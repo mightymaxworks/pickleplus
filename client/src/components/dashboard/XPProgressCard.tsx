@@ -1,264 +1,99 @@
-import { useState } from "react";
-import { User } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, ChevronUp, Info, Award, Star } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+/**
+ * PKL-278651-PROF-0011-COMP - XP Progress Card Component
+ * 
+ * This component displays user XP progress and level information 
+ * with frontend-first calculations.
+ * 
+ * @framework Framework5.3
+ * @version 1.0.0
+ * @lastUpdated 2025-04-26
+ */
+
+import { useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { apiRequest } from "@/lib/queryClient";
-import { getXpRequiredForLevel } from "@/lib/calculateLevel";
-import { useDerivedData, useDerivedMetric } from "@/contexts/DerivedDataContext";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useDerivedData } from "@/contexts/DerivedDataContext";
+import { useAuth } from "@/lib/auth";
+import { Zap, ChevronRight } from "lucide-react";
 
-interface XPProgressCardProps {
-  user: User;
-}
-
-export default function XPProgressCard({ user }: XPProgressCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { isLoading } = useDerivedData();
+export default function XPProgressCard() {
+  const { user } = useAuth();
+  const { calculatedMetrics } = useDerivedData();
   
-  // Get derived metrics from context
-  const { value: level } = useDerivedMetric('level');
-  const { value: xpProgress } = useDerivedMetric('xpProgress');
-  const { value: xpProgressPercentage } = useDerivedMetric('xpProgressPercentage');
-  const { value: nextLevelXP } = useDerivedMetric('nextLevelXP');
+  // Calculate remaining XP to next level
+  const remainingXP = useMemo(() => {
+    if (!calculatedMetrics) return 0;
+    return calculatedMetrics.nextLevelXP - (user?.xp || 0);
+  }, [calculatedMetrics, user?.xp]);
   
-  // Use the current level or fallback to calculated value if context not ready
-  const currentXP = user.xp || 0;
-  const currentLevel = level || 1;
-  
-  // Calculate values based on derived data or fallback
-  const previousLevelThreshold = getXpRequiredForLevel(currentLevel);
-  const xpForCurrentLevel = xpProgress !== undefined ? xpProgress : (currentXP - previousLevelThreshold);
-  const xpNeededForNextLevel = nextLevelXP !== undefined ? (nextLevelXP - previousLevelThreshold) : 
-                              (getXpRequiredForLevel(currentLevel + 1) - previousLevelThreshold);
-  const progressPercentage = xpProgressPercentage !== undefined ? xpProgressPercentage : 
-                           Math.min(99, Math.floor((xpForCurrentLevel / xpNeededForNextLevel) * 100));
-  
-  // Query XP history
-  const { data: xpHistory, isLoading: isXpLoading } = useQuery({
-    queryKey: ["/api/xp/transactions", { userId: user.id, limit: 5 }],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest("GET", `/api/xp/transactions?userId=${user.id}&limit=5`);
-        if (!res.ok) throw new Error("Failed to fetch XP history");
-        return await res.json();
-      } catch (error) {
-        console.error("Error fetching XP history:", error);
-        return [];
-      }
-    },
-    enabled: isExpanded, // Only fetch when expanded
-  });
-  
-  // Calculate next reward at level milestone
-  const nextRewardLevel = Math.ceil(currentLevel / 5) * 5; // Next multiple of 5
-  const isFoundingMember = user.isFoundingMember;
+  // Show loading skeleton if data is not available
+  if (!calculatedMetrics || !user) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-12 w-12 rounded-full bg-primary/20 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-40 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+          <div className="h-2 w-full bg-muted animate-pulse rounded mb-2" />
+          <div className="flex justify-between">
+            <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
-    <Card className={`transition-all duration-300 ${isExpanded ? 'border-primary/20' : ''}`}>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-bold flex items-center">
-          <Award className="mr-2 h-5 w-5 text-primary" />
-          XP Progress
-        </CardTitle>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="h-8 w-8 p-0"
-        >
-          {isExpanded ? <ChevronUp size={16} /> : <ChevronRight size={16} />}
-        </Button>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="space-y-4">
-          {isLoading ? (
-            /* Loading state - skeleton UI */
-            <>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <Skeleton className="w-10 h-10 rounded-full" />
-                  <div className="ml-3">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-3 w-32 mt-1" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24 mt-1" />
-                </div>
-              </div>
-              <Skeleton className="h-2 w-full" />
-            </>
-          ) : (
-            /* Content when data is loaded */
-            <>
-              {/* Current Level Display */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full ${isFoundingMember ? 'bg-gradient-to-r from-[#FF5722] to-[#FFD700]' : 'bg-primary'} flex items-center justify-center text-white font-bold`}>
-                    {currentLevel}
-                  </div>
-                  <div className="ml-3">
-                    <div className="text-sm font-medium text-gray-700">Level {currentLevel}</div>
-                    <div className="text-xs text-gray-500">
-                      {isFoundingMember && (
-                        <span className="text-yellow-600 flex items-center">
-                          <Star size={12} className="mr-1" /> 10% XP Bonus Active
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                  <div className="text-sm font-medium text-primary">{xpForCurrentLevel.toLocaleString()} / {xpNeededForNextLevel.toLocaleString()} XP</div>
-                  <div className="text-xs text-gray-500">{progressPercentage}% to Level {currentLevel + 1}</div>
-                </div>
-              </div>
-              
-              {/* Progress Bar */}
-              <Progress value={progressPercentage} className="h-2" indicatorClassName={isFoundingMember ? 'bg-gradient-to-r from-[#FF5722] to-[#FFD700]' : undefined} />
-            </>
-          )}
-          
-          {/* Next Reward Preview */}
-          {isLoading ? (
-            /* Loading state for next reward */
-            <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center">
-                <Skeleton className="w-8 h-8 rounded-full" />
-                <div className="ml-3">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-32 mt-1" />
-                </div>
-              </div>
-              <Skeleton className="h-3 w-16" />
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+            <Zap className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">Level {calculatedMetrics.level}</h3>
+            <p className="text-sm text-muted-foreground">
+              {remainingXP} XP needed for Level {calculatedMetrics.level + 1}
+            </p>
+          </div>
+        </div>
+        
+        <Progress
+          value={calculatedMetrics.xpProgressPercentage}
+          className="h-2 mb-2"
+        />
+        
+        <div className="flex justify-between text-sm">
+          <span>{user.xp} XP</span>
+          <div className="flex items-center">
+            <span>{calculatedMetrics.nextLevelXP} XP</span>
+            <ChevronRight className="h-4 w-4 ml-1 text-muted-foreground" />
+          </div>
+        </div>
+        
+        {/* Mobile only: Visible at xs and sm breakpoints */}
+        <div className="flex justify-between mt-4 md:hidden">
+          <div className="text-center">
+            <div className="text-lg font-semibold">{user.totalMatches || 0}</div>
+            <div className="text-xs text-muted-foreground">Matches</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold">{user.matchesWon || 0}</div>
+            <div className="text-xs text-muted-foreground">Wins</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold">
+              {user.totalMatches ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%
             </div>
-          ) : (
-            /* Loaded state for next reward */
-            <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="bg-yellow-100 p-2 rounded-full text-yellow-600">
-                  <Award size={16} />
-                </div>
-                <div className="ml-3">
-                  <div className="text-sm font-medium">Next Reward at Level {nextRewardLevel}</div>
-                  <div className="text-xs text-gray-500">Unlock premium avatar frames</div>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500">
-                {nextRewardLevel - currentLevel} levels to go
-              </div>
-            </div>
-          )}
-          
-          {/* Expanded Content - XP History */}
-          {isExpanded && (
-            <div className="mt-4 border-t pt-4 border-gray-100">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold">Recent XP Activity</h4>
-                <Button variant="link" size="sm" className="h-auto p-0 text-xs">
-                  View All
-                </Button>
-              </div>
-              
-              {isXpLoading ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-                  <div className="text-xs text-gray-500 mt-2">Loading XP history...</div>
-                </div>
-              ) : xpHistory && xpHistory.length > 0 ? (
-                <div className="space-y-2">
-                  {xpHistory.map((transaction: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${getSourceColor(transaction.source)}`}>
-                          {getSourceIcon(transaction.source)}
-                        </div>
-                        <div className="ml-2">
-                          <div className="text-xs font-medium">{transaction.source}</div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(transaction.timestamp).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-green-600">+{transaction.amount} XP</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <div className="text-xs text-gray-500">No recent XP activity</div>
-                  <div className="text-xs text-gray-400 mt-1">Play matches to earn XP!</div>
-                </div>
-              )}
-              
-              {/* XP Explanation */}
-              <div className="mt-4 bg-blue-50 rounded-lg p-3 text-xs">
-                <div className="flex items-start">
-                  <Info size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                  <div className="ml-2 text-blue-700">
-                    <p className="font-medium">How XP Works:</p>
-                    <ul className="mt-1 list-disc pl-4 space-y-1">
-                      <li>Earn XP from matches, tournaments, and achievements</li>
-                      <li>Daily match bonus: First 2 matches earn 25 XP each</li>
-                      <li>Tournament multipliers: Club (1.5x) to International (3.0x)</li>
-                      {isFoundingMember && (
-                        <li className="text-yellow-700">Founding Member: +10% XP on all activities</li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+            <div className="text-xs text-muted-foreground">Win Rate</div>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
-}
-
-// Helper functions for styling XP sources
-function getSourceColor(source: string): string {
-  const sourceMap: Record<string, string> = {
-    "match": "bg-green-500",
-    "tournament": "bg-blue-500",
-    "achievement": "bg-purple-500",
-    "daily_bonus": "bg-yellow-500",
-    "redemption": "bg-orange-500",
-    "admin": "bg-gray-500"
-  };
-  
-  // Check for partial matches
-  for (const [key, value] of Object.entries(sourceMap)) {
-    if (source.toLowerCase().includes(key)) {
-      return value;
-    }
-  }
-  
-  return "bg-gray-400"; // Default color
-}
-
-function getSourceIcon(source: string): React.ReactNode {
-  const sourceMap: Record<string, React.ReactNode> = {
-    "match": <span>M</span>,
-    "tournament": <span>T</span>,
-    "achievement": <span>A</span>,
-    "daily_bonus": <span>D</span>,
-    "redemption": <span>R</span>,
-    "admin": <span>S</span>
-  };
-  
-  // Check for partial matches
-  for (const [key, value] of Object.entries(sourceMap)) {
-    if (source.toLowerCase().includes(key)) {
-      return value;
-    }
-  }
-  
-  return <span>•</span>; // Default icon
 }

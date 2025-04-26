@@ -1,18 +1,24 @@
 /**
- * PKL-278651-ADMIN-0009-MOBILE
- * useMediaQuery Hook
+ * PKL-278651-UI-0005-HOOK - useMediaQuery Hook
  * 
- * Custom React hook for detecting if a media query matches.
- * This is used by the device detection utility to determine the current device type.
+ * Custom hook for responsive media queries that updates when viewport changes.
+ * 
+ * @framework Framework5.3
+ * @version 1.0.0
+ * @lastUpdated 2025-04-26
  */
 
 import { useState, useEffect } from 'react';
 
+/**
+ * Hook to check if a media query matches
+ * @param query - CSS media query string (e.g., '(max-width: 768px)')
+ * @returns boolean indicating if the media query matches
+ */
 export function useMediaQuery(query: string): boolean {
-  // Initialize with the match state if window is available (client-side)
-  // Otherwise, default to false (server-side rendering)
+  // Initialize with current match state or false if SSR
   const getMatches = (): boolean => {
-    // Check if window is available (client-side)
+    // Check if window is available (browser environment)
     if (typeof window !== 'undefined') {
       return window.matchMedia(query).matches;
     }
@@ -21,22 +27,31 @@ export function useMediaQuery(query: string): boolean {
 
   const [matches, setMatches] = useState<boolean>(getMatches());
 
+  // Update matches state whenever the media query result changes
   useEffect(() => {
-    // Exit early if window is not available (server-side rendering)
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
+    // Get initial match
+    const matchMedia = window.matchMedia(query);
+    setMatches(matchMedia.matches);
 
-    const mediaQuery = window.matchMedia(query);
-    
-    // Update the state with the current value
-    const handler = (): void => setMatches(mediaQuery.matches);
-    
-    // Add event listener for subsequent changes
-    mediaQuery.addEventListener('change', handler);
-    
-    // Clean up function
-    return () => mediaQuery.removeEventListener('change', handler);
+    // Create handler to update state
+    const handleChange = (e: MediaQueryListEvent) => {
+      setMatches(e.matches);
+    };
+
+    // Add event listener for changes
+    if (matchMedia.addEventListener) {
+      // Modern browsers
+      matchMedia.addEventListener('change', handleChange);
+      return () => {
+        matchMedia.removeEventListener('change', handleChange);
+      };
+    } else {
+      // Fallback for older browsers
+      matchMedia.addListener(handleChange);
+      return () => {
+        matchMedia.removeListener(handleChange);
+      };
+    }
   }, [query]);
 
   return matches;

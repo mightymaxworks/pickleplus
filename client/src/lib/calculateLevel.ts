@@ -1,148 +1,121 @@
 /**
- * PKL-278651-XP-0007-LEVEL - XP Level Calculation Utility
+ * PKL-278651-PROF-0010-UTIL - Level Calculation Utility
  * 
- * This utility file provides functions to calculate the correct user level
- * based on XP thresholds. It ensures consistent level calculation across the app.
+ * This utility provides level calculation based on XP thresholds
+ * with frontend-first implementation.
+ * 
+ * @framework Framework5.3
+ * @version 1.0.0
+ * @lastUpdated 2025-04-26
  */
 
 /**
- * Calculate the user's level based on their XP amount
- * @param xp Current XP amount
+ * XP threshold for each level
+ * Index corresponds to level (e.g., levelThresholds[1] is XP needed for level 1)
+ */
+export const levelThresholds = [
+  0,     // Level 0 (not used)
+  0,     // Level 1 (starting level)
+  100,   // Level 2
+  250,   // Level 3
+  500,   // Level 4
+  750,   // Level 5
+  800,   // Level 6
+  850,   // Level 7
+  900,   // Level 8
+  950,   // Level 9
+  1000,  // Level 10
+  1100,  // Level 11
+  1200,  // Level 12
+  1300,  // Level 13
+  1500,  // Level 14
+  1750,  // Level 15
+  2000,  // Level 16
+  2500,  // Level 17
+  3000,  // Level 18
+  4000,  // Level 19
+  5000,  // Level 20
+  7500,  // Level 21
+  10000, // Level 22
+  12500, // Level 23
+  15000, // Level 24
+  20000, // Level 25
+  25000, // Level 26
+  30000, // Level 27
+  40000, // Level 28
+  50000, // Level 29
+  100000 // Level 30 (max level)
+];
+
+export const MAX_LEVEL = levelThresholds.length - 1;
+
+/**
+ * Calculate user level based on XP
+ * @param xp - User's current XP
  * @returns The calculated level
  */
-export function calculateLevelFromXP(xp: number): number {
-  // Define explicit thresholds for levels
-  const levelThresholds: { [key: number]: number } = {
-    1: 0,
-    2: 100,
-    3: 250,
-    4: 500,
-    5: 750,
-    6: 800,  // Added missing Level 6 threshold
-    10: 1000,
-    15: 2000,
-    20: 4000
-  };
-
-  // If no XP, return level 1
-  if (!xp) return 1;
-  
-  // Find the highest level threshold that is less than or equal to the user's XP
-  let calculatedLevel = 1;
-  
-  for (const [level, threshold] of Object.entries(levelThresholds)) {
-    const levelNum = Number(level);
-    if (xp >= threshold) {
-      calculatedLevel = Math.max(calculatedLevel, levelNum);
-    }
+export function calculateLevel(xp: number): number {
+  if (xp >= levelThresholds[MAX_LEVEL]) {
+    return MAX_LEVEL;
   }
-
-  // For XP beyond our explicit thresholds
-  if (xp >= 4000) {
-    // Level 21-40: moderate growth
-    for (let level = 21; level <= 40; level++) {
-      const threshold = 4000 + 100 * Math.pow(level - 20, 2);
-      if (xp < threshold) break;
-      calculatedLevel = level;
-    }
-    
-    // Level 41-60: faster growth
-    if (calculatedLevel >= 40) {
-      for (let level = 41; level <= 60; level++) {
-        const threshold = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(level - 40, 2);
-        if (xp < threshold) break;
-        calculatedLevel = level;
-      }
-    }
-    
-    // Level 61-80: even faster growth
-    if (calculatedLevel >= 60) {
-      for (let level = 61; level <= 80; level++) {
-        const base = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(20, 2);
-        const threshold = base + 300 * Math.pow(level - 60, 2);
-        if (xp < threshold) break;
-        calculatedLevel = level;
-      }
-    }
-    
-    // Level 81-100: most challenging growth
-    if (calculatedLevel >= 80) {
-      for (let level = 81; level <= 100; level++) {
-        const base = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(20, 2) + 300 * Math.pow(20, 2);
-        const threshold = base + 500 * Math.pow(level - 80, 2);
-        if (xp < threshold) break;
-        calculatedLevel = level;
-      }
+  
+  // Find the highest level where the threshold is less than or equal to the user's XP
+  for (let i = MAX_LEVEL - 1; i >= 1; i--) {
+    if (xp >= levelThresholds[i]) {
+      return i;
     }
   }
   
-  return calculatedLevel;
+  return 1; // Default to level 1
 }
 
 /**
- * Get XP required for a specific level
- * @param level Target level
- * @returns XP amount required
+ * Calculate the XP needed for the next level
+ * @param currentLevel - User's current level
+ * @returns XP needed for the next level
  */
-export function getXpRequiredForLevel(level: number): number {
-  // Define explicit thresholds for early levels (for backward compatibility)
-  const earlyLevels: { [key: number]: number } = {
-    1: 0,
-    2: 100,
-    3: 250,
-    4: 500,
-    5: 750,
-    6: 800,  // Added missing Level 6 threshold
-    10: 1000,
-    15: 2000,
-    20: 4000
+export function getNextLevelXP(currentLevel: number): number {
+  const safeLevel = Math.min(Math.max(1, currentLevel), MAX_LEVEL - 1);
+  return levelThresholds[safeLevel + 1];
+}
+
+/**
+ * Calculate progress percentage towards the next level
+ * @param xp - User's current XP
+ * @param currentLevel - User's current level
+ * @returns Percentage (0-100) of progress towards the next level
+ */
+export function calculateLevelProgress(xp: number, currentLevel: number): number {
+  // If at max level, return 100%
+  if (currentLevel >= MAX_LEVEL) {
+    return 100;
+  }
+  
+  const currentLevelXP = levelThresholds[currentLevel];
+  const nextLevelXP = levelThresholds[currentLevel + 1];
+  const xpForCurrentLevel = xp - currentLevelXP;
+  const xpRequiredForNextLevel = nextLevelXP - currentLevelXP;
+  
+  return Math.round((xpForCurrentLevel / xpRequiredForNextLevel) * 100);
+}
+
+/**
+ * Get an object with all level-related calculations
+ * @param xp - User's current XP
+ * @returns Object containing level, next level XP, and progress percentage
+ */
+export function getLevelInfo(xp: number): { 
+  level: number;
+  nextLevelXP: number;
+  xpProgressPercentage: number;
+} {
+  const level = calculateLevel(xp);
+  const nextLevelXP = getNextLevelXP(level);
+  const xpProgressPercentage = calculateLevelProgress(xp, level);
+  
+  return {
+    level,
+    nextLevelXP,
+    xpProgressPercentage
   };
-  
-  if (level in earlyLevels) {
-    return earlyLevels[level];
-  }
-  
-  // For levels 1-20, use the existing progression if defined
-  if (level <= 20) {
-    // Linear interpolation between defined points
-    const lowerBound = 
-      Object.keys(earlyLevels)
-        .map(Number)
-        .filter(l => l <= level)
-        .sort((a, b) => b - a)[0] || 1;
-        
-    const upperBound = 
-      Object.keys(earlyLevels)
-        .map(Number)
-        .filter(l => l > level)
-        .sort((a, b) => a - b)[0] || 20;
-    
-    const lowerXP = earlyLevels[lowerBound];
-    const upperXP = earlyLevels[upperBound];
-    
-    // Linear interpolation
-    return Math.round(
-      lowerXP + (upperXP - lowerXP) * (level - lowerBound) / (upperBound - lowerBound)
-    );
-  }
-  
-  // For levels 21-40, moderate growth: 1000 + 100 * (level - 20)^2
-  if (level <= 40) {
-    return 4000 + 100 * Math.pow(level - 20, 2);
-  }
-  
-  // For levels 41-60, faster growth: quadratic formula with steeper coefficient
-  if (level <= 60) {
-    return 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(level - 40, 2);
-  }
-  
-  // For levels 61-80, even faster growth
-  if (level <= 80) {
-    const base = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(20, 2);
-    return base + 300 * Math.pow(level - 60, 2);
-  }
-  
-  // For levels 81-100, most challenging growth
-  const base = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(20, 2) + 300 * Math.pow(20, 2);
-  return base + 500 * Math.pow(level - 80, 2);
 }

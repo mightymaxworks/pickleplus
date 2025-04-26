@@ -1,114 +1,88 @@
-// Enhanced User type for the Pickle+ platform
+/**
+ * PKL-278651-PROF-0006-TYPE - Enhanced User Interface
+ * 
+ * This file defines the enhanced user interface with extended profile fields.
+ * 
+ * @framework Framework5.3
+ * @version 1.0.0
+ * @lastUpdated 2025-04-26
+ */
+
+/**
+ * Enhanced user interface with extended profile fields
+ * Includes all base user fields plus additional profile information
+ */
 export interface EnhancedUser {
-  // Base user properties
+  // Base user fields
   id: number;
   username: string;
-  email: string | null;
+  email?: string | null;
   password: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  displayName: string | null;
-  location: string | null;
-  bio: string | null;
-  yearOfBirth: number | null;
-  passportId: string | null;
-  
-  // System fields
-  level?: number;
-  xp?: number;
-  totalMatches?: number;
-  matchesWon?: number;
-  isAdmin?: boolean;
-  createdAt?: Date;
-  lastUpdated?: Date;
-  
-  // Profile customization
-  avatarInitials?: string;
+  displayName?: string | null;
   avatarUrl?: string | null;
-  bannerUrl?: string | null;
-  bannerPattern?: string | null;
+  avatarInitials: string;
+  bio?: string | null;
+  location?: string | null;
+  yearOfBirth?: number | null;
   
-  // Profile completion
-  profileCompletionPct?: number;
+  // Status and verification
+  isAdmin?: boolean;
+  isCoach?: boolean;
+  isVerified?: boolean;
+  passportId?: string | null;
   
-  // Physical attributes
-  height?: number;
-  reach?: number;
+  // Performance metrics
+  level: number;
+  xp: number;
+  totalMatches: number;
+  matchesWon: number;
+  matchesLost?: number;
+  totalTournaments: number;
+  rankingPoints: number;
+  
+  // Profile-related
+  profileCompletionPct: number;
+  lastVisit?: Date | string;
+  createdAt?: Date | string;
+  lastUpdated?: Date | string;
   
   // Equipment preferences
   paddleBrand?: string;
   paddleModel?: string;
   backupPaddleBrand?: string;
   backupPaddleModel?: string;
-  apparelBrand?: string;
-  shoesBrand?: string;
   otherEquipment?: string;
-  preferredPosition?: string;
   
-  // Performance metrics
+  // Playing preferences
+  preferredPosition?: string;
   forehandStrength?: number;
   backhandStrength?: number;
   servePower?: number;
   dinkAccuracy?: number;
   thirdShotConsistency?: number;
   courtCoverage?: number;
-  
-  // Match preferences
   preferredSurface?: string;
   indoorOutdoorPreference?: string;
-  competitiveIntensity?: number;
+  
+  // Extended profile fields
+  height?: string;
+  reach?: string;
+  competitiveIntensity?: string;
   mentorshipInterest?: boolean;
-  preferredMatchDuration?: string;
-  fitnessLevel?: string;
-  mobilityLimitations?: string;
-  
-  // Location data
-  homeCourtLocations?: string;
+  homeCourtLocations?: string[];
   travelRadiusKm?: number;
-  
-  // External Rating Systems - PKL-278651-EXTR-0001
-  duprRating?: string;
-  duprProfileUrl?: string;
-  utprRating?: string;
-  utprProfileUrl?: string;
-  wprRating?: string;
-  wprProfileUrl?: string;
-  externalRatingsVerified?: boolean;
-  lastExternalRatingUpdate?: Date;
-  
-  // Playing style preferences
-  playingStyle?: string;
-  shotStrengths?: string;
-  
-  // Communication preferences
-  privateMessagePreference?: string;
-  
-  // Social and partner settings
-  lookingForPartners?: boolean;
-  preferredFormat?: string;
-  dominantHand?: string;
-  regularSchedule?: string;
-  playingSince?: string;
-  skillLevel?: string;
-  privacyProfile?: string;
-  
-  // Social connections and community
-  coach?: string;
-  clubs?: string;
-  leagues?: string;
-  
-  // Goals and development
   playerGoals?: string;
+  lookingForPartners?: boolean;
   
-  // Tournament and achievement data (optional)
-  totalTournaments?: number;
-  tournamentCount?: number;
-  achievements?: any[];
+  // External ratings
+  duprRating?: number;
+  utprRating?: number;
+  wprRating?: number;
+  externalRatingsVerified?: boolean;
   
-  // Rating and ranking
-  rankingPoints?: number;
-  tier?: string;
-  isFoundingMember?: boolean;
-  xpMultiplier?: number;
-  lastMatchDate?: Date | null;
+  // Social and privacy
+  privacyProfile?: 'public' | 'friends' | 'private';
+  
+  // Collection-based data
+  achievements: any[];
 }

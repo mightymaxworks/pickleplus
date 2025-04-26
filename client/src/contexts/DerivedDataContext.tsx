@@ -1,204 +1,97 @@
 /**
- * PKL-278651-CALC-0002-CONTEXT - Frontend Derived Data Context
+ * PKL-278651-PROF-0008-CONT - Derived Data Context
  * 
- * This context provides frontend-calculated data to components
- * and manages caching and data synchronization.
+ * This context provides derived data calculations from base user data
+ * to reduce redundant calculations across components.
  * 
  * @framework Framework5.3
  * @version 1.0.0
  * @lastUpdated 2025-04-26
  */
 
-import React, { createContext, useContext, ReactNode, useState, useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  DataCalculationService,
-  UserStats,
-  CalculatedUserMetrics,
-  CourtIQMetrics
-} from '@/services/DataCalculationService';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { EnhancedUser } from "@/types/enhanced-user";
+import { DataCalculationService, CalculatedUserMetrics } from "@/services/DataCalculationService";
 
-// Define context state interface
-interface DerivedDataContextState {
-  // Raw data
-  userStats: UserStats | null;
-  
-  // Derived metrics
+interface DerivedDataContextType {
+  calculationService: DataCalculationService;
   calculatedMetrics: CalculatedUserMetrics | null;
-  
-  // Status
+  updateCalculations: () => void;
   isLoading: boolean;
-  error: Error | null;
-  lastUpdated: Date | null;
-  
-  // Actions
-  refreshData: () => void;
-  setUserStats: (stats: Partial<UserStats>) => void;
 }
 
-// Create context with default values
-const DerivedDataContext = createContext<DerivedDataContextState | undefined>(undefined);
+const DerivedDataContext = createContext<DerivedDataContextType | null>(null);
 
-// Provider component props
-interface DerivedDataProviderProps {
-  children: ReactNode;
-}
+// Default values for metrics when user data isn't available
+const DEFAULT_METRICS: CalculatedUserMetrics = {
+  level: 1,
+  nextLevelXP: 100,
+  xpProgressPercentage: 0,
+  recentPerformance: 0,
+  overallRating: 1000,
+  completionPercentage: 0
+};
 
-/**
- * Provider for derived data context
- * This component fetches raw data and calculates derived metrics
- */
-export function DerivedDataProvider({ children }: DerivedDataProviderProps) {
-  const queryClient = useQueryClient();
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  
-  // Fetch user data
-  const {
-    data: userData,
-    isLoading: isUserDataLoading,
-    error: userDataError,
-    refetch: refetchUserData
-  } = useQuery<any>({
-    queryKey: ['/api/me'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
-  // Fetch match data
-  const {
-    data: matchStats,
-    isLoading: isMatchStatsLoading,
-    error: matchStatsError,
-    refetch: refetchMatchStats
-  } = useQuery<any>({
-    queryKey: ['/api/match/stats'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
-  // Fetch CourtIQ data
-  const {
-    data: courtIQData,
-    isLoading: isCourtIQLoading,
-    error: courtIQError,
-    refetch: refetchCourtIQ
-  } = useQuery<any>({
-    queryKey: ['/api/courtiq/performance'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
-  // Combine raw data
-  const [userStats, setUserStatsState] = useState<UserStats | null>(null);
-  
-  // Update raw data when queries complete
+export function DerivedDataProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const [calculationService] = useState(() => new DataCalculationService());
+  const [calculatedMetrics, setCalculatedMetrics] = useState<CalculatedUserMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Calculate metrics when user data changes
   useEffect(() => {
-    if (!isUserDataLoading && !isMatchStatsLoading && userData) {
-      // Define courtIQMetrics if courtIQ data exists
-      const courtIQMetrics: CourtIQMetrics | undefined = courtIQData && courtIQData.skills ? {
-        technical: courtIQData.skills.technical || 0,
-        tactical: courtIQData.skills.tactical || 0,
-        physical: courtIQData.skills.physical || 0,
-        mental: courtIQData.skills.mental || 0,
-        consistency: courtIQData.skills.consistency || 0
-      } : undefined;
-      
-      // Create user stats object from available data
-      setUserStatsState({
-        xp: userData.xp || 0,
-        totalMatches: matchStats?.totalMatches || userData.totalMatches || 0,
-        matchesWon: matchStats?.matchesWon || userData.matchesWon || 0,
-        matchesLost: matchStats?.matchesLost || userData.matchesLost || 0,
-        recentMatches: matchStats?.recentMatches || [],
-        courtIQMetrics
-      });
-      
-      setLastUpdated(new Date());
+    if (user) {
+      setIsLoading(true);
+      calculateAndUpdateMetrics(user);
+    } else {
+      setCalculatedMetrics(null);
+      setIsLoading(false);
     }
-  }, [userData, matchStats, courtIQData, isUserDataLoading, isMatchStatsLoading, isCourtIQLoading]);
-  
-  // Function to update user stats
-  const setUserStats = (stats: Partial<UserStats>) => {
-    setUserStatsState(prev => {
-      if (!prev) return stats as UserStats;
-      return { ...prev, ...stats };
-    });
-    setLastUpdated(new Date());
+  }, [user]);
+
+  // Function to calculate and update metrics
+  const calculateAndUpdateMetrics = (userData: EnhancedUser) => {
+    // Use setTimeout to prevent blocking the main thread for complex calculations
+    setTimeout(() => {
+      try {
+        const metrics = calculationService.calculateUserMetrics(userData);
+        setCalculatedMetrics(metrics);
+      } catch (error) {
+        console.error("Error calculating user metrics:", error);
+        setCalculatedMetrics(DEFAULT_METRICS);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 0);
   };
-  
-  // Calculate derived metrics
-  const calculatedMetrics = useMemo(() => {
-    if (!userStats) return null;
-    return DataCalculationService.calculateAllMetrics(userStats);
-  }, [userStats]);
-  
-  // Refresh all data
-  const refreshData = () => {
-    refetchUserData();
-    refetchMatchStats();
-    refetchCourtIQ();
+
+  // Function to trigger recalculation
+  const updateCalculations = () => {
+    if (user) {
+      setIsLoading(true);
+      calculateAndUpdateMetrics(user);
+    }
   };
-  
-  // Combine errors and loading states
-  const isLoading = isUserDataLoading || isMatchStatsLoading;
-  const error = userDataError || matchStatsError || courtIQError;
-  
-  // Build context value
-  const contextValue: DerivedDataContextState = {
-    userStats,
-    calculatedMetrics,
-    isLoading,
-    error: error as Error | null,
-    lastUpdated,
-    refreshData,
-    setUserStats
-  };
-  
+
   return (
-    <DerivedDataContext.Provider value={contextValue}>
+    <DerivedDataContext.Provider
+      value={{
+        calculationService,
+        calculatedMetrics,
+        updateCalculations,
+        isLoading
+      }}
+    >
       {children}
     </DerivedDataContext.Provider>
   );
 }
 
-/**
- * Hook to use the derived data context
- * @returns Context state and actions
- */
 export function useDerivedData() {
   const context = useContext(DerivedDataContext);
-  
-  if (context === undefined) {
-    throw new Error('useDerivedData must be used within a DerivedDataProvider');
+  if (!context) {
+    throw new Error("useDerivedData must be used within a DerivedDataProvider");
   }
-  
   return context;
-}
-
-/**
- * Hook to get only the calculated metrics
- * @returns Calculated metrics object
- */
-export function useCalculatedMetrics() {
-  const { calculatedMetrics, isLoading, error } = useDerivedData();
-  
-  return { 
-    metrics: calculatedMetrics,
-    isLoading,
-    error
-  };
-}
-
-/**
- * Hook for accessing specific derived values
- * @param metricKey Key of the metric to extract
- * @returns Specific metric value
- */
-export function useDerivedMetric<K extends keyof CalculatedUserMetrics>(metricKey: K) {
-  const { calculatedMetrics, isLoading, error } = useDerivedData();
-  
-  const value = calculatedMetrics ? calculatedMetrics[metricKey] : undefined;
-  
-  return {
-    value,
-    isLoading,
-    error
-  };
 }
