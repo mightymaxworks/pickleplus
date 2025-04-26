@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
-import { calculateLevelFromXP, getXpRequiredForLevel } from "@/lib/calculateLevel";
+import { getXpRequiredForLevel } from "@/lib/calculateLevel";
+import { useDerivedData, useDerivedMetric } from "@/contexts/DerivedDataContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface XPProgressCardProps {
   user: User;
@@ -14,21 +16,25 @@ interface XPProgressCardProps {
 
 export default function XPProgressCard({ user }: XPProgressCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isLoading } = useDerivedData();
   
-  // Calculate XP progress using the correct level calculation
+  // Get derived metrics from context
+  const { value: level } = useDerivedMetric('level');
+  const { value: xpProgress } = useDerivedMetric('xpProgress');
+  const { value: xpProgressPercentage } = useDerivedMetric('xpProgressPercentage');
+  const { value: nextLevelXP } = useDerivedMetric('nextLevelXP');
+  
+  // Use the current level or fallback to calculated value if context not ready
   const currentXP = user.xp || 0;
-  // Use the correct level based on XP amount, not the stored level value
-  const currentLevel = calculateLevelFromXP(currentXP);
+  const currentLevel = level || 1;
   
-  console.debug(`[XP Debug] XP=${currentXP}, Calculated Level=${currentLevel}, Stored Level=${user.level}`);
-  
-  // Get the current and next level thresholds
+  // Calculate values based on derived data or fallback
   const previousLevelThreshold = getXpRequiredForLevel(currentLevel);
-  const nextLevelThreshold = getXpRequiredForLevel(currentLevel + 1);
-  
-  const xpForCurrentLevel = currentXP - previousLevelThreshold;
-  const xpNeededForNextLevel = nextLevelThreshold - previousLevelThreshold;
-  const progressPercentage = Math.min(99, Math.floor((xpForCurrentLevel / xpNeededForNextLevel) * 100));
+  const xpForCurrentLevel = xpProgress !== undefined ? xpProgress : (currentXP - previousLevelThreshold);
+  const xpNeededForNextLevel = nextLevelXP !== undefined ? (nextLevelXP - previousLevelThreshold) : 
+                              (getXpRequiredForLevel(currentLevel + 1) - previousLevelThreshold);
+  const progressPercentage = xpProgressPercentage !== undefined ? xpProgressPercentage : 
+                           Math.min(99, Math.floor((xpForCurrentLevel / xpNeededForNextLevel) * 100));
   
   // Query XP history
   const { data: xpHistory, isLoading: isXpLoading } = useQuery({
@@ -69,48 +75,86 @@ export default function XPProgressCard({ user }: XPProgressCardProps) {
       
       <CardContent>
         <div className="space-y-4">
-          {/* Current Level Display */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className={`w-10 h-10 rounded-full ${isFoundingMember ? 'bg-gradient-to-r from-[#FF5722] to-[#FFD700]' : 'bg-primary'} flex items-center justify-center text-white font-bold`}>
-                {currentLevel}
-              </div>
-              <div className="ml-3">
-                <div className="text-sm font-medium text-gray-700">Level {currentLevel}</div>
-                <div className="text-xs text-gray-500">
-                  {isFoundingMember && (
-                    <span className="text-yellow-600 flex items-center">
-                      <Star size={12} className="mr-1" /> 10% XP Bonus Active
-                    </span>
-                  )}
+          {isLoading ? (
+            /* Loading state - skeleton UI */
+            <>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="ml-3">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-32 mt-1" />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24 mt-1" />
                 </div>
               </div>
-            </div>
-            
-            <div className="text-right">
-              <div className="text-sm font-medium text-primary">{xpForCurrentLevel.toLocaleString()} / {xpNeededForNextLevel.toLocaleString()} XP</div>
-              <div className="text-xs text-gray-500">{progressPercentage}% to Level {currentLevel + 1}</div>
-            </div>
-          </div>
-          
-          {/* Progress Bar */}
-          <Progress value={progressPercentage} className="h-2" indicatorClassName={isFoundingMember ? 'bg-gradient-to-r from-[#FF5722] to-[#FFD700]' : undefined} />
+              <Skeleton className="h-2 w-full" />
+            </>
+          ) : (
+            /* Content when data is loaded */
+            <>
+              {/* Current Level Display */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full ${isFoundingMember ? 'bg-gradient-to-r from-[#FF5722] to-[#FFD700]' : 'bg-primary'} flex items-center justify-center text-white font-bold`}>
+                    {currentLevel}
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-700">Level {currentLevel}</div>
+                    <div className="text-xs text-gray-500">
+                      {isFoundingMember && (
+                        <span className="text-yellow-600 flex items-center">
+                          <Star size={12} className="mr-1" /> 10% XP Bonus Active
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className="text-sm font-medium text-primary">{xpForCurrentLevel.toLocaleString()} / {xpNeededForNextLevel.toLocaleString()} XP</div>
+                  <div className="text-xs text-gray-500">{progressPercentage}% to Level {currentLevel + 1}</div>
+                </div>
+              </div>
+              
+              {/* Progress Bar */}
+              <Progress value={progressPercentage} className="h-2" indicatorClassName={isFoundingMember ? 'bg-gradient-to-r from-[#FF5722] to-[#FFD700]' : undefined} />
+            </>
+          )}
           
           {/* Next Reward Preview */}
-          <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="bg-yellow-100 p-2 rounded-full text-yellow-600">
-                <Award size={16} />
+          {isLoading ? (
+            /* Loading state for next reward */
+            <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <div className="ml-3">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-32 mt-1" />
+                </div>
               </div>
-              <div className="ml-3">
-                <div className="text-sm font-medium">Next Reward at Level {nextRewardLevel}</div>
-                <div className="text-xs text-gray-500">Unlock premium avatar frames</div>
+              <Skeleton className="h-3 w-16" />
+            </div>
+          ) : (
+            /* Loaded state for next reward */
+            <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="bg-yellow-100 p-2 rounded-full text-yellow-600">
+                  <Award size={16} />
+                </div>
+                <div className="ml-3">
+                  <div className="text-sm font-medium">Next Reward at Level {nextRewardLevel}</div>
+                  <div className="text-xs text-gray-500">Unlock premium avatar frames</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">
+                {nextRewardLevel - currentLevel} levels to go
               </div>
             </div>
-            <div className="text-xs text-gray-500">
-              {nextRewardLevel - currentLevel} levels to go
-            </div>
-          </div>
+          )}
           
           {/* Expanded Content - XP History */}
           {isExpanded && (
