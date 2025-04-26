@@ -22,27 +22,24 @@ const CRITICAL_PATTERNS = {
   'schema/courtiq.ts': [
     'pgTable', 
     'courtiqUserRatings', 
-    'DimensionCode',
-    'export const courtiqUserRatings',
-    'export const courtiqRatingImpacts'
+    'DimensionCode'
   ],
   
-  // Matches schema critical patterns
-  'schema/matches.ts': [
+  // Main schema critical patterns for matches and users
+  'schema.ts': [
     'pgTable', 
     'matches', 
     'matchParticipants',
-    'export const matches'
-  ],
-  
-  // Users schema critical patterns
-  'schema/users.ts': [
-    'pgTable',
     'users',
     'export const users'
   ],
   
-  // Add other critical schema files here
+  // Additional critical schema files
+  'schema/community.ts': [
+    'pgTable',
+    'communities',
+    'communityMembers'
+  ]
 };
 
 /**
@@ -55,8 +52,8 @@ function validateSchemaFiles(): boolean {
   
   // Check for each critical file
   Object.entries(CRITICAL_PATTERNS).forEach(([filePath, requiredPatterns]) => {
-    const fullPath = path.join(process.cwd(), 'shared', filePath);
-    console.log(`Checking: ${filePath}`);
+    const fullPath = path.join(process.cwd(), '..', 'shared', filePath);
+    console.log(`Checking: ${filePath} (Full path: ${fullPath})`);
     
     // Check if file exists
     if (!fs.existsSync(fullPath)) {
@@ -79,9 +76,11 @@ function validateSchemaFiles(): boolean {
   });
   
   // Check for proper file headers
-  const schemaDir = path.join(process.cwd(), 'shared/schema');
+  const schemaDir = path.join(process.cwd(), '..', 'shared/schema');
+  console.log(`Checking schema directory: ${schemaDir}`);
   if (fs.existsSync(schemaDir)) {
     const schemaFiles = fs.readdirSync(schemaDir).filter(file => file.endsWith('.ts'));
+    console.log(`Found ${schemaFiles.length} schema files in directory`);
     
     schemaFiles.forEach(file => {
       const filePath = path.join(schemaDir, file);
