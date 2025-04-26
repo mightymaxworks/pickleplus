@@ -97,14 +97,28 @@ export function OptimizedProfileTabs({
         return <ProfileDetailsSection user={user} />;
         
       case "statistics":
-        return calculatedMetrics ? (
-          <ProfileStatisticsSection 
-            user={user} 
-            calculatedMetrics={calculatedMetrics} 
-          />
-        ) : (
-          <LoadingSection />
-        );
+        // Ensure calculatedMetrics is available and initialized
+        if (!calculatedMetrics) {
+          return <LoadingSection />;
+        }
+        
+        try {
+          return (
+            <ProfileStatisticsSection 
+              user={user} 
+              calculatedMetrics={calculatedMetrics} 
+            />
+          );
+        } catch (error) {
+          console.error("Error rendering statistics section:", error);
+          return (
+            <div className="col-span-12 p-6 text-center">
+              <p className="text-muted-foreground">
+                There was an error loading your statistics. Please try again.
+              </p>
+            </div>
+          );
+        }
         
       case "equipment":
         return <ProfileEquipmentSection user={user} />;
