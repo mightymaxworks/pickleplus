@@ -80,92 +80,106 @@ export function DerivedDataProvider({ children }: { children: React.ReactNode })
   const [calculationService] = useState(() => new DataCalculationService());
   const [calculatedMetrics, setCalculatedMetrics] = useState<CalculatedUserMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Use a ref to track if calculation is in progress to prevent infinite loops
+  const isCalculatingRef = useRef(false);
 
   // Calculate metrics when user data changes
   useEffect(() => {
     let isMounted = true;
     
-    if (user) {
-      setIsLoading(true);
+    // Use the ref to prevent infinite loops
+    if (isCalculatingRef.current) {
+      return;
+    }
+    
+    if (!user) {
+      setCalculatedMetrics(null);
+      setIsLoading(false);
+      return;
+    }
+    
+    // Mark that we're starting a calculation cycle
+    isCalculatingRef.current = true;
+    setIsLoading(true);
+    
+    // Safe type assertion to work around TypeScript limitations
+    const safeUser = user as any;
+    
+    // Use setTimeout to break the render cycle and avoid infinite loops
+    setTimeout(() => {
+      if (!isMounted) return;
       
-      // Safe type assertion to work around TypeScript limitations
-      // This is necessary because the actual user object from auth might have 
-      // fields that TypeScript doesn't know about at compile time
-      const safeUser = user as any;
-      
-      // Create a properly formatted EnhancedUser object
-      // This is a workaround for TypeScript errors since the user object from auth
-      // doesn't exactly match the EnhancedUser interface
-      const formattedUser: EnhancedUser = {
-        // Required base properties
-        id: user.id || 0,
-        username: user.username || '',
-        password: user.password || '',
-        avatarInitials: user.avatarInitials || '',
-        level: user.level || 1,
-        xp: user.xp || 0,
-        totalMatches: user.totalMatches || 0,
-        matchesWon: user.matchesWon || 0,
-        totalTournaments: user.totalTournaments || 0,
-        profileCompletionPct: user.profileCompletionPct || 0,
-        rankingPoints: user.rankingPoints || 0,
-        achievements: Array.isArray(user.achievements) ? user.achievements : [],
-        
-        // Optional properties with safe defaults
-        email: user.email || null,
-        displayName: user.displayName || null,
-        avatarUrl: user.avatarUrl || null,
-        bio: user.bio || null,
-        location: user.location || null,
-        yearOfBirth: user.yearOfBirth || null,
-        
-        // Boolean properties with nullish coalescing for proper default
-        isAdmin: typeof user.isAdmin === 'boolean' ? user.isAdmin : false,
-        isCoach: typeof user.isCoach === 'boolean' ? user.isCoach : false,
-        isVerified: typeof user.isVerified === 'boolean' ? user.isVerified : false,
-        
-        // Other properties with proper types
-        passportId: user.passportId || null,
-        matchesLost: typeof user.matchesLost === 'number' ? user.matchesLost : undefined,
-        createdAt: user.createdAt ? user.createdAt : undefined,
-        lastUpdated: user.lastUpdated ? user.lastUpdated : undefined,
-        lastVisit: user.lastVisit ? user.lastVisit : undefined,
-        paddleBrand: typeof user.paddleBrand === 'string' ? user.paddleBrand : undefined,
-        paddleModel: typeof user.paddleModel === 'string' ? user.paddleModel : undefined,
-        
-        // All other fields default to undefined
-        backupPaddleBrand: undefined,
-        backupPaddleModel: undefined,
-        otherEquipment: undefined,
-        preferredPosition: undefined,
-        forehandStrength: undefined,
-        backhandStrength: undefined,
-        servePower: undefined,
-        dinkAccuracy: undefined,
-        thirdShotConsistency: undefined,
-        courtCoverage: undefined,
-        preferredSurface: undefined,
-        indoorOutdoorPreference: undefined,
-        height: undefined,
-        reach: undefined,
-        competitiveIntensity: undefined,
-        mentorshipInterest: undefined,
-        homeCourtLocations: undefined,
-        travelRadiusKm: undefined,
-        playerGoals: undefined,
-        lookingForPartners: undefined,
-        duprRating: undefined,
-        utprRating: undefined,
-        wprRating: undefined,
-        externalRatingsVerified: undefined,
-        privacyProfile: undefined
-      };
-      
-      // Run calculation outside of React's rendering cycle to prevent loops
       try {
+        // Create a properly formatted EnhancedUser object
+        const formattedUser: EnhancedUser = {
+          // Required base properties
+          id: safeUser.id || 0,
+          username: safeUser.username || '',
+          password: safeUser.password || '',
+          avatarInitials: safeUser.avatarInitials || '',
+          level: safeUser.level || 1,
+          xp: safeUser.xp || 0,
+          totalMatches: safeUser.totalMatches || 0,
+          matchesWon: safeUser.matchesWon || 0,
+          totalTournaments: safeUser.totalTournaments || 0,
+          profileCompletionPct: safeUser.profileCompletionPct || 0,
+          rankingPoints: safeUser.rankingPoints || 0,
+          achievements: Array.isArray(safeUser.achievements) ? safeUser.achievements : [],
+          
+          // Optional properties with safe defaults
+          email: safeUser.email || null,
+          displayName: safeUser.displayName || null,
+          avatarUrl: safeUser.avatarUrl || null,
+          bio: safeUser.bio || null,
+          location: safeUser.location || null,
+          yearOfBirth: safeUser.yearOfBirth || null,
+          
+          // Boolean properties with nullish coalescing for proper default
+          isAdmin: typeof safeUser.isAdmin === 'boolean' ? safeUser.isAdmin : false,
+          isCoach: typeof safeUser.isCoach === 'boolean' ? safeUser.isCoach : false,
+          isVerified: typeof safeUser.isVerified === 'boolean' ? safeUser.isVerified : false,
+          
+          // Other properties with proper types
+          passportId: safeUser.passportId || null,
+          matchesLost: typeof safeUser.matchesLost === 'number' ? safeUser.matchesLost : undefined,
+          createdAt: safeUser.createdAt ? safeUser.createdAt : undefined,
+          lastUpdated: safeUser.lastUpdated ? safeUser.lastUpdated : undefined,
+          lastVisit: safeUser.lastVisit ? safeUser.lastVisit : undefined,
+          paddleBrand: typeof safeUser.paddleBrand === 'string' ? safeUser.paddleBrand : undefined,
+          paddleModel: typeof safeUser.paddleModel === 'string' ? safeUser.paddleModel : undefined,
+          
+          // All other fields default to undefined
+          backupPaddleBrand: undefined,
+          backupPaddleModel: undefined,
+          otherEquipment: undefined,
+          preferredPosition: undefined,
+          forehandStrength: undefined,
+          backhandStrength: undefined,
+          servePower: undefined,
+          dinkAccuracy: undefined,
+          thirdShotConsistency: undefined,
+          courtCoverage: undefined,
+          preferredSurface: undefined,
+          indoorOutdoorPreference: undefined,
+          height: undefined,
+          reach: undefined,
+          competitiveIntensity: undefined,
+          mentorshipInterest: undefined,
+          homeCourtLocations: undefined,
+          travelRadiusKm: undefined,
+          playerGoals: undefined,
+          lookingForPartners: undefined,
+          duprRating: undefined,
+          utprRating: undefined,
+          wprRating: undefined,
+          externalRatingsVerified: undefined,
+          privacyProfile: undefined
+        };
+        
+        // Calculate metrics
         const metrics = calculationService.calculateUserMetrics(formattedUser);
         
-        // Only update state if the component is still mounted
         if (isMounted) {
           setCalculatedMetrics(metrics);
           setIsLoading(false);
@@ -176,11 +190,11 @@ export function DerivedDataProvider({ children }: { children: React.ReactNode })
           setCalculatedMetrics(DEFAULT_METRICS);
           setIsLoading(false);
         }
+      } finally {
+        // Reset the flag to allow future calculations
+        isCalculatingRef.current = false;
       }
-    } else {
-      setCalculatedMetrics(null);
-      setIsLoading(false);
-    }
+    }, 0);
     
     // Cleanup function to prevent updates if component unmounts during calculation
     return () => {
@@ -188,105 +202,132 @@ export function DerivedDataProvider({ children }: { children: React.ReactNode })
     };
   }, [user, calculationService]);
 
-  // Function to trigger recalculation (now with safe handling)
+  // Function to calculate metrics from provided user data
   const calculateAndUpdateMetrics = (userData: EnhancedUser) => {
+    // Prevent multiple calculations from running simultaneously
+    if (isCalculatingRef.current) {
+      console.log("Calculation already in progress, skipping calculateAndUpdateMetrics request");
+      return;
+    }
+    
+    // Mark that we're starting a calculation
+    isCalculatingRef.current = true;
     setIsLoading(true);
     
-    try {
-      const metrics = calculationService.calculateUserMetrics(userData);
-      setCalculatedMetrics(metrics);
-    } catch (error) {
-      console.error("Error calculating user metrics:", error);
-      setCalculatedMetrics(DEFAULT_METRICS);
-    } finally {
-      setIsLoading(false);
-    }
+    // Use setTimeout to break potential render cycle
+    setTimeout(() => {
+      try {
+        const metrics = calculationService.calculateUserMetrics(userData);
+        setCalculatedMetrics(metrics);
+      } catch (error) {
+        console.error("Error calculating user metrics in calculateAndUpdateMetrics:", error);
+        setCalculatedMetrics(DEFAULT_METRICS);
+      } finally {
+        setIsLoading(false);
+        isCalculatingRef.current = false;
+      }
+    }, 0);
   };
 
-  // Function to trigger recalculation
+  // Function to trigger manual recalculation
   const updateCalculations = () => {
-    if (user) {
-      setIsLoading(true);
-      
-      // Safe type assertion just like in the useEffect
-      const safeUser = user as any;
-      
-      // Create a properly formatted EnhancedUser object (same approach as in useEffect)
-      const formattedUser: EnhancedUser = {
-        // Required base properties
-        id: user.id || 0,
-        username: user.username || '',
-        password: user.password || '',
-        avatarInitials: user.avatarInitials || '',
-        level: user.level || 1,
-        xp: user.xp || 0,
-        totalMatches: user.totalMatches || 0,
-        matchesWon: user.matchesWon || 0,
-        totalTournaments: user.totalTournaments || 0,
-        profileCompletionPct: user.profileCompletionPct || 0,
-        rankingPoints: user.rankingPoints || 0,
-        achievements: Array.isArray(user.achievements) ? user.achievements : [],
-        
-        // Optional properties with safe defaults
-        email: user.email || null,
-        displayName: user.displayName || null,
-        avatarUrl: user.avatarUrl || null,
-        bio: user.bio || null,
-        location: user.location || null,
-        yearOfBirth: user.yearOfBirth || null,
-        
-        // Boolean properties with nullish coalescing for proper default
-        isAdmin: typeof user.isAdmin === 'boolean' ? user.isAdmin : false,
-        isCoach: typeof user.isCoach === 'boolean' ? user.isCoach : false,
-        isVerified: typeof user.isVerified === 'boolean' ? user.isVerified : false,
-        
-        // Other properties with proper types
-        passportId: user.passportId || null,
-        matchesLost: typeof user.matchesLost === 'number' ? user.matchesLost : undefined,
-        createdAt: user.createdAt ? user.createdAt : undefined,
-        lastUpdated: user.lastUpdated ? user.lastUpdated : undefined,
-        lastVisit: user.lastVisit ? user.lastVisit : undefined,
-        paddleBrand: typeof user.paddleBrand === 'string' ? user.paddleBrand : undefined,
-        paddleModel: typeof user.paddleModel === 'string' ? user.paddleModel : undefined,
-        
-        // All other fields default to undefined
-        backupPaddleBrand: undefined,
-        backupPaddleModel: undefined,
-        otherEquipment: undefined,
-        preferredPosition: undefined,
-        forehandStrength: undefined,
-        backhandStrength: undefined,
-        servePower: undefined,
-        dinkAccuracy: undefined,
-        thirdShotConsistency: undefined,
-        courtCoverage: undefined,
-        preferredSurface: undefined,
-        indoorOutdoorPreference: undefined,
-        height: undefined,
-        reach: undefined,
-        competitiveIntensity: undefined,
-        mentorshipInterest: undefined,
-        homeCourtLocations: undefined,
-        travelRadiusKm: undefined,
-        playerGoals: undefined,
-        lookingForPartners: undefined,
-        duprRating: undefined,
-        utprRating: undefined,
-        wprRating: undefined,
-        externalRatingsVerified: undefined,
-        privacyProfile: undefined
-      };
-      
+    // Prevent multiple calculations from running simultaneously
+    if (isCalculatingRef.current) {
+      console.log("Calculation already in progress, skipping updateCalculations request");
+      return;
+    }
+    
+    if (!user) {
+      return;
+    }
+    
+    // Mark that we're starting a calculation
+    isCalculatingRef.current = true;
+    setIsLoading(true);
+    
+    // Use setTimeout to break potential render cycle
+    setTimeout(() => {
       try {
+        // Safe type assertion to work around TypeScript limitations
+        const safeUser = user as any;
+        
+        // Create a properly formatted EnhancedUser object
+        const formattedUser: EnhancedUser = {
+          // Required base properties
+          id: safeUser.id || 0,
+          username: safeUser.username || '',
+          password: safeUser.password || '',
+          avatarInitials: safeUser.avatarInitials || '',
+          level: safeUser.level || 1,
+          xp: safeUser.xp || 0,
+          totalMatches: safeUser.totalMatches || 0,
+          matchesWon: safeUser.matchesWon || 0,
+          totalTournaments: safeUser.totalTournaments || 0,
+          profileCompletionPct: safeUser.profileCompletionPct || 0,
+          rankingPoints: safeUser.rankingPoints || 0,
+          achievements: Array.isArray(safeUser.achievements) ? safeUser.achievements : [],
+          
+          // Optional properties with safe defaults
+          email: safeUser.email || null,
+          displayName: safeUser.displayName || null,
+          avatarUrl: safeUser.avatarUrl || null,
+          bio: safeUser.bio || null,
+          location: safeUser.location || null,
+          yearOfBirth: safeUser.yearOfBirth || null,
+          
+          // Boolean properties with nullish coalescing for proper default
+          isAdmin: typeof safeUser.isAdmin === 'boolean' ? safeUser.isAdmin : false,
+          isCoach: typeof safeUser.isCoach === 'boolean' ? safeUser.isCoach : false,
+          isVerified: typeof safeUser.isVerified === 'boolean' ? safeUser.isVerified : false,
+          
+          // Other properties with proper types
+          passportId: safeUser.passportId || null,
+          matchesLost: typeof safeUser.matchesLost === 'number' ? safeUser.matchesLost : undefined,
+          createdAt: safeUser.createdAt ? safeUser.createdAt : undefined,
+          lastUpdated: safeUser.lastUpdated ? safeUser.lastUpdated : undefined,
+          lastVisit: safeUser.lastVisit ? safeUser.lastVisit : undefined,
+          paddleBrand: typeof safeUser.paddleBrand === 'string' ? safeUser.paddleBrand : undefined,
+          paddleModel: typeof safeUser.paddleModel === 'string' ? safeUser.paddleModel : undefined,
+          
+          // All other fields default to undefined
+          backupPaddleBrand: undefined,
+          backupPaddleModel: undefined,
+          otherEquipment: undefined,
+          preferredPosition: undefined,
+          forehandStrength: undefined,
+          backhandStrength: undefined,
+          servePower: undefined,
+          dinkAccuracy: undefined,
+          thirdShotConsistency: undefined,
+          courtCoverage: undefined,
+          preferredSurface: undefined,
+          indoorOutdoorPreference: undefined,
+          height: undefined,
+          reach: undefined,
+          competitiveIntensity: undefined,
+          mentorshipInterest: undefined,
+          homeCourtLocations: undefined,
+          travelRadiusKm: undefined,
+          playerGoals: undefined,
+          lookingForPartners: undefined,
+          duprRating: undefined,
+          utprRating: undefined,
+          wprRating: undefined,
+          externalRatingsVerified: undefined,
+          privacyProfile: undefined
+        };
+        
+        // Calculate the metrics
         const metrics = calculationService.calculateUserMetrics(formattedUser);
         setCalculatedMetrics(metrics);
-        setIsLoading(false);
       } catch (error) {
-        console.error("Error calculating user metrics:", error);
+        console.error("Error calculating user metrics in updateCalculations:", error);
         setCalculatedMetrics(DEFAULT_METRICS);
+      } finally {
         setIsLoading(false);
+        isCalculatingRef.current = false;
       }
-    }
+    }, 0);
   };
 
   return (
