@@ -61,6 +61,13 @@ export default function DashboardContent() {
    * Calculate the correct XP percentage based on current XP and level thresholds
    * This aligns with the extended level system (100 levels) and provides a smooth progression
    */
+  /**
+   * PKL-278651-XP-0006-EXTEND-FIX - Fixed XP percentage calculation
+   * 
+   * Fixes issue where XP percentage was incorrectly showing 100% even when the user
+   * hadn't reached the next level threshold. Added logging and bounds checking to
+   * ensure proper progression display.
+   */
   const calculateXpPercentage = (xp: number, level: number) => {
     // If no XP, return 0
     if (!xp) return 0;
@@ -138,9 +145,18 @@ export default function DashboardContent() {
     
     // Calculate xp progress percentage
     const totalForLevel = nextLevelXp - currentLevelXp;
-    const currentProgress = xp - currentLevelXp;
     
-    return Math.min(Math.max(0, Math.floor((currentProgress / totalForLevel) * 100)), 100);
+    // Fix for the 100% issue: Ensure the user's XP doesn't exceed the next level threshold
+    // This prevents showing 100% when the user hasn't actually reached the next level
+    const currentProgress = Math.min(xp - currentLevelXp, totalForLevel - 1);
+    
+    // Calculate percentage with bounds checking to never show 100% unless truly at next level
+    const percentage = Math.max(0, Math.min(99, Math.floor((currentProgress / totalForLevel) * 100)));
+    
+    // Additional debugging
+    console.debug(`XP Calculation: level=${level}, xp=${xp}, current=${currentLevelXp}, next=${nextLevelXp}, progress=${currentProgress}/${totalForLevel}, percentage=${percentage}%`);
+    
+    return percentage;
   };
   
   const xpPercentage = calculateXpPercentage(user.xp || 0, user.level || 1);
