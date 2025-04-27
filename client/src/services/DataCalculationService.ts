@@ -19,6 +19,20 @@ import { apiRequest } from "@/lib/queryClient";
 export { getLevelInfo, calculateLevel };
 
 // Define the CalculatedUserMetrics interface so it can be imported elsewhere
+// CourtIQ dimension types
+export type CourtIQDimension = "TECH" | "TACT" | "PHYS" | "MENT" | "CONS";
+
+// CourtIQ dimension ratings result
+export interface DimensionRatings {
+  TECH: number;
+  TACT: number;
+  PHYS: number;
+  MENT: number;
+  CONS: number;
+  // The overall aggregate rating
+  overall: number;
+}
+
 export interface CalculatedUserMetrics {
   level: number;
   nextLevelXP: number;
@@ -255,6 +269,101 @@ export function calculateOverallRating(user: EnhancedUser): number {
   return Math.round(rating);
 }
 
+/**
+ * Calculate detailed CourtIQ™ dimension ratings for a user
+ * This breaks down the overall rating into the five dimensions:
+ * Technical, Tactical, Physical, Mental, and Consistency
+ * 
+ * @param user - User data object
+ * @returns Object with ratings for each dimension and overall
+ */
+export function calculateDimensionRatings(user: EnhancedUser): DimensionRatings {
+  if (!user) {
+    // Default empty ratings
+    return {
+      TECH: 2.0,
+      TACT: 2.0,
+      PHYS: 2.0,
+      MENT: 2.0,
+      CONS: 2.0,
+      overall: 1000
+    };
+  }
+  
+  // Use existing CourtIQ ratings if available from the API
+  if (user.courtIQ) {
+    return {
+      TECH: user.courtIQ.technical || 2.0,
+      TACT: user.courtIQ.tactical || 2.0,
+      PHYS: user.courtIQ.physical || 2.0, 
+      MENT: user.courtIQ.mental || 2.0,
+      CONS: user.courtIQ.consistency || 2.0,
+      overall: calculateOverallRating(user)
+    };
+  }
+  
+  // Calculate ratings based on available data if no API ratings
+  // Base all dimensions at 2.0 (beginner level)
+  const baseDimensionRating = 2.0;
+  
+  // Technical: influenced by external ratings and playing experience
+  let technical = baseDimensionRating;
+  if (user.duprRating) {
+    technical = Math.max(technical, user.duprRating * 0.8);
+  }
+  if (user.playingSince) {
+    // Longer experience slightly improves technical rating
+    // Calculate years of experience based on playingSince (e.g., "2023")
+    const currentYear = new Date().getFullYear();
+    const startYear = parseInt(user.playingSince);
+    if (!isNaN(startYear)) {
+      const yearsOfExperience = currentYear - startYear;
+      technical += Math.min(yearsOfExperience * 0.1, 0.5);
+    }
+  }
+  
+  // Tactical: influenced by match win rate and experience
+  let tactical = baseDimensionRating;
+  if (user.totalMatches && user.matchesWon) {
+    const winRate = user.matchesWon / user.totalMatches;
+    tactical += winRate * 2; // Win rate of 50% adds 1.0 to tactical
+  }
+  
+  // Physical: influenced by height, reach, and playing frequency
+  let physical = baseDimensionRating;
+  if (user.height && user.reach) {
+    // Slightly adjust for physical attributes
+    physical += 0.3;
+  }
+  
+  // Mental: influenced by close matches and consistency
+  let mental = baseDimensionRating;
+  if (user.totalMatches && user.totalMatches > 5) {
+    // More matches implies more mental experience
+    mental += 0.5;
+  }
+  
+  // Consistency: influenced by match history and playing frequency
+  let consistency = baseDimensionRating;
+  if (user.playingFrequency === 'daily' || user.playingFrequency === 'several_times_week') {
+    consistency += 0.7;
+  } else if (user.playingFrequency === 'weekly') {
+    consistency += 0.4;
+  }
+  
+  // Cap all ratings between 1.0 and 5.0
+  const capRating = (rating: number): number => Math.min(5.0, Math.max(1.0, rating));
+  
+  return {
+    TECH: capRating(technical),
+    TACT: capRating(tactical),
+    PHYS: capRating(physical),
+    MENT: capRating(mental),
+    CONS: capRating(consistency),
+    overall: calculateOverallRating(user)
+  };
+}
+
 // Export the DataCalculationService class for compatibility with existing code
 // Define this at the end after all functions are defined to avoid reference errors
 export class DataCalculationService {
@@ -265,4 +374,5 @@ export class DataCalculationService {
   static calculateProfileCompletionPercentage = calculateProfileCompletionPercentage;
   static recordProfileFieldCompletion = recordProfileFieldCompletion;
   static calculateOverallRating = calculateOverallRating;
+  static calculateDimensionRatings = calculateDimensionRatings;
 }

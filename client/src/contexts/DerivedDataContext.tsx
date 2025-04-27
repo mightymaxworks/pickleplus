@@ -18,7 +18,8 @@ import {
   calculateCompletionBonus,
   calculateProfileCompletionPercentage,
   recordProfileFieldCompletion,
-  calculateOverallRating
+  calculateOverallRating,
+  calculateDimensionRatings
 } from "@/services/DataCalculationService";
 
 interface DerivedDataContextType {
@@ -29,6 +30,7 @@ interface DerivedDataContextType {
     calculateProfileCompletionPercentage: typeof calculateProfileCompletionPercentage;
     recordProfileFieldCompletion: typeof recordProfileFieldCompletion;
     calculateOverallRating: typeof calculateOverallRating;
+    calculateDimensionRatings: typeof calculateDimensionRatings;
   };
   calculatedMetrics: CalculatedUserMetrics | null;
   updateCalculations: () => void;
@@ -59,7 +61,8 @@ const calculationService = {
   calculateCompletionBonus,
   calculateProfileCompletionPercentage,
   recordProfileFieldCompletion,
-  calculateOverallRating
+  calculateOverallRating,
+  calculateDimensionRatings
 };
 
 // EMERGENCY FIX: Static context to prevent infinite loops
