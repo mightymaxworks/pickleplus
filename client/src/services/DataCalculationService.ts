@@ -18,6 +18,16 @@ import { apiRequest } from "@/lib/queryClient";
 // Re-export level calculation functions for convenience
 export { getLevelInfo, calculateLevel };
 
+// Export the DataCalculationService class for compatibility with existing code
+export class DataCalculationService {
+  // Static methods that mirror the exported functions
+  static calculateProfileFieldXp = calculateProfileFieldXp;
+  static calculateTotalPotentialProfileXp = calculateTotalPotentialProfileXp;
+  static calculateCompletionBonus = calculateCompletionBonus;
+  static calculateProfileCompletionPercentage = calculateProfileCompletionPercentage;
+  static recordProfileFieldCompletion = recordProfileFieldCompletion;
+}
+
 interface ProfileFieldXpMap {
   [key: string]: number;
 }
