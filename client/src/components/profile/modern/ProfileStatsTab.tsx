@@ -4,13 +4,14 @@
  * Statistics tab for the modern profile page, showing performance metrics and visualizations.
  * 
  * @framework Framework5.3
- * @version 1.0.0
- * @lastUpdated 2025-04-26
+ * @version 1.1.0
+ * @lastUpdated 2025-04-27
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EnhancedUser } from "@/types/enhanced-user";
 import { useDerivedData } from "@/contexts/DerivedDataContext";
 import CourtIQRadarChart from "./CourtIQRadarChart";
@@ -18,6 +19,8 @@ import PerformanceMetricsCard from "./PerformanceMetricsCard";
 import RankingCard from "./RankingCard";
 import SkillDistributionChart from "./SkillDistributionChart";
 import XPProgressDisplay from "./XPProgressDisplay";
+import { RatingConverter } from "../RatingConverter";
+import { ExternalRatingsSection } from "../ExternalRatingsSection";
 
 /**
  * Helper function to calculate rating tier from score
@@ -140,57 +143,82 @@ export default function ProfileStatsTab({
         </motion.div>
       </div>
       
-      {/* External Ratings */}
+      {/* External Ratings Section with Tabs */}
       <motion.div variants={itemVariants}>
         <Card>
           <CardHeader>
-            <CardTitle>External Rating Systems</CardTitle>
+            <CardTitle>Rating Systems</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* DUPR Rating */}
-              <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="text-sm text-muted-foreground mb-1">DUPR</div>
-                <div className="text-2xl font-bold">
-                  {typeof user.duprRating === 'number' ? 
-                    user.duprRating.toFixed(2) : 
-                    <span className="text-sm text-muted-foreground">Not set</span>
-                  }
-                </div>
-              </div>
+            <Tabs defaultValue="ratings" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="ratings">Your Ratings</TabsTrigger>
+                <TabsTrigger value="converter">Rating Converter</TabsTrigger>
+                <TabsTrigger value="manage">Manage Ratings</TabsTrigger>
+              </TabsList>
               
-              {/* UTPR Rating */}
-              <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="text-sm text-muted-foreground mb-1">UTPR</div>
-                <div className="text-2xl font-bold">
-                  {typeof user.utprRating === 'number' ? 
-                    user.utprRating.toFixed(1) : 
-                    <span className="text-sm text-muted-foreground">Not set</span>
-                  }
+              {/* Tab 1: Current Ratings Display */}
+              <TabsContent value="ratings" className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* DUPR Rating */}
+                  <div className="p-4 rounded-lg bg-muted/50 text-center">
+                    <div className="text-sm text-muted-foreground mb-1">DUPR</div>
+                    <div className="text-2xl font-bold">
+                      {typeof user.duprRating === 'number' ? 
+                        user.duprRating.toFixed(2) : 
+                        <span className="text-sm text-muted-foreground">Not set</span>
+                      }
+                    </div>
+                  </div>
+                  
+                  {/* UTPR Rating */}
+                  <div className="p-4 rounded-lg bg-muted/50 text-center">
+                    <div className="text-sm text-muted-foreground mb-1">UTPR</div>
+                    <div className="text-2xl font-bold">
+                      {typeof user.utprRating === 'number' ? 
+                        user.utprRating.toFixed(1) : 
+                        <span className="text-sm text-muted-foreground">Not set</span>
+                      }
+                    </div>
+                  </div>
+                  
+                  {/* WPR Rating */}
+                  <div className="p-4 rounded-lg bg-muted/50 text-center">
+                    <div className="text-sm text-muted-foreground mb-1">WPR</div>
+                    <div className="text-2xl font-bold">
+                      {typeof user.wprRating === 'number' ? 
+                        user.wprRating.toFixed(1) : 
+                        <span className="text-sm text-muted-foreground">Not set</span>
+                      }
+                    </div>
+                  </div>
                 </div>
-              </div>
+                
+                {user.externalRatingsVerified ? (
+                  <div className="text-center text-xs text-muted-foreground bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 p-2 rounded-md">
+                    External ratings verified ✓
+                  </div>
+                ) : (
+                  <div className="text-center text-xs text-muted-foreground">
+                    External ratings are self-reported and pending verification
+                  </div>
+                )}
+              </TabsContent>
               
-              {/* WPR Rating */}
-              <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="text-sm text-muted-foreground mb-1">WPR</div>
-                <div className="text-2xl font-bold">
-                  {typeof user.wprRating === 'number' ? 
-                    user.wprRating.toFixed(1) : 
-                    <span className="text-sm text-muted-foreground">Not set</span>
-                  }
-                </div>
-              </div>
-            </div>
-            
-            {user.externalRatingsVerified ? (
-              <div className="mt-4 text-center text-xs text-muted-foreground bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 p-2 rounded-md">
-                External ratings verified ✓
-              </div>
-            ) : (
-              <div className="mt-4 text-center text-xs text-muted-foreground">
-                External ratings are self-reported and not verified
-              </div>
-            )}
+              {/* Tab 2: Rating Converter Tool */}
+              <TabsContent value="converter">
+                <RatingConverter />
+              </TabsContent>
+              
+              {/* Tab 3: Manage External Ratings */}
+              <TabsContent value="manage">
+                <ExternalRatingsSection 
+                  user={user} 
+                  isEditable={true} 
+                  isCurrentUser={true} 
+                />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </motion.div>

@@ -2045,8 +2045,25 @@ export class DatabaseStorage implements IStorage {
           return currentUser;
         }
         
+        // Fix for the SQL syntax error - make sure eq is imported
+        const { eq } = await import('drizzle-orm');
+        
+        // Improved error handling and logging
+        console.log(`[Storage] Executing update for user ID ${numericId} with fields:`, Object.keys(profileData));
+        
+        // Ensure we're only updating valid fields that exist in the schema
+        const validProfileData: Record<string, any> = {};
+        Object.entries(profileData).forEach(([key, value]) => {
+          // Skip any fields that aren't recognized columns
+          if (users[key] !== undefined) {
+            validProfileData[key] = value;
+          } else {
+            console.log(`[Storage] Skipping field '${key}' as it's not in the schema`);
+          }
+        });
+        
         const [result] = await db.update(users)
-          .set(profileData)
+          .set(validProfileData)
           .where(eq(users.id, numericId))
           .returning();
         
