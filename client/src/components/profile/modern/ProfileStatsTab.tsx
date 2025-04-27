@@ -152,7 +152,7 @@ export default function ProfileStatsTab({
               <div className="p-4 rounded-lg bg-muted/50 text-center">
                 <div className="text-sm text-muted-foreground mb-1">DUPR</div>
                 <div className="text-2xl font-bold">
-                  {user.duprRating ? 
+                  {typeof user.duprRating === 'number' ? 
                     user.duprRating.toFixed(2) : 
                     <span className="text-sm text-muted-foreground">Not set</span>
                   }
@@ -163,7 +163,7 @@ export default function ProfileStatsTab({
               <div className="p-4 rounded-lg bg-muted/50 text-center">
                 <div className="text-sm text-muted-foreground mb-1">UTPR</div>
                 <div className="text-2xl font-bold">
-                  {user.utprRating ? 
+                  {typeof user.utprRating === 'number' ? 
                     user.utprRating.toFixed(1) : 
                     <span className="text-sm text-muted-foreground">Not set</span>
                   }
@@ -174,7 +174,7 @@ export default function ProfileStatsTab({
               <div className="p-4 rounded-lg bg-muted/50 text-center">
                 <div className="text-sm text-muted-foreground mb-1">WPR</div>
                 <div className="text-2xl font-bold">
-                  {user.wprRating ? 
+                  {typeof user.wprRating === 'number' ? 
                     user.wprRating.toFixed(1) : 
                     <span className="text-sm text-muted-foreground">Not set</span>
                   }
