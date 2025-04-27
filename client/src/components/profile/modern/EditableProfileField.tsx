@@ -250,7 +250,7 @@ export default function EditableProfileField({
           />
         ) : (
           <div 
-            className={`min-h-[1.5rem] py-0.5 ${editable && 'cursor-pointer'}`}
+            className={`min-h-[1.5rem] py-0.5 ${editable ? 'cursor-pointer hover:bg-muted/40 rounded px-1 transition-colors' : ''}`}
             onClick={editable ? handleEditClick : undefined}
           >
             {currentValue || (editable ? (

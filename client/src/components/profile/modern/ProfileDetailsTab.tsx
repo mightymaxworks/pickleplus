@@ -122,7 +122,7 @@ export default function ProfileDetailsTab({
                             />
                           </div>
                         ) : (
-                          <span className="text-sm">
+                          <span className="text-sm cursor-pointer">
                             {user.firstName && user.lastName 
                               ? `${user.firstName} ${user.lastName}`
                               : user.firstName || user.lastName || 

@@ -35,10 +35,14 @@ export default function PlayerComparisonTool({ currentUser }: PlayerComparisonTo
   
   // Search for players
   const { data: searchResults, isLoading: isSearching } = useQuery({
-    queryKey: ["/api/users/search", searchQuery],
+    queryKey: ["/api/player/search", searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
-      const res = await apiRequest("GET", `/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+      const res = await apiRequest("GET", `/api/player/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!res.ok) {
+        console.error("Error searching for players:", res.statusText);
+        return [];
+      }
       const data = await res.json();
       return data.filter((user: EnhancedUser) => user.id !== currentUser.id); // Filter out current user
     },
