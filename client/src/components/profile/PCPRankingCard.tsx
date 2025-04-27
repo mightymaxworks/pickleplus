@@ -52,7 +52,7 @@ export const PCPRankingCard: React.FC<PCPRankingCardProps> = ({
           </Badge>
         </div>
         <CardDescription className="text-white/90">
-          Pickle Community Points
+          PCP Ranking Points
         </CardDescription>
       </CardHeader>
       

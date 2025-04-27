@@ -84,7 +84,7 @@ export default function RankingCard({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Pickle Community Points</CardTitle>
+        <CardTitle>PCP Ranking Points</CardTitle>
         <CardDescription>PCP Ranking & Progress</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
