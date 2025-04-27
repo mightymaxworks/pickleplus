@@ -42,8 +42,8 @@ const ratingSystemsInfo: Record<string, RatingSystemInfo> = {
     code: RATING_SYSTEMS.COURTIQ,
     name: 'CourtIQ™',
     description: 'Pickle+ internal rating system',
-    range: '1000-2500',
-    placeholderValue: '1500'
+    range: '1000-5000',
+    placeholderValue: '3000'
   },
   [RATING_SYSTEMS.DUPR]: {
     code: RATING_SYSTEMS.DUPR,
