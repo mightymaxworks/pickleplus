@@ -1984,11 +1984,42 @@ export class DatabaseStorage implements IStorage {
       // Log received data
       console.log(`[Storage] updateUserProfile - Original data:`, JSON.stringify(profileData, null, 2));
       
-      // Note: The route has already mapped firstName to first_name and lastName to last_name
+      // Convert camelCase field names to snake_case for the database
+      const updatedProfileData: Record<string, any> = {};
+      
+      for (const [key, value] of Object.entries(profileData)) {
+        // Skip CSRF token and other non-database fields
+        if (key === '_csrf') continue;
+        
+        // Convert camelCase to snake_case
+        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        updatedProfileData[snakeKey] = value;
+      }
+      
       // External ratings handling
       if ('duprRating' in profileData || 'utprRating' in profileData || 'wprRating' in profileData) {
-        profileData.last_external_rating_update = new Date();
+        updatedProfileData.last_external_rating_update = new Date();
       }
+      
+      // Add additional fields explicitly that need to be in the database
+      if ('shoesModel' in profileData) {
+        updatedProfileData.shoes_model = profileData.shoesModel;
+      }
+      if ('playingFrequency' in profileData) {
+        updatedProfileData.playing_frequency = profileData.playingFrequency;
+      }
+      if ('preferredPlayingTime' in profileData) {
+        updatedProfileData.preferred_playing_time = profileData.preferredPlayingTime;
+      }
+      if ('preferredVenue' in profileData) {
+        updatedProfileData.preferred_venue = profileData.preferredVenue;
+      }
+      if ('bio' in profileData) {
+        updatedProfileData.bio = profileData.bio;
+      }
+      
+      // Replace original profileData with the converted one
+      profileData = updatedProfileData;
       
       console.log(`[Storage] updateUserProfile - Processing data:`, JSON.stringify(profileData, null, 2));
       
@@ -2033,11 +2064,14 @@ export class DatabaseStorage implements IStorage {
         }
         
         // Map back from database column names to camelCase for frontend use
-        if ('first_name' in updatedUser) {
-          (updatedUser as any).firstName = updatedUser.first_name;
-        }
-        if ('last_name' in updatedUser) {
-          (updatedUser as any).lastName = updatedUser.last_name;
+        // Convert all snake_case fields to camelCase
+        for (const key in updatedUser) {
+          if (key.includes('_')) {
+            const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+            if (camelKey !== key) {
+              (updatedUser as any)[camelKey] = (updatedUser as any)[key];
+            }
+          }
         }
       }
       
@@ -2061,11 +2095,14 @@ export class DatabaseStorage implements IStorage {
           }
           
           // Map back from database column names to camelCase for frontend use
-          if ('first_name' in finalUser) {
-            (finalUser as any).firstName = finalUser.first_name;
-          }
-          if ('last_name' in finalUser) {
-            (finalUser as any).lastName = finalUser.last_name;
+          // Convert all snake_case fields to camelCase
+          for (const key in finalUser) {
+            if (key.includes('_')) {
+              const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+              if (camelKey !== key) {
+                (finalUser as any)[camelKey] = (finalUser as any)[key];
+              }
+            }
           }
         }
         
