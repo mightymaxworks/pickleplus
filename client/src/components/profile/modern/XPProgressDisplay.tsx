@@ -1,11 +1,14 @@
 /**
- * PKL-278651-PROF-0020-COMP - XP Progress Display
+ * PKL-278651-PROF-0025-XP - XP Progress Display
  * 
- * An animated component showing user XP progress and level information.
+ * This component visualizes the user's XP and level progression
+ * with animated progress bars and level-up effects.
+ * 
+ * Part of Sprint 4 - Engagement & Discovery
  * 
  * @framework Framework5.3
  * @version 1.0.0
- * @lastUpdated 2025-04-26
+ * @lastUpdated 2025-04-27
  */
 
 import { useState, useEffect } from "react";
@@ -15,198 +18,266 @@ import {
   CardContent, 
   CardHeader, 
   CardTitle, 
-  CardDescription, 
-  CardFooter 
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Award, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Trophy, Zap, Info, ArrowRight } from "lucide-react";
 import { EnhancedUser } from "@/types/enhanced-user";
-import { getLevelInfo } from "@/lib/calculateLevel";
+import { calculateLevel, getLevelInfo } from "@/lib/calculateLevel";
 
 interface XPProgressDisplayProps {
   user: EnhancedUser;
   className?: string;
+  onViewAchievements?: () => void;
 }
 
 export default function XPProgressDisplay({
   user,
-  className = ""
+  className = "",
+  onViewAchievements
 }: XPProgressDisplayProps) {
-  // Get level info from XP
-  const { level, nextLevelXP, xpProgressPercentage } = getLevelInfo(user.xp);
+  const [isLevelingUp, setIsLevelingUp] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [prevXp, setPrevXp] = useState(user.xp || 0);
   
-  // State for animated progress
-  const [progress, setProgress] = useState(0);
-  const [currentXP, setCurrentXP] = useState(0);
-  const [levelChanged, setLevelChanged] = useState(false);
+  // Calculate level information
+  const { level, xpForNextLevel, currentLevelXp, xpProgress } = getLevelInfo(user.xp || 0);
   
-  // Check if displayed level is different from user level
+  // XP needed to reach next level
+  const xpNeeded = xpForNextLevel - currentLevelXp;
+  const xpInCurrentLevel = (user.xp || 0) - currentLevelXp;
+  const progressPercentage = (xpInCurrentLevel / xpNeeded) * 100;
+  
+  // Check if user has leveled up
   useEffect(() => {
-    if (level !== user.level) {
-      setLevelChanged(true);
+    const currentUserXp = user.xp || 0;
+    const currentLevel = calculateLevel(currentUserXp);
+    const previousLevel = calculateLevel(prevXp);
+    
+    // Level up detected
+    if (currentLevel > previousLevel) {
+      setIsLevelingUp(true);
+      setShowConfetti(true);
       
-      // Reset after animation completes
+      // Reset after animation
       const timer = setTimeout(() => {
-        setLevelChanged(false);
+        setIsLevelingUp(false);
+        setShowConfetti(false);
       }, 3000);
       
       return () => clearTimeout(timer);
     }
-  }, [level, user.level]);
+    
+    // Update previous XP reference
+    setPrevXp(currentUserXp);
+  }, [user.xp, prevXp]);
   
-  // Animate XP and progress on mount
-  useEffect(() => {
-    // Start from 0 for better animation
-    setProgress(0);
-    setCurrentXP(0);
-    
-    // Animate progress over time
-    const progressDuration = 1500; // ms
-    const progressStartTime = Date.now();
-    
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - progressStartTime;
-      const progressValue = Math.min(elapsed / progressDuration, 1);
-      
-      // Easing function for smoother animation
-      const eased = 1 - Math.pow(1 - progressValue, 3);
-      
-      setProgress(xpProgressPercentage * eased);
-      setCurrentXP(Math.round(user.xp * eased));
-      
-      if (progressValue === 1) {
-        clearInterval(progressInterval);
-      }
-    }, 16);
-    
-    return () => clearInterval(progressInterval);
-  }, [user.xp, xpProgressPercentage]);
-  
-  // Calculate XP needed for next level
-  const xpForNextLevel = nextLevelXP - user.xp;
+  // Recent XP sources (this would come from the API in a real implementation)
+  const recentXpSources = user.recentXpActivities || [
+    { source: 'Profile completion', amount: 10, timestamp: new Date().toISOString() },
+    { source: 'Match victory', amount: 25, timestamp: new Date().toISOString() },
+    { source: 'Daily login', amount: 5, timestamp: new Date().toISOString() }
+  ];
   
   return (
     <Card className={className}>
-      <CardHeader className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 pointer-events-none" />
-        
-        <div className="relative z-10 flex justify-between items-center">
-          <div>
-            <CardTitle>Experience Level</CardTitle>
-            <CardDescription>Your progress and achievements</CardDescription>
-          </div>
-          
-          {/* Level Badge */}
-          <div className="relative">
-            <div className="bg-background border-4 border-primary rounded-full h-16 w-16 flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`level-${level}`}
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 1.5, opacity: 0 }}
-                  className="text-2xl font-bold"
-                >
-                  {level}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            
-            {/* Level Up Indicator */}
-            {levelChanged && (
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 2, opacity: 0 }}
-                className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold px-1 rounded"
-              >
-                +1
-              </motion.div>
-            )}
-          </div>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">Experience & Level</CardTitle>
+          {level >= 10 && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Trophy className="h-3 w-3" />
+              Veteran
+            </Badge>
+          )}
         </div>
+        <CardDescription>Track your progress and achievements</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* XP Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1.5">
-              <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-              <span className="text-sm font-medium">XP Progress</span>
-            </div>
-            <AnimatePresence mode="wait">
+      <CardContent>
+        <AnimatePresence>
+          {isLevelingUp ? (
+            <motion.div
+              key="level-up"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.2 }}
+              className="flex flex-col items-center justify-center py-8"
+            >
               <motion.div
-                key={`xp-${currentXP}`}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm font-bold"
+                animate={{ 
+                  rotate: [0, 10, -10, 10, 0],
+                  scale: [1, 1.2, 1.1, 1.15, 1]
+                }}
+                transition={{ duration: 1.5, repeat: 1 }}
+                className="text-6xl mb-6 text-primary"
               >
-                {currentXP} XP
+                <Sparkles />
               </motion.div>
-            </AnimatePresence>
-          </div>
-          
-          <div className="relative pt-1">
-            <Progress value={progress} className="h-2.5" />
-            
-            {/* XP Markers */}
-            {progress > 0 && (
-              <div className="absolute top-0 left-0 w-full flex justify-between px-1 text-xs -mt-1 pointer-events-none">
-                <div className="text-muted-foreground">{user.xp - (user.xp % 100)}</div>
-                <div className="text-muted-foreground">{nextLevelXP}</div>
+              
+              <motion.h2
+                className="text-2xl font-bold mb-2"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.5, repeat: 3, repeatType: "reverse" }}
+              >
+                Level Up!
+              </motion.h2>
+              
+              <motion.div
+                className="text-4xl font-bold mb-6 text-primary"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {level}
+              </motion.div>
+              
+              <motion.p
+                className="text-center text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+              >
+                Congratulations! You've reached level {level}.<br />
+                New skills and opportunities await.
+              </motion.p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="xp-progress"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="flex justify-between items-baseline mb-2">
+                <div className="flex items-center">
+                  <span className="text-3xl font-bold text-primary">{level}</span>
+                  <ArrowRight className="h-4 w-4 mx-1.5 text-muted-foreground" />
+                  <span className="text-lg text-muted-foreground">{level + 1}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm text-muted-foreground">
+                    {xpInCurrentLevel}/{xpNeeded} XP
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
-          
-          <div className="text-sm text-muted-foreground text-center">
-            {xpForNextLevel} XP needed for Level {level + 1}
-          </div>
-        </div>
-        
-        {/* Rewards and Achievements */}
-        <div className="bg-muted/50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Award className="h-5 w-5 text-primary" />
-            <span className="font-medium">Unlocked Rewards</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {level >= 2 && (
-              <Badge variant="outline" className="bg-background">
-                Skill Assessments
-              </Badge>
-            )}
-            {level >= 3 && (
-              <Badge variant="outline" className="bg-background">
-                Advanced Analytics
-              </Badge>
-            )}
-            {level >= 5 && (
-              <Badge variant="outline" className="bg-background">
-                Custom Training Plans
-              </Badge>
-            )}
-            {level >= 10 && (
-              <Badge variant="outline" className="bg-background">
-                Coach Mode
-              </Badge>
-            )}
-            {level < 2 && (
-              <div className="w-full text-center text-sm text-muted-foreground">
-                Reach Level 2 to unlock rewards!
+              
+              <div className="relative pt-1">
+                <Progress value={progressPercentage} className="h-2" />
+                
+                {/* Level markers */}
+                <div className="w-full flex justify-between items-center mt-1">
+                  <div className="flex flex-col items-center">
+                    <div className="w-1 h-1 bg-primary rounded-full"></div>
+                    <span className="text-xs text-muted-foreground mt-1">{currentLevelXp} XP</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center">
+                    <div className="w-1 h-1 bg-primary rounded-full"></div>
+                    <span className="text-xs text-muted-foreground mt-1">{xpForNextLevel} XP</span>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
+              
+              <div className="mt-8">
+                <h4 className="text-sm font-medium mb-3 flex items-center">
+                  <Zap className="h-4 w-4 mr-1 text-primary" />
+                  Recent XP Activity
+                </h4>
+                
+                <div className="space-y-2">
+                  {recentXpSources.length > 0 ? (
+                    recentXpSources.map((activity, index) => (
+                      <motion.div
+                        key={`${activity.source}-${index}`}
+                        className="flex justify-between items-center p-1.5 rounded hover:bg-muted/50"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <span className="text-sm">{activity.source}</span>
+                        <Badge variant="outline" className="text-primary">
+                          +{activity.amount} XP
+                        </Badge>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-24 text-muted-foreground">
+                      <Info className="h-8 w-8 mb-2 opacity-20" />
+                      <p className="text-sm">No recent XP activity</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mt-4 text-center">
+                <div className="text-sm text-muted-foreground mb-2">
+                  Total: <span className="font-semibold">{user.xp || 0} XP</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
-      <CardFooter className="pt-0">
-        <Button variant="outline" size="sm" className="w-full">
-          <span>View XP History</span>
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </CardFooter>
+      
+      {onViewAchievements && (
+        <CardFooter className="px-6 py-3 border-t flex justify-between">
+          <div className="text-xs text-muted-foreground">
+            Earn XP by completing profile, playing matches, and more!
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs"
+            onClick={onViewAchievements}
+          >
+            <Trophy className="h-3 w-3 mr-1" />
+            View Achievements
+          </Button>
+        </CardFooter>
+      )}
+      
+      {/* Confetti effect on level up */}
+      {showConfetti && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 25 }).map((_, index) => {
+            const size = Math.random() * 10 + 5;
+            const left = Math.random() * 100;
+            const animationDuration = Math.random() * 2 + 1;
+            const delay = Math.random() * 0.5;
+            
+            return (
+              <motion.div
+                key={index}
+                className="absolute w-2 h-2 rounded-full"
+                style={{
+                  left: `${left}%`,
+                  top: '-20px',
+                  width: size,
+                  height: size,
+                  backgroundColor: [
+                    '#FF5722', '#2196F3', '#4CAF50', '#9C27B0', '#FFC107'
+                  ][Math.floor(Math.random() * 5)]
+                }}
+                initial={{ y: -20, opacity: 1 }}
+                animate={{ 
+                  y: ['0%', '100%'], 
+                  x: [`${left}%`, `${left + (Math.random() * 30 - 15)}%`],
+                  opacity: [1, 1, 0],
+                  rotate: [0, 360]
+                }}
+                transition={{
+                  duration: animationDuration,
+                  delay: delay,
+                  ease: 'easeOut'
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
     </Card>
   );
 }
