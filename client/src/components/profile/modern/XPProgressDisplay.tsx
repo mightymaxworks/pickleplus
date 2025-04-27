@@ -44,12 +44,17 @@ export default function XPProgressDisplay({
   const [prevXp, setPrevXp] = useState(user.xp || 0);
   
   // Calculate level information
-  const { level, xpForNextLevel, currentLevelXp, xpProgress } = getLevelInfo(user.xp || 0);
+  const { 
+    level, 
+    nextLevelXP: xpForNextLevel, 
+    currentLevelXP: currentLevelXp, 
+    xpProgressPercentage 
+  } = getLevelInfo(user.xp || 0);
   
   // XP needed to reach next level
   const xpNeeded = xpForNextLevel - currentLevelXp;
   const xpInCurrentLevel = (user.xp || 0) - currentLevelXp;
-  const progressPercentage = (xpInCurrentLevel / xpNeeded) * 100;
+  const progressPercentage = Math.max(0, Math.min(100, xpProgressPercentage));
   
   // Check if user has leveled up
   useEffect(() => {
@@ -76,11 +81,19 @@ export default function XPProgressDisplay({
   }, [user.xp, prevXp]);
   
   // Recent XP sources (this would come from the API in a real implementation)
-  const recentXpSources = user.recentXpActivities || [
+  interface XpActivity {
+    source: string;
+    amount: number;
+    timestamp: string;
+  }
+  
+  const defaultXpSources: XpActivity[] = [
     { source: 'Profile completion', amount: 10, timestamp: new Date().toISOString() },
     { source: 'Match victory', amount: 25, timestamp: new Date().toISOString() },
     { source: 'Daily login', amount: 5, timestamp: new Date().toISOString() }
   ];
+  
+  const recentXpSources = (user as any).recentXpActivities || defaultXpSources;
   
   return (
     <Card className={className}>
@@ -189,7 +202,7 @@ export default function XPProgressDisplay({
                 
                 <div className="space-y-2">
                   {recentXpSources.length > 0 ? (
-                    recentXpSources.map((activity, index) => (
+                    recentXpSources.map((activity: XpActivity, index: number) => (
                       <motion.div
                         key={`${activity.source}-${index}`}
                         className="flex justify-between items-center p-1.5 rounded hover:bg-muted/50"
