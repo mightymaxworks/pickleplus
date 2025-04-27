@@ -20,8 +20,6 @@ import { Eye, EyeOff, Lock, Bell, BellOff } from "lucide-react";
 interface ProfileSettingsTabProps {
   user: EnhancedUser;
   onFieldUpdate: (field: string, value: any) => void;
-  showEditInfo?: boolean;
-  setShowEditInfo?: (show: boolean) => void;
 }
 
 // Animation variants
@@ -47,18 +45,9 @@ const itemVariants = {
 export default function ProfileSettingsTab({
   user,
   onFieldUpdate,
-  showEditInfo: externalShowEditInfo,
-  setShowEditInfo: externalSetShowEditInfo
 }: ProfileSettingsTabProps) {
   // Default privacy settings if not already set
   const privacyProfile = user.privacyProfile || 'public';
-  
-  // Use internal state if external not provided
-  const [internalShowEditInfo, setInternalShowEditInfo] = useState(false);
-  
-  // Use either external or internal state
-  const showEditInfo = externalShowEditInfo !== undefined ? externalShowEditInfo : internalShowEditInfo;
-  const setShowEditInfo = externalSetShowEditInfo || setInternalShowEditInfo;
   
   // Local state for toggle switches
   const [allowMatchRequests, setAllowMatchRequests] = useState<boolean>(true);

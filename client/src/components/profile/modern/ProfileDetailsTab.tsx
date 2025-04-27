@@ -111,7 +111,7 @@ export default function ProfileDetailsTab({
                       value={user.firstName || ""}
                       field="firstName"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="First name"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -154,7 +154,7 @@ export default function ProfileDetailsTab({
                       value={user.location || ""}
                       field="location"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Add your location"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -192,7 +192,7 @@ export default function ProfileDetailsTab({
                           onFieldUpdate(field, numValue);
                         }
                       }}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Add year of birth"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -227,7 +227,7 @@ export default function ProfileDetailsTab({
                       value={user.bio || ""}
                       field="bio"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Tell others about yourself"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -261,14 +261,6 @@ export default function ProfileDetailsTab({
               <Award className="h-5 w-5 text-primary" />
               <span>Equipment Information</span>
             </CardTitle>
-            {isCurrentUser && isMobile && (
-              <div onClick={() => setShowEditInfo(!showEditInfo)} className="cursor-pointer">
-                <Badge variant={showEditInfo ? "secondary" : "outline"} className="flex gap-1 items-center">
-                  <Edit className="h-3 w-3" />
-                  <span>{showEditInfo ? "Exit Edit Mode" : "Edit Info"}</span>
-                </Badge>
-              </div>
-            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -281,7 +273,7 @@ export default function ProfileDetailsTab({
                       value={user.paddleBrand || ""}
                       field="paddleBrand"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -304,7 +296,7 @@ export default function ProfileDetailsTab({
                       value={user.paddleModel || ""}
                       field="paddleModel"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Model"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -331,7 +323,7 @@ export default function ProfileDetailsTab({
                       value={user.backupPaddleBrand || ""}
                       field="backupPaddleBrand"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -354,7 +346,7 @@ export default function ProfileDetailsTab({
                       value={user.backupPaddleModel || ""}
                       field="backupPaddleModel"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser && (!isMobile || showEditInfo)}
+                      editable={isCurrentUser}
                       placeholder="Model"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -383,7 +375,7 @@ export default function ProfileDetailsTab({
                     value={user.shoeBrand || ""}
                     field="shoeBrand"
                     onUpdate={onFieldUpdate}
-                    editable={isCurrentUser && (!isMobile || showEditInfo)}
+                    editable={isCurrentUser}
                     placeholder="Shoe Brand"
                     render={(value, editing, onChange) => (
                       editing ? (
@@ -406,7 +398,7 @@ export default function ProfileDetailsTab({
                     value={user.apparel || ""}
                     field="apparel"
                     onUpdate={onFieldUpdate}
-                    editable={isCurrentUser && (!isMobile || showEditInfo)}
+                    editable={isCurrentUser}
                     placeholder="Apparel"
                     render={(value, editing, onChange) => (
                       editing ? (
@@ -431,29 +423,7 @@ export default function ProfileDetailsTab({
         </Card>
       </motion.div>
       
-      {/* Mobile Edit Mode Banner */}
-      {isCurrentUser && isMobile && showEditInfo && (
-        <motion.div 
-          className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-3 flex justify-between items-center z-50"
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        >
-          <div className="text-sm font-medium text-primary">
-            <Smartphone className="h-4 w-4 inline-block mr-2" />
-            <span>Tap fields to edit your profile</span>
-          </div>
-          <Button 
-            size="sm" 
-            variant="secondary"
-            onClick={() => setShowEditInfo(false)}
-            className="flex items-center gap-1"
-          >
-            <Check className="h-4 w-4" />
-            <span>Done</span>
-          </Button>
-        </motion.div>
-      )}
+
     </motion.div>
   );
 }

@@ -77,7 +77,6 @@ export default function ModernProfilePage() {
   const [activeTab, setActiveTab] = useState("details");
   const [isCoverImageLoading, setIsCoverImageLoading] = useState(false);
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
-  const [showEditInfo, setShowEditInfo] = useState(false);
   
   // Check if on mobile device
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -412,27 +411,13 @@ export default function ModernProfilePage() {
                 )}
               </div>
               
-              {/* Profile Edit Toggle - Only visible for current user */}
-              {isCurrentUserProfile && (
-                <div className="mt-2 mb-3">
-                  <Badge 
-                    variant={showEditInfo ? "secondary" : "outline"} 
-                    className="flex gap-1 items-center cursor-pointer"
-                    onClick={() => setShowEditInfo(!showEditInfo)}
-                  >
-                    {showEditInfo ? <Check className="h-3.5 w-3.5" /> : <Edit className="h-3.5 w-3.5" />}
-                    <span>{showEditInfo ? "Exit Edit Mode" : "Edit Profile"}</span>
-                  </Badge>
-                </div>
-              )}
-              
               {/* Bio */}
               <div className="max-w-xl">
                 <EditableProfileField
                   value={user.bio || ""}
                   field="bio"
                   onUpdate={handleFieldUpdate}
-                  editable={isCurrentUserProfile && (!isMobile || showEditInfo)}
+                  editable={isCurrentUserProfile}
                   placeholder="Add a bio to tell people about yourself"
                   render={(value, editing, onChange) => (
                     editing ? (
@@ -544,8 +529,6 @@ export default function ModernProfilePage() {
                 user={user} 
                 isCurrentUser={isCurrentUserProfile} 
                 onFieldUpdate={handleFieldUpdate}
-                showEditInfo={showEditInfo}
-                setShowEditInfo={setShowEditInfo}
               />
             </TabsContent>
             
@@ -566,8 +549,6 @@ export default function ModernProfilePage() {
                 <ProfileSettingsTab 
                   user={user} 
                   onFieldUpdate={handleFieldUpdate}
-                  showEditInfo={showEditInfo}
-                  setShowEditInfo={setShowEditInfo}
                 />
               </TabsContent>
             )}
