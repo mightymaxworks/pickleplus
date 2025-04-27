@@ -3,10 +3,11 @@
  * 
  * Component for inline editing of profile fields with customizable rendering.
  * Enhanced for mobile with touch support and improved UI.
+ * Added more prominent edit icons and better visual feedback.
  * 
  * @framework Framework5.3
- * @version 1.1.0
- * @lastUpdated 2025-04-26
+ * @version 1.2.0
+ * @lastUpdated 2025-04-27
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -213,16 +214,21 @@ export default function EditableProfileField({
           </motion.button>
         )}
         
-        {/* Mobile edit button (touch) */}
+        {/* Mobile edit button (touch) - ENHANCED for better visibility */}
         {editable && !isEditing && isMobile && (
           <motion.button
-            className={`absolute -right-8 top-0 p-1 rounded-full bg-background shadow-sm border border-border 
+            className={`absolute -right-8 top-0 p-1.5 rounded-full bg-primary/10 shadow-md border border-primary/20 
                        ${isTouched ? 'opacity-100' : 'opacity-0'}`}
             onClick={handleEditClick}
+            initial={{ scale: 1 }}
+            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            animate={isTouched ? { y: [0, -3, 0] } : {}}
+            transition={{ duration: 0.5 }}
             aria-label="Edit field"
+            title="Click to edit"
           >
-            <PenLine className="h-3 w-3 text-primary" />
+            <PenLine className="h-4 w-4 text-primary" />
           </motion.button>
         )}
         
@@ -350,16 +356,21 @@ export default function EditableProfileField({
         </motion.button>
       )}
       
-      {/* Mobile edit button (touch) - appears when field is touched */}
+      {/* Mobile edit button (touch) - appears when field is touched - ENHANCED for better visibility */}
       {editable && !isEditing && isMobile && (
         <motion.button
-          className={`absolute -right-8 top-0 p-1 rounded-full bg-background shadow-sm border border-border 
+          className={`absolute -right-8 top-0 p-1.5 rounded-full bg-primary/10 shadow-md border border-primary/20 
                     ${isTouched ? 'opacity-100' : 'opacity-0'}`}
           onClick={handleEditClick}
+          initial={{ scale: 1 }}
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          animate={isTouched ? { y: [0, -3, 0] } : {}}
+          transition={{ duration: 0.5 }}
           aria-label="Edit field"
+          title="Click to edit"
         >
-          <PenLine className="h-3 w-3 text-primary" />
+          <PenLine className="h-4 w-4 text-primary" />
         </motion.button>
       )}
       
