@@ -308,11 +308,15 @@ export default function App() {
                       requiredRole={UserRole.ADMIN} 
                     />}
                   </Route>
-                  <ProtectedRouteWithLayout
-                    path="/profile"
-                    component={LazyProfilePage}
-                    pageTitle="Your Profile"
-                  />
+                  {/* Redirect from /profile to /profile/modern */}
+                  <Route path="/profile">
+                    {() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/profile/modern';
+                      }
+                      return null;
+                    }}
+                  </Route>
                   <ProtectedRouteWithLayout
                     path="/profile/enhanced"
                     component={EnhancedProfilePage}

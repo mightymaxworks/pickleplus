@@ -95,7 +95,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       icon: <Users className="h-5 w-5" />,
       badge: { text: 'New', variant: 'outline' }
     },
-    { name: 'Profile', path: '/profile', icon: <UserCircle className="h-5 w-5" /> },
+    { name: 'Profile', path: '/profile/modern', icon: <UserCircle className="h-5 w-5" /> },
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];
 

@@ -145,7 +145,7 @@ export function OptimizedNavMenu() {
         Home
       </PreloadingLink>
       <PreloadingLink 
-        to="/profile" 
+        to="/profile/modern" 
         className="text-primary hover:text-primary/80 transition-colors"
       >
         Profile
