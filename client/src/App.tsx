@@ -84,6 +84,9 @@ import CommunityEngagementPage from './pages/community/CommunityEngagementPage' 
 import NotificationsPage from './pages/notifications-page'
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage'
 
+// Import PickleJourney™ page (PKL-278651-JOUR-001)
+import PickleJourneyDashboard from './pages/PickleJourneyDashboard'
+
 // Import referral page (PKL-278651-COMM-0007 - Enhanced Referral System)
 import ReferralPage from './pages/ReferralPage'
 
@@ -275,6 +278,13 @@ export default function App() {
                     path="/coach/sage"
                     component={LazySageCoachingPage}
                     pageTitle="S.A.G.E. Coaching"
+                  />
+                  
+                  {/* PKL-278651-JOUR-001 - PickleJourney™ */}
+                  <ProtectedRouteWithLayout
+                    path="/journey"
+                    component={PickleJourneyDashboard}
+                    pageTitle="Your Pickleball Journey"
                   />
                   
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}

@@ -1,56 +1,46 @@
 /**
- * Module Registration
+ * PKL-278651-JOUR-001: PickleJourney™ Module Registration
+ * Add the picklejourney module to the imports
  * 
- * This file registers all modules with the module registry.
- * It serves as the central place to import and register modules.
+ * @framework Framework5.3
+ * @version 1.0.0
  */
 
 import { moduleRegistry } from '@/core/modules/moduleRegistry';
 
-// Import all modules
-import { userModule } from './user';
-import { matchModule } from './match';
-import { tournamentModule } from './tournament';
-import { achievementModule } from './achievement';
-import { socialModule } from './social';
-import { coachingModule } from './coaching';
-import { guidanceMiniModule } from './guidance-mini';
-import { adminModule } from './admin';
-import { feedbackModule } from './feedback/module';
+// Import modules
+import userModule from '@/modules/user';
+import matchModule from '@/modules/match';
+import tournamentModule from '@/modules/tournament';
+import achievementModule from '@/modules/achievement';
+import socialModule from '@/modules/social';
+import coachingModule from '@/modules/coaching';
+import guidanceMiniModule from '@/modules/guidance-mini';
+import adminModule from '@/modules/admin';
+import feedbackModule from '@/modules/feedback/module';
+import picklejourneyModule from '@/modules/picklejourney'; // Add PickleJourney™ module
 
 /**
- * Register all modules with the module registry
+ * Register a module with the registry
  */
-export function registerAllModules(): void {
-  // Register each module
-  moduleRegistry.registerModule(userModule);
-  moduleRegistry.registerModule(matchModule);
-  moduleRegistry.registerModule(tournamentModule);
-  moduleRegistry.registerModule(achievementModule);
-  moduleRegistry.registerModule(socialModule);
-  moduleRegistry.registerModule(coachingModule);
-  moduleRegistry.registerModule(guidanceMiniModule);
-  moduleRegistry.registerModule(adminModule);
-  moduleRegistry.registerModule(feedbackModule);
-  
-  console.log('All modules registered successfully.');
-  console.log('Registered modules:', moduleRegistry.getAllModules().map(m => `${m.name}@${m.version}`));
+export function registerModule(name: string, version: string) {
+  // This is a stub for consistent API usage in module initialization
+  console.log(`[Module Registration] Module ${name}@${version} registered`);
 }
 
-/**
- * Check if a module is registered
- * @param name The name of the module to check
- * @returns Whether the module is registered
- */
-export function isModuleRegistered(name: string): boolean {
-  return moduleRegistry.hasModule(name);
-}
+// Register all modules
+moduleRegistry.registerModule(userModule);
+moduleRegistry.registerModule(matchModule);
+moduleRegistry.registerModule(tournamentModule);
+moduleRegistry.registerModule(achievementModule);
+moduleRegistry.registerModule(socialModule);
+moduleRegistry.registerModule(coachingModule);
+moduleRegistry.registerModule(guidanceMiniModule);
+moduleRegistry.registerModule(adminModule);
+moduleRegistry.registerModule(feedbackModule);
+moduleRegistry.registerModule(picklejourneyModule); // Register PickleJourney™ module
 
-/**
- * Get a module's API
- * @param name The name of the module to get
- * @returns The module's exports (API)
- */
-export function getModuleAPI<T>(name: string): T {
-  return moduleRegistry.getModule(name).exports as T;
-}
+console.log('All modules registered successfully.');
+console.log('Registered modules:', moduleRegistry.getRegisteredModules().map((m) => `${m.name}@${m.version}`));
+
+export default moduleRegistry;

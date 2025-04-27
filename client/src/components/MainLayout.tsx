@@ -12,7 +12,8 @@ import {
   Menu,
   Shield,
   CheckCircle2,
-  Palette
+  Palette,
+  HeartPulse
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -87,6 +88,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Achievements', path: '/achievements', icon: <Award className="h-5 w-5" /> },
     { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
     { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },
+    // PKL-278651-JOUR-001 - PickleJourney™
+    { 
+      name: 'Your Journey', 
+      path: '/journey', 
+      icon: <HeartPulse className="h-5 w-5" />,
+      badge: { text: 'New', variant: 'success' }
+    },
     { name: 'Communities', path: '/communities', icon: <Users className="h-5 w-5" /> },
     // New NodeBB-based Community Hub
     { 
@@ -186,7 +194,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             variant="outline" 
             className="w-full flex items-center justify-center" 
             onClick={handleLogout}
-            disabled={logoutMutation.isPending}
           >
             <LogOut className="h-4 w-4 mr-2" />
             <span>Logout</span>
@@ -256,7 +263,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 variant="outline" 
                 className="w-full flex items-center justify-center" 
                 onClick={handleLogout}
-                disabled={logoutMutation.isPending}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 <span>Logout</span>
