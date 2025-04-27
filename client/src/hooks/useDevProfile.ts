@@ -11,55 +11,103 @@
  * @lastUpdated 2025-04-27
  */
 
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { EnhancedUser } from "@/types/enhanced-user";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { EnhancedUser } from '@/types/enhanced-user';
 
 /**
  * Hook for development profile data access
  */
 export function useDevProfile() {
-  // Query for fetching development profile data
-  const { 
+  const { toast } = useToast();
+
+  // Query for user profile data from development endpoint
+  const {
     data: profile,
     isLoading: isLoadingProfile,
-    error: profileError,
-    refetch: refetchProfile
-  } = useQuery<EnhancedUser>({
-    queryKey: ['/api/dev/profile'],
+    error: profileError
+  } = useQuery({
+    queryKey: ['/api/dev/me'],
     queryFn: async () => {
-      console.log('[DEV MODE] Fetching profile from development endpoint');
-      const response = await apiRequest('GET', '/api/dev/profile');
-      if (!response.ok) {
-        throw new Error('Failed to fetch development profile');
+      console.log('[DEV] Fetching profile data from development endpoint');
+      try {
+        const res = await apiRequest('GET', '/api/dev/me');
+        console.log('[DEV] Profile data API response status:', res.status);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('[DEV] Profile data fetch error:', errorText);
+          throw new Error(`Failed to fetch profile data: ${res.status} ${errorText}`);
+        }
+        
+        const profileData = await res.json();
+        console.log('[DEV] Profile data loaded successfully:', profileData);
+        return profileData as EnhancedUser;
+      } catch (err) {
+        console.error('[DEV] Profile data fetch exception:', err);
+        throw err;
       }
-      return response.json();
     }
   });
 
-  // Mutation for updating profile fields
+  // Mutation for updating profile fields using development endpoint
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: Record<string, any>) => {
-      console.log('[DEV MODE] Updating profile with:', updates);
-      const response = await apiRequest('POST', '/api/dev/profile/update', updates);
-      if (!response.ok) {
-        throw new Error('Failed to update development profile');
+    mutationFn: async (updateData: Record<string, any>) => {
+      console.log('[DEV] Updating profile fields:', updateData);
+      
+      try {
+        const response = await apiRequest(
+          'PATCH',
+          '/api/dev/profile/update',
+          updateData
+        );
+        
+        console.log('[DEV] Profile update response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[DEV] Profile update error:', errorText);
+          throw new Error(`Failed to update profile: ${response.status} ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log('[DEV] Profile update result:', result);
+        return result;
+      } catch (err) {
+        console.error('[DEV] Profile update exception:', err);
+        throw err;
       }
-      return response.json();
     },
-    onSuccess: () => {
-      // Invalidate the profile query to trigger a refetch
-      queryClient.invalidateQueries({ queryKey: ['/api/dev/profile'] });
-    }
+    onSuccess: (data) => {
+      console.log('[DEV] Profile update succeeded:', data);
+      // Invalidate user data query to refresh
+      queryClient.invalidateQueries({ queryKey: ['/api/dev/me'] });
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated in development mode.",
+      });
+    },
+    onError: (error: Error) => {
+      console.error('[DEV] Profile update mutation error:', error);
+      toast({
+        title: "Update failed",
+        description: `There was an error updating your profile: ${error.message}`,
+        variant: "destructive",
+      });
+    },
   });
+
+  // Function to update profile
+  const updateProfile = (updateData: Record<string, any>) => {
+    updateProfileMutation.mutate(updateData);
+  };
 
   return {
     profile,
     isLoadingProfile,
     profileError,
-    refetchProfile,
-    updateProfile: updateProfileMutation.mutate,
-    isUpdatingProfile: updateProfileMutation.isPending,
-    updateError: updateProfileMutation.error
+    updateProfile,
+    isUpdatingProfile: updateProfileMutation.isPending
   };
 }

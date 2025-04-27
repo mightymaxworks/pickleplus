@@ -373,7 +373,7 @@ export default function DevModernProfilePage() {
           <TabsContent value="details">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="col-span-1 md:col-span-2 space-y-6">
-                <ProfileDetailsTab user={user} onUpdateField={handleFieldUpdate} />
+                <ProfileDetailsTab user={user} isCurrentUser={true} onFieldUpdate={handleFieldUpdate} />
               </div>
               <div className="space-y-6">
                 {/* Stats Overview Card */}
@@ -446,7 +446,7 @@ export default function DevModernProfilePage() {
           
           {/* Stats Tab */}
           <TabsContent value="stats">
-            <ProfileStatsTab user={user} courtIQRating={courtIQRating} />
+            <ProfileStatsTab user={user} />
           </TabsContent>
           
           {/* History Tab */}
@@ -456,7 +456,7 @@ export default function DevModernProfilePage() {
           
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <ProfileSettingsTab user={user} onUpdateField={handleFieldUpdate} />
+            <ProfileSettingsTab user={user} onFieldUpdate={handleFieldUpdate} />
           </TabsContent>
         </Tabs>
       </div>
