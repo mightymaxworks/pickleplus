@@ -200,6 +200,178 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  // PKL-278651-PROF-0008-FIX - Development endpoint for profile page data
+  app.get('/api/me', async (req: Request, res: Response) => {
+    console.log("[Profile API] /api/me request - Is authenticated:", req.isAuthenticated());
+    console.log("[Profile API] Session ID:", req.sessionID);
+    
+    // Ensure CORS headers for credentials
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // For development, allow a test user to be returned automatically
+    if (process.env.NODE_ENV !== 'production' && !req.isAuthenticated()) {
+      console.log('[DEV MODE] Returning development enhanced user data');
+      return res.json({
+        id: 1,
+        username: 'testdev',
+        email: 'dev@pickle.plus',
+        isAdmin: true,
+        passportId: '1000MM7',
+        firstName: 'Mighty',
+        lastName: 'Max',
+        displayName: 'Mighty Max',
+        dateOfBirth: null,
+        avatarUrl: null,
+        coverImageUrl: null,
+        avatarInitials: 'MM',
+        bio: 'Pickleball enthusiast and coach',
+        location: 'Miami, FL',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        verifiedEmail: true,
+        // Equipment preferences
+        paddleBrand: 'Selkirk',
+        paddleModel: 'Vanguard Power Air',
+        backupPaddleBrand: 'Joola',
+        backupPaddleModel: 'Hyperion CFS',
+        shoeBrand: 'K-Swiss',
+        shoeModel: 'Express Light 2',
+        apparel: 'Fila Pro Collection',
+        otherEquipment: 'Graphite Z5 paddle',
+        // Performance metrics
+        xp: 1500,
+        level: 12,
+        totalMatches: 45,
+        matchesWon: 32,
+        matchesLost: 13,
+        matchesPlayed: 45,
+        tournamentsPlayed: 8,
+        totalTournaments: 8,
+        rankingPoints: 3450,
+        winRate: 0.71,
+        // CourtIQ ratings
+        courtIQ: {
+          technical: 4.2,
+          tactical: 3.8,
+          physical: 4.0,
+          mental: 3.7,
+          consistency: 4.1,
+          overall: 4.0
+        },
+        // Profile-related
+        profileCompletionPct: 85,
+        lastVisit: new Date(),
+        // Playing preferences
+        preferredPosition: 'Right Side',
+        forehandStrength: 4,
+        backhandStrength: 4,
+        servePower: 3,
+        dinkAccuracy: 5,
+        thirdShotConsistency: 4,
+        courtCoverage: 4,
+        preferredSurface: 'Indoor',
+        indoorOutdoorPreference: 'Indoor',
+        // External ratings
+        duprRating: 5.0,
+        utprRating: 5.2,
+        wprRating: 5.0,
+        externalRatingsVerified: true,
+        achievements: []
+      });
+    }
+    
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      // In a real implementation, this would fetch the enhanced user data
+      const userId = (req.user as any).id;
+      const enhancedUser = await storage.getEnhancedUserProfile(userId);
+      
+      if (!enhancedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(enhancedUser);
+    } catch (error) {
+      console.error('[API] Error getting enhanced user profile:', error);
+      res.status(500).json({ error: 'Error getting user profile' });
+    }
+  });
+  
+  // PKL-278651-PROF-0008-FIX - API endpoint for updating profile fields
+  app.patch('/api/profile/update', async (req: Request, res: Response) => {
+    console.log("[Profile API] /api/profile/update request:", req.body);
+    
+    // Ensure user is authenticated
+    if (!req.isAuthenticated()) {
+      console.error('[Profile API] Profile update failed: User not authenticated');
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    const userId = (req.user as any).id;
+    
+    try {
+      // Get the field to update from the request body
+      const updates = req.body;
+      
+      if (!updates || Object.keys(updates).length === 0) {
+        console.error('[Profile API] No fields to update');
+        return res.status(400).json({ message: "No fields to update" });
+      }
+      
+      console.log(`[Profile API] Processing profile update for user ${userId}:`, updates);
+      
+      // Track field update success
+      const results: Record<string, boolean> = {};
+      let allSuccessful = true;
+      
+      // Process each field update
+      for (const [field, value] of Object.entries(updates)) {
+        console.log(`[Profile API] Updating field '${field}' to:`, value);
+        
+        // Update the field using the storage method
+        const success = await storage.updateUserProfileField(userId, field, value);
+        results[field] = success;
+        
+        if (!success) {
+          allSuccessful = false;
+          console.error(`[Profile API] Failed to update field '${field}'`);
+        }
+      }
+      
+      // Get the updated user profile
+      const updatedUser = await storage.getEnhancedUserProfile(userId);
+      
+      // Return the result
+      if (allSuccessful) {
+        console.log(`[Profile API] Profile update successful for user ${userId}`);
+        res.json({ 
+          success: true, 
+          message: "Profile updated successfully",
+          results,
+          user: updatedUser
+        });
+      } else {
+        console.warn(`[Profile API] Partial profile update for user ${userId}:`, results);
+        res.status(207).json({ 
+          success: false, 
+          message: "Some fields could not be updated",
+          results,
+          user: updatedUser
+        });
+      }
+    } catch (error) {
+      console.error('[Profile API] Error updating profile:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "An error occurred while updating the profile"
+      });
+    }
+  });
+  
   // Default route for API 404s
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });

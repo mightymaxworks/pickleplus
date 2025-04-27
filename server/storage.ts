@@ -147,6 +147,10 @@ import memorystore from "memorystore";
 export interface IStorage {
   sessionStore: Store;
   
+  // PKL-278651-PROF-0008-FIX - Enhanced User Profile support
+  getEnhancedUserProfile(userId: number): Promise<any>;
+  updateUserProfileField(userId: number, field: string, value: any): Promise<boolean>;
+  
   // PKL-278651-SAGE-0002-CONV - SAGE Conversation Interface
   // Conversation operations
   createConversation(data: InsertCoachingConversation): Promise<CoachingConversation>;
@@ -1606,6 +1610,138 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] getUserById error:', error);
       return undefined;
+    }
+  }
+  
+  // PKL-278651-PROF-0008-FIX - Enhanced User Profile support
+  async getEnhancedUserProfile(userId: number): Promise<any> {
+    try {
+      console.log(`[Storage] getEnhancedUserProfile called for user ID: ${userId}`);
+      
+      // Get the base user data
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.log(`[Storage] User not found for ID: ${userId}`);
+        return null;
+      }
+      
+      // Initialize CourtIQ data
+      let courtIQData = {
+        technical: 0,
+        tactical: 0,
+        physical: 0,
+        mental: 0,
+        consistency: 0,
+        overall: 0
+      };
+      
+      try {
+        // Try to get CourtIQ data
+        const courtIQ = await this.getCourtIQRatings(userId);
+        if (courtIQ) {
+          courtIQData = {
+            technical: courtIQ.TECH || 0,
+            tactical: courtIQ.TACT || 0,
+            physical: courtIQ.PHYS || 0,
+            mental: courtIQ.MENT || 0,
+            consistency: courtIQ.CONS || 0,
+            overall: Object.values(courtIQ).reduce((sum, val) => sum + (val || 0), 0) / Object.keys(courtIQ).length
+          };
+        }
+      } catch (error) {
+        console.error(`[Storage] Error getting CourtIQ data for user ${userId}:`, error);
+        // Continue with default values
+      }
+      
+      // Get user matches
+      const matches = await this.getMatchesByUser(userId, 100);
+      const matchesWon = matches.filter(match => match.winnerId === userId).length;
+      const matchesPlayed = matches.length;
+      const winRate = matchesPlayed > 0 ? matchesWon / matchesPlayed : 0;
+      
+      // Create enhanced user object
+      const enhancedUser = {
+        ...user,
+        matchesWon,
+        matchesLost: matchesPlayed - matchesWon,
+        matchesPlayed,
+        winRate,
+        courtIQ: courtIQData,
+        totalMatches: matchesPlayed,
+        totalTournaments: 0,  // This would be loaded from tournaments
+        rankingPoints: 0,     // This would be calculated
+        profileCompletionPct: 0, // This would be calculated
+        tournamentsPlayed: 0, // This would be loaded
+        // Default empty values for fields not in the basic user model
+        shoeBrand: user.shoeBrand || '',
+        shoeModel: user.shoeModel || '',
+        apparel: user.apparel || '',
+        paddleBrand: user.paddleBrand || '',
+        paddleModel: user.paddleModel || '',
+        backupPaddleBrand: user.backupPaddleBrand || '',
+        backupPaddleModel: user.backupPaddleModel || '', 
+        preferredPosition: user.preferredPosition || '',
+        indoorOutdoorPreference: user.indoorOutdoorPreference || '',
+        preferredSurface: user.preferredSurface || '',
+        competitiveIntensity: user.competitiveIntensity || '',
+        achievements: []  // This would load user achievements
+      };
+      
+      // Try to get profile completion
+      try {
+        const profileCompletion = await this.getProfileCompletion(userId);
+        if (profileCompletion) {
+          enhancedUser.profileCompletionPct = profileCompletion.percentage;
+        }
+      } catch (error) {
+        console.error(`[Storage] Error getting profile completion for user ${userId}:`, error);
+      }
+      
+      console.log(`[Storage] Enhanced user profile loaded successfully for user ID: ${userId}`);
+      return enhancedUser;
+    } catch (error) {
+      console.error(`[Storage] Error in getEnhancedUserProfile for user ${userId}:`, error);
+      return null;
+    }
+  }
+  
+  async updateUserProfileField(userId: number, field: string, value: any): Promise<boolean> {
+    try {
+      console.log(`[Storage] updateUserProfileField called for user ID: ${userId}, field: ${field}`);
+      
+      // Create update object with the specified field
+      const update: any = {};
+      update[field] = value;
+      
+      // Update the user record
+      const updatedUser = await this.updateUser(userId, update);
+      
+      // Check if update was successful
+      if (updatedUser) {
+        console.log(`[Storage] User ${userId} field ${field} updated successfully to:`, value);
+        
+        // Track this field as completed in profile completion tracking
+        try {
+          const isCompleted = await this.checkProfileFieldCompletion(userId, field);
+          
+          // If it's not already marked as completed, record it
+          if (!isCompleted) {
+            await this.recordProfileFieldCompletion(userId, field, 5); // Award 5 XP for completing a profile field
+            console.log(`[Storage] Field ${field} marked as completed for user ${userId}`);
+          }
+        } catch (error) {
+          console.error(`[Storage] Error tracking profile completion for field ${field}:`, error);
+          // Continue even if tracking fails
+        }
+        
+        return true;
+      } else {
+        console.log(`[Storage] Failed to update user ${userId} field ${field}`);
+        return false;
+      }
+    } catch (error) {
+      console.error(`[Storage] Error in updateUserProfileField for user ${userId}, field ${field}:`, error);
+      return false;
     }
   }
   
