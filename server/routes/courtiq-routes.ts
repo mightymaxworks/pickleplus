@@ -17,6 +17,21 @@ import {
 import { courtiqStorage } from "../services/courtiq-storage";
 import { courtiqCalculator } from "../services/courtiq-calculator-fixed";
 import { isAuthenticated } from "../middleware/auth";
+import { storage } from "../storage"; // Added for user rating access
+
+/**
+ * Rating systems types for conversion
+ */
+const RatingSystemEnum = z.enum(['DUPR', 'UTPR', 'WPR', 'COURTIQ']);
+
+/**
+ * Schema for rating conversion requests
+ */
+const convertRatingSchema = z.object({
+  fromSystem: RatingSystemEnum,
+  toSystem: RatingSystemEnum,
+  rating: z.number().min(0).max(10)
+});
 
 const router = Router();
 
@@ -477,6 +492,191 @@ router.get("/performance", async (req, res) => {
   } catch (error) {
     console.error("Error getting performance data:", error);
     res.status(500).json({ error: "Failed to retrieve performance data" });
+  }
+});
+
+/**
+ * Convert rating between different rating systems
+ * POST /api/courtiq/convert-rating
+ */
+router.post("/convert-rating", async (req, res) => {
+  try {
+    // Validate request body
+    const validationResult = convertRatingSchema.safeParse(req.body);
+    
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: "Invalid conversion request",
+        details: validationResult.error.format()
+      });
+    }
+    
+    const { fromSystem, toSystem, rating } = validationResult.data;
+    
+    // If converting to same system, return the same rating
+    if (fromSystem === toSystem) {
+      return res.json({
+        fromSystem,
+        toSystem,
+        originalRating: rating,
+        convertedRating: rating
+      });
+    }
+    
+    // Calculate the conversion
+    let convertedRating: number = 0;
+    
+    // DUPR to CourtIQ conversion (DUPR scale is 1.0-7.0)
+    if (fromSystem === 'DUPR' && toSystem === 'COURTIQ') {
+      // CourtIQ overall is based on 1000-5000 scale
+      // For simplicity: DUPR 2.0 = 1000, 3.0 = 2000, 4.0 = 3000, 5.0 = 4000, 6.0+ = 5000
+      convertedRating = Math.min(5000, Math.max(1000, (rating - 1) * 1000));
+    }
+    // CourtIQ to DUPR conversion
+    else if (fromSystem === 'COURTIQ' && toSystem === 'DUPR') {
+      // Convert CourtIQ 1000-5000 back to DUPR 1.0-7.0
+      convertedRating = Math.min(7.0, Math.max(1.0, (rating / 1000) + 1));
+    }
+    // UTPR to CourtIQ (UTPR scale is similar to DUPR, 1.0-7.0)
+    else if (fromSystem === 'UTPR' && toSystem === 'COURTIQ') {
+      convertedRating = Math.min(5000, Math.max(1000, (rating - 1) * 1000));
+    }
+    // CourtIQ to UTPR
+    else if (fromSystem === 'COURTIQ' && toSystem === 'UTPR') {
+      convertedRating = Math.min(7.0, Math.max(1.0, (rating / 1000) + 1));
+    }
+    // WPR to CourtIQ (WPR uses 1-20 scale)
+    else if (fromSystem === 'WPR' && toSystem === 'COURTIQ') {
+      // Scale WPR 1-20 to CourtIQ 1000-5000
+      convertedRating = Math.min(5000, Math.max(1000, (rating / 4) * 1000));
+    }
+    // CourtIQ to WPR
+    else if (fromSystem === 'COURTIQ' && toSystem === 'WPR') {
+      // Scale CourtIQ 1000-5000 to WPR 1-20
+      convertedRating = Math.min(20, Math.max(1, (rating / 1000) * 4));
+    }
+    // DUPR to UTPR (very similar scales)
+    else if ((fromSystem === 'DUPR' && toSystem === 'UTPR') || 
+             (fromSystem === 'UTPR' && toSystem === 'DUPR')) {
+      // DUPR and UTPR are nearly equivalent
+      convertedRating = rating;
+    }
+    // DUPR to WPR
+    else if (fromSystem === 'DUPR' && toSystem === 'WPR') {
+      // Convert DUPR 1.0-7.0 to WPR 1-20
+      convertedRating = Math.min(20, Math.max(1, (rating - 1) * 4));
+    }
+    // WPR to DUPR
+    else if (fromSystem === 'WPR' && toSystem === 'DUPR') {
+      // Convert WPR 1-20 to DUPR 1.0-7.0
+      convertedRating = Math.min(7.0, Math.max(1.0, (rating / 4) + 1));
+    }
+    // UTPR to WPR
+    else if (fromSystem === 'UTPR' && toSystem === 'WPR') {
+      // Convert UTPR 1.0-7.0 to WPR 1-20
+      convertedRating = Math.min(20, Math.max(1, (rating - 1) * 4));
+    }
+    // WPR to UTPR
+    else if (fromSystem === 'WPR' && toSystem === 'UTPR') {
+      // Convert WPR 1-20 to UTPR 1.0-7.0
+      convertedRating = Math.min(7.0, Math.max(1.0, (rating / 4) + 1));
+    }
+    
+    // Round to 2 decimal places for readability
+    convertedRating = Math.round(convertedRating * 100) / 100;
+    
+    res.json({
+      fromSystem,
+      toSystem,
+      originalRating: rating,
+      convertedRating
+    });
+  } catch (error) {
+    console.error("Error converting rating:", error);
+    res.status(500).json({ error: "Failed to convert rating" });
+  }
+});
+
+/**
+ * Get user's rating in other systems
+ * GET /api/courtiq/user-rating/:userId
+ */
+router.get("/user-rating/:userId", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+    
+    // Get user's CourtIQ rating
+    let courtiqRatings: any = await courtiqStorage.getUserRatings(userId);
+    
+    // If ratings don't exist, create default ones
+    if (!courtiqRatings) {
+      courtiqRatings = {
+        userId,
+        overallRating: 3000,
+        technicalRating: 3,
+        tacticalRating: 3,
+        physicalRating: 3,
+        mentalRating: 3,
+        consistencyRating: 3,
+        confidenceScore: 50,
+        assessmentCount: 0,
+        latestAssessmentDate: new Date()
+      };
+    }
+    
+    // Get user's external ratings from profile
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Calculate estimated ratings in other systems
+    const overallRating = courtiqRatings.overallRating || 3000; 
+    
+    const duprRating = user.duprRating || 
+      Math.min(7.0, Math.max(1.0, (overallRating / 1000) + 1));
+    
+    const utprRating = user.utprRating || 
+      Math.min(7.0, Math.max(1.0, (overallRating / 1000) + 1));
+    
+    const wprRating = user.wprRating || 
+      Math.min(20, Math.max(1, (overallRating / 1000) * 4));
+    
+    res.json({
+      userId,
+      verified: false,
+      lastUpdated: user.lastUpdated || new Date(),
+      ratings: {
+        courtiq: {
+          overall: courtiqRatings.overallRating || 3000,
+          technical: courtiqRatings.technicalRating || 3,
+          tactical: courtiqRatings.tacticalRating || 3,
+          physical: courtiqRatings.physicalRating || 3,
+          mental: courtiqRatings.mentalRating || 3,
+          consistency: courtiqRatings.consistencyRating || 3
+        },
+        dupr: {
+          rating: duprRating,
+          isVerified: Boolean(user.duprRating)
+        },
+        utpr: {
+          rating: utprRating,
+          isVerified: Boolean(user.utprRating)
+        },
+        wpr: {
+          rating: wprRating,
+          isVerified: Boolean(user.wprRating)
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error getting user ratings:", error);
+    res.status(500).json({ error: "Failed to retrieve user ratings" });
   }
 });
 
