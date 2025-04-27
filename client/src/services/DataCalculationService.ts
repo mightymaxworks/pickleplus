@@ -364,6 +364,25 @@ export function calculateDimensionRatings(user: EnhancedUser): DimensionRatings 
   };
 }
 
+/**
+ * Calculate the rating tier based on the overall rating
+ */
+function calculateRatingTier(overallRating: number): string {
+  if (overallRating >= 4.5) {
+    return "Elite";
+  } else if (overallRating >= 4.0) {
+    return "Expert";
+  } else if (overallRating >= 3.5) {
+    return "Advanced";
+  } else if (overallRating >= 3.0) {
+    return "Intermediate";
+  } else if (overallRating >= 2.0) {
+    return "Developing";
+  } else {
+    return "Beginner";
+  }
+}
+
 // Export the DataCalculationService class for compatibility with existing code
 // Define this at the end after all functions are defined to avoid reference errors
 export class DataCalculationService {
@@ -375,4 +394,5 @@ export class DataCalculationService {
   static recordProfileFieldCompletion = recordProfileFieldCompletion;
   static calculateOverallRating = calculateOverallRating;
   static calculateDimensionRatings = calculateDimensionRatings;
+  static calculateRatingTier = calculateRatingTier;
 }
