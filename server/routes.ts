@@ -200,24 +200,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
-  // PKL-278651-PROF-0008-FIX - Development endpoint for profile page data
-  // Use a more direct approach without auth checking
-  app.all('/api/me', async (req: Request, res: Response) => {
-    console.log("[Profile API] /api/me request received");
+  // Create a completely new development endpoint that doesn't use any auth middleware
+  app.get('/api/dev/profile', (req: Request, res: Response) => {
+    console.log("[DEV MODE] Serving development profile data");
     
-    // Ensure CORS headers for credentials
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
-    // Check if this is a preflight request
-    if (req.method === 'OPTIONS') {
-      res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      return res.status(200).send();
-    }
-    
-    // SIMPLIFIED DEV FIX: Always return development data
-    console.log('[DEV MODE] Returning development enhanced user data');
+    // Always return mock data for development
     return res.json({
         id: 1,
         username: 'testdev',
@@ -285,52 +272,13 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         externalRatingsVerified: true,
         achievements: []
       });
-    
-    /* This code is now unreachable due to our simplified fix
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    */
-    
-    try {
-      // In a real implementation, this would fetch the enhanced user data
-      const userId = (req.user as any).id;
-      const enhancedUser = await storage.getEnhancedUserProfile(userId);
-      
-      if (!enhancedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      res.json(enhancedUser);
-    } catch (error) {
-      console.error('[API] Error getting enhanced user profile:', error);
-      res.status(500).json({ error: 'Error getting user profile' });
-    }
   });
   
-  // PKL-278651-PROF-0008-FIX - API endpoint for updating profile fields
-  app.all('/api/profile/update', async (req: Request, res: Response) => {
-    console.log("[Profile API] /api/profile/update request received, method:", req.method);
+  // Create a completely new development endpoint for profile updates
+  app.post('/api/dev/profile/update', (req: Request, res: Response) => {
+    console.log("[DEV MODE] Processing development profile update:", req.body);
     
-    // Ensure CORS headers for credentials
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
-    // Check if this is a preflight request
-    if (req.method === 'OPTIONS') {
-      res.header('Access-Control-Allow-Methods', 'PATCH, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      return res.status(200).send();
-    }
-    
-    if (req.method !== 'PATCH') {
-      return res.status(405).json({ message: "Method not allowed" });
-    }
-    
-    console.log("[Profile API] /api/profile/update request body:", req.body);
-    
-    // SIMPLIFIED FIX: Skip authentication check in development
-    // For development we'll just simulate a successful update
+    // Always accept updates in development mode
     
     try {
       // Get the field to update from the request body
