@@ -76,8 +76,28 @@ export default function TournamentShowcase({
   } = useQuery({
     queryKey: ['/api/tournaments/history', user.id],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/tournaments/history?userId=${user.id}`);
-      return response.json();
+      try {
+        // Try specific endpoint
+        const response = await apiRequest("GET", `/api/tournaments/history?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data) ? data : [];
+        }
+        
+        // Fallback to tournament API if needed
+        const tournamentResponse = await apiRequest("GET", `/api/tournament/user/${user.id}`);
+        if (tournamentResponse.ok) {
+          const tournamentData = await tournamentResponse.json();
+          return Array.isArray(tournamentData) ? tournamentData : 
+                 (tournamentData.data && Array.isArray(tournamentData.data)) ? tournamentData.data : [];
+        }
+        
+        console.error("Failed to fetch tournament data from either endpoint");
+        return [];
+      } catch (e) {
+        console.error("Error fetching tournament data:", e);
+        return [];
+      }
     }
   });
   

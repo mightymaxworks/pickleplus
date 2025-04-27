@@ -68,8 +68,28 @@ export default function MatchHistoryTimeline({
   } = useQuery({
     queryKey: ['/api/matches/history', user.id],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/matches/history?userId=${user.id}`);
-      return response.json();
+      try {
+        // First try the specific endpoint
+        const response = await apiRequest("GET", `/api/matches/history?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data) ? data : [];
+        }
+        
+        // Fall back to SAGE API endpoint if available
+        const sageResponse = await apiRequest("GET", `/api/sage/match-history?userId=${user.id}`);
+        if (sageResponse.ok) {
+          const sageData = await sageResponse.json();
+          return Array.isArray(sageData.data) ? sageData.data : [];
+        }
+        
+        // If both fail, return empty array
+        console.error("Failed to fetch match history data from either endpoint");
+        return [];
+      } catch (e) {
+        console.error("Error fetching match history:", e);
+        return [];
+      }
     }
   });
   

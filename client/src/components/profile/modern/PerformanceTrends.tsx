@@ -92,11 +92,35 @@ export default function PerformanceTrends({
   } = useQuery({
     queryKey: ['/api/stats/performance-history', user.id, timePeriod],
     queryFn: async () => {
-      const response = await apiRequest(
-        "GET", 
-        `/api/stats/performance-history?userId=${user.id}&period=${timePeriod}`
-      );
-      return response.json();
+      try {
+        // Try the primary endpoint
+        const response = await apiRequest(
+          "GET", 
+          `/api/stats/performance-history?userId=${user.id}&period=${timePeriod}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data) ? data : [];
+        }
+        
+        // Try alternative endpoint if available
+        const altResponse = await apiRequest(
+          "GET",
+          `/api/sage/performance-trends?userId=${user.id}&period=${timePeriod}`
+        );
+        
+        if (altResponse.ok) {
+          const altData = await altResponse.json();
+          return Array.isArray(altData.data) ? altData.data : [];
+        }
+        
+        console.error("Failed to fetch performance history from either endpoint");
+        return [];
+      } catch (e) {
+        console.error("Error fetching performance history:", e);
+        return [];
+      }
     }
   });
   

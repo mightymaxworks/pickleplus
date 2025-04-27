@@ -116,8 +116,17 @@ export default function AchievementsGallery({
   } = useQuery({
     queryKey: ['/api/achievements', user.id],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/achievements?userId=${user.id}`);
-      return response.json();
+      try {
+        const response = await apiRequest("GET", `/api/achievements?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data) ? data : [];
+        }
+        return [];
+      } catch (e) {
+        console.error("Error fetching achievements:", e);
+        return [];
+      }
     }
   });
   
