@@ -9,6 +9,7 @@ import { registerCommunityRoutes } from "./routes/community-routes";
 import { registerEventRoutes } from "./routes/event-routes";
 import { registerUserRoutes } from "./routes/user-routes";
 import { registerUserProfileRoutes } from "./routes/user-profile-routes"; // PKL-278651-PROF-0005-UPLOAD
+import partnerApiRoutes from "./routes/partner-api-routes"; // PKL-278651-PROF-0030-API
 import { registerMatchRoutes } from "./routes/match-routes";
 import { registerTournamentRoutes } from "./routes/tournament-routes";
 import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
@@ -109,6 +110,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount Social Sharing routes - PKL-278651-SAGE-0011-SOCIAL
   app.use('/api/social', socialRoutes);
+  
+  // Mount partner matching routes - PKL-278651-PROF-0030-API
+  app.use('/api/partners', partnerApiRoutes);
   
   // Mount SAGE Concierge routes - PKL-278651-SAGE-0013-CONCIERGE
   app.use('/api/coach/sage/concierge', sageConciergeRoutes);

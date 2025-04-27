@@ -270,6 +270,11 @@ export interface IStorage {
     avatarInitials: string; 
   }[]>;
   
+  // PKL-278651-PROF-0030-API - Partner Matching operations
+  getPartnerPreferences(userId: number): Promise<any | null>;
+  savePartnerPreferences(userId: number, preferences: any): Promise<boolean>;
+  getPotentialPartnerMatches(userId: number, limit?: number): Promise<any[]>;
+  
   // Profile Completion Tracking
   getCompletedProfileFields(userId: number): Promise<ProfileCompletionTracking[]>;
   recordProfileFieldCompletion(userId: number, fieldName: string, xpAwarded: number): Promise<ProfileCompletionTracking>;
@@ -5486,6 +5491,121 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] getCourtIQRatings error:', error);
       return { TECH: 3, TACT: 3, PHYS: 3, MENT: 3, CONS: 3 };
+    }
+  }
+  
+  /**
+   * PKL-278651-PROF-0030-API - Partner Matching
+   * Get user's partner preferences
+   */
+  async getPartnerPreferences(userId: number): Promise<any | null> {
+    try {
+      // For now, we're storing preferences in the user's metadata column
+      const user = await this.getUser(userId);
+      
+      if (!user || !user.metadata) {
+        return null;
+      }
+      
+      // Parse the metadata JSON if it exists
+      const metadata = typeof user.metadata === 'string' 
+        ? JSON.parse(user.metadata) 
+        : user.metadata;
+      
+      // Return partner preferences if they exist
+      if (metadata && metadata.partnerPreferences) {
+        return metadata.partnerPreferences;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('[Storage] getPartnerPreferences error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * PKL-278651-PROF-0030-API - Partner Matching
+   * Save user's partner preferences
+   */
+  async savePartnerPreferences(userId: number, preferences: any): Promise<boolean> {
+    try {
+      // Get the current user
+      const user = await this.getUser(userId);
+      
+      if (!user) {
+        return false;
+      }
+      
+      // Parse existing metadata or create new object
+      const metadata = user.metadata 
+        ? (typeof user.metadata === 'string' ? JSON.parse(user.metadata) : user.metadata) 
+        : {};
+      
+      // Update partner preferences
+      metadata.partnerPreferences = preferences;
+      
+      // Save the updated metadata
+      await db.update(users)
+        .set({ metadata: JSON.stringify(metadata) })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('[Storage] savePartnerPreferences error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * PKL-278651-PROF-0030-API - Partner Matching
+   * Get potential partner matches for a user
+   */
+  async getPotentialPartnerMatches(userId: number, limit: number = 10): Promise<any[]> {
+    try {
+      // Get active users excluding the current user
+      const potentialMatches = await db.select()
+        .from(users)
+        .where(
+          and(
+            ne(users.id, userId),
+            eq(users.isActive, true)
+          )
+        )
+        .limit(limit);
+      
+      // Enhance the user data with additional information needed for matching
+      const enhancedMatches = [];
+      
+      for (const match of potentialMatches) {
+        // Get user's CourtIQ ratings
+        const courtIQData = await this.getCourtIQRatings(match.id);
+        
+        // Build enhanced user object with more detailed profile info
+        const enhancedUser = {
+          ...match,
+          // Map data to the format expected by the frontend
+          courtIQ: {
+            TECH: courtIQData.TECH || 3.0,
+            TACT: courtIQData.TACT || 3.0,
+            PHYS: courtIQData.PHYS || 3.0,
+            MENT: courtIQData.MENT || 3.0,
+            CONS: courtIQData.CONS || 3.0,
+            overall: 1000 // Default value
+          },
+          // Add avatar initials for display if no avatar
+          avatarInitials: match.firstName && match.lastName 
+            ? `${match.firstName[0]}${match.lastName[0]}` 
+            : match.username?.slice(0, 2).toUpperCase() || "??"
+        };
+        
+        enhancedMatches.push(enhancedUser);
+      }
+      
+      return enhancedMatches;
+    } catch (error) {
+      console.error('[Storage] getPotentialPartnerMatches error:', error);
+      return [];
     }
   }
 }
