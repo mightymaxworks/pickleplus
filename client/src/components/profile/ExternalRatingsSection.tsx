@@ -436,7 +436,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
               
               {renderRatingSection(
                 'IPTPA', 
-                user.iptpaRating, 
+                user.iptpaRating !== undefined ? String(user.iptpaRating) : undefined, 
                 user.iptpaProfileUrl
               )}
             </div>
