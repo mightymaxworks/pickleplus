@@ -1987,13 +1987,20 @@ export class DatabaseStorage implements IStorage {
       // Convert camelCase field names to snake_case for the database
       const updatedProfileData: Record<string, any> = {};
       
+      console.log(`[Storage][DEBUG] Beginning field name conversion for ${Object.keys(profileData).length} fields`);
+      
       for (const [key, value] of Object.entries(profileData)) {
         // Skip CSRF token and other non-database fields
-        if (key === '_csrf') continue;
+        if (key === '_csrf') {
+          console.log(`[Storage][DEBUG] Skipping CSRF token field`);
+          continue;
+        }
         
         // Convert camelCase to snake_case
         const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
         updatedProfileData[snakeKey] = value;
+        
+        console.log(`[Storage][DEBUG] Converted field: '${key}' -> '${snakeKey}' with value:`, value);
       }
       
       // External ratings handling
@@ -2040,6 +2047,12 @@ export class DatabaseStorage implements IStorage {
         
         updatedUser = result;
         console.log(`[Storage] updateUserProfile - SQL UPDATE successful. Updated user data:`, JSON.stringify(updatedUser, null, 2));
+        
+        // Log the data types of returned fields to help debug issues
+        console.log(`[Storage][DEBUG] Checking returned field types:`);
+        for (const [key, value] of Object.entries(updatedUser)) {
+          console.log(`[Storage][DEBUG] Field '${key}' has type: ${typeof value}, value:`, value);
+        }
       } catch (sqlError) {
         console.error(`[Storage] updateUserProfile - SQL UPDATE ERROR:`, sqlError);
         throw sqlError;
@@ -2065,10 +2078,12 @@ export class DatabaseStorage implements IStorage {
         
         // Map back from database column names to camelCase for frontend use
         // Convert all snake_case fields to camelCase
+        console.log(`[Storage][DEBUG] Converting database fields from snake_case to camelCase for frontend`);
         for (const key in updatedUser) {
           if (key.includes('_')) {
             const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
             if (camelKey !== key) {
+              console.log(`[Storage][DEBUG] Created camelCase property: '${key}' -> '${camelKey}'`);
               (updatedUser as any)[camelKey] = (updatedUser as any)[key];
             }
           }
@@ -2096,10 +2111,12 @@ export class DatabaseStorage implements IStorage {
           
           // Map back from database column names to camelCase for frontend use
           // Convert all snake_case fields to camelCase
+          console.log(`[Storage][DEBUG] Converting finalUser database fields from snake_case to camelCase for frontend`);
           for (const key in finalUser) {
             if (key.includes('_')) {
               const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
               if (camelKey !== key) {
+                console.log(`[Storage][DEBUG] Created camelCase property in finalUser: '${key}' -> '${camelKey}'`);
                 (finalUser as any)[camelKey] = (finalUser as any)[key];
               }
             }
