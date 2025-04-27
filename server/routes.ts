@@ -367,6 +367,114 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  /**
+   * PKL-278651-PROF-0007-API - Profile Update Endpoint
+   * Unified profile update endpoint for both development and production
+   * Following Framework 5.3 authentication best practices
+   */
+  app.patch("/api/profile/update", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      // In Framework 5.3, we can skip CSRF checks in development for easier testing
+      if (process.env.NODE_ENV === 'production') {
+        // CSRF protection for production
+        const csrfToken = req.headers['x-csrf-token'];
+        if (!csrfToken) {
+          console.error('[API] CSRF token missing in profile update request');
+          return res.status(403).json({ message: "CSRF token validation failed" });
+        }
+        
+        if (!req.session || !req.session.csrfToken || req.session.csrfToken !== csrfToken) {
+          console.error(`[API] CSRF token mismatch. Expected: ${req.session?.csrfToken?.substring(0, 8) || 'undefined'}, Got: ${(csrfToken as string)?.substring(0, 8) || 'undefined'}`);
+          return res.status(403).json({ message: "CSRF token validation failed" });
+        }
+      }
+      
+      console.log("[API] Profile update request received:", JSON.stringify(req.body, null, 2));
+      console.log("[API] Raw profile request body keys:", Object.keys(req.body));
+      
+      // Get the current user data to compare later for XP rewards
+      const oldUser = await storage.getUser(req.user.id);
+      if (!oldUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Ensure we have data to update
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: "No profile data provided for update" });
+      }
+      
+      // Use standard storage interface for updating profile
+      // The storage.updateUserProfile method handles all the field mapping 
+      // between camelCase (frontend/TypeScript) and snake_case (database)
+      const profileData = { ...req.body };
+      console.log(`[API] Processing profile update with data:`, JSON.stringify(profileData, null, 2));
+      
+      // Update the user's profile using the storage interface
+      const updatedUserProfile = await storage.updateUserProfile(req.user.id, profileData);
+      if (!updatedUserProfile) {
+        console.error("[API] Failed to update profile with storage interface");
+        return res.status(500).json({ error: "Failed to update profile" });
+      }
+      
+      console.log("[API] Profile update successful:", JSON.stringify({
+        firstName: updatedUserProfile.firstName,
+        lastName: updatedUserProfile.lastName
+      }, null, 2));
+      
+      // Check if profile completion crossed a threshold to award XP
+      const oldCompletion = oldUser.profileCompletionPct || 0;
+      const newCompletion = updatedUserProfile.profileCompletionPct || 0;
+      
+      let xpAwarded = 0;
+      
+      // XP thresholds: award XP at 25%, 50%, 75%, and 100% completion
+      const thresholds = [
+        { threshold: 25, reward: 25 },
+        { threshold: 50, reward: 50 },
+        { threshold: 75, reward: 75 },
+        { threshold: 100, reward: 100 }
+      ];
+      
+      // Check if any thresholds were crossed
+      for (const tier of thresholds) {
+        if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
+          xpAwarded += tier.reward;
+          
+          // Record activity
+          await storage.createActivity({
+            userId: req.user.id,
+            type: 'profile_update',
+            description: `Profile ${tier.threshold}% complete: +${tier.reward}XP`,
+            xpEarned: tier.reward,
+            metadata: { 
+              oldCompletion, 
+              newCompletion,
+              threshold: tier.threshold 
+            }
+          });
+          
+          // Award XP
+          await storage.updateUserXP(req.user.id, tier.reward);
+        }
+      }
+      
+      // Get the latest user data after possible XP awards
+      const finalUser = await storage.getUser(req.user.id);
+      
+      res.json({
+        user: finalUser,
+        xpAwarded
+      });
+    } catch (error) {
+      console.error("[API] Error updating profile:", error);
+      res.status(500).json({ error: "Server error updating profile" });
+    }
+  });
+  
   // Default route for API 404s
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
