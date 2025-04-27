@@ -124,6 +124,7 @@ import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-27865
 import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
 import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
 import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo
+import DevModernProfilePage from './pages/DevModernProfilePage' // PKL-278651-PROF-0008-DEV - Development Profile Page
 
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -337,6 +338,10 @@ export default function App() {
                     component={ModernProfilePage}
                     pageTitle="Modern Profile"
                   />
+                  {/* PKL-278651-PROF-0008-DEV - Development profile page that bypasses authentication */}
+                  <Route path="/profile/dev">
+                    {() => <DevModernProfilePage />}
+                  </Route>
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"
