@@ -10,10 +10,26 @@
  */
 
 import React, { createContext, useContext } from "react";
-import { DataCalculationService, CalculatedUserMetrics } from "@/services/DataCalculationService";
+import { 
+  DataCalculationService, 
+  CalculatedUserMetrics,
+  calculateProfileFieldXp,
+  calculateTotalPotentialProfileXp,
+  calculateCompletionBonus,
+  calculateProfileCompletionPercentage,
+  recordProfileFieldCompletion,
+  calculateOverallRating
+} from "@/services/DataCalculationService";
 
 interface DerivedDataContextType {
-  calculationService: DataCalculationService;
+  calculationService: {
+    calculateProfileFieldXp: typeof calculateProfileFieldXp;
+    calculateTotalPotentialProfileXp: typeof calculateTotalPotentialProfileXp;
+    calculateCompletionBonus: typeof calculateCompletionBonus;
+    calculateProfileCompletionPercentage: typeof calculateProfileCompletionPercentage;
+    recordProfileFieldCompletion: typeof recordProfileFieldCompletion;
+    calculateOverallRating: typeof calculateOverallRating;
+  };
   calculatedMetrics: CalculatedUserMetrics | null;
   updateCalculations: () => void;
   isLoading: boolean;
@@ -36,8 +52,15 @@ const DEFAULT_METRICS: CalculatedUserMetrics = {
   }
 };
 
-// Create a service instance once
-const calculationService = new DataCalculationService();
+// Create a service instance by aggregating the imported functions
+const calculationService = {
+  calculateProfileFieldXp,
+  calculateTotalPotentialProfileXp,
+  calculateCompletionBonus,
+  calculateProfileCompletionPercentage,
+  recordProfileFieldCompletion,
+  calculateOverallRating
+};
 
 // EMERGENCY FIX: Static context to prevent infinite loops
 // This is a temporary static implementation that prevents render loops

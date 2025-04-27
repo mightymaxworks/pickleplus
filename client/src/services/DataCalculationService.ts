@@ -18,6 +18,23 @@ import { apiRequest } from "@/lib/queryClient";
 // Re-export level calculation functions for convenience
 export { getLevelInfo, calculateLevel };
 
+// Define the CalculatedUserMetrics interface so it can be imported elsewhere
+export interface CalculatedUserMetrics {
+  level: number;
+  nextLevelXP: number;
+  xpProgressPercentage: number;
+  recentPerformance: number;
+  overallRating: number;
+  completionPercentage: number;
+  pcpRanking: {
+    tier: string;
+    points: number;
+    nextTierThreshold: number;
+    progressPercentage: number;
+    ratingContribution: number;
+  };
+}
+
 // The DataCalculationService class will be declared at the end of the file
 // after all functions are defined
 
