@@ -18,15 +18,8 @@ import { apiRequest } from "@/lib/queryClient";
 // Re-export level calculation functions for convenience
 export { getLevelInfo, calculateLevel };
 
-// Export the DataCalculationService class for compatibility with existing code
-export class DataCalculationService {
-  // Static methods that mirror the exported functions
-  static calculateProfileFieldXp = calculateProfileFieldXp;
-  static calculateTotalPotentialProfileXp = calculateTotalPotentialProfileXp;
-  static calculateCompletionBonus = calculateCompletionBonus;
-  static calculateProfileCompletionPercentage = calculateProfileCompletionPercentage;
-  static recordProfileFieldCompletion = recordProfileFieldCompletion;
-}
+// The DataCalculationService class will be declared at the end of the file
+// after all functions are defined
 
 interface ProfileFieldXpMap {
   [key: string]: number;
@@ -203,4 +196,56 @@ export async function recordProfileFieldCompletion(
       message: "Failed to record completion"
     };
   }
+}
+
+/**
+ * Calculate the user's overall CourtIQ Rating based on various performance metrics
+ * 
+ * @param user - User data object
+ * @returns Overall rating number (typically in the range of 1000-5000)
+ */
+export function calculateOverallRating(user: EnhancedUser): number {
+  if (!user) return 1000; // Default base rating
+  
+  // Start with base rating
+  let rating = 1000;
+  
+  // Add contribution from matches played
+  if (user.totalMatches) {
+    rating += Math.min(user.totalMatches * 50, 500); // Max 500 points from match count
+  }
+  
+  // Add contribution from win percentage
+  if (user.totalMatches && user.matchesWon) {
+    const winRate = (user.matchesWon / user.totalMatches) * 100;
+    rating += Math.min(winRate * 10, 500); // Max 500 points from win rate
+  }
+  
+  // Add contribution from external ratings (if available)
+  if (user.duprRating) {
+    rating += user.duprRating * 200; // DUPR rating (typically 2.0-6.0) converted to points
+  }
+  
+  // Add contribution from XP
+  if (user.xp) {
+    rating += Math.min(user.xp, 1000); // Max 1000 points from XP
+  }
+  
+  // Add contribution from profile completion
+  const completionPercentage = calculateProfileCompletionPercentage(user);
+  rating += completionPercentage * 5; // Max 500 points from 100% completion
+  
+  return Math.round(rating);
+}
+
+// Export the DataCalculationService class for compatibility with existing code
+// Define this at the end after all functions are defined to avoid reference errors
+export class DataCalculationService {
+  // Static methods that mirror the exported functions
+  static calculateProfileFieldXp = calculateProfileFieldXp;
+  static calculateTotalPotentialProfileXp = calculateTotalPotentialProfileXp;
+  static calculateCompletionBonus = calculateCompletionBonus;
+  static calculateProfileCompletionPercentage = calculateProfileCompletionPercentage;
+  static recordProfileFieldCompletion = recordProfileFieldCompletion;
+  static calculateOverallRating = calculateOverallRating;
 }
