@@ -6,7 +6,7 @@
  * 
  * @framework Framework5.2
  * @version 1.0.0
- * @lastModified 2025-04-23
+ * @lastModified 2025-04-27
  */
 
 import express, { Request, Response } from 'express';
@@ -20,6 +20,11 @@ import { AuditAction, AuditResource } from '@shared/schema/audit';
 // Helper function to get safe IP address (handle undefined)
 function getSafeIpAddress(req: Request): string {
   return req.ip || '';
+}
+
+// Helper function to get user agent safely
+function getSafeUserAgent(req: Request): string {
+  return req.headers['user-agent'] || 'Unknown';
 }
 
 // Configure multer for uploading profile photos
@@ -132,8 +137,8 @@ export function registerUserProfileRoutes(app: express.Express): void {
             field: 'avatarUrl',
             newValue: filePath
           },
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'] || 'Unknown',
+          ipAddress: getSafeIpAddress(req),
+          userAgent: getSafeUserAgent(req),
           timestamp: new Date()
         });
       } catch (auditError) {
@@ -205,8 +210,8 @@ export function registerUserProfileRoutes(app: express.Express): void {
             newValue: null,
             oldValue: user.avatarUrl
           },
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'] || 'Unknown',
+          ipAddress: getSafeIpAddress(req),
+          userAgent: getSafeUserAgent(req),
           timestamp: new Date()
         });
       } catch (auditError) {
@@ -264,8 +269,8 @@ export function registerUserProfileRoutes(app: express.Express): void {
             field: 'bannerUrl',
             newValue: filePath
           },
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'] || 'Unknown',
+          ipAddress: getSafeIpAddress(req),
+          userAgent: getSafeUserAgent(req),
           timestamp: new Date()
         });
       } catch (auditError) {
@@ -337,8 +342,8 @@ export function registerUserProfileRoutes(app: express.Express): void {
             newValue: null,
             oldValue: user.bannerUrl
           },
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'] || 'Unknown',
+          ipAddress: getSafeIpAddress(req),
+          userAgent: getSafeUserAgent(req),
           timestamp: new Date()
         });
       } catch (auditError) {
