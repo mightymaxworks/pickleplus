@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 import { EnhancedHeroSection } from '@/components/EnhancedHeroSection';
 import { CourtIQExplanationSection } from '@/components/CourtIQExplanationSection';
 import { RatingSystemsIntegrationSection } from '@/components/RatingSystemsIntegrationSection';
+import { SageShowcaseSection } from '@/components/SageShowcaseSection';
 import { EnhancedChangelogSection } from '@/components/EnhancedChangelogSection';
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -100,8 +101,8 @@ export default function EnhancedLandingPage() {
   const [showDiscovery, setShowDiscovery] = useState(false);
   
   // Use the Konami code hook to trigger a discovery
-  useKonamiCode({
-    onKonami: () => {
+  const { konamiActivated, reset } = useKonamiCode({
+    onComplete: () => {
       console.log("Konami code activated!");
       setShowDiscovery(true);
       // Play a success sound
@@ -135,6 +136,9 @@ export default function EnhancedLandingPage() {
       
       {/* Rating Systems Integration Section */}
       <RatingSystemsIntegrationSection />
+      
+      {/* SAGE Showcase Section */}
+      <SageShowcaseSection />
       
       {/* Enhanced Changelog Section */}
       <EnhancedChangelogSection />
@@ -287,7 +291,7 @@ export default function EnhancedLandingPage() {
         <DiscoveryAlert
           title="You Found a Secret!"
           message="You've discovered the Konami Code Easter Egg! The Konami Code is a cheat code that originated from Konami games in the 1980s: Up, Up, Down, Down, Left, Right, Left, Right, B, A."
-          level="special"
+          level="success"
           open={showDiscovery}
           autoHide={true}
           hideDelay={10000}
