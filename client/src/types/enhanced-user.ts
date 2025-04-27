@@ -67,6 +67,9 @@ export interface EnhancedUser {
   paddleModel?: string;
   backupPaddleBrand?: string;
   backupPaddleModel?: string;
+  shoeBrand?: string;
+  shoeModel?: string;
+  apparel?: string;
   otherEquipment?: string;
   
   // Playing preferences

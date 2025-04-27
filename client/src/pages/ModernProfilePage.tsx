@@ -78,34 +78,70 @@ export default function ModernProfilePage() {
   // The view is either the current user's profile or another user's profile
   const isCurrentUserProfile = !userId || userId === currentUser?.id;
   
-  // Query for user data
+  // Query for user data with enhanced error logging
   const { 
     data: user,
     isLoading,
     error
   } = useQuery({
     queryKey: userId ? [`/api/users/${userId}`] : ['/api/me'],
-    queryFn: () => 
-      apiRequest("GET", userId ? `/api/users/${userId}` : "/api/me")
-        .then(res => res.json()),
+    queryFn: async () => {
+      console.log('[DEBUG] Fetching user data. UserId:', userId, 'Current user:', currentUser);
+      try {
+        const res = await apiRequest("GET", userId ? `/api/users/${userId}` : "/api/me");
+        console.log('[DEBUG] User data API response status:', res.status);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('[DEBUG] User data fetch error:', errorText);
+          throw new Error(`Failed to fetch user data: ${res.status} ${errorText}`);
+        }
+        
+        const userData = await res.json();
+        console.log('[DEBUG] User data loaded successfully:', userData);
+        return userData;
+      } catch (err) {
+        console.error('[DEBUG] User data fetch exception:', err);
+        throw err;
+      }
+    },
     enabled: !!currentUser,
   });
   
   // Courts IQ Rating calculation (client-side calculation)
   const courtIQRating = user ? calculationService.calculateOverallRating(user) : 0;
   
-  // Mutation for updating profile fields
+  // Mutation for updating profile fields with detailed logging
   const updateProfileMutation = useMutation({
     mutationFn: async (updateData: { field: string, value: any }) => {
       const { field, value } = updateData;
-      const response = await apiRequest(
-        "PATCH",
-        "/api/profile/update",
-        { [field]: value }
-      );
-      return response.json();
+      console.log('[DEBUG] Updating profile field:', field, 'with value:', value);
+      
+      try {
+        const response = await apiRequest(
+          "PATCH",
+          "/api/profile/update",
+          { [field]: value }
+        );
+        
+        console.log('[DEBUG] Profile update response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[DEBUG] Profile update error:', errorText);
+          throw new Error(`Failed to update profile: ${response.status} ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log('[DEBUG] Profile update result:', result);
+        return result;
+      } catch (err) {
+        console.error('[DEBUG] Profile update exception:', err);
+        throw err;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[DEBUG] Profile update succeeded:', data);
       // Invalidate user data query to refresh
       queryClient.invalidateQueries({ queryKey: ['/api/me'] });
       toast({
@@ -114,6 +150,7 @@ export default function ModernProfilePage() {
       });
     },
     onError: (error) => {
+      console.error('[DEBUG] Profile update mutation error:', error);
       toast({
         title: "Update failed",
         description: "There was an error updating your profile. Please try again.",

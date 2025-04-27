@@ -44,26 +44,62 @@ export default function EditableProfileField({
   // Detect if on mobile
   const isMobile = useMediaQuery("(max-width: 768px)");
   
+  // Debug logging on initialization
+  useEffect(() => {
+    console.log(`[DEBUG] EditableProfileField ${field} initialized:`, { 
+      value, 
+      editable, 
+      isEditing,
+      isMobile,
+      currentValue,
+      prevValue
+    });
+  }, []);
+  
   // If value prop changes, update the current value state
   useEffect(() => {
     if (value !== prevValue) {
+      console.log(`[DEBUG] EditableProfileField ${field} value changed:`, { 
+        value, 
+        prevValue, 
+        currentValue 
+      });
       setCurrentValue(value);
       setPrevValue(value);
     }
   }, [value, prevValue]);
   
   const handleEditClick = () => {
-    if (!editable) return;
+    console.log(`[DEBUG] EditableProfileField ${field} clicked:`, { 
+      editable, 
+      currentValue,
+      isEditing 
+    });
+    
+    if (!editable) {
+      console.log(`[DEBUG] EditableProfileField ${field} not editable, ignoring click`);
+      return;
+    }
     
     setPrevValue(currentValue);
+    console.log(`[DEBUG] EditableProfileField ${field} entering edit mode`);
     setIsEditing(true);
   };
   
   const handleSave = () => {
+    console.log(`[DEBUG] EditableProfileField ${field} saving:`, {
+      currentValue,
+      prevValue,
+      hasChanged: currentValue !== prevValue
+    });
+    
     setIsEditing(false);
     setIsTouched(false);
     if (currentValue !== prevValue) {
+      console.log(`[DEBUG] EditableProfileField ${field} calling onUpdate with:`, currentValue);
       onUpdate(field, currentValue);
+    } else {
+      console.log(`[DEBUG] EditableProfileField ${field} no changes to save`);
     }
   };
   
