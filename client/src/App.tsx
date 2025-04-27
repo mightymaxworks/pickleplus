@@ -317,26 +317,39 @@ export default function App() {
                       return null;
                     }}
                   </Route>
-                  <ProtectedRouteWithLayout
-                    path="/profile/enhanced"
-                    component={EnhancedProfilePage}
-                    pageTitle="Enhanced Profile"
-                  />
-                  <ProtectedRouteWithLayout
-                    path="/profile/contextual"
-                    component={ContextualEnhancedProfile}
-                    pageTitle="Contextual Profile"
-                  />
+                  {/* Redirect from /profile/enhanced to /profile/modern */}
+                  <Route path="/profile/enhanced">
+                    {() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/profile/modern';
+                      }
+                      return null;
+                    }}
+                  </Route>
+                  {/* Redirect from /profile/contextual to /profile/modern */}
+                  <Route path="/profile/contextual">
+                    {() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/profile/modern';
+                      }
+                      return null;
+                    }}
+                  </Route>
+                  {/* Keep the edit profile route as it's still needed for editing */}
                   <ProtectedRouteWithLayout
                     path="/profile/edit"
                     component={LazyProfileEditPage}
                     pageTitle="Edit Profile"
                   />
-                  <ProtectedRouteWithLayout
-                    path="/profile/streamlined"
-                    component={LazyProfilePage}
-                    pageTitle="Streamlined Profile"
-                  />
+                  {/* Redirect from /profile/streamlined to /profile/modern */}
+                  <Route path="/profile/streamlined">
+                    {() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/profile/modern';
+                      }
+                      return null;
+                    }}
+                  </Route>
                   <ProtectedRouteWithLayout
                     path="/profile/modern"
                     component={ModernProfilePage}
