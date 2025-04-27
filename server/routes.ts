@@ -201,7 +201,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Create a completely new development endpoint that doesn't use any auth middleware
-  app.get('/api/dev/profile', (req: Request, res: Response) => {
+  app.get('/api/dev/me', (req: Request, res: Response) => {
     console.log("[DEV MODE] Serving development profile data");
     
     // Always return mock data for development
@@ -275,7 +275,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Create a completely new development endpoint for profile updates
-  app.post('/api/dev/profile/update', (req: Request, res: Response) => {
+  app.patch('/api/dev/profile/update', (req: Request, res: Response) => {
     console.log("[DEV MODE] Processing development profile update:", req.body);
     
     // Always accept updates in development mode
