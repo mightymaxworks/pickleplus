@@ -101,7 +101,7 @@ export default function registerTournamentSeedTeamsRoutes(router: Router, storag
         action: 'SEED_TEAMS',
         resource: 'BRACKET',
         resourceId: bracketId.toString(),
-        details: {
+        additionalData: {
           method,
           assignmentCount: seedAssignments.length,
           bracketId

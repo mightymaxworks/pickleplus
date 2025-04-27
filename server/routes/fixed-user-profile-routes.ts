@@ -133,7 +133,7 @@ export function registerUserProfileRoutes(app: express.Express): void {
           userId,
           action: AuditAction.USER_UPDATE,
           resource: AuditResource.USER,
-          details: {
+          additionalData: {
             field: 'avatarUrl',
             newValue: filePath
           },
@@ -205,7 +205,7 @@ export function registerUserProfileRoutes(app: express.Express): void {
           userId,
           action: AuditAction.USER_UPDATE,
           resource: AuditResource.USER,
-          details: {
+          additionalData: {
             field: 'avatarUrl',
             newValue: null,
             oldValue: user.avatarUrl
@@ -265,7 +265,7 @@ export function registerUserProfileRoutes(app: express.Express): void {
           userId,
           action: AuditAction.USER_UPDATE,
           resource: AuditResource.USER,
-          details: {
+          additionalData: {
             field: 'bannerUrl',
             newValue: filePath
           },
@@ -337,7 +337,7 @@ export function registerUserProfileRoutes(app: express.Express): void {
           userId,
           action: AuditAction.USER_UPDATE,
           resource: AuditResource.USER,
-          details: {
+          additionalData: {
             field: 'bannerUrl',
             newValue: null,
             oldValue: user.bannerUrl
