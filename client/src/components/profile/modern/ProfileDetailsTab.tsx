@@ -6,20 +6,16 @@
  * 
  * @framework Framework5.3
  * @version 1.1.0
- * @lastUpdated 2025-04-26
+ * @lastUpdated 2025-04-27
  */
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EnhancedUser } from "@/types/enhanced-user";
+import { Calendar } from "lucide-react";
 import EditableProfileField from "./EditableProfileField";
-import { Mail, Calendar, User, MapPin, Info, Award, Smartphone, Edit, Check } from "lucide-react";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { EnhancedUser } from "@/types/enhanced-user";
 
 interface ProfileDetailsTabProps {
   user: EnhancedUser;
@@ -33,6 +29,7 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
+      when: "beforeChildren",
       staggerChildren: 0.1
     }
   }
@@ -43,7 +40,11 @@ const itemVariants = {
   visible: { 
     y: 0, 
     opacity: 1,
-    transition: { type: "spring", stiffness: 300, damping: 24 }
+    transition: { 
+      type: "spring", 
+      stiffness: 300, 
+      damping: 24 
+    }
   }
 };
 
@@ -52,9 +53,6 @@ export default function ProfileDetailsTab({
   isCurrentUser,
   onFieldUpdate
 }: ProfileDetailsTabProps) {
-  // Detect if on mobile
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  
   return (
     <motion.div 
       className="space-y-6"
@@ -62,192 +60,132 @@ export default function ProfileDetailsTab({
       initial="hidden"
       animate="visible"
     >
-      {/* Personal Information */}
+      {/* Personal Information Card */}
       <motion.div variants={itemVariants}>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
+              <Calendar className="h-5 w-5 text-primary" />
               <span>Personal Information</span>
             </CardTitle>
+            <CardDescription>
+              Basic information about you
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Email */}
-              <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">Email</div>
-                  <div className="text-sm text-muted-foreground">
-                    {user.email || "No email added"}
-                  </div>
-                </div>
+            <div className="space-y-6">
+              {/* Display Name */}
+              <div className="space-y-1">
+                <div className="font-medium text-sm">Display Name</div>
+                <EditableProfileField
+                  value={user.displayName || ""}
+                  field="displayName"
+                  onUpdate={onFieldUpdate}
+                  editable={isCurrentUser}
+                  placeholder="Enter your display name"
+                />
               </div>
               
-              {/* Name (First/Last) */}
-              <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* First Name */}
                 <div className="space-y-1">
-                  <div className="text-sm font-medium">Full Name</div>
-                  <div className="text-sm">
-                    <EditableProfileField
-                      value={user.firstName || ""}
-                      field="firstName"
-                      onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
-                      placeholder="First name"
-                      render={(value, editing, onChange) => (
-                        editing ? (
-                          <div className="flex gap-2">
-                            <input
-                              className="px-2 py-1 bg-muted rounded border border-input text-sm"
-                              value={value}
-                              onChange={(e) => onChange(e.target.value)}
-                              placeholder="First name"
-                              autoFocus
-                            />
-                            <input
-                              className="px-2 py-1 bg-muted rounded border border-input text-sm"
-                              value={user.lastName || ""}
-                              onChange={(e) => onFieldUpdate("lastName", e.target.value)}
-                              placeholder="Last name"
-                            />
-                          </div>
-                        ) : (
-                          <span className="text-sm cursor-pointer">
-                            {user.firstName && user.lastName 
-                              ? `${user.firstName} ${user.lastName}`
-                              : user.firstName || user.lastName || 
-                                (isCurrentUser ? "Add your name" : "No name set")}
-                          </span>
-                        )
-                      )}
-                    />
-                  </div>
+                  <div className="font-medium text-sm">First Name</div>
+                  <EditableProfileField
+                    value={user.firstName || ""}
+                    field="firstName"
+                    onUpdate={onFieldUpdate}
+                    editable={isCurrentUser}
+                    placeholder="Enter your first name"
+                  />
+                </div>
+                
+                {/* Last Name */}
+                <div className="space-y-1">
+                  <div className="font-medium text-sm">Last Name</div>
+                  <EditableProfileField
+                    value={user.lastName || ""}
+                    field="lastName"
+                    onUpdate={onFieldUpdate}
+                    editable={isCurrentUser}
+                    placeholder="Enter your last name"
+                  />
                 </div>
               </div>
               
               {/* Location */}
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">Location</div>
-                  <div className="text-sm">
-                    <EditableProfileField
-                      value={user.location || ""}
-                      field="location"
-                      onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
-                      placeholder="Add your location"
-                      render={(value, editing, onChange) => (
-                        editing ? (
-                          <input
-                            className="w-full max-w-xs px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            placeholder="Add your location"
-                            autoFocus
-                          />
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            {value || (isCurrentUser ? "Add your location" : "No location set")}
-                          </span>
-                        )
-                      )}
-                    />
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <div className="font-medium text-sm">Location</div>
+                <EditableProfileField
+                  value={user.location || ""}
+                  field="location"
+                  onUpdate={onFieldUpdate}
+                  editable={isCurrentUser}
+                  placeholder="Enter your location"
+                />
               </div>
               
               {/* Year of Birth */}
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">Year of Birth</div>
-                  <div className="text-sm">
-                    <EditableProfileField
-                      value={user.yearOfBirth ? user.yearOfBirth.toString() : ""}
-                      field="yearOfBirth"
-                      onUpdate={(field, value) => {
-                        // Validate and convert to number
-                        const numValue = parseInt(value);
-                        if (!isNaN(numValue) && numValue > 1900 && numValue <= new Date().getFullYear()) {
-                          onFieldUpdate(field, numValue);
-                        }
-                      }}
-                      editable={isCurrentUser}
-                      placeholder="Add year of birth"
-                      render={(value, editing, onChange) => (
-                        editing ? (
-                          <input
-                            className="w-32 px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            placeholder="YYYY"
-                            type="number"
-                            min="1900"
-                            max={new Date().getFullYear()}
-                            autoFocus
-                          />
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            {value || (isCurrentUser ? "Add year of birth" : "Not specified")}
-                          </span>
-                        )
-                      )}
-                    />
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <div className="font-medium text-sm">Year of Birth</div>
+                <EditableProfileField
+                  value={user.yearOfBirth?.toString() || ""}
+                  field="yearOfBirth"
+                  onUpdate={(field, value) => {
+                    // Convert to number
+                    const yearNum = parseInt(value);
+                    if (!isNaN(yearNum)) {
+                      onFieldUpdate(field, yearNum);
+                    }
+                  }}
+                  editable={isCurrentUser}
+                  placeholder="Enter your year of birth"
+                />
               </div>
               
               {/* Bio */}
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">About</div>
-                  <div className="text-sm">
-                    <EditableProfileField
-                      value={user.bio || ""}
-                      field="bio"
-                      onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
-                      placeholder="Tell others about yourself"
-                      render={(value, editing, onChange) => (
-                        editing ? (
-                          <textarea
-                            className="w-full min-h-[100px] px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            placeholder="Tell others about yourself"
-                            autoFocus
-                          />
-                        ) : (
-                          <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                            {value || (isCurrentUser ? "Add your bio" : "No bio provided")}
-                          </div>
-                        )
-                      )}
-                    />
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <div className="font-medium text-sm">Bio</div>
+                <EditableProfileField
+                  value={user.bio || ""}
+                  field="bio"
+                  onUpdate={onFieldUpdate}
+                  editable={isCurrentUser}
+                  placeholder="Tell others about yourself"
+                  className="min-h-[100px]"
+                  render={(value, editing, onChange) => (
+                    editing ? (
+                      <textarea
+                        className="w-full px-2 py-1 bg-muted rounded border border-input min-h-[100px] text-sm"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder="Tell others about yourself"
+                      />
+                    ) : (
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {value || (
+                          <span className="text-muted-foreground italic">No bio specified</span>
+                        )}
+                      </div>
+                    )
+                  )}
+                />
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
       
-      {/* Equipment */}
+      {/* Equipment Card */}
       <motion.div variants={itemVariants}>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              <span>Equipment Information</span>
-            </CardTitle>
+          <CardHeader>
+            <CardTitle>Equipment</CardTitle>
+            <CardDescription>
+              Your pickleball gear setup
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Paddle Information */}
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Primary Paddle</div>
@@ -258,38 +196,61 @@ export default function ProfileDetailsTab({
                       onUpdate={onFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Brand"
-                      render={(value, editing, onChange) => (
-                        editing ? (
-                          <select
-                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            aria-label="Select paddle brand"
-                          >
-                            <option value="" disabled>Select paddle brand</option>
-                            <option value="Selkirk">Selkirk</option>
-                            <option value="Joola">Joola</option>
-                            <option value="Engage">Engage</option>
-                            <option value="Paddletek">Paddletek</option>
-                            <option value="Onix">Onix</option>
-                            <option value="Head">Head</option>
-                            <option value="ProKennex">ProKennex</option>
-                            <option value="Franklin">Franklin</option>
-                            <option value="Gamma">Gamma</option>
-                            <option value="Gearbox">Gearbox</option>
-                            <option value="Prince">Prince</option>
-                            <option value="CRBN">CRBN</option>
-                            <option value="Electrum">Electrum</option>
-                            <option value="Diadem">Diadem</option>
-                            <option value="SHOT3">SHOT3</option>
-                            <option value="Other">Other</option>
-                          </select>
+                      render={(value, editing, onChange) => {
+                        // Define our brand options once
+                        const brandOptions = [
+                          { value: "Selkirk", label: "Selkirk" },
+                          { value: "Joola", label: "Joola" },
+                          { value: "Engage", label: "Engage" },
+                          { value: "Paddletek", label: "Paddletek" },
+                          { value: "Onix", label: "Onix" },
+                          { value: "Head", label: "Head" },
+                          { value: "ProKennex", label: "ProKennex" },
+                          { value: "Franklin", label: "Franklin" },
+                          { value: "Gamma", label: "Gamma" },
+                          { value: "Gearbox", label: "Gearbox" },
+                          { value: "Prince", label: "Prince" },
+                          { value: "CRBN", label: "CRBN" },
+                          { value: "Electrum", label: "Electrum" },
+                          { value: "Diadem", label: "Diadem" },
+                          { value: "SHOT3", label: "SHOT3" },
+                          { value: "Other", label: "Other" }
+                        ];
+                        
+                        const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+                          onChange(e.target.value);
+                          // Force browser focus blur to ensure mobile keyboard closes
+                          if (document.activeElement instanceof HTMLElement) {
+                            document.activeElement.blur();
+                          }
+                        };
+                        
+                        // On small screens, we show a simplified display and handle touch differently
+                        // Get direct window size to ensure we have the right value
+                        const isMobileWidth = window.innerWidth <= 768;
+                        
+                        return editing ? (
+                          <div className="w-full">
+                            <select
+                              className={`w-full bg-muted rounded border border-input
+                                ${isMobileWidth ? 'text-base px-3 py-3' : 'text-sm px-2 py-1'}`}
+                              value={value}
+                              onChange={handleChange}
+                              aria-label="Select paddle brand"
+                              style={isMobileWidth ? { fontSize: '16px' } : {}}
+                            >
+                              <option value="" disabled>Select paddle brand</option>
+                              {brandOptions.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                          </div>
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Brand: ${value}` : "No brand specified"}
                           </div>
-                        )
-                      )}
+                        );
+                      }}
                     />
                     
                     <EditableProfileField
@@ -298,20 +259,26 @@ export default function ProfileDetailsTab({
                       onUpdate={onFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Model"
-                      render={(value, editing, onChange) => (
-                        editing ? (
+                      render={(value, editing, onChange) => {
+                        // On small screens, we show a simplified display and handle touch differently
+                        // Get direct window size to ensure we have the right value
+                        const isMobileWidth = window.innerWidth <= 768;
+                        
+                        return editing ? (
                           <input
-                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                            className={`w-full bg-muted rounded border border-input
+                              ${isMobileWidth ? 'text-base px-3 py-3' : 'text-sm px-2 py-1'}`}
                             value={value}
                             onChange={(e) => onChange(e.target.value)}
                             placeholder="Model"
+                            style={isMobileWidth ? { fontSize: '16px' } : {}}
                           />
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Model: ${value}` : "No model specified"}
                           </div>
                         )
-                      )}
+                      }}
                     />
                   </div>
                 </div>
@@ -325,38 +292,61 @@ export default function ProfileDetailsTab({
                       onUpdate={onFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Brand"
-                      render={(value, editing, onChange) => (
-                        editing ? (
-                          <select
-                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            aria-label="Select backup paddle brand"
-                          >
-                            <option value="" disabled>Select paddle brand</option>
-                            <option value="Selkirk">Selkirk</option>
-                            <option value="Joola">Joola</option>
-                            <option value="Engage">Engage</option>
-                            <option value="Paddletek">Paddletek</option>
-                            <option value="Onix">Onix</option>
-                            <option value="Head">Head</option>
-                            <option value="ProKennex">ProKennex</option>
-                            <option value="Franklin">Franklin</option>
-                            <option value="Gamma">Gamma</option>
-                            <option value="Gearbox">Gearbox</option>
-                            <option value="Prince">Prince</option>
-                            <option value="CRBN">CRBN</option>
-                            <option value="Electrum">Electrum</option>
-                            <option value="Diadem">Diadem</option>
-                            <option value="SHOT3">SHOT3</option>
-                            <option value="Other">Other</option>
-                          </select>
+                      render={(value, editing, onChange) => {
+                        // Define our brand options once
+                        const brandOptions = [
+                          { value: "Selkirk", label: "Selkirk" },
+                          { value: "Joola", label: "Joola" },
+                          { value: "Engage", label: "Engage" },
+                          { value: "Paddletek", label: "Paddletek" },
+                          { value: "Onix", label: "Onix" },
+                          { value: "Head", label: "Head" },
+                          { value: "ProKennex", label: "ProKennex" },
+                          { value: "Franklin", label: "Franklin" },
+                          { value: "Gamma", label: "Gamma" },
+                          { value: "Gearbox", label: "Gearbox" },
+                          { value: "Prince", label: "Prince" },
+                          { value: "CRBN", label: "CRBN" },
+                          { value: "Electrum", label: "Electrum" },
+                          { value: "Diadem", label: "Diadem" },
+                          { value: "SHOT3", label: "SHOT3" },
+                          { value: "Other", label: "Other" }
+                        ];
+                        
+                        const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+                          onChange(e.target.value);
+                          // Force browser focus blur to ensure mobile keyboard closes
+                          if (document.activeElement instanceof HTMLElement) {
+                            document.activeElement.blur();
+                          }
+                        };
+                        
+                        // On small screens, we show a simplified display and handle touch differently
+                        // Get direct window size to ensure we have the right value
+                        const isMobileWidth = window.innerWidth <= 768;
+                        
+                        return editing ? (
+                          <div className="w-full">
+                            <select
+                              className={`w-full bg-muted rounded border border-input
+                                ${isMobileWidth ? 'text-base px-3 py-3' : 'text-sm px-2 py-1'}`}
+                              value={value}
+                              onChange={handleChange}
+                              aria-label="Select backup paddle brand"
+                              style={isMobileWidth ? { fontSize: '16px' } : {}}
+                            >
+                              <option value="" disabled>Select paddle brand</option>
+                              {brandOptions.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                          </div>
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Brand: ${value}` : "No brand specified"}
                           </div>
-                        )
-                      )}
+                        );
+                      }}
                     />
                     
                     <EditableProfileField
@@ -365,20 +355,26 @@ export default function ProfileDetailsTab({
                       onUpdate={onFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Model"
-                      render={(value, editing, onChange) => (
-                        editing ? (
+                      render={(value, editing, onChange) => {
+                        // On small screens, we show a simplified display and handle touch differently
+                        // Get direct window size to ensure we have the right value
+                        const isMobileWidth = window.innerWidth <= 768;
+                        
+                        return editing ? (
                           <input
-                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                            className={`w-full bg-muted rounded border border-input
+                              ${isMobileWidth ? 'text-base px-3 py-3' : 'text-sm px-2 py-1'}`}
                             value={value}
                             onChange={(e) => onChange(e.target.value)}
                             placeholder="Model"
+                            style={isMobileWidth ? { fontSize: '16px' } : {}}
                           />
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Model: ${value}` : "No model specified"}
                           </div>
                         )
-                      )}
+                      }}
                     />
                   </div>
                 </div>
@@ -394,35 +390,56 @@ export default function ProfileDetailsTab({
                     onUpdate={onFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Shoe Brand"
-                    render={(value, editing, onChange) => (
-                      editing ? (
-                        <select
-                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                          value={value}
-                          onChange={(e) => onChange(e.target.value)}
-                          aria-label="Select shoe brand"
-                        >
-                          <option value="" disabled>Select shoe brand</option>
-                          <option value="Nike">Nike</option>
-                          <option value="Adidas">Adidas</option>
-                          <option value="K-Swiss">K-Swiss</option>
-                          <option value="New Balance">New Balance</option>
-                          <option value="ASICS">ASICS</option>
-                          <option value="Wilson">Wilson</option>
-                          <option value="Babolat">Babolat</option>
-                          <option value="Lacoste">Lacoste</option>
-                          <option value="FILA">FILA</option>
-                          <option value="Under Armour">Under Armour</option>
-                          <option value="Skechers">Skechers</option>
-                          <option value="Brooks">Brooks</option>
-                          <option value="Other">Other</option>
-                        </select>
+                    render={(value, editing, onChange) => {
+                      const shoeOptions = [
+                        { value: "Nike", label: "Nike" },
+                        { value: "Adidas", label: "Adidas" },
+                        { value: "K-Swiss", label: "K-Swiss" },
+                        { value: "New Balance", label: "New Balance" },
+                        { value: "ASICS", label: "ASICS" },
+                        { value: "Wilson", label: "Wilson" },
+                        { value: "Babolat", label: "Babolat" },
+                        { value: "Lacoste", label: "Lacoste" },
+                        { value: "FILA", label: "FILA" },
+                        { value: "Under Armour", label: "Under Armour" },
+                        { value: "Skechers", label: "Skechers" },
+                        { value: "Brooks", label: "Brooks" },
+                        { value: "Other", label: "Other" }
+                      ];
+                      
+                      const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+                        onChange(e.target.value);
+                        // Force browser focus blur to ensure mobile keyboard closes
+                        if (document.activeElement instanceof HTMLElement) {
+                          document.activeElement.blur();
+                        }
+                      };
+                      
+                      // On small screens, we show a simplified display and handle touch differently
+                      const isMobileWidth = window.innerWidth <= 768;
+                      
+                      return editing ? (
+                        <div className="w-full">
+                          <select
+                            className={`w-full bg-muted rounded border border-input
+                              ${isMobileWidth ? 'text-base px-3 py-3' : 'text-sm px-2 py-1'}`}
+                            value={value}
+                            onChange={handleChange}
+                            aria-label="Select shoe brand"
+                            style={isMobileWidth ? { fontSize: '16px' } : {}}
+                          >
+                            <option value="" disabled>Select shoe brand</option>
+                            {shoeOptions.map(option => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
                         <div className="text-sm text-muted-foreground">
                           {value ? `Shoe Brand: ${value}` : "No shoe brand specified"}
                         </div>
-                      )
-                    )}
+                      );
+                    }}
                   />
                   
                   <EditableProfileField
@@ -431,34 +448,55 @@ export default function ProfileDetailsTab({
                     onUpdate={onFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Apparel"
-                    render={(value, editing, onChange) => (
-                      editing ? (
-                        <select
-                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                          value={value}
-                          onChange={(e) => onChange(e.target.value)}
-                          aria-label="Select apparel brand"
-                        >
-                          <option value="" disabled>Select apparel brand</option>
-                          <option value="Nike">Nike</option>
-                          <option value="Adidas">Adidas</option>
-                          <option value="Under Armour">Under Armour</option>
-                          <option value="Lululemon">Lululemon</option>
-                          <option value="FILA">FILA</option>
-                          <option value="New Balance">New Balance</option>
-                          <option value="Wilson">Wilson</option>
-                          <option value="Lacoste">Lacoste</option>
-                          <option value="Athleta">Athleta</option>
-                          <option value="Jockerey">Jockerey</option>
-                          <option value="Vuori">Vuori</option>
-                          <option value="Other">Other</option>
-                        </select>
+                    render={(value, editing, onChange) => {
+                      const apparelOptions = [
+                        { value: "Nike", label: "Nike" },
+                        { value: "Adidas", label: "Adidas" },
+                        { value: "Under Armour", label: "Under Armour" },
+                        { value: "Lululemon", label: "Lululemon" },
+                        { value: "FILA", label: "FILA" },
+                        { value: "New Balance", label: "New Balance" },
+                        { value: "Wilson", label: "Wilson" },
+                        { value: "Lacoste", label: "Lacoste" },
+                        { value: "Athleta", label: "Athleta" },
+                        { value: "Jockerey", label: "Jockerey" },
+                        { value: "Vuori", label: "Vuori" },
+                        { value: "Other", label: "Other" }
+                      ];
+                      
+                      const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+                        onChange(e.target.value);
+                        // Force browser focus blur to ensure mobile keyboard closes
+                        if (document.activeElement instanceof HTMLElement) {
+                          document.activeElement.blur();
+                        }
+                      };
+                      
+                      // On small screens, we show a simplified display and handle touch differently
+                      const isMobileWidth = window.innerWidth <= 768;
+                      
+                      return editing ? (
+                        <div className="w-full">
+                          <select
+                            className={`w-full bg-muted rounded border border-input
+                              ${isMobileWidth ? 'text-base px-3 py-3' : 'text-sm px-2 py-1'}`}
+                            value={value}
+                            onChange={handleChange}
+                            aria-label="Select apparel brand"
+                            style={isMobileWidth ? { fontSize: '16px' } : {}}
+                          >
+                            <option value="" disabled>Select apparel brand</option>
+                            {apparelOptions.map(option => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
                         <div className="text-sm text-muted-foreground">
                           {value ? `Apparel: ${value}` : "No apparel specified"}
                         </div>
-                      )
-                    )}
+                      );
+                    }}
                   />
                 </div>
               </div>

@@ -41,8 +41,23 @@ export default function EditableProfileField({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Detect if on mobile
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  // More reliable mobile detection that doesn't depend on initial state
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  // Update mobile status on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    // Force check on mount to ensure we have the right value
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   
   // Debug logging on initialization
   useEffect(() => {
@@ -50,7 +65,7 @@ export default function EditableProfileField({
       value, 
       editable, 
       isEditing,
-      isMobile,
+      isMobile: window.innerWidth <= 768, // Get real-time value
       currentValue,
       prevValue
     });
