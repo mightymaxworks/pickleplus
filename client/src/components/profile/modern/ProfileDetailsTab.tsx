@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EnhancedUser } from "@/types/enhanced-user";
 import EditableProfileField from "./EditableProfileField";
 import { Mail, Calendar, User, MapPin, Info, Award, Smartphone, Edit, Check } from "lucide-react";
@@ -24,8 +25,6 @@ interface ProfileDetailsTabProps {
   user: EnhancedUser;
   isCurrentUser: boolean;
   onFieldUpdate: (field: string, value: any) => void;
-  showEditInfo?: boolean;
-  setShowEditInfo?: (show: boolean) => void;
 }
 
 // Animation variants
@@ -51,18 +50,10 @@ const itemVariants = {
 export default function ProfileDetailsTab({
   user,
   isCurrentUser,
-  onFieldUpdate,
-  showEditInfo: externalShowEditInfo,
-  setShowEditInfo: externalSetShowEditInfo
+  onFieldUpdate
 }: ProfileDetailsTabProps) {
   // Detect if on mobile
   const isMobile = useMediaQuery("(max-width: 768px)");
-  // Use internal state if external not provided
-  const [internalShowEditInfo, setInternalShowEditInfo] = useState(false);
-  
-  // Use either external or internal state
-  const showEditInfo = externalShowEditInfo !== undefined ? externalShowEditInfo : internalShowEditInfo;
-  const setShowEditInfo = externalSetShowEditInfo || setInternalShowEditInfo;
   
   return (
     <motion.div 
@@ -79,14 +70,6 @@ export default function ProfileDetailsTab({
               <User className="h-5 w-5 text-primary" />
               <span>Personal Information</span>
             </CardTitle>
-            {isCurrentUser && isMobile && (
-              <div onClick={() => setShowEditInfo(!showEditInfo)} className="cursor-pointer">
-                <Badge variant={showEditInfo ? "secondary" : "outline"} className="flex gap-1 items-center">
-                  <Edit className="h-3 w-3" />
-                  <span>{showEditInfo ? "Exit Edit Mode" : "Edit Info"}</span>
-                </Badge>
-              </div>
-            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -268,7 +251,7 @@ export default function ProfileDetailsTab({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Primary Paddle</div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <EditableProfileField
                       value={user.paddleBrand || ""}
                       field="paddleBrand"
@@ -277,13 +260,32 @@ export default function ProfileDetailsTab({
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
-                          <input
-                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            placeholder="Brand"
-                            autoFocus
-                          />
+                          <Select 
+                            value={value} 
+                            onValueChange={onChange}
+                          >
+                            <SelectTrigger className="w-full bg-muted border border-input text-sm">
+                              <SelectValue placeholder="Select paddle brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Selkirk">Selkirk</SelectItem>
+                              <SelectItem value="Joola">Joola</SelectItem>
+                              <SelectItem value="Engage">Engage</SelectItem>
+                              <SelectItem value="Paddletek">Paddletek</SelectItem>
+                              <SelectItem value="Onix">Onix</SelectItem>
+                              <SelectItem value="Head">Head</SelectItem>
+                              <SelectItem value="ProKennex">ProKennex</SelectItem>
+                              <SelectItem value="Franklin">Franklin</SelectItem>
+                              <SelectItem value="Gamma">Gamma</SelectItem>
+                              <SelectItem value="Gearbox">Gearbox</SelectItem>
+                              <SelectItem value="Prince">Prince</SelectItem>
+                              <SelectItem value="CRBN">CRBN</SelectItem>
+                              <SelectItem value="Electrum">Electrum</SelectItem>
+                              <SelectItem value="Diadem">Diadem</SelectItem>
+                              <SelectItem value="SHOT3">SHOT3</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Brand: ${value}` : "No brand specified"}
@@ -318,7 +320,7 @@ export default function ProfileDetailsTab({
                 
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Backup Paddle</div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <EditableProfileField
                       value={user.backupPaddleBrand || ""}
                       field="backupPaddleBrand"
@@ -327,13 +329,32 @@ export default function ProfileDetailsTab({
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
-                          <input
-                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                            value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            placeholder="Brand"
-                            autoFocus
-                          />
+                          <Select 
+                            value={value} 
+                            onValueChange={onChange}
+                          >
+                            <SelectTrigger className="w-full bg-muted border border-input text-sm">
+                              <SelectValue placeholder="Select paddle brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Selkirk">Selkirk</SelectItem>
+                              <SelectItem value="Joola">Joola</SelectItem>
+                              <SelectItem value="Engage">Engage</SelectItem>
+                              <SelectItem value="Paddletek">Paddletek</SelectItem>
+                              <SelectItem value="Onix">Onix</SelectItem>
+                              <SelectItem value="Head">Head</SelectItem>
+                              <SelectItem value="ProKennex">ProKennex</SelectItem>
+                              <SelectItem value="Franklin">Franklin</SelectItem>
+                              <SelectItem value="Gamma">Gamma</SelectItem>
+                              <SelectItem value="Gearbox">Gearbox</SelectItem>
+                              <SelectItem value="Prince">Prince</SelectItem>
+                              <SelectItem value="CRBN">CRBN</SelectItem>
+                              <SelectItem value="Electrum">Electrum</SelectItem>
+                              <SelectItem value="Diadem">Diadem</SelectItem>
+                              <SelectItem value="SHOT3">SHOT3</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Brand: ${value}` : "No brand specified"}
@@ -370,7 +391,7 @@ export default function ProfileDetailsTab({
               {/* Other Equipment */}
               <div className="space-y-2">
                 <div className="text-sm font-medium">Other Equipment</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <EditableProfileField
                     value={user.shoeBrand || ""}
                     field="shoeBrand"
@@ -379,13 +400,29 @@ export default function ProfileDetailsTab({
                     placeholder="Shoe Brand"
                     render={(value, editing, onChange) => (
                       editing ? (
-                        <input
-                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                          value={value}
-                          onChange={(e) => onChange(e.target.value)}
-                          placeholder="Shoe Brand"
-                          autoFocus
-                        />
+                        <Select 
+                          value={value} 
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger className="w-full bg-muted border border-input text-sm">
+                            <SelectValue placeholder="Select shoe brand" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Nike">Nike</SelectItem>
+                            <SelectItem value="Adidas">Adidas</SelectItem>
+                            <SelectItem value="K-Swiss">K-Swiss</SelectItem>
+                            <SelectItem value="New Balance">New Balance</SelectItem>
+                            <SelectItem value="ASICS">ASICS</SelectItem>
+                            <SelectItem value="Wilson">Wilson</SelectItem>
+                            <SelectItem value="Babolat">Babolat</SelectItem>
+                            <SelectItem value="Lacoste">Lacoste</SelectItem>
+                            <SelectItem value="FILA">FILA</SelectItem>
+                            <SelectItem value="Under Armour">Under Armour</SelectItem>
+                            <SelectItem value="Skechers">Skechers</SelectItem>
+                            <SelectItem value="Brooks">Brooks</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       ) : (
                         <div className="text-sm text-muted-foreground">
                           {value ? `Shoe Brand: ${value}` : "No shoe brand specified"}
@@ -402,13 +439,28 @@ export default function ProfileDetailsTab({
                     placeholder="Apparel"
                     render={(value, editing, onChange) => (
                       editing ? (
-                        <input
-                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                          value={value}
-                          onChange={(e) => onChange(e.target.value)}
-                          placeholder="Apparel"
-                          autoFocus
-                        />
+                        <Select 
+                          value={value} 
+                          onValueChange={onChange}
+                        >
+                          <SelectTrigger className="w-full bg-muted border border-input text-sm">
+                            <SelectValue placeholder="Select apparel brand" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Nike">Nike</SelectItem>
+                            <SelectItem value="Adidas">Adidas</SelectItem>
+                            <SelectItem value="Under Armour">Under Armour</SelectItem>
+                            <SelectItem value="Lululemon">Lululemon</SelectItem>
+                            <SelectItem value="FILA">FILA</SelectItem>
+                            <SelectItem value="New Balance">New Balance</SelectItem>
+                            <SelectItem value="Wilson">Wilson</SelectItem>
+                            <SelectItem value="Lacoste">Lacoste</SelectItem>
+                            <SelectItem value="Athleta">Athleta</SelectItem>
+                            <SelectItem value="Jockerey">Jockerey</SelectItem>
+                            <SelectItem value="Vuori">Vuori</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       ) : (
                         <div className="text-sm text-muted-foreground">
                           {value ? `Apparel: ${value}` : "No apparel specified"}

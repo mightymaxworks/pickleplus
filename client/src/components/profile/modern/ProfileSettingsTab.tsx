@@ -150,7 +150,7 @@ export default function ProfileSettingsTab({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
                   <Label htmlFor="match-requests">Match Requests</Label>
                   <p className="text-muted-foreground text-xs">
@@ -164,7 +164,7 @@ export default function ProfileSettingsTab({
                 />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
                   <Label htmlFor="direct-messages">Direct Messages</Label>
                   <p className="text-muted-foreground text-xs">
@@ -178,7 +178,7 @@ export default function ProfileSettingsTab({
                 />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
                   <Label htmlFor="connection-requests">Connection Requests</Label>
                   <p className="text-muted-foreground text-xs">
@@ -192,7 +192,7 @@ export default function ProfileSettingsTab({
                 />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
                   <Label htmlFor="mentorship">Mentorship Interest</Label>
                   <p className="text-muted-foreground text-xs">
