@@ -260,32 +260,30 @@ export default function ProfileDetailsTab({
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
-                          <Select 
-                            value={value} 
-                            onValueChange={onChange}
+                          <select
+                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                            value={value}
+                            onChange={(e) => onChange(e.target.value)}
+                            aria-label="Select paddle brand"
                           >
-                            <SelectTrigger className="w-full bg-muted border border-input text-sm">
-                              <SelectValue placeholder="Select paddle brand" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Selkirk">Selkirk</SelectItem>
-                              <SelectItem value="Joola">Joola</SelectItem>
-                              <SelectItem value="Engage">Engage</SelectItem>
-                              <SelectItem value="Paddletek">Paddletek</SelectItem>
-                              <SelectItem value="Onix">Onix</SelectItem>
-                              <SelectItem value="Head">Head</SelectItem>
-                              <SelectItem value="ProKennex">ProKennex</SelectItem>
-                              <SelectItem value="Franklin">Franklin</SelectItem>
-                              <SelectItem value="Gamma">Gamma</SelectItem>
-                              <SelectItem value="Gearbox">Gearbox</SelectItem>
-                              <SelectItem value="Prince">Prince</SelectItem>
-                              <SelectItem value="CRBN">CRBN</SelectItem>
-                              <SelectItem value="Electrum">Electrum</SelectItem>
-                              <SelectItem value="Diadem">Diadem</SelectItem>
-                              <SelectItem value="SHOT3">SHOT3</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <option value="" disabled>Select paddle brand</option>
+                            <option value="Selkirk">Selkirk</option>
+                            <option value="Joola">Joola</option>
+                            <option value="Engage">Engage</option>
+                            <option value="Paddletek">Paddletek</option>
+                            <option value="Onix">Onix</option>
+                            <option value="Head">Head</option>
+                            <option value="ProKennex">ProKennex</option>
+                            <option value="Franklin">Franklin</option>
+                            <option value="Gamma">Gamma</option>
+                            <option value="Gearbox">Gearbox</option>
+                            <option value="Prince">Prince</option>
+                            <option value="CRBN">CRBN</option>
+                            <option value="Electrum">Electrum</option>
+                            <option value="Diadem">Diadem</option>
+                            <option value="SHOT3">SHOT3</option>
+                            <option value="Other">Other</option>
+                          </select>
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Brand: ${value}` : "No brand specified"}
@@ -329,32 +327,30 @@ export default function ProfileDetailsTab({
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
-                          <Select 
-                            value={value} 
-                            onValueChange={onChange}
+                          <select
+                            className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                            value={value}
+                            onChange={(e) => onChange(e.target.value)}
+                            aria-label="Select backup paddle brand"
                           >
-                            <SelectTrigger className="w-full bg-muted border border-input text-sm">
-                              <SelectValue placeholder="Select paddle brand" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Selkirk">Selkirk</SelectItem>
-                              <SelectItem value="Joola">Joola</SelectItem>
-                              <SelectItem value="Engage">Engage</SelectItem>
-                              <SelectItem value="Paddletek">Paddletek</SelectItem>
-                              <SelectItem value="Onix">Onix</SelectItem>
-                              <SelectItem value="Head">Head</SelectItem>
-                              <SelectItem value="ProKennex">ProKennex</SelectItem>
-                              <SelectItem value="Franklin">Franklin</SelectItem>
-                              <SelectItem value="Gamma">Gamma</SelectItem>
-                              <SelectItem value="Gearbox">Gearbox</SelectItem>
-                              <SelectItem value="Prince">Prince</SelectItem>
-                              <SelectItem value="CRBN">CRBN</SelectItem>
-                              <SelectItem value="Electrum">Electrum</SelectItem>
-                              <SelectItem value="Diadem">Diadem</SelectItem>
-                              <SelectItem value="SHOT3">SHOT3</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <option value="" disabled>Select paddle brand</option>
+                            <option value="Selkirk">Selkirk</option>
+                            <option value="Joola">Joola</option>
+                            <option value="Engage">Engage</option>
+                            <option value="Paddletek">Paddletek</option>
+                            <option value="Onix">Onix</option>
+                            <option value="Head">Head</option>
+                            <option value="ProKennex">ProKennex</option>
+                            <option value="Franklin">Franklin</option>
+                            <option value="Gamma">Gamma</option>
+                            <option value="Gearbox">Gearbox</option>
+                            <option value="Prince">Prince</option>
+                            <option value="CRBN">CRBN</option>
+                            <option value="Electrum">Electrum</option>
+                            <option value="Diadem">Diadem</option>
+                            <option value="SHOT3">SHOT3</option>
+                            <option value="Other">Other</option>
+                          </select>
                         ) : (
                           <div className="text-sm text-muted-foreground">
                             {value ? `Brand: ${value}` : "No brand specified"}
@@ -400,29 +396,27 @@ export default function ProfileDetailsTab({
                     placeholder="Shoe Brand"
                     render={(value, editing, onChange) => (
                       editing ? (
-                        <Select 
-                          value={value} 
-                          onValueChange={onChange}
+                        <select
+                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          aria-label="Select shoe brand"
                         >
-                          <SelectTrigger className="w-full bg-muted border border-input text-sm">
-                            <SelectValue placeholder="Select shoe brand" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Nike">Nike</SelectItem>
-                            <SelectItem value="Adidas">Adidas</SelectItem>
-                            <SelectItem value="K-Swiss">K-Swiss</SelectItem>
-                            <SelectItem value="New Balance">New Balance</SelectItem>
-                            <SelectItem value="ASICS">ASICS</SelectItem>
-                            <SelectItem value="Wilson">Wilson</SelectItem>
-                            <SelectItem value="Babolat">Babolat</SelectItem>
-                            <SelectItem value="Lacoste">Lacoste</SelectItem>
-                            <SelectItem value="FILA">FILA</SelectItem>
-                            <SelectItem value="Under Armour">Under Armour</SelectItem>
-                            <SelectItem value="Skechers">Skechers</SelectItem>
-                            <SelectItem value="Brooks">Brooks</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          <option value="" disabled>Select shoe brand</option>
+                          <option value="Nike">Nike</option>
+                          <option value="Adidas">Adidas</option>
+                          <option value="K-Swiss">K-Swiss</option>
+                          <option value="New Balance">New Balance</option>
+                          <option value="ASICS">ASICS</option>
+                          <option value="Wilson">Wilson</option>
+                          <option value="Babolat">Babolat</option>
+                          <option value="Lacoste">Lacoste</option>
+                          <option value="FILA">FILA</option>
+                          <option value="Under Armour">Under Armour</option>
+                          <option value="Skechers">Skechers</option>
+                          <option value="Brooks">Brooks</option>
+                          <option value="Other">Other</option>
+                        </select>
                       ) : (
                         <div className="text-sm text-muted-foreground">
                           {value ? `Shoe Brand: ${value}` : "No shoe brand specified"}
@@ -439,28 +433,26 @@ export default function ProfileDetailsTab({
                     placeholder="Apparel"
                     render={(value, editing, onChange) => (
                       editing ? (
-                        <Select 
-                          value={value} 
-                          onValueChange={onChange}
+                        <select
+                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          aria-label="Select apparel brand"
                         >
-                          <SelectTrigger className="w-full bg-muted border border-input text-sm">
-                            <SelectValue placeholder="Select apparel brand" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Nike">Nike</SelectItem>
-                            <SelectItem value="Adidas">Adidas</SelectItem>
-                            <SelectItem value="Under Armour">Under Armour</SelectItem>
-                            <SelectItem value="Lululemon">Lululemon</SelectItem>
-                            <SelectItem value="FILA">FILA</SelectItem>
-                            <SelectItem value="New Balance">New Balance</SelectItem>
-                            <SelectItem value="Wilson">Wilson</SelectItem>
-                            <SelectItem value="Lacoste">Lacoste</SelectItem>
-                            <SelectItem value="Athleta">Athleta</SelectItem>
-                            <SelectItem value="Jockerey">Jockerey</SelectItem>
-                            <SelectItem value="Vuori">Vuori</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          <option value="" disabled>Select apparel brand</option>
+                          <option value="Nike">Nike</option>
+                          <option value="Adidas">Adidas</option>
+                          <option value="Under Armour">Under Armour</option>
+                          <option value="Lululemon">Lululemon</option>
+                          <option value="FILA">FILA</option>
+                          <option value="New Balance">New Balance</option>
+                          <option value="Wilson">Wilson</option>
+                          <option value="Lacoste">Lacoste</option>
+                          <option value="Athleta">Athleta</option>
+                          <option value="Jockerey">Jockerey</option>
+                          <option value="Vuori">Vuori</option>
+                          <option value="Other">Other</option>
+                        </select>
                       ) : (
                         <div className="text-sm text-muted-foreground">
                           {value ? `Apparel: ${value}` : "No apparel specified"}
