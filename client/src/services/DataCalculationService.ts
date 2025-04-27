@@ -1,582 +1,196 @@
 /**
- * PKL-278651-PROF-0007-SERV - Data Calculation Service
+ * PKL-278651-PROF-0022-CALC - Data Calculation Service
  * 
- * This service handles all CourtIQ metrics calculations and user performance analytics
- * with frontend-first implementation.
+ * Frontend-first calculation service for various application metrics
+ * including XP, profile completion, and other user-related calculations.
+ * 
+ * This is a core component of the Frontend-First architecture.
  * 
  * @framework Framework5.3
  * @version 1.0.0
- * @lastUpdated 2025-04-26
+ * @lastUpdated 2025-04-27
  */
 
+import { getLevelInfo, calculateLevel } from "@/lib/calculateLevel";
 import { EnhancedUser } from "@/types/enhanced-user";
-import { getLevelInfo } from "@/lib/calculateLevel";
+import { apiRequest } from "@/lib/queryClient";
 
-// Court IQ dimension codes
-export type CourtIQDimension = "TECH" | "TACT" | "PHYS" | "MENT" | "CONS";
+// Re-export level calculation functions for convenience
+export { getLevelInfo, calculateLevel };
 
-// CourtIQ metrics interface
-export interface CourtIQMetrics {
-  technical: number;    // Technical Skills
-  tactical: number;     // Tactical Awareness
-  physical: number;     // Physical Fitness
-  mental: number;       // Mental Toughness
-  consistency: number;  // Consistency
+interface ProfileFieldXpMap {
+  [key: string]: number;
 }
 
-// Calculated user metrics from DataCalculationService
-export interface PCPRankingInfo {
-  tier: PCPTier;
-  points: number;
-  nextTierThreshold: number;
-  progressPercentage: number;
-  ratingContribution: number;
-}
+// XP awarded for completing various profile fields
+const PROFILE_FIELD_XP: ProfileFieldXpMap = {
+  // Personal Info - Basic fields (5 XP each)
+  firstName: 5,
+  lastName: 5,
+  displayName: 5,
+  location: 5,
+  yearOfBirth: 5,
+  bio: 10, // Bio is worth more as it's more detailed
 
-export interface CalculatedUserMetrics {
-  level: number;
-  nextLevelXP: number;
-  xpProgressPercentage: number;
-  recentPerformance: number;
-  overallRating: number;
-  ratingTier?: string;
-  masteryLevel?: string;
-  dimensionRatings?: CourtIQMetrics;
-  completionPercentage: number;
-  pcpRanking?: PCPRankingInfo;
-}
+  // Equipment fields (5 XP each)
+  paddleBrand: 5,
+  paddleModel: 5,
+  backupPaddleBrand: 5,
+  backupPaddleModel: 5,
+  preferredBall: 5,
 
-// Rating system types
-export type RatingSystem = "COURTIQ" | "DUPR" | "UTPR" | "WPR";
+  // Playing Preferences (7 XP each - more gameplay relevant)
+  playingFrequency: 7,
+  preferredPlayFormat: 7,
+  preferredPosition: 7,
+  playStyle: 7,
+  experienceYears: 7,
+  skill: 7,
 
-// PCP Tier definition
-export type PCPTier = "Bronze" | "Silver" | "Gold" | "Platinum" | "Diamond" | "Master";
+  // Physical attributes (5 XP each)
+  height: 5,
+  reach: 5,
+  dominantHand: 5,
 
-// PCP Tier threshold configuration
-export const PCP_TIER_THRESHOLDS = {
-  BRONZE: 0,
-  SILVER: 1000,
-  GOLD: 2500,
-  PLATINUM: 5000,
-  DIAMOND: 10000,
-  MASTER: 25000
+  // External Ratings (8 XP each - more complex info)
+  duprRating: 8,
+  utprRating: 8,
+  wprRating: 8
 };
 
-// Dimension weight configuration
-const DIMENSION_WEIGHTS = {
-  TECH: 0.25,  // Technical Skills: 25%
-  TACT: 0.25,  // Tactical Awareness: 25%
-  PHYS: 0.15,  // Physical Fitness: 15%
-  MENT: 0.20,  // Mental Toughness: 20%
-  CONS: 0.15   // Consistency: 15%
-};
-
-// Protection thresholds for ratings
-const RATING_PROTECTION = {
-  MIN_MATCHES_FOR_ACCURATE: 5,
-  BEGINNER_FLOOR: 1000,
-  MIN_CHANGE_THRESHOLD: 25,
-  VOLATILITY_DAMPENER: 0.8
-};
-
-// Maximum PCP ranking points that contribute to CourtIQ rating
-export const MAX_PCP_RATING_CONTRIBUTION = 500;
+// Threshold bonuses for profile completion
+const COMPLETION_BONUS_THRESHOLDS = [
+  { threshold: 25, bonus: 10 },  // 25% completion: +10 XP
+  { threshold: 50, bonus: 15 },  // 50% completion: +15 XP
+  { threshold: 75, bonus: 25 },  // 75% completion: +25 XP
+  { threshold: 100, bonus: 50 }, // 100% completion: +50 XP
+];
 
 /**
- * Converts a CourtIQ rating to the specified rating system
- * @param courtIQRating - The CourtIQ rating value (1000-3000 scale)
- * @param targetSystem - The target rating system
- * @returns The converted rating in the target system's scale
+ * Calculate the XP value for completing a specific profile field
+ * 
+ * @param fieldName - The name of the profile field
+ * @returns The XP value for the field, or 0 if not defined
  */
-export function convertRating(courtIQRating: number, targetSystem: RatingSystem): number {
-  // Base CourtIQ scale is 1000-3000 where 2000 is advanced intermediate
-  
-  if (targetSystem === "COURTIQ") {
-    return courtIQRating;
-  }
-  
-  switch (targetSystem) {
-    case "DUPR":
-      // DUPR: 2.0-7.0 scale, increments of 0.25, 4.5 is advanced intermediate
-      return 2.0 + ((courtIQRating - 1000) / 2000) * 5.0;
-      
-    case "UTPR":
-      // UTPR: 1.0-6.5 scale, increments of 0.5, 4.0 is advanced intermediate  
-      return 1.0 + ((courtIQRating - 1000) / 2000) * 5.5;
-      
-    case "WPR":
-      // WPR: 1-10 scale, 6 is advanced intermediate
-      return 1.0 + ((courtIQRating - 1000) / 2000) * 9.0;
-      
-    default:
-      return courtIQRating;
-  }
+export function calculateProfileFieldXp(fieldName: string): number {
+  return PROFILE_FIELD_XP[fieldName] || 0;
 }
 
 /**
- * Data Calculation Service for handling all metrics calculations
+ * Calculate the total potential XP available from profile completion
+ * 
+ * @returns The total XP available, including field XP and bonuses
  */
-export class DataCalculationService {
-  /**
-   * Calculate all user metrics based on user data
-   * @param user - Enhanced user data
-   * @returns Calculated metrics
-   */
-  calculateUserMetrics(user: EnhancedUser): CalculatedUserMetrics {
-    // Calculate level info
-    const levelInfo = getLevelInfo(user.xp);
+export function calculateTotalPotentialProfileXp(): number {
+  // Sum the XP values for all fields
+  const fieldXp = Object.values(PROFILE_FIELD_XP).reduce((sum, xp) => sum + xp, 0);
+  
+  // Sum the XP bonuses for completion thresholds
+  const bonusXp = COMPLETION_BONUS_THRESHOLDS.reduce((sum, threshold) => sum + threshold.bonus, 0);
+  
+  return fieldXp + bonusXp;
+}
 
-    // Calculate rating tier
-    const ratingTier = this.calculateRatingTier(this.calculateOverallRating(user));
+/**
+ * Calculate the bonus XP for reaching a specific profile completion percentage
+ * 
+ * @param completionPercentage - The profile completion percentage (0-100)
+ * @param previousPercentage - The previous completion percentage to avoid awarding bonuses twice
+ * @returns The bonus XP to award
+ */
+export function calculateCompletionBonus(
+  completionPercentage: number, 
+  previousPercentage: number
+): number {
+  let bonus = 0;
+  
+  // Check if user has passed any thresholds since last update
+  for (const { threshold, bonus: xpBonus } of COMPLETION_BONUS_THRESHOLDS) {
+    if (completionPercentage >= threshold && previousPercentage < threshold) {
+      bonus += xpBonus;
+    }
+  }
+  
+  return bonus;
+}
+
+/**
+ * Calculate profile completion percentage based on filled fields
+ * 
+ * @param user - User data object
+ * @returns The profile completion percentage (0-100)
+ */
+export function calculateProfileCompletionPercentage(user: EnhancedUser): number {
+  if (!user) return 0;
+  
+  const allFields = Object.keys(PROFILE_FIELD_XP);
+  const filledFields = allFields.filter(field => {
+    const value = user[field as keyof EnhancedUser];
+    return value !== null && value !== undefined && value !== '';
+  });
+  
+  return Math.round((filledFields.length / allFields.length) * 100);
+}
+
+/**
+ * Record a profile field completion and potentially award XP
+ * This is part of the frontend-first approach where we calculate locally,
+ * then sync with the server.
+ * 
+ * @param userId - User ID
+ * @param fieldName - The name of the field completed
+ * @param isFirstTimeCompletion - Whether this is the first time completing this field
+ * @param completionPercentage - Current profile completion percentage 
+ * @param previousPercentage - Previous profile completion percentage
+ * @returns Promise with XP awarded information
+ */
+export async function recordProfileFieldCompletion(
+  userId: number,
+  fieldName: string,
+  isFirstTimeCompletion: boolean,
+  completionPercentage: number,
+  previousPercentage: number
+): Promise<{ success: boolean; xpAwarded: number; message: string }> {
+  try {
+    // Only award XP for first-time completions
+    if (!isFirstTimeCompletion) {
+      return { success: true, xpAwarded: 0, message: "Field already completed" };
+    }
     
-    // Calculate dimension ratings from properties
-    const dimensionRatings = this.calculateDimensionRatings(user);
+    // Calculate the XP to award
+    const fieldXp = calculateProfileFieldXp(fieldName);
+    let totalXp = fieldXp;
     
-    // Calculate recent performance trend
-    const recentPerformance = user.totalMatches > 0 ? 
-      this.calculatePerformanceTrend(user) : 0;
+    // Check for completion bonuses
+    const bonusXp = calculateCompletionBonus(completionPercentage, previousPercentage);
+    totalXp += bonusXp;
+    
+    if (totalXp > 0) {
+      // Record field completion on the server
+      const response = await apiRequest("POST", "/api/profile/field-completion", {
+        fieldName,
+        fieldType: "profile",
+        xpAwarded: totalXp
+      });
       
-    // Calculate completion percentage
-    const completionPercentage = user.profileCompletionPct || 
-      this.calculateProfileCompletionPercentage(user);
+      const data = await response.json();
       
-    // Calculate PCP ranking info if user has ranking points
-    const pcpRanking = user.rankingPoints !== undefined ? 
-      this.calculatePCPRanking(user.rankingPoints) : undefined;
-      
+      return {
+        success: true,
+        xpAwarded: totalXp,
+        message: bonusXp > 0 
+          ? `You earned ${fieldXp} XP for filling out this field and a bonus ${bonusXp} XP for reaching ${completionPercentage}% completion!`
+          : `You earned ${fieldXp} XP for filling out this field!`
+      };
+    }
+    
+    return { success: true, xpAwarded: 0, message: "No XP awarded" };
+  } catch (error) {
+    console.error("Error recording profile field completion:", error);
     return {
-      ...levelInfo,
-      overallRating: this.calculateOverallRating(user),
-      ratingTier,
-      masteryLevel: this.calculateMasteryLevel(user),
-      dimensionRatings,
-      recentPerformance,
-      completionPercentage,
-      pcpRanking
+      success: false,
+      xpAwarded: 0,
+      message: "Failed to record completion"
     };
-  }
-  
-  /**
-   * Calculate PCP ranking tier and progress information
-   * @param rankingPoints - User's total PCP ranking points
-   * @returns PCP ranking information including tier, progress, and rating contribution
-   */
-  calculatePCPRanking(rankingPoints: number): PCPRankingInfo {
-    // Default to 0 if undefined
-    const points = rankingPoints || 0;
-    
-    // Determine current tier
-    let tier: PCPTier = "Bronze";
-    let nextTierThreshold = PCP_TIER_THRESHOLDS.SILVER;
-    
-    if (points >= PCP_TIER_THRESHOLDS.MASTER) {
-      tier = "Master";
-      nextTierThreshold = Infinity; // No next tier
-    } else if (points >= PCP_TIER_THRESHOLDS.DIAMOND) {
-      tier = "Diamond";
-      nextTierThreshold = PCP_TIER_THRESHOLDS.MASTER;
-    } else if (points >= PCP_TIER_THRESHOLDS.PLATINUM) {
-      tier = "Platinum";
-      nextTierThreshold = PCP_TIER_THRESHOLDS.DIAMOND;
-    } else if (points >= PCP_TIER_THRESHOLDS.GOLD) {
-      tier = "Gold";
-      nextTierThreshold = PCP_TIER_THRESHOLDS.PLATINUM;
-    } else if (points >= PCP_TIER_THRESHOLDS.SILVER) {
-      tier = "Silver";
-      nextTierThreshold = PCP_TIER_THRESHOLDS.GOLD;
-    }
-    
-    // Calculate progress to next tier
-    let progressPercentage = 0;
-    let currentTierThreshold = 0;
-    
-    switch (tier) {
-      case "Bronze":
-        currentTierThreshold = PCP_TIER_THRESHOLDS.BRONZE;
-        break;
-      case "Silver":
-        currentTierThreshold = PCP_TIER_THRESHOLDS.SILVER;
-        break;
-      case "Gold":
-        currentTierThreshold = PCP_TIER_THRESHOLDS.GOLD;
-        break;
-      case "Platinum":
-        currentTierThreshold = PCP_TIER_THRESHOLDS.PLATINUM;
-        break;
-      case "Diamond":
-        currentTierThreshold = PCP_TIER_THRESHOLDS.DIAMOND;
-        break;
-      case "Master":
-        currentTierThreshold = PCP_TIER_THRESHOLDS.MASTER;
-        break;
-    }
-    
-    // If not at max tier, calculate progress percentage
-    if (tier !== "Master") {
-      const tierRange = nextTierThreshold - currentTierThreshold;
-      const pointsInTier = points - currentTierThreshold;
-      progressPercentage = Math.min(100, Math.round((pointsInTier / tierRange) * 100));
-    } else {
-      progressPercentage = 100; // Max tier achieved
-    }
-    
-    // Calculate rating contribution (capped at MAX_PCP_RATING_CONTRIBUTION)
-    const ratingContribution = Math.min(points, MAX_PCP_RATING_CONTRIBUTION);
-    
-    return {
-      tier,
-      points,
-      nextTierThreshold,
-      progressPercentage,
-      ratingContribution
-    };
-  }
-  
-  /**
-   * Calculate overall CourtIQ rating
-   * @param user - User data
-   * @returns Overall CourtIQ rating (1000-3000 scale)
-   */
-  calculateOverallRating(user: EnhancedUser): number {
-    // If user has less than minimum matches, use baseline rating
-    if (user.totalMatches < RATING_PROTECTION.MIN_MATCHES_FOR_ACCURATE) {
-      return Math.max(RATING_PROTECTION.BEGINNER_FLOOR, 1200 + (user.xp * 0.5));
-    }
-    
-    // Base rating from win rate and experience
-    const winRate = user.totalMatches > 0 ? (user.matchesWon / user.totalMatches) : 0;
-    let baseRating = 1000 + (winRate * 1000) + (Math.min(user.totalMatches, 100) * 5);
-    
-    // Adjust based on dimension ratings
-    const dimensions = this.calculateDimensionRatings(user);
-    if (dimensions) {
-      const weightedSum = 
-        dimensions.technical * DIMENSION_WEIGHTS.TECH +
-        dimensions.tactical * DIMENSION_WEIGHTS.TACT +
-        dimensions.physical * DIMENSION_WEIGHTS.PHYS +
-        dimensions.mental * DIMENSION_WEIGHTS.MENT +
-        dimensions.consistency * DIMENSION_WEIGHTS.CONS;
-        
-      // Scale from 1-5 dimension rating to points
-      const dimensionBonus = ((weightedSum - 1) / 4) * 500;
-      baseRating += dimensionBonus;
-    }
-    
-    // Adjust based on tournament performance
-    if (user.totalTournaments > 0) {
-      baseRating += Math.min(user.totalTournaments * 25, 250);
-    }
-    
-    // Apply ranking points (capped at MAX_PCP_RATING_CONTRIBUTION)
-    if (user.rankingPoints > 0) {
-      baseRating += Math.min(user.rankingPoints, MAX_PCP_RATING_CONTRIBUTION);
-    }
-    
-    // Cap at 3000
-    return Math.min(3000, Math.round(baseRating));
-  }
-  
-  /**
-   * Calculate rating tier based on overall rating
-   * @param rating - Overall CourtIQ rating
-   * @returns Rating tier designation
-   */
-  calculateRatingTier(rating: number): string {
-    if (rating >= 2800) return "Elite";
-    if (rating >= 2600) return "Professional";
-    if (rating >= 2400) return "Expert";
-    if (rating >= 2200) return "Advanced";
-    if (rating >= 2000) return "Advanced Intermediate";
-    if (rating >= 1800) return "Intermediate";
-    if (rating >= 1600) return "Intermediate Beginner";
-    if (rating >= 1400) return "Developing";
-    if (rating >= 1200) return "Beginner";
-    return "Novice";
-  }
-  
-  /**
-   * Calculate mastery level based on overall progression
-   * @param user - User data
-   * @returns Mastery level designation
-   */
-  calculateMasteryLevel(user: EnhancedUser): string {
-    // Use a combination of XP, matches played, and rating
-    const xpFactor = Math.min(user.xp / 2000, 1); // Max at 2000 XP
-    const matchesFactor = Math.min(user.totalMatches / 50, 1); // Max at 50 matches
-    const ratingFactor = Math.min((this.calculateOverallRating(user) - 1000) / 1000, 1); // Max at 2000 rating
-    
-    // Calculate overall mastery score (0-100)
-    const masteryScore = Math.round((xpFactor * 0.4 + matchesFactor * 0.3 + ratingFactor * 0.3) * 100);
-    
-    // Determine mastery level
-    if (masteryScore >= 90) return "Grandmaster";
-    if (masteryScore >= 80) return "Master";
-    if (masteryScore >= 70) return "Diamond";
-    if (masteryScore >= 60) return "Platinum";
-    if (masteryScore >= 50) return "Gold";
-    if (masteryScore >= 40) return "Silver";
-    if (masteryScore >= 30) return "Bronze";
-    if (masteryScore >= 20) return "Copper";
-    if (masteryScore >= 10) return "Novice";
-    return "Rookie";
-  }
-  
-  /**
-   * Calculate the individual dimension ratings
-   * @param user - User data
-   * @returns CourtIQ dimension metrics (1-5 scale)
-   */
-  calculateDimensionRatings(user: EnhancedUser): CourtIQMetrics {
-    // Calculate ratings based on available user attributes
-    // Each dimension is on a 1-5 scale
-    
-    // Technical rating from specific skills
-    const technical = this.calculateAverageRating([
-      user.forehandStrength,
-      user.backhandStrength,
-      user.servePower,
-      user.dinkAccuracy
-    ]);
-    
-    // Tactical based on performance
-    const tactical = this.estimateTacticalRating(user);
-    
-    // Physical based on user attributes
-    const physical = this.estimatePhysicalRating(user);
-    
-    // Mental toughness rating
-    const mental = this.estimateMentalRating(user);
-    
-    // Consistency rating
-    const consistency = this.estimateConsistencyRating(user);
-    
-    return {
-      technical,
-      tactical,
-      physical,
-      mental,
-      consistency
-    };
-  }
-  
-  /**
-   * Calculate average rating from available values
-   * @param values - Array of rating values
-   * @returns Average rating or default if no values available
-   */
-  private calculateAverageRating(values: (number | undefined)[]): number {
-    const validValues = values.filter(val => val !== undefined) as number[];
-    
-    if (validValues.length === 0) {
-      return 3.0; // Default middle value
-    }
-    
-    const sum = validValues.reduce((acc, val) => acc + val, 0);
-    return Number((sum / validValues.length).toFixed(1));
-  }
-  
-  /**
-   * Estimate tactical rating based on user performance
-   * @param user - User data
-   * @returns Estimated tactical rating (1-5 scale)
-   */
-  private estimateTacticalRating(user: EnhancedUser): number {
-    // If we have an explicit rating, use it
-    if (user.thirdShotConsistency !== undefined) {
-      return Math.min(5, Math.max(1, user.thirdShotConsistency));
-    }
-    
-    // Otherwise estimate from performance
-    const baseRating = 3.0;
-    
-    // Adjust based on win rate if enough matches played
-    let adjustment = 0;
-    if (user.totalMatches >= 5) {
-      const winRate = user.matchesWon / user.totalMatches;
-      adjustment += (winRate - 0.5) * 2; // +1 for 100% win rate, -1 for 0% win rate
-    }
-    
-    // Adjust based on tournament experience
-    if (user.totalTournaments > 0) {
-      adjustment += Math.min(user.totalTournaments / 10, 0.5);
-    }
-    
-    // Clamp to 1-5 range and round to nearest decimal
-    return Number(Math.min(5, Math.max(1, baseRating + adjustment)).toFixed(1));
-  }
-  
-  /**
-   * Estimate physical rating based on user attributes
-   * @param user - User data
-   * @returns Estimated physical rating (1-5 scale)
-   */
-  private estimatePhysicalRating(user: EnhancedUser): number {
-    // If court coverage is provided, use it as base
-    if (user.courtCoverage !== undefined) {
-      return Math.min(5, Math.max(1, user.courtCoverage));
-    }
-    
-    // Otherwise estimate from other factors
-    const baseRating = 3.0;
-    
-    // Use total matches as an indicator of physical conditioning
-    let adjustment = 0;
-    if (user.totalMatches > 0) {
-      adjustment += Math.min(user.totalMatches / 50, 0.5);
-    }
-    
-    // Clamp to 1-5 range and round to nearest decimal
-    return Number(Math.min(5, Math.max(1, baseRating + adjustment)).toFixed(1));
-  }
-  
-  /**
-   * Estimate mental rating based on user performance
-   * @param user - User data
-   * @returns Estimated mental rating (1-5 scale)
-   */
-  private estimateMentalRating(user: EnhancedUser): number {
-    // Base mental rating
-    const baseRating = 3.0;
-    
-    // Adjust based on win rate in tough matches
-    let adjustment = 0;
-    
-    // Tournament experience suggests mental toughness
-    if (user.totalTournaments > 0) {
-      adjustment += Math.min(user.totalTournaments / 5, 0.5);
-    }
-    
-    // Experiential attributes
-    if (user.competitiveIntensity) {
-      if (user.competitiveIntensity === "high") adjustment += 0.5;
-      else if (user.competitiveIntensity === "low") adjustment -= 0.5;
-    }
-    
-    // Clamp to 1-5 range and round to nearest decimal
-    return Number(Math.min(5, Math.max(1, baseRating + adjustment)).toFixed(1));
-  }
-  
-  /**
-   * Estimate consistency rating based on user attributes
-   * @param user - User data
-   * @returns Estimated consistency rating (1-5 scale)
-   */
-  private estimateConsistencyRating(user: EnhancedUser): number {
-    // Base consistency rating
-    const baseRating = 3.0;
-    
-    // Experience suggests consistency
-    let adjustment = 0;
-    
-    // More matches played indicates consistency
-    if (user.totalMatches > 0) {
-      adjustment += Math.min(user.totalMatches / 50, 0.5);
-    }
-    
-    // Level progression suggests consistency
-    if (user.level > 1) {
-      adjustment += Math.min((user.level - 1) / 10, 0.5);
-    }
-    
-    // Clamp to 1-5 range and round to nearest decimal
-    return Number(Math.min(5, Math.max(1, baseRating + adjustment)).toFixed(1));
-  }
-  
-  /**
-   * Calculate recent performance trend
-   * @param user - User data
-   * @returns Performance trend percentage (-100 to 100)
-   */
-  calculatePerformanceTrend(user: EnhancedUser): number {
-    // This would normally be calculated from match history
-    // but for now we'll use a placeholder based on win rate
-    
-    if (user.totalMatches < 5) {
-      return 0; // Not enough matches to determine trend
-    }
-    
-    // Simulate a performance trend based on win rate
-    // A win rate over 50% would be a positive trend
-    const winRate = user.matchesWon / user.totalMatches;
-    const trendPercentage = (winRate - 0.5) * 100;
-    
-    // Randomize slightly for realistic variance
-    const variance = Math.random() * 10 - 5; // -5 to +5
-    
-    return Number((trendPercentage + variance).toFixed(1));
-  }
-  
-  /**
-   * Calculate profile completion percentage
-   * @param user - User data
-   * @returns Completion percentage (0-100)
-   */
-  calculateProfileCompletionPercentage(user: EnhancedUser): number {
-    // Define required and optional fields to check
-    const requiredFields: (keyof EnhancedUser)[] = [
-      'username', 'email', 'displayName', 'avatarUrl'
-    ];
-    
-    const optionalFields: (keyof EnhancedUser)[] = [
-      'bio', 'location', 'yearOfBirth', 'paddleBrand', 
-      'paddleModel', 'preferredPosition', 'forehandStrength',
-      'backhandStrength', 'servePower', 'height', 'reach',
-      'competitiveIntensity', 'playerGoals'
-    ];
-    
-    // Calculate completion percentage
-    const totalFields = requiredFields.length + optionalFields.length;
-    let completedFields = 0;
-    
-    // Check required fields (higher weight)
-    for (const field of requiredFields) {
-      if (user[field] !== undefined && user[field] !== null && user[field] !== '') {
-        completedFields += 2; // Double weight for required fields
-      }
-    }
-    
-    // Check optional fields
-    for (const field of optionalFields) {
-      if (user[field] !== undefined && user[field] !== null && user[field] !== '') {
-        completedFields += 1;
-      }
-    }
-    
-    // Calculate percentage (required fields have double weight)
-    const maxScore = (requiredFields.length * 2) + optionalFields.length;
-    const percentage = Math.round((completedFields / maxScore) * 100);
-    
-    return Math.min(100, Math.max(0, percentage));
-  }
-  
-  /**
-   * Apply rating protection mechanics to ensure fair progression
-   * @param currentRating - Current user rating
-   * @param calculatedRating - New calculated rating
-   * @param matchesPlayed - Total matches played
-   * @returns Protected rating after applying protection mechanics
-   */
-  applyRatingProtection(
-    currentRating: number,
-    calculatedRating: number,
-    matchesPlayed: number
-  ): number {
-    // If not enough matches, limit volatility
-    if (matchesPlayed < RATING_PROTECTION.MIN_MATCHES_FOR_ACCURATE) {
-      // Ensure new players don't drop below the beginner floor
-      if (calculatedRating < RATING_PROTECTION.BEGINNER_FLOOR) {
-        return RATING_PROTECTION.BEGINNER_FLOOR;
-      }
-      
-      // Limit change magnitude for new players
-      const change = calculatedRating - currentRating;
-      if (Math.abs(change) > RATING_PROTECTION.MIN_CHANGE_THRESHOLD) {
-        // Apply dampening factor to large changes
-        const protectedChange = change * RATING_PROTECTION.VOLATILITY_DAMPENER;
-        return currentRating + protectedChange;
-      }
-    }
-    
-    return calculatedRating;
   }
 }

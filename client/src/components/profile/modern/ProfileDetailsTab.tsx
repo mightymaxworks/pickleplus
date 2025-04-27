@@ -14,13 +14,15 @@
  * where you want them to be.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar } from "lucide-react";
+import { Calendar, Trophy } from "lucide-react";
 import EditableProfileField from "./EditableProfileField";
 import { EnhancedUser } from "@/types/enhanced-user";
+import { useProfileFieldXp } from "@/hooks/useProfileFieldXp";
+import { queryClient } from "@/lib/queryClient";
 
 interface ProfileDetailsTabProps {
   user: EnhancedUser;
@@ -58,6 +60,62 @@ export default function ProfileDetailsTab({
   isCurrentUser,
   onFieldUpdate
 }: ProfileDetailsTabProps) {
+  // Track field values for XP awards (only needed for the current user's profile)
+  const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
+  const [isMobileWidth, setIsMobileWidth] = useState(window.innerWidth <= 768);
+  
+  // XP tracking hook for frontend-first calculation
+  const { trackFieldCompletion, completionPercentage } = useProfileFieldXp({
+    user,
+    onXpAwarded: (amount) => {
+      // Invalidate XP-related queries when XP is awarded
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/xp'] });
+    }
+  });
+  
+  // Update mobile status on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileWidth(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
+  // Initialize field values on component mount
+  useEffect(() => {
+    if (user) {
+      // Create a map of the current field values
+      const initialValues: Record<string, any> = {};
+      Object.entries(user).forEach(([key, value]) => {
+        initialValues[key] = value;
+      });
+      setFieldValues(initialValues);
+    }
+  }, [user?.id]); // Only run when user ID changes
+  
+  // Enhanced field update handler that tracks XP
+  const handleFieldUpdate = (field: string, value: any) => {
+    // Store the previous value before update
+    const previousValue = fieldValues[field];
+    
+    // Call the parent's update handler
+    onFieldUpdate(field, value);
+    
+    // Update local field values state
+    setFieldValues(prev => ({ ...prev, [field]: value }));
+    
+    // Track field completion for XP (frontend first)
+    if (isCurrentUser) {
+      trackFieldCompletion(field, value, previousValue);
+    }
+  };
+
   return (
     <motion.div 
       className="space-y-6"
@@ -85,7 +143,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.displayName || ""}
                   field="displayName"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Enter your display name"
                 />
@@ -98,7 +156,7 @@ export default function ProfileDetailsTab({
                   <EditableProfileField
                     value={user.firstName || ""}
                     field="firstName"
-                    onUpdate={onFieldUpdate}
+                    onUpdate={handleFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Enter your first name"
                   />
@@ -110,7 +168,7 @@ export default function ProfileDetailsTab({
                   <EditableProfileField
                     value={user.lastName || ""}
                     field="lastName"
-                    onUpdate={onFieldUpdate}
+                    onUpdate={handleFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Enter your last name"
                   />
@@ -123,7 +181,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.location || ""}
                   field="location"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Enter your location"
                 />
@@ -139,7 +197,7 @@ export default function ProfileDetailsTab({
                     // Convert to number
                     const yearNum = parseInt(value);
                     if (!isNaN(yearNum)) {
-                      onFieldUpdate(field, yearNum);
+                      handleFieldUpdate(field, yearNum);
                     }
                   }}
                   editable={isCurrentUser}
@@ -153,7 +211,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.bio || ""}
                   field="bio"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Tell others about yourself"
                   className="min-h-[100px]"
@@ -200,7 +258,7 @@ export default function ProfileDetailsTab({
                     <EditableProfileField
                       value={user.paddleBrand || ""}
                       field="paddleBrand"
-                      onUpdate={onFieldUpdate}
+                      onUpdate={handleFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Brand"
                       render={(value, editing, onChange) => {
@@ -263,7 +321,7 @@ export default function ProfileDetailsTab({
                     <EditableProfileField
                       value={user.paddleModel || ""}
                       field="paddleModel"
-                      onUpdate={onFieldUpdate}
+                      onUpdate={handleFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Model"
                       render={(value, editing, onChange) => {
@@ -296,7 +354,7 @@ export default function ProfileDetailsTab({
                     <EditableProfileField
                       value={user.backupPaddleBrand || ""}
                       field="backupPaddleBrand"
-                      onUpdate={onFieldUpdate}
+                      onUpdate={handleFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Brand"
                       render={(value, editing, onChange) => {
@@ -359,7 +417,7 @@ export default function ProfileDetailsTab({
                     <EditableProfileField
                       value={user.backupPaddleModel || ""}
                       field="backupPaddleModel"
-                      onUpdate={onFieldUpdate}
+                      onUpdate={handleFieldUpdate}
                       editable={isCurrentUser}
                       placeholder="Model"
                       render={(value, editing, onChange) => {
@@ -394,7 +452,7 @@ export default function ProfileDetailsTab({
                   <EditableProfileField
                     value={user.shoesBrand || ""}
                     field="shoesBrand"
-                    onUpdate={onFieldUpdate}
+                    onUpdate={handleFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Shoe Brand"
                     render={(value, editing, onChange) => {
@@ -452,7 +510,7 @@ export default function ProfileDetailsTab({
                   <EditableProfileField
                     value={user.apparelBrand || ""}
                     field="apparelBrand"
-                    onUpdate={onFieldUpdate}
+                    onUpdate={handleFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Apparel"
                     render={(value, editing, onChange) => {
@@ -530,7 +588,7 @@ export default function ProfileDetailsTab({
                   <EditableProfileField
                     value={user.preferredPosition || ""}
                     field="preferredPosition"
-                    onUpdate={onFieldUpdate}
+                    onUpdate={handleFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Select position"
                     render={(value, editing, onChange) => {
@@ -582,7 +640,7 @@ export default function ProfileDetailsTab({
                   <EditableProfileField
                     value={user.playingSince || ""}
                     field="playingSince"
-                    onUpdate={onFieldUpdate}
+                    onUpdate={handleFieldUpdate}
                     editable={isCurrentUser}
                     placeholder="Year you started playing"
                     render={(value, editing, onChange) => {
@@ -636,7 +694,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.playingStyle || ""}
                   field="playingStyle"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Select your playing style"
                   render={(value, editing, onChange) => {
@@ -693,7 +751,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.skillLevel || ""}
                   field="skillLevel"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Select your skill level"
                   render={(value, editing, onChange) => {
@@ -770,7 +828,7 @@ export default function ProfileDetailsTab({
                     // Convert to number
                     const heightNum = parseInt(value);
                     if (!isNaN(heightNum)) {
-                      onFieldUpdate(field, heightNum);
+                      handleFieldUpdate(field, heightNum);
                     }
                   }}
                   editable={isCurrentUser}
@@ -810,7 +868,7 @@ export default function ProfileDetailsTab({
                     // Convert to number
                     const reachNum = parseInt(value);
                     if (!isNaN(reachNum)) {
-                      onFieldUpdate(field, reachNum);
+                      handleFieldUpdate(field, reachNum);
                     }
                   }}
                   editable={isCurrentUser}
@@ -861,7 +919,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.playingFrequency || ""}
                   field="playingFrequency"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Select how often you play"
                   render={(value, editing, onChange) => {
@@ -918,7 +976,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.preferredPlayingTime || ""}
                   field="preferredPlayingTime"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Select your preferred time to play"
                   render={(value, editing, onChange) => {
@@ -977,7 +1035,7 @@ export default function ProfileDetailsTab({
                 <EditableProfileField
                   value={user.preferredVenue || ""}
                   field="preferredVenue"
-                  onUpdate={onFieldUpdate}
+                  onUpdate={handleFieldUpdate}
                   editable={isCurrentUser}
                   placeholder="Where do you usually play?"
                   render={(value, editing, onChange) => {
