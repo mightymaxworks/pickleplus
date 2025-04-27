@@ -131,3 +131,21 @@ export function getLevelInfo(xp: number): LevelInfo {
 export function calculateLevel(xp: number): number {
   return getLevelInfo(xp).level;
 }
+
+/**
+ * Get the XP required to reach a specific level
+ * 
+ * @param level - The target level
+ * @returns XP required for the specified level
+ */
+export function getNextLevelXP(level: number): number {
+  if (level <= 0) return 0;
+  
+  // Use predefined thresholds for levels in our table
+  if (level <= XP_THRESHOLDS.length) {
+    return XP_THRESHOLDS[level - 1];
+  }
+  
+  // Calculate XP for levels beyond our table
+  return calculateXpForHighLevel(level);
+}

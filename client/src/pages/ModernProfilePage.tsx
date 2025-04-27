@@ -39,7 +39,8 @@ import {
   MessageSquare,
   FileText,
   ChevronRight,
-  CalendarDays
+  CalendarDays,
+  Users
 } from "lucide-react";
 
 // Profile Components
@@ -47,6 +48,7 @@ import ProfileDetailsTab from "@/components/profile/modern/ProfileDetailsTab";
 import ProfileStatsTab from "@/components/profile/modern/ProfileStatsTab";
 import ProfileHistoryTab from "@/components/profile/modern/ProfileHistoryTab";
 import ProfileSettingsTab from "@/components/profile/modern/ProfileSettingsTab";
+import PlayerComparisonTool from "@/components/profile/modern/PlayerComparisonTool";
 import EditableProfileField from "@/components/profile/modern/EditableProfileField";
 import CoverImageUploader from "@/components/profile/modern/CoverImageUploader";
 import AvatarUploader from "@/components/profile/modern/AvatarUploader";
@@ -453,7 +455,7 @@ export default function ModernProfilePage() {
         {/* Tab Navigation */}
         <div className="mt-8">
           <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 mb-8">
+            <TabsList className="grid grid-cols-5 mb-8">
               <TabsTrigger value="details" className="flex items-center">
                 <User className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Details</span>
@@ -465,6 +467,10 @@ export default function ModernProfilePage() {
               <TabsTrigger value="history" className="flex items-center">
                 <Clock className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">History</span>
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="flex items-center">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Compare</span>
               </TabsTrigger>
               {isCurrentUserProfile && (
                 <TabsTrigger value="settings" className="flex items-center">
