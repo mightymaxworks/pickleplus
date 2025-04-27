@@ -493,6 +493,10 @@ export const users = pgTable("users", {
   utprProfileUrl: varchar("utpr_profile_url", { length: 255 }),
   wprRating: varchar("wpr_rating", { length: 10 }),
   wprProfileUrl: varchar("wpr_profile_url", { length: 255 }),
+  ifpRating: varchar("ifp_rating", { length: 10 }),
+  ifpProfileUrl: varchar("ifp_profile_url", { length: 255 }),
+  iptpaRating: varchar("iptpa_rating", { length: 10 }),
+  iptpaProfileUrl: varchar("iptpa_profile_url", { length: 255 }),
   externalRatingsVerified: boolean("external_ratings_verified").default(false),
   lastExternalRatingUpdate: timestamp("last_external_rating_update"),
   

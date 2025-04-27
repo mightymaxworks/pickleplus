@@ -164,7 +164,17 @@ export function RatingConverter() {
         throw new Error(errorData.error || 'Failed to convert rating');
       }
       
-      const data: ConversionResult = await response.json();
+      const apiResponse = await response.json();
+      
+      // Format the API response to match our component's expected structure
+      const data: ConversionResult = {
+        rating: apiResponse.convertedRating,
+        confidence: 90, // Default high confidence for our direct calculations
+        source: fromSystem === toSystem ? 'direct' : 'mathematical',
+        originalRating: apiResponse.originalRating,
+        originalSystem: apiResponse.fromSystem
+      };
+      
       setResult(data);
       
       console.log('Conversion result:', data);

@@ -22,7 +22,7 @@ import { storage } from "../storage"; // Added for user rating access
 /**
  * Rating systems types for conversion
  */
-const RatingSystemEnum = z.enum(['DUPR', 'UTPR', 'WPR', 'COURTIQ']);
+const RatingSystemEnum = z.enum(['DUPR', 'UTPR', 'WPR', 'COURTIQ', 'IFP', 'IPTPA']);
 
 /**
  * Schema for rating conversion requests
@@ -581,6 +581,104 @@ router.post("/convert-rating", async (req, res) => {
       // Convert WPR 1-20 to UTPR 1.0-7.0
       convertedRating = Math.min(7.0, Math.max(1.0, (rating / 4) + 1));
     }
+    // IFP to CourtIQ (IFP scale is 1.0-5.0)
+    else if (fromSystem === 'IFP' && toSystem === 'COURTIQ') {
+      // Scale IFP 1.0-5.0 to CourtIQ 1000-5000
+      convertedRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+    }
+    // CourtIQ to IFP
+    else if (fromSystem === 'COURTIQ' && toSystem === 'IFP') {
+      // Scale CourtIQ 1000-5000 to IFP 1.0-5.0
+      convertedRating = Math.min(5.0, Math.max(1.0, ((rating - 1000) / 4000) * 4 + 1));
+    }
+    // IPTPA to CourtIQ (IPTPA scale is 1.0-5.0)
+    else if (fromSystem === 'IPTPA' && toSystem === 'COURTIQ') {
+      // Scale IPTPA 1.0-5.0 to CourtIQ 1000-5000
+      convertedRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+    }
+    // CourtIQ to IPTPA
+    else if (fromSystem === 'COURTIQ' && toSystem === 'IPTPA') {
+      // Scale CourtIQ 1000-5000 to IPTPA 1.0-5.0
+      convertedRating = Math.min(5.0, Math.max(1.0, ((rating - 1000) / 4000) * 4 + 1));
+    }
+    // DUPR to IFP
+    else if (fromSystem === 'DUPR' && toSystem === 'IFP') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, (rating - 1) * 1000));
+      convertedRating = Math.min(5.0, Math.max(1.0, ((courtiqRating - 1000) / 4000) * 4 + 1));
+    }
+    // IFP to DUPR
+    else if (fromSystem === 'IFP' && toSystem === 'DUPR') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+      convertedRating = Math.min(7.0, Math.max(1.0, (courtiqRating / 1000) + 1));
+    }
+    // DUPR to IPTPA
+    else if (fromSystem === 'DUPR' && toSystem === 'IPTPA') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, (rating - 1) * 1000));
+      convertedRating = Math.min(5.0, Math.max(1.0, ((courtiqRating - 1000) / 4000) * 4 + 1));
+    }
+    // IPTPA to DUPR
+    else if (fromSystem === 'IPTPA' && toSystem === 'DUPR') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+      convertedRating = Math.min(7.0, Math.max(1.0, (courtiqRating / 1000) + 1));
+    }
+    // UTPR to IFP
+    else if (fromSystem === 'UTPR' && toSystem === 'IFP') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, (rating - 1) * 1000));
+      convertedRating = Math.min(5.0, Math.max(1.0, ((courtiqRating - 1000) / 4000) * 4 + 1));
+    }
+    // IFP to UTPR
+    else if (fromSystem === 'IFP' && toSystem === 'UTPR') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+      convertedRating = Math.min(7.0, Math.max(1.0, (courtiqRating / 1000) + 1));
+    }
+    // UTPR to IPTPA
+    else if (fromSystem === 'UTPR' && toSystem === 'IPTPA') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, (rating - 1) * 1000));
+      convertedRating = Math.min(5.0, Math.max(1.0, ((courtiqRating - 1000) / 4000) * 4 + 1));
+    }
+    // IPTPA to UTPR
+    else if (fromSystem === 'IPTPA' && toSystem === 'UTPR') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+      convertedRating = Math.min(7.0, Math.max(1.0, (courtiqRating / 1000) + 1));
+    }
+    // WPR to IFP
+    else if (fromSystem === 'WPR' && toSystem === 'IFP') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, (rating / 4) * 1000));
+      convertedRating = Math.min(5.0, Math.max(1.0, ((courtiqRating - 1000) / 4000) * 4 + 1));
+    }
+    // IFP to WPR
+    else if (fromSystem === 'IFP' && toSystem === 'WPR') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+      convertedRating = Math.min(20, Math.max(1, (courtiqRating / 1000) * 4));
+    }
+    // WPR to IPTPA
+    else if (fromSystem === 'WPR' && toSystem === 'IPTPA') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, (rating / 4) * 1000));
+      convertedRating = Math.min(5.0, Math.max(1.0, ((courtiqRating - 1000) / 4000) * 4 + 1));
+    }
+    // IPTPA to WPR
+    else if (fromSystem === 'IPTPA' && toSystem === 'WPR') {
+      // Convert through CourtIQ scale as intermediary
+      const courtiqRating = Math.min(5000, Math.max(1000, ((rating - 1) / 4) * 4000 + 1000));
+      convertedRating = Math.min(20, Math.max(1, (courtiqRating / 1000) * 4));
+    }
+    // IFP to IPTPA - both systems use the same scale
+    else if ((fromSystem === 'IFP' && toSystem === 'IPTPA') || 
+             (fromSystem === 'IPTPA' && toSystem === 'IFP')) {
+      // IFP and IPTPA both use 1.0-5.0 scale
+      convertedRating = rating;
+    }
     
     // Round to 2 decimal places for readability
     convertedRating = Math.round(convertedRating * 100) / 100;
@@ -646,6 +744,14 @@ router.get("/user-rating/:userId", async (req, res) => {
     
     const wprRating = user.wprRating || 
       Math.min(20, Math.max(1, (overallRating / 1000) * 4));
+      
+    // Calculate estimated IFP rating (1.0-5.0 scale)
+    const ifpRating = (user as any).ifpRating || 
+      Math.min(5.0, Math.max(1.0, ((overallRating - 1000) / 4000) * 4 + 1));
+      
+    // Calculate estimated IPTPA rating (1.0-5.0 scale)
+    const iptpaRating = (user as any).iptpaRating || 
+      Math.min(5.0, Math.max(1.0, ((overallRating - 1000) / 4000) * 4 + 1));
     
     res.json({
       userId,
@@ -671,6 +777,14 @@ router.get("/user-rating/:userId", async (req, res) => {
         wpr: {
           rating: wprRating,
           isVerified: Boolean(user.wprRating)
+        },
+        ifp: {
+          rating: ifpRating,
+          isVerified: Boolean((user as any).ifpRating)
+        },
+        iptpa: {
+          rating: iptpaRating,
+          isVerified: Boolean((user as any).iptpaRating)
         }
       }
     });

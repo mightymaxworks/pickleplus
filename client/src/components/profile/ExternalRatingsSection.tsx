@@ -32,6 +32,10 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
     utprProfileUrl: user.utprProfileUrl || '',
     wprRating: user.wprRating || '',
     wprProfileUrl: user.wprProfileUrl || '',
+    ifpRating: user.ifpRating || '',
+    ifpProfileUrl: user.ifpProfileUrl || '',
+    iptpaRating: user.iptpaRating || '',
+    iptpaProfileUrl: user.iptpaProfileUrl || '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +48,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
     
     try {
       // Validate rating formats
-      if (form.duprRating && !/^\d+(\.\d{1,2})?$/.test(form.duprRating)) {
+      if (form.duprRating && !/^\d+(\.\d{1,2})?$/.test(String(form.duprRating))) {
         toast({
           title: "Invalid DUPR Rating",
           description: "Please enter a valid rating (e.g., 4.5)",
@@ -53,7 +57,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
         return;
       }
       
-      if (form.utprRating && !/^\d+(\.\d{1,2})?$/.test(form.utprRating)) {
+      if (form.utprRating && !/^\d+(\.\d{1,2})?$/.test(String(form.utprRating))) {
         toast({
           title: "Invalid UTPR Rating",
           description: "Please enter a valid rating (e.g., 4.5)",
@@ -62,10 +66,28 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
         return;
       }
       
-      if (form.wprRating && !/^\d+(\.\d{1,2})?$/.test(form.wprRating)) {
+      if (form.wprRating && !/^\d+(\.\d{1,2})?$/.test(String(form.wprRating))) {
         toast({
           title: "Invalid WPR Rating",
           description: "Please enter a valid rating (e.g., 4.5)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (form.ifpRating && !/^\d+(\.\d{1,2})?$/.test(String(form.ifpRating))) {
+        toast({
+          title: "Invalid IFP Rating",
+          description: "Please enter a valid rating (e.g., 3.5)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (form.iptpaRating && !/^\d+(\.\d{1,2})?$/.test(String(form.iptpaRating))) {
+        toast({
+          title: "Invalid IPTPA Rating",
+          description: "Please enter a valid rating (e.g., 3.5)",
           variant: "destructive",
         });
         return;
@@ -82,6 +104,10 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
         utprProfileUrl: form.utprProfileUrl || null,
         wprRating: form.wprRating || null,
         wprProfileUrl: form.wprProfileUrl || null,
+        ifpRating: form.ifpRating || null,
+        ifpProfileUrl: form.ifpProfileUrl || null,
+        iptpaRating: form.iptpaRating || null,
+        iptpaProfileUrl: form.iptpaProfileUrl || null,
         lastExternalRatingUpdate: new Date().toISOString(),
       };
       
@@ -133,7 +159,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
     }
   };
   
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string) => {
     if (!date) return 'Never';
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric', 
@@ -144,7 +170,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
 
   const renderRatingSection = (
     system: string, 
-    rating?: string, 
+    rating?: string | number, 
     profileUrl?: string, 
     description?: string
   ) => {
@@ -267,6 +293,12 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
             <Separator className="my-3" />
             
             {renderRatingSection('WPR', user.wprRating, user.wprProfileUrl)}
+            <Separator className="my-3" />
+            
+            {renderRatingSection('IFP', user.ifpRating !== undefined ? String(user.ifpRating) : undefined, user.ifpProfileUrl)}
+            <Separator className="my-3" />
+            
+            {renderRatingSection('IPTPA', user.iptpaRating !== undefined ? String(user.iptpaRating) : undefined, user.iptpaProfileUrl)}
             
             <div className="flex justify-end mt-4">
               <Button type="submit" className="w-full sm:w-auto">
@@ -355,7 +387,61 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
               )}
             </div>
             
-            {!user.duprRating && !user.utprRating && !user.wprRating && (
+            <Separator />
+            
+            <div className="space-y-1 pt-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <h3 className="font-semibold">International Federation of Pickleball (IFP)</h3>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      IFP uses a rating system with a scale from 1.0-5.0 that is primarily 
+                      used for international tournament play and rankings.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {renderRatingSection(
+                'IFP', 
+                user.ifpRating !== undefined ? String(user.ifpRating) : undefined, 
+                user.ifpProfileUrl
+              )}
+            </div>
+            
+            <Separator />
+            
+            <div className="space-y-1 pt-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <h3 className="font-semibold">International Pickleball Teaching Professional Association (IPTPA)</h3>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      IPTPA uses a rating system from 1.0-5.0 specifically designed for teaching 
+                      professionals and instructor certification programs.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {renderRatingSection(
+                'IPTPA', 
+                user.iptpaRating, 
+                user.iptpaProfileUrl
+              )}
+            </div>
+            
+            {!user.duprRating && !user.utprRating && !user.wprRating && !user.ifpRating && !user.iptpaRating && (
               <div className="bg-muted/50 p-4 rounded-md text-center">
                 <p className="text-muted-foreground">
                   No external ratings have been added yet.

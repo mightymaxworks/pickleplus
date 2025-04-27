@@ -105,9 +105,17 @@ export interface EnhancedUser {
   
   // External ratings
   duprRating?: number;
+  duprProfileUrl?: string;
   utprRating?: number;
+  utprProfileUrl?: string;
   wprRating?: number;
+  wprProfileUrl?: string;
+  ifpRating?: number;
+  ifpProfileUrl?: string;
+  iptpaRating?: number;
+  iptpaProfileUrl?: string;
   externalRatingsVerified?: boolean;
+  lastExternalRatingUpdate?: Date | string;
   
   // Social and privacy
   privacyProfile?: 'public' | 'friends' | 'private';
