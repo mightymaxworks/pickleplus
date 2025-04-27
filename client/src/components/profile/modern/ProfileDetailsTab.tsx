@@ -24,6 +24,8 @@ interface ProfileDetailsTabProps {
   user: EnhancedUser;
   isCurrentUser: boolean;
   onFieldUpdate: (field: string, value: any) => void;
+  showEditInfo?: boolean;
+  setShowEditInfo?: (show: boolean) => void;
 }
 
 // Animation variants
@@ -49,11 +51,18 @@ const itemVariants = {
 export default function ProfileDetailsTab({
   user,
   isCurrentUser,
-  onFieldUpdate
+  onFieldUpdate,
+  showEditInfo: externalShowEditInfo,
+  setShowEditInfo: externalSetShowEditInfo
 }: ProfileDetailsTabProps) {
   // Detect if on mobile
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [showEditInfo, setShowEditInfo] = useState(false);
+  // Use internal state if external not provided
+  const [internalShowEditInfo, setInternalShowEditInfo] = useState(false);
+  
+  // Use either external or internal state
+  const showEditInfo = externalShowEditInfo !== undefined ? externalShowEditInfo : internalShowEditInfo;
+  const setShowEditInfo = externalSetShowEditInfo || setInternalShowEditInfo;
   
   return (
     <motion.div 

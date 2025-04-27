@@ -18,6 +18,8 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { getAvatarInitials } from "@/lib/stringUtils";
 import { calculateLevel } from "@/lib/calculateLevel";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,7 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
 import { EnhancedUser } from "@/types/enhanced-user";
 
 // Icons
@@ -74,6 +75,10 @@ export default function ModernProfilePage() {
   const [activeTab, setActiveTab] = useState("details");
   const [isCoverImageLoading, setIsCoverImageLoading] = useState(false);
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
+  const [showEditInfo, setShowEditInfo] = useState(false);
+  
+  // Check if on mobile device
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   // The view is either the current user's profile or another user's profile
   const isCurrentUserProfile = !userId || userId === currentUser?.id;
@@ -405,13 +410,27 @@ export default function ModernProfilePage() {
                 )}
               </div>
               
+              {/* Profile Edit Toggle - Only visible for current user */}
+              {isCurrentUserProfile && (
+                <div className="mt-2 mb-3">
+                  <Badge 
+                    variant={showEditInfo ? "secondary" : "outline"} 
+                    className="flex gap-1 items-center cursor-pointer"
+                    onClick={() => setShowEditInfo(!showEditInfo)}
+                  >
+                    {showEditInfo ? <Check className="h-3.5 w-3.5" /> : <Edit className="h-3.5 w-3.5" />}
+                    <span>{showEditInfo ? "Exit Edit Mode" : "Edit Profile"}</span>
+                  </Badge>
+                </div>
+              )}
+              
               {/* Bio */}
               <div className="max-w-xl">
                 <EditableProfileField
                   value={user.bio || ""}
                   field="bio"
                   onUpdate={handleFieldUpdate}
-                  editable={isCurrentUserProfile}
+                  editable={isCurrentUserProfile && (!isMobile || showEditInfo)}
                   placeholder="Add a bio to tell people about yourself"
                   render={(value, editing, onChange) => (
                     editing ? (
@@ -522,7 +541,9 @@ export default function ModernProfilePage() {
               <ProfileDetailsTab 
                 user={user} 
                 isCurrentUser={isCurrentUserProfile} 
-                onFieldUpdate={handleFieldUpdate} 
+                onFieldUpdate={handleFieldUpdate}
+                showEditInfo={showEditInfo}
+                setShowEditInfo={setShowEditInfo}
               />
             </TabsContent>
             
@@ -542,7 +563,9 @@ export default function ModernProfilePage() {
               <TabsContent value="settings">
                 <ProfileSettingsTab 
                   user={user} 
-                  onFieldUpdate={handleFieldUpdate} 
+                  onFieldUpdate={handleFieldUpdate}
+                  showEditInfo={showEditInfo}
+                  setShowEditInfo={setShowEditInfo}
                 />
               </TabsContent>
             )}
