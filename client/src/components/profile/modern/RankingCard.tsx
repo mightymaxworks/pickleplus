@@ -67,7 +67,7 @@ export default function RankingCard({
   className = ""
 }: RankingCardProps) {
   // Calculate PCP ranking
-  const pcpRanking = calculationService.calculatePCPRanking(user.rankingPoints || 0);
+  const pcpRanking = DataCalculationService.calculatePCPRanking(user.rankingPoints || 0);
   
   // State for animated progress
   const [progress, setProgress] = useState(0);
