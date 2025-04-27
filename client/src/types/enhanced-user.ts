@@ -67,9 +67,9 @@ export interface EnhancedUser {
   paddleModel?: string;
   backupPaddleBrand?: string;
   backupPaddleModel?: string;
-  shoeBrand?: string;
-  shoeModel?: string;
-  apparel?: string;
+  shoesBrand?: string;
+  shoesModel?: string;
+  apparelBrand?: string;
   otherEquipment?: string;
   
   // Playing preferences
@@ -82,6 +82,16 @@ export interface EnhancedUser {
   courtCoverage?: number;
   preferredSurface?: string;
   indoorOutdoorPreference?: string;
+  playingSince?: string;
+  skillLevel?: string;
+  playingStyle?: string;
+  preferredFormat?: string;
+  regularSchedule?: string;
+  playingFrequency?: string;
+  preferredPlayingTime?: string;
+  preferredVenue?: string;
+  shotStrengths?: string;
+  dominantHand?: string;
   
   // Extended profile fields
   height?: string;
