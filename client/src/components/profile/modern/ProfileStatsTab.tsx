@@ -19,6 +19,25 @@ import RankingCard from "./RankingCard";
 import SkillDistributionChart from "./SkillDistributionChart";
 import XPProgressDisplay from "./XPProgressDisplay";
 
+/**
+ * Helper function to calculate rating tier from score
+ */
+function getRatingTierFromScore(overallRating: number): string {
+  if (overallRating >= 4.5) {
+    return "Elite";
+  } else if (overallRating >= 4.0) {
+    return "Expert";
+  } else if (overallRating >= 3.5) {
+    return "Advanced";
+  } else if (overallRating >= 3.0) {
+    return "Intermediate";
+  } else if (overallRating >= 2.0) {
+    return "Developing";
+  } else {
+    return "Beginner";
+  }
+}
+
 interface ProfileStatsTabProps {
   user: EnhancedUser;
 }
@@ -76,7 +95,7 @@ export default function ProfileStatsTab({
                   {calculationService.calculateOverallRating(user).toFixed(1)}
                 </div>
                 <div className="text-sm font-medium bg-primary/10 px-3 py-1 rounded-full">
-                  {calculationService.calculateRatingTier(calculationService.calculateOverallRating(user))}
+                  {getRatingTierFromScore(calculationService.calculateOverallRating(user))}
                 </div>
               </div>
               

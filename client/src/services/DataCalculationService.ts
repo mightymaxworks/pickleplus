@@ -33,6 +33,19 @@ export interface DimensionRatings {
   overall: number;
 }
 
+// PCP tier types
+export type PCPTier = "Bronze" | "Silver" | "Gold" | "Platinum" | "Diamond" | "Master";
+
+// PCP tier thresholds
+export const PCP_TIER_THRESHOLDS = {
+  Bronze: 0,
+  Silver: 1000,
+  Gold: 2500,
+  Platinum: 5000,
+  Diamond: 10000,
+  Master: 25000
+};
+
 export interface CalculatedUserMetrics {
   level: number;
   nextLevelXP: number;
@@ -383,6 +396,55 @@ function calculateRatingTier(overallRating: number): string {
   }
 }
 
+/**
+ * Calculate PCP (Pickle Community Points) ranking information
+ * @param points - The user's current PCP points
+ * @returns Object with tier, points, next tier threshold, progress percentage and rating contribution
+ */
+function calculatePCPRanking(points: number) {
+  // Default to Bronze tier
+  let tier: PCPTier = "Bronze";
+  let nextTierThreshold = PCP_TIER_THRESHOLDS.Silver;
+  
+  // Determine current tier and next tier threshold
+  if (points >= PCP_TIER_THRESHOLDS.Master) {
+    tier = "Master";
+    nextTierThreshold = PCP_TIER_THRESHOLDS.Master;
+  } else if (points >= PCP_TIER_THRESHOLDS.Diamond) {
+    tier = "Diamond";
+    nextTierThreshold = PCP_TIER_THRESHOLDS.Master;
+  } else if (points >= PCP_TIER_THRESHOLDS.Platinum) {
+    tier = "Platinum";
+    nextTierThreshold = PCP_TIER_THRESHOLDS.Diamond;
+  } else if (points >= PCP_TIER_THRESHOLDS.Gold) {
+    tier = "Gold";
+    nextTierThreshold = PCP_TIER_THRESHOLDS.Platinum;
+  } else if (points >= PCP_TIER_THRESHOLDS.Silver) {
+    tier = "Silver";
+    nextTierThreshold = PCP_TIER_THRESHOLDS.Gold;
+  }
+  
+  // Calculate progress percentage to next tier
+  let progressPercentage = 100;
+  if (tier !== "Master") {
+    const currentTierThreshold = PCP_TIER_THRESHOLDS[tier];
+    const pointsToNextTier = nextTierThreshold - currentTierThreshold;
+    const pointsEarnedInCurrentTier = points - currentTierThreshold;
+    progressPercentage = Math.min(100, Math.round((pointsEarnedInCurrentTier / pointsToNextTier) * 100));
+  }
+  
+  // Calculate rating contribution (max 500 points)
+  const ratingContribution = Math.min(500, Math.floor(points / 50));
+  
+  return {
+    tier,
+    points,
+    nextTierThreshold,
+    progressPercentage,
+    ratingContribution
+  };
+}
+
 // Export the DataCalculationService class for compatibility with existing code
 // Define this at the end after all functions are defined to avoid reference errors
 export class DataCalculationService {
@@ -395,4 +457,5 @@ export class DataCalculationService {
   static calculateOverallRating = calculateOverallRating;
   static calculateDimensionRatings = calculateDimensionRatings;
   static calculateRatingTier = calculateRatingTier;
+  static calculatePCPRanking = calculatePCPRanking;
 }
