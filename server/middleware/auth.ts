@@ -15,9 +15,35 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
     return next();
   }
   
-  // In development mode, we might want to bypass authentication
-  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
-    console.warn('[AUTH] Bypassing authentication in development mode');
+  // PKL-278651-AUTH-0017-DEBUG - Development-only test user bypass
+  // Always bypass authentication in development mode for easier testing
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV MODE] Bypassing authentication for ${req.path}`);
+    
+    // Attach a development test user to the request
+    req.user = {
+      id: 1,
+      username: 'testdev',
+      email: 'dev@pickle.plus',
+      isAdmin: true,
+      passportId: '1000MM7',
+      firstName: 'Mighty',
+      lastName: 'Max',
+      displayName: 'Mighty Max',
+      dateOfBirth: null,
+      avatarUrl: null,
+      avatarInitials: 'MM',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      verifiedEmail: true,
+      xp: 1000,
+      level: 10,
+      role: 'PLAYER',
+      isCoach: true,
+      isReferee: true,
+      roles: ['ADMIN', 'COACH', 'REFEREE', 'PLAYER']
+    } as any;
+    
     return next();
   }
   
@@ -32,6 +58,13 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
  */
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated || !req.isAuthenticated()) {
+    // PKL-278651-AUTH-0017-DEBUG - Development-only test user bypass
+    // Always bypass authentication in development mode for easier testing
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV MODE] Bypassing admin authentication for ${req.path}`);
+      return next();
+    }
+    
     return res.status(401).json({
       success: false,
       message: 'Authentication required'
@@ -44,9 +77,9 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
     return next();
   }
   
-  // In development mode, we might want to bypass authorization
-  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
-    console.warn('[AUTH] Bypassing admin check in development mode');
+  // PKL-278651-AUTH-0017-DEBUG - Development-only admin bypass
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV MODE] Bypassing admin authorization for ${req.path}`);
     return next();
   }
   

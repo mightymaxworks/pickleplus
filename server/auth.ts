@@ -63,6 +63,35 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
     return next();
   }
   
+  // PKL-278651-AUTH-0017-DEBUG - Development-only test user bypass
+  // For development, allow requests to proceed even without authentication
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV MODE] Bypassing authentication for ${req.path}`);
+    
+    // Attach a development test user to the request
+    req.user = {
+      id: 1,
+      username: 'testdev',
+      email: 'dev@pickle.plus',
+      isAdmin: true,
+      passportId: '1000MM7',
+      firstName: 'Mighty',
+      lastName: 'Max',
+      displayName: 'Mighty Max',
+      dateOfBirth: null,
+      avatarUrl: null,
+      avatarInitials: 'MM',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      verifiedEmail: true,
+      xp: 1000,
+      level: 10,
+      role: 'PLAYER'
+    } as any;
+    
+    return next();
+  }
+  
   // Log authentication failure for debugging
   console.log(`Authentication failed for ${req.path} - Session ID: ${req.sessionID}`);
   console.log('Cookies available:', req.headers.cookie);
