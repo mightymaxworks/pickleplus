@@ -40,8 +40,21 @@ export interface EnhancedUser {
   totalMatches: number;
   matchesWon: number;
   matchesLost?: number;
+  matchesPlayed?: number;
+  tournamentsPlayed?: number;
   totalTournaments: number;
   rankingPoints: number;
+  winRate?: number;
+  
+  // CourtIQ ratings
+  courtIQ?: {
+    technical: number;
+    tactical: number;
+    physical: number;
+    mental: number;
+    consistency: number;
+    overall: number;
+  };
   
   // Profile-related
   profileCompletionPct: number;

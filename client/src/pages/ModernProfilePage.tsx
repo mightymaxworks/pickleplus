@@ -497,6 +497,10 @@ export default function ModernProfilePage() {
               <ProfileHistoryTab user={user} />
             </TabsContent>
             
+            <TabsContent value="compare">
+              <PlayerComparisonTool currentUser={user} />
+            </TabsContent>
+            
             {isCurrentUserProfile && (
               <TabsContent value="settings">
                 <ProfileSettingsTab 

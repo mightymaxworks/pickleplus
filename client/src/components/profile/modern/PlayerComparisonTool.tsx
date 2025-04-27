@@ -60,7 +60,8 @@ export default function PlayerComparisonTool({ currentUser }: PlayerComparisonTo
   const courtIQComparisons = useMemo(() => {
     if (!comparisonUser) return null;
     
-    const metrics = ["technical", "tactical", "physical", "mental", "consistency"];
+    // Type-safe metrics array as tuple of literal types
+    const metrics = ["technical", "tactical", "physical", "mental", "consistency"] as const;
     const dimensionCodes = ["TECH", "TACT", "PHYS", "MENT", "CONS"];
     
     return metrics.map((metric, index) => {
@@ -221,7 +222,7 @@ export default function PlayerComparisonTool({ currentUser }: PlayerComparisonTo
                       onClick={() => setSelectedUserId(user.id)}
                     >
                       <Avatar>
-                        <AvatarImage src={user.avatarUrl} alt={user.username} />
+                        <AvatarImage src={user.avatarUrl || undefined} alt={user.username} />
                         <AvatarFallback>{user.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
@@ -279,7 +280,7 @@ export default function PlayerComparisonTool({ currentUser }: PlayerComparisonTo
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
                       <div className="flex flex-col items-center md:items-start">
                         <Avatar className="h-16 w-16 md:h-20 md:w-20 mb-2">
-                          <AvatarImage src={currentUser.avatarUrl} alt={currentUser.username} />
+                          <AvatarImage src={currentUser.avatarUrl || undefined} alt={currentUser.username} />
                           <AvatarFallback>{currentUser.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="text-lg font-semibold">{currentUser.username}</div>
@@ -306,7 +307,7 @@ export default function PlayerComparisonTool({ currentUser }: PlayerComparisonTo
                       
                       <div className="flex flex-col items-center md:items-end">
                         <Avatar className="h-16 w-16 md:h-20 md:w-20 mb-2">
-                          <AvatarImage src={comparisonUser.avatarUrl} alt={comparisonUser.username} />
+                          <AvatarImage src={comparisonUser.avatarUrl || undefined} alt={comparisonUser.username} />
                           <AvatarFallback>{comparisonUser.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="text-lg font-semibold">{comparisonUser.username}</div>
