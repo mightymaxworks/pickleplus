@@ -1,81 +1,60 @@
 /**
- * PKL-278651-JOUR-001.2: Emotion Detection Hook
+ * PKL-278651-JOUR-002.3: Emotion Detection Hook
  * 
- * A hook that provides emotion detection capabilities for the PickleJourney™ system,
- * handling both user-reported emotions and detected emotions from text.
+ * Custom hook for emotion detection that provides methods for:
+ * - Detecting emotions from text input
+ * - Allowing users to report their own emotional state
+ * - Maintaining a history of detected emotions
+ * - Providing the current emotional state
  * 
  * @framework Framework5.3
  * @version 1.0.0
+ * @lastModified 2025-04-28
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { EmotionalState, EmotionDetectionResult } from '../types';
 
-/**
- * Simple emotion detection patterns for demonstration
- * In a production system, this would be replaced with a more sophisticated
- * NLP-based emotion detection system or API
- */
-const emotionPatterns = {
-  'frustrated-disappointed': [
-    'frustrated', 'disappointing', 'disappointing', 'lost', 'upset', 'sad',
-    'angry', 'annoyed', 'failed', 'mistake', 'struggled', 'terrible',
-    'worst', 'hate', 'miss', 'bad', 'worst'
-  ],
-  'anxious-uncertain': [
-    'anxious', 'nervous', 'worried', 'uncertain', 'doubt', 'fear', 'afraid',
-    'scared', 'stress', 'pressure', 'panic', 'unsure', 'concern', 'wonder'
-  ],
-  'neutral-focused': [
-    'okay', 'fine', 'normal', 'neutral', 'average', 'focused', 'working',
-    'playing', 'learning', 'practice', 'training', 'regular', 'standard'
-  ],
-  'excited-proud': [
-    'excited', 'happy', 'thrilled', 'proud', 'great', 'amazing', 'wonderful',
-    'excellent', 'fantastic', 'awesome', 'perfect', 'love', 'enjoy', 'win'
-  ],
-  'determined-growth': [
-    'determined', 'motivated', 'inspired', 'focused', 'committed', 'dedicated',
-    'improving', 'progress', 'growth', 'better', 'stronger', 'learn', 'goal'
-  ]
-};
-
-/**
- * Hook for detecting and tracking emotional states
- */
 export function useEmotionDetection() {
-  // Store the current emotional state
-  const [currentEmotionalState, setCurrentEmotionalState] = useState<EmotionalState>('neutral-focused');
+  // Default emotional state
+  const [currentEmotionalState, setCurrentEmotionalState] = 
+    useState<EmotionalState>('neutral-focused');
   
-  // Store detection history in localStorage
-  const [detectionHistory, setDetectionHistory] = useLocalStorage<EmotionDetectionResult[]>(
-    'emotion-detection-history', 
-    []
-  );
+  // History of detected emotions
+  const [detectionHistory, setDetectionHistory] = useState<EmotionDetectionResult[]>([]);
   
-  // Report an emotional state (user self-reporting)
-  const reportEmotionalState = useCallback((state: EmotionalState) => {
-    setCurrentEmotionalState(state);
-    
-    // Record this detection
-    const newDetection: EmotionDetectionResult = {
-      primaryEmotion: state,
-      confidence: 1.0, // User-reported emotions have 100% confidence
-      timestamp: new Date(),
-      source: 'user-reported'
-    };
-    
-    setDetectionHistory(prev => [newDetection, ...prev]);
-    
-    return newDetection;
-  }, [setDetectionHistory]);
-  
-  // Detect emotion from text input
+  // Emotion detection algorithm (simplified for prototype)
   const detectEmotionFromText = useCallback((text: string): EmotionDetectionResult => {
-    // Simple emotion detection based on keyword matching
-    // In a real system, this would use NLP or a sentiment analysis API
-    const wordCounts: Record<EmotionalState, number> = {
+    // Text-based emotional keywords
+    const emotionKeywords = {
+      'frustrated-disappointed': [
+        'frustrated', 'disappointing', 'upset', 'annoyed', 'failed', 
+        'mistake', 'error', 'lose', 'loss', 'defeat', 'setback', 'struggling'
+      ],
+      'anxious-uncertain': [
+        'nervous', 'anxious', 'worried', 'unsure', 'uncertain', 'concern', 
+        'fear', 'stress', 'pressure', 'doubt', 'hesitant', 'afraid'
+      ],
+      'neutral-focused': [
+        'okay', 'fine', 'normal', 'adequate', 'working', 'focusing', 
+        'concentrating', 'steady', 'stable', 'routine', 'regular', 'standard'
+      ],
+      'excited-proud': [
+        'excited', 'happy', 'proud', 'thrilled', 'accomplished', 'achievement', 
+        'success', 'win', 'victory', 'celebration', 'joy', 'delighted'
+      ],
+      'determined-growth': [
+        'determined', 'growth', 'improve', 'learning', 'develop', 'progress', 
+        'advance', 'better', 'stronger', 'persistent', 'goal', 'focus'
+      ]
+    };
+
+    // Normalize and tokenize the input text
+    const normalizedText = text.toLowerCase();
+    const words = normalizedText.split(/\W+/);
+    
+    // Count occurrences of emotion keywords
+    const emotionCounts: Record<EmotionalState, number> = {
       'frustrated-disappointed': 0,
       'anxious-uncertain': 0,
       'neutral-focused': 0,
@@ -83,82 +62,93 @@ export function useEmotionDetection() {
       'determined-growth': 0
     };
     
-    // Normalize and split the text
-    const words = text.toLowerCase()
-      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
-      .split(/\s+/);
-    
-    // Count emotional keywords
-    for (const word of words) {
-      for (const [emotion, patterns] of Object.entries(emotionPatterns) as [EmotionalState, string[]][]) {
-        if (patterns.includes(word)) {
-          wordCounts[emotion]++;
+    // Process text to find emotional indicators
+    Object.entries(emotionKeywords).forEach(([emotion, keywords]) => {
+      keywords.forEach(keyword => {
+        if (normalizedText.includes(keyword)) {
+          emotionCounts[emotion as EmotionalState] += 1;
         }
-      }
-    }
+      });
+    });
     
     // Find the dominant emotion
     let dominantEmotion: EmotionalState = 'neutral-focused';
-    let maxCount = 0;
+    let highestCount = 0;
     
-    for (const [emotion, count] of Object.entries(wordCounts) as [EmotionalState, number][]) {
-      if (count > maxCount) {
-        dominantEmotion = emotion;
-        maxCount = count;
+    Object.entries(emotionCounts).forEach(([emotion, count]) => {
+      if (count > highestCount) {
+        highestCount = count;
+        dominantEmotion = emotion as EmotionalState;
       }
-    }
+    });
     
-    // Calculate confidence based on relative presence of emotion words
-    const totalEmotionWords = Object.values(wordCounts).reduce((a, b) => a + b, 0);
-    const confidence = totalEmotionWords > 0 
-      ? Math.min(0.9, (wordCounts[dominantEmotion] / totalEmotionWords) * 1.5) 
-      : 0.3;
+    // Calculate a confidence score (max count / total words, capped at 0.9)
+    let confidenceScore = Math.min(0.90, highestCount / words.length);
     
-    // If confidence is too low, default to neutral
-    if (confidence < 0.4) {
+    // If no strong signals, default to a neutral state with low confidence
+    if (highestCount === 0) {
       dominantEmotion = 'neutral-focused';
+      confidenceScore = 0.3;
     }
     
-    // Create detection result
+    // Create the detection result
     const result: EmotionDetectionResult = {
       primaryEmotion: dominantEmotion,
-      confidence,
+      confidence: confidenceScore,
       timestamp: new Date(),
       source: 'text-analysis'
     };
     
-    // If confidence is high enough, update current state and record
-    if (confidence > 0.6) {
+    // Update the current emotional state if confidence is high enough
+    if (confidenceScore > 0.4) {
       setCurrentEmotionalState(dominantEmotion);
-      setDetectionHistory(prev => [result, ...prev]);
+      
+      // Add to history
+      setDetectionHistory(prev => [result, ...prev].slice(0, 20));
     }
     
     return result;
-  }, [setDetectionHistory]);
+  }, []);
   
-  // Initialize with a default emotional state on first load
+  // Allow users to directly report their emotional state
+  const reportEmotionalState = useCallback((state: EmotionalState): EmotionDetectionResult => {
+    const result: EmotionDetectionResult = {
+      primaryEmotion: state,
+      confidence: 0.95, // High confidence for self-reporting
+      timestamp: new Date(),
+      source: 'user-reported'
+    };
+    
+    // Update the current emotional state
+    setCurrentEmotionalState(state);
+    
+    // Add to history
+    setDetectionHistory(prev => [result, ...prev].slice(0, 20));
+    
+    return result;
+  }, []);
+  
+  // Add a simulated initial detection if history is empty
   useEffect(() => {
-    // If there's no previous detection, record the default state
     if (detectionHistory.length === 0) {
+      const initialState: EmotionalState = 'neutral-focused';
       const initialDetection: EmotionDetectionResult = {
-        primaryEmotion: 'neutral-focused',
+        primaryEmotion: initialState,
         confidence: 0.7,
         timestamp: new Date(),
         source: 'interaction-pattern'
       };
       
       setDetectionHistory([initialDetection]);
-    } else {
-      // Otherwise, restore the most recent state
-      setCurrentEmotionalState(detectionHistory[0].primaryEmotion);
+      setCurrentEmotionalState(initialState);
     }
-  }, [detectionHistory, setDetectionHistory]);
+  }, []);
   
   return {
     currentEmotionalState,
     detectionHistory,
-    reportEmotionalState,
-    detectEmotionFromText
+    detectEmotionFromText,
+    reportEmotionalState
   };
 }
 

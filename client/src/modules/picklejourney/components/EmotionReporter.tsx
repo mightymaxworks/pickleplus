@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { useEmotionDetection } from '../hooks/useEmotionDetection';
+import { useEmotion } from '../contexts/EmotionContext';
 import { EmotionalState } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ interface EmotionOption {
  * Component for reporting current emotional state
  */
 export function EmotionReporter({ className }: EmotionReporterProps) {
-  const { currentEmotionalState, reportEmotionalState } = useEmotionDetection();
+  const { currentEmotionalState, reportEmotionalState } = useEmotion();
   
   // Define the emotion options with icons and descriptions
   const emotionOptions: EmotionOption[] = [

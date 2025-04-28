@@ -9,7 +9,7 @@
  * @lastModified 2025-04-28
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useJourneyRoles } from '../../hooks/useJourneyRoles';
 import { RoleSwitcher } from './RoleSwitcher';
 import { RoleDiscoveryWizard } from '../onboarding/RoleDiscoveryWizard';
@@ -293,93 +293,60 @@ const RoleGoalsList = () => {
  * This component provides personalized reflection prompts based on the user's selected role
  * to encourage journaling that is relevant to their specific pickleball journey.
  */
+/**
+ * PKL-278651-JOUR-002.3: Emotionally Intelligent Daily Prompt
+ * 
+ * Enhanced with emotion detection and adaptive content based on the
+ * user's emotional state and current role.
+ */
 const DailyPrompt = () => {
   const { primaryRole, getRoleLabel } = useJourneyRoles();
-  const [promptIndex, setPromptIndex] = useState(0);
-  
-  // Role-specific prompts for each user role
-  const rolePrompts = {
-    [UserRole.PLAYER]: [
-      "What technique or strategy did you focus on in your recent practice sessions, and what progress have you observed?",
-      "Describe a challenging moment in your recent matches. How did you handle it, and what did you learn?",
-      "What aspect of your physical fitness is currently helping or hindering your play? How can you address this?",
-      "How have your pre-match routines evolved, and what impact has this had on your mental readiness?",
-      "Which part of your game has shown the most improvement in the last month, and what contributed to this progress?"
-    ],
-    [UserRole.COACH]: [
-      "What coaching technique has been most effective recently, and how might you refine it further?",
-      "Describe a challenge one of your students faced and how you helped them overcome it.",
-      "How have you balanced technical instruction with mental preparation in your recent coaching sessions?",
-      "What new drills or exercises have you introduced, and what outcomes have you observed?",
-      "How are you continuing your own education as a coach? What resources or experiences have been valuable?"
-    ],
-    [UserRole.REFEREE]: [
-      "What was the most challenging call you made recently? How did you handle player reactions?",
-      "How has your positioning on the court evolved, and what impact has it had on your officiating?",
-      "Describe a situation where you needed to apply a complex rule. How did you ensure accuracy?",
-      "What feedback have you received from players or other officials, and how are you incorporating it?",
-      "What aspects of tournament management have you been involved with, and what have you learned?"
-    ],
-    [UserRole.ADMIN]: [
-      "What community initiative have you been working on, and what progress have you made?",
-      "How have you addressed feedback from community members in your recent activities?",
-      "What operational challenges have you encountered recently, and how did you resolve them?",
-      "How are you balancing growth objectives with maintaining quality experiences for members?",
-      "What collaboration opportunities have you identified with other pickleball organizations or communities?"
-    ]
-  };
-  
-  // Get prompts for the current role, or default to player prompts
-  const currentRolePrompts = rolePrompts[primaryRole] || rolePrompts[UserRole.PLAYER];
-  
-  // Current prompt to display
-  const currentPrompt = currentRolePrompts[promptIndex % currentRolePrompts.length];
-  
-  // Change to another prompt
-  const handleRefreshPrompt = () => {
-    setPromptIndex((prev) => (prev + 1) % currentRolePrompts.length);
-  };
+  const [showEmotionReporter, setShowEmotionReporter] = useState(false);
+  const EmotionallyAdaptivePrompt = lazy(() => import('../EmotionallyAdaptivePrompt'));
+  const EmotionReporter = lazy(() => import('../EmotionReporter'));
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center">
-            <BookOpen className="h-5 w-5 mr-2 text-primary" />
-            <span>{getRoleLabel(primaryRole)} Reflection</span>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleRefreshPrompt}
-            title="Get another prompt"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-              <path d="M3 21v-5h5" />
-            </svg>
-          </Button>
-        </CardTitle>
-        <CardDescription>
-          Today's journal prompt to inspire your reflection
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="bg-muted p-4 rounded-md">
-          <p className="italic">
-            "{currentPrompt}"
-          </p>
-        </div>
-        
-        <div className="mt-4">
-          <Button className="w-full">
-            Respond in Journal
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {/* Emotion Reporter Section - Initially hidden, can be toggled */}
+      {showEmotionReporter && (
+        <Suspense fallback={<Card className="h-40 animate-pulse" />}>
+          <EmotionReporter />
+        </Suspense>
+      )}
+      
+      {/* Emotionally Adaptive Prompt */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <BookOpen className="h-5 w-5 mr-2 text-primary" />
+              <span>{getRoleLabel(primaryRole)} Reflection</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowEmotionReporter(!showEmotionReporter)}
+              title={showEmotionReporter ? "Hide emotion reporter" : "Report your emotional state"}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-smile">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                <line x1="9" x2="9.01" y1="9" y2="9" />
+                <line x1="15" x2="15.01" y1="9" y2="9" />
+              </svg>
+            </Button>
+          </CardTitle>
+          <CardDescription>
+            Today's emotionally intelligent prompt
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-md" />}>
+            <EmotionallyAdaptivePrompt />
+          </Suspense>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

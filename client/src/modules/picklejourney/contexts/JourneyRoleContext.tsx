@@ -20,7 +20,7 @@ import {
   useMemo, 
   useState 
 } from 'react';
-import { UserRole, getRoleLabel, DEFAULT_ROLE } from '@/lib/roles';
+import { UserRole, getRoleLabel as getRoleLabelUtil, DEFAULT_ROLE } from '@/lib/roles';
 import { 
   ExperienceLevel, 
   JourneyGoal, 
@@ -57,6 +57,11 @@ export interface JourneyRoleContextType {
   // Role metadata methods
   getRoleMetadata: (role: UserRole) => RoleMetadata;
   updateRoleMetadata: (role: UserRole, metadata: Partial<RoleMetadata>) => void;
+  
+  // Helper methods
+  getRoleLabel: (role: UserRole) => string;
+  getRoleExperienceLabel: (role: UserRole) => string;
+  getRoleProgress: (role: UserRole) => number;
   
   // Goals management
   addGoal: (goal: Omit<JourneyGoal, 'id'>) => void;
@@ -444,6 +449,41 @@ export function JourneyRoleProvider({
     return primaryRole === role;
   }, [primaryRole]);
   
+  // Get a human-readable label for a role
+  const getRoleLabel = useCallback((role: UserRole): string => {
+    return getRoleLabelUtil(role);  // This uses the imported utility function
+  }, []);
+  
+  // Get a label describing experience level for a role
+  const getRoleExperienceLabel = useCallback((role: UserRole): string => {
+    const metadata = getRoleMetadata(role);
+    switch (metadata.experience) {
+      case ExperienceLevel.BEGINNER:
+        return 'Beginner';
+      case ExperienceLevel.INTERMEDIATE:
+        return 'Intermediate';
+      case ExperienceLevel.ADVANCED:
+        return 'Advanced';
+      case ExperienceLevel.EXPERT:
+        return 'Expert';
+      default:
+        return 'Unknown';
+    }
+  }, [getRoleMetadata]);
+  
+  // Calculate progress percentage for a role
+  const getRoleProgress = useCallback((role: UserRole): number => {
+    const metadata = getRoleMetadata(role);
+    
+    // Calculate role progress based on goals and achievements
+    // A simple algorithm: achievements count / total goals count * 100
+    const achievementsCount = metadata.achievements.length;
+    const goalsCount = metadata.goals.length || 1; // Prevent division by zero
+    
+    // Calculate progress percentage, cap at 100%
+    return Math.min(100, Math.round((achievementsCount / goalsCount) * 100));
+  }, [getRoleMetadata]);
+  
   // Build the context value
   const contextValue = useMemo<JourneyRoleContextType>(() => ({
     // Core role properties
@@ -471,7 +511,10 @@ export function JourneyRoleProvider({
     
     // Helper methods
     hasRole,
-    isPrimaryRole
+    isPrimaryRole,
+    getRoleLabel,
+    getRoleExperienceLabel,
+    getRoleProgress
   }), [
     roles, 
     primaryRole, 
@@ -487,7 +530,10 @@ export function JourneyRoleProvider({
     addAchievement,
     removeAchievement,
     hasRole,
-    isPrimaryRole
+    isPrimaryRole,
+    getRoleLabel,
+    getRoleExperienceLabel,
+    getRoleProgress
   ]);
   
   return (
