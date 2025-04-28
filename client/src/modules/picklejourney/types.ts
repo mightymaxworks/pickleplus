@@ -1,11 +1,15 @@
 /**
- * PKL-278651-JOUR-001: PickleJourney™ Types
+ * PKL-278651-JOUR-002: PickleJourney™ Types
  * 
  * Types used throughout the PickleJourney emotionally intelligent journaling system.
+ * Updated to support multi-role journaling in sprint JOUR-002.
  * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 2.0.0
+ * @lastModified 2025-04-28
  */
+
+import { UserRole } from '@/lib/roles';
 
 /**
  * Emotional states used to track user's emotions
@@ -84,6 +88,159 @@ export interface JournalEntry {
 }
 
 /**
+ * PKL-278651-JOUR-002.1: Extended journal entry with role context
+ */
+export interface RoleJournalEntry extends JournalEntry {
+  /** The roles relevant to this journal entry */
+  roles: UserRole[];
+  
+  /** The primary role perspective for this entry */
+  primaryRole: UserRole;
+  
+  /** Insights that span across multiple roles */
+  crossRoleInsights?: string;
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Experience level for a role
+ */
+export enum ExperienceLevel {
+  BEGINNER = "BEGINNER",
+  INTERMEDIATE = "INTERMEDIATE",
+  ADVANCED = "ADVANCED",
+  EXPERT = "EXPERT"
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Goal for a specific role journey
+ */
+export interface JourneyGoal {
+  /** Unique identifier for the goal */
+  id: string;
+  
+  /** Description of the goal */
+  description: string;
+  
+  /** The primary role this goal belongs to */
+  role: UserRole;
+  
+  /** Whether the goal has been completed */
+  completed: boolean;
+  
+  /** Optional target date for completion */
+  targetDate?: Date;
+  
+  /** Other roles that this goal might benefit */
+  relatedRoles?: UserRole[];
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Achievement in a role journey
+ */
+export interface RoleAchievement {
+  /** Unique identifier */
+  id: string;
+  
+  /** Title of the achievement */
+  title: string;
+  
+  /** Description of what was accomplished */
+  description: string;
+  
+  /** When the achievement was earned */
+  date: Date;
+  
+  /** The role this achievement is associated with */
+  role: UserRole;
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Metadata for a specific role
+ */
+export interface RoleMetadata {
+  /** The user's "why" statement for this role */
+  why: string;
+  
+  /** Goals specific to this role */
+  goals: JourneyGoal[];
+  
+  /** Experience level in this role */
+  experience: ExperienceLevel;
+  
+  /** When the user started in this role */
+  startDate: Date;
+  
+  /** Achievements in this role */
+  achievements: RoleAchievement[];
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Role preferences for the journey
+ */
+export interface JourneyRolePreferences {
+  /** All roles the user has */
+  roles: UserRole[];
+  
+  /** The user's primary/current role focus */
+  primaryRole: UserRole;
+  
+  /** Metadata for each role */
+  roleMetadata: Record<UserRole, RoleMetadata>;
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Journey metadata
+ */
+export interface JourneyMetadata {
+  /** Role preferences and metadata */
+  rolePreferences: JourneyRolePreferences;
+  
+  /** Onboarding status */
+  onboarding: {
+    /** Whether onboarding has been completed */
+    completed: boolean;
+    
+    /** Last completed step */
+    lastStep: string;
+    
+    /** All completed steps */
+    completedSteps: string[];
+  };
+  
+  /** Journey progress tracking */
+  progress: {
+    /** Journey milestones achieved */
+    milestones: JourneyMilestone[];
+    
+    /** Overall journey level */
+    currentLevel: number;
+    
+    /** Level in each specific role */
+    roleSpecificLevels: Record<UserRole, number>;
+  };
+}
+
+/**
+ * PKL-278651-JOUR-002.1: Journey milestone
+ */
+export interface JourneyMilestone {
+  /** Unique identifier */
+  id: string;
+  
+  /** Title of the milestone */
+  title: string;
+  
+  /** Description of the milestone */
+  description: string;
+  
+  /** When the milestone was reached */
+  achievedAt: Date;
+  
+  /** The roles this milestone is relevant to */
+  roles: UserRole[];
+}
+
+/**
  * Structure for emotional patterns derived from journal entries
  */
 export interface EmotionalPatternAnalysis {
@@ -128,4 +285,7 @@ export interface EmotionalDataPoint {
   
   /** Number of entries for this date */
   entryCount: number;
+  
+  /** Role context for this data point */
+  role?: UserRole;
 }
