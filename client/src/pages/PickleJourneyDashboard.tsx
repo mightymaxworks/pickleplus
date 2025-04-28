@@ -11,7 +11,8 @@
 
 import { JourneyRoleProvider } from '../modules/picklejourney/contexts/JourneyRoleContext';
 import JourneyDashboard from '../modules/picklejourney/components/dashboard/JourneyDashboard';
-import { Helmet } from 'react-helmet-async';
+// Using Helmet in this component is causing conflicts with the app's HelmetProvider
+// We'll set the title through other means
 
 /**
  * PickleJourney Dashboard Page
@@ -19,9 +20,6 @@ import { Helmet } from 'react-helmet-async';
 export default function PickleJourneyDashboard() {
   return (
     <JourneyRoleProvider>
-      <Helmet>
-        <title>Your Journey | Pickle+</title>
-      </Helmet>
       <JourneyDashboard />
     </JourneyRoleProvider>
   );
