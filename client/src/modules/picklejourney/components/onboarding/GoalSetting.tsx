@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { UserRole } from '@/lib/roles';
 import { useJourneyRoles } from '../../hooks/useJourneyRoles';
 import { JourneyGoal } from '../../types';
-import { CheckCircle2, Plus, Trash2, Calendar, User, Users, Whistle, Award } from 'lucide-react';
+import { CheckCircle2, Plus, Trash2, Calendar, User, Users, Flag, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -78,7 +78,7 @@ const RoleIcon = ({ role }: { role: UserRole }) => {
     case UserRole.COACH:
       return <Users className="h-5 w-5" />;
     case UserRole.REFEREE:
-      return <Whistle className="h-5 w-5" />;
+      return <Flag className="h-5 w-5" />;
     case UserRole.ADMIN:
       return <Award className="h-5 w-5" />;
     default:

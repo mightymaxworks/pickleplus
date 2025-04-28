@@ -21,7 +21,7 @@ import {
   CardHeader, 
   CardTitle
 } from '@/components/ui/card';
-import { User, Users, Whistle, Award, Lightbulb } from 'lucide-react';
+import { User, Users, Flag, Award, Lightbulb } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ExperienceLevel } from '../../types';
 import {
@@ -42,7 +42,7 @@ const ROLE_PROMPTS: Record<UserRole, string[]> = {
   ],
   [UserRole.COACH]: [
     'What motivated you to become a pickleball coach?',
-    'What's your coaching philosophy or approach?',
+    'What is your coaching philosophy or approach?',
     'What brings you the most satisfaction in coaching?',
     'How do you hope to impact your students?'
   ],
@@ -67,7 +67,7 @@ const RoleIcon = ({ role }: { role: UserRole }) => {
     case UserRole.COACH:
       return <Users className="h-5 w-5" />;
     case UserRole.REFEREE:
-      return <Whistle className="h-5 w-5" />;
+      return <Flag className="h-5 w-5" />;
     case UserRole.ADMIN:
       return <Award className="h-5 w-5" />;
     default:

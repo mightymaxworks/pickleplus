@@ -11,7 +11,7 @@
 
 import { useJourneyRoles } from '../../hooks/useJourneyRoles';
 import { UserRole } from '@/lib/roles';
-import { GripVertical, Crown, User, Whistle, Users, Award } from 'lucide-react';
+import { GripVertical, Crown, User, Flag, Users, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ const RolePriorityCard = ({ role, index, isPrimary }: RolePriorityCardProps) => 
       case UserRole.COACH:
         return <Users className="h-5 w-5" />;
       case UserRole.REFEREE:
-        return <Whistle className="h-5 w-5" />;
+        return <Flag className="h-5 w-5" />;
       case UserRole.ADMIN:
         return <Award className="h-5 w-5" />;
       default:

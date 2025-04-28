@@ -22,11 +22,10 @@ import {
 import { 
   User, 
   Users, 
-  Whistle, 
+  Flag, 
   Award, 
   CheckCircle2, 
   Crown, 
-  Flag, 
   LineChart 
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -39,7 +38,7 @@ const RoleIcon = ({ role }: { role: UserRole }) => {
     case UserRole.COACH:
       return <Users className="h-5 w-5" />;
     case UserRole.REFEREE:
-      return <Whistle className="h-5 w-5" />;
+      return <Flag className="h-5 w-5" />;
     case UserRole.ADMIN:
       return <Award className="h-5 w-5" />;
     default:

@@ -11,7 +11,7 @@
 
 import { useJourneyRoles } from '../../hooks/useJourneyRoles';
 import { UserRole } from '@/lib/roles';
-import { User, Users, Whistle, Award } from 'lucide-react';
+import { User, Users, Flag, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -51,7 +51,7 @@ export function RoleBadge({
       case UserRole.COACH:
         return <Users className="h-4 w-4" />;
       case UserRole.REFEREE:
-        return <Whistle className="h-4 w-4" />;
+        return <Flag className="h-4 w-4" />;
       case UserRole.ADMIN:
         return <Award className="h-4 w-4" />;
       default:

@@ -12,7 +12,7 @@
 import { UserRole } from '@/lib/roles';
 import { useJourneyRoles } from '../../hooks/useJourneyRoles';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, User, Whistle, Award, Users } from 'lucide-react';
+import { CheckCircle2, User, Flag, Award, Users } from 'lucide-react';
 import { 
   Card, 
   CardContent, 
@@ -39,7 +39,7 @@ const RoleIcon = ({ role }: { role: UserRole }) => {
     case UserRole.COACH:
       return <Users className="h-6 w-6" />;
     case UserRole.REFEREE:
-      return <Whistle className="h-6 w-6" />;
+      return <Flag className="h-6 w-6" />;
     case UserRole.ADMIN:
       return <Award className="h-6 w-6" />;
     default:
