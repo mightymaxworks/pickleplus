@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error - Pickle+ OAuth</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .error-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+      text-align: center;
+    }
+    
+    .error-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.5rem;
+      color: #f43f5e;
+    }
+    
+    .error-title {
+      margin: 0 0 1rem 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    
+    .error-description {
+      margin: 0 0 2rem 0;
+      color: #64748b;
+    }
+    
+    .error-code {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: #475569;
+      margin-bottom: 1.5rem;
+    }
+    
+    .back-button {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background-color: #38bdf8;
+      color: #ffffff;
+      border-radius: 6px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    
+    .back-button:hover {
+      background-color: #0ea5e9;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="container mx-auto py-10">
+    <div class="error-container">
+      <div class="error-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      
+      <h1 class="error-title">OAuth Error</h1>
+      
+      <div class="error-code">
+        <%= error %>
+      </div>
+      
+      <p class="error-description">
+        <%= error_description %>
+      </p>
+      
+      <a href="/" class="back-button">
+        Return to Pickle+
+      </a>
+    </div>
+  </div>
+</body>
+</html>
