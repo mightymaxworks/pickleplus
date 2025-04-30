@@ -42,8 +42,6 @@ import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth"
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
-import oauthRoutes from "./routes/oauth-routes"; // PKL-278651-OAUTH-0003 - OAuth for external applications
-import oauthDeveloperRoutes from './routes/oauth-developer-routes'; // PKL-278651-OAUTH-0005 - OAuth Developer Dashboard
 
 /**
  * Register all application routes with the Express app
@@ -135,20 +133,6 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount SAGE API routes - PKL-278651-SAGE-0029-API
   app.use('/api/sage', sageApiRoutes);
-  
-  // Mount OAuth routes for external application authentication - PKL-278651-OAUTH-0003
-  console.log("[API] Registering OAuth routes for external application authentication");
-  
-  // OAuth developer routes are already imported at the top of the file
-  
-  // Mount main OAuth routes
-  app.use('/api/oauth', oauthRoutes);
-  app.use('/oauth', oauthRoutes); // Also mount at /oauth for standard OAuth endpoints
-  
-  // Mount OAuth developer dashboard routes
-  app.use('/api/oauth/developer', oauthDeveloperRoutes);
-  
-  console.log("[API] OAuth routes registered successfully");
   
   // Initialize OpenAI client if API key is available
   initializeOpenAI();
@@ -294,12 +278,6 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       });
   });
   
-  // PKL-278651-OAUTH-0005 - Simple OAuth test page (direct implementation)
-  app.get('/oauth-test', (req: Request, res: Response) => {
-    // Redirect to the static file in the public directory
-    res.redirect('/public/oauth-test.html');
-  });
-
   // Create a completely new development endpoint for profile updates
   app.patch('/api/dev/profile/update', (req: Request, res: Response) => {
     console.log("[DEV MODE] Processing development profile update:", req.body);

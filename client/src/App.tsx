@@ -32,7 +32,7 @@ import '@/core/modules/tournament/init'
 import {
   LazyLandingPage,
   LazyAuthPage,
-  // LazyAboutUsPage, // Temporarily commented out due to missing file
+  LazyAboutUsPage,
   LazyProfilePage,
   LazyProfileEditPage,
   LazyMatchesPage, 
@@ -48,7 +48,6 @@ import {
   LazyMyEventsPage,
   LazyAdminDashboardPage,
   LazyPrizeDrawingPage,
-  LazyOAuthDeveloperDashboard, // PKL-278651-OAUTH-0005 - OAuth Developer Dashboard
   LazyGoldenTicketAdmin,
   LazyPassportVerificationPage,
   
@@ -99,9 +98,6 @@ import SageDemoPage from './pages/SageDemoPage'
 
 // Import custom test login page to help with loading issues
 import TestLoginPage from './pages/test-login-page'
-
-// Import OAuth test page
-import TestOAuthPage from './pages/TestOAuthPage'
 
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
@@ -212,22 +208,11 @@ export default function App() {
                   <Route path="/auth" component={LazyAuthPage} />
                   <Route path="/onboarding" component={LazyOnboardingPage} />
                   <Route path="/onboarding-complete" component={OnboardingCompletePage} />
-                  {/* Route temporarily disabled due to missing component */}
-                  {/* <Route path="/about" component={LazyAboutUsPage} /> */}
+                  <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/test-login" component={TestLoginPage} />
                   <Route path="/sage-demo" component={SageDemoPage} />
-                  <Route path="/test-oauth" component={TestOAuthPage} />
-                  
-                  {/* PKL-278651-OAUTH-0005 - OAuth Developer Dashboard */}
-                  <Route path="/oauth/developer">
-                    {(params) => (
-                      <AdminProtectedRoute>
-                        <LazyOAuthDeveloperDashboard />
-                      </AdminProtectedRoute>
-                    )}
-                  </Route>
                 
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 
