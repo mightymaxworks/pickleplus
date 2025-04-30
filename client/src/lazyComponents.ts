@@ -14,7 +14,8 @@ import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad';
 // Main Pages
 export const LazyLandingPage = lazyLoad(() => import('./pages/landing-page'));
 export const LazyAuthPage = lazyLoad(() => import('./pages/auth-page'));
-export const LazyAboutUsPage = lazyLoad(() => import('./pages/about-page'));
+// Temporarily comment out missing page
+// export const LazyAboutUsPage = lazyLoad(() => import('./pages/about-page'));
 export const LazyDashboardPage = lazyLoad(() => import('./pages/dashboard-page'));
 export const LazyNotFoundPage = lazyLoad(() => import('./pages/not-found'));
 

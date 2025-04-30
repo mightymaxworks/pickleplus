@@ -32,7 +32,7 @@ import '@/core/modules/tournament/init'
 import {
   LazyLandingPage,
   LazyAuthPage,
-  LazyAboutUsPage,
+  // LazyAboutUsPage, // Temporarily commented out due to missing file
   LazyProfilePage,
   LazyProfileEditPage,
   LazyMatchesPage, 
@@ -212,7 +212,8 @@ export default function App() {
                   <Route path="/auth" component={LazyAuthPage} />
                   <Route path="/onboarding" component={LazyOnboardingPage} />
                   <Route path="/onboarding-complete" component={OnboardingCompletePage} />
-                  <Route path="/about" component={LazyAboutUsPage} />
+                  {/* Route temporarily disabled due to missing component */}
+                  {/* <Route path="/about" component={LazyAboutUsPage} /> */}
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/test-login" component={TestLoginPage} />
