@@ -294,6 +294,12 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       });
   });
   
+  // PKL-278651-OAUTH-0005 - Simple OAuth test page (direct implementation)
+  app.get('/oauth-test', (req: Request, res: Response) => {
+    // Redirect to the static file in the public directory
+    res.redirect('/public/oauth-test.html');
+  });
+
   // Create a completely new development endpoint for profile updates
   app.patch('/api/dev/profile/update', (req: Request, res: Response) => {
     console.log("[DEV MODE] Processing development profile update:", req.body);

@@ -76,6 +76,10 @@ app.use((req, res, next) => {
   // Serve static files from uploads directory
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   console.log("[Static Files] Serving uploads directory from:", path.join(process.cwd(), 'uploads'));
+  
+  // Serve static files from public directory (PKL-278651-OAUTH-0005)
+  app.use('/public', express.static(path.join(process.cwd(), 'public')));
+  console.log("[Static Files] Serving public directory from:", path.join(process.cwd(), 'public'));
 
   // Set up authentication
   setupAuth(app);

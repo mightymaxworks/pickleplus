@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .card {
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      color: #333;
+    }
+    input, textarea, button {
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+    input, textarea {
+      width: 100%;
+      max-width: 400px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow: auto;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pickle+ OAuth Test</h1>
+    
+    <div class="card">
+      <h2>1. Register OAuth Client</h2>
+      <div>
+        <label for="client-name">Client Name:</label>
+        <input type="text" id="client-name" value="Test Application">
+      </div>
+      <div>
+        <label for="client-website">Website URL:</label>
+        <input type="text" id="client-website" value="https://example.com">
+      </div>
+      <div>
+        <label for="client-description">Description:</label>
+        <textarea id="client-description">A test application for OAuth implementation</textarea>
+      </div>
+      <div>
+        <label for="redirect-uris">Redirect URIs (one per line):</label>
+        <textarea id="redirect-uris">https://example.com/callback
+http://localhost:3000/callback</textarea>
+      </div>
+      <button id="register-client">Register Client</button>
+      <div id="register-result"></div>
+    </div>
+    
+    <div class="card">
+      <h2>2. List Registered Clients</h2>
+      <button id="list-clients">List Clients</button>
+      <div id="clients-list"></div>
+    </div>
+    
+    <div class="card">
+      <h2>3. Test Authorization Flow</h2>
+      <div>
+        <label for="client-id">Client ID:</label>
+        <input type="text" id="client-id">
+      </div>
+      <div>
+        <label for="scope">Scope (space separated):</label>
+        <input type="text" id="scope" value="user:basic">
+      </div>
+      <button id="start-auth-flow">Start Auth Flow</button>
+      <div id="auth-result"></div>
+    </div>
+    
+    <div class="card">
+      <h2>4. Exchange Code for Token</h2>
+      <div>
+        <label for="auth-code">Authorization Code:</label>
+        <input type="text" id="auth-code">
+      </div>
+      <div>
+        <label for="exchange-client-id">Client ID:</label>
+        <input type="text" id="exchange-client-id">
+      </div>
+      <button id="exchange-token">Exchange for Token</button>
+      <div id="token-result"></div>
+    </div>
+    
+    <div class="card">
+      <h2>5. Use Access Token</h2>
+      <div>
+        <label for="access-token">Access Token:</label>
+        <input type="text" id="access-token">
+      </div>
+      <button id="test-token">Test Token</button>
+      <div id="api-result"></div>
+    </div>
+  </div>
+
+  <script>
+    // Helper function for API calls
+    async function apiCall(endpoint, method = 'GET', data = null) {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      };
+
+      if (data) {
+        options.body = JSON.stringify(data);
+      }
+
+      try {
+        const response = await fetch(endpoint, options);
+        const result = await response.json();
+        
+        return {
+          status: response.status,
+          data: result
+        };
+      } catch (error) {
+        return {
+          status: 500,
+          error: error.message
+        };
+      }
+    }
+
+    // Register Client
+    document.getElementById('register-client').addEventListener('click', async () => {
+      const name = document.getElementById('client-name').value;
+      const website = document.getElementById('client-website').value;
+      const description = document.getElementById('client-description').value;
+      const redirectUris = document.getElementById('redirect-uris').value
+        .split('\n')
+        .map(uri => uri.trim())
+        .filter(uri => uri);
+
+      const resultElement = document.getElementById('register-result');
+      
+      try {
+        const result = await apiCall('/api/oauth/developer/clients', 'POST', {
+          name,
+          website,
+          description,
+          redirectUris
+        });
+
+        if (result.status === 201) {
+          resultElement.innerHTML = `
+            <p class="success">Client registered successfully!</p>
+            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+          `;
+          
+          // Automatically fill client ID for next steps
+          const clientId = result.data.clientId;
+          document.getElementById('client-id').value = clientId;
+          document.getElementById('exchange-client-id').value = clientId;
+        } else {
+          resultElement.innerHTML = `
+            <p class="error">Error registering client: ${result.error || 'Unknown error'}</p>
+            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+
+    // List Clients
+    document.getElementById('list-clients').addEventListener('click', async () => {
+      const resultElement = document.getElementById('clients-list');
+      
+      try {
+        const result = await apiCall('/api/oauth/developer/clients');
+
+        if (result.status === 200) {
+          if (result.data.length === 0) {
+            resultElement.innerHTML = '<p>No clients registered yet.</p>';
+          } else {
+            let html = '<h3>Registered Clients:</h3>';
+            
+            result.data.forEach(client => {
+              html += `
+                <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                  <p><strong>Name:</strong> ${client.name}</p>
+                  <p><strong>Client ID:</strong> ${client.clientId}</p>
+                  <p><strong>Website:</strong> ${client.website}</p>
+                  <p><strong>Description:</strong> ${client.description}</p>
+                  <p><strong>Status:</strong> ${client.status}</p>
+                  <p><strong>Created:</strong> ${new Date(client.createdAt).toLocaleString()}</p>
+                  <p><strong>Redirect URIs:</strong></p>
+                  <ul>
+                    ${client.redirectUris.map(uri => `<li>${uri}</li>`).join('')}
+                  </ul>
+                </div>
+              `;
+            });
+            
+            resultElement.innerHTML = html;
+          }
+        } else {
+          resultElement.innerHTML = `
+            <p class="error">Error listing clients: ${result.error || 'Unknown error'}</p>
+            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+
+    // Start Authorization Flow
+    document.getElementById('start-auth-flow').addEventListener('click', () => {
+      const clientId = document.getElementById('client-id').value;
+      const scope = document.getElementById('scope').value;
+      
+      if (!clientId) {
+        document.getElementById('auth-result').innerHTML = '<p class="error">Please enter a Client ID</p>';
+        return;
+      }
+      
+      const redirectUri = "https://example.com/callback"; // Using first redirect URI
+      const authUrl = `/api/oauth/authorize?client_id=${encodeURIComponent(clientId)}&response_type=code&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      
+      // Display the link for testing
+      document.getElementById('auth-result').innerHTML = `
+        <p>Authorization URL generated. In a real app, user would be redirected to this URL:</p>
+        <a href="${authUrl}" target="_blank">${authUrl}</a>
+        <p>Note: After authorization, you'll be redirected to your redirect URI. Since that's not a valid endpoint in this test, copy the 'code' parameter from the URL and paste it below.</p>
+      `;
+    });
+
+    // Exchange Code for Token
+    document.getElementById('exchange-token').addEventListener('click', async () => {
+      const authCode = document.getElementById('auth-code').value;
+      const clientId = document.getElementById('exchange-client-id').value;
+      const resultElement = document.getElementById('token-result');
+      
+      if (!authCode || !clientId) {
+        resultElement.innerHTML = '<p class="error">Please enter both Authorization Code and Client ID</p>';
+        return;
+      }
+      
+      const redirectUri = "https://example.com/callback"; // Using first redirect URI
+      
+      try {
+        const result = await apiCall('/api/oauth/token', 'POST', {
+          grant_type: 'authorization_code',
+          code: authCode,
+          client_id: clientId,
+          redirect_uri: redirectUri
+        });
+
+        if (result.status === 200 && result.data.access_token) {
+          resultElement.innerHTML = `
+            <p class="success">Token received successfully!</p>
+            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+          `;
+          
+          // Automatically fill access token for next step
+          document.getElementById('access-token').value = result.data.access_token;
+        } else {
+          resultElement.innerHTML = `
+            <p class="error">Error exchanging code for token: ${result.error || 'Unknown error'}</p>
+            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+
+    // Test Access Token
+    document.getElementById('test-token').addEventListener('click', async () => {
+      const accessToken = document.getElementById('access-token').value;
+      const resultElement = document.getElementById('api-result');
+      
+      if (!accessToken) {
+        resultElement.innerHTML = '<p class="error">Please enter an Access Token</p>';
+        return;
+      }
+      
+      try {
+        const result = await fetch('/api/oauth/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+        
+        const data = await result.json();
+        
+        if (result.ok) {
+          resultElement.innerHTML = `
+            <p class="success">API call successful!</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        } else {
+          resultElement.innerHTML = `
+            <p class="error">Error making API call: ${data.error || 'Unknown error'}</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
