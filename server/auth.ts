@@ -533,6 +533,23 @@ export function setupAuth(app: Express) {
           console.log('[DEBUG AUTH] Session ID:', req.sessionID);
           console.log('[DEBUG AUTH] Session data:', req.session);
           
+          // Start the onboarding process for the new user
+          try {
+            // Directly import the onboarding service
+            const { onboardingService } = require('./modules/onboarding/onboardingService');
+            // Use Promise handling instead of await
+            onboardingService.startOrResumeOnboarding(user.id)
+              .then(() => {
+                console.log('[DEBUG AUTH] Onboarding process started for user:', user.id);
+              })
+              .catch((err) => {
+                console.error('[DEBUG AUTH] Failed to start onboarding process:', err);
+              });
+          } catch (onboardingError) {
+            // Don't block registration if onboarding initialization fails
+            console.error('[DEBUG AUTH] Failed to start onboarding service:', onboardingError);
+          }
+          
           // Return the user data without the password
           const { password, ...userWithoutPassword } = user;
           res.status(201).json(userWithoutPassword);
