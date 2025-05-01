@@ -59,6 +59,10 @@ export function registerUserSearchRoutes(app: express.Express): void {
         whereClause = searchConditions[0];
       }
       
+      // Exclude users with "test" in their username
+      const testUserFilter = sql`lower(${users.username}) NOT LIKE '%test%'`;
+      whereClause = whereClause ? and(whereClause, testUserFilter) : testUserFilter;
+      
       const players = await db.select({
         id: users.id,
         username: users.username,
@@ -131,8 +135,15 @@ export function registerUserSearchRoutes(app: express.Express): void {
       
       console.log(`[API][UserSearch] Found ${matchingUsers.length} matching users`);
       
+      // Filter out users with "test" in their username
+      const filteredUsers = matchingUsers.filter(user => 
+        !user.username.toLowerCase().includes('test')
+      );
+      
+      console.log(`[API][UserSearch] Filtered out ${matchingUsers.length - filteredUsers.length} test users`);
+      
       // Map to safe user objects without sensitive info
-      const safeUsers = matchingUsers.map(user => ({
+      const safeUsers = filteredUsers.map(user => ({
         id: user.id,
         username: user.username,
         displayName: user.displayName || user.username,
