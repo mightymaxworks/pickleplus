@@ -5497,17 +5497,18 @@ export class DatabaseStorage implements IStorage {
         };
       }
       
-      // Return default ratings if no matches or profile
+      // For new users, return 0 for all dimensions until they complete onboarding
+      // This prevents showing fake default values of 1000/1250/1500
       return { 
-        TECH: 3, 
-        TACT: 3, 
-        PHYS: 3, 
-        MENT: 3, 
-        CONS: 3 
+        TECH: 0, 
+        TACT: 0, 
+        PHYS: 0, 
+        MENT: 0, 
+        CONS: 0 
       };
     } catch (error) {
       console.error('[Storage] getCourtIQRatings error:', error);
-      return { TECH: 3, TACT: 3, PHYS: 3, MENT: 3, CONS: 3 };
+      return { TECH: 0, TACT: 0, PHYS: 0, MENT: 0, CONS: 0 };
     }
   }
   
