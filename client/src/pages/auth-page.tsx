@@ -136,11 +136,21 @@ export default function AuthPage() {
     try {
       const { confirmPassword, redemptionCode, agreeToTerms, displayName, yearOfBirth, location, playingSince, skillLevel, ...credentials } = values;
       
+      // First check if passwords match to give immediate feedback
+      if (credentials.password !== confirmPassword) {
+        registerForm.setError("confirmPassword", { 
+          type: "manual", 
+          message: "Passwords do not match" 
+        });
+        return;
+      }
+      
       // Create a properly formatted registration object matching server expectations
       const registrationData = {
         username: credentials.username,
         email: credentials.email,
         password: credentials.password,
+        confirmPassword: confirmPassword, // Include confirmPassword for validation
         displayName: displayName, // Server expects displayName, not firstName/lastName
         firstName: displayName.split(' ')[0] || displayName, // Extract first name from display name
         lastName: displayName.split(' ').slice(1).join(' ') || '', // Extract last name from display name
@@ -151,7 +161,7 @@ export default function AuthPage() {
         redemptionCode: redemptionCode || undefined
       };
       
-      console.log("Sending registration data:", { ...registrationData, password: "[REDACTED]" });
+      console.log("Sending registration data:", { ...registrationData, password: "[REDACTED]", confirmPassword: "[REDACTED]" });
       await register(registrationData);
       // Success and error are handled by the register function
     } catch (error: any) {
@@ -659,7 +669,7 @@ export default function AuthPage() {
       </div>
       
       {/* Background CSS for decorative pattern */}
-      <style jsx global>{`
+      <style>{`
         .bg-pattern {
           background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }

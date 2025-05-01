@@ -147,11 +147,21 @@ export default function EnhancedAuthPage() {
 
   const handleRegister = async (formData: RegisterFormData) => {
     try {
+      // First, verify passwords match to provide immediate feedback
+      if (formData.password !== formData.confirmPassword) {
+        registerForm.setError("confirmPassword", { 
+          type: "manual", 
+          message: "Passwords do not match" 
+        });
+        return;
+      }
+      
       // Create a properly formatted registration object
       const registrationData = {
         username: formData.username,
         email: formData.email || "",
         password: formData.password,
+        confirmPassword: formData.confirmPassword, // Include confirmPassword for validation
         displayName: formData.displayName || `${formData.firstName} ${formData.lastName}`.trim(),
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -181,6 +191,11 @@ export default function EnhancedAuthPage() {
           registerForm.setError("email", { 
             type: "manual", 
             message: "This email is already registered. Please use another email or try logging in." 
+          });
+        } else if (errorMessage.includes("Passwords do not match")) {
+          registerForm.setError("confirmPassword", { 
+            type: "manual", 
+            message: "Passwords do not match" 
           });
         } else {
           registerForm.setError("root", { 
