@@ -86,7 +86,7 @@ export default function DashboardContent() {
         3: 250,
         4: 500,
         5: 750,
-        10: 1000,
+        6: 1000,
         15: 2000,
         20: 4000
       };
