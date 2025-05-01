@@ -2,7 +2,8 @@ import {
   users, type User, type InsertUser,
   profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
   matches, type Match, type InsertMatch,
-  type XpTransaction, type InsertXpTransaction
+  type XpTransaction, type InsertXpTransaction,
+  activities, type InsertActivity
 } from "@shared/schema";
 
 // Import SAGE coaching schema (PKL-278651-COACH-0001-CORE - Skills Assessment & Growth Engine)
@@ -231,6 +232,9 @@ export interface IStorage {
   // Helper method to award XP
   awardXpToUser(userId: number, xpAmount: number, source: string): Promise<User | undefined>;
   
+  // PKL-278651-XP-0001-FIX-ACTIVITY - User Activity Tracking
+  createActivity(activityData: InsertActivity): Promise<any>;
+  
   // PKL-278651-SAGE-0015-CONCIERGE - SAGE Concierge operations
   createConciergeInteraction(interaction: InsertConciergeInteraction): Promise<ConciergeInteraction>;
   getConciergeInteractions(userId: number, limit?: number): Promise<ConciergeInteraction[]>;
@@ -282,6 +286,9 @@ export interface IStorage {
   
   // XP Transactions
   createXpTransaction(transaction: Omit<InsertXpTransaction, 'timestamp'>): Promise<XpTransaction>;
+  
+  // User Activity Tracking
+  createActivity(activityData: InsertActivity): Promise<any>;
   
   // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
   // Match operations
@@ -1491,6 +1498,27 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error awarding XP to user:', error);
       return undefined;
+    }
+  }
+  
+  /**
+   * PKL-278651-XP-0001-FIX-ACTIVITY - Create user activity record
+   * 
+   * @param activityData Activity data to insert
+   * @returns Created activity record
+   */
+  async createActivity(activityData: InsertActivity): Promise<any> {
+    try {
+      console.log(`[Storage] createActivity called with type: ${activityData.type}`);
+      
+      const [result] = await db.insert(activities)
+        .values(activityData)
+        .returning();
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] createActivity error:', error);
+      return null;
     }
   }
   
