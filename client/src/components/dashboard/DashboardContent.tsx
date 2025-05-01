@@ -23,7 +23,10 @@ import CourtIQStatsOverview from '@/components/dashboard/CourtIQStatsOverview';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
+// Original level calculation (now deprecated)
 import { calculateLevel as calculateLevelFromXP, getNextLevelXP as getXpRequiredForLevel } from '@/lib/calculateLevel';
+// PKL-278651-XP-0001-FIX - Database-aligned level calculation
+import { calculateLevelFromDb, getLevelInfoFromDb } from '@/lib/calculateLevelFromDatabase';
 import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
@@ -161,10 +164,22 @@ export default function DashboardContent() {
   };
   
   // Calculate the correct level based on XP (ensures displayed level is accurate)
-  const correctLevel = calculateLevelFromXP(user.xp || 0);
+  // PKL-278651-XP-0001-FIX - Use database-aligned level calculation
+  const frontendLevel = calculateLevelFromXP(user.xp || 0);
+  const dbLevel = calculateLevelFromDb(user.xp || 0); // This matches the server calculation
   
-  // XP percentage still uses the calculated level to show correct progress
-  const xpPercentage = calculateXpPercentage(user.xp || 0, correctLevel);
+  // Use the database level for display (matches what server returns)
+  const correctLevel = dbLevel;
+  
+  const levelInfo = getLevelInfoFromDb(user.xp || 0);
+  
+  // Calculate percentage from database-aligned ranges instead of frontend calculations
+  const xpPercentage = levelInfo.xpProgressPercentage;
+  
+  // Log the difference for debugging
+  if (frontendLevel !== dbLevel) {
+    console.debug(`[XP] Level calculation differs: Frontend=${frontendLevel}, Database=${dbLevel}, XP=${user.xp}`);
+  }
   // Only calculate winRate when we have real match data
   const hasMatchData = (matchStats && matchStats.totalMatches && matchStats.totalMatches > 0) || (user.totalMatches && user.totalMatches > 0);
   const winRate = hasMatchData 
@@ -481,7 +496,10 @@ export default function DashboardContent() {
                             {!user?.xp ? (
                               <div className="text-xs font-medium">Start</div>
                             ) : (
-                              <div className="text-sm font-bold">{calculateLevelFromXP(user.xp || 0)}</div>
+                              <div className="text-sm font-bold">{
+                                // PKL-278651-XP-0001-FIX - Use database-aligned level display
+                                calculateLevelFromDb(user.xp || 0)
+                              }</div>
                             )}
                             <div className="text-xs text-gray-500">Level</div>
                           </div>
@@ -529,11 +547,10 @@ export default function DashboardContent() {
                                   transition={{ delay: 0.7, duration: 0.3 }}
                                 >
                                   {(() => {
-                                    // Use our centralized calculation utilities
-                                    const currentLevel = calculateLevelFromXP(user.xp || 0);
-                                    const nextLevel = currentLevel + 1;
-                                    const nextLevelXp = getXpRequiredForLevel(nextLevel);
-                                    return `${nextLevel} (${nextLevelXp.toLocaleString()} XP)`;
+                                    // PKL-278651-XP-0001-FIX - Use database-aligned level calculation
+                                    // for next level information
+                                    const levelInfo = getLevelInfoFromDb(user.xp || 0);
+                                    return `${levelInfo.nextLevel.level} (${levelInfo.nextLevel.minXp.toLocaleString()} XP)`;
                                   })()}
                                 </motion.span>
                               </div>

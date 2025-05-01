@@ -18,6 +18,7 @@ import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
 import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation-routes";
 import { registerUserSearchRoutes } from "./routes/user-search-routes"; // PKL-278651-SRCH-0001-UNIFD
 import { registerTestXpRoutes } from "./routes/test-xp-routes"; // PKL-278651-TEST-XP - Temporary XP Award Test
+import { registerXpCalculationTestRoutes } from "./routes/xp-calculation-test-routes"; // PKL-278651-XP-0001-FIX - XP Level Calculation Test
 import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes"; // PKL-278651-RATE-0004-MADV
 import { registerHealthCheckRoutes } from "./routes/health-check-routes"; // Simple health check routes
 import { registerPassportVerificationRoutes } from "./routes/passport-verification-routes"; // PKL-278651-CONN-0004-PASS-ADMIN
@@ -75,6 +76,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
   registerUserSearchRoutes(app); // PKL-278651-SRCH-0001-UNIFD - Player search routes
   registerTestXpRoutes(app); // PKL-278651-TEST-XP - Temporary XP Award Test
+  registerXpCalculationTestRoutes(app); // PKL-278651-XP-0001-FIX - XP Level Calculation Test
   registerMasteryPathsRoutes(app); // PKL-278651-RATE-0004-MADV - CourtIQ Mastery Paths
   registerHealthCheckRoutes(app); // Simple health check route
   registerPassportVerificationRoutes(app); // PKL-278651-CONN-0004-PASS-ADMIN - Passport verification routes
