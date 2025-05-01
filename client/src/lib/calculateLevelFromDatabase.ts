@@ -32,6 +32,14 @@ interface LevelInfo {
   minXpForNextLevel: number;
   xpProgressPercentage: number;
   xpNeededForNextLevel: number;
+  
+  // PKL-278651-XP-0001-FIX-DATA - Adding additional fields needed by components
+  // This makes it easier for components to access next level info directly
+  nextLevel: {
+    level: number;
+    name: string;
+    minXp: number;
+  };
 }
 
 /**
@@ -129,6 +137,17 @@ export function getLevelInfoFromDb(xp: number): LevelInfo {
   const xpIntoLevel = xp - currentLevelData.min_xp;
   const xpProgressPercentage = Math.min(100, Math.round((xpIntoLevel / levelXpRange) * 100));
   
+  // Ensure nextLevelData exists (avoid TypeScript error)
+  if (!nextLevelData) {
+    // If somehow we don't have next level data, create a fallback
+    nextLevelData = {
+      level: level + 1,
+      name: `Next ${currentLevelData.name}`,
+      min_xp: currentLevelData.max_xp + 1,
+      max_xp: currentLevelData.max_xp + 1000
+    };
+  }
+  
   return {
     level,
     name: currentLevelData.name,
@@ -137,6 +156,13 @@ export function getLevelInfoFromDb(xp: number): LevelInfo {
     maxXpForCurrentLevel: currentLevelData.max_xp,
     minXpForNextLevel: nextLevelData.min_xp,
     xpProgressPercentage,
-    xpNeededForNextLevel: nextLevelData.min_xp - xp
+    xpNeededForNextLevel: nextLevelData.min_xp - xp,
+    
+    // Add nextLevel property for component use
+    nextLevel: {
+      level: nextLevelData.level,
+      name: nextLevelData.name,
+      minXp: nextLevelData.min_xp
+    }
   };
 }
