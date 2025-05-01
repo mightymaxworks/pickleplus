@@ -2248,12 +2248,30 @@ export class DatabaseStorage implements IStorage {
         console.log(`[XP] User ${numericId} is a founding member with multiplier ${user.xpMultiplier}%. Adding ${finalXpToAdd}XP instead of ${xpToAdd}XP`);
       }
       
-      // Calculate new XP and level
+      // Calculate new XP
       const newXP = currentXP + finalXpToAdd;
       
-      // Simple level calculation: level up for every 1000 XP
-      const xpPerLevel = 1000;
-      const newLevel = Math.floor(newXP / xpPerLevel) + 1;
+      // Get the correct level from the xp_levels table
+      let newLevel = 1; // Default level if no matching level found
+      try {
+        // Query the xp_levels table directly with raw SQL for maximum compatibility
+        const levelResult = await db.execute(
+          `SELECT * FROM xp_levels WHERE ${newXP} >= min_xp AND ${newXP} <= max_xp`
+        );
+        
+        if (levelResult.rows && levelResult.rows.length > 0) {
+          newLevel = levelResult.rows[0].level;
+          console.log(`[XP] User ${numericId} now has ${newXP}XP and level ${newLevel} (from xp_levels table)`);
+        } else {
+          console.log(`[XP] Warning: No matching level found for XP ${newXP}, defaulting to level 1`);
+        }
+      } catch (levelError) {
+        console.error('[XP] Error fetching level from xp_levels table:', levelError);
+        // Fallback to original simple calculation if there's an error with the table
+        console.log('[XP] Falling back to simple level calculation');
+        const xpPerLevel = 1000;
+        newLevel = Math.floor(newXP / xpPerLevel) + 1;
+      }
 
       const [updatedUser] = await db.update(users)
         .set({ 
