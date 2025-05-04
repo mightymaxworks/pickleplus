@@ -55,13 +55,39 @@ export const registerUserSchema = registerSchema;
 
 // Hash a password using bcryptjs
 export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcryptjs.genSalt(10);
-  return await bcryptjs.hash(password, salt);
+  try {
+    if (!password || typeof password !== 'string') {
+      console.error('[Auth] hashPassword called with invalid password:', { 
+        hasPassword: !!password,
+        typeOfPassword: typeof password
+      });
+      throw new Error('Invalid password provided for hashing');
+    }
+    
+    const salt = await bcryptjs.genSalt(10);
+    return await bcryptjs.hash(password, salt);
+  } catch (error) {
+    console.error('[Auth] Error in hashPassword:', error);
+    throw error; // Re-throw to handle properly in calling function
+  }
 }
 
 // Compare a plaintext password with a stored hash
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  return await bcryptjs.compare(supplied, stored);
+  try {
+    if (!supplied || !stored) {
+      console.error('[Auth] comparePasswords called with invalid parameters:', {
+        hasSupplied: !!supplied,
+        hasStored: !!stored
+      });
+      return false;
+    }
+    
+    return await bcryptjs.compare(supplied, stored);
+  } catch (error) {
+    console.error('[Auth] Error in comparePasswords:', error);
+    return false;
+  }
 }
 
 // Middleware to check if a user is authenticated
@@ -273,13 +299,41 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        console.log(`[Auth] LocalStrategy login attempt for username: ${username}`);
+        
+        if (!username || !password) {
+          console.error('[Auth] Invalid login attempt with missing credentials:', {
+            hasUsername: !!username,
+            hasPassword: !!password
+          });
           return done(null, false);
-        } else {
-          return done(null, user);
         }
+        
+        // Check for test users in case they've been temporarily removed
+        if (username === 'testuser1' && process.env.NODE_ENV !== 'production') {
+          console.log('[Auth] Special handling for test user: testuser1');
+        }
+        
+        const user = await storage.getUserByUsername(username);
+        
+        if (!user) {
+          console.log(`[Auth] User not found: ${username}`);
+          return done(null, false);
+        }
+        
+        console.log(`[Auth] User found: ${username} (ID: ${user.id}), validating password...`);
+        
+        const passwordValid = await comparePasswords(password, user.password);
+        
+        if (!passwordValid) {
+          console.log(`[Auth] Password validation failed for user: ${username}`);
+          return done(null, false);
+        }
+        
+        console.log(`[Auth] Password validation successful for user: ${username}`);
+        return done(null, user);
       } catch (error) {
+        console.error('[Auth] Error in LocalStrategy:', error);
         return done(error);
       }
     }),
@@ -444,11 +498,29 @@ export function setupAuth(app: Express) {
         }
         
         // Create the user with the augmented data object
-        const user = await storage.createUser(userData as InsertUser);
-        
-        if (!user) {
-          console.error("[DEBUG AUTH] User creation failed, storage.createUser returned null/undefined");
-          return res.status(500).json({ message: "User creation failed" });
+        let user;
+        try {
+          user = await storage.createUser(userData as InsertUser);
+          
+          if (!user) {
+            console.error("[DEBUG AUTH] User creation failed, storage.createUser returned null/undefined");
+            return res.status(500).json({ message: "User creation failed" });
+          }
+        } catch (createError) {
+          console.error("[DEBUG AUTH] User creation error:", createError);
+          
+          // Check for specific error types
+          if (createError.message && createError.message.includes('duplicate key')) {
+            if (createError.message.includes('username')) {
+              return res.status(400).json({ message: "Username already exists" });
+            } else if (createError.message.includes('email')) {
+              return res.status(400).json({ message: "Email already in use" });
+            } else if (createError.message.includes('passport')) {
+              return res.status(500).json({ message: "System error with passport generation. Please try again." });
+            }
+          }
+          
+          return res.status(500).json({ message: "Error creating user account" });
         }
         
         console.log("[DEBUG AUTH] User created successfully with ID:", user.id);
@@ -591,13 +663,24 @@ export function setupAuth(app: Express) {
   // Login route
   app.post("/api/auth/login", handleMightymaxLogin, (req, res, next) => {
     try {
+      console.log('[Login] Login attempt:', { 
+        username: req.body.username,
+        sessionID: req.sessionID,
+        hasSession: !!req.session,
+        sessionCookie: req.headers.cookie || 'no-cookie'
+      });
+      
       // If we get here, it's not mightymax or the special handler passed to next()
       // Validate login data
       loginSchema.parse(req.body);
       
       passport.authenticate("local", (err: any, user: any, info: any) => {
-        if (err) return next(err);
+        if (err) {
+          console.error('[Login] Authentication error:', err);
+          return next(err);
+        }
         if (!user) {
+          console.log('[Login] Authentication failed - Invalid credentials for user:', req.body.username);
           return res.status(401).json({ message: "Invalid username or password" });
         }
         
@@ -609,13 +692,60 @@ export function setupAuth(app: Express) {
         }
         
         req.login(user, (err) => {
-          if (err) return next(err);
+          if (err) {
+            console.error('[Login] Login session error:', err);
+            
+            // Extra session diagnostics for debugging
+            console.error('[Login] Session diagnostics during error:', {
+              hasSession: !!req.session,
+              sessionID: req.sessionID || 'none',
+              cookies: req.headers.cookie || 'none',
+              sessionStore: !!storage.sessionStore,
+              userID: user?.id,
+              username: user?.username
+            });
+            
+            // Attempt session recovery
+            try {
+              if (req.session) {
+                console.log('[Login] Attempting session recovery...');
+                req.session.regenerate((regenerateErr) => {
+                  if (regenerateErr) {
+                    console.error('[Login] Session regeneration failed:', regenerateErr);
+                    return next(err); // Return original error if regeneration fails
+                  }
+                  
+                  console.log('[Login] Session regenerated successfully, retrying login...');
+                  req.login(user, (retryErr) => {
+                    if (retryErr) {
+                      console.error('[Login] Retry login failed:', retryErr);
+                      return next(retryErr);
+                    }
+                    
+                    // Continue with login flow if retry succeeds...
+                    continueSuccessfulLogin();
+                  });
+                });
+                return; // Exit early, we're handling via the regenerate callback
+              }
+            } catch (recoveryErr) {
+              console.error('[Login] Session recovery attempt failed:', recoveryErr);
+            }
+            
+            return next(err);
+          }
           
-          // Extra logging for debug
-          console.log('Login successful for user:', user.username);
-          console.log('Session ID:', req.sessionID);
-          console.log('User admin status:', user.isAdmin);
-          console.log('User founding member status:', user.isFoundingMember);
+          // Normal successful flow
+          function continueSuccessfulLogin() {
+            // Extra logging for debug
+            console.log('[Login] Login successful for user:', user.username);
+            console.log('[Login] Session ID:', req.sessionID);
+            console.log('[Login] Session data:', req.session);
+            console.log('[Login] User admin status:', user.isAdmin);
+            console.log('[Login] User founding member status:', user.isFoundingMember);
+          }
+          
+          continueSuccessfulLogin();
           
           // Create audit log for successful login
           const auditAction = user.isAdmin ? AuditAction.ADMIN_LOGIN : AuditAction.USER_LOGIN;
