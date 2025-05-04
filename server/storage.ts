@@ -256,6 +256,7 @@ export interface IStorage {
   getAllActiveUserIds(): Promise<number[]>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
   getUserByPassportCode(passportCode: string): Promise<User | undefined>;
   getUserByPassportId(passportId: string): Promise<User | undefined>;
@@ -1810,6 +1811,42 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error('[Storage] getUserByUsername error:', error);
+      return undefined;
+    }
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    try {
+      // Validate email parameter
+      if (!email || typeof email !== 'string') {
+        console.log(`[Storage] getUserByEmail called with invalid email: ${email}`);
+        return undefined;
+      }
+      
+      // Select all fields from the user table
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.email, email));
+      
+      // Add any missing fields expected in the User type
+      if (user) {
+        if (!('avatarUrl' in user)) {
+          (user as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (user.profileCompletionPct === undefined || user.profileCompletionPct === null) {
+          (user as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in user)) {
+          (user as any).regularSchedule = null;
+        }
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('[Storage] getUserByEmail error:', error);
       return undefined;
     }
   }

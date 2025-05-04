@@ -448,6 +448,16 @@ export function setupAuth(app: Express) {
           return res.status(400).json({ message: "Username already exists" });
         }
         console.log("[DEBUG AUTH] Username check passed, username is available");
+        
+        // Check if the email is already in use
+        if (validatedData.email) {
+          const existingEmail = await storage.getUserByEmail(validatedData.email);
+          if (existingEmail) {
+            console.log("[DEBUG AUTH] Registration failed: Email already in use:", validatedData.email);
+            return res.status(400).json({ message: "Email address already in use" });
+          }
+          console.log("[DEBUG AUTH] Email check passed, email is available");
+        }
 
         // Hash the password
         const hashedPassword = await hashPassword(validatedData.password);
