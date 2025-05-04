@@ -59,9 +59,18 @@ export function registerUserSearchRoutes(app: express.Express): void {
         whereClause = searchConditions[0];
       }
       
-      // Exclude users with "test" in their username
-      const testUserFilter = sql`lower(${users.username}) NOT LIKE '%test%'`;
-      whereClause = whereClause ? and(whereClause, testUserFilter) : testUserFilter;
+      // Check if the requesting user is an admin
+      const isAdmin = req.isAuthenticated() && req.user?.isAdmin === true;
+      
+      // Only filter out test users for non-admin users
+      if (!isAdmin) {
+        console.log("[PlayerSearch] Non-admin user - excluding test users from results");
+        // Exclude users with "test" in their username
+        const testUserFilter = sql`lower(${users.username}) NOT LIKE '%test%'`;
+        whereClause = whereClause ? and(whereClause, testUserFilter) : testUserFilter;
+      } else {
+        console.log("[PlayerSearch] Admin user - including test users in results");
+      }
       
       const players = await db.select({
         id: users.id,
@@ -131,16 +140,30 @@ export function registerUserSearchRoutes(app: express.Express): void {
       
       // Search users by username, displayName, firstName, or lastName
       const searchPattern = `%${searchQuery}%`;
-      const matchingUsers = await storage.searchUsers(searchPattern, limit);
+      const matchingUsers = await storage.searchUsers(
+        searchPattern, 
+        limit, 
+        undefined, // exclude user ID
+        req.user.id // pass the requesting user's ID to check for admin privileges
+      );
       
       console.log(`[API][UserSearch] Found ${matchingUsers.length} matching users`);
       
-      // Filter out users with "test" in their username
-      const filteredUsers = matchingUsers.filter(user => 
-        !user.username.toLowerCase().includes('test')
-      );
+      // Check if the user is an admin
+      const isAdmin = req.user?.isAdmin === true;
       
-      console.log(`[API][UserSearch] Filtered out ${matchingUsers.length - filteredUsers.length} test users`);
+      let filteredUsers = matchingUsers;
+      
+      // Only filter out test users for non-admin users
+      if (!isAdmin) {
+        console.log('[API][UserSearch] Non-admin user - filtering out test users');
+        filteredUsers = matchingUsers.filter(user => 
+          !user.username.toLowerCase().includes('test')
+        );
+        console.log(`[API][UserSearch] Filtered out ${matchingUsers.length - filteredUsers.length} test users`);
+      } else {
+        console.log('[API][UserSearch] Admin user - including test users in results');
+      }
       
       // Map to safe user objects without sensitive info
       const safeUsers = filteredUsers.map(user => ({
