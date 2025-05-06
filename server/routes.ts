@@ -482,6 +482,57 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       res.status(500).json({ error: "Server error updating profile" });
     }
   });
+
+  // Dedicated endpoint for updating external ratings
+  app.post("/api/profile/update-external-ratings", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      // Ensure we have data to update
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: "No rating data provided for update" });
+      }
+      
+      console.log("[API] External ratings update request received:", JSON.stringify(req.body, null, 2));
+      
+      // Extract relevant rating fields
+      const ratingData = {
+        duprRating: req.body.duprRating,
+        duprProfileUrl: req.body.duprProfileUrl,
+        utprRating: req.body.utprRating,
+        utprProfileUrl: req.body.utprProfileUrl,
+        wprRating: req.body.wprRating,
+        wprProfileUrl: req.body.wprProfileUrl,
+        ifpRating: req.body.ifpRating,
+        ifpProfileUrl: req.body.ifpProfileUrl,
+        iptpaRating: req.body.iptpaRating,
+        iptpaProfileUrl: req.body.iptpaProfileUrl,
+        lastExternalRatingUpdate: new Date(),
+        externalRatingsVerified: false // Reset verification status on update
+      };
+      
+      // The storage.updateUserProfile method handles all the field mapping
+      const updatedUser = await storage.updateUserProfile(req.user.id, ratingData);
+      
+      if (updatedUser) {
+        res.status(200).json({
+          success: true,
+          message: "External ratings updated successfully",
+          user: updatedUser
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to update external ratings"
+        });
+      }
+    } catch (error) {
+      console.error("[API] Error updating external ratings:", error);
+      res.status(500).json({ error: "Server error updating external ratings" });
+    }
+  });
   
   // Default route for API 404s
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {

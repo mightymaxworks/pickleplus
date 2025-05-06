@@ -49,13 +49,13 @@ export default function CoverImageUploader({
     
     // Create form data
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('banner', file); // Using 'banner' instead of 'file' to match the server's multer config
     
     try {
       onUploadStart();
       
       // Upload the file
-      const response = await fetch('/api/user/profile/cover', {
+      const response = await fetch('/api/profile/upload-banner', {
         method: 'POST',
         body: formData,
         credentials: 'include'
