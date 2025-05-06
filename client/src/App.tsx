@@ -321,28 +321,22 @@ export default function App() {
                   {/* Redirect from /profile to /profile/modern */}
                   <Route path="/profile">
                     {() => {
-                      if (typeof window !== 'undefined') {
-                        window.location.href = '/profile/modern';
-                      }
-                      return null;
+                      // Directly render the ModernProfilePage component instead of redirecting
+                      return <ModernProfilePage />;
                     }}
                   </Route>
                   {/* Redirect from /profile/enhanced to /profile/modern */}
                   <Route path="/profile/enhanced">
                     {() => {
-                      if (typeof window !== 'undefined') {
-                        window.location.href = '/profile/modern';
-                      }
-                      return null;
+                      // Directly render the ModernProfilePage component instead of redirecting
+                      return <ModernProfilePage />;
                     }}
                   </Route>
                   {/* Redirect from /profile/contextual to /profile/modern */}
                   <Route path="/profile/contextual">
                     {() => {
-                      if (typeof window !== 'undefined') {
-                        window.location.href = '/profile/modern';
-                      }
-                      return null;
+                      // Directly render the ModernProfilePage component instead of redirecting
+                      return <ModernProfilePage />;
                     }}
                   </Route>
                   {/* Keep the edit profile route as it's still needed for editing */}
@@ -354,10 +348,8 @@ export default function App() {
                   {/* Redirect from /profile/streamlined to /profile/modern */}
                   <Route path="/profile/streamlined">
                     {() => {
-                      if (typeof window !== 'undefined') {
-                        window.location.href = '/profile/modern';
-                      }
-                      return null;
+                      // Directly render the ModernProfilePage component instead of redirecting
+                      return <ModernProfilePage />;
                     }}
                   </Route>
                   <ProtectedRouteWithLayout
