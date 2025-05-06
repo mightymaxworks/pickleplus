@@ -11,6 +11,85 @@ import { isAuthenticated } from '../auth';
 const router = Router();
 
 /**
+ * Get user ratings
+ * GET /api/user/ratings
+ */
+router.get('/ratings', async (req: Request, res: Response) => {
+  console.log("[UserRating] Ratings requested, path:", req.path, "baseUrl:", req.baseUrl);
+  try {
+    // Get userId from query or current user
+    let userId: number;
+    if (req.query.userId) {
+      userId = parseInt(req.query.userId as string);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+    } else if (req.isAuthenticated()) {
+      userId = (req.user as any).id;
+    } else {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    
+    // Extract optional filters
+    const division = req.query.division as string;
+    const format = req.query.format as string;
+    
+    // Create a consistent rating based on userId
+    const baseRating = 1750 + (userId * 17) % 500;
+    
+    // Create mock rating data for demonstration
+    const mockRatings = [
+      {
+        id: 1,
+        userId: userId,
+        format: 'singles',
+        division: 'open',
+        rating: baseRating,
+        matchesPlayed: 25,
+        confidenceLevel: 0.85,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 2,
+        userId: userId,
+        format: 'doubles',
+        division: 'open',
+        rating: baseRating + 50,
+        matchesPlayed: 42,
+        confidenceLevel: 0.92,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 3,
+        userId: userId,
+        format: 'mixed',
+        division: 'open',
+        rating: baseRating - 25,
+        matchesPlayed: 18,
+        confidenceLevel: 0.78,
+        lastUpdated: new Date().toISOString()
+      }
+    ];
+    
+    // Apply format filter if provided
+    let filteredRatings = mockRatings;
+    if (format) {
+      filteredRatings = filteredRatings.filter(r => r.format === format);
+    }
+    
+    // Apply division filter if provided
+    if (division) {
+      filteredRatings = filteredRatings.filter(r => r.division === division);
+    }
+    
+    res.json(filteredRatings);
+  } catch (error) {
+    console.error('[API][User] Error retrieving ratings:', error);
+    res.status(500).json({ message: "Error retrieving user ratings" });
+  }
+});
+
+/**
  * Get detailed rating information for a user
  * GET /api/user/rating-detail
  */
