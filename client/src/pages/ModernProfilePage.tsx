@@ -18,6 +18,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { getAvatarInitials } from "@/lib/stringUtils";
 import { calculateLevel } from "@/lib/calculateLevel";
+import { StandardLayout } from "@/components/layout/StandardLayout";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -224,38 +225,42 @@ export default function ModernProfilePage() {
   // If loading or error, show appropriate state
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-4">
-          <Skeleton className="h-64 w-full rounded-lg" />
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <Skeleton className="h-12 w-48 mb-4" />
-              <Skeleton className="h-8 w-full mb-2" />
-              <Skeleton className="h-8 w-full mb-2" />
-              <Skeleton className="h-8 w-3/4" />
-            </div>
-            <div className="w-full md:w-64">
-              <Skeleton className="h-52 w-full rounded-lg mb-4" />
-              <Skeleton className="h-8 w-full mb-2" />
-              <Skeleton className="h-8 w-full" />
+      <StandardLayout pageTitle="Loading Profile">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-64 w-full rounded-lg" />
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1">
+                <Skeleton className="h-12 w-48 mb-4" />
+                <Skeleton className="h-8 w-full mb-2" />
+                <Skeleton className="h-8 w-full mb-2" />
+                <Skeleton className="h-8 w-3/4" />
+              </div>
+              <div className="w-full md:w-64">
+                <Skeleton className="h-52 w-full rounded-lg mb-4" />
+                <Skeleton className="h-8 w-full mb-2" />
+                <Skeleton className="h-8 w-full" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </StandardLayout>
     );
   }
   
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <div className="bg-destructive/10 rounded-lg p-8 max-w-xl mx-auto">
-          <h1 className="text-2xl font-bold text-destructive mb-4">Failed to load profile</h1>
-          <p className="text-muted-foreground mb-6">
-            There was an error loading the profile information. Please try again later.
-          </p>
-          <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+      <StandardLayout pageTitle="Error Loading Profile">
+        <div className="container mx-auto px-4 py-12 text-center">
+          <div className="bg-destructive/10 rounded-lg p-8 max-w-xl mx-auto">
+            <h1 className="text-2xl font-bold text-destructive mb-4">Failed to load profile</h1>
+            <p className="text-muted-foreground mb-6">
+              There was an error loading the profile information. Please try again later.
+            </p>
+            <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+          </div>
         </div>
-      </div>
+      </StandardLayout>
     );
   }
   
@@ -267,8 +272,9 @@ export default function ModernProfilePage() {
   const matchLossCount = user.totalMatches - user.matchesWon;
   
   return (
-    <div className="pb-8">
-      {/* Cover Image with Parallax Effect */}
+    <StandardLayout pageTitle={`${user.displayName || user.username}'s Profile`}>
+      <div className="pb-8">
+        {/* Cover Image with Parallax Effect */}
       <div className="relative h-64 overflow-hidden">
         <motion.div 
           className="absolute inset-0 bg-cover bg-center"
@@ -555,6 +561,7 @@ export default function ModernProfilePage() {
           </Tabs>
         </div>
       </div>
-    </div>
+      </div>
+    </StandardLayout>
   );
 }
