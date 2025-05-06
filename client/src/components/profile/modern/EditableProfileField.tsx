@@ -217,18 +217,18 @@ export default function EditableProfileField({
         {/* Mobile edit button (touch) - ENHANCED for better visibility */}
         {editable && !isEditing && isMobile && (
           <motion.button
-            className={`absolute -right-8 top-0 p-1.5 rounded-full bg-primary/10 shadow-md border border-primary/20 
-                       ${isTouched ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute -right-11 top-0 p-2.5 rounded-full bg-primary/30 shadow-md border border-primary/30 
+                       ${isTouched ? 'opacity-100' : 'opacity-70'}`}
             onClick={handleEditClick}
             initial={{ scale: 1 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            animate={isTouched ? { y: [0, -3, 0] } : {}}
-            transition={{ duration: 0.5 }}
+            animate={isTouched ? { y: [0, -3, 0], scale: [1, 1.1, 1] } : {}}
+            transition={{ duration: 0.5, repeat: isTouched ? 1 : 0 }}
             aria-label="Edit field"
             title="Click to edit"
           >
-            <PenLine className="h-4 w-4 text-primary" />
+            <PenLine className="h-6 w-6 text-primary" />
           </motion.button>
         )}
         
@@ -325,17 +325,17 @@ export default function EditableProfileField({
               variant="outline" 
               size="sm" 
               onClick={handleCancel}
-              className="h-9 text-sm border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive shadow-sm"
+              className="h-10 text-sm border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive shadow-md"
             >
-              <X className="h-4 w-4 mr-1.5" />
+              <X className="h-5 w-5 mr-1.5" />
               Cancel
             </Button>
             <Button 
               size="sm" 
               onClick={handleSave}
-              className="h-9 text-sm bg-primary hover:bg-primary/90 shadow-sm"
+              className="h-10 text-sm bg-primary hover:bg-primary/90 shadow-md"
             >
-              <Check className="h-4 w-4 mr-1.5" />
+              <Check className="h-5 w-5 mr-1.5" />
               Save
             </Button>
           </div>
@@ -345,21 +345,21 @@ export default function EditableProfileField({
       {/* Desktop edit button (hover) - ENHANCED for better visibility */}
       {editable && !isEditing && !isMobile && (
         <motion.button
-          className="absolute -right-8 top-0 opacity-30 group-hover:opacity-100 text-primary bg-primary/5 p-1 rounded hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-primary/10 shadow-sm"
+          className="absolute -right-9 top-0 opacity-70 group-hover:opacity-100 text-primary bg-primary/15 p-1.5 rounded-md hover:bg-primary/30 hover:text-primary transition-all duration-200 border border-primary/20 shadow-sm"
           onClick={handleEditClick}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           aria-label="Edit field"
         >
-          <Edit2 className="h-4 w-4" />
+          <Edit2 className="h-5 w-5" />
         </motion.button>
       )}
       
       {/* Mobile edit button (touch) - ENHANCED for better visibility */}
       {editable && !isEditing && isMobile && (
         <motion.button
-          className={`absolute -right-10 top-0 p-2 rounded-full bg-primary/20 shadow-md border border-primary/20 
-                    ${isTouched ? 'opacity-100' : 'opacity-40'}`}
+          className={`absolute -right-11 top-0 p-2.5 rounded-full bg-primary/30 shadow-md border border-primary/30
+                    ${isTouched ? 'opacity-100' : 'opacity-70'}`}
           onClick={handleEditClick}
           initial={{ scale: 1 }}
           whileHover={{ scale: 1.1 }}
@@ -369,30 +369,30 @@ export default function EditableProfileField({
           aria-label="Edit field"
           title="Click to edit"
         >
-          <PenLine className="h-5 w-5 text-primary" />
+          <PenLine className="h-6 w-6 text-primary" />
         </motion.button>
       )}
       
       {/* Desktop save/cancel buttons - ENHANCED for better visibility */}
       {isEditing && !isMobile && (
-        <div className="absolute -right-20 top-0 flex gap-1.5">
+        <div className="absolute -right-24 top-0 flex gap-2">
           <motion.button
-            className="bg-destructive/10 text-destructive p-1.5 rounded hover:bg-destructive/20 border border-destructive/20 shadow-sm"
+            className="bg-destructive/20 text-destructive p-2 rounded-md hover:bg-destructive/30 border border-destructive/30 shadow-md"
             onClick={handleCancel}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Cancel"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </motion.button>
           <motion.button
-            className="bg-primary/10 text-primary p-1.5 rounded hover:bg-primary/20 border border-primary/20 shadow-sm"
+            className="bg-primary/20 text-primary p-2 rounded-md hover:bg-primary/30 border border-primary/30 shadow-md"
             onClick={handleSave}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Save"
           >
-            <Check className="h-4 w-4" />
+            <Check className="h-5 w-5" />
           </motion.button>
         </div>
       )}
