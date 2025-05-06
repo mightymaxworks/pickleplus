@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, Check, Edit2, Info, Star, Medal, Globe, Flag, BookOpen } from 'lucide-react';
+import { Award, Check, Edit2, Info, Star, Medal, Globe, Flag, BookOpen, X } from 'lucide-react';
 import { EnhancedUser } from '@/types/enhanced-user';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,6 +12,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EditableProfileField from './modern/EditableProfileField';
 
 interface ExternalRatingsProps {
   user: EnhancedUser;
@@ -168,43 +169,118 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
     });
   };
 
+  // Handle field update
+  const handleFieldUpdate = (field: string, value: any) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+  
+  // Validate a rating value
+  const validateRating = (system: string, value: string): boolean => {
+    if (!value) return true; // Empty values are valid (optional)
+    if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+      toast({
+        title: `Invalid ${system} Rating`,
+        description: `Please enter a valid rating (e.g., 4.5)`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+  
+  // Save a single rating field
+  const handleSingleRatingUpdate = async (system: string, field: string, value: string) => {
+    if (!validateRating(system, value)) return;
+    
+    try {
+      // Set up field names based on system
+      const ratingField = `${system.toLowerCase()}Rating`;
+      
+      // Create update data with just this field
+      const updateData = {
+        userId: user.id,
+        [ratingField]: value || null,
+        lastExternalRatingUpdate: new Date().toISOString(),
+      };
+      
+      console.log(`Updating ${system} rating:`, updateData);
+      
+      await apiRequest('POST', '/api/profile/update-external-ratings', updateData);
+      
+      // Invalidate cached user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      toast({
+        title: `${system} Rating Updated`,
+        description: `Your ${system} rating has been updated to ${value}.`,
+      });
+      
+      // Call onSaveSuccess callback if provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    } catch (error) {
+      console.error(`Error updating ${system} rating:`, error);
+      toast({
+        title: "Update Failed",
+        description: `There was a problem updating your ${system} rating. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Save a single player ID field
+  const handleSingleProfileUrlUpdate = async (system: string, field: string, value: string) => {
+    try {
+      // Set up field names based on system
+      const profileUrlField = `${system.toLowerCase()}ProfileUrl`;
+      
+      // Create update data with just this field
+      const updateData = {
+        userId: user.id,
+        [profileUrlField]: value || null,
+        lastExternalRatingUpdate: new Date().toISOString(),
+      };
+      
+      console.log(`Updating ${system} player ID:`, updateData);
+      
+      await apiRequest('POST', '/api/profile/update-external-ratings', updateData);
+      
+      // Invalidate cached user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      toast({
+        title: `${system} Player ID Updated`,
+        description: `Your ${system} player ID has been updated.`,
+      });
+      
+      // Call onSaveSuccess callback if provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    } catch (error) {
+      console.error(`Error updating ${system} player ID:`, error);
+      toast({
+        title: "Update Failed",
+        description: `There was a problem updating your ${system} player ID. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
+  
   const renderRatingSection = (
     system: string, 
     rating?: string | number, 
     profileUrl?: string, 
     description?: string
   ) => {
-    if (isEditing) {
-      return (
-        <div className="space-y-3 mb-4">
-          <div className="space-y-1">
-            <Label htmlFor={`${system.toLowerCase()}Rating`}>{system} Rating</Label>
-            <Input
-              id={`${system.toLowerCase()}Rating`}
-              name={`${system.toLowerCase()}Rating`}
-              value={form[`${system.toLowerCase()}Rating` as keyof typeof form] || ''}
-              onChange={handleChange}
-              placeholder={`Enter your ${system} rating (e.g., 4.5)`}
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor={`${system.toLowerCase()}ProfileUrl`}>{system} Player ID</Label>
-            <Input
-              id={`${system.toLowerCase()}ProfileUrl`}
-              name={`${system.toLowerCase()}ProfileUrl`}
-              value={form[`${system.toLowerCase()}ProfileUrl` as keyof typeof form] || ''}
-              onChange={handleChange}
-              placeholder={`Enter your ${system} player ID for verification`}
-            />
-          </div>
-        </div>
-      );
-    }
-
+    // For the new inline editing approach
+    const ratingField = `${system.toLowerCase()}Rating`;
+    const profileUrlField = `${system.toLowerCase()}ProfileUrl`;
+    
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-2">
           <div className="font-medium">{system} Rating</div>
           {rating && user.externalRatingsVerified && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
@@ -218,22 +294,34 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
           )}
         </div>
         
-        <div className="flex items-center gap-2">
-          {rating ? (
-            <div className="text-2xl font-bold">{rating}</div>
-          ) : (
-            <div className="text-muted-foreground italic">Not provided</div>
-          )}
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="text-sm text-muted-foreground mb-1">Rating</div>
+            <EditableProfileField
+              value={rating !== undefined ? String(rating) : ""}
+              field={ratingField}
+              onUpdate={(field, value) => handleSingleRatingUpdate(system, field, value)}
+              editable={isEditable && isCurrentUser}
+              placeholder={`Enter your ${system} rating (e.g., 4.5)`}
+              className="text-2xl font-bold"
+            />
+          </div>
           
-          {profileUrl && (
-            <span className="text-sm text-muted-foreground">
-              Player ID: {profileUrl}
-            </span>
-          )}
+          <div>
+            <div className="text-sm text-muted-foreground mb-1">Player ID</div>
+            <EditableProfileField
+              value={profileUrl || ""}
+              field={profileUrlField}
+              onUpdate={(field, value) => handleSingleProfileUrlUpdate(system, field, value)}
+              editable={isEditable && isCurrentUser}
+              placeholder={`Enter your ${system} player ID for verification`}
+              className="text-sm"
+            />
+          </div>
         </div>
         
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-sm text-muted-foreground mt-3">{description}</p>
         )}
       </div>
     );
@@ -250,15 +338,20 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
           
           {isEditable && isCurrentUser && (
             <Button 
-              variant="ghost" 
+              variant={isEditing ? "outline" : "secondary"}
               size="sm" 
               onClick={() => setIsEditing(!isEditing)}
-              className="text-xs h-8"
+              className={`text-sm h-8 font-medium ${isEditing ? 'border-destructive text-destructive' : 'shadow-sm'}`}
             >
-              {isEditing ? 'Cancel' : (
+              {isEditing ? (
                 <>
-                  <Edit2 className="h-3.5 w-3.5 mr-1" />
-                  Edit
+                  <X className="h-4 w-4 mr-1.5" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Edit2 className="h-4 w-4 mr-1.5" />
+                  Edit All Ratings
                 </>
               )}
             </Button>

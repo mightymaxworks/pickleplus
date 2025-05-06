@@ -318,35 +318,34 @@ export default function EditableProfileField({
           </div>
         )}
         
-        {/* Control buttons while editing (mobile optimized) */}
+        {/* Control buttons while editing (mobile optimized) - ENHANCED for better visibility */}
         {isEditing && isMobile && (
-          <div className="flex justify-end gap-2 mt-1">
+          <div className="flex justify-end gap-2 mt-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleCancel}
-              className="text-destructive border-destructive/20 hover:bg-destructive/10"
+              className="h-9 text-sm border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive shadow-sm"
             >
-              <X className="h-4 w-4 mr-1" />
+              <X className="h-4 w-4 mr-1.5" />
               Cancel
             </Button>
             <Button 
-              variant="outline" 
               size="sm" 
               onClick={handleSave}
-              className="text-primary border-primary/20 hover:bg-primary/10"
+              className="h-9 text-sm bg-primary hover:bg-primary/90 shadow-sm"
             >
-              <Check className="h-4 w-4 mr-1" />
+              <Check className="h-4 w-4 mr-1.5" />
               Save
             </Button>
           </div>
         )}
       </div>
       
-      {/* Desktop edit button (hover) */}
+      {/* Desktop edit button (hover) - ENHANCED for better visibility */}
       {editable && !isEditing && !isMobile && (
         <motion.button
-          className="absolute -right-6 top-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary transition-opacity"
+          className="absolute -right-8 top-0 opacity-30 group-hover:opacity-100 text-primary bg-primary/5 p-1 rounded hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-primary/10 shadow-sm"
           onClick={handleEditClick}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
@@ -356,29 +355,29 @@ export default function EditableProfileField({
         </motion.button>
       )}
       
-      {/* Mobile edit button (touch) - appears when field is touched - ENHANCED for better visibility */}
+      {/* Mobile edit button (touch) - ENHANCED for better visibility */}
       {editable && !isEditing && isMobile && (
         <motion.button
-          className={`absolute -right-8 top-0 p-1.5 rounded-full bg-primary/10 shadow-md border border-primary/20 
-                    ${isTouched ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute -right-10 top-0 p-2 rounded-full bg-primary/20 shadow-md border border-primary/20 
+                    ${isTouched ? 'opacity-100' : 'opacity-40'}`}
           onClick={handleEditClick}
           initial={{ scale: 1 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          animate={isTouched ? { y: [0, -3, 0] } : {}}
-          transition={{ duration: 0.5 }}
+          animate={isTouched ? { y: [0, -3, 0], scale: [1, 1.1, 1] } : {}}
+          transition={{ duration: 0.5, repeat: isTouched ? 1 : 0 }}
           aria-label="Edit field"
           title="Click to edit"
         >
-          <PenLine className="h-4 w-4 text-primary" />
+          <PenLine className="h-5 w-5 text-primary" />
         </motion.button>
       )}
       
-      {/* Desktop save/cancel buttons */}
+      {/* Desktop save/cancel buttons - ENHANCED for better visibility */}
       {isEditing && !isMobile && (
-        <div className="absolute -right-14 top-0 flex gap-1">
+        <div className="absolute -right-20 top-0 flex gap-1.5">
           <motion.button
-            className="text-destructive hover:text-destructive/80"
+            className="bg-destructive/10 text-destructive p-1.5 rounded hover:bg-destructive/20 border border-destructive/20 shadow-sm"
             onClick={handleCancel}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -387,7 +386,7 @@ export default function EditableProfileField({
             <X className="h-4 w-4" />
           </motion.button>
           <motion.button
-            className="text-primary hover:text-primary/80"
+            className="bg-primary/10 text-primary p-1.5 rounded hover:bg-primary/20 border border-primary/20 shadow-sm"
             onClick={handleSave}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
