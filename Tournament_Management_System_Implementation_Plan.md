@@ -241,9 +241,9 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
   - All base points are then multiplied by the tournament tier multiplier
 - Special handling for round robin format (points awarded upon completion of all matches)
 - Team tournament point distribution to individual player rankings:
-  - Each player on a team receives points based on team performance
+  - Equal Distribution: All team members receive equal points regardless of participation
   - Points awarded based on the round where the team is eliminated
-  - Individual contribution factor: players who participate in more team matches receive higher percentage of team points
+  - All team members receive full points based on team performance
   - All points still subject to tournament tier multipliers
 
 #### Performance Analytics
