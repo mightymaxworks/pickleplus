@@ -10,13 +10,7 @@ import { db } from '../db';
 import { eq, and, gte, lte, desc, asc, sql } from 'drizzle-orm';
 import { 
   tournaments, 
-  tournamentRegistrations, 
-  tournamentTeams,
-  tournamentBrackets,
-  tournamentRoundPoints,
-  tournamentTiers,
-  tournamentCategories,
-  tournamentAgeDivisions,
+  tournamentRegistrations,
   insertTournamentSchema,
   insertTournamentRegistrationSchema
 } from '@shared/schema';
