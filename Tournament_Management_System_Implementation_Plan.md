@@ -245,6 +245,12 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
   - Points awarded based on the round where the team is eliminated
   - All team members receive full points based on team performance
   - All points still subject to tournament tier multipliers
+- Point decay system:
+  - Tournament points decay over time to keep rankings current
+  - Points retain 100% value for 3 months
+  - After 3 months, points decay by 15% per quarter (85% at 6 months, 70% at 9 months, 55% at 12 months)
+  - After 15 months, points are removed from ranking calculation
+  - This encourages continued tournament participation
 
 #### Performance Analytics
 - Tournament performance statistics
