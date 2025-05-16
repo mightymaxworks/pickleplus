@@ -83,21 +83,139 @@ export default function ProfileStatsTab({
       initial="hidden"
       animate="visible"
     >
-      {/* Court IQ Overview */}
+      {/* Ranking Points - Moved to the top as the primary focus */}
+      <motion.div variants={itemVariants} className="mb-8">
+        <RankingCard 
+          user={user} 
+          calculationService={calculationService}
+          className="border-primary/30"
+        />
+      </motion.div>
+      
+      {/* Performance Stats & XP Progress */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div variants={itemVariants}>
+          <PerformanceMetricsCard user={user} />
+        </motion.div>
+        
+        <motion.div variants={itemVariants}>
+          <XPProgressDisplay user={user} />
+        </motion.div>
+      </div>
+      
+      {/* Simplified Rating System Section */}
+      <motion.div variants={itemVariants}>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-amber-500" />
+              DUPR Rating
+            </CardTitle>
+            <CardDescription>
+              Dynamic Universal Pickleball Rating - Industry standard rating system (2.0-7.0)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              {/* DUPR Rating Display */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 p-5 rounded-lg flex flex-col items-center justify-center min-w-[150px]">
+                <div className="text-xs font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-1">Your DUPR</div>
+                <div className="text-4xl font-bold text-amber-700 dark:text-amber-400 my-1">
+                  {typeof user.duprRating === 'number' ? 
+                    user.duprRating.toFixed(2) : 
+                    <span className="text-base text-amber-600/70 dark:text-amber-500/70 italic">Not set</span>
+                  }
+                </div>
+                {user.duprRating && (
+                  <div className="text-xs mt-1">
+                    {user.externalRatingsVerified ? (
+                      <span className="flex items-center text-green-600 dark:text-green-400 gap-0.5">
+                        <Check className="h-3 w-3" /> Verified
+                      </span>
+                    ) : (
+                      <span className="text-amber-600/80 dark:text-amber-500/80">Self-reported</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* DUPR Information */}
+              <div className="flex-1 space-y-3">
+                <p className="text-sm">
+                  DUPR is the most widely accepted rating system in pickleball, providing a global standard for player skill assessment. 
+                  Your DUPR rating is calculated based on match outcomes against players of known ratings.
+                </p>
+                
+                <div className="flex justify-start gap-3 mt-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-xs h-8 border-amber-300 text-amber-700 hover:bg-amber-50"
+                    onClick={() => {
+                      const manageTab = document.querySelector('[value="manage"]') as HTMLButtonElement;
+                      if (manageTab) manageTab.click();
+                    }}
+                  >
+                    <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+                    Update Your DUPR
+                  </Button>
+                  
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-xs h-8 text-amber-700"
+                    onClick={() => {
+                      const converterTab = document.querySelector('[value="converter"]') as HTMLButtonElement;
+                      if (converterTab) converterTab.click();
+                    }}
+                  >
+                    Rating Converter Tool
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Tabbed Interface for Additional Rating Features */}
+            <Tabs defaultValue="manage" className="w-full mt-6">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="manage">Update Your Rating</TabsTrigger>
+                <TabsTrigger value="converter">Rating Converter</TabsTrigger>
+              </TabsList>
+              
+              {/* Tab 1: Manage Ratings - Simplified to focus only on DUPR */}
+              <TabsContent value="manage">
+                <ExternalRatingsSection 
+                  user={user} 
+                  isEditable={true} 
+                  isCurrentUser={true} 
+                />
+              </TabsContent>
+              
+              {/* Tab 2: Rating Converter Tool */}
+              <TabsContent value="converter">
+                <RatingConverter />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </motion.div>
+      
+      {/* CourtIQ Overview - Moved down and made less prominent */}
       <motion.div variants={itemVariants}>
         <Card>
           <CardHeader>
-            <CardTitle>CourtIQ™ Rating Overview</CardTitle>
+            <CardTitle className="text-lg">Skill Breakdown</CardTitle>
+            <CardDescription>Detailed breakdown of your skills across different dimensions</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Rating Card */}
-              <div className="bg-muted/50 p-6 rounded-lg flex flex-col items-center justify-center">
+              <div className="bg-muted/50 p-4 rounded-lg flex flex-col items-center justify-center">
                 <div className="text-sm text-muted-foreground">Overall Rating</div>
-                <div className="text-5xl font-bold my-2">
+                <div className="text-4xl font-bold my-2">
                   {calculationService.calculateOverallRating(user).toFixed(1)}
                 </div>
-                <div className="text-sm font-medium bg-primary/10 px-3 py-1 rounded-full">
+                <div className="text-xs font-medium bg-primary/10 px-3 py-1 rounded-full">
                   {getRatingTierFromScore(calculationService.calculateOverallRating(user))}
                 </div>
               </div>
@@ -107,118 +225,6 @@ export default function ProfileStatsTab({
                 <CourtIQRadarChart dimensions={dimensionRatings} />
               </div>
             </div>
-            
-            <div className="mt-8 text-sm text-muted-foreground">
-              <p>
-                The CourtIQ™ rating system evaluates your pickleball performance across five key dimensions, 
-                providing a comprehensive multi-faceted assessment of your skill level.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-      
-      {/* Performance Metrics and Rankings */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div variants={itemVariants}>
-          <PerformanceMetricsCard user={user} />
-        </motion.div>
-        
-        <motion.div variants={itemVariants}>
-          <RankingCard 
-            user={user} 
-            calculationService={calculationService}
-          />
-        </motion.div>
-      </div>
-      
-      {/* Skill Distribution and XP Progress */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div variants={itemVariants}>
-          <SkillDistributionChart user={user} />
-        </motion.div>
-        
-        <motion.div variants={itemVariants}>
-          <XPProgressDisplay user={user} />
-        </motion.div>
-      </div>
-      
-      {/* External Ratings Section with Tabs */}
-      <motion.div variants={itemVariants}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Rating Systems</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="ratings" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
-                <TabsTrigger value="ratings">Your Ratings</TabsTrigger>
-                <TabsTrigger value="converter">Rating Converter</TabsTrigger>
-                <TabsTrigger value="manage">Manage Ratings</TabsTrigger>
-              </TabsList>
-              
-              {/* Tab 1: Current Ratings Display */}
-              <TabsContent value="ratings" className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* DUPR Rating */}
-                  <div className="p-4 rounded-lg bg-muted/50 text-center">
-                    <div className="text-sm text-muted-foreground mb-1">DUPR</div>
-                    <div className="text-2xl font-bold">
-                      {typeof user.duprRating === 'number' ? 
-                        user.duprRating.toFixed(2) : 
-                        <span className="text-sm text-muted-foreground">Not set</span>
-                      }
-                    </div>
-                  </div>
-                  
-                  {/* UTPR Rating */}
-                  <div className="p-4 rounded-lg bg-muted/50 text-center">
-                    <div className="text-sm text-muted-foreground mb-1">UTPR</div>
-                    <div className="text-2xl font-bold">
-                      {typeof user.utprRating === 'number' ? 
-                        user.utprRating.toFixed(1) : 
-                        <span className="text-sm text-muted-foreground">Not set</span>
-                      }
-                    </div>
-                  </div>
-                  
-                  {/* WPR Rating */}
-                  <div className="p-4 rounded-lg bg-muted/50 text-center">
-                    <div className="text-sm text-muted-foreground mb-1">WPR</div>
-                    <div className="text-2xl font-bold">
-                      {typeof user.wprRating === 'number' ? 
-                        user.wprRating.toFixed(1) : 
-                        <span className="text-sm text-muted-foreground">Not set</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-                
-                {user.externalRatingsVerified ? (
-                  <div className="text-center text-xs text-muted-foreground bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 p-2 rounded-md">
-                    External ratings verified ✓
-                  </div>
-                ) : (
-                  <div className="text-center text-xs text-muted-foreground">
-                    External ratings are self-reported and pending verification
-                  </div>
-                )}
-              </TabsContent>
-              
-              {/* Tab 2: Rating Converter Tool */}
-              <TabsContent value="converter">
-                <RatingConverter />
-              </TabsContent>
-              
-              {/* Tab 3: Manage External Ratings */}
-              <TabsContent value="manage">
-                <ExternalRatingsSection 
-                  user={user} 
-                  isEditable={true} 
-                  isCurrentUser={true} 
-                />
-              </TabsContent>
-            </Tabs>
           </CardContent>
         </Card>
       </motion.div>
