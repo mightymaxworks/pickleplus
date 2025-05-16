@@ -226,9 +226,25 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
 **Goal:** Fully integrate tournament results with ranking system and refine overall experience
 
 #### Ranking Points Calculation
-- Tournament performance to ranking points algorithms
-- Bonus points for tournament significance
-- Points adjustment based on opponent skill
+- Tournament tier-based point multipliers:
+  - Club Level: 1.2x base points
+  - District Level: 1.5x base points
+  - City Level: 1.8x base points
+  - Provincial Level: 2.0x base points
+  - National Level: 2.5x base points
+  - Regional Level: 3.0x base points
+  - International Level: 4.0x base points
+- Round advancement point awards:
+  - Players earn points based on the furthest round they reach
+  - Point structure increases with deeper tournament advancement
+  - Elimination round points: R64 (10pts), R32 (15pts), R16 (25pts), QF (40pts), SF (60pts), F (80pts), Champion (100pts)
+  - All base points are then multiplied by the tournament tier multiplier
+- Special handling for round robin format (points awarded upon completion of all matches)
+- Team tournament point distribution to individual player rankings:
+  - Each player on a team receives points based on team performance
+  - Points awarded based on the round where the team is eliminated
+  - Individual contribution factor: players who participate in more team matches receive higher percentage of team points
+  - All points still subject to tournament tier multipliers
 
 #### Performance Analytics
 - Tournament performance statistics
