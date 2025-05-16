@@ -63,6 +63,7 @@ import {
   LazyUsersPage, // PKL-278651-ADMIN-0015-USER
   LazyNotFoundPage,
   LazyDashboardPage,
+  LazyModernDashboardPage, // PKL-278651-DASH-0010-REDESIGN - New Ranking-Focused Dashboard
   LazyCourtIQDetailedAnalysisPage, // PKL-278651-COURTIQ-0005-DETAIL
   LazyPassportPage, // PKL-278651-CONN-0008-UX-MOD2
   preloadProfilePages,
@@ -217,7 +218,7 @@ export default function App() {
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 
                     path="/dashboard" 
-                    component={LazyModernDashboardPage} 
+                    component={LazyDashboardPage} 
                     pageTitle="Dashboard"
                   />
                   <ProtectedRouteWithLayout 

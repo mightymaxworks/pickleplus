@@ -1,18 +1,18 @@
 /**
- * PKL-278651-UI-0001-STDLAYOUT-DASH
+ * PKL-278651-DASH-0010-REDESIGN
  * Dashboard Page Component
  * 
- * Updated to use the DashboardContent component with the standard layout system
- * to prevent header duplication and maintain standard layout behavior.
+ * Updated to use the ModernDashboardContent component with the standard layout system
+ * to showcase the redesigned ranking-focused dashboard.
  * 
- * @framework Framework5.2
+ * @framework Framework5.3
  * @version 1.0.0
- * @lastModified 2025-04-21
+ * @lastModified 2025-05-16
  */
 
 import React from 'react';
-import DashboardContent from '@/components/dashboard/DashboardContent';
+import ModernDashboardContent from '@/components/dashboard/ModernDashboardContent';
 
 export default function Dashboard() {
-  return <DashboardContent />;
+  return <ModernDashboardContent />;
 }

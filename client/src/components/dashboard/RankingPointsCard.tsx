@@ -60,7 +60,7 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
     isError,
     error: queryError,
     refetch
-  } = usePCPGlobalRankingData(user.id, format, ageDivision);
+  } = usePCPGlobalRankingData(user?.id, format, ageDivision);
   
   // Calculate recent gain (last 7 days)
   const sevenDaysAgo = React.useMemo(() => {
