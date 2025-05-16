@@ -86,106 +86,75 @@ export default function ProfileStatsTab({
       initial="hidden"
       animate="visible"
     >
-      {/* Ranking Points - Moved to the top as the primary focus */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <RankingCard 
-          user={user} 
-          calculationService={calculationService}
-          className="border-primary/30"
-        />
+      {/* ENHANCED: Large Ranking Points Card - The centerpiece of the profile */}
+      <motion.div 
+        variants={itemVariants} 
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <div className="p-1 bg-gradient-to-r from-primary/30 to-primary/10 rounded-xl shadow-md">
+          <RankingCard 
+            user={user} 
+            calculationService={calculationService}
+            className="border-0"
+          />
+        </div>
       </motion.div>
       
-      {/* Performance Stats & XP Progress */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div variants={itemVariants}>
-          <PerformanceMetricsCard user={user} />
-        </motion.div>
-        
-        <motion.div variants={itemVariants}>
-          <XPProgressDisplay user={user} />
-        </motion.div>
-      </div>
-      
-      {/* Simplified Rating System Section */}
+      {/* XP Progress (kept as it's closely related to ranking) */}
       <motion.div variants={itemVariants}>
-        <Card>
+        <XPProgressDisplay user={user} />
+      </motion.div>
+      
+      {/* Simple DUPR Rating Section - Compact version */}
+      <motion.div variants={itemVariants}>
+        <Card className="border border-amber-100 dark:border-amber-900/30">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-amber-500" />
-              DUPR Rating
-            </CardTitle>
-            <CardDescription>
-              Dynamic Universal Pickleball Rating - Industry standard rating system (2.0-7.0)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="flex flex-col md:flex-row gap-6 items-center">
-              {/* DUPR Rating Display */}
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 p-5 rounded-lg flex flex-col items-center justify-center min-w-[150px]">
-                <div className="text-xs font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-1">Your DUPR</div>
-                <div className="text-4xl font-bold text-amber-700 dark:text-amber-400 my-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-amber-500" />
+                <CardTitle>DUPR Rating</CardTitle>
+              </div>
+              
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 px-4 py-2 rounded-lg flex items-center justify-center">
+                <span className="text-3xl font-bold text-amber-700 dark:text-amber-400">
                   {typeof user.duprRating === 'number' ? 
                     user.duprRating.toFixed(2) : 
-                    <span className="text-base text-amber-600/70 dark:text-amber-500/70 italic">Not set</span>
+                    <span className="text-base text-amber-600/70 italic">Not set</span>
                   }
-                </div>
-                {user.duprRating && (
-                  <div className="text-xs mt-1">
-                    {user.externalRatingsVerified ? (
-                      <span className="flex items-center text-green-600 dark:text-green-400 gap-0.5">
-                        <Check className="h-3 w-3" /> Verified
-                      </span>
-                    ) : (
-                      <span className="text-amber-600/80 dark:text-amber-500/80">Self-reported</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              {/* DUPR Information */}
-              <div className="flex-1 space-y-3">
-                <p className="text-sm">
-                  DUPR is the most widely accepted rating system in pickleball, providing a global standard for player skill assessment. 
-                  Your DUPR rating is calculated based on match outcomes against players of known ratings.
-                </p>
-                
-                <div className="flex justify-start gap-3 mt-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs h-8 border-amber-300 text-amber-700 hover:bg-amber-50"
-                    onClick={() => {
-                      const manageTab = document.querySelector('[value="manage"]') as HTMLButtonElement;
-                      if (manageTab) manageTab.click();
-                    }}
-                  >
-                    <Edit2 className="h-3.5 w-3.5 mr-1.5" />
-                    Update Your DUPR
-                  </Button>
-                  
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="text-xs h-8 text-amber-700"
-                    onClick={() => {
-                      const converterTab = document.querySelector('[value="converter"]') as HTMLButtonElement;
-                      if (converterTab) converterTab.click();
-                    }}
-                  >
-                    Rating Converter Tool
-                  </Button>
-                </div>
+                </span>
               </div>
             </div>
+            <CardDescription>
+              Dynamic Universal Pickleball Rating - Industry standard (2.0-7.0)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs h-8 border-amber-300 text-amber-700 hover:bg-amber-50"
+                onClick={() => {
+                  // Open DUPR rating update panel in a simpler way
+                  const tabs = document.querySelector('[value="manage"]') as HTMLButtonElement;
+                  if (tabs) tabs.click();
+                }}
+              >
+                <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+                Update Your DUPR
+              </Button>
+            </div>
             
-            {/* Tabbed Interface for Additional Rating Features */}
-            <Tabs defaultValue="manage" className="w-full mt-6">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="manage">Update Your Rating</TabsTrigger>
-                <TabsTrigger value="converter">Rating Converter</TabsTrigger>
+            {/* Simplified Tabbed Interface */}
+            <Tabs defaultValue="manage" className="w-full mt-4">
+              <TabsList className="grid w-full grid-cols-1 mb-4">
+                <TabsTrigger value="manage">Manage Your DUPR Rating</TabsTrigger>
               </TabsList>
               
-              {/* Tab 1: Manage Ratings - Simplified to focus only on DUPR */}
+              {/* Simplified Rating Management */}
               <TabsContent value="manage">
                 <ExternalRatingsSection 
                   user={user} 
@@ -193,41 +162,23 @@ export default function ProfileStatsTab({
                   isCurrentUser={true} 
                 />
               </TabsContent>
-              
-              {/* Tab 2: Rating Converter Tool */}
-              <TabsContent value="converter">
-                <RatingConverter />
-              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
       </motion.div>
       
-      {/* CourtIQ Overview - Moved down and made less prominent */}
+      {/* Performance Stats in a collapsible section */}
       <motion.div variants={itemVariants}>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Skill Breakdown</CardTitle>
-            <CardDescription>Detailed breakdown of your skills across different dimensions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Rating Card */}
-              <div className="bg-muted/50 p-4 rounded-lg flex flex-col items-center justify-center">
-                <div className="text-sm text-muted-foreground">Overall Rating</div>
-                <div className="text-4xl font-bold my-2">
-                  {calculationService.calculateOverallRating(user).toFixed(1)}
-                </div>
-                <div className="text-xs font-medium bg-primary/10 px-3 py-1 rounded-full">
-                  {getRatingTierFromScore(calculationService.calculateOverallRating(user))}
-                </div>
-              </div>
-              
-              {/* Radar Chart */}
-              <div className="md:col-span-2">
-                <CourtIQRadarChart dimensions={dimensionRatings} />
-              </div>
+          <CardHeader className="cursor-pointer" onClick={() => document.getElementById('performance-metrics')?.classList.toggle('hidden')}>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Performance Metrics</CardTitle>
+              <ArrowRight className="h-5 w-5 transition-transform" />
             </div>
+            <CardDescription>View your match statistics and performance data</CardDescription>
+          </CardHeader>
+          <CardContent id="performance-metrics" className="hidden">
+            <PerformanceMetricsCard user={user} />
           </CardContent>
         </Card>
       </motion.div>
