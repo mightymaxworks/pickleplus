@@ -10,10 +10,13 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { EnhancedUser } from "@/types/enhanced-user";
 import { useDerivedData } from "@/contexts/DerivedDataContext";
+import { Award, Check, Edit2, Star, ArrowRight } from 'lucide-react';
 import CourtIQRadarChart from "./CourtIQRadarChart";
 import PerformanceMetricsCard from "./PerformanceMetricsCard";
 import RankingCard from "./RankingCard";
