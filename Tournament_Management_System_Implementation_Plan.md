@@ -232,11 +232,6 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
 - Qualification rounds for high-demand tournaments
 - Waitlist management and automatic entry when spots open
 
-##### Conflict Resolution Tools
-- Match result dispute handling workflow
-- Tournament director arbitration interface
-- Appeal system for point allocation issues
-
 ##### Withdrawal Management
 - Bracket adjustment algorithms for player withdrawals
 - Late withdrawal policies with potential point penalties
