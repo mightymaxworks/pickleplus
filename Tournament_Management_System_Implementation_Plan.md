@@ -114,6 +114,11 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
 - Automated bracket creation based on format
 - Seeding algorithms based on ranking points
 - Bracket visualization for web interface
+- Advanced seeding approaches:
+  - Format-specific seeding strategies (single elimination, double elimination, round robin)
+  - Team tournament seeding based on combined team metrics
+  - Special handling for qualifiers entering main draw
+  - Customizable seeding weights and parameters for tournament directors
 
 #### Match Management
 - Match scheduling tools
@@ -167,6 +172,11 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
 - Team eligibility rules based on combined rankings
 - Team vs. team match formats
 - Team standings and statistics
+- Advanced team composition rules:
+  - Age-based restrictions (minimum combined age, average age requirements)
+  - Gender-balanced team requirements (e.g., exact ratio of men/women)
+  - Division-specific team composition rules
+  - Validation system for enforcing team constraints
 
 #### Qualifying Rounds
 - Pre-tournament qualifier setup
@@ -330,6 +340,59 @@ The Tournament Management System will be implemented as a core module within our
 - Support for tournaments with large participant counts (100+ players)
 - Architecture allowing for future expansion to new tournament types
 - Independent scaling of tournament subsystems as needed
+
+## Tournament Seeding Implementation
+
+### Ranking Points-Based Seeding System
+The tournament module will implement a sophisticated seeding system based primarily on player ranking points, with the following key features:
+
+#### Single Elimination Tournament Seeding
+- Seed #1 placed at the top of the bracket
+- Seed #2 placed at the bottom of the bracket
+- Seeds #3 and #4 placed at quarter-final positions opposite of their closest higher seed
+- Remaining seeds distributed to prevent top seeds from meeting early
+- Implementation of "separation of conflict" to keep players from same club/region separated when possible
+- Support for tournament director manual seed adjustments
+
+#### Double Elimination Tournament Seeding
+- Initial seeding follows single elimination pattern
+- Loser's bracket seeding structured to prevent early rematches
+- Proper bracket positioning to ensure balanced bracket integrity
+- Winner's bracket finalists properly placed in loser's bracket final rounds
+
+#### Round Robin Group Seeding
+- Snake seeding across groups (1→A, 2→B, 3→C, 4→C, 5→B, 6→A, etc.)
+- One top seed per group when possible
+- Balanced distribution of skill levels across groups
+- Option for manual group assignments by tournament director
+
+#### Team Tournament Seeding
+- Primary: Combined ranking points of all team members
+- Alternative options:
+  - Average of top X players
+  - Weighted average based on lineup requirements
+  - Previous tournament results
+- Special handling for teams with balanced gender/age requirements
+- Team composition validation against tournament requirements
+
+#### Qualifying Round Integration
+- Proper placement of qualifiers in main draw
+- Options for directing qualifiers to face seeded players
+- Protected seeding for main draw players
+- Balanced qualifier distribution throughout the bracket
+
+#### Customizable Seeding Parameters
+- Tournament tier multipliers for ranking points
+- Age division adjustment factors
+- Format-specific seeding rules
+- Recent performance weighting
+
+### Seeding Algorithm Technical Implementation
+The seeding implementation will use a modular approach:
+1. Core seeding logic based on player/team ranking data
+2. Format-specific placement algorithms (separate implementations per format)
+3. Extensible design to allow for future seeding strategies
+4. Visualization hooks to display seeding in brackets
 
 ## Success Metrics
 1. Tournament creation time under 10 minutes for administrators
