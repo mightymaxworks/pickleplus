@@ -35,6 +35,8 @@ import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { calculateLevelFromDb, getLevelInfoFromDb } from '@/lib/calculateLevelFromDatabase';
 import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRecentMatches } from '@/hooks/use-recent-matches';
+import { format, formatDistanceToNow } from 'date-fns';
 
 export default function ModernDashboardContent() {
   const { user } = useAuth();
@@ -44,6 +46,17 @@ export default function ModernDashboardContent() {
   // Fetch match statistics data
   const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStatistics({ 
     userId: user?.id,
+    enabled: !!user
+  });
+  
+  // Fetch recent matches data
+  const { 
+    data: recentMatches, 
+    isLoading: isRecentMatchesLoading,
+    error: recentMatchesError
+  } = useRecentMatches({ 
+    userId: user?.id,
+    limit: 3,
     enabled: !!user
   });
   
@@ -196,63 +209,101 @@ export default function ModernDashboardContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {isMatchStatsLoading ? (
+                {isRecentMatchesLoading || isMatchStatsLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-14 w-full" />
                     <Skeleton className="h-14 w-full" />
                     <Skeleton className="h-14 w-full" />
                   </div>
-                ) : !matchStats || matchStats.totalMatches === 0 ? (
+                ) : (!recentMatches || recentMatches.length === 0) ? (
                   <div className="text-center py-6">
                     <p className="text-gray-500 dark:text-gray-400 mb-4">No matches recorded yet</p>
-                    <Button className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+                    <Button 
+                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                      onClick={() => {
+                        window.location.href = '/matches/record';
+                      }}
+                    >
                       <ClipboardList className="mr-2 h-5 w-5" />
                       Record Your First Match
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {/* This is a placeholder for recent matches - will be implemented in Sprint 4 */}
-                    <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">vs. JohnDoe123</div>
-                        <div className="text-sm text-gray-500">Singles • 2 days ago</div>
+                    {Array.isArray(recentMatches) ? recentMatches.map((match) => {
+                      try {
+                        // Find opponent (assuming 2-player match for simplicity)
+                        const opponent = match.players?.find(p => p.userId !== user?.id);
+                        const currentPlayer = match.players?.find(p => p.userId === user?.id);
+                        const isWin = currentPlayer?.isWinner;
+                        
+                        // Get opponent name with fallbacks
+                        let opponentName = 'Opponent';
+                        if (opponent) {
+                          if (match.playerNames && match.playerNames[opponent.userId]) {
+                            opponentName = match.playerNames[opponent.userId].displayName || 
+                                         match.playerNames[opponent.userId].username || 'Opponent';
+                          } else if (opponent.displayName) {
+                            opponentName = opponent.displayName;
+                          } else if (opponent.username) {
+                            opponentName = opponent.username;
+                          }
+                        }
+                        
+                        // Format match date
+                        const matchDate = new Date(match.date);
+                        const timeAgo = formatDistanceToNow(matchDate, { addSuffix: true });
+                        
+                        // Points calculation
+                        let pointsDisplay = null;
+                        if (match.pointsAwarded !== undefined) {
+                          pointsDisplay = match.pointsAwarded;
+                        } else if (match.rankingPointsEarned !== undefined) {
+                          pointsDisplay = match.rankingPointsEarned;
+                        }
+                        
+                        return (
+                          <div key={match.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">vs. {opponentName}</div>
+                              <div className="text-sm text-gray-500">
+                                {match.formatType?.charAt(0).toUpperCase() + match.formatType?.slice(1) || 'Match'} • {timeAgo}
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              <div className={isWin ? "text-green-500 font-medium mr-2" : "text-red-500 font-medium mr-2"}>
+                                {isWin ? 'Win' : 'Loss'}
+                              </div>
+                              {pointsDisplay !== null && (
+                                <div className={`text-xs ${isWin 
+                                  ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" 
+                                  : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                } px-2 py-0.5 rounded-full`}>
+                                  {pointsDisplay > 0 ? '+' : ''}{pointsDisplay} pts
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      } catch (err) {
+                        console.error('Error rendering match:', err);
+                        return null;
+                      }
+                    }) : (
+                      <div className="text-center py-2">
+                        <p className="text-gray-500 dark:text-gray-400">Unable to load matches</p>
                       </div>
-                      <div className="flex items-center">
-                        <div className="text-green-500 font-medium mr-2">Win</div>
-                        <div className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">
-                          +15 pts
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">vs. PicklePro</div>
-                        <div className="text-sm text-gray-500">Doubles • 5 days ago</div>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="text-red-500 font-medium mr-2">Loss</div>
-                        <div className="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
-                          -5 pts
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">vs. PaddleMaster</div>
-                        <div className="text-sm text-gray-500">Singles • 1 week ago</div>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="text-green-500 font-medium mr-2">Win</div>
-                        <div className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">
-                          +12 pts
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
                 <div className="mt-4 text-center">
-                  <Button variant="link" className="text-indigo-500 dark:text-indigo-400">
+                  <Button 
+                    variant="link" 
+                    className="text-indigo-500 dark:text-indigo-400"
+                    onClick={() => {
+                      window.location.href = '/matches';
+                    }}
+                  >
                     View Full History
                   </Button>
                 </div>
