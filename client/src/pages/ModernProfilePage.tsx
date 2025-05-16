@@ -265,26 +265,26 @@ export default function ModernProfilePage() {
   }
   
   // Calculated values from user data
-  const matchWinPercentage = user.totalMatches > 0 
-    ? Math.round((user.matchesWon / user.totalMatches) * 100) 
+  const matchWinPercentage = user?.totalMatches && user.totalMatches > 0 
+    ? Math.round(((user.matchesWon || 0) / user.totalMatches) * 100) 
     : 0;
   
-  const matchLossCount = user.totalMatches - user.matchesWon;
+  const matchLossCount = (user?.totalMatches || 0) - (user?.matchesWon || 0);
   
   return (
-    <StandardLayout pageTitle={`${user.displayName || user.username}'s Profile`}>
+    <StandardLayout pageTitle={`${user?.displayName || user?.username || 'User'}'s Profile`}>
       <div className="pb-8">
         {/* Cover Image with Parallax Effect */}
       <div className="relative h-64 overflow-hidden">
         <motion.div 
           className="absolute inset-0 bg-cover bg-center"
           style={{ 
-            backgroundImage: user.coverImageUrl ? `url(${user.coverImageUrl})` : undefined,
+            backgroundImage: user?.coverImageUrl ? `url(${user.coverImageUrl})` : undefined,
             y: coverY 
           }}
         >
           {/* If no cover image, show a gradient background */}
-          {!user.coverImageUrl && <div className={`absolute inset-0 ${DEFAULT_COVER_BG}`} />}
+          {!user?.coverImageUrl && <div className={`absolute inset-0 ${DEFAULT_COVER_BG}`} />}
           
           {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-black/30" />
@@ -474,9 +474,9 @@ export default function ModernProfilePage() {
             <div>
               <h3 className="text-sm font-medium">Career Matches</h3>
               <div className="flex items-center gap-2">
-                <p className="text-2xl font-bold">{user.totalMatches}</p>
+                <p className="text-2xl font-bold">{user?.totalMatches || 0}</p>
                 <span className="text-xs bg-primary-foreground px-2 py-1 rounded">
-                  {user.matchesWon} W - {matchLossCount} L
+                  {user?.matchesWon || 0} W - {matchLossCount} L
                 </span>
               </div>
             </div>
