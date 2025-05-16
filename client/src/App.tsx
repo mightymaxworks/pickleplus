@@ -217,7 +217,7 @@ export default function App() {
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 
                     path="/dashboard" 
-                    component={LazyDashboardPage} 
+                    component={LazyModernDashboardPage} 
                     pageTitle="Dashboard"
                   />
                   <ProtectedRouteWithLayout 
