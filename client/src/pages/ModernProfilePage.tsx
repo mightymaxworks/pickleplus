@@ -271,8 +271,25 @@ export default function ModernProfilePage() {
   
   const matchLossCount = (user?.totalMatches || 0) - (user?.matchesWon || 0);
   
+  // Guard to ensure user is defined before rendering
+  if (!user) {
+    return (
+      <StandardLayout pageTitle="Profile">
+        <div className="container mx-auto px-4 py-12 text-center">
+          <div className="bg-muted rounded-lg p-8 max-w-xl mx-auto">
+            <h1 className="text-2xl font-bold mb-4">User data not available</h1>
+            <p className="text-muted-foreground mb-6">
+              We couldn't load the user profile. Please try again later.
+            </p>
+            <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+          </div>
+        </div>
+      </StandardLayout>
+    );
+  }
+
   return (
-    <StandardLayout pageTitle={`${user?.displayName || user?.username || 'User'}'s Profile`}>
+    <StandardLayout pageTitle={`${user.displayName || user.username}'s Profile`}>
       <div className="pb-8">
         {/* Cover Image with Parallax Effect */}
       <div className="relative h-64 overflow-hidden">
@@ -293,7 +310,7 @@ export default function ModernProfilePage() {
           {isCurrentUserProfile && (
             <div className="absolute bottom-4 right-4">
               <CoverImageUploader
-                userId={user.id}
+                userId={user?.id || 0}
                 onUploadStart={handleCoverUploadStart}
                 onUploadComplete={handleCoverUploadComplete}
                 onUploadError={handleCoverUploadError}
@@ -308,7 +325,7 @@ export default function ModernProfilePage() {
                   ) : (
                     <>
                       <Camera className="mr-2 h-4 w-4" />
-                      {user.coverImageUrl ? "Change Cover" : "Add Cover"}
+                      {user?.coverImageUrl ? "Change Cover" : "Add Cover"}
                     </>
                   )}
                 </Button>
@@ -326,7 +343,7 @@ export default function ModernProfilePage() {
             <div className="relative">
               {isCurrentUserProfile ? (
                 <AvatarUploader
-                  userId={user.id}
+                  userId={user?.id || 0}
                   onUploadStart={handleAvatarUploadStart}
                   onUploadComplete={handleAvatarUploadComplete}
                   onUploadError={handleAvatarUploadError}
@@ -338,22 +355,22 @@ export default function ModernProfilePage() {
                       </div>
                     ) : (
                       <>
-                        <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName || user.username} />
-                        <AvatarFallback className="bg-primary text-3xl">{user.avatarInitials}</AvatarFallback>
+                        <AvatarImage src={user?.avatarUrl || undefined} alt={user?.displayName || user?.username || ''} />
+                        <AvatarFallback className="bg-primary text-3xl">{user?.avatarInitials || ''}</AvatarFallback>
                       </>
                     )}
                   </Avatar>
                 </AvatarUploader>
               ) : (
                 <Avatar className="h-32 w-32 border-4 border-background">
-                  <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName || user.username} />
-                  <AvatarFallback className="bg-primary text-3xl">{user.avatarInitials}</AvatarFallback>
+                  <AvatarImage src={user?.avatarUrl || undefined} alt={user?.displayName || user?.username || ''} />
+                  <AvatarFallback className="bg-primary text-3xl">{user?.avatarInitials || ''}</AvatarFallback>
                 </Avatar>
               )}
               
               {/* Level Badge */}
               <div className="absolute -right-2 -bottom-2 bg-primary text-primary-foreground text-sm font-bold h-8 w-8 rounded-full flex items-center justify-center border-2 border-background">
-                {user.level}
+                {user?.level || 1}
               </div>
             </div>
           </div>
