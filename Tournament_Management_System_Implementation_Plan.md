@@ -154,22 +154,67 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
 - Tournament performance analytics
 - Refined and optimized tournament system
 
+## Module Architecture & Framework Principles
+
+### Module Structure
+The Tournament Management System will be implemented as a core module within our existing modular architecture, following Framework 5.3 principles:
+
+```
+/src/core/modules/tournament/
+├── components/             # UI components for tournaments
+│   ├── admin/             # Admin-specific components
+│   ├── player/            # Player-facing components
+│   ├── bracket/           # Bracket visualization components
+│   └── team/              # Team tournament components
+├── hooks/                 # Custom React hooks for tournament functionality
+├── context/               # React context providers for tournament state
+├── services/              # Tournament business logic services
+├── api/                   # API integration for tournament data
+├── utils/                 # Tournament-specific utility functions
+├── types/                 # TypeScript types and interfaces
+└── index.ts              # Module entry point and public API
+```
+
+### Module Integration
+- **Explicit Dependencies**: Clearly define dependencies on other modules (e.g., ranking, user, match)
+- **Clean Interfaces**: Create well-defined interfaces between modules using shared types
+- **Event-Based Communication**: Use event system for cross-module notifications
+- **Isolation**: Ensure the tournament module can function independently for testing
+- **Shared Services**: Leverage existing application services where appropriate
+
+### Framework Alignment
+1. **Component-Based Architecture**: Follow existing component patterns for consistency
+2. **State Management**: Use React Query for server state and Context for module state
+3. **Type Safety**: Implement comprehensive TypeScript typing throughout
+4. **API Integration**: Follow established API patterns for data fetching and mutation
+5. **Performance Patterns**: Implement Framework 5.3 performance best practices
+
+### Service Integration Points
+- **Ranking System**: Tournament results feed into ranking point calculations
+- **User System**: Player profiles and eligibility requirements
+- **Match System**: Tournament matches leverage existing match recording
+- **Notification System**: Tournament status updates utilize notification infrastructure
+- **Payment System**: Tournament registration fees use existing payment processing
+
 ## Technical Considerations
 
 ### Data Modeling
 - Flexible tournament structure to accommodate various formats
 - Efficient bracket representation for different tournament types
 - Relationship between tournaments, matches, players, and teams
+- Schema design that supports the modular architecture pattern
 
 ### Performance
 - Optimization for concurrent bracket updates during active tournaments
 - Efficient queries for tournament listings with eligibility filtering
 - Caching strategies for frequently accessed tournament data
+- Module-specific performance optimizations
 
 ### Scalability
 - Design to handle hundreds of concurrent tournaments
 - Support for tournaments with large participant counts (100+ players)
 - Architecture allowing for future expansion to new tournament types
+- Independent scaling of tournament subsystems as needed
 
 ## Success Metrics
 1. Tournament creation time under 10 minutes for administrators
