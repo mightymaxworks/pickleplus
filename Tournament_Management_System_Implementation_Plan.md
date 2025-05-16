@@ -239,7 +239,12 @@ This document outlines the implementation strategy for the Pickle+ Tournament Ma
   - Point structure increases with deeper tournament advancement
   - Elimination round points: R64 (10pts), R32 (15pts), R16 (25pts), QF (40pts), SF (60pts), F (80pts), Champion (100pts)
   - All base points are then multiplied by the tournament tier multiplier
-- Special handling for round robin format (points awarded upon completion of all matches)
+- Special handling for round robin format:
+  - Hybrid point allocation approach
+  - 3 base points awarded per match win 
+  - Placement bonuses: 10% bonus for 1st place, 5% bonus for 2nd place
+  - All points then multiplied by tournament tier multiplier
+  - Points only awarded after completion of all round robin matches
 - Team tournament point distribution to individual player rankings:
   - Equal Distribution: All team members receive equal points regardless of participation
   - Points awarded based on the round where the team is eliminated
