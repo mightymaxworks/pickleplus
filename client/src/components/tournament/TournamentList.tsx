@@ -163,7 +163,7 @@ export default function TournamentList() {
                 <SelectValue placeholder="Any Format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Format</SelectItem>
+                <SelectItem value="any">Any Format</SelectItem>
                 <SelectItem value="single_elimination">Single Elimination</SelectItem>
                 <SelectItem value="double_elimination">Double Elimination</SelectItem>
                 <SelectItem value="round_robin">Round Robin</SelectItem>
@@ -179,7 +179,7 @@ export default function TournamentList() {
                 <SelectValue placeholder="Any Division" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Division</SelectItem>
+                <SelectItem value="any">Any Division</SelectItem>
                 <SelectItem value="singles">Singles</SelectItem>
                 <SelectItem value="doubles">Doubles</SelectItem>
                 <SelectItem value="mixed">Mixed Doubles</SelectItem>
@@ -194,7 +194,7 @@ export default function TournamentList() {
                 <SelectValue placeholder="Any Tier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Tier</SelectItem>
+                <SelectItem value="any">Any Tier</SelectItem>
                 <SelectItem value="club">Club</SelectItem>
                 <SelectItem value="district">District</SelectItem>
                 <SelectItem value="city">City</SelectItem>
