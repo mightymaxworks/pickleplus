@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,10 +44,14 @@ interface Tournament {
 
 export default function TournamentList() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("upcoming");
   const [formatFilter, setFormatFilter] = useState<string>("");
   const [divisionFilter, setDivisionFilter] = useState<string>("");
   const [tierFilter, setTierFilter] = useState<string>("");
+  
+  // Check if user is an admin - use isAdmin property directly
+  const isAdmin = !!user?.isAdmin;
   
   // Fetch tournaments
   const { data: tournaments, isLoading, error } = useQuery({
@@ -126,12 +131,14 @@ export default function TournamentList() {
             Browse and register for upcoming tournaments
           </p>
         </div>
-        <Button 
-          onClick={() => setLocation("/tournaments/create")}
-          className="shrink-0"
-        >
-          Create Tournament
-        </Button>
+        {isAdmin && (
+          <Button 
+            onClick={() => setLocation("/tournaments/create")}
+            className="shrink-0"
+          >
+            Create Tournament
+          </Button>
+        )}
       </div>
       
       <Tabs defaultValue="upcoming" onValueChange={(value) => setStatusFilter(value)}>

@@ -228,9 +228,28 @@ export default function App() {
                   />
                   <ProtectedRouteWithLayout 
                     path="/tournaments" 
-                    component={LazyTournamentDiscoveryPage} 
+                    component={lazyLoad(() => import('./pages/tournaments/index'))} 
                     pageTitle="Tournaments"
                   />
+                  
+                  <Route path="/tournaments/create">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {lazyLoad(() => import('./pages/tournaments/create'))()}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  
+                  <Route path="/tournaments/:id">
+                    {(params) => {
+                      const TournamentDetailsPage = lazyLoad(() => 
+                        import('./pages/tournaments/[id]').then(mod => ({
+                          default: (props: any) => <mod.default id={params.id} {...props} />
+                        }))
+                      );
+                      return <TournamentDetailsPage />;
+                    }}
+                  </Route>
                   {/* PKL-278651-COMM-0007 - Enhanced Referral System */}
                   <ProtectedRouteWithLayout 
                     path="/referrals" 
