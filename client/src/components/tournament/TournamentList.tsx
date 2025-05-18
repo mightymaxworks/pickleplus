@@ -34,7 +34,8 @@ interface Tournament {
   maxParticipants: number | null;
   currentParticipants: number;
   format: string;
-  division: string;
+  division: string; // Age division (open, 35+, 50+, etc.)
+  category: string; // Type of play (singles, doubles, mixed)
   level: string;
   entryFee: number | null;
   prizePool: number | null;
@@ -175,16 +176,33 @@ export default function TournamentList() {
           </div>
           
           <div className="grid gap-2 w-full sm:w-[150px]">
-            <label className="text-sm font-medium">Division</label>
-            <Select value={divisionFilter} onValueChange={setDivisionFilter}>
+            <label className="text-sm font-medium">Category</label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Any Division" />
+                <SelectValue placeholder="Any Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Any Division</SelectItem>
+                <SelectItem value="any">Any Category</SelectItem>
                 <SelectItem value="singles">Singles</SelectItem>
                 <SelectItem value="doubles">Doubles</SelectItem>
                 <SelectItem value="mixed">Mixed Doubles</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid gap-2 w-full sm:w-[150px]">
+            <label className="text-sm font-medium">Age Division</label>
+            <Select value={divisionFilter} onValueChange={setDivisionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Any Age Division" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Age Division</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="35+">35+</SelectItem>
+                <SelectItem value="50+">50+</SelectItem>
+                <SelectItem value="65+">65+</SelectItem>
+                <SelectItem value="junior">Junior</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -275,7 +293,9 @@ export default function TournamentList() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-muted-foreground" />
-                    <div className="text-sm">{formatLabel(tournament.format)} • {tournament.division}</div>
+                    <div className="text-sm">
+                      {formatLabel(tournament.format)} • {tournament.category} • {tournament.division}
+                    </div>
                   </div>
                   {tournament.maxParticipants && (
                     <div className="flex items-center gap-2">
