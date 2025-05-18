@@ -42,7 +42,8 @@ const tournamentFormSchema = z.object({
   registrationEndDate: z.date(),
   maxParticipants: z.number().int().positive().optional(),
   format: z.string(),
-  division: z.string(),
+  division: z.string(), // Age division (e.g., Open, 35+, 50+, etc.)
+  category: z.string(), // Type of play (Singles, Doubles, Mixed)
   level: z.string(),
   entryFee: z.number().int().nonnegative().optional(),
   organizer: z.string().optional(),
@@ -102,7 +103,8 @@ export default function TournamentCreationForm() {
       registrationStartDate: new Date(),
       registrationEndDate: new Date(new Date().setDate(new Date().getDate() + 25)),
       format: "single_elimination",
-      division: "singles",
+      division: "open", // Age division (Open, 35+, etc.)
+      category: "singles", // Type of play (Singles, Doubles, Mixed)
       level: "club",
       status: "upcoming",
     },
@@ -252,7 +254,7 @@ export default function TournamentCreationForm() {
 
                   <FormField
                     control={form.control}
-                    name="division"
+                    name="category"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
@@ -266,6 +268,31 @@ export default function TournamentCreationForm() {
                             <SelectItem value="singles">Singles</SelectItem>
                             <SelectItem value="doubles">Doubles</SelectItem>
                             <SelectItem value="mixed">Mixed Doubles</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="division"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age Division</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select age division" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="open">Open (19+)</SelectItem>
+                            <SelectItem value="35plus">35+</SelectItem>
+                            <SelectItem value="50plus">50+</SelectItem>
+                            <SelectItem value="65plus">65+</SelectItem>
+                            <SelectItem value="junior">Junior (12-18)</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
