@@ -582,7 +582,8 @@ export const tournaments = pgTable("tournaments", {
   maxParticipants: integer("max_participants"),
   currentParticipants: integer("current_participants").default(0),
   format: varchar("format", { length: 50 }).notNull(),
-  division: varchar("division", { length: 50 }).notNull(),
+  division: varchar("division", { length: 50 }).notNull(), // Age division (e.g., open, 35+, 50+, etc.)
+  category: varchar("category", { length: 50 }).default("singles"), // Type of play (singles, doubles, mixed)
   minRating: integer("min_rating"),
   maxRating: integer("max_rating"),
   entryFee: integer("entry_fee"),

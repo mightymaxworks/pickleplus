@@ -47,6 +47,7 @@ export default function TournamentList() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("upcoming");
   const [formatFilter, setFormatFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [divisionFilter, setDivisionFilter] = useState<string>("");
   const [tierFilter, setTierFilter] = useState<string>("");
   
@@ -55,14 +56,15 @@ export default function TournamentList() {
   
   // Fetch tournaments
   const { data: tournaments, isLoading, error } = useQuery({
-    queryKey: ["/api/tournaments", statusFilter, formatFilter, divisionFilter, tierFilter],
+    queryKey: ["/api/tournaments", statusFilter, formatFilter, categoryFilter, divisionFilter, tierFilter],
     queryFn: async () => {
       // Build query params
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
       if (formatFilter) params.append("format", formatFilter);
-      if (divisionFilter) params.append("division", divisionFilter);
-      if (tierFilter) params.append("tier", tierFilter);
+      if (categoryFilter && categoryFilter !== "any") params.append("category", categoryFilter);
+      if (divisionFilter && divisionFilter !== "any") params.append("division", divisionFilter);
+      if (tierFilter && tierFilter !== "any") params.append("tier", tierFilter);
       
       const response = await apiRequest(
         "GET", 

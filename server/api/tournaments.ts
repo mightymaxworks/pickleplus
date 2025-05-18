@@ -48,11 +48,11 @@ router.get('/', async (req: Request, res: Response) => {
     }
     
     if (category) {
-      query = query.where(eq(tournaments.division, category as string));
+      query = query.where(eq(tournaments.category, category as string));
     }
     
     if (division) {
-      // This is for age division
+      // Age division (Open, 35+, etc.)
       query = query.where(eq(tournaments.division, division as string));
     }
     
