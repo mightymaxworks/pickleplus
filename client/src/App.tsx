@@ -233,11 +233,14 @@ export default function App() {
                   />
                   
                   <Route path="/tournaments/create">
-                    {() => (
-                      <AdminProtectedRoute>
-                        {lazyLoad(() => import('./pages/tournaments/create'))()}
-                      </AdminProtectedRoute>
-                    )}
+                    {() => {
+                      const CreateTournamentPage = lazyLoad(() => import('./pages/tournaments/create'));
+                      return (
+                        <AdminProtectedRoute>
+                          <CreateTournamentPage />
+                        </AdminProtectedRoute>
+                      );
+                    }}
                   </Route>
                   
                   <Route path="/tournaments/:id">
