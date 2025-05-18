@@ -103,15 +103,11 @@ router.get('/:id', async (req: Request, res: Response) => {
     const registrationsCount = await db.select({ count: sql<number>`count(*)` }).from(tournamentRegistrations)
       .where(eq(tournamentRegistrations.tournamentId, parseInt(id)));
     
-    // Get brackets if any
-    const brackets = await db.select().from(tournamentBrackets)
-      .where(eq(tournamentBrackets.tournamentId, parseInt(id)));
-    
     // Combine data
     const result = {
       ...tournament[0],
       currentRegistrations: registrationsCount[0].count,
-      brackets: brackets
+      brackets: [] // Placeholder for brackets until we implement full tournament bracket functionality
     };
     
     res.json(result);
@@ -287,13 +283,40 @@ router.post('/:id/register', isAuthenticated, async (req: Request, res: Response
     
     // Update the tournament's current participants count
     await db.update(tournaments)
-      .set({ currentParticipants: tournament.currentParticipants + 1 })
+      .set({ currentParticipants: (tournament.currentParticipants || 0) + 1 })
       .where(eq(tournaments.id, parseInt(id)));
     
     res.status(201).json(registration[0]);
   } catch (error) {
     console.error('Error registering for tournament:', error);
     res.status(500).json({ message: 'Failed to register for tournament' });
+  }
+});
+
+/**
+ * GET /api/tournaments/:id/registration/check
+ * Check if the authenticated user is registered for a tournament
+ */
+router.get('/:id/registration/check', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+    
+    // Check if user is registered for the tournament
+    const existingRegistration = await db.select().from(tournamentRegistrations)
+      .where(and(
+        eq(tournamentRegistrations.tournamentId, parseInt(id)),
+        eq(tournamentRegistrations.userId, userId)
+      ));
+    
+    if (existingRegistration.length === 0) {
+      return res.status(404).json({ message: 'You are not registered for this tournament' });
+    }
+    
+    res.status(200).json(existingRegistration[0]);
+  } catch (error) {
+    console.error('Error checking tournament registration status:', error);
+    res.status(500).json({ message: 'Failed to check registration status' });
   }
 });
 
@@ -342,7 +365,7 @@ router.delete('/:id/register', isAuthenticated, async (req: Request, res: Respon
     
     // Update the tournament's current participants count
     await db.update(tournaments)
-      .set({ currentParticipants: Math.max(0, tournament.currentParticipants - 1) })
+      .set({ currentParticipants: Math.max(0, (tournament.currentParticipants || 0) - 1) })
       .where(eq(tournaments.id, parseInt(id)));
     
     res.status(204).send();
@@ -358,10 +381,16 @@ router.delete('/:id/register', isAuthenticated, async (req: Request, res: Respon
  */
 router.get('/tiers/all', async (req: Request, res: Response) => {
   try {
-    const tiers = await db.select().from(tournamentTiers)
-      .where(eq(tournamentTiers.active, true))
-      .orderBy(asc(tournamentTiers.pointsMultiplier));
-    
+    // Return predefined tournament tiers
+    const tiers = [
+      { id: 1, name: 'Club Tournament', code: 'CLUB', pointsMultiplier: 1.2, description: 'Local club level tournaments', badgeUrl: '', requiresVerification: false, active: true },
+      { id: 2, name: 'District Tournament', code: 'DISTRICT', pointsMultiplier: 1.5, description: 'District level tournaments', badgeUrl: '', requiresVerification: false, active: true },
+      { id: 3, name: 'City Tournament', code: 'CITY', pointsMultiplier: 1.8, description: 'City championship tournaments', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 4, name: 'Provincial Tournament', code: 'PROVINCIAL', pointsMultiplier: 2.0, description: 'Provincial level championships', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 5, name: 'National Tournament', code: 'NATIONAL', pointsMultiplier: 2.5, description: 'National championships', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 6, name: 'Regional Tournament', code: 'REGIONAL', pointsMultiplier: 3.0, description: 'Multi-country regional tournaments', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 7, name: 'International Tournament', code: 'INTERNATIONAL', pointsMultiplier: 4.0, description: 'International championship tournaments', badgeUrl: '', requiresVerification: true, active: true }
+    ];
     res.json(tiers);
   } catch (error) {
     console.error('Error getting tournament tiers:', error);
@@ -375,8 +404,12 @@ router.get('/tiers/all', async (req: Request, res: Response) => {
  */
 router.get('/categories/all', async (req: Request, res: Response) => {
   try {
-    const categories = await db.select().from(tournamentCategories)
-      .where(eq(tournamentCategories.active, true));
+    // Return predefined tournament categories
+    const categories = [
+      { id: 1, name: 'Singles', code: 'SINGLES', playersPerTeam: 1, description: 'Individual competition', active: true },
+      { id: 2, name: 'Doubles', code: 'DOUBLES', playersPerTeam: 2, description: 'Two players of the same gender', active: true },
+      { id: 3, name: 'Mixed Doubles', code: 'MIXED', playersPerTeam: 2, description: 'One male and one female player', active: true }
+    ];
     
     res.json(categories);
   } catch (error) {
@@ -391,9 +424,14 @@ router.get('/categories/all', async (req: Request, res: Response) => {
  */
 router.get('/divisions/all', async (req: Request, res: Response) => {
   try {
-    const divisions = await db.select().from(tournamentAgeDivisions)
-      .where(eq(tournamentAgeDivisions.active, true))
-      .orderBy(asc(tournamentAgeDivisions.minAge));
+    // Return predefined tournament age divisions
+    const divisions = [
+      { id: 1, name: 'Open Division', code: 'OPEN', minAge: 19, maxAge: null, description: 'Open to all players 19 and older', active: true },
+      { id: 2, name: '35+ Division', code: '35_PLUS', minAge: 35, maxAge: null, description: 'Players 35 and older', active: true },
+      { id: 3, name: '50+ Division', code: '50_PLUS', minAge: 50, maxAge: null, description: 'Players 50 and older', active: true },
+      { id: 4, name: '65+ Division', code: '65_PLUS', minAge: 65, maxAge: null, description: 'Players 65 and older', active: true },
+      { id: 5, name: 'Junior Division', code: 'JUNIOR', minAge: 12, maxAge: 18, description: 'Players between 12-18 years', active: true }
+    ];
     
     res.json(divisions);
   } catch (error) {
@@ -408,9 +446,16 @@ router.get('/divisions/all', async (req: Request, res: Response) => {
  */
 router.get('/rounds/points', async (req: Request, res: Response) => {
   try {
-    const roundPoints = await db.select().from(tournamentRoundPoints)
-      .where(eq(tournamentRoundPoints.active, true))
-      .orderBy(asc(tournamentRoundPoints.roundOrder));
+    // Return predefined tournament round points
+    const roundPoints = [
+      { id: 1, roundName: 'R64', displayName: 'Round of 64', pointsAwarded: 10, roundOrder: 1, active: true },
+      { id: 2, roundName: 'R32', displayName: 'Round of 32', pointsAwarded: 15, roundOrder: 2, active: true },
+      { id: 3, roundName: 'R16', displayName: 'Round of 16', pointsAwarded: 25, roundOrder: 3, active: true },
+      { id: 4, roundName: 'QF', displayName: 'Quarter-Finals', pointsAwarded: 40, roundOrder: 4, active: true },
+      { id: 5, roundName: 'SF', displayName: 'Semi-Finals', pointsAwarded: 60, roundOrder: 5, active: true },
+      { id: 6, roundName: 'F', displayName: 'Finals', pointsAwarded: 80, roundOrder: 6, active: true },
+      { id: 7, roundName: 'Champion', displayName: 'Champion', pointsAwarded: 100, roundOrder: 7, active: true }
+    ];
     
     res.json(roundPoints);
   } catch (error) {
