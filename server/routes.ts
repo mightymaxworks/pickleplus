@@ -12,6 +12,7 @@ import { registerUserProfileRoutes } from "./routes/user-profile-routes"; // PKL
 import partnerApiRoutes from "./routes/partner-api-routes"; // PKL-278651-PROF-0030-API
 import { registerMatchRoutes } from "./routes/match-routes";
 import { registerTournamentRoutes } from "./routes/tournament-routes";
+import { registerTournamentAdminRoutes } from "./routes/tournament-admin-routes"; // PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament Admin Routes
 import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
 import { registerBounceGamificationRoutes } from "./routes/bounce-gamification-routes";
 import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
@@ -70,6 +71,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerUserProfileRoutes(app); // Added for PKL-278651-PROF-0005-UPLOAD - Profile Photo Upload
   registerMatchRoutes(app);
   registerTournamentRoutes(app);
+  registerTournamentAdminRoutes(app); // Added for PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System
   registerBounceAdminRoutes(app); // Add Bounce admin routes
   registerBounceGamificationRoutes(app); // Add Bounce gamification routes
   registerBounceXpRoutes(app); // Add Bounce XP integration routes

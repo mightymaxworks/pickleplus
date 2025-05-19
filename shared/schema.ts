@@ -331,6 +331,61 @@ import {
   type InsertTournamentBracketMatch
 } from './schema/tournament-brackets';
 
+// Import tournament relations for parent-child relationships (PKL-278651-TOURN-0015-MULTI)
+import { tournamentRelations } from './schema/tournament-relations';
+
+// Import enhanced tournament system schema (PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System)
+import * as enhancedTournamentSystem from './schema/enhanced-tournament-system';
+
+// Re-export the enhanced tournament system
+export const parentTournaments = enhancedTournamentSystem.parentTournaments;
+export const tournamentRelationships = enhancedTournamentSystem.tournamentRelationships;
+export const teams = enhancedTournamentSystem.teams;
+export const teamMembers = enhancedTournamentSystem.teamMembers;
+export const teamTournamentRegistrations = enhancedTournamentSystem.teamTournamentRegistrations;
+export const tournamentDirectors = enhancedTournamentSystem.tournamentDirectors;
+export const tournamentCourts = enhancedTournamentSystem.tournamentCourts;
+export const tournamentStatusHistory = enhancedTournamentSystem.tournamentStatusHistory;
+export const tournamentTemplates = enhancedTournamentSystem.tournamentTemplates;
+export const tournamentAuditLogs = enhancedTournamentSystem.tournamentAuditLogs;
+
+// Re-export insert schemas
+export const insertParentTournamentSchema = enhancedTournamentSystem.insertParentTournamentSchema;
+export const insertTournamentRelationshipSchema = enhancedTournamentSystem.insertTournamentRelationshipSchema;
+export const insertTeamSchema = enhancedTournamentSystem.insertTeamSchema;
+export const insertTeamMemberSchema = enhancedTournamentSystem.insertTeamMemberSchema;
+export const insertTeamTournamentRegistrationSchema = enhancedTournamentSystem.insertTeamTournamentRegistrationSchema;
+export const insertTournamentDirectorSchema = enhancedTournamentSystem.insertTournamentDirectorSchema;
+export const insertTournamentCourtSchema = enhancedTournamentSystem.insertTournamentCourtSchema;
+export const insertTournamentStatusHistorySchema = enhancedTournamentSystem.insertTournamentStatusHistorySchema;
+export const insertTournamentTemplateSchema = enhancedTournamentSystem.insertTournamentTemplateSchema;
+export const insertTournamentAuditLogSchema = enhancedTournamentSystem.insertTournamentAuditLogSchema;
+
+// Re-export types
+export type ParentTournament = enhancedTournamentSystem.ParentTournament;
+export type InsertParentTournament = enhancedTournamentSystem.InsertParentTournament;
+export type TournamentRelationship = enhancedTournamentSystem.TournamentRelationship;
+export type InsertTournamentRelationship = enhancedTournamentSystem.InsertTournamentRelationship;
+export type Team = enhancedTournamentSystem.Team;
+export type InsertTeam = enhancedTournamentSystem.InsertTeam;
+export type TeamMember = enhancedTournamentSystem.TeamMember;
+export type InsertTeamMember = enhancedTournamentSystem.InsertTeamMember;
+export type TeamTournamentRegistration = enhancedTournamentSystem.TeamTournamentRegistration;
+export type InsertTeamTournamentRegistration = enhancedTournamentSystem.InsertTeamTournamentRegistration;
+export type TournamentDirector = enhancedTournamentSystem.TournamentDirector;
+export type InsertTournamentDirector = enhancedTournamentSystem.InsertTournamentDirector;
+export type TournamentCourt = enhancedTournamentSystem.TournamentCourt;
+export type InsertTournamentCourt = enhancedTournamentSystem.InsertTournamentCourt;
+export type TournamentStatusHistory = enhancedTournamentSystem.TournamentStatusHistory;
+export type InsertTournamentStatusHistory = enhancedTournamentSystem.InsertTournamentStatusHistory;
+export type TournamentTemplate = enhancedTournamentSystem.TournamentTemplate;
+export type InsertTournamentTemplate = enhancedTournamentSystem.InsertTournamentTemplate;
+export type TournamentAuditLog = enhancedTournamentSystem.TournamentAuditLog;
+export type InsertTournamentAuditLog = enhancedTournamentSystem.InsertTournamentAuditLog;
+
+// Import other tournament schemas
+// The enhanced tournament system is now imported and exported above
+
 // Import comprehensive tournament system schema (PKL-278651-TOURN-SYSTEM - Tournament Management System)
 import {
   tournamentTiers,
@@ -591,6 +646,10 @@ export const tournaments = pgTable("tournaments", {
   status: varchar("status", { length: 50 }).notNull().default("upcoming"),
   level: varchar("level", { length: 50 }).notNull().default("club"), // club, district, city, provincial, national, regional, international
   organizer: varchar("organizer", { length: 255 }),
+  // Parent-child relationship for multi-event tournaments
+  parentTournamentId: integer("parent_tournament_id"), // Will be linked in relations
+  isParent: boolean("is_parent").default(false), // Indicates if this is a parent tournament
+  isSubEvent: boolean("is_sub_event").default(false), // Indicates if this is a sub-event of a parent tournament
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
