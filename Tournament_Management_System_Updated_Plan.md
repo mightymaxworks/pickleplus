@@ -96,25 +96,68 @@ This document outlines the revised implementation strategy for the Pickle+ Tourn
 
 #### Team Tournament Structure
 - Team creation and roster management
+  - Team profile with logo, name, and description
+  - Team member roles (captain, player, alternate)
+  - Team communication tools
+  - Team history and statistics tracking
 - Team eligibility rules based on combined rankings
+  - Minimum/maximum combined ranking requirements
+  - Age-based restrictions
+  - Gender balance requirements for mixed teams
+  - Previous performance qualifications
 - Team vs. team match formats
+  - Head-to-head team matches
+  - Round robin team pools
+  - Team elimination brackets
+  - Match scoring systems (games won, points scored, etc.)
 - Team standings and statistics
+  - Win-loss records
+  - Game differential
+  - Individual player performance within teams
+  - Historical team ranking
+
+#### Team Tournament Types
+- **Team Round Robin**: Teams compete in pools, with each team playing all others
+- **Team Elimination**: Single or double elimination brackets for teams
+- **Team League**: Extended competition with standings over multiple sessions
+- **Team Challenge**: Ladder-based challenge system for team rankings
+- **Mixed Format**: Combined pool play followed by championship brackets
+
+#### Team Tournament Administration
+- Team registration workflow
+  - Team profile creation
+  - Roster submission and verification
+  - Team fee payment options
+  - Team documentation requirements
+- Team seeding methods
+  - By combined team ranking points
+  - By previous tournament results
+  - By geographic region
+  - Manual seeding by tournament director
+- Team bracket generation
+  - Team-specific bracket algorithms
+  - Team pool assignment balancing
+  - Team schedule generation with court assignments
 
 #### Multi-Event Tournament Enhancements
 - Event templates for quick creation of standard multi-event tournaments
 - Bulk operations across related sub-tournaments
 - Advanced scheduling tools for multi-event tournaments
+- Team events as part of larger multi-event tournaments
 
 #### Qualifying Rounds
 - Pre-tournament qualifier setup
 - Qualifier-to-main-draw progression
 - Special seeding for qualifiers
+- Team qualification process for championship events
 
 #### Deliverables
 - Complete team tournament functionality
+- Team management interface for captains and players
+- Team tournament administration tools
 - Qualifying rounds system
 - Advanced tournament type options
-- Enhanced multi-event tournament capabilities
+- Enhanced multi-event tournament capabilities with team integration
 
 ### Sprint 5: Rankings Integration & Refinement (2 weeks) 🔜 PLANNED
 **Goal:** Fully integrate tournament results with ranking system and refine overall experience
