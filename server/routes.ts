@@ -71,7 +71,16 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerUserProfileRoutes(app); // Added for PKL-278651-PROF-0005-UPLOAD - Profile Photo Upload
   registerMatchRoutes(app);
   registerTournamentRoutes(app);
-  registerTournamentAdminRoutes(app); // Added for PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System
+  registerTournamentAdminRoutes(app); // Added for PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System Admin Routes
+  
+  // Register Enhanced Tournament Routes for Multi-Event Tournament System (PKL-278651-TOURN-0015-MULTI)
+  try {
+    const { registerEnhancedTournamentRoutes } = require('./routes/enhanced-tournament-routes');
+    registerEnhancedTournamentRoutes(app);
+  } catch (error) {
+    console.error('[API] Error registering Enhanced Tournament API routes:', error);
+  }
+  
   registerBounceAdminRoutes(app); // Add Bounce admin routes
   registerBounceGamificationRoutes(app); // Add Bounce gamification routes
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
