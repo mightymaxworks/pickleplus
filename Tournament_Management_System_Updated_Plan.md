@@ -1,7 +1,7 @@
-# Pickle+ Tournament Management System - Updated Implementation Plan
+# Pickle+ Tournament Management System - Reorganized Implementation Plan
 
 ## Overview
-This document outlines the revised implementation strategy for the Pickle+ Tournament Management System, incorporating a hybrid approach to multi-event tournaments. This system will allow administrators to create and manage tournaments with various formats across multiple divisions and categories, while players can discover, register for, and participate in tournaments that match their skill level.
+This document outlines the revised implementation strategy for the Pickle+ Tournament Management System, focusing on a "backend-first" approach that prioritizes admin functionality and CRUD operations before moving to user-facing features. This system will allow for comprehensive tournament management with support for multi-event tournaments, team tournaments, and advanced ranking calculations.
 
 ## Core Features
 1. Tournament creation and management
@@ -12,259 +12,331 @@ This document outlines the revised implementation strategy for the Pickle+ Tourn
 6. Qualifying rounds for high-demand events
 7. **Multi-event tournaments with different divisions and categories**
 
-## Implementation Strategy - Hybrid Approach
+## Reorganized Implementation Strategy
 
-### Sprint 1: Core Tournament Structure (2 weeks) ✓ COMPLETED
-**Goal:** Establish the foundational data models and basic tournament creation functionality
+### Sprint 1: Core Data Models & Admin CRUD (2 weeks)
+**Goal:** Establish all database models and basic admin CRUD operations
 
-#### Database Schema Enhancement ✓
-- Tournament entity with basic properties (name, date, location, description)
-- Tournament divisions (age groups like open, 35+, 50+, junior)
-- Tournament categories (singles, doubles, mixed)
-- Qualification criteria based on ranking points
+#### Complete Database Schema
+- Tournament entity with all properties
+- Division (age groups) and category (play types) definitions  
+- Team entities and relationships
+- Tournament-team and tournament-player relationships
+- Match and bracket data models
+- Comprehensive relationship mapping between all entities
 
-#### Admin Tournament Creation ✓
-- Tournament creation form with basic details
-- Division and category configuration interface
-- Qualification rules setup
-- Format selection (single elimination, double elimination, round robin)
+#### Admin CRUD Operations
+- Tournament creation, editing, and deletion
+- Team management operations (create, update, delete, assign to tournaments)
+- Player registration management (add, remove, update registrations)
+- Match creation and result recording
+- Bracket management operations
 
-#### API Endpoints ✓
-- Tournament CRUD operations
-- Tournament listing with filtering by division and category
-- Tournament detail retrieval
+#### API Development
+- Complete REST API for all entities
+- Input validation and error handling
+- Authentication and authorization for admin endpoints
+- Data filtering and pagination
 
-#### Deliverables ✓
-- Functional tournament creation for administrators
-- Database schema for tournaments
-- Basic API endpoints for tournament data
-
-### Sprint 2: Player Experience & Registration (2 weeks) ✓ COMPLETED
-**Goal:** Enable players to discover, register for, and track tournaments
-
-#### Tournament Discovery ✓
-- Browse tournaments with filtering (date, location, type)
-- Filter tournaments by division (age group) and category (singles/doubles/mixed)
-- Eligibility indicators based on player ranking
-- Recommended tournaments based on player skill level
-
-#### Registration Flow ✓
-- Tournament registration process
-- Partner selection for doubles events
-- Payment integration for entry fees
-- Waitlist functionality for tournaments at capacity
-
-#### Player Dashboard Enhancements ✓
-- Upcoming registered tournaments
-- Tournament history with results
-- Tournament-specific ranking points earned
-
-#### Deliverables ✓
-- Complete tournament discovery and registration interface
-- Enhanced player dashboard with tournament information
-- Registration confirmation system
-
-### Sprint 3: Bracket Management & Multi-Event Tournaments (2 weeks) ⚠️ IN PROGRESS
-**Goal:** Create tournament bracket generation, multi-event tournaments, and match result reporting
-
-#### Bracket Generation
-- Automated bracket creation based on format
-- Seeding algorithms based on ranking points
-- Bracket visualization for web interface
-
-#### Multi-Event Tournament Structure ⚠️ PRIORITY ADDITION
-- Enhanced tournament creation to support multiple division/category combinations
-- Tournament data structure to represent sub-tournaments within a parent event
-- UI for displaying related division/category tournaments as parts of the same event
-- Navigation between related sub-tournaments
-- Common tournament details shared across all sub-tournaments
-
-#### Match Management
-- Match scheduling tools
-- Court assignment functionality
-- Match result entry interface
-- Score validation rules
+#### Continuous Integration & Testing
+- Automated tests for all CRUD operations
+- Integration tests for database operations
+- API endpoint testing suite
+- CI pipeline for validating database integrity
+- Test coverage reporting
 
 #### Deliverables
-- Functional bracket generation system with multiple tournament formats
-- Match reporting and management interface
-- Real-time tournament progress tracking
-- Multi-event tournament creation and management capabilities
+- Complete database schema with all relationships
+- Admin API for managing all tournament entities
+- Comprehensive test suite for all CRUD functions
+- CI/CD pipeline for automated testing
 
-### Sprint 4: Team Tournaments & Advanced Features (2 weeks) 🔜 PLANNED
-**Goal:** Implement team tournament functionality and advanced features
+### Sprint 2: Tournament Management & Advanced Admin Features (2 weeks)
+**Goal:** Implement advanced tournament administration features
 
-#### Team Tournament Structure
-- Team creation and roster management
-  - Team profile with logo, name, and description
-  - Team member roles (captain, player, alternate)
-  - Team communication tools
-  - Team history and statistics tracking
-- Team eligibility rules based on combined rankings
-  - Minimum/maximum combined ranking requirements
-  - Age-based restrictions
-  - Gender balance requirements for mixed teams
-  - Previous performance qualifications
-- Team vs. team match formats
-  - Head-to-head team matches
-  - Round robin team pools
-  - Team elimination brackets
-  - Match scoring systems (games won, points scored, etc.)
-- Team standings and statistics
-  - Win-loss records
-  - Game differential
-  - Individual player performance within teams
-  - Historical team ranking
+#### Tournament Structure Management
+- Multi-event tournament creation and management
+- Parent-child relationship for tournament events
+- Team tournament setup and configuration
+- Bracket generation algorithms implementation
+- Tournament templates creation and storage
+
+#### Match Management
+- Match scheduling functionality
+- Result recording with validation
+- Score calculation and statistics
+- Automatic bracket progression
+- Match rescheduling and cancellation handling
+
+#### Administrative Tools
+- Tournament status management (draft, registration open, in progress, completed)
+- Participant management across multiple events
+- Bulk operations for tournaments and participants
+- Administrative dashboards and reports
+- Tournament director role management
+
+#### Continuous Integration & Testing
+- Automated tests for tournament structure operations
+- Bracket generation algorithm validation
+- Match management workflow testing
+- Data integrity tests for complex operations
+- Performance testing for large tournament operations
+
+#### Deliverables
+- Complete tournament management backend
+- Match creation and results system
+- Advanced admin functionality
+- Tested and validated CRUD operations for all features
+
+### Sprint 3: User-Facing Views & Tournament Discovery (2 weeks)
+**Goal:** Implement user interfaces for tournament discovery and participation
+
+#### Tournament Discovery
+- Tournament listing with advanced filtering
+- Tournament detail views showing all divisions/categories
+- Related tournaments grouping for multi-event tournaments
+- Tournament schedules and results views
+
+#### Player Registration Interface
+- Tournament registration flow
+- Team creation and joining interface
+- Partner selection for doubles events
+- Payment integration for tournament fees
+- Registration confirmation and management
+
+#### Tournament Viewing
+- Bracket visualization components
+- Match schedules display
+- Results and standings views
+- Player performance tracking
+
+#### Continuous Integration & Testing
+- User interface component testing
+- Registration flow validation
+- End-to-end testing of user journeys
+- Cross-browser compatibility testing
+- Mobile responsiveness testing
+
+#### Deliverables
+- Complete user-facing tournament interface
+- Registration system with confirmation
+- Tournament viewing and tracking features
+- Comprehensive UI test suite
+
+### Sprint 4: Team Features & Advanced Visualizations (2 weeks)
+**Goal:** Implement team-specific features and advanced tournament visualizations
+
+#### Team Features
+- Team profiles with customization options
+- Team management interface for captains
+- Team member roles and permissions
+- Team communication tools
+- Team statistics and performance history
 
 #### Team Tournament Types
-- **Team Round Robin**: Teams compete in pools, with each team playing all others
-- **Team Elimination**: Single or double elimination brackets for teams
-- **Team League**: Extended competition with standings over multiple sessions
-- **Team Challenge**: Ladder-based challenge system for team rankings
-- **Mixed Format**: Combined pool play followed by championship brackets
+- Team Round Robin implementation
+- Team Elimination tournament format
+- Team League structure
+- Team Challenge system
+- Mixed Format tournaments
 
-#### Team Tournament Administration
-- Team registration workflow
-  - Team profile creation
-  - Roster submission and verification
-  - Team fee payment options
-  - Team documentation requirements
-- Team seeding methods
-  - By combined team ranking points
-  - By previous tournament results
-  - By geographic region
-  - Manual seeding by tournament director
-- Team bracket generation
-  - Team-specific bracket algorithms
-  - Team pool assignment balancing
-  - Team schedule generation with court assignments
+#### Advanced Tournament Visualizations
+- Interactive tournament brackets
+- Real-time tournament progress tracking
+- Match statistics and visualizations
+- Tournament leaderboards
+- Dynamic schedule updates
 
-#### Multi-Event Tournament Enhancements
-- Event templates for quick creation of standard multi-event tournaments
-- Bulk operations across related sub-tournaments
-- Advanced scheduling tools for multi-event tournaments
-- Team events as part of larger multi-event tournaments
-
-#### Qualifying Rounds
-- Pre-tournament qualifier setup
-- Qualifier-to-main-draw progression
-- Special seeding for qualifiers
-- Team qualification process for championship events
+#### Continuous Integration & Testing
+- Team management feature testing
+- Team tournament format validation
+- UI component testing
+- Performance testing for visualizations
+- User acceptance testing
 
 #### Deliverables
 - Complete team tournament functionality
-- Team management interface for captains and players
-- Team tournament administration tools
-- Qualifying rounds system
-- Advanced tournament type options
-- Enhanced multi-event tournament capabilities with team integration
+- Advanced tournament visualizations
+- Team management tools
+- Comprehensive test coverage
 
-### Sprint 5: Rankings Integration & Refinement (2 weeks) 🔜 PLANNED
-**Goal:** Fully integrate tournament results with ranking system and refine overall experience
+### Sprint 5: Rankings Integration & System Refinement (2 weeks)
+**Goal:** Integrate rankings system and refine the entire platform
 
-#### Ranking Points Calculation
-- Tournament tier-based point multipliers:
-  - Club Level: 1.2x base points
-  - District Level: 1.5x base points
-  - City Level: 1.8x base points
-  - Provincial Level: 2.0x base points
-  - National Level: 2.5x base points
-  - Regional Level: 3.0x base points
-  - International Level: 4.0x base points
-- Round advancement point awards:
-  - Players earn points based on the furthest round they reach
-  - Point structure increases with deeper tournament advancement
-  - Elimination round points: R64 (10pts), R32 (15pts), R16 (25pts), QF (40pts), SF (60pts), F (80pts), Champion (100pts)
-  - All base points are then multiplied by the tournament tier multiplier
-- Special handling for round robin format:
-  - Hybrid point allocation approach
-  - 3 base points awarded per match win 
-  - Placement bonuses: 10% bonus for 1st place, 5% bonus for 2nd place
-  - All points then multiplied by tournament tier multiplier
-- Team tournament point distribution:
-  - Equal Distribution: All team members receive equal points regardless of participation
-- Point decay system:
-  - Points retain 100% value for 3 months
-  - After 3 months, points decay by 15% per quarter (85% at 6 months, 70% at 9 months, 55% at 12 months)
-  - After 15 months, points are removed from ranking calculation
+#### Ranking System Implementation
+- Point calculation algorithms based on tournament tiers
+- Tournament tier multipliers configuration
+- Point decay system implementation
+- Ranking leaderboards and historical tracking
+- Ranking point visualizations
 
-#### Performance Analytics
-- Tournament performance statistics
-- Historical tournament data analysis
-- Ranking progression visualization
+#### System Refinement
+- Performance optimization for large tournaments
+- UI/UX improvements based on user feedback
+- Mobile responsiveness enhancements
+- Analytics dashboards for tournament performance
+- End-to-end system testing
+
+#### Final Testing & Quality Assurance
+- Complete system stress testing
+- Security and penetration testing
+- Data backup and recovery testing
+- Comprehensive documentation finalization
+- User acceptance testing across all features
 
 #### Deliverables
 - Fully integrated ranking system
-- Tournament performance analytics
-- Refined and optimized tournament system
+- Optimized tournament platform
+- Complete documentation
+- Production-ready system with verified quality
 
-## Multi-Event Tournament Architecture
+## Data Models
 
-### Data Model
+### Tournament Entity
 ```
-Tournament (parent event)
-├── id
-├── name
-├── description
-├── location
-├── startDate
-├── endDate
-├── registrationDates
-├── organizer
-├── isTestData
-└── subTournaments []
-    ├── id
-    ├── parentTournamentId
-    ├── division (age group: open, 35+, 50+, junior)
-    ├── category (play type: singles, doubles, mixed)
-    ├── format (single_elim, double_elim, round_robin)
-    ├── participants []
-    └── brackets []
+Tournament
+├── id: UUID
+├── name: string
+├── description: string
+├── location: string
+├── startDate: Date
+├── endDate: Date
+├── registrationStartDate: Date
+├── registrationEndDate: Date
+├── organizer: UUID (reference to User)
+├── status: enum (draft, registration_open, in_progress, completed)
+├── isTestData: boolean
+├── tier: enum (club, district, city, provincial, national, regional, international)
+├── parentTournamentId: UUID (null if this is a parent tournament)
+├── division: string (age group: open, 35+, 50+, junior) - null for parent tournaments
+├── category: string (play type: singles, doubles, mixed) - null for parent tournaments
+├── format: enum (single_elimination, double_elimination, round_robin, custom)
+└── created_at: Date
 ```
 
-### User Interface Considerations
-- Main tournament page shows all divisions/categories as tabs or sections
-- Common information shared across all sub-tournaments
-- Tournament registration selects specific division/category combinations
-- Brackets displayed per division/category combination
-- Results and schedules organized by division/category
+### Team Entity
+```
+Team
+├── id: UUID
+├── name: string
+├── description: string
+├── logo: string (URL)
+├── captainId: UUID (reference to User)
+├── createdAt: Date
+├── members: [TeamMember]
+```
 
-### Implementation Approach
-1. **Phase 1** (Sprint 3): Basic multi-event structure
-   - Create parent-child relationship between tournaments
-   - Update tournament creation to allow multiple division/category pairs
-   - Display related tournaments together in the UI
-   
-2. **Phase 2** (Sprint 4): Advanced multi-event capabilities
-   - Event templates for standard tournament structures
-   - Bulk operations across related tournaments
-   - Advanced scheduling for multi-event tournaments
-   
-3. **Phase 3** (Sprint 5): Complete integration
-   - Points calculation across all events
-   - Comprehensive reporting and analytics
-   - Full-featured tournament series management
+### TeamMember Entity
+```
+TeamMember
+├── id: UUID
+├── teamId: UUID (reference to Team)
+├── userId: UUID (reference to User)
+├── role: enum (captain, player, alternate)
+├── joinedAt: Date
+```
+
+### Tournament Registration
+```
+TournamentRegistration
+├── id: UUID
+├── tournamentId: UUID (reference to Tournament)
+├── userId: UUID (reference to User) - for individual registrations
+├── teamId: UUID (reference to Team) - for team registrations
+├── partnerId: UUID (reference to User) - for doubles registrations
+├── status: enum (pending, confirmed, waitlist, cancelled)
+├── registeredAt: Date
+├── seedingPosition: number (optional)
+```
+
+### Tournament Bracket
+```
+Bracket
+├── id: UUID
+├── tournamentId: UUID (reference to Tournament)
+├── round: number
+├── matches: [Match]
+```
+
+### Match
+```
+Match
+├── id: UUID
+├── tournamentId: UUID (reference to Tournament)
+├── bracketId: UUID (reference to Bracket)
+├── roundNumber: number
+├── matchNumber: number
+├── participant1Id: UUID (reference to User or Team)
+├── participant2Id: UUID (reference to User or Team)
+├── participant1Score: number
+├── participant2Score: number
+├── winnerId: UUID (reference to User or Team)
+├── status: enum (scheduled, completed, cancelled)
+├── courtAssignment: string
+├── scheduledTime: DateTime
+├── completedTime: DateTime
+```
+
+## CI/CD Testing Strategy
+
+### Continuous Integration Testing
+- **Unit Tests**: Individual component testing
+  - Database model validation tests
+  - API endpoint request/response tests
+  - Data transformation function tests
+  - Business logic validation tests
+
+- **Integration Tests**: Verifying component interaction
+  - Database transaction tests
+  - API workflow tests
+  - Service integration tests
+  - Authentication/authorization tests
+
+- **End-to-End Tests**: Complete user journey tests
+  - Tournament creation to completion workflows
+  - Registration and participation workflows
+  - Team tournament management workflows
+  - Admin operations workflows
+
+### Automated Testing
+- **Pre-commit hooks**: Run linting and basic tests before commit
+- **CI pipeline stages**:
+  1. Code linting and formatting
+  2. Unit tests execution
+  3. Integration tests execution
+  4. E2E tests on test database
+  5. Performance benchmarking
+  6. Code coverage reporting
+  7. Security scanning
+
+### Testing Principles
+- All CRUD operations must have dedicated tests
+- Min. 90% code coverage for core functionality
+- Database migration tests for all schema changes
+- Automated regression testing
+- Performance testing under load conditions
+- Security validation for all endpoints
 
 ## Current Implementation Progress
 
 ### Completed ✓
 - Basic tournament data model with division and category fields
-- Tournament creation form with division and category options
-- Tournament listing with filtering by division and category
+- Simple tournament creation form
+- Tournament listing with basic filtering
 - Tournament detail view
-- Test tournaments created for various division/category combinations:
-  - "Summer Open Singles Championships" - Open division with Singles category
-  - "Masters 50+ Doubles Classic" - 50+ division with Doubles category
-  - "Mixed Doubles Championship" - 35+ division with Mixed category
-  - "Junior Singles Open" - Junior division with Singles category
 
-### In Progress ⚠️
-- Multi-event tournament structure implementation
-- Bracket generation system development
-- Match management interface
+### Next Steps ⚠️
+- Enhance database schema with complete entity relationships
+- Implement comprehensive admin CRUD operations
+- Develop robust API with proper validation
+- Create automated tests for all CRUD functions
 
-### Upcoming 🔜
-- Team tournament functionality
-- Qualifying rounds
-- Tournament series management
-- Ranking points integration
+## Implementation Timeline
+
+| Sprint | Focus Area | Duration | Status |
+|--------|------------|----------|--------|
+| Sprint 1 | Core Data Models & Admin CRUD | 2 weeks | Starting |
+| Sprint 2 | Tournament Management & Advanced Admin | 2 weeks | Planned |
+| Sprint 3 | User-Facing Views & Discovery | 2 weeks | Planned |
+| Sprint 4 | Team Features & Visualizations | 2 weeks | Planned |
+| Sprint 5 | Rankings Integration & Refinement | 2 weeks | Planned |
