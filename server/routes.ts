@@ -75,8 +75,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Enhanced Tournament Routes for Multi-Event Tournament System (PKL-278651-TOURN-0015-MULTI)
   try {
-    const { registerEnhancedTournamentRoutes } = require('./routes/enhanced-tournament-routes');
+    const { registerEnhancedTournamentRoutes } = await import('./routes/enhanced-tournament-routes.js');
     registerEnhancedTournamentRoutes(app);
+    console.log('[API] Enhanced Tournament API routes registered successfully');
   } catch (error) {
     console.error('[API] Error registering Enhanced Tournament API routes:', error);
   }
