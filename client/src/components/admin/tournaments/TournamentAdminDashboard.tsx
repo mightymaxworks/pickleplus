@@ -21,9 +21,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Calendar as CalendarIcon, Users, Trophy, Settings, Trash2, Edit, Copy, Eye } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Users, Trophy, Settings, Trash2, Edit, Copy, Eye, BarChart3, Target, GitBranch, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Tournament interfaces
 interface Tournament {
@@ -424,12 +436,8 @@ export default function TournamentAdminDashboard() {
                   Cancel
                 </Button>
                 <Button onClick={() => {
-                  // TODO: Navigate to appropriate creation form
                   setIsCreateDialogOpen(false);
-                  toast({
-                    title: "Feature Coming Soon",
-                    description: `${createTournamentType} tournament creation will be available soon.`,
-                  });
+                  setIsCreateFormOpen(true);
                 }}>
                   Continue
                 </Button>
@@ -440,12 +448,57 @@ export default function TournamentAdminDashboard() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="individual">Individual Tournaments</TabsTrigger>
-          <TabsTrigger value="multi-event">Multi-Event Tournaments</TabsTrigger>
-          <TabsTrigger value="team">Team Tournaments</TabsTrigger>
-        </TabsList>
+        <TooltipProvider>
+          <TabsList className="grid w-full grid-cols-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Overview</span>
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Tournament statistics and overview</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="individual" className="flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  <span className="hidden sm:inline">Individual</span>
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Single tournament management</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="multi-event" className="flex items-center gap-2">
+                  <GitBranch className="w-4 h-4" />
+                  <span className="hidden sm:inline">Multi-Event</span>
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Complex tournaments with multiple divisions and categories</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="team" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden sm:inline">Team</span>
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Team-based tournament management</p>
+              </TooltipContent>
+            </Tooltip>
+          </TabsList>
+        </TooltipProvider>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
