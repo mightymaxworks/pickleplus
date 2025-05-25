@@ -260,11 +260,14 @@ export default function App() {
                     pageTitle="Referral Program"
                   />
                   <Route path="/admin/tournaments">
-                    {(params) => (
-                      <AdminProtectedRoute>
-                        <LazyTournamentManagementPage />
-                      </AdminProtectedRoute>
-                    )}
+                    {(params) => {
+                      const TournamentAdminDashboard = lazyLoad(() => import('./components/admin/tournaments/TournamentAdminDashboard'));
+                      return (
+                        <AdminProtectedRoute>
+                          <TournamentAdminDashboard />
+                        </AdminProtectedRoute>
+                      );
+                    }}
                   </Route>
                   <Route path="/admin/tournaments/:id">
                     {(params) => (
