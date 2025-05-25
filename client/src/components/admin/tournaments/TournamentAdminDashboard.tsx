@@ -78,19 +78,22 @@ export default function TournamentAdminDashboard() {
   
   // Fetch tournaments
   const { data: tournaments = [], isLoading: tournamentsLoading } = useQuery({
-    queryKey: ['/api/enhanced-tournaments'],
+    queryKey: ['/api/tournaments'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/enhanced-tournaments');
-      return response.json();
+      const response = await apiRequest('GET', '/api/tournaments');
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Fetch parent tournaments for multi-event view
   const { data: parentTournaments = [], isLoading: parentTournamentsLoading } = useQuery({
-    queryKey: ['/api/enhanced-tournaments/parent'],
+    queryKey: ['/api/tournaments/parent'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/enhanced-tournaments/parent');
-      return response.json();
+      // For now, filter tournaments that might be parent tournaments
+      const response = await apiRequest('GET', '/api/tournaments');
+      const data = await response.json();
+      return Array.isArray(data) ? data.filter((t: any) => !t.parentTournamentId) : [];
     }
   });
 
