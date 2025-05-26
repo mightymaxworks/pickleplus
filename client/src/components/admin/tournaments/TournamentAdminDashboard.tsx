@@ -878,15 +878,15 @@ export default function TournamentAdminDashboard() {
                         // Prepare tournament data for database
                         const tournamentData = {
                           name: formData.name,
-                          description: formData.description,
-                          location: formData.venue,
+                          description: formData.description || '',
+                          location: formData.venue || '',
                           level: formData.level,
                           format: formData.format,
                           category: formData.category,
                           division: formData.division,
-                          startDate: new Date(formData.startDate).toISOString(),
-                          endDate: new Date(formData.endDate).toISOString(),
-                          registrationEndDate: formData.registrationDeadline ? new Date(formData.registrationDeadline).toISOString() : null,
+                          startDate: formData.startDate,
+                          endDate: formData.endDate,
+                          registrationEndDate: formData.registrationDeadline || null,
                           maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
                           status: 'upcoming'
                         };
