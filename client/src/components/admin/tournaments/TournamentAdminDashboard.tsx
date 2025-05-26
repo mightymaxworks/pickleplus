@@ -884,9 +884,9 @@ export default function TournamentAdminDashboard() {
                           format: formData.format,
                           category: formData.category,
                           division: formData.division,
-                          startDate: formData.startDate,
-                          endDate: formData.endDate,
-                          registrationEndDate: formData.registrationDeadline || null,
+                          startDate: new Date(formData.startDate),
+                          endDate: new Date(formData.endDate),
+                          registrationEndDate: formData.registrationDeadline ? new Date(formData.registrationDeadline) : null,
                           maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
                           status: 'upcoming'
                         };
