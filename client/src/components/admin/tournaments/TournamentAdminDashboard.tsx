@@ -86,6 +86,7 @@ export default function TournamentAdminDashboard() {
   
   const [selectedTab, setSelectedTab] = useState('overview');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [createTournamentType, setCreateTournamentType] = useState<'single' | 'multi-event' | 'team'>('single');
   
   // Fetch tournaments
@@ -607,6 +608,109 @@ export default function TournamentAdminDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Tournament Creation Form Dialog */}
+      <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Create {createTournamentType === 'single' ? 'Single' : 
+                     createTournamentType === 'multi-event' ? 'Multi-Event' : 'Team'} Tournament
+            </DialogTitle>
+            <DialogDescription>
+              Fill out the form below to create your tournament
+            </DialogDescription>
+          </DialogHeader>
+          
+          {createTournamentType === 'single' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Tournament Name</Label>
+                  <Input id="name" placeholder="Enter tournament name" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="level">Level</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="club">Club</SelectItem>
+                      <SelectItem value="district">District</SelectItem>
+                      <SelectItem value="city">City</SelectItem>
+                      <SelectItem value="provincial">Provincial</SelectItem>
+                      <SelectItem value="national">National</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" placeholder="Tournament description" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="format">Format</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="elimination">Single Elimination</SelectItem>
+                      <SelectItem value="double-elimination">Double Elimination</SelectItem>
+                      <SelectItem value="round-robin">Round Robin</SelectItem>
+                      <SelectItem value="swiss">Swiss System</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="singles">Singles</SelectItem>
+                      <SelectItem value="doubles">Doubles</SelectItem>
+                      <SelectItem value="mixed">Mixed Doubles</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsCreateFormOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  setIsCreateFormOpen(false);
+                  toast({
+                    title: "Tournament Created",
+                    description: "Your tournament has been created successfully!",
+                  });
+                }}>
+                  Create Tournament
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {createTournamentType === 'multi-event' && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Multi-event tournament creation wizard coming soon!</p>
+            </div>
+          )}
+          
+          {createTournamentType === 'team' && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Team tournament creation wizard coming soon!</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
