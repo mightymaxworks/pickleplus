@@ -873,19 +873,30 @@ export default function TournamentAdminDashboard() {
                       Next
                     </Button>
                   ) : (
-                    <Button onClick={() => {
-                      setIsCreateFormOpen(false);
-                      setFormStep(1);
-                      setFormData({
-                        name: '', description: '', level: '', format: '', category: '', 
-                        division: '', startDate: '', endDate: '', venue: '', maxParticipants: '', registrationDeadline: ''
-                      });
-                      toast({
-                        title: "Tournament Created",
-                        description: "Your tournament has been created successfully!",
-                      });
-                    }}>
-                      Create Tournament
+                    <Button 
+                      onClick={() => {
+                        // Prepare tournament data for database
+                        const tournamentData = {
+                          name: formData.name,
+                          description: formData.description,
+                          location: formData.venue,
+                          level: formData.level,
+                          format: formData.format,
+                          category: formData.category,
+                          division: formData.division,
+                          startDate: new Date(formData.startDate).toISOString(),
+                          endDate: new Date(formData.endDate).toISOString(),
+                          registrationEndDate: formData.registrationDeadline ? new Date(formData.registrationDeadline).toISOString() : null,
+                          maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
+                          status: 'upcoming'
+                        };
+                        
+                        // Submit to database
+                        createTournamentMutation.mutate(tournamentData);
+                      }}
+                      disabled={createTournamentMutation.isPending}
+                    >
+                      {createTournamentMutation.isPending ? 'Creating...' : 'Create Tournament'}
                     </Button>
                   )}
                 </div>
