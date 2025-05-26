@@ -123,9 +123,11 @@ router.get('/:id', async (req: Request, res: Response) => {
  */
 router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
   try {
+    console.log('Tournament creation request body:', req.body);
     const validated = insertTournamentSchema.safeParse(req.body);
     
     if (!validated.success) {
+      console.log('Validation errors:', validated.error.format());
       return res.status(400).json({ errors: validated.error.format() });
     }
     
