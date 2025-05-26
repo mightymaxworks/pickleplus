@@ -113,6 +113,34 @@ export default function TournamentAdminDashboard() {
     }
   });
 
+  // Create tournament mutation
+  const createTournamentMutation = useMutation({
+    mutationFn: async (tournamentData: any) => {
+      const res = await apiRequest('POST', '/api/tournaments', tournamentData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      setIsCreateFormOpen(false);
+      setFormStep(1);
+      setFormData({
+        name: '', description: '', level: '', format: '', category: '', 
+        division: '', startDate: '', endDate: '', venue: '', maxParticipants: '', registrationDeadline: ''
+      });
+      toast({
+        title: "Tournament Created",
+        description: "Your tournament has been created successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Creating Tournament",
+        description: error.message || "Failed to create tournament. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch parent tournaments for multi-event view
   const { data: parentTournaments = [], isLoading: parentTournamentsLoading } = useQuery({
     queryKey: ['/api/tournaments/parent'],
