@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import CreateTournamentForm from "./CreateTournamentForm";
+import { CreateTournamentWizard } from '@/core/modules/tournament/components/CreateTournamentWizard';
 import { Plus, Calendar as CalendarIcon, Users, Trophy, Settings, Trash2, Edit, Copy, Eye, BarChart3, Target, GitBranch, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
