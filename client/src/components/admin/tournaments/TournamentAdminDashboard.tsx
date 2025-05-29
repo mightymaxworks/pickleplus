@@ -1033,10 +1033,14 @@ export default function TournamentAdminDashboard() {
                           <SelectValue placeholder="Select scoring format" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="best_of_3">Best of 3 games (11 points)</SelectItem>
-                          <SelectItem value="best_of_5">Best of 5 games (11 points)</SelectItem>
-                          <SelectItem value="rally_scoring">Rally scoring to 15</SelectItem>
-                          <SelectItem value="custom">Custom</SelectItem>
+                          <SelectItem value="best_of_3_rally_15">Best of 3 Games (15 Rally)</SelectItem>
+                          <SelectItem value="best_of_3_rally_21">Best of 3 Games (21 Rally)</SelectItem>
+                          <SelectItem value="best_of_3_traditional_11">Best of 3 Games (11 Traditional)</SelectItem>
+                          <SelectItem value="best_of_5_rally_15">Best of 5 Games (15 Rally)</SelectItem>
+                          <SelectItem value="best_of_5_rally_21">Best of 5 Games (21 Rally)</SelectItem>
+                          <SelectItem value="single_game_11">Single Game to 11</SelectItem>
+                          <SelectItem value="single_game_15">Single Game to 15</SelectItem>
+                          <SelectItem value="single_game_21">Single Game to 21</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
