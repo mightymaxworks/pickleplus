@@ -1607,40 +1607,45 @@ export default function TournamentAdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Create Tournament Form Dialog */}
-        <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                Create {createTournamentType === 'single' ? 'Tournament' : 
-                       createTournamentType === 'multi-event' ? 'Multi-Event Tournament' : 
-                       'Team Tournament'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            {createTournamentType === 'single' && (
-              <CreateTournamentForm 
-                onSuccess={() => {
-                  setIsCreateFormOpen(false);
-                  queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
-                }}
-                onCancel={() => setIsCreateFormOpen(false)}
-              />
-            )}
-            
-            {createTournamentType === 'multi-event' && (
+        {/* Multi-Step Tournament Creation Wizard */}
+        {createTournamentType === 'single' && (
+          <CreateTournamentWizard
+            open={isCreateFormOpen}
+            onOpenChange={setIsCreateFormOpen}
+            queryKey="/api/tournaments"
+            onTournamentCreated={() => {
+              queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+            }}
+          />
+        )}
+        
+        {/* Multi-Event Tournament Dialog */}
+        {createTournamentType === 'multi-event' && (
+          <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create Multi-Event Tournament</DialogTitle>
+              </DialogHeader>
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Multi-event tournament creation wizard coming soon!</p>
               </div>
-            )}
-            
-            {createTournamentType === 'team' && (
+            </DialogContent>
+          </Dialog>
+        )}
+        
+        {/* Team Tournament Dialog */}
+        {createTournamentType === 'team' && (
+          <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create Team Tournament</DialogTitle>
+              </DialogHeader>
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Team tournament creation wizard coming soon!</p>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
