@@ -733,7 +733,7 @@ export default function TournamentAdminDashboard() {
 
       {/* Tournament Creation Form Dialog */}
       <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto p-4">
           <DialogHeader>
             <DialogTitle>
               Create {createTournamentType === 'single' ? 'Single' : 
@@ -824,7 +824,7 @@ export default function TournamentAdminDashboard() {
               {formStep === 2 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Venue & Schedule Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="venueAddress">Venue Address</Label>
                       <Input 
@@ -832,6 +832,7 @@ export default function TournamentAdminDashboard() {
                         placeholder="Full venue address"
                         value={formData.venueAddress}
                         onChange={(e) => setFormData({...formData, venueAddress: e.target.value})}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -842,10 +843,11 @@ export default function TournamentAdminDashboard() {
                         placeholder="4"
                         value={formData.numberOfCourts}
                         onChange={(e) => setFormData({...formData, numberOfCourts: parseInt(e.target.value) || 4})}
+                        className="w-full"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="courtSurface">Court Surface</Label>
                       <Select value={formData.courtSurface} onValueChange={(value) => setFormData({...formData, courtSurface: value})}>
