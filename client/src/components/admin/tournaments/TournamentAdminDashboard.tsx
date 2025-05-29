@@ -501,13 +501,13 @@ export default function TournamentAdminDashboard() {
           </div>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Tournament
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Tournament
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Choose Tournament Type</DialogTitle>
               <DialogDescription>
@@ -1458,6 +1458,9 @@ export default function TournamentAdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
