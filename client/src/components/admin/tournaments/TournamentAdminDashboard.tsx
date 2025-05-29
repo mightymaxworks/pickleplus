@@ -808,84 +808,67 @@ export default function TournamentAdminDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="venue">Venue</Label>
+                      <Label htmlFor="location">Location</Label>
                       <Input 
-                        id="venue" 
-                        placeholder="Tournament venue"
-                        value={formData.venue}
-                        onChange={(e) => setFormData({...formData, venue: e.target.value})}
+                        id="location" 
+                        placeholder="City, State/Province"
+                        value={formData.location}
+                        onChange={(e) => setFormData({...formData, location: e.target.value})}
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Tournament Details */}
+              {/* Step 2: Venue & Dates */}
               {formStep === 2 && (
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Venue & Schedule Details</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="format">Tournament Format</Label>
-                      <Select value={formData.format} onValueChange={(value) => setFormData({...formData, format: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select format" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="elimination">Single Elimination</SelectItem>
-                          <SelectItem value="double-elimination">Double Elimination</SelectItem>
-                          <SelectItem value="round-robin">Round Robin</SelectItem>
-                          <SelectItem value="swiss">Swiss System</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="singles">Singles</SelectItem>
-                          <SelectItem value="doubles">Doubles</SelectItem>
-                          <SelectItem value="mixed">Mixed Doubles</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="division">Age Division</Label>
-                      <Select value={formData.division} onValueChange={(value) => setFormData({...formData, division: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select division" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="open">Open (19+)</SelectItem>
-                          <SelectItem value="35plus">35+</SelectItem>
-                          <SelectItem value="50plus">50+</SelectItem>
-                          <SelectItem value="65plus">65+</SelectItem>
-                          <SelectItem value="junior">Junior (18 & Under)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="maxParticipants">Max Participants</Label>
+                      <Label htmlFor="venueAddress">Venue Address</Label>
                       <Input 
-                        id="maxParticipants" 
+                        id="venueAddress" 
+                        placeholder="Full venue address"
+                        value={formData.venueAddress}
+                        onChange={(e) => setFormData({...formData, venueAddress: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="numberOfCourts">Number of Courts</Label>
+                      <Input 
+                        id="numberOfCourts" 
                         type="number"
-                        placeholder="32"
-                        value={formData.maxParticipants}
-                        onChange={(e) => setFormData({...formData, maxParticipants: e.target.value})}
+                        placeholder="4"
+                        value={formData.numberOfCourts}
+                        onChange={(e) => setFormData({...formData, numberOfCourts: parseInt(e.target.value) || 4})}
                       />
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Step 3: Schedule & Settings */}
-              {formStep === 3 && (
-                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="courtSurface">Court Surface</Label>
+                      <Select value={formData.courtSurface} onValueChange={(value) => setFormData({...formData, courtSurface: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select surface" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="indoor">Indoor</SelectItem>
+                          <SelectItem value="outdoor">Outdoor</SelectItem>
+                          <SelectItem value="covered">Covered Outdoor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="checkInTime">Check-in Time</Label>
+                      <Input 
+                        id="checkInTime" 
+                        type="time"
+                        value={formData.checkInTime}
+                        onChange={(e) => setFormData({...formData, checkInTime: e.target.value})}
+                      />
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="startDate">Start Date</Label>
@@ -906,30 +889,372 @@ export default function TournamentAdminDashboard() {
                       />
                     </div>
                   </div>
-                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="registrationStartDate">Registration Opens</Label>
+                      <Input 
+                        id="registrationStartDate" 
+                        type="date"
+                        value={formData.registrationStartDate}
+                        onChange={(e) => setFormData({...formData, registrationStartDate: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="registrationEndDate">Registration Closes</Label>
+                      <Input 
+                        id="registrationEndDate" 
+                        type="date"
+                        value={formData.registrationEndDate}
+                        onChange={(e) => setFormData({...formData, registrationEndDate: e.target.value})}
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="registrationDeadline">Registration Deadline</Label>
+                    <Label htmlFor="parkingInfo">Parking Information</Label>
                     <Input 
-                      id="registrationDeadline" 
-                      type="date"
-                      value={formData.registrationDeadline}
-                      onChange={(e) => setFormData({...formData, registrationDeadline: e.target.value})}
+                      id="parkingInfo" 
+                      placeholder="Parking details and instructions"
+                      value={formData.parkingInfo}
+                      onChange={(e) => setFormData({...formData, parkingInfo: e.target.value})}
                     />
                   </div>
-                  
-                  {/* Summary */}
-                  <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                    <h4 className="font-medium mb-2">Tournament Summary</h4>
-                    <div className="text-sm space-y-1">
-                      <p><span className="font-medium">Name:</span> {formData.name || 'Not specified'}</p>
-                      <p><span className="font-medium">Level:</span> {formData.level || 'Not specified'}</p>
-                      <p><span className="font-medium">Format:</span> {formData.format || 'Not specified'}</p>
-                      <p><span className="font-medium">Category:</span> {formData.category || 'Not specified'}</p>
-                      <p><span className="font-medium">Division:</span> {formData.division || 'Not specified'}</p>
+                </div>
+              )}
+
+              {/* Step 3: Tournament Structure */}
+              {formStep === 3 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Tournament Structure</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="format">Format</Label>
+                      <Select value={formData.format} onValueChange={(value) => setFormData({...formData, format: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="single_elimination">Single Elimination</SelectItem>
+                          <SelectItem value="double_elimination">Double Elimination</SelectItem>
+                          <SelectItem value="round_robin">Round Robin</SelectItem>
+                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mens_singles">Men's Singles</SelectItem>
+                          <SelectItem value="womens_singles">Women's Singles</SelectItem>
+                          <SelectItem value="mens_doubles">Men's Doubles</SelectItem>
+                          <SelectItem value="womens_doubles">Women's Doubles</SelectItem>
+                          <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="division">Division</Label>
+                      <Select value={formData.division} onValueChange={(value) => setFormData({...formData, division: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select division" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="35+">35+</SelectItem>
+                          <SelectItem value="50+">50+</SelectItem>
+                          <SelectItem value="65+">65+</SelectItem>
+                          <SelectItem value="junior">Junior (19 & Under)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="seedingMethod">Seeding Method</Label>
+                      <Select value={formData.seedingMethod} onValueChange={(value) => setFormData({...formData, seedingMethod: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select seeding method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ranking">Ranking Points</SelectItem>
+                          <SelectItem value="rating">DUPR Rating</SelectItem>
+                          <SelectItem value="random">Random</SelectItem>
+                          <SelectItem value="manual">Manual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxParticipants">Max Participants</Label>
+                      <Input 
+                        id="maxParticipants" 
+                        type="number"
+                        placeholder="32"
+                        value={formData.maxParticipants}
+                        onChange={(e) => setFormData({...formData, maxParticipants: parseInt(e.target.value) || 32})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="minParticipants">Min Participants</Label>
+                      <Input 
+                        id="minParticipants" 
+                        type="number"
+                        placeholder="8"
+                        value={formData.minParticipants}
+                        onChange={(e) => setFormData({...formData, minParticipants: parseInt(e.target.value) || 8})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="waitlistCapacity">Waitlist Capacity</Label>
+                      <Input 
+                        id="waitlistCapacity" 
+                        type="number"
+                        placeholder="16"
+                        value={formData.waitlistCapacity}
+                        onChange={(e) => setFormData({...formData, waitlistCapacity: parseInt(e.target.value) || 16})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="scoringFormat">Scoring Format</Label>
+                      <Select value={formData.scoringFormat} onValueChange={(value) => setFormData({...formData, scoringFormat: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select scoring format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="best_of_3">Best of 3 games (11 points)</SelectItem>
+                          <SelectItem value="best_of_5">Best of 5 games (11 points)</SelectItem>
+                          <SelectItem value="rally_scoring">Rally scoring to 15</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center space-x-2 pt-6">
+                      <input 
+                        type="checkbox" 
+                        id="consolationBracket"
+                        checked={formData.consolationBracket}
+                        onChange={(e) => setFormData({...formData, consolationBracket: e.target.checked})}
+                        className="rounded"
+                      />
+                      <Label htmlFor="consolationBracket">Include Consolation Bracket</Label>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Step 4: Financial & Rules */}
+              {formStep === 4 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Financial & Policies</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="entryFee">Entry Fee ($)</Label>
+                      <Input 
+                        id="entryFee" 
+                        type="number"
+                        step="0.01"
+                        placeholder="75.00"
+                        value={formData.entryFee}
+                        onChange={(e) => setFormData({...formData, entryFee: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prizePool">Prize Pool ($)</Label>
+                      <Input 
+                        id="prizePool" 
+                        type="number"
+                        step="0.01"
+                        placeholder="1000.00"
+                        value={formData.prizePool}
+                        onChange={(e) => setFormData({...formData, prizePool: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="lateRegistrationFee">Late Registration Fee ($)</Label>
+                      <Input 
+                        id="lateRegistrationFee" 
+                        type="number"
+                        step="0.01"
+                        placeholder="10.00"
+                        value={formData.lateRegistrationFee}
+                        onChange={(e) => setFormData({...formData, lateRegistrationFee: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 pt-6">
+                      <input 
+                        type="checkbox" 
+                        id="allowLateRegistration"
+                        checked={formData.allowLateRegistration}
+                        onChange={(e) => setFormData({...formData, allowLateRegistration: e.target.checked})}
+                        className="rounded"
+                      />
+                      <Label htmlFor="allowLateRegistration">Allow Late Registration</Label>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="refundPolicy">Refund Policy</Label>
+                    <textarea 
+                      id="refundPolicy" 
+                      placeholder="Full refund until 7 days before tournament..."
+                      value={formData.refundPolicy}
+                      onChange={(e) => setFormData({...formData, refundPolicy: e.target.value})}
+                      className="w-full p-2 border rounded-md h-20 resize-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="equipmentReq">Equipment Requirements</Label>
+                    <Input 
+                      id="equipmentReq" 
+                      placeholder="Approved paddle list, dress code, etc."
+                      value={formData.equipmentReq}
+                      onChange={(e) => setFormData({...formData, equipmentReq: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weatherPolicy">Weather Policy</Label>
+                    <Input 
+                      id="weatherPolicy" 
+                      placeholder="Rain delay procedures, cancellation policy"
+                      value={formData.weatherPolicy}
+                      onChange={(e) => setFormData({...formData, weatherPolicy: e.target.value})}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Management & Details */}
+              {formStep === 5 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Tournament Management</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="organizer">Tournament Organizer</Label>
+                      <Input 
+                        id="organizer" 
+                        placeholder="Organization or individual name"
+                        value={formData.organizer}
+                        onChange={(e) => setFormData({...formData, organizer: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tournamentDirector">Tournament Director</Label>
+                      <Input 
+                        id="tournamentDirector" 
+                        placeholder="Director name"
+                        value={formData.tournamentDirector}
+                        onChange={(e) => setFormData({...formData, tournamentDirector: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="contactEmail">Contact Email</Label>
+                      <Input 
+                        id="contactEmail" 
+                        type="email"
+                        placeholder="tournament@example.com"
+                        value={formData.contactEmail}
+                        onChange={(e) => setFormData({...formData, contactEmail: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contactPhone">Contact Phone</Label>
+                      <Input 
+                        id="contactPhone" 
+                        type="tel"
+                        placeholder="(555) 123-4567"
+                        value={formData.contactPhone}
+                        onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="warmupTime">Warmup Time (min)</Label>
+                      <Input 
+                        id="warmupTime" 
+                        type="number"
+                        placeholder="5"
+                        value={formData.warmupTime}
+                        onChange={(e) => setFormData({...formData, warmupTime: parseInt(e.target.value) || 5})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="breakTimeBetweenMatches">Break Between Matches (min)</Label>
+                      <Input 
+                        id="breakTimeBetweenMatches" 
+                        type="number"
+                        placeholder="10"
+                        value={formData.breakTimeBetweenMatches}
+                        onChange={(e) => setFormData({...formData, breakTimeBetweenMatches: parseInt(e.target.value) || 10})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="timeLimit">Time Limit (min, optional)</Label>
+                      <Input 
+                        id="timeLimit" 
+                        type="number"
+                        placeholder="60"
+                        value={formData.timeLimit}
+                        onChange={(e) => setFormData({...formData, timeLimit: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="awards">Awards & Recognition</Label>
+                    <Input 
+                      id="awards" 
+                      placeholder="Trophies, medals, prizes description"
+                      value={formData.awards}
+                      onChange={(e) => setFormData({...formData, awards: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id="liveStreaming"
+                        checked={formData.liveStreaming}
+                        onChange={(e) => setFormData({...formData, liveStreaming: e.target.checked})}
+                        className="rounded"
+                      />
+                      <Label htmlFor="liveStreaming">Live Streaming Available</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id="featuredMatches"
+                        checked={formData.featuredMatches}
+                        onChange={(e) => setFormData({...formData, featuredMatches: e.target.checked})}
+                        className="rounded"
+                      />
+                      <Label htmlFor="featuredMatches">Featured Match Coverage</Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tournament Summary - shown on all steps */}
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">Tournament Summary</h4>
+                <div className="text-sm space-y-1">
+                  <p><span className="font-medium">Name:</span> {formData.name || 'Not specified'}</p>
+                  <p><span className="font-medium">Level:</span> {formData.level || 'Not specified'}</p>
+                  <p><span className="font-medium">Location:</span> {formData.location || 'Not specified'}</p>
+                  <p><span className="font-medium">Format:</span> {formData.format || 'Not specified'}</p>
+                  <p><span className="font-medium">Category:</span> {formData.category || 'Not specified'}</p>
+                  <p><span className="font-medium">Division:</span> {formData.division || 'Not specified'}</p>
+                  <p><span className="font-medium">Entry Fee:</span> ${formData.entryFee || 0}</p>
+                </div>
+              </div>
               
               {/* Navigation Buttons */}
               <div className="flex justify-between pt-4 border-t">
@@ -945,33 +1270,62 @@ export default function TournamentAdminDashboard() {
                     setIsCreateFormOpen(false);
                     setFormStep(1);
                     setFormData({
-                      name: '', description: '', level: '', format: '', category: '', 
-                      division: '', startDate: '', endDate: '', venue: '', maxParticipants: '', registrationDeadline: ''
+                      // Basic Information
+                      name: '', description: '', level: '', status: 'upcoming',
+                      // Venue Details
+                      location: '', venueAddress: '', numberOfCourts: 4, courtSurface: 'indoor', parkingInfo: '',
+                      // Date & Time
+                      startDate: '', endDate: '', registrationStartDate: '', registrationEndDate: '', checkInTime: '08:00',
+                      // Participants & Registration
+                      maxParticipants: 32, minParticipants: 8, waitlistCapacity: 16, allowLateRegistration: false, lateRegistrationFee: 0,
+                      // Tournament Structure
+                      format: '', category: '', division: '', seedingMethod: 'ranking', scoringFormat: 'best_of_3', consolationBracket: false,
+                      // Eligibility & Requirements
+                      minRating: '', maxRating: '', ageRestrictions: '', skillLevelReq: '', equipmentReq: '', dressCode: '',
+                      // Financial
+                      entryFee: 0, prizePool: 0, prizeDistribution: '', refundPolicy: '', refundDeadline: '',
+                      // Rules & Policies
+                      withdrawalPolicy: '', codeOfConduct: '', weatherPolicy: '',
+                      // Tournament Management
+                      organizer: '', tournamentDirector: '', contactEmail: '', contactPhone: '',
+                      // Match Settings
+                      warmupTime: 5, breakTimeBetweenMatches: 10, timeLimit: '',
+                      // Event Details
+                      awards: '', ceremonytTime: '', liveStreaming: false, featuredMatches: false
                     });
                   }}>
                     Cancel
                   </Button>
-                  {formStep < 3 ? (
+                  {formStep < 5 ? (
                     <Button onClick={() => setFormStep(formStep + 1)}>
                       Next
                     </Button>
                   ) : (
                     <Button 
                       onClick={() => {
-                        // Prepare tournament data for database
+                        // Prepare comprehensive tournament data for database
                         const tournamentData = {
                           name: formData.name,
                           description: formData.description || '',
-                          location: formData.venue || '',
+                          location: formData.location || '',
                           level: formData.level,
                           format: formData.format,
                           category: formData.category,
                           division: formData.division,
                           startDate: new Date(formData.startDate),
                           endDate: new Date(formData.endDate),
-                          registrationEndDate: formData.registrationDeadline ? new Date(formData.registrationDeadline) : null,
-                          maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
-                          status: 'upcoming'
+                          registrationEndDate: formData.registrationEndDate ? new Date(formData.registrationEndDate) : null,
+                          maxParticipants: formData.maxParticipants || 32,
+                          status: 'upcoming',
+                          // Additional comprehensive fields
+                          venueAddress: formData.venueAddress || '',
+                          numberOfCourts: formData.numberOfCourts || 4,
+                          courtSurface: formData.courtSurface || 'indoor',
+                          entryFee: formData.entryFee || 0,
+                          prizePool: formData.prizePool || 0,
+                          organizer: formData.organizer || '',
+                          contactEmail: formData.contactEmail || '',
+                          contactPhone: formData.contactPhone || ''
                         };
                         
                         // Submit to database
