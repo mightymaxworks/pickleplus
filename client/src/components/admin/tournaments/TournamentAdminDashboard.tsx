@@ -1248,17 +1248,72 @@ export default function TournamentAdminDashboard() {
                 </div>
               )}
 
-              {/* Tournament Summary - shown on all steps */}
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-medium mb-2">Tournament Summary</h4>
-                <div className="text-sm space-y-1">
-                  <p><span className="font-medium">Name:</span> {formData.name || 'Not specified'}</p>
-                  <p><span className="font-medium">Level:</span> {formData.level || 'Not specified'}</p>
-                  <p><span className="font-medium">Location:</span> {formData.location || 'Not specified'}</p>
-                  <p><span className="font-medium">Format:</span> {formData.format || 'Not specified'}</p>
-                  <p><span className="font-medium">Category:</span> {formData.category || 'Not specified'}</p>
-                  <p><span className="font-medium">Division:</span> {formData.division || 'Not specified'}</p>
-                  <p><span className="font-medium">Entry Fee:</span> ${formData.entryFee || 0}</p>
+              {/* Enhanced Tournament Summary - Testing Mode */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-semibold mb-3 text-blue-900 flex items-center">
+                  📊 Complete Tournament Data Preview (Testing Mode)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+                  {/* Basic Information */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2">Basic Information</div>
+                  <div><strong>Name:</strong> {formData.name || 'Not set'}</div>
+                  <div><strong>Level:</strong> {formData.level || 'Not set'}</div>
+                  <div><strong>Status:</strong> {formData.status || 'Not set'}</div>
+                  <div><strong>Format:</strong> {formData.format || 'Not set'}</div>
+                  <div><strong>Category:</strong> {formData.category || 'Not set'}</div>
+                  <div><strong>Division:</strong> {formData.division || 'Not set'}</div>
+                  
+                  {/* Venue & Location */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Venue & Location</div>
+                  <div><strong>Location:</strong> {formData.location || 'Not set'}</div>
+                  <div><strong>Venue Address:</strong> {formData.venueAddress || 'Not set'}</div>
+                  <div><strong>Courts:</strong> {formData.numberOfCourts || 'Not set'}</div>
+                  <div><strong>Surface:</strong> {formData.courtSurface || 'Not set'}</div>
+                  <div><strong>Parking:</strong> {formData.parkingInfo || 'Not set'}</div>
+                  
+                  {/* Dates & Times */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Dates & Times</div>
+                  <div><strong>Start Date:</strong> {formData.startDate || 'Not set'}</div>
+                  <div><strong>End Date:</strong> {formData.endDate || 'Not set'}</div>
+                  <div><strong>Registration Opens:</strong> {formData.registrationStartDate || 'Not set'}</div>
+                  <div><strong>Registration Closes:</strong> {formData.registrationEndDate || 'Not set'}</div>
+                  <div><strong>Check-in Time:</strong> {formData.checkInTime || 'Not set'}</div>
+                  
+                  {/* Participants & Structure */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Tournament Structure</div>
+                  <div><strong>Max Participants:</strong> {formData.maxParticipants || 'Not set'}</div>
+                  <div><strong>Min Participants:</strong> {formData.minParticipants || 'Not set'}</div>
+                  <div><strong>Seeding Method:</strong> {formData.seedingMethod || 'Not set'}</div>
+                  <div><strong>Scoring Format:</strong> {formData.scoringFormat || 'Not set'}</div>
+                  <div><strong>Consolation Bracket:</strong> {formData.consolationBracket ? 'Yes' : 'No'}</div>
+                  
+                  {/* Financial */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Financial</div>
+                  <div><strong>Entry Fee:</strong> ${formData.entryFee || '0'}</div>
+                  <div><strong>Prize Pool:</strong> ${formData.prizePool || '0'}</div>
+                  <div><strong>Late Reg Fee:</strong> ${formData.lateRegistrationFee || '0'}</div>
+                  <div><strong>Prize Distribution:</strong> {formData.prizeDistribution || 'Not set'}</div>
+                  <div><strong>Refund Policy:</strong> {formData.refundPolicy || 'Not set'}</div>
+                  
+                  {/* Management */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Tournament Management</div>
+                  <div><strong>Organizer:</strong> {formData.organizer || 'Not set'}</div>
+                  <div><strong>Tournament Director:</strong> {formData.tournamentDirector || 'Not set'}</div>
+                  <div><strong>Contact Email:</strong> {formData.contactEmail || 'Not set'}</div>
+                  <div><strong>Contact Phone:</strong> {formData.contactPhone || 'Not set'}</div>
+                  
+                  {/* Match Settings */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Match Settings</div>
+                  <div><strong>Warmup Time:</strong> {formData.warmupTime || 'Not set'} min</div>
+                  <div><strong>Break Between Matches:</strong> {formData.breakTimeBetweenMatches || 'Not set'} min</div>
+                  <div><strong>Time Limit:</strong> {formData.timeLimit || 'Not set'}</div>
+                  
+                  {/* Special Features */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Special Features</div>
+                  <div><strong>Live Streaming:</strong> {formData.liveStreaming ? 'Yes' : 'No'}</div>
+                  <div><strong>Featured Matches:</strong> {formData.featuredMatches ? 'Yes' : 'No'}</div>
+                  <div><strong>Equipment Provided:</strong> {formData.equipmentProvided ? 'Yes' : 'No'}</div>
+                  <div><strong>Awards:</strong> {formData.awards || 'Not set'}</div>
                 </div>
               </div>
               
