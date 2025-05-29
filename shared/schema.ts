@@ -1010,7 +1010,10 @@ export const insertUserSchema = createInsertSchema(users)
 export const insertTournamentSchema = createInsertSchema(tournaments)
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
-    level: z.enum(['club', 'district', 'city', 'provincial', 'national', 'regional', 'international']).default('club')
+    level: z.enum(['club', 'district', 'city', 'provincial', 'national', 'regional', 'international']).default('club'),
+    startDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val),
+    endDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val),
+    registrationEndDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val).optional(),
   });
 
 export const insertTournamentRegistrationSchema = createInsertSchema(tournamentRegistrations)

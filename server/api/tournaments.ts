@@ -125,15 +125,7 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
   try {
     console.log('Tournament creation request body:', req.body);
     
-    // Simple date conversion - convert string dates to Date objects
-    const processedData = {
-      ...req.body,
-      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
-      endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
-      registrationEndDate: req.body.registrationEndDate ? new Date(req.body.registrationEndDate) : undefined,
-    };
-    
-    const validated = insertTournamentSchema.safeParse(processedData);
+    const validated = insertTournamentSchema.safeParse(req.body);
     
     if (!validated.success) {
       console.log('Validation errors:', validated.error.format());

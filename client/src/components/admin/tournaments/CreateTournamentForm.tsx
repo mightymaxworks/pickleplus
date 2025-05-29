@@ -138,7 +138,7 @@ export default function CreateTournamentForm({ onSuccess, onCancel }: CreateTour
 
   const levelMultipliers = {
     club: '1.0x points',
-    district: '1.1x points',
+    district: '1.1x points', 
     city: '1.2x points',
     provincial: '1.5x points',
     national: '1.8x points',

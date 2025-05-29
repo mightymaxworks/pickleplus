@@ -238,13 +238,13 @@ export default function TournamentCreationForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="club">Club (1.2x)</SelectItem>
-                            <SelectItem value="district">District (1.5x)</SelectItem>
-                            <SelectItem value="city">City (1.8x)</SelectItem>
-                            <SelectItem value="provincial">Provincial (2.0x)</SelectItem>
-                            <SelectItem value="national">National (2.5x)</SelectItem>
-                            <SelectItem value="regional">Regional (3.0x)</SelectItem>
-                            <SelectItem value="international">International (4.0x)</SelectItem>
+                            <SelectItem value="club">Club (1.0x)</SelectItem>
+                            <SelectItem value="district">District (1.1x)</SelectItem>
+                            <SelectItem value="city">City (1.2x)</SelectItem>
+                            <SelectItem value="provincial">Provincial (1.5x)</SelectItem>
+                            <SelectItem value="national">National (1.8x)</SelectItem>
+                            <SelectItem value="regional">Regional (2.2x)</SelectItem>
+                            <SelectItem value="international">International (3.0x)</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
