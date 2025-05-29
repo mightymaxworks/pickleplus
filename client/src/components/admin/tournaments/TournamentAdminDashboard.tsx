@@ -30,6 +30,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+// Import tournament creation forms
+import CreateTournamentForm from './CreateTournamentForm';
+import CreateMultiEventTournamentForm from './CreateMultiEventTournamentForm';
+
 // Tournament interfaces
 interface Tournament {
   id: number;
@@ -555,6 +559,50 @@ export default function TournamentAdminDashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Tournament Creation Form Dialog */}
+        <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                Create {createTournamentType === 'single' ? 'Individual' : 
+                        createTournamentType === 'multi-event' ? 'Multi-Event' : 'Team'} Tournament
+              </DialogTitle>
+              <DialogDescription>
+                Fill out the form below to create your tournament
+              </DialogDescription>
+            </DialogHeader>
+            
+            {createTournamentType === 'single' && (
+              <CreateTournamentForm 
+                onSuccess={() => {
+                  setIsCreateFormOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+                }}
+                onCancel={() => setIsCreateFormOpen(false)}
+              />
+            )}
+            
+            {createTournamentType === 'multi-event' && (
+              <CreateMultiEventTournamentForm 
+                onSuccess={() => {
+                  setIsCreateFormOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+                }}
+                onCancel={() => setIsCreateFormOpen(false)}
+              />
+            )}
+            
+            {createTournamentType === 'team' && (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Team tournament creation wizard coming soon!</p>
+                <Button variant="outline" onClick={() => setIsCreateFormOpen(false)} className="mt-4">
+                  Close
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
