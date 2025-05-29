@@ -570,9 +570,9 @@ export default function TournamentAdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TooltipProvider>
           <TabsList className="grid w-full grid-cols-4">
             <Tooltip>
