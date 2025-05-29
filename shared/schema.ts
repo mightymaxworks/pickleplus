@@ -630,22 +630,78 @@ export const tournaments = pgTable("tournaments", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   location: varchar("location", { length: 255 }),
+  
+  // Venue Details
+  venueAddress: text("venue_address"),
+  numberOfCourts: integer("number_of_courts"),
+  courtSurface: varchar("court_surface", { length: 50 }).default("indoor"), // indoor, outdoor, hard, clay
+  venueAmenities: text("venue_amenities").array(),
+  parkingInfo: text("parking_info"),
+  
+  // Date & Time
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   registrationStartDate: timestamp("registration_start_date"),
   registrationEndDate: timestamp("registration_end_date"),
+  checkInTime: varchar("check_in_time", { length: 20 }),
+  
+  // Participants & Registration
   maxParticipants: integer("max_participants"),
+  minParticipants: integer("min_participants"),
   currentParticipants: integer("current_participants").default(0),
+  waitlistCapacity: integer("waitlist_capacity"),
+  allowLateRegistration: boolean("allow_late_registration").default(false),
+  lateRegistrationFee: integer("late_registration_fee"),
+  
+  // Tournament Structure
   format: varchar("format", { length: 50 }).notNull(),
   division: varchar("division", { length: 50 }).notNull(), // Age division (e.g., open, 35+, 50+, etc.)
   category: varchar("category", { length: 50 }).default("singles"), // Type of play (singles, doubles, mixed)
+  seedingMethod: varchar("seeding_method", { length: 50 }).default("ranking"), // ranking, random, manual
+  scoringFormat: varchar("scoring_format", { length: 50 }).default("best_of_3"), // best_of_3, race_to_11, etc.
+  consolationBracket: boolean("consolation_bracket").default(false),
+  
+  // Eligibility & Requirements
   minRating: integer("min_rating"),
   maxRating: integer("max_rating"),
+  ageRestrictions: text("age_restrictions"),
+  skillLevelReq: varchar("skill_level_req", { length: 100 }),
+  equipmentReq: text("equipment_req"),
+  dressCode: text("dress_code"),
+  
+  // Financial
   entryFee: integer("entry_fee"),
   prizePool: integer("prize_pool"),
+  prizeDistribution: text("prize_distribution"),
+  paymentMethods: text("payment_methods").array(),
+  refundPolicy: text("refund_policy"),
+  refundDeadline: timestamp("refund_deadline"),
+  
+  // Rules & Policies
+  withdrawalPolicy: text("withdrawal_policy"),
+  withdrawalDeadline: timestamp("withdrawal_deadline"),
+  codeOfConduct: text("code_of_conduct"),
+  weatherPolicy: text("weather_policy"),
+  
+  // Tournament Management
   status: varchar("status", { length: 50 }).notNull().default("upcoming"),
   level: varchar("level", { length: 50 }).notNull().default("club"), // club, district, city, provincial, national, regional, international
   organizer: varchar("organizer", { length: 255 }),
+  tournamentDirector: varchar("tournament_director", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  
+  // Match Settings
+  warmupTime: integer("warmup_time").default(5), // minutes
+  breakTimeBetweenMatches: integer("break_time_between_matches").default(10), // minutes
+  timeLimit: integer("time_limit"), // minutes per match if applicable
+  
+  // Event Details
+  awards: text("awards"),
+  ceremonytTime: varchar("ceremony_time", { length: 20 }),
+  liveStreaming: boolean("live_streaming").default(false),
+  featuredMatches: boolean("featured_matches").default(false),
+  
   // Parent-child relationship for multi-event tournaments
   parentTournamentId: integer("parent_tournament_id"), // Will be linked in relations
   isParent: boolean("is_parent").default(false), // Indicates if this is a parent tournament

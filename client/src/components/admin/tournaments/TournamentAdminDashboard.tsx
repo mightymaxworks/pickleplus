@@ -90,17 +90,77 @@ export default function TournamentAdminDashboard() {
   const [createTournamentType, setCreateTournamentType] = useState<'single' | 'multi-event' | 'team'>('single');
   const [formStep, setFormStep] = useState(1);
   const [formData, setFormData] = useState({
+    // Basic Information
     name: '',
     description: '',
     level: '',
+    status: 'upcoming',
+    
+    // Venue Details
+    location: '',
+    venueAddress: '',
+    numberOfCourts: 4,
+    courtSurface: 'indoor',
+    parkingInfo: '',
+    
+    // Date & Time
+    startDate: '',
+    endDate: '',
+    registrationStartDate: '',
+    registrationEndDate: '',
+    checkInTime: '08:00',
+    
+    // Participants & Registration
+    maxParticipants: 32,
+    minParticipants: 8,
+    waitlistCapacity: 16,
+    allowLateRegistration: false,
+    lateRegistrationFee: 0,
+    
+    // Tournament Structure
     format: '',
     category: '',
     division: '',
-    startDate: '',
-    endDate: '',
-    venue: '',
-    maxParticipants: '',
-    registrationDeadline: ''
+    seedingMethod: 'ranking',
+    scoringFormat: 'best_of_3',
+    consolationBracket: false,
+    
+    // Eligibility & Requirements
+    minRating: '',
+    maxRating: '',
+    ageRestrictions: '',
+    skillLevelReq: '',
+    equipmentReq: '',
+    dressCode: '',
+    
+    // Financial
+    entryFee: 0,
+    prizePool: 0,
+    prizeDistribution: '',
+    refundPolicy: '',
+    refundDeadline: '',
+    
+    // Rules & Policies
+    withdrawalPolicy: '',
+    codeOfConduct: '',
+    weatherPolicy: '',
+    
+    // Tournament Management
+    organizer: '',
+    tournamentDirector: '',
+    contactEmail: '',
+    contactPhone: '',
+    
+    // Match Settings
+    warmupTime: 5,
+    breakTimeBetweenMatches: 10,
+    timeLimit: '',
+    
+    // Event Details
+    awards: '',
+    ceremonytTime: '',
+    liveStreaming: false,
+    featuredMatches: false
   });
   
   // Fetch tournaments
@@ -124,8 +184,28 @@ export default function TournamentAdminDashboard() {
       setIsCreateFormOpen(false);
       setFormStep(1);
       setFormData({
-        name: '', description: '', level: '', format: '', category: '', 
-        division: '', startDate: '', endDate: '', venue: '', maxParticipants: '', registrationDeadline: ''
+        // Basic Information
+        name: '', description: '', level: '', status: 'upcoming',
+        // Venue Details
+        location: '', venueAddress: '', numberOfCourts: 4, courtSurface: 'indoor', parkingInfo: '',
+        // Date & Time
+        startDate: '', endDate: '', registrationStartDate: '', registrationEndDate: '', checkInTime: '08:00',
+        // Participants & Registration
+        maxParticipants: 32, minParticipants: 8, waitlistCapacity: 16, allowLateRegistration: false, lateRegistrationFee: 0,
+        // Tournament Structure
+        format: '', category: '', division: '', seedingMethod: 'ranking', scoringFormat: 'best_of_3', consolationBracket: false,
+        // Eligibility & Requirements
+        minRating: '', maxRating: '', ageRestrictions: '', skillLevelReq: '', equipmentReq: '', dressCode: '',
+        // Financial
+        entryFee: 0, prizePool: 0, prizeDistribution: '', refundPolicy: '', refundDeadline: '',
+        // Rules & Policies
+        withdrawalPolicy: '', codeOfConduct: '', weatherPolicy: '',
+        // Tournament Management
+        organizer: '', tournamentDirector: '', contactEmail: '', contactPhone: '',
+        // Match Settings
+        warmupTime: 5, breakTimeBetweenMatches: 10, timeLimit: '',
+        // Event Details
+        awards: '', ceremonytTime: '', liveStreaming: false, featuredMatches: false
       });
       toast({
         title: "Tournament Created",
@@ -668,7 +748,7 @@ export default function TournamentAdminDashboard() {
             <div className="space-y-6">
               {/* Progress Steps */}
               <div className="flex items-center justify-between mb-6">
-                {[1, 2, 3].map((step) => (
+                {[1, 2, 3, 4, 5].map((step) => (
                   <div key={step} className="flex items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       formStep >= step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
@@ -676,9 +756,12 @@ export default function TournamentAdminDashboard() {
                       {step}
                     </div>
                     <span className="ml-2 text-sm font-medium">
-                      {step === 1 ? 'Basic Info' : step === 2 ? 'Tournament Details' : 'Schedule & Settings'}
+                      {step === 1 ? 'Basic Info' : 
+                       step === 2 ? 'Venue & Dates' : 
+                       step === 3 ? 'Tournament Structure' : 
+                       step === 4 ? 'Financial & Rules' : 'Management & Details'}
                     </span>
-                    {step < 3 && <div className="w-12 h-px bg-muted mx-4" />}
+                    {step < 5 && <div className="w-8 h-px bg-muted mx-2" />}
                   </div>
                 ))}
               </div>
