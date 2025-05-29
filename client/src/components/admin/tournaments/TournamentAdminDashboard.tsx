@@ -21,7 +21,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { CreateTournamentWizard } from '@/core/modules/tournament/components/CreateTournamentWizard';
 import { Plus, Calendar as CalendarIcon, Users, Trophy, Settings, Trash2, Edit, Copy, Eye, BarChart3, Target, GitBranch, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
@@ -571,9 +570,9 @@ export default function TournamentAdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
-        </div>
+      </div>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TooltipProvider>
           <TabsList className="grid w-full grid-cols-4">
             <Tooltip>
@@ -1459,193 +1458,8 @@ export default function TournamentAdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
-
-        {/* Main Tabs Content */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full space-y-6">
-          <TooltipProvider>
-            <TabsList className="grid w-full grid-cols-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger value="overview" className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    <span className="hidden sm:inline">Overview</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Tournament statistics and overview</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger value="individual" className="flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    <span className="hidden sm:inline">Individual</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Single tournament management</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger value="multi-event" className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span className="hidden sm:inline">Multi-Event</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Multi-event tournament management</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger value="team" className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">Team</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Team tournament management</p>
-                </TooltipContent>
-              </Tooltip>
-            </TabsList>
-          </TooltipProvider>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Tournaments</CardTitle>
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{tournaments?.filter(t => t.isActive).length || 0}</div>
-                  <p className="text-xs text-muted-foreground">Currently running</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Tournaments</CardTitle>
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{tournaments?.length || 0}</div>
-                  <p className="text-xs text-muted-foreground">All time</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Multi-Event</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{parentTournaments?.length || 0}</div>
-                  <p className="text-xs text-muted-foreground">Complex tournaments</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Team Events</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{tournaments?.filter(t => t.isTeamTournament).length || 0}</div>
-                  <p className="text-xs text-muted-foreground">Team competitions</p>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="individual" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {tournaments && tournaments.length > 0 ? (
-                tournaments.filter(tournament => !tournament.isSubEvent && !tournament.isTeamTournament)
-                  .map((tournament) => (
-                    <TournamentCard key={tournament.id} tournament={tournament} />
-                  ))
-              ) : (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  No individual tournaments found
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="multi-event" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {parentTournaments && parentTournaments.length > 0 ? (
-                parentTournaments.map((parentTournament) => (
-                  <ParentTournamentCard key={parentTournament.id} parentTournament={parentTournament} />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  No multi-event tournaments found
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="team" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {tournaments && tournaments.length > 0 ? (
-                tournaments.filter(tournament => tournament.isTeamTournament)
-                  .map((tournament) => (
-                    <TournamentCard key={tournament.id} tournament={tournament} />
-                  ))
-              ) : (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  No team tournaments found
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Multi-Step Tournament Creation Wizard */}
-        {createTournamentType === 'single' && (
-          <CreateTournamentWizard
-            open={isCreateFormOpen}
-            onOpenChange={setIsCreateFormOpen}
-            queryKey="/api/tournaments"
-            onTournamentCreated={() => {
-              queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
-            }}
-          />
-        )}
-        
-        {/* Multi-Event Tournament Dialog */}
-        {createTournamentType === 'multi-event' && (
-          <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create Multi-Event Tournament</DialogTitle>
-              </DialogHeader>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Multi-event tournament creation wizard coming soon!</p>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-        
-        {/* Team Tournament Dialog */}
-        {createTournamentType === 'team' && (
-          <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create Team Tournament</DialogTitle>
-              </DialogHeader>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Team tournament creation wizard coming soon!</p>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );
