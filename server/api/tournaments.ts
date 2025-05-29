@@ -385,7 +385,7 @@ router.get('/tiers/all', async (req: Request, res: Response) => {
   try {
     // Return predefined tournament tiers
     const tiers = [
-      { id: 1, name: 'Club Tournament', code: 'CLUB', pointsMultiplier: 1.2, description: 'Local club level tournaments', badgeUrl: '', requiresVerification: false, active: true },
+      { id: 1, name: 'Club Tournament', code: 'CLUB', pointsMultiplier: 1.0, description: 'Local club level tournaments', badgeUrl: '', requiresVerification: false, active: true },
       { id: 2, name: 'District Tournament', code: 'DISTRICT', pointsMultiplier: 1.5, description: 'District level tournaments', badgeUrl: '', requiresVerification: false, active: true },
       { id: 3, name: 'City Tournament', code: 'CITY', pointsMultiplier: 1.8, description: 'City championship tournaments', badgeUrl: '', requiresVerification: true, active: true },
       { id: 4, name: 'Provincial Tournament', code: 'PROVINCIAL', pointsMultiplier: 2.0, description: 'Provincial level championships', badgeUrl: '', requiresVerification: true, active: true },
