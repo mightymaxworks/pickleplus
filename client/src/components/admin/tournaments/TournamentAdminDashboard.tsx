@@ -116,6 +116,7 @@ export default function TournamentAdminDashboard() {
     waitlistCapacity: 16,
     allowLateRegistration: false,
     lateRegistrationFee: 0,
+    earlyBirdFee: 0,
     
     // Tournament Structure
     format: '',
@@ -191,13 +192,13 @@ export default function TournamentAdminDashboard() {
         // Date & Time
         startDate: '', endDate: '', registrationStartDate: '', registrationEndDate: '', checkInTime: '08:00',
         // Participants & Registration
-        maxParticipants: 32, minParticipants: 8, waitlistCapacity: 16, allowLateRegistration: false, lateRegistrationFee: 0,
+        maxParticipants: 32, minParticipants: 8, waitlistCapacity: 16, allowLateRegistration: false, lateRegistrationFee: undefined,
         // Tournament Structure
         format: '', category: '', division: '', seedingMethod: 'ranking', scoringFormat: 'best_of_3', consolationBracket: false,
         // Eligibility & Requirements
         minRating: '', maxRating: '', ageRestrictions: '', skillLevelReq: '', equipmentReq: '', dressCode: '',
         // Financial
-        entryFee: 0, prizePool: 0, prizeDistribution: '', refundPolicy: '', refundDeadline: '',
+        entryFee: undefined, prizePool: undefined, earlyBirdFee: undefined, prizeDistribution: '', refundPolicy: '', refundDeadline: '',
         // Rules & Policies
         withdrawalPolicy: '', codeOfConduct: '', weatherPolicy: '',
         // Tournament Management
@@ -1072,8 +1073,8 @@ export default function TournamentAdminDashboard() {
                         type="number"
                         step="0.01"
                         placeholder="75.00"
-                        value={formData.entryFee}
-                        onChange={(e) => setFormData({...formData, entryFee: parseFloat(e.target.value) || 0})}
+                        value={formData.entryFee || ''}
+                        onChange={(e) => setFormData({...formData, entryFee: e.target.value ? parseFloat(e.target.value) : undefined})}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1083,12 +1084,23 @@ export default function TournamentAdminDashboard() {
                         type="number"
                         step="0.01"
                         placeholder="1000.00"
-                        value={formData.prizePool}
-                        onChange={(e) => setFormData({...formData, prizePool: parseFloat(e.target.value) || 0})}
+                        value={formData.prizePool || ''}
+                        onChange={(e) => setFormData({...formData, prizePool: e.target.value ? parseFloat(e.target.value) : undefined})}
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="earlyBirdFee">Early Bird Fee ($)</Label>
+                      <Input 
+                        id="earlyBirdFee" 
+                        type="number"
+                        step="0.01"
+                        placeholder="65.00"
+                        value={formData.earlyBirdFee || ''}
+                        onChange={(e) => setFormData({...formData, earlyBirdFee: e.target.value ? parseFloat(e.target.value) : undefined})}
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="lateRegistrationFee">Late Registration Fee ($)</Label>
                       <Input 
@@ -1096,8 +1108,8 @@ export default function TournamentAdminDashboard() {
                         type="number"
                         step="0.01"
                         placeholder="10.00"
-                        value={formData.lateRegistrationFee}
-                        onChange={(e) => setFormData({...formData, lateRegistrationFee: parseFloat(e.target.value) || 0})}
+                        value={formData.lateRegistrationFee || ''}
+                        onChange={(e) => setFormData({...formData, lateRegistrationFee: e.target.value ? parseFloat(e.target.value) : undefined})}
                       />
                     </div>
                     <div className="flex items-center space-x-2 pt-6">
