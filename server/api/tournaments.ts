@@ -124,7 +124,16 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
   try {
     console.log('Tournament creation request body:', req.body);
-    const validated = insertTournamentSchema.safeParse(req.body);
+    
+    // Convert date strings to Date objects
+    const processedBody = {
+      ...req.body,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+      registrationEndDate: req.body.registrationEndDate ? new Date(req.body.registrationEndDate) : undefined,
+    };
+    
+    const validated = insertTournamentSchema.safeParse(processedBody);
     
     if (!validated.success) {
       console.log('Validation errors:', validated.error.format());
