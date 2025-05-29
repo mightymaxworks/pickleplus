@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import CreateTournamentForm from "./CreateTournamentForm";
 import { Plus, Calendar as CalendarIcon, Users, Trophy, Settings, Trash2, Edit, Copy, Eye, BarChart3, Target, GitBranch, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
@@ -1618,9 +1619,13 @@ export default function TournamentAdminDashboard() {
             </DialogHeader>
             
             {createTournamentType === 'single' && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Single tournament creation form coming soon!</p>
-              </div>
+              <CreateTournamentForm 
+                onSuccess={() => {
+                  setIsCreateFormOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+                }}
+                onCancel={() => setIsCreateFormOpen(false)}
+              />
             )}
             
             {createTournamentType === 'multi-event' && (
