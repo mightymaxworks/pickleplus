@@ -1257,6 +1257,7 @@ export default function TournamentAdminDashboard() {
                   {/* Basic Information */}
                   <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2">Basic Information</div>
                   <div><strong>Name:</strong> {formData.name || 'Not set'}</div>
+                  <div><strong>Description:</strong> {formData.description || 'Not set'}</div>
                   <div><strong>Level:</strong> {formData.level || 'Not set'}</div>
                   <div><strong>Status:</strong> {formData.status || 'Not set'}</div>
                   <div><strong>Format:</strong> {formData.format || 'Not set'}</div>
@@ -1308,12 +1309,35 @@ export default function TournamentAdminDashboard() {
                   <div><strong>Break Between Matches:</strong> {formData.breakTimeBetweenMatches || 'Not set'} min</div>
                   <div><strong>Time Limit:</strong> {formData.timeLimit || 'Not set'}</div>
                   
+                  {/* Eligibility & Requirements */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Eligibility & Requirements</div>
+                  <div><strong>Min Rating:</strong> {formData.minRating || 'Not set'}</div>
+                  <div><strong>Max Rating:</strong> {formData.maxRating || 'Not set'}</div>
+                  <div><strong>Age Restrictions:</strong> {formData.ageRestrictions || 'Not set'}</div>
+                  <div><strong>Skill Level Requirement:</strong> {formData.skillLevelReq || 'Not set'}</div>
+                  <div><strong>Equipment Requirements:</strong> {formData.equipmentReq || 'Not set'}</div>
+                  <div><strong>Dress Code:</strong> {formData.dressCode || 'Not set'}</div>
+                  
+                  {/* Rules & Policies */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Rules & Policies</div>
+                  <div><strong>Withdrawal Policy:</strong> {formData.withdrawalPolicy || 'Not set'}</div>
+                  <div><strong>Code of Conduct:</strong> {formData.codeOfConduct || 'Not set'}</div>
+                  <div><strong>Weather Policy:</strong> {formData.weatherPolicy || 'Not set'}</div>
+                  <div><strong>Refund Deadline:</strong> {formData.refundDeadline || 'Not set'}</div>
+                  <div><strong>Withdrawal Deadline:</strong> {formData.withdrawalDeadline || 'Not set'}</div>
+                  
                   {/* Special Features */}
                   <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Special Features</div>
                   <div><strong>Live Streaming:</strong> {formData.liveStreaming ? 'Yes' : 'No'}</div>
                   <div><strong>Featured Matches:</strong> {formData.featuredMatches ? 'Yes' : 'No'}</div>
-                  <div><strong>Equipment Provided:</strong> {formData.equipmentProvided ? 'Yes' : 'No'}</div>
                   <div><strong>Awards:</strong> {formData.awards || 'Not set'}</div>
+                  <div><strong>Ceremony Time:</strong> {formData.ceremonytTime || 'Not set'}</div>
+                  
+                  {/* Advanced Registration */}
+                  <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Registration Options</div>
+                  <div><strong>Waitlist Capacity:</strong> {formData.waitlistCapacity || 'Not set'}</div>
+                  <div><strong>Allow Late Registration:</strong> {formData.allowLateRegistration ? 'Yes' : 'No'}</div>
+                  <div><strong>Consolation Bracket:</strong> {formData.consolationBracket ? 'Yes' : 'No'}</div>
                 </div>
               </div>
               
