@@ -124,7 +124,16 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
   try {
     console.log('Tournament creation request body:', req.body);
-    const validated = insertTournamentSchema.safeParse(req.body);
+    
+    // Simple date conversion - convert string dates to Date objects
+    const processedData = {
+      ...req.body,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+      registrationEndDate: req.body.registrationEndDate ? new Date(req.body.registrationEndDate) : undefined,
+    };
+    
+    const validated = insertTournamentSchema.safeParse(processedData);
     
     if (!validated.success) {
       console.log('Validation errors:', validated.error.format());
@@ -386,12 +395,12 @@ router.get('/tiers/all', async (req: Request, res: Response) => {
     // Return predefined tournament tiers
     const tiers = [
       { id: 1, name: 'Club Tournament', code: 'CLUB', pointsMultiplier: 1.0, description: 'Local club level tournaments', badgeUrl: '', requiresVerification: false, active: true },
-      { id: 2, name: 'District Tournament', code: 'DISTRICT', pointsMultiplier: 1.5, description: 'District level tournaments', badgeUrl: '', requiresVerification: false, active: true },
-      { id: 3, name: 'City Tournament', code: 'CITY', pointsMultiplier: 1.8, description: 'City championship tournaments', badgeUrl: '', requiresVerification: true, active: true },
-      { id: 4, name: 'Provincial Tournament', code: 'PROVINCIAL', pointsMultiplier: 2.0, description: 'Provincial level championships', badgeUrl: '', requiresVerification: true, active: true },
-      { id: 5, name: 'National Tournament', code: 'NATIONAL', pointsMultiplier: 2.5, description: 'National championships', badgeUrl: '', requiresVerification: true, active: true },
-      { id: 6, name: 'Regional Tournament', code: 'REGIONAL', pointsMultiplier: 3.0, description: 'Multi-country regional tournaments', badgeUrl: '', requiresVerification: true, active: true },
-      { id: 7, name: 'International Tournament', code: 'INTERNATIONAL', pointsMultiplier: 4.0, description: 'International championship tournaments', badgeUrl: '', requiresVerification: true, active: true }
+      { id: 2, name: 'District Tournament', code: 'DISTRICT', pointsMultiplier: 1.1, description: 'District level tournaments', badgeUrl: '', requiresVerification: false, active: true },
+      { id: 3, name: 'City Tournament', code: 'CITY', pointsMultiplier: 1.2, description: 'City championship tournaments', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 4, name: 'Provincial Tournament', code: 'PROVINCIAL', pointsMultiplier: 1.5, description: 'Provincial level championships', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 5, name: 'National Tournament', code: 'NATIONAL', pointsMultiplier: 1.8, description: 'National championships', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 6, name: 'Regional Tournament', code: 'REGIONAL', pointsMultiplier: 2.2, description: 'Multi-country regional tournaments', badgeUrl: '', requiresVerification: true, active: true },
+      { id: 7, name: 'International Tournament', code: 'INTERNATIONAL', pointsMultiplier: 3.0, description: 'International championship tournaments', badgeUrl: '', requiresVerification: true, active: true }
     ];
     res.json(tiers);
   } catch (error) {

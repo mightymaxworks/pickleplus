@@ -181,12 +181,12 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
 
   const levelMultipliers = {
     club: '1.0x points',
-    district: '1.5x points',
-    city: '1.8x points',
-    provincial: '2.0x points',
-    national: '2.5x points',
-    regional: '3.0x points',
-    international: '4.0x points'
+    district: '1.1x points',
+    city: '1.2x points',
+    provincial: '1.5x points',
+    national: '1.8x points',
+    regional: '2.2x points',
+    international: '3.0x points'
   };
 
   const nextStep = () => {
