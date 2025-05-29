@@ -680,17 +680,6 @@ export function CreateTournamentWizard({
     if (step < totalSteps - 1) {
       setStep(step + 1); // Direct approach without using prev callback
       console.log("[Tournament] Moving to step:", step + 1);
-      
-      // Scroll to top of form when advancing to next step
-      const formContainer = document.querySelector('.tournament-form-container') || 
-                           document.querySelector('[data-tournament-form]') || 
-                           document.querySelector('.space-y-6');
-      if (formContainer) {
-        formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        // Fallback: scroll to top of page
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
     } else {
       // On the final step, submit the form
       console.log("[Tournament] Submitting form from final step");
