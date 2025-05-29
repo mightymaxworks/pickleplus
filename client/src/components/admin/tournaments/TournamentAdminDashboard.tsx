@@ -871,7 +871,7 @@ export default function TournamentAdminDashboard() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="startDate">Start Date</Label>
                       <Input 
@@ -879,6 +879,7 @@ export default function TournamentAdminDashboard() {
                         type="date"
                         value={formData.startDate}
                         onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -888,10 +889,11 @@ export default function TournamentAdminDashboard() {
                         type="date"
                         value={formData.endDate}
                         onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                        className="w-full"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="registrationStartDate">Registration Opens</Label>
                       <Input 
@@ -899,6 +901,7 @@ export default function TournamentAdminDashboard() {
                         type="date"
                         value={formData.registrationStartDate}
                         onChange={(e) => setFormData({...formData, registrationStartDate: e.target.value})}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -908,6 +911,7 @@ export default function TournamentAdminDashboard() {
                         type="date"
                         value={formData.registrationEndDate}
                         onChange={(e) => setFormData({...formData, registrationEndDate: e.target.value})}
+                        className="w-full"
                       />
                     </div>
                   </div>

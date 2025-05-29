@@ -36,23 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
       offset = 0
     } = req.query;
 
-    let query = db.select({
-      id: tournaments.id,
-      name: tournaments.name,
-      description: tournaments.description,
-      location: tournaments.location,
-      level: tournaments.level,
-      format: tournaments.format,
-      category: tournaments.category,
-      division: tournaments.division,
-      startDate: tournaments.startDate,
-      endDate: tournaments.endDate,
-      registrationEndDate: tournaments.registrationEndDate,
-      maxParticipants: tournaments.maxParticipants,
-      status: tournaments.status,
-      createdAt: tournaments.createdAt,
-      updatedAt: tournaments.updatedAt
-    }).from(tournaments);
+    let query = db.select().from(tournaments);
 
     // Apply filters if provided
     if (status) {
