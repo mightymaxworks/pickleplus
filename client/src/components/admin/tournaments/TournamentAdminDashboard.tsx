@@ -490,16 +490,17 @@ export default function TournamentAdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Tournament Administration</h1>
-          <p className="text-muted-foreground">
-            Create and manage tournaments, including multi-event and team tournaments
-          </p>
-        </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="container mx-auto px-8 py-8 max-w-7xl">
+        <div className="flex items-center justify-between mb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">Tournament Administration</h1>
+            <p className="text-lg text-muted-foreground">
+              Create and manage tournaments, including multi-event and team tournaments
+            </p>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
