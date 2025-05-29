@@ -1038,9 +1038,11 @@ export default function TournamentAdminDashboard() {
                           <SelectItem value="best_of_3_traditional_11">Best of 3 Games (11 Traditional)</SelectItem>
                           <SelectItem value="best_of_5_rally_15">Best of 5 Games (15 Rally)</SelectItem>
                           <SelectItem value="best_of_5_rally_21">Best of 5 Games (21 Rally)</SelectItem>
-                          <SelectItem value="single_game_11">Single Game to 11</SelectItem>
-                          <SelectItem value="single_game_15">Single Game to 15</SelectItem>
-                          <SelectItem value="single_game_21">Single Game to 21</SelectItem>
+                          <SelectItem value="best_of_5_traditional_11">Best of 5 Games (11 Traditional)</SelectItem>
+                          <SelectItem value="single_game_11_traditional">Single Game to 11 (Traditional)</SelectItem>
+                          <SelectItem value="single_game_15_traditional">Single Game to 15 (Traditional)</SelectItem>
+                          <SelectItem value="single_game_15_rally">Single Game to 15 (Rally)</SelectItem>
+                          <SelectItem value="single_game_21_rally">Single Game to 21 (Rally)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
