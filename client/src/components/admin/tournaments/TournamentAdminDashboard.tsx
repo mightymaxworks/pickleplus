@@ -570,9 +570,9 @@ export default function TournamentAdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TooltipProvider>
           <TabsList className="grid w-full grid-cols-4">
             <Tooltip>
@@ -1458,7 +1458,33 @@ export default function TournamentAdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
-          </div>
+
+        {/* Create Tournament Form */}
+        <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Create {createTournamentType === 'single' ? 'Single' : 
+                       createTournamentType === 'multi-event' ? 'Multi-Event' : 'Team'} Tournament
+              </DialogTitle>
+            </DialogHeader>
+            {createTournamentType === 'single' && (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">Single tournament creation wizard coming soon!</p>
+              </div>
+            )}
+            {createTournamentType === 'multi-event' && (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">Multi-event tournament creation wizard coming soon!</p>
+              </div>
+            )}
+            {createTournamentType === 'team' && (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">Team tournament creation wizard coming soon!</p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
         </div>
       </div>
     </div>
