@@ -483,10 +483,26 @@ export function CreateTournamentWizard({
   // Auto-scroll to top whenever step changes
   useEffect(() => {
     if (step > 0) { // Only scroll after first step
-      const container = document.getElementById('tournament-wizard-scroll-container');
-      if (container) {
-        container.scrollTop = 0;
-      }
+      // Try multiple approaches in sequence
+      setTimeout(() => {
+        // Approach 1: Direct container scroll
+        const container = document.getElementById('tournament-wizard-scroll-container');
+        if (container) {
+          container.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        
+        // Approach 2: Force the dialog itself to scroll
+        const dialog = document.querySelector('[role="dialog"]');
+        if (dialog) {
+          dialog.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        
+        // Approach 3: Find any scrollable parent
+        const scrollable = document.querySelector('.overflow-y-auto');
+        if (scrollable) {
+          scrollable.scrollTop = 0;
+        }
+      }, 50);
     }
   }, [step]);
   const totalSteps = 3;
