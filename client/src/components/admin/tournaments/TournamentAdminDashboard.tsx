@@ -1712,6 +1712,332 @@ export default function TournamentAdminDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="scoringFormat">Individual Match Scoring</Label>
+                      <Select value={formData.scoringFormat} onValueChange={(value) => setFormData({...formData, scoringFormat: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select scoring format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="best_of_3">Best of 3</SelectItem>
+                          <SelectItem value="best_of_5">Best of 5</SelectItem>
+                          <SelectItem value="single_game">Single Game</SelectItem>
+                          <SelectItem value="rally_scoring">Rally Scoring</SelectItem>
+                          <SelectItem value="timed_matches">Timed Matches</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Eligibility Criteria */}
+              {formStep === 4 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Team Rating Limits</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Control team composition using DUPR ratings
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxTotalDUPR">Maximum Total Team DUPR</Label>
+                      <Input 
+                        id="maxTotalDUPR" 
+                        type="number"
+                        step="0.1"
+                        placeholder="20.0"
+                        value={formData.maxTotalDUPR}
+                        onChange={(e) => setFormData({...formData, maxTotalDUPR: parseFloat(e.target.value) || undefined})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="maxAverageDUPR">Maximum Average DUPR</Label>
+                      <Input 
+                        id="maxAverageDUPR" 
+                        type="number"
+                        step="0.1"
+                        placeholder="5.0"
+                        value={formData.maxAverageDUPR}
+                        onChange={(e) => setFormData({...formData, maxAverageDUPR: parseFloat(e.target.value) || undefined})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Team Ranking Points Limits</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Control team composition using ranking points
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxTotalRankingPoints">Maximum Total Ranking Points</Label>
+                      <Input 
+                        id="maxTotalRankingPoints" 
+                        type="number"
+                        placeholder="10000"
+                        value={formData.maxTotalRankingPoints}
+                        onChange={(e) => setFormData({...formData, maxTotalRankingPoints: parseInt(e.target.value) || undefined})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="minTotalRankingPoints">Minimum Total Ranking Points</Label>
+                      <Input 
+                        id="minTotalRankingPoints" 
+                        type="number"
+                        placeholder="2000"
+                        value={formData.minTotalRankingPoints}
+                        onChange={(e) => setFormData({...formData, minTotalRankingPoints: parseInt(e.target.value) || undefined})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Individual Player Requirements</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Set requirements for individual team members
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="minPlayerDUPR">Minimum Player DUPR</Label>
+                      <Input 
+                        id="minPlayerDUPR" 
+                        type="number"
+                        step="0.1"
+                        placeholder="3.5"
+                        value={formData.minPlayerDUPR}
+                        onChange={(e) => setFormData({...formData, minPlayerDUPR: parseFloat(e.target.value) || undefined})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="maxPlayerDUPR">Maximum Player DUPR</Label>
+                      <Input 
+                        id="maxPlayerDUPR" 
+                        type="number"
+                        step="0.1"
+                        placeholder="5.5"
+                        value={formData.maxPlayerDUPR}
+                        onChange={(e) => setFormData({...formData, maxPlayerDUPR: parseFloat(e.target.value) || undefined})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="minPlayerRankingPoints">Minimum Player Ranking Points</Label>
+                      <Input 
+                        id="minPlayerRankingPoints" 
+                        type="number"
+                        placeholder="300"
+                        value={formData.minPlayerRankingPoints}
+                        onChange={(e) => setFormData({...formData, minPlayerRankingPoints: parseInt(e.target.value) || undefined})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="minTournamentsPlayed">Minimum Tournaments Played</Label>
+                      <Input 
+                        id="minTournamentsPlayed" 
+                        type="number"
+                        placeholder="3"
+                        value={formData.minTournamentsPlayed}
+                        onChange={(e) => setFormData({...formData, minTournamentsPlayed: parseInt(e.target.value) || undefined})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Advanced Restrictions</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Additional eligibility requirements
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="professionalStatus">Professional Status</Label>
+                      <Select value={formData.professionalStatus} onValueChange={(value) => setFormData({...formData, professionalStatus: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status requirement" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="amateur_only">Amateur Only</SelectItem>
+                          <SelectItem value="semi_pro_allowed">Semi-Pro Allowed</SelectItem>
+                          <SelectItem value="professional_allowed">Professional Allowed</SelectItem>
+                          <SelectItem value="mixed">Mixed (Any Status)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="genderRequirements">Gender Requirements</Label>
+                      <Select value={formData.genderRequirements} onValueChange={(value) => setFormData({...formData, genderRequirements: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender requirements" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open (Any Gender)</SelectItem>
+                          <SelectItem value="mixed_required">Mixed Required</SelectItem>
+                          <SelectItem value="men_only">Men Only</SelectItem>
+                          <SelectItem value="women_only">Women Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="requireVerifiedRating"
+                      checked={formData.requireVerifiedRating}
+                      onChange={(e) => setFormData({...formData, requireVerifiedRating: e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="requireVerifiedRating">Require Verified DUPR Ratings</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="allowUnratedPlayers"
+                      checked={formData.allowUnratedPlayers}
+                      onChange={(e) => setFormData({...formData, allowUnratedPlayers: e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="allowUnratedPlayers">Allow Unrated Players</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="requireMedicalClearance"
+                      checked={formData.requireMedicalClearance}
+                      onChange={(e) => setFormData({...formData, requireMedicalClearance: e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="requireMedicalClearance">Require Medical Clearance</Label>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Financial & Rules (using existing fields) */}
+              {formStep === 5 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Financial Information</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Tournament entry fees and prize information
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="entryFee">Entry Fee per Team ($)</Label>
+                      <Input 
+                        id="entryFee" 
+                        type="number"
+                        placeholder="150"
+                        value={formData.entryFee}
+                        onChange={(e) => setFormData({...formData, entryFee: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="prizePool">Prize Pool ($)</Label>
+                      <Input 
+                        id="prizePool" 
+                        type="number"
+                        placeholder="5000"
+                        value={formData.prizePool}
+                        onChange={(e) => setFormData({...formData, prizePool: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="prizeDistribution">Prize Distribution</Label>
+                    <Textarea 
+                      id="prizeDistribution" 
+                      placeholder="1st: 40%, 2nd: 30%, 3rd: 20%, 4th: 10%"
+                      value={formData.prizeDistribution}
+                      onChange={(e) => setFormData({...formData, prizeDistribution: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="refundPolicy">Refund Policy</Label>
+                    <Textarea 
+                      id="refundPolicy" 
+                      placeholder="Full refund before registration deadline, 50% refund within 48 hours..."
+                      value={formData.refundPolicy}
+                      onChange={(e) => setFormData({...formData, refundPolicy: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tournament Rules & Policies</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Set tournament rules and conduct policies
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="withdrawalPolicy">Withdrawal Policy</Label>
+                    <Textarea 
+                      id="withdrawalPolicy" 
+                      placeholder="Teams may withdraw with penalty fees..."
+                      value={formData.withdrawalPolicy}
+                      onChange={(e) => setFormData({...formData, withdrawalPolicy: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="codeOfConduct">Code of Conduct</Label>
+                    <Textarea 
+                      id="codeOfConduct" 
+                      placeholder="All players must maintain sportsmanlike conduct..."
+                      value={formData.codeOfConduct}
+                      onChange={(e) => setFormData({...formData, codeOfConduct: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="weatherPolicy">Weather Policy</Label>
+                    <Textarea 
+                      id="weatherPolicy" 
+                      placeholder="In case of rain or extreme weather..."
+                      value={formData.weatherPolicy}
+                      onChange={(e) => setFormData({...formData, weatherPolicy: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Team Tournament Summary */}
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-semibold mb-3 text-green-900">Team Tournament Summary</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <div><strong>Tournament:</strong> {formData.name || 'Not set'}</div>
+                      <div><strong>Level:</strong> {formData.level || 'Not set'}</div>
+                      <div><strong>Location:</strong> {formData.location || 'Not set'}</div>
+                      <div><strong>Format:</strong> {formData.format || 'Not set'}</div>
+                      <div><strong>Scoring:</strong> {formData.scoringFormat || 'Not set'}</div>
+                      <div><strong>Category:</strong> {formData.category || 'Not set'}</div>
+                      <div><strong>Division:</strong> {formData.division || 'Not set'}</div>
+                      <div><strong>Entry Fee:</strong> ${formData.entryFee || 0} per team</div>
+                      <div><strong>Prize Pool:</strong> ${formData.prizePool || 0}</div>
+                      <div><strong>Start Date:</strong> {formData.startDate || 'Not set'}</div>
+                      <div><strong>End Date:</strong> {formData.endDate || 'Not set'}</div>
+                      <div><strong>Registration Deadline:</strong> {formData.registrationEndDate || 'Not set'}</div>
+                    </div>
                   </div>
                 </div>
               )}
