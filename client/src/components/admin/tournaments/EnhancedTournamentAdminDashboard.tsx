@@ -1,6 +1,8 @@
 /**
- * Tournament Admin Dashboard
- * Enhanced version with better tournament representation and management
+ * Enhanced Tournament Admin Dashboard
+ * 
+ * Provides a comprehensive view of tournaments with advanced filtering,
+ * detailed tournament cards, and quick actions for tournament management.
  */
 
 import { useState, useMemo } from 'react';
@@ -29,9 +31,11 @@ import {
   Trophy, 
   DollarSign, 
   Star, 
+  Filter,
   Plus,
   Eye,
   Edit,
+  Trash2,
   Download
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -73,7 +77,7 @@ const statusColors = {
   'cancelled': 'bg-red-100 text-red-800'
 };
 
-export default function TournamentAdminDashboard() {
+export default function EnhancedTournamentAdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
