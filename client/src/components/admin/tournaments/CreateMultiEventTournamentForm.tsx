@@ -767,6 +767,271 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
 
                 <Separator />
 
+                {/* Eligibility Criteria Configuration */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Eligibility Criteria</h3>
+                  <FormDescription className="mb-6">
+                    Configure rating requirements, age restrictions, and other eligibility criteria for each division and category combination.
+                  </FormDescription>
+                  
+                  {watchedDivisions?.map((division) => 
+                    watchedCategories?.map((category) => {
+                      const combinationKey = `${division}-${category}`;
+                      const eligibilityPath = `eligibilityCriteria.${combinationKey}` as const;
+                      
+                      return (
+                        <div key={combinationKey} className="border rounded-lg p-6 mb-4">
+                          <h4 className="text-base font-semibold mb-4 text-blue-700">
+                            {division} - {category}
+                          </h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* DUPR Rating Requirements */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.minDUPR`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Min DUPR Rating</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      step="0.1"
+                                      min="1.0"
+                                      max="6.0"
+                                      placeholder="e.g., 4.0"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.maxDUPR`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Max DUPR Rating</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      step="0.1"
+                                      min="1.0"
+                                      max="6.0"
+                                      placeholder="e.g., 4.5"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {/* Ranking Points Requirements */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.minRankingPoints`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Min Ranking Points</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="0"
+                                      placeholder="e.g., 1000"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.maxRankingPoints`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Max Ranking Points</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="0"
+                                      placeholder="e.g., 2000"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {/* Age Requirements */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.minAge`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Min Age</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="18"
+                                      max="100"
+                                      placeholder="e.g., 18"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.maxAge`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Max Age</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="18"
+                                      max="100"
+                                      placeholder="e.g., 65"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            {/* Gender Restriction */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.genderRestriction`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Gender Restriction</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select restriction" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="open">Open (No Restriction)</SelectItem>
+                                      <SelectItem value="men">Men Only</SelectItem>
+                                      <SelectItem value="women">Women Only</SelectItem>
+                                      <SelectItem value="mixed">Mixed Doubles</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {/* Membership Type */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.membershipType`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Required Membership</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="e.g., USA Pickleball, Local Club"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Leave empty if no membership required
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            {/* Tournament Experience */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.minTournamentsPlayed`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Min Tournaments Played</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="0"
+                                      placeholder="e.g., 5"
+                                      {...field}
+                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {/* Rating Verification */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.requireRatingVerification`}
+                              render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                                  <div className="space-y-0.5">
+                                    <FormLabel className="text-sm">Require Rating Verification</FormLabel>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            {/* Allow Self Rating */}
+                            <FormField
+                              control={form.control}
+                              name={`${eligibilityPath}.allowSelfRating`}
+                              render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                                  <div className="space-y-0.5">
+                                    <FormLabel className="text-sm">Allow Self Rating</FormLabel>
+                                  </div>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <Separator />
+
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Registration Settings</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
