@@ -24,6 +24,8 @@ const router = express.Router();
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
+    console.log('[Tournament API] GET /api/tournaments called');
+    
     const { 
       status, 
       category, 
@@ -32,54 +34,64 @@ router.get('/', async (req: Request, res: Response) => {
       startDate, 
       endDate,
       format,
-      limit = 20,
+      limit = 100,
       offset = 0
     } = req.query;
 
-    let query = db.select().from(tournaments);
-
-    // Apply filters if provided
+    // Start with a basic query
+    const baseQuery = db.select().from(tournaments);
+    
+    // Build conditions array
+    const conditions = [];
+    
     if (status) {
-      query = query.where(eq(tournaments.status, status as string));
+      conditions.push(eq(tournaments.status, status as string));
     }
     
     if (format) {
-      query = query.where(eq(tournaments.format, format as string));
+      conditions.push(eq(tournaments.format, format as string));
     }
     
     if (category) {
-      query = query.where(eq(tournaments.category, category as string));
+      conditions.push(eq(tournaments.category, category as string));
     }
     
     if (division) {
-      // Age division (Open, 35+, etc.)
-      query = query.where(eq(tournaments.division, division as string));
+      conditions.push(eq(tournaments.division, division as string));
     }
     
     if (tier) {
-      query = query.where(eq(tournaments.level, tier as string));
+      conditions.push(eq(tournaments.level, tier as string));
     }
     
     if (startDate) {
-      query = query.where(gte(tournaments.startDate, new Date(startDate as string)));
+      conditions.push(gte(tournaments.startDate, new Date(startDate as string)));
     }
     
     if (endDate) {
-      query = query.where(lte(tournaments.endDate, new Date(endDate as string)));
+      conditions.push(lte(tournaments.endDate, new Date(endDate as string)));
     }
 
-    // Apply pagination
-    query = query.limit(Number(limit)).offset(Number(offset));
+    // Apply conditions if any exist
+    let query = baseQuery;
+    if (conditions.length > 0) {
+      query = baseQuery.where(and(...conditions));
+    }
     
-    // Order by start date
-    query = query.orderBy(asc(tournaments.startDate));
+    // Apply ordering and pagination
+    query = query
+      .orderBy(desc(tournaments.createdAt))
+      .limit(Number(limit))
+      .offset(Number(offset));
     
     const result = await query;
     
+    console.log(`[Tournament API] Found ${result.length} tournaments`);
+    
     res.json(result);
   } catch (error) {
-    console.error('Error getting tournaments:', error);
-    res.status(500).json({ message: 'Failed to get tournaments' });
+    console.error('[Tournament API] Error getting tournaments:', error);
+    res.status(500).json({ message: 'Failed to get tournaments', error: error.message });
   }
 });
 
