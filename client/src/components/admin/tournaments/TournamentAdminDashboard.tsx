@@ -36,6 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import CreateMultiEventTournamentForm from './CreateMultiEventTournamentForm';
 
 // Tournament interfaces
 interface Tournament {
@@ -1445,9 +1446,10 @@ export default function TournamentAdminDashboard() {
           )}
           
           {createTournamentType === 'multi-event' && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Multi-event tournament creation wizard coming soon!</p>
-            </div>
+            <CreateMultiEventTournamentForm
+              onSuccess={() => setIsCreateFormOpen(false)}
+              onCancel={() => setIsCreateFormOpen(false)}
+            />
           )}
           
           {createTournamentType === 'team' && (
