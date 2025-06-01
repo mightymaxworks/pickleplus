@@ -63,6 +63,9 @@ interface Tournament {
   organizer?: string;
   numberOfCourts?: number;
   createdAt: Date;
+  parentTournamentId?: number;
+  isParent?: boolean;
+  isSubEvent?: boolean;
 }
 
 const levelColors = {
