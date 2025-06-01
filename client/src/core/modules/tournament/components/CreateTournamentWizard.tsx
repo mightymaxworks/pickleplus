@@ -726,94 +726,98 @@ export function CreateTournamentWizard({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        ref={dialogContentRef}
-        className="w-[95%] max-w-[600px] p-4 md:p-6 max-h-[90vh] overflow-y-auto"
+        className="w-[95%] max-w-[600px] p-0 max-h-[90vh] overflow-hidden"
         aria-describedby="tournament-wizard-description"
       >
-        <DialogHeader>
-          <DialogTitle>Create Tournament</DialogTitle>
-          <DialogDescription id="tournament-wizard-description">
-            Step {step + 1} of {totalSteps}: {steps[step].label} - {steps[step].description}
-          </DialogDescription>
-        </DialogHeader>
-        
-        {/* Progress bar */}
-        <Progress value={progress} className="h-2 mb-4" />
-        
-        {/* Simplified step indicators */}
-        <div className="flex justify-between mb-4">
-          {steps.map((s, i) => (
-            <div 
-              key={i} 
-              className={`flex items-center ${i === step ? 'text-primary' : 'text-muted-foreground'}`}
-            >
+        <div 
+          ref={dialogContentRef}
+          className="p-4 md:p-6 max-h-[90vh] overflow-y-auto"
+        >
+          <DialogHeader>
+            <DialogTitle>Create Tournament</DialogTitle>
+            <DialogDescription id="tournament-wizard-description">
+              Step {step + 1} of {totalSteps}: {steps[step].label} - {steps[step].description}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Progress bar */}
+          <Progress value={progress} className="h-2 mb-4" />
+          
+          {/* Simplified step indicators */}
+          <div className="flex justify-between mb-4">
+            {steps.map((s, i) => (
               <div 
-                className={`w-6 h-6 rounded-full flex items-center justify-center mr-1 ${
-                  i === step 
-                    ? 'bg-primary text-primary-foreground' 
-                    : i < step 
-                      ? 'bg-primary/20 text-primary' 
-                      : 'bg-muted text-muted-foreground'
-                }`}
+                key={i} 
+                className={`flex items-center ${i === step ? 'text-primary' : 'text-muted-foreground'}`}
               >
-                {i < step ? <Check className="h-3 w-3" /> : <s.icon className="h-3 w-3" />}
+                <div 
+                  className={`w-6 h-6 rounded-full flex items-center justify-center mr-1 ${
+                    i === step 
+                      ? 'bg-primary text-primary-foreground' 
+                      : i < step 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {i < step ? <Check className="h-3 w-3" /> : <s.icon className="h-3 w-3" />}
+                </div>
+                <span className="text-xs font-medium">{s.label}</span>
               </div>
-              <span className="text-xs font-medium">{s.label}</span>
-            </div>
-          ))}
-        </div>
-        
-        {/* Form with clear structure (Framework 5.0: Improve predictability) */}
-        <Form {...form}>
-          <div className="space-y-4">
-            {renderCurrentStep()}
-            
-            <DialogFooter className="flex justify-between pt-3 border-t mt-3">
-              <div>
-                {step > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={goBack}
+            ))}
+          </div>
+          
+          {/* Form with clear structure (Framework 5.0: Improve predictability) */}
+          <Form {...form}>
+            <div className="space-y-4">
+              {renderCurrentStep()}
+              
+              <DialogFooter className="flex justify-between pt-3 border-t mt-3">
+                <div>
+                  {step > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={goBack}
+                      disabled={isPending}
+                      className="h-9"
+                      size="sm"
+                    >
+                      <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => onOpenChange(false)}
                     disabled={isPending}
                     className="h-9"
                     size="sm"
                   >
-                    <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                    Cancel
                   </Button>
-                )}
-              </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => onOpenChange(false)}
-                  disabled={isPending}
-                  className="h-9"
-                  size="sm"
-                >
-                  Cancel
-                </Button>
-                
-                <Button 
-                  type="button" 
-                  onClick={nextStep}
-                  disabled={isPending}
-                  className="h-9"
-                  size="sm"
-                >
-                  {isPending 
-                    ? 'Creating...' 
-                    : step === totalSteps - 1 
-                      ? 'Create' 
-                      : 'Next'
-                  }
-                </Button>
-              </div>
-            </DialogFooter>
-          </div>
-        </Form>
+                  
+                  <Button 
+                    type="button" 
+                    onClick={nextStep}
+                    disabled={isPending}
+                    className="h-9"
+                    size="sm"
+                  >
+                    {isPending 
+                      ? 'Creating...' 
+                      : step === totalSteps - 1 
+                        ? 'Create' 
+                        : 'Next'
+                    }
+                  </Button>
+                </div>
+              </DialogFooter>
+            </div>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
