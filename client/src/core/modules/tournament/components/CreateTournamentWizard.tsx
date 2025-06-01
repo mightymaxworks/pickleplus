@@ -52,6 +52,75 @@ import {
 // Framework 5.0 optimization: Implement a fully modular component architecture
 // where all wizard components are defined in a single file to eliminate import issues
 
+// Tournament Type Selection Step Component
+const TournamentTypeSelectionStep = ({ form, tournamentType, setTournamentType }: { 
+  form: ReturnType<typeof useForm<TournamentFormValues>>, 
+  tournamentType: string,
+  setTournamentType: (type: string) => void 
+}) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium mb-4">Choose Tournament Type</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Single Tournament */}
+        <div
+          className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+            tournamentType === 'single' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => setTournamentType('single')}
+        >
+          <User className="h-8 w-8 mb-3 text-primary" />
+          <h4 className="font-semibold mb-2">Single Tournament</h4>
+          <p className="text-sm text-muted-foreground">
+            A standard tournament with one event and format
+          </p>
+        </div>
+
+        {/* Multi-Event Tournament */}
+        <div
+          className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+            tournamentType === 'multi-event' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => setTournamentType('multi-event')}
+        >
+          <LayoutIcon className="h-8 w-8 mb-3 text-primary" />
+          <h4 className="font-semibold mb-2">Multi-Event Tournament</h4>
+          <p className="text-sm text-muted-foreground">
+            A tournament with multiple sub-events (e.g., Men's Singles, Women's Doubles)
+          </p>
+        </div>
+
+        {/* Team Tournament */}
+        <div
+          className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+            tournamentType === 'team' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => setTournamentType('team')}
+        >
+          <Users className="h-8 w-8 mb-3 text-primary" />
+          <h4 className="font-semibold mb-2">Team Tournament</h4>
+          <p className="text-sm text-muted-foreground">
+            Team-based tournament with flexible player configurations
+          </p>
+        </div>
+      </div>
+
+      {tournamentType && (
+        <Alert className="mt-4">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Selected: {tournamentType === 'multi-event' ? 'Multi-Event' : tournamentType === 'team' ? 'Team' : 'Single'} Tournament</AlertTitle>
+          <AlertDescription>
+            {tournamentType === 'single' && 'You\'ll create a standard tournament with one format and division.'}
+            {tournamentType === 'multi-event' && 'You\'ll create a parent tournament that can contain multiple sub-events.'}
+            {tournamentType === 'team' && 'You\'ll create a team-based tournament with configurable team constraints.'}
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+};
+
 // Basic Info Step Component
 const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<TournamentFormValues>> }) => {
   return (
@@ -477,8 +546,9 @@ export function CreateTournamentWizard({
   // Create a ref for the dialog content to enable scroll to top
   const dialogContentRef = useRef<HTMLDivElement>(null);
   
-  // Track the current step
+  // Track the current step and tournament type
   const [step, setStep] = useState(0);
+  const [tournamentType, setTournamentType] = useState('');
 
   // Auto-scroll to top whenever step changes
   useEffect(() => {
