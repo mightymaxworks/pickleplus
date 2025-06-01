@@ -70,6 +70,24 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerUserRoutes(app);
   registerUserProfileRoutes(app); // Added for PKL-278651-PROF-0005-UPLOAD - Profile Photo Upload
   registerMatchRoutes(app);
+  
+  // Direct tournament endpoint to ensure data access
+  app.get('/api/tournaments', async (req, res) => {
+    try {
+      console.log('[Direct Tournament API] GET /api/tournaments called');
+      const { db } = await import('./db');
+      const { tournaments } = await import('../shared/schema');
+      const { desc } = await import('drizzle-orm');
+      
+      const result = await db.select().from(tournaments).orderBy(desc(tournaments.createdAt)).limit(100);
+      console.log(`[Direct Tournament API] Found ${result.length} tournaments`);
+      res.json(result);
+    } catch (error) {
+      console.error('[Direct Tournament API] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch tournaments' });
+    }
+  });
+  
   registerTournamentRoutes(app);
   registerTournamentAdminRoutes(app); // Added for PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System Admin Routes
   
