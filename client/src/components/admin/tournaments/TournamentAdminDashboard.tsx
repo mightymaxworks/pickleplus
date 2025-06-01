@@ -128,10 +128,6 @@ export default function TournamentAdminDashboard() {
     const childTournaments = tournaments.filter(t => t.parentTournamentId);
     const parentIds = new Set(childTournaments.map(t => t.parentTournamentId));
 
-    console.log('[Tournament Grouping] Total tournaments:', tournaments.length);
-    console.log('[Tournament Grouping] Child tournaments found:', childTournaments.length);
-    console.log('[Tournament Grouping] Parent IDs referenced:', Array.from(parentIds));
-
     // Organize child tournaments by parent
     childTournaments.forEach(child => {
       const parentId = child.parentTournamentId;
@@ -151,16 +147,12 @@ export default function TournamentAdminDashboard() {
         return;
       } else if (parentIds.has(tournament.id)) {
         // This is a parent tournament (has children)
-        console.log('[Tournament Grouping] Found parent tournament:', tournament.name, 'with children:', subsByParent[tournament.id]?.length || 0);
         parents.push(tournament);
       } else {
         // This is a standalone tournament
         standalone.push(tournament);
       }
     });
-
-    console.log('[Tournament Grouping] Final counts - Parents:', parents.length, 'Standalone:', standalone.length);
-    console.log('[Tournament Grouping] Parent tournaments:', parents.map(p => p.name));
 
     return { 
       parentTournaments: parents, 
@@ -173,7 +165,8 @@ export default function TournamentAdminDashboard() {
   const filteredAndSortedTournaments = useMemo(() => {
     const allTournaments = viewMode === 'hierarchy' ? 
       [...parentTournaments, ...standaloneTournaments] : 
-      tournaments;
+      // In flat view, exclude child tournaments - they should only appear grouped under parents
+      tournaments.filter(t => !t.parentTournamentId);
 
     let filtered = allTournaments.filter(tournament => {
       const matchesSearch = tournament.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
