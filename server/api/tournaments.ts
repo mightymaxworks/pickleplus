@@ -24,8 +24,6 @@ const router = express.Router();
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    console.log('[Tournament API] GET /api/tournaments called');
-    
     const { 
       status, 
       category, 
@@ -34,30 +32,54 @@ router.get('/', async (req: Request, res: Response) => {
       startDate, 
       endDate,
       format,
-      limit = 100,
+      limit = 20,
       offset = 0
     } = req.query;
 
-    // Simple query first - get all tournaments
     let query = db.select().from(tournaments);
+
+    // Apply filters if provided
+    if (status) {
+      query = query.where(eq(tournaments.status, status as string));
+    }
     
-    // Apply ordering
-    query = query.orderBy(desc(tournaments.createdAt));
+    if (format) {
+      query = query.where(eq(tournaments.format, format as string));
+    }
     
+    if (category) {
+      query = query.where(eq(tournaments.category, category as string));
+    }
+    
+    if (division) {
+      // Age division (Open, 35+, etc.)
+      query = query.where(eq(tournaments.division, division as string));
+    }
+    
+    if (tier) {
+      query = query.where(eq(tournaments.level, tier as string));
+    }
+    
+    if (startDate) {
+      query = query.where(gte(tournaments.startDate, new Date(startDate as string)));
+    }
+    
+    if (endDate) {
+      query = query.where(lte(tournaments.endDate, new Date(endDate as string)));
+    }
+
     // Apply pagination
     query = query.limit(Number(limit)).offset(Number(offset));
     
-    const result = await query;
+    // Order by start date
+    query = query.orderBy(asc(tournaments.startDate));
     
-    console.log(`[Tournament API] Found ${result.length} tournaments`);
-    if (result.length > 0) {
-      console.log(`[Tournament API] Sample tournament: ${result[0].name}`);
-    }
+    const result = await query;
     
     res.json(result);
   } catch (error) {
-    console.error('[Tournament API] Error getting tournaments:', error);
-    res.status(500).json({ message: 'Failed to get tournaments', error: error.message });
+    console.error('Error getting tournaments:', error);
+    res.status(500).json({ message: 'Failed to get tournaments' });
   }
 });
 

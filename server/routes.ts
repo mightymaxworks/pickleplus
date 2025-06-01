@@ -14,7 +14,6 @@ import { registerMatchRoutes } from "./routes/match-routes";
 import { registerTournamentRoutes } from "./routes/tournament-routes";
 import { registerTournamentAdminRoutes } from "./routes/tournament-admin-routes"; // PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament Admin Routes
 import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
-import userManagementRoutes from "./modules/admin/routes/user-management-routes";
 import { registerBounceGamificationRoutes } from "./routes/bounce-gamification-routes";
 import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
 import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation-routes";
@@ -71,24 +70,6 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerUserRoutes(app);
   registerUserProfileRoutes(app); // Added for PKL-278651-PROF-0005-UPLOAD - Profile Photo Upload
   registerMatchRoutes(app);
-  
-  // Direct tournament endpoint to ensure data access
-  app.get('/api/tournaments', async (req, res) => {
-    try {
-      console.log('[Direct Tournament API] GET /api/tournaments called');
-      const { db } = await import('./db');
-      const { tournaments } = await import('../shared/schema');
-      const { desc } = await import('drizzle-orm');
-      
-      const result = await db.select().from(tournaments).orderBy(desc(tournaments.createdAt)).limit(100);
-      console.log(`[Direct Tournament API] Found ${result.length} tournaments`);
-      res.json(result);
-    } catch (error) {
-      console.error('[Direct Tournament API] Error:', error);
-      res.status(500).json({ error: 'Failed to fetch tournaments' });
-    }
-  });
-  
   registerTournamentRoutes(app);
   registerTournamentAdminRoutes(app); // Added for PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System Admin Routes
   
@@ -102,7 +83,6 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   }
   
   registerBounceAdminRoutes(app); // Add Bounce admin routes
-  app.use('/api/admin/users', userManagementRoutes); // Add user management admin routes
   registerBounceGamificationRoutes(app); // Add Bounce gamification routes
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
