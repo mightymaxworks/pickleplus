@@ -684,13 +684,23 @@ export function CreateTournamentWizard({
       setStep(step + 1); // Direct approach without using prev callback
       console.log("[Tournament] Moving to step:", step + 1);
       
-      // Simple scroll fix - target the specific dialog container
+      // Force scroll to top using multiple methods
       setTimeout(() => {
+        // Method 1: Try the container
         const container = document.getElementById('tournament-wizard-scroll-container');
         if (container) {
           container.scrollTop = 0;
         }
-      }, 100);
+        
+        // Method 2: Try scrollIntoView on the header
+        const header = document.getElementById('tournament-wizard-header');
+        if (header) {
+          header.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+        
+        // Method 3: Force window scroll as fallback
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 150);
     } else {
       // On the final step, submit the form
       console.log("[Tournament] Submitting form from final step");
@@ -733,7 +743,7 @@ export function CreateTournamentWizard({
           id="tournament-wizard-scroll-container"
           className="p-4 md:p-6 max-h-[90vh] overflow-y-auto"
         >
-          <DialogHeader>
+          <DialogHeader id="tournament-wizard-header">
             <DialogTitle>Create Tournament</DialogTitle>
             <DialogDescription id="tournament-wizard-description">
               Step {step + 1} of {totalSteps}: {steps[step].label} - {steps[step].description}
