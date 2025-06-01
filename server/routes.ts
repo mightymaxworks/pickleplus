@@ -14,6 +14,7 @@ import { registerMatchRoutes } from "./routes/match-routes";
 import { registerTournamentRoutes } from "./routes/tournament-routes";
 import { registerTournamentAdminRoutes } from "./routes/tournament-admin-routes"; // PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament Admin Routes
 import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
+import userManagementRoutes from "./modules/admin/routes/user-management-routes";
 import { registerBounceGamificationRoutes } from "./routes/bounce-gamification-routes";
 import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
 import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation-routes";
@@ -101,6 +102,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   }
   
   registerBounceAdminRoutes(app); // Add Bounce admin routes
+  app.use('/api/admin/users', userManagementRoutes); // Add user management admin routes
   registerBounceGamificationRoutes(app); // Add Bounce gamification routes
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
