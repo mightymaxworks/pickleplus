@@ -125,7 +125,57 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
   try {
     console.log('Tournament creation request body:', req.body);
     
-    const validated = insertTournamentSchema.safeParse(req.body);
+    // Transform camelCase form data to snake_case database fields
+    const transformedData = {
+      ...req.body,
+      // Map camelCase fields to snake_case
+      venue_address: req.body.venueAddress,
+      number_of_courts: req.body.numberOfCourts,
+      court_surface: req.body.courtSurface,
+      start_date: req.body.startDate,
+      end_date: req.body.endDate,
+      registration_start_date: req.body.registrationStartDate,
+      registration_end_date: req.body.registrationEndDate,
+      max_participants: req.body.maxParticipants,
+      min_participants: req.body.minParticipants,
+      min_rating: req.body.minRating,
+      max_rating: req.body.maxRating,
+      entry_fee: req.body.entryFee,
+      early_bird_fee: req.body.earlyBirdFee,
+      late_registration_fee: req.body.lateRegistrationFee,
+      prize_pool: req.body.prizePool,
+      contact_email: req.body.contactEmail,
+      contact_phone: req.body.contactPhone,
+      // Remove camelCase fields to avoid conflicts
+      venueAddress: undefined,
+      numberOfCourts: undefined,
+      courtSurface: undefined,
+      startDate: undefined,
+      endDate: undefined,
+      registrationStartDate: undefined,
+      registrationEndDate: undefined,
+      maxParticipants: undefined,
+      minParticipants: undefined,
+      minRating: undefined,
+      maxRating: undefined,
+      entryFee: undefined,
+      earlyBirdFee: undefined,
+      lateRegistrationFee: undefined,
+      prizePool: undefined,
+      contactEmail: undefined,
+      contactPhone: undefined
+    };
+
+    // Remove undefined fields
+    Object.keys(transformedData).forEach(key => {
+      if (transformedData[key] === undefined) {
+        delete transformedData[key];
+      }
+    });
+
+    console.log('Transformed tournament data:', transformedData);
+    
+    const validated = insertTournamentSchema.safeParse(transformedData);
     
     if (!validated.success) {
       console.log('Validation errors:', validated.error.format());
