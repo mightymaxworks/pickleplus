@@ -460,8 +460,8 @@ export default function TournamentAdminDashboard() {
                               <div className="space-y-2">
                                 <h4 className="font-medium text-sm line-clamp-2">{subTournament.name}</h4>
                                 <div className="flex flex-wrap gap-1">
-                                  <Badge variant="outline" size="sm">{subTournament.division}</Badge>
-                                  <Badge variant="outline" size="sm">{subTournament.category}</Badge>
+                                  <Badge variant="outline">{subTournament.division}</Badge>
+                                  <Badge variant="outline">{subTournament.category}</Badge>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                                   <div className="flex items-center gap-1">
@@ -514,99 +514,204 @@ export default function TournamentAdminDashboard() {
                 Standalone Tournaments
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredAndSortedTournaments.map((tournament) => (
-          <Card key={tournament.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg leading-tight mb-2 line-clamp-2">
-                    {tournament.name}
-                  </CardTitle>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge className={levelColors[tournament.level as keyof typeof levelColors] || 'bg-gray-100 text-gray-800'}>
-                      {tournament.level}
-                    </Badge>
-                    <Badge className={statusColors[tournament.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
-                      {tournament.status}
-                    </Badge>
-                    {tournament.category && (
-                      <Badge variant="outline">{tournament.category}</Badge>
+                {standaloneTournaments.filter(tournament => 
+                  tournament.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  tournament.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  tournament.organizer?.toLowerCase().includes(searchTerm.toLowerCase())
+                ).map((tournament) => (
+                  <Card key={tournament.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg leading-tight mb-2 line-clamp-2">
+                            {tournament.name}
+                          </CardTitle>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge className={levelColors[tournament.level as keyof typeof levelColors] || 'bg-gray-100 text-gray-800'}>
+                              {tournament.level}
+                            </Badge>
+                            <Badge className={statusColors[tournament.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
+                              {tournament.status}
+                            </Badge>
+                            {tournament.category && (
+                              <Badge variant="outline">{tournament.category}</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        {/* Tournament Details */}
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-gray-500" />
+                            <span>{format(new Date(tournament.startDate), 'MMM dd')}</span>
+                          </div>
+                          
+                          {tournament.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3 text-gray-500" />
+                              <span className="truncate">{tournament.location}</span>
+                            </div>
+                          )}
+                          
+                          {tournament.maxParticipants && (
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3 text-gray-500" />
+                              <span>{tournament.maxParticipants} max</span>
+                            </div>
+                          )}
+                          
+                          {tournament.prizePool && tournament.prizePool > 0 && (
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3 text-gray-500" />
+                              <span>${tournament.prizePool.toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Division and Entry Fee */}
+                        {tournament.division && (
+                          <div className="text-sm">
+                            <span className="font-medium">Division:</span> {tournament.division}
+                          </div>
+                        )}
+                        
+                        {tournament.entryFee && tournament.entryFee > 0 && (
+                          <div className="text-sm">
+                            <span className="font-medium">Entry Fee:</span> ${tournament.entryFee}
+                          </div>
+                        )}
+
+                        {/* Description */}
+                        {tournament.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {tournament.description}
+                          </p>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Download className="h-3 w-3 mr-1" />
+                            Export
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Flat View */
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredAndSortedTournaments.map((tournament) => (
+            <Card key={tournament.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg leading-tight mb-2 line-clamp-2">
+                      {tournament.name}
+                    </CardTitle>
+                    <div className="flex flex-wrap gap-1">
+                      <Badge className={levelColors[tournament.level as keyof typeof levelColors] || 'bg-gray-100 text-gray-800'}>
+                        {tournament.level}
+                      </Badge>
+                      <Badge className={statusColors[tournament.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
+                        {tournament.status}
+                      </Badge>
+                      {tournament.category && (
+                        <Badge variant="outline">{tournament.category}</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  {/* Tournament Details */}
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-gray-500" />
+                      <span>{format(new Date(tournament.startDate), 'MMM dd')}</span>
+                    </div>
+                    
+                    {tournament.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-gray-500" />
+                        <span className="truncate">{tournament.location}</span>
+                      </div>
+                    )}
+                    
+                    {tournament.maxParticipants && (
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3 text-gray-500" />
+                        <span>{tournament.maxParticipants} max</span>
+                      </div>
+                    )}
+                    
+                    {tournament.prizePool && tournament.prizePool > 0 && (
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-3 w-3 text-gray-500" />
+                        <span>${tournament.prizePool.toLocaleString()}</span>
+                      </div>
                     )}
                   </div>
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {/* Tournament Details */}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-gray-500" />
-                    <span>{format(new Date(tournament.startDate), 'MMM dd')}</span>
-                  </div>
-                  
-                  {tournament.location && (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-gray-500" />
-                      <span className="truncate">{tournament.location}</span>
+
+                  {/* Division and Entry Fee */}
+                  {tournament.division && (
+                    <div className="text-sm">
+                      <span className="font-medium">Division:</span> {tournament.division}
                     </div>
                   )}
                   
-                  {tournament.maxParticipants && (
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3 text-gray-500" />
-                      <span>{tournament.maxParticipants} max</span>
+                  {tournament.entryFee && tournament.entryFee > 0 && (
+                    <div className="text-sm">
+                      <span className="font-medium">Entry Fee:</span> ${tournament.entryFee}
                     </div>
                   )}
-                  
-                  {tournament.prizePool && tournament.prizePool > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3 text-gray-500" />
-                      <span>${tournament.prizePool.toLocaleString()}</span>
-                    </div>
+
+                  {/* Description */}
+                  {tournament.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {tournament.description}
+                    </p>
                   )}
-                </div>
 
-                {/* Division and Entry Fee */}
-                {tournament.division && (
-                  <div className="text-sm">
-                    <span className="font-medium">Division:</span> {tournament.division}
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Download className="h-3 w-3" />
+                    </Button>
                   </div>
-                )}
-                
-                {tournament.entryFee && tournament.entryFee > 0 && (
-                  <div className="text-sm">
-                    <span className="font-medium">Entry Fee:</span> ${tournament.entryFee}
-                  </div>
-                )}
-
-                {/* Description */}
-                {tournament.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {tournament.description}
-                  </p>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 pt-2">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Eye className="h-3 w-3 mr-1" />
-                    View
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Download className="h-3 w-3" />
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Empty State */}
       {filteredAndSortedTournaments.length === 0 && (
