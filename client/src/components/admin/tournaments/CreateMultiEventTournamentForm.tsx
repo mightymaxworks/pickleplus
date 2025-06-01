@@ -1053,6 +1053,52 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
                     <p>No events will be created. Please go back and select divisions and categories.</p>
                   </div>
                 )}
+
+                {/* Enhanced Tournament Summary - Testing Mode */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold mb-3 text-blue-900 flex items-center">
+                    📊 Complete Multi-Event Tournament Data Preview (Testing Mode)
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+                    {/* Basic Information */}
+                    <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2">Basic Information</div>
+                    <div><strong>Name:</strong> {form.getValues('name') || 'Not set'}</div>
+                    <div><strong>Description:</strong> {form.getValues('description') || 'Not set'}</div>
+                    <div><strong>Level:</strong> {form.getValues('level') || 'Not set'}</div>
+                    <div><strong>Format:</strong> {form.getValues('format') || 'Not set'}</div>
+                    <div><strong>Venue:</strong> {form.getValues('venue') || 'Not set'}</div>
+                    <div><strong>Public:</strong> {form.getValues('isPublic') ? 'Yes' : 'No'}</div>
+                    
+                    {/* Dates & Times */}
+                    <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Dates & Times</div>
+                    <div><strong>Start Date:</strong> {form.getValues('startDate') ? format(form.getValues('startDate'), 'PPP') : 'Not set'}</div>
+                    <div><strong>End Date:</strong> {form.getValues('endDate') ? format(form.getValues('endDate'), 'PPP') : 'Not set'}</div>
+                    <div><strong>Registration Deadline:</strong> {form.getValues('registrationDeadline') ? format(form.getValues('registrationDeadline'), 'PPP') : 'Not set'}</div>
+                    
+                    {/* Registration & Participation */}
+                    <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Registration & Participation</div>
+                    <div><strong>Registration Fee:</strong> ${form.getValues('registrationFee') || 0}</div>
+                    <div><strong>Max Per Event:</strong> {form.getValues('maxParticipantsPerEvent') || 'Not set'}</div>
+                    <div><strong>Registration Open:</strong> {form.getValues('registrationOpen') ? 'Yes' : 'No'}</div>
+                    
+                    {/* Multi-Event Configuration */}
+                    <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Multi-Event Configuration</div>
+                    <div><strong>Allow Multi Registration:</strong> {form.getValues('allowMultipleRegistrations') ? 'Yes' : 'No'}</div>
+                    <div><strong>Cross-Event Prizes:</strong> {form.getValues('enableCrossEventPrizing') ? 'Yes' : 'No'}</div>
+                    <div><strong>Total Events:</strong> {subTournamentPreviews.length}</div>
+                    
+                    {/* Prize Configuration Summary */}
+                    <div className="font-medium text-blue-800 col-span-full border-b border-blue-200 pb-1 mb-2 mt-3">Prize Pool Summary</div>
+                    {Object.entries(prizePoolAllocations).map(([key, allocation]) => (
+                      <div key={key} className="col-span-full">
+                        <div className="flex justify-between text-xs bg-white p-2 rounded">
+                          <span><strong>{key}:</strong></span>
+                          <span>${allocation.totalPrizePool} ({allocation.distribution})</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
