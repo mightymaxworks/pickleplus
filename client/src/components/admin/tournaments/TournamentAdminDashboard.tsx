@@ -1451,6 +1451,299 @@ export default function TournamentAdminDashboard() {
               onCancel={() => setIsCreateFormOpen(false)}
             />
           )}
+
+          {createTournamentType === 'team' && (
+            <div className="space-y-6">
+              {/* Progress Steps */}
+              <div className="flex items-center justify-between mb-6">
+                {[1, 2, 3, 4, 5].map((step) => (
+                  <div key={step} className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      formStep >= step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {step}
+                    </div>
+                    <span className="ml-2 text-sm font-medium">
+                      {step === 1 ? 'Basic Info' : 
+                       step === 2 ? 'Team Structure' : 
+                       step === 3 ? 'Match Format' : 
+                       step === 4 ? 'Eligibility' : 'Tournament Rules'}
+                    </span>
+                    {step < 5 && <div className="w-8 h-px bg-muted mx-2" />}
+                  </div>
+                ))}
+              </div>
+
+              {/* Step 1: Basic Information */}
+              {formStep === 1 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="teamTournamentName">Team Tournament Name</Label>
+                    <Input 
+                      id="teamTournamentName" 
+                      placeholder="e.g., Elite Club Team Championship"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="teamDescription">Description</Label>
+                    <Textarea 
+                      id="teamDescription" 
+                      placeholder="Describe the team tournament format and objectives"
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="teamLevel">Tournament Level</Label>
+                      <Select value={formData.level} onValueChange={(value) => setFormData({...formData, level: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="club">Club</SelectItem>
+                          <SelectItem value="district">District</SelectItem>
+                          <SelectItem value="city">City</SelectItem>
+                          <SelectItem value="provincial">Provincial</SelectItem>
+                          <SelectItem value="national">National</SelectItem>
+                          <SelectItem value="regional">Regional</SelectItem>
+                          <SelectItem value="international">International</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="maxTeams">Maximum Teams</Label>
+                      <Input 
+                        id="maxTeams" 
+                        type="number"
+                        placeholder="16"
+                        value={formData.maxTeams}
+                        onChange={(e) => setFormData({...formData, maxTeams: parseInt(e.target.value) || 16})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="teamLocation">Location</Label>
+                      <Input 
+                        id="teamLocation" 
+                        placeholder="Tournament location"
+                        value={formData.location}
+                        onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="teamEntryFee">Entry Fee per Team</Label>
+                      <Input 
+                        id="teamEntryFee" 
+                        type="number"
+                        placeholder="400"
+                        value={formData.entryFee}
+                        onChange={(e) => setFormData({...formData, entryFee: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Team Structure */}
+              {formStep === 2 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="minPlayers">Minimum Players per Team</Label>
+                      <Input 
+                        id="minPlayers" 
+                        type="number"
+                        placeholder="4"
+                        value={formData.minPlayers}
+                        onChange={(e) => setFormData({...formData, minPlayers: parseInt(e.target.value) || 4})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="maxPlayers">Maximum Players per Team</Label>
+                      <Input 
+                        id="maxPlayers" 
+                        type="number"
+                        placeholder="6"
+                        value={formData.maxPlayers}
+                        onChange={(e) => setFormData({...formData, maxPlayers: parseInt(e.target.value) || 6})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="requiredMales">Required Male Players (optional)</Label>
+                      <Input 
+                        id="requiredMales" 
+                        type="number"
+                        placeholder="2"
+                        value={formData.requiredMales}
+                        onChange={(e) => setFormData({...formData, requiredMales: parseInt(e.target.value) || undefined})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="requiredFemales">Required Female Players (optional)</Label>
+                      <Input 
+                        id="requiredFemales" 
+                        type="number"
+                        placeholder="2"
+                        value={formData.requiredFemales}
+                        onChange={(e) => setFormData({...formData, requiredFemales: parseInt(e.target.value) || undefined})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="allowSubstitutes"
+                      checked={formData.allowSubstitutes}
+                      onChange={(e) => setFormData({...formData, allowSubstitutes: e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="allowSubstitutes">Allow Substitute Players</Label>
+                  </div>
+
+                  {formData.allowSubstitutes && (
+                    <div className="space-y-2">
+                      <Label htmlFor="maxSubstitutes">Maximum Substitutes per Team</Label>
+                      <Input 
+                        id="maxSubstitutes" 
+                        type="number"
+                        placeholder="2"
+                        value={formData.maxSubstitutes}
+                        onChange={(e) => setFormData({...formData, maxSubstitutes: parseInt(e.target.value) || 2})}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Match Format */}
+              {formStep === 3 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Match Structure</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Define the individual matches that make up each team vs team competition
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="singlesMatches">Singles Matches</Label>
+                        <Input 
+                          id="singlesMatches" 
+                          type="number"
+                          placeholder="1"
+                          value={formData.singlesMatches}
+                          onChange={(e) => setFormData({...formData, singlesMatches: parseInt(e.target.value) || 0})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="doublesMatches">Doubles Matches</Label>
+                        <Input 
+                          id="doublesMatches" 
+                          type="number"
+                          placeholder="2"
+                          value={formData.doublesMatches}
+                          onChange={(e) => setFormData({...formData, doublesMatches: parseInt(e.target.value) || 0})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="mixedDoublesMatches">Mixed Doubles</Label>
+                        <Input 
+                          id="mixedDoublesMatches" 
+                          type="number"
+                          placeholder="2"
+                          value={formData.mixedDoublesMatches}
+                          onChange={(e) => setFormData({...formData, mixedDoublesMatches: parseInt(e.target.value) || 0})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Total Matches</Label>
+                        <div className="w-full h-10 border rounded px-3 flex items-center bg-muted text-muted-foreground">
+                          {(formData.singlesMatches || 0) + (formData.doublesMatches || 0) + (formData.mixedDoublesMatches || 0)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="scoringSystem">Scoring System</Label>
+                      <Select value={formData.scoringSystem} onValueChange={(value) => setFormData({...formData, scoringSystem: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select scoring system" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="match_wins">Match Wins (each match worth 1 point)</SelectItem>
+                          <SelectItem value="weighted_points">Weighted Points (different point values)</SelectItem>
+                          <SelectItem value="total_points">Total Points (cumulative game scores)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tournamentFormat">Tournament Format</Label>
+                      <Select value={formData.tournamentFormat} onValueChange={(value) => setFormData({...formData, tournamentFormat: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select tournament format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="round_robin">Round Robin</SelectItem>
+                          <SelectItem value="single_elimination">Single Elimination</SelectItem>
+                          <SelectItem value="double_elimination">Double Elimination</SelectItem>
+                          <SelectItem value="pool_play_playoff">Pool Play + Playoffs</SelectItem>
+                          <SelectItem value="swiss">Swiss System</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => formStep > 1 ? setFormStep(formStep - 1) : setIsCreateFormOpen(false)}
+                >
+                  {formStep === 1 ? 'Cancel' : 'Previous'}
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    if (formStep < 5) {
+                      setFormStep(formStep + 1);
+                    } else {
+                      // Create team tournament - will implement backend
+                      toast({
+                        title: "Team Tournament Creation",
+                        description: "Team tournament creation will be implemented with backend API",
+                      });
+                      setIsCreateFormOpen(false);
+                    }
+                  }}
+                >
+                  {formStep === 5 ? 'Create Team Tournament' : 'Next'}
+                </Button>
+              </div>
+            </div>
+          )}
           
           {createTournamentType === 'team' && (
             <div className="text-center py-8">
