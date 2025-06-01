@@ -125,12 +125,16 @@ export default function TournamentAdminDashboard() {
     const subsByParent: { [parentId: number]: Tournament[] } = {};
 
     // First pass: identify actual parent-child relationships from database
-    const childTournaments = tournaments.filter(t => (t as any).parentTournamentId);
-    const parentIds = new Set(childTournaments.map(t => (t as any).parentTournamentId));
+    const childTournaments = tournaments.filter(t => t.parentTournamentId);
+    const parentIds = new Set(childTournaments.map(t => t.parentTournamentId));
+
+    console.log('[Tournament Grouping] Total tournaments:', tournaments.length);
+    console.log('[Tournament Grouping] Child tournaments found:', childTournaments.length);
+    console.log('[Tournament Grouping] Parent IDs referenced:', Array.from(parentIds));
 
     // Organize child tournaments by parent
     childTournaments.forEach(child => {
-      const parentId = (child as any).parentTournamentId;
+      const parentId = child.parentTournamentId;
       if (parentId) {
         if (!subsByParent[parentId]) {
           subsByParent[parentId] = [];
@@ -141,18 +145,22 @@ export default function TournamentAdminDashboard() {
 
     // Second pass: categorize tournaments
     tournaments.forEach(tournament => {
-      const hasParentId = (tournament as any).parentTournamentId;
+      const hasParentId = tournament.parentTournamentId;
       if (hasParentId) {
         // This is a child tournament - already handled above
         return;
       } else if (parentIds.has(tournament.id)) {
         // This is a parent tournament (has children)
+        console.log('[Tournament Grouping] Found parent tournament:', tournament.name, 'with children:', subsByParent[tournament.id]?.length || 0);
         parents.push(tournament);
       } else {
         // This is a standalone tournament
         standalone.push(tournament);
       }
     });
+
+    console.log('[Tournament Grouping] Final counts - Parents:', parents.length, 'Standalone:', standalone.length);
+    console.log('[Tournament Grouping] Parent tournaments:', parents.map(p => p.name));
 
     return { 
       parentTournaments: parents, 
