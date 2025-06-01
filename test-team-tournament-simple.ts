@@ -39,12 +39,28 @@ async function testComplexTeamTournament() {
     entryFee: 2500,
     prizePool: 500000,
     
-    // Team tournament specific
+    // Team tournament specific fields (inheriting from single tournament structure)
     isTeamTournament: true,
     teamSize: 12,
     minTeamSize: 8,
     maxTeamSize: 12,
     maxTeams: 64,
+    teamMatchFormat: {
+      singles: { men: 2, women: 2 },
+      doubles: { men: 1, women: 1 },
+      mixedDoubles: 2,
+      totalMatches: 8
+    },
+    teamEligibilityRules: {
+      maxTotalTeamDUPR: 55.0,
+      maxAverageTeamDUPR: 6.5,
+      minPlayerDUPR: 5.0,
+      maxPlayerDUPR: 7.0,
+      maxTotalTeamRankingPoints: 50000,
+      maxProfessionalPlayers: 6,
+      requiredMales: 4,
+      requiredFemales: 4
+    },
     
     // Standard required fields
     status: 'upcoming',

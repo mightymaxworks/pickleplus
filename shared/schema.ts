@@ -1080,19 +1080,42 @@ export const insertUserSchema = createInsertSchema(users)
     // passportId is now included in the insertUserSchema
   });
 
-// Create insert schemas for validation
+// Create insert schemas for validation - unified schema supporting single, multi-event, and team tournaments
 export const insertTournamentSchema = createInsertSchema(tournaments)
-  .omit({ id: true, createdAt: true, updatedAt: true })
+  .omit({ id: true, createdAt: true, updatedAt: true, currentParticipants: true })
   .extend({
     level: z.enum(['club', 'district', 'city', 'provincial', 'national', 'regional', 'international']).default('club'),
     startDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val),
     endDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val),
     registrationStartDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val).optional(),
     registrationEndDate: z.union([z.string(), z.date()]).transform((val) => typeof val === 'string' ? new Date(val) : val).optional(),
+    
+    // Multi-event tournament fields
+    isParent: z.boolean().default(false).optional(),
+    isSubEvent: z.boolean().default(false).optional(),
+    parentTournamentId: z.number().optional(),
+    
+    // Team tournament fields
+    isTeamTournament: z.boolean().default(false).optional(),
+    teamSize: z.number().optional(),
+    minTeamSize: z.number().optional(),
+    maxTeamSize: z.number().optional(),
+    maxTeams: z.number().optional(),
+    teamMatchFormat: z.any().optional(), // JSON for team match configurations
+    teamEligibilityRules: z.any().optional(), // JSON for eligibility rules
+    teamLineupRules: z.any().optional(), // JSON for lineup rules
   });
 
+// Unified tournament registration schema supporting both individual and team registrations
 export const insertTournamentRegistrationSchema = createInsertSchema(tournamentRegistrations)
-  .omit({ id: true, createdAt: true, updatedAt: true, registrationDate: true });
+  .omit({ id: true, createdAt: true, updatedAt: true, registrationDate: true })
+  .extend({
+    // Team registration fields
+    isTeamRegistration: z.boolean().default(false).optional(),
+    teamName: z.string().optional(),
+    teamPlayers: z.any().optional(), // JSON array of team player details
+    teamCaptain: z.string().optional(),
+  });
 
 export const insertAchievementSchema = createInsertSchema(achievements)
   .omit({ id: true, createdAt: true, updatedAt: true });
