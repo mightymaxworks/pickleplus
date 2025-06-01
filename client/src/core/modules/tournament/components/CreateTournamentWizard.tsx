@@ -479,6 +479,16 @@ export function CreateTournamentWizard({
   
   // Track the current step
   const [step, setStep] = useState(0);
+
+  // Auto-scroll to top whenever step changes
+  useEffect(() => {
+    if (step > 0) { // Only scroll after first step
+      const container = document.getElementById('tournament-wizard-scroll-container');
+      if (container) {
+        container.scrollTop = 0;
+      }
+    }
+  }, [step]);
   const totalSteps = 3;
   
   // Calculate progress percentage
@@ -681,26 +691,8 @@ export function CreateTournamentWizard({
     
     // Move to next step (or submit if on final step)
     if (step < totalSteps - 1) {
-      setStep(step + 1); // Direct approach without using prev callback
+      setStep(step + 1);
       console.log("[Tournament] Moving to step:", step + 1);
-      
-      // Force scroll to top using multiple methods
-      setTimeout(() => {
-        // Method 1: Try the container
-        const container = document.getElementById('tournament-wizard-scroll-container');
-        if (container) {
-          container.scrollTop = 0;
-        }
-        
-        // Method 2: Try scrollIntoView on the header
-        const header = document.getElementById('tournament-wizard-header');
-        if (header) {
-          header.scrollIntoView({ behavior: 'instant', block: 'start' });
-        }
-        
-        // Method 3: Force window scroll as fallback
-        window.scrollTo({ top: 0, behavior: 'instant' });
-      }, 150);
     } else {
       // On the final step, submit the form
       console.log("[Tournament] Submitting form from final step");
