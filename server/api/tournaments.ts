@@ -120,10 +120,14 @@ router.get('/:id', async (req: Request, res: Response) => {
 /**
  * POST /api/tournaments
  * Create a new tournament (admin only)
+ * Supports individual, multi-event, and team tournaments
  */
 router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
   try {
     console.log('Tournament creation request body:', req.body);
+    
+    // Check if this is a team tournament
+    const isTeamTournament = req.body.tournamentType === 'team' || req.body.isTeamTournament;
     
     // Transform between camelCase and snake_case as needed
     const transformedData = {
@@ -146,6 +150,34 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
       prizePool: req.body.prize_pool || req.body.prizePool,
       contactEmail: req.body.contact_email || req.body.contactEmail,
       contactPhone: req.body.contact_phone || req.body.contactPhone,
+      
+      // Team tournament specific fields
+      isTeamTournament: isTeamTournament,
+      teamSize: req.body.teamSize || req.body.maxPlayers,
+      minTeamSize: req.body.minTeamSize || req.body.minPlayers,
+      maxTeamSize: req.body.maxTeamSize || req.body.maxPlayers,
+      maxTeams: req.body.maxTeams,
+      teamMatchFormat: req.body.teamMatchFormat || JSON.stringify({
+        singles: req.body.singlesMatches || 0,
+        doubles: req.body.doublesMatches || 0,
+        mixedDoubles: req.body.mixedDoublesMatches || 0
+      }),
+      teamEligibilityRules: req.body.teamEligibilityRules || JSON.stringify({
+        maxTotalDUPR: req.body.maxTotalDUPR,
+        maxAverageDUPR: req.body.maxAverageDUPR,
+        maxTotalRankingPoints: req.body.maxTotalRankingPoints,
+        minTotalRankingPoints: req.body.minTotalRankingPoints,
+        minPlayerDUPR: req.body.minPlayerDUPR,
+        maxPlayerDUPR: req.body.maxPlayerDUPR,
+        minPlayerRankingPoints: req.body.minPlayerRankingPoints,
+        minTournamentsPlayed: req.body.minTournamentsPlayed,
+        professionalStatus: req.body.professionalStatus,
+        genderRequirements: req.body.genderRequirements,
+        requireVerifiedRating: req.body.requireVerifiedRating,
+        allowUnratedPlayers: req.body.allowUnratedPlayers,
+        requireMedicalClearance: req.body.requireMedicalClearance
+      }),
+      
       // Remove snake_case duplicates
       start_date: undefined,
       end_date: undefined,
@@ -174,6 +206,7 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
     });
 
     console.log('Transformed tournament data:', transformedData);
+    console.log('Is team tournament:', isTeamTournament);
     
     const validated = insertTournamentSchema.safeParse(transformedData);
     
@@ -184,10 +217,75 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
     
     const tournament = await db.insert(tournaments).values(validated.data).returning();
     
+    console.log('Created tournament:', tournament[0]);
+    
     res.status(201).json(tournament[0]);
   } catch (error) {
     console.error('Error creating tournament:', error);
     res.status(500).json({ message: 'Failed to create tournament' });
+  }
+});
+
+/**
+ * POST /api/tournaments/:id/teams
+ * Register a team for a team tournament
+ */
+router.post('/:id/teams', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { teamName, players, captain } = req.body;
+    
+    // Verify tournament exists and is a team tournament
+    const tournament = await db.select().from(tournaments).where(eq(tournaments.id, parseInt(id)));
+    
+    if (!tournament.length) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+    
+    if (!tournament[0].isTeamTournament) {
+      return res.status(400).json({ message: 'This tournament is not a team tournament' });
+    }
+    
+    // Validate team composition against tournament rules
+    const eligibilityRules = tournament[0].teamEligibilityRules ? 
+      JSON.parse(tournament[0].teamEligibilityRules) : {};
+    
+    // Create team registration record
+    const teamRegistration = await db.insert(tournamentRegistrations).values({
+      tournamentId: parseInt(id),
+      userId: req.user!.id,
+      teamName: teamName,
+      teamPlayers: JSON.stringify(players),
+      teamCaptain: captain,
+      registeredAt: new Date(),
+      status: 'pending'
+    }).returning();
+    
+    res.status(201).json(teamRegistration[0]);
+  } catch (error) {
+    console.error('Error registering team:', error);
+    res.status(500).json({ message: 'Failed to register team' });
+  }
+});
+
+/**
+ * GET /api/tournaments/:id/teams
+ * Get all teams registered for a tournament
+ */
+router.get('/:id/teams', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const teams = await db.select().from(tournamentRegistrations)
+      .where(and(
+        eq(tournamentRegistrations.tournamentId, parseInt(id)),
+        sql`team_name IS NOT NULL`
+      ));
+    
+    res.json(teams);
+  } catch (error) {
+    console.error('Error getting teams:', error);
+    res.status(500).json({ message: 'Failed to get teams' });
   }
 });
 
