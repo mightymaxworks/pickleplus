@@ -706,6 +706,7 @@ export const tournaments = pgTable("tournaments", {
   parentTournamentId: integer("parent_tournament_id"), // Will be linked in relations
   isParent: boolean("is_parent").default(false), // Indicates if this is a parent tournament
   isSubEvent: boolean("is_sub_event").default(false), // Indicates if this is a sub-event of a parent tournament
+  isMultiEvent: boolean("is_multi_event").default(false), // Indicates if this is a multi-event tournament
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
