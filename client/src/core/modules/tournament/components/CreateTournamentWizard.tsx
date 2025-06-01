@@ -689,12 +689,10 @@ export function CreateTournamentWizard({
         // Use setTimeout to ensure the step content has rendered before scrolling
         setTimeout(() => {
           if (dialogContentRef.current) {
-            dialogContentRef.current.scrollTo({
-              top: 0,
-              behavior: 'smooth'
-            });
+            // Force immediate scroll to top without smooth behavior
+            dialogContentRef.current.scrollTop = 0;
           }
-        }, 50);
+        }, 100);
       }
     } else {
       // On the final step, submit the form
