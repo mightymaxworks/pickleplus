@@ -44,6 +44,7 @@ import {
   FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { CreateTournamentDialog } from '@/core/modules/tournament/components/CreateTournamentDialog';
 
 interface Tournament {
   id: number;
@@ -93,6 +94,7 @@ export default function TournamentAdminDashboard() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
   const [viewMode, setViewMode] = useState<'hierarchy' | 'flat'>('hierarchy');
+  const [isCreateTournamentOpen, setIsCreateTournamentOpen] = useState(false);
 
   const { data: tournaments = [], isLoading } = useQuery<Tournament[]>({
     queryKey: ['/api/tournaments'],
@@ -246,7 +248,10 @@ export default function TournamentAdminDashboard() {
           <h1 className="text-3xl font-bold">Tournament Administration</h1>
           <p className="text-gray-600">Manage tournaments, eligibility criteria, and participant registration</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setIsCreateTournamentOpen(true)}
+        >
           <Plus className="h-4 w-4" />
           Create Tournament
         </Button>
@@ -732,6 +737,13 @@ export default function TournamentAdminDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Create Tournament Modal */}
+      <CreateTournamentDialog
+        open={isCreateTournamentOpen}
+        onOpenChange={setIsCreateTournamentOpen}
+        queryKey="/api/tournaments"
+      />
     </div>
   );
 }
