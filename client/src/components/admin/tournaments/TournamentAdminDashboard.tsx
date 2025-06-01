@@ -163,16 +163,10 @@ export default function TournamentAdminDashboard() {
 
   // Filter and sort tournaments
   const filteredAndSortedTournaments = useMemo(() => {
-    console.log('[Filter Debug] View mode:', viewMode);
-    console.log('[Filter Debug] All tournaments count:', tournaments.length);
-    
     const allTournaments = viewMode === 'hierarchy' ? 
       [...parentTournaments, ...standaloneTournaments] : 
       // In flat view, exclude child tournaments - they should only appear grouped under parents
       tournaments.filter(t => !t.parentTournamentId);
-    
-    console.log('[Filter Debug] Tournaments after view filter:', allTournaments.length);
-    console.log('[Filter Debug] Child tournaments being filtered out:', tournaments.filter(t => t.parentTournamentId).map(t => ({id: t.id, name: t.name, parentId: t.parentTournamentId})));
 
     let filtered = allTournaments.filter(tournament => {
       const matchesSearch = tournament.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
