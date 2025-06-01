@@ -223,15 +223,25 @@ export default function TournamentAdminDashboard() {
     },
   });
 
+  // Fetch all tournaments with increased limit to show recent test tournaments
+  const { data: allTournaments = [], isLoading: allTournamentsLoading } = useQuery({
+    queryKey: ['/api/tournaments'],
+    queryFn: async () => {
+      // Fetch with increased limit to see all tournaments including recent test ones
+      const response = await apiRequest('GET', '/api/tournaments?limit=100');
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    }
+  });
+
   // Fetch parent tournaments for multi-event view
   const { data: parentTournaments = [], isLoading: parentTournamentsLoading } = useQuery({
     queryKey: ['/api/tournaments/parent'],
     queryFn: async () => {
-      // For now, filter tournaments that might be parent tournaments
-      const response = await apiRequest('GET', '/api/tournaments');
-      const data = await response.json();
-      return Array.isArray(data) ? data.filter((t: any) => !t.parentTournamentId) : [];
-    }
+      // Filter tournaments that might be parent tournaments from all tournaments
+      return allTournaments.filter((t: any) => t.isParent || (!t.parentTournamentId && !t.isSubEvent));
+    },
+    enabled: allTournaments.length > 0
   });
 
   // Delete tournament mutation
