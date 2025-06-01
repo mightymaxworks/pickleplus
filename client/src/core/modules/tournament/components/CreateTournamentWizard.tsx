@@ -684,10 +684,16 @@ export function CreateTournamentWizard({
       setStep(step + 1); // Direct approach without using prev callback
       console.log("[Tournament] Moving to step:", step + 1);
       
-      // Simple scroll to top fix
+      // Scroll the dialog content to top
       setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 50);
+        const dialogContent = document.querySelector('[role="dialog"]');
+        if (dialogContent) {
+          const scrollContainer = dialogContent.querySelector('[class*="overflow-y-auto"]');
+          if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+          }
+        }
+      }, 100);
     } else {
       // On the final step, submit the form
       console.log("[Tournament] Submitting form from final step");
