@@ -23,6 +23,11 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { 
+  Collapsible, 
+  CollapsibleContent, 
+  CollapsibleTrigger 
+} from '@/components/ui/collapsible';
+import { 
   Calendar, 
   MapPin, 
   Users, 
@@ -32,7 +37,11 @@ import {
   Plus,
   Eye,
   Edit,
-  Download
+  Download,
+  ChevronDown,
+  ChevronUp,
+  Layers,
+  FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -79,6 +88,8 @@ export default function TournamentAdminDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
+  const [viewMode, setViewMode] = useState<'hierarchy' | 'flat'>('hierarchy');
 
   const { data: tournaments = [], isLoading } = useQuery<Tournament[]>({
     queryKey: ['/api/tournaments'],
@@ -91,9 +102,72 @@ export default function TournamentAdminDashboard() {
     },
   });
 
+  // Helper functions for hierarchy management
+  const toggleParentExpansion = (parentId: number) => {
+    setExpandedParents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(parentId)) {
+        newSet.delete(parentId);
+      } else {
+        newSet.add(parentId);
+      }
+      return newSet;
+    });
+  };
+
+  // Group tournaments by hierarchy
+  const { parentTournaments, standaloneTournaments, subTournamentsByParent } = useMemo(() => {
+    const parents: Tournament[] = [];
+    const standalone: Tournament[] = [];
+    const subsByParent: { [parentId: number]: Tournament[] } = {};
+
+    tournaments.forEach(tournament => {
+      // Check if this tournament has the multi-event indicators
+      const isParent = tournament.name.includes('Championship Series') || 
+                      tournament.name.includes('Multi-Event') ||
+                      tournaments.some(other => other.name.includes(tournament.name.split(' ')[0]) && other.id !== tournament.id);
+      
+      // Check if this is a sub-tournament
+      const potentialParent = tournaments.find(parent => 
+        parent.id !== tournament.id &&
+        (tournament.name.includes(parent.name.split(' ')[0]) || 
+         tournament.name.includes('Men\'s') || 
+         tournament.name.includes('Women\'s') ||
+         tournament.name.includes('Mixed') ||
+         tournament.name.includes('Pro') ||
+         tournament.name.includes('Elite') ||
+         tournament.name.includes('Junior'))
+      );
+
+      if (potentialParent && !isParent) {
+        // This is a sub-tournament
+        if (!subsByParent[potentialParent.id]) {
+          subsByParent[potentialParent.id] = [];
+        }
+        subsByParent[potentialParent.id].push(tournament);
+      } else if (isParent || Object.keys(subsByParent).includes(tournament.id.toString())) {
+        // This is a parent tournament
+        parents.push(tournament);
+      } else {
+        // This is a standalone tournament
+        standalone.push(tournament);
+      }
+    });
+
+    return { 
+      parentTournaments: parents, 
+      standaloneTournaments: standalone, 
+      subTournamentsByParent: subsByParent 
+    };
+  }, [tournaments]);
+
   // Filter and sort tournaments
   const filteredAndSortedTournaments = useMemo(() => {
-    let filtered = tournaments.filter(tournament => {
+    const allTournaments = viewMode === 'hierarchy' ? 
+      [...parentTournaments, ...standaloneTournaments] : 
+      tournaments;
+
+    let filtered = allTournaments.filter(tournament => {
       const matchesSearch = tournament.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            tournament.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            tournament.organizer?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -302,12 +376,144 @@ export default function TournamentAdminDashboard() {
             >
               {sortOrder === 'asc' ? '↑' : '↓'}
             </Button>
+
+            {/* View Mode Toggle */}
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === 'hierarchy' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('hierarchy')}
+                className="rounded-r-none"
+              >
+                <Layers className="h-4 w-4 mr-1" />
+                Hierarchy
+              </Button>
+              <Button
+                variant={viewMode === 'flat' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('flat')}
+                className="rounded-l-none"
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Flat
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tournament Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      {/* Tournament Display */}
+      {viewMode === 'hierarchy' ? (
+        /* Hierarchical View */
+        <div className="space-y-4">
+          {/* Parent Tournaments with Sub-tournaments */}
+          {parentTournaments.filter(parent => 
+            parent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            parent.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            parent.organizer?.toLowerCase().includes(searchTerm.toLowerCase())
+          ).map((parentTournament) => {
+            const subTournaments = subTournamentsByParent[parentTournament.id] || [];
+            const isExpanded = expandedParents.has(parentTournament.id);
+            
+            return (
+              <Card key={parentTournament.id} className="overflow-hidden">
+                <Collapsible open={isExpanded} onOpenChange={() => toggleParentExpansion(parentTournament.id)}>
+                  <CollapsibleTrigger asChild>
+                    <div className="w-full">
+                      <CardHeader className="pb-3 hover:bg-gray-50 cursor-pointer">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Layers className="h-5 w-5 text-blue-600" />
+                              <CardTitle className="text-lg leading-tight line-clamp-2">
+                                {parentTournament.name}
+                              </CardTitle>
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              <Badge className={levelColors[parentTournament.level as keyof typeof levelColors] || 'bg-gray-100 text-gray-800'}>
+                                {parentTournament.level}
+                              </Badge>
+                              <Badge className={statusColors[parentTournament.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
+                                {parentTournament.status}
+                              </Badge>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                {subTournaments.length} Sub-Events
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </div>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <div className="px-6 pb-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {subTournaments.map((subTournament) => (
+                          <Card key={subTournament.id} className="border-l-4 border-l-blue-400 bg-blue-50/50">
+                            <CardContent className="p-4">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm line-clamp-2">{subTournament.name}</h4>
+                                <div className="flex flex-wrap gap-1">
+                                  <Badge variant="outline" size="sm">{subTournament.division}</Badge>
+                                  <Badge variant="outline" size="sm">{subTournament.category}</Badge>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>{format(new Date(subTournament.startDate), 'MMM dd')}</span>
+                                  </div>
+                                  {subTournament.maxParticipants && (
+                                    <div className="flex items-center gap-1">
+                                      <Users className="h-3 w-3" />
+                                      <span>{subTournament.maxParticipants}</span>
+                                    </div>
+                                  )}
+                                  {subTournament.prizePool && subTournament.prizePool > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <DollarSign className="h-3 w-3" />
+                                      <span>${subTournament.prizePool.toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                  {subTournament.entryFee && subTournament.entryFee > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <span>Fee: ${subTournament.entryFee}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex justify-end gap-1">
+                                  <Button size="sm" variant="outline" className="h-6 px-2 text-xs">
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="h-6 px-2 text-xs">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            );
+          })}
+
+          {/* Standalone Tournaments */}
+          {standaloneTournaments.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Standalone Tournaments
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredAndSortedTournaments.map((tournament) => (
           <Card key={tournament.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
