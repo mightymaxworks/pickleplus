@@ -38,55 +38,21 @@ router.get('/', async (req: Request, res: Response) => {
       offset = 0
     } = req.query;
 
-    // Start with a basic query
-    const baseQuery = db.select().from(tournaments);
+    // Simple query first - get all tournaments
+    let query = db.select().from(tournaments);
     
-    // Build conditions array
-    const conditions = [];
+    // Apply ordering
+    query = query.orderBy(desc(tournaments.createdAt));
     
-    if (status) {
-      conditions.push(eq(tournaments.status, status as string));
-    }
-    
-    if (format) {
-      conditions.push(eq(tournaments.format, format as string));
-    }
-    
-    if (category) {
-      conditions.push(eq(tournaments.category, category as string));
-    }
-    
-    if (division) {
-      conditions.push(eq(tournaments.division, division as string));
-    }
-    
-    if (tier) {
-      conditions.push(eq(tournaments.level, tier as string));
-    }
-    
-    if (startDate) {
-      conditions.push(gte(tournaments.startDate, new Date(startDate as string)));
-    }
-    
-    if (endDate) {
-      conditions.push(lte(tournaments.endDate, new Date(endDate as string)));
-    }
-
-    // Apply conditions if any exist
-    let query = baseQuery;
-    if (conditions.length > 0) {
-      query = baseQuery.where(and(...conditions));
-    }
-    
-    // Apply ordering and pagination
-    query = query
-      .orderBy(desc(tournaments.createdAt))
-      .limit(Number(limit))
-      .offset(Number(offset));
+    // Apply pagination
+    query = query.limit(Number(limit)).offset(Number(offset));
     
     const result = await query;
     
     console.log(`[Tournament API] Found ${result.length} tournaments`);
+    if (result.length > 0) {
+      console.log(`[Tournament API] Sample tournament: ${result[0].name}`);
+    }
     
     res.json(result);
   } catch (error) {
