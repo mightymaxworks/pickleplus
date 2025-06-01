@@ -125,45 +125,45 @@ router.post('/', isAuthenticated, isAdmin, async (req: Request, res: Response) =
   try {
     console.log('Tournament creation request body:', req.body);
     
-    // Transform camelCase form data to snake_case database fields
+    // Transform between camelCase and snake_case as needed
     const transformedData = {
       ...req.body,
-      // Map camelCase fields to snake_case
-      venue_address: req.body.venueAddress,
-      number_of_courts: req.body.numberOfCourts,
-      court_surface: req.body.courtSurface,
-      start_date: req.body.startDate,
-      end_date: req.body.endDate,
-      registration_start_date: req.body.registrationStartDate,
-      registration_end_date: req.body.registrationEndDate,
-      max_participants: req.body.maxParticipants,
-      min_participants: req.body.minParticipants,
-      min_rating: req.body.minRating,
-      max_rating: req.body.maxRating,
-      entry_fee: req.body.entryFee,
-      early_bird_fee: req.body.earlyBirdFee,
-      late_registration_fee: req.body.lateRegistrationFee,
-      prize_pool: req.body.prizePool,
-      contact_email: req.body.contactEmail,
-      contact_phone: req.body.contactPhone,
-      // Remove camelCase fields to avoid conflicts
-      venueAddress: undefined,
-      numberOfCourts: undefined,
-      courtSurface: undefined,
-      startDate: undefined,
-      endDate: undefined,
-      registrationStartDate: undefined,
-      registrationEndDate: undefined,
-      maxParticipants: undefined,
-      minParticipants: undefined,
-      minRating: undefined,
-      maxRating: undefined,
-      entryFee: undefined,
-      earlyBirdFee: undefined,
-      lateRegistrationFee: undefined,
-      prizePool: undefined,
-      contactEmail: undefined,
-      contactPhone: undefined
+      // Convert snake_case form fields back to camelCase for validation
+      startDate: req.body.start_date || req.body.startDate,
+      endDate: req.body.end_date || req.body.endDate,
+      registrationStartDate: req.body.registration_start_date || req.body.registrationStartDate,
+      registrationEndDate: req.body.registration_end_date || req.body.registrationEndDate,
+      venueAddress: req.body.venue_address || req.body.venueAddress,
+      numberOfCourts: req.body.number_of_courts || req.body.numberOfCourts,
+      courtSurface: req.body.court_surface || req.body.courtSurface,
+      maxParticipants: req.body.max_participants || req.body.maxParticipants,
+      minParticipants: req.body.min_participants || req.body.minParticipants,
+      minRating: req.body.min_rating || req.body.minRating,
+      maxRating: req.body.max_rating || req.body.maxRating,
+      entryFee: req.body.entry_fee || req.body.entryFee,
+      earlyBirdFee: req.body.early_bird_fee || req.body.earlyBirdFee,
+      lateRegistrationFee: req.body.late_registration_fee || req.body.lateRegistrationFee,
+      prizePool: req.body.prize_pool || req.body.prizePool,
+      contactEmail: req.body.contact_email || req.body.contactEmail,
+      contactPhone: req.body.contact_phone || req.body.contactPhone,
+      // Remove snake_case duplicates
+      start_date: undefined,
+      end_date: undefined,
+      registration_start_date: undefined,
+      registration_end_date: undefined,
+      venue_address: undefined,
+      number_of_courts: undefined,
+      court_surface: undefined,
+      max_participants: undefined,
+      min_participants: undefined,
+      min_rating: undefined,
+      max_rating: undefined,
+      entry_fee: undefined,
+      early_bird_fee: undefined,
+      late_registration_fee: undefined,
+      prize_pool: undefined,
+      contact_email: undefined,
+      contact_phone: undefined
     };
 
     // Remove undefined fields
