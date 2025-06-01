@@ -60,6 +60,34 @@ const createMultiEventTournamentSchema = z.object({
   divisions: z.array(z.string()).min(1, 'Select at least one division'),
   categories: z.array(z.string()).min(1, 'Select at least one category'),
   
+  // Eligibility configuration for each division/category combination
+  eligibilityCriteria: z.record(z.string(), z.object({
+    // Rating requirements
+    minDUPR: z.number().min(1.0).max(6.0).optional(),
+    maxDUPR: z.number().min(1.0).max(6.0).optional(),
+    minRankingPoints: z.number().min(0).default(0),
+    maxRankingPoints: z.number().min(0).optional(),
+    
+    // Age categories
+    minAge: z.number().min(18).max(100).optional(),
+    maxAge: z.number().min(18).max(100).optional(),
+    ageGroupLabel: z.string().optional(),
+    
+    // Additional eligibility criteria
+    requireMembership: z.boolean().default(false),
+    membershipType: z.string().optional(),
+    residencyRestriction: z.string().optional(),
+    genderRestriction: z.enum(['men', 'women', 'mixed', 'open']).optional(),
+    
+    // Skill level verification
+    requireRatingVerification: z.boolean().default(false),
+    allowSelfRating: z.boolean().default(true),
+    
+    // Tournament history requirements
+    minTournamentsPlayed: z.number().min(0).optional(),
+    requiredEventTypes: z.array(z.string()).optional(),
+  })).optional(),
+  
   // Prize allocation for individual events
   eventPrizes: z.record(z.string(), z.object({
     prizePool: z.number().min(0, 'Prize pool must be non-negative'),
