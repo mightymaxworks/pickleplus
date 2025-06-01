@@ -82,6 +82,13 @@ export default function TournamentAdminDashboard() {
 
   const { data: tournaments = [], isLoading } = useQuery<Tournament[]>({
     queryKey: ['/api/tournaments'],
+    queryFn: async () => {
+      const response = await fetch('/api/tournaments');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tournaments');
+      }
+      return response.json();
+    },
   });
 
   // Filter and sort tournaments
