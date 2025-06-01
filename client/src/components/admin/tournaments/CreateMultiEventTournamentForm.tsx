@@ -28,9 +28,10 @@ import { format } from 'date-fns';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
 
-// Form validation schema
+// Multi-event tournament form validation schema
+// Inherits all fields from single tournament creation plus multi-event specific fields
 const createMultiEventTournamentSchema = z.object({
-  // Parent tournament details
+  // Basic tournament information (inherited from single tournament)
   name: z.string().min(3, 'Tournament name must be at least 3 characters'),
   description: z.string().optional(),
   startDate: z.date({
@@ -42,21 +43,31 @@ const createMultiEventTournamentSchema = z.object({
   venue: z.string().optional(),
   level: z.enum(['club', 'district', 'city', 'provincial', 'national', 'regional', 'international']),
   
-  // Event configuration
-  divisions: z.array(z.string()).min(1, 'Select at least one division'),
-  categories: z.array(z.string()).min(1, 'Select at least one category'),
-  format: z.enum(['elimination', 'round-robin', 'hybrid', 'swiss']),
-  
-  // Registration settings
+  // Registration settings (inherited from single tournament)
   registrationDeadline: z.date().optional(),
   registrationFee: z.number().min(0).optional(),
   isPublic: z.boolean().default(true),
+  registrationOpen: z.boolean().default(true),
   maxParticipantsPerEvent: z.number().min(4).optional(),
   
-  // Advanced settings
+  // Advanced settings (inherited from single tournament)
   allowWaitlist: z.boolean().default(true),
   requireApproval: z.boolean().default(false),
   emailNotifications: z.boolean().default(true),
+  
+  // Multi-event specific configuration
+  format: z.enum(['elimination', 'round-robin', 'hybrid', 'swiss']),
+  divisions: z.array(z.string()).min(1, 'Select at least one division'),
+  categories: z.array(z.string()).min(1, 'Select at least one category'),
+  
+  // Prize allocation for individual events
+  eventPrizes: z.record(z.string(), z.object({
+    prizePool: z.number().min(0, 'Prize pool must be non-negative'),
+    firstPlace: z.number().min(0).max(100, 'Percentage must be between 0-100'),
+    secondPlace: z.number().min(0).max(100, 'Percentage must be between 0-100'),
+    thirdPlace: z.number().min(0).max(100, 'Percentage must be between 0-100'),
+    sponsor: z.string().optional(),
+  })).optional(),
 });
 
 type CreateMultiEventTournamentFormData = z.infer<typeof createMultiEventTournamentSchema>;
@@ -84,6 +95,7 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
     resolver: zodResolver(createMultiEventTournamentSchema),
     defaultValues: {
       isPublic: true,
+      registrationOpen: true,
       allowWaitlist: true,
       requireApproval: false,
       emailNotifications: true,
@@ -91,6 +103,7 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
       format: 'elimination',
       divisions: [],
       categories: [],
+      eventPrizes: {},
     },
   });
 
@@ -190,7 +203,7 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
   };
 
   const nextStep = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -198,9 +211,10 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
   };
 
   const steps = [
-    { number: 1, title: 'Basic Details', description: 'Tournament information' },
+    { number: 1, title: 'Basic Information', description: 'Tournament details and settings' },
     { number: 2, title: 'Event Configuration', description: 'Divisions and categories' },
-    { number: 3, title: 'Review & Create', description: 'Confirm and create' },
+    { number: 3, title: 'Prize Allocation', description: 'Individual event prizes' },
+    { number: 4, title: 'Review & Create', description: 'Confirm and create' },
   ];
 
   return (
@@ -449,6 +463,140 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
                             </PopoverContent>
                           </Popover>
                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Registration Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="registrationFee"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registration Fee ($)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="0.00" 
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormDescription>Fee per event registration</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="maxParticipantsPerEvent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Max Participants Per Event</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="32" 
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            />
+                          </FormControl>
+                          <FormDescription>Leave empty for unlimited</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="isPublic"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Public Tournament</FormLabel>
+                            <FormDescription>Allow public registration and viewing</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="registrationOpen"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Registration Open</FormLabel>
+                            <FormDescription>Accept new registrations</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Advanced Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="allowWaitlist"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Allow Waitlist</FormLabel>
+                            <FormDescription>Enable waitlist when events are full</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="requireApproval"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Require Approval</FormLabel>
+                            <FormDescription>Manually approve registrations</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="emailNotifications"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 md:col-span-2">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Email Notifications</FormLabel>
+                            <FormDescription>Send automated emails for registration and updates</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
                         </FormItem>
                       )}
                     />
@@ -705,8 +853,138 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
               </div>
             )}
 
-            {/* Step 3: Review & Create */}
+            {/* Step 3: Prize Allocation */}
             {currentStep === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Prize Allocation</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Set individual prize pools and distribution for each event combination.
+                  </p>
+                  
+                  {subTournamentPreviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {subTournamentPreviews.map((preview, index) => {
+                        const eventKey = `${preview.division}-${preview.category}`;
+                        return (
+                          <Card key={index} className="border">
+                            <CardHeader className="pb-4">
+                              <CardTitle className="text-base">{preview.name}</CardTitle>
+                              <CardDescription>
+                                {preview.division} • {preview.category}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium">Prize Pool ($)</label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={form.watch(`eventPrizes.${eventKey}.prizePool`) || ''}
+                                    onChange={(e) => {
+                                      const value = parseFloat(e.target.value) || 0;
+                                      form.setValue(`eventPrizes.${eventKey}.prizePool`, value);
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Sponsor (Optional)</label>
+                                  <Input
+                                    placeholder="e.g., Local Pro Shop"
+                                    value={form.watch(`eventPrizes.${eventKey}.sponsor`) || ''}
+                                    onChange={(e) => {
+                                      form.setValue(`eventPrizes.${eventKey}.sponsor`, e.target.value);
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <label className="text-sm font-medium mb-2 block">Prize Distribution (%)</label>
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">1st Place</label>
+                                    <Input
+                                      type="number"
+                                      max="100"
+                                      placeholder="50"
+                                      value={form.watch(`eventPrizes.${eventKey}.firstPlace`) || ''}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value) || 0;
+                                        form.setValue(`eventPrizes.${eventKey}.firstPlace`, value);
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">2nd Place</label>
+                                    <Input
+                                      type="number"
+                                      max="100"
+                                      placeholder="30"
+                                      value={form.watch(`eventPrizes.${eventKey}.secondPlace`) || ''}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value) || 0;
+                                        form.setValue(`eventPrizes.${eventKey}.secondPlace`, value);
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">3rd Place</label>
+                                    <Input
+                                      type="number"
+                                      max="100"
+                                      placeholder="20"
+                                      value={form.watch(`eventPrizes.${eventKey}.thirdPlace`) || ''}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value) || 0;
+                                        form.setValue(`eventPrizes.${eventKey}.thirdPlace`, value);
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                {(() => {
+                                  const first = form.watch(`eventPrizes.${eventKey}.firstPlace`) || 0;
+                                  const second = form.watch(`eventPrizes.${eventKey}.secondPlace`) || 0;
+                                  const third = form.watch(`eventPrizes.${eventKey}.thirdPlace`) || 0;
+                                  const total = first + second + third;
+                                  return total !== 100 && total > 0 ? (
+                                    <p className="text-sm text-amber-600 mt-2">
+                                      Total: {total}% (should equal 100%)
+                                    </p>
+                                  ) : null;
+                                })()}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                      
+                      <Card className="border-dashed bg-muted/20">
+                        <CardContent className="pt-6">
+                          <div className="text-center">
+                            <DollarSign className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <h4 className="font-semibold mb-2">Total Prize Pool</h4>
+                            <p className="text-2xl font-bold text-green-600">
+                              ${Object.values(form.watch('eventPrizes') || {}).reduce((total, event: any) => total + (event?.prizePool || 0), 0).toFixed(2)}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Configure events in Step 2 to set up prize allocation</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Review & Create */}
+            {currentStep === 4 && (
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Tournament Preview</h3>
@@ -799,7 +1077,7 @@ export default function CreateMultiEventTournamentForm({ onSuccess, onCancel }: 
                   Cancel
                 </Button>
                 
-                {currentStep < 3 ? (
+                {currentStep < 4 ? (
                   <Button type="button" onClick={nextStep}>
                     Next
                     <ChevronRight className="w-4 h-4 ml-2" />
