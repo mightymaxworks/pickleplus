@@ -44,7 +44,7 @@ import {
   FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { CreateTournamentDialog } from '@/core/modules/tournament/components/CreateTournamentDialog';
+import { CreateTournamentWizard } from '@/core/modules/tournament/components/CreateTournamentWizard';
 
 interface Tournament {
   id: number;
@@ -739,7 +739,7 @@ export default function TournamentAdminDashboard() {
       )}
 
       {/* Create Tournament Modal */}
-      <CreateTournamentDialog
+      <CreateTournamentWizard
         open={isCreateTournamentOpen}
         onOpenChange={setIsCreateTournamentOpen}
         queryKey="/api/tournaments"
