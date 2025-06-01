@@ -23,7 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Trophy, Users, Plus, X, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { CalendarIcon, Trophy, Users, Plus, X, ChevronLeft, ChevronRight, CheckCircle, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
