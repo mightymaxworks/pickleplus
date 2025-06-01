@@ -122,26 +122,28 @@ export default function TournamentAdminDashboard() {
     const subsByParent: { [parentId: number]: Tournament[] } = {};
 
     // First pass: identify actual parent-child relationships from database
-    const childTournaments = tournaments.filter(t => t.parentTournamentId);
-    const parentIds = new Set(childTournaments.map(t => t.parentTournamentId));
+    const childTournaments = tournaments.filter(t => (t as any).parentTournamentId);
+    const parentIds = new Set(childTournaments.map(t => (t as any).parentTournamentId));
 
     // Organize child tournaments by parent
     childTournaments.forEach(child => {
-      if (child.parentTournamentId) {
-        if (!subsByParent[child.parentTournamentId]) {
-          subsByParent[child.parentTournamentId] = [];
+      const parentId = (child as any).parentTournamentId;
+      if (parentId) {
+        if (!subsByParent[parentId]) {
+          subsByParent[parentId] = [];
         }
-        subsByParent[child.parentTournamentId].push(child);
+        subsByParent[parentId].push(child);
       }
     });
 
     // Second pass: categorize tournaments
     tournaments.forEach(tournament => {
-      if (tournament.parentTournamentId) {
+      const hasParentId = (tournament as any).parentTournamentId;
+      if (hasParentId) {
         // This is a child tournament - already handled above
         return;
-      } else if (parentIds.has(tournament.id) || tournament.isMultiEvent) {
-        // This is a parent tournament (has children or marked as multi-event)
+      } else if (parentIds.has(tournament.id)) {
+        // This is a parent tournament (has children)
         parents.push(tournament);
       } else {
         // This is a standalone tournament
