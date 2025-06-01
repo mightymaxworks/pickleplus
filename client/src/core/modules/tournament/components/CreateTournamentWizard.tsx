@@ -575,13 +575,18 @@ export function CreateTournamentWizard({
       }, 50);
     }
   }, [step]);
-  const totalSteps = 3;
+  const totalSteps = 4;
   
   // Calculate progress percentage
   const progress = ((step + 1) / totalSteps) * 100;
   
   // Step indicators
   const steps = [
+    {
+      label: 'Type',
+      icon: LayoutIcon,
+      description: 'Choose tournament type'
+    },
     {
       label: 'Basic Info',
       icon: InfoIcon,
@@ -764,7 +769,17 @@ export function CreateTournamentWizard({
     // For simplicity and reliability, let's just enforce the minimal validation
     // and focus on making navigation work first
     if (step === 0) {
-      // Basic validation for first step
+      // Tournament type validation for first step
+      if (!tournamentType) {
+        toast({
+          title: 'Please select a tournament type',
+          description: 'You must choose between Single, Multi-Event, or Team tournament.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    } else if (step === 1) {
+      // Basic validation for second step (name)
       const name = form.getValues("name");
       if (!name || name.length < 3) {
         form.setError("name", {
@@ -801,10 +816,12 @@ export function CreateTournamentWizard({
     
     switch (step) {
       case 0:
-        return <TournamentBasicInfoStep {...stepProps} />;
+        return <TournamentTypeSelectionStep form={form} tournamentType={tournamentType} setTournamentType={setTournamentType} />;
       case 1:
-        return <TournamentStructureStep {...stepProps} />;
+        return <TournamentBasicInfoStep {...stepProps} />;
       case 2:
+        return <TournamentStructureStep {...stepProps} />;
+      case 3:
         return <TournamentSchedulingStep {...stepProps} />;
       default:
         return <TournamentBasicInfoStep {...stepProps} />;
