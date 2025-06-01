@@ -684,14 +684,11 @@ export function CreateTournamentWizard({
       setStep(step + 1); // Direct approach without using prev callback
       console.log("[Tournament] Moving to step:", step + 1);
       
-      // Scroll the dialog content to top
+      // Simple scroll fix - target the specific dialog container
       setTimeout(() => {
-        const dialogContent = document.querySelector('[role="dialog"]');
-        if (dialogContent) {
-          const scrollContainer = dialogContent.querySelector('[class*="overflow-y-auto"]');
-          if (scrollContainer) {
-            scrollContainer.scrollTop = 0;
-          }
+        const container = document.getElementById('tournament-wizard-scroll-container');
+        if (container) {
+          container.scrollTop = 0;
         }
       }, 100);
     } else {
@@ -733,7 +730,7 @@ export function CreateTournamentWizard({
         aria-describedby="tournament-wizard-description"
       >
         <div 
-          ref={dialogContentRef}
+          id="tournament-wizard-scroll-container"
           className="p-4 md:p-6 max-h-[90vh] overflow-y-auto"
         >
           <DialogHeader>
