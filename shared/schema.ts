@@ -706,6 +706,17 @@ export const tournaments = pgTable("tournaments", {
   parentTournamentId: integer("parent_tournament_id"), // Will be linked in relations
   isParent: boolean("is_parent").default(false), // Indicates if this is a parent tournament
   isSubEvent: boolean("is_sub_event").default(false), // Indicates if this is a sub-event of a parent tournament
+  
+  // Team tournament specific fields (inherits all above fields for consistency)
+  isTeamTournament: boolean("is_team_tournament").default(false), // Indicates if this is a team tournament
+  teamSize: integer("team_size"), // Default team size
+  minTeamSize: integer("min_team_size"), // Minimum players per team
+  maxTeamSize: integer("max_team_size"), // Maximum players per team
+  maxTeams: integer("max_teams"), // Maximum number of teams
+  teamMatchFormat: jsonb("team_match_format"), // JSON config for match formats (singles, doubles, mixed)
+  teamEligibilityRules: jsonb("team_eligibility_rules"), // JSON config for DUPR, ranking points, professional status rules
+  teamLineupRules: jsonb("team_lineup_rules"), // JSON config for lineup submission and rotation rules
+  
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -723,6 +734,13 @@ export const tournamentRegistrations = pgTable("tournament_registrations", {
   seedNumber: integer("seed_number"),
   placement: integer("placement"),
   notes: text("notes"),
+  
+  // Team tournament specific fields (inherits all above fields for consistency)
+  teamName: varchar("team_name", { length: 255 }), // Team name for team tournaments
+  teamPlayers: jsonb("team_players"), // JSON array of team player details
+  teamCaptain: varchar("team_captain", { length: 255 }), // Team captain name
+  isTeamRegistration: boolean("is_team_registration").default(false), // Indicates if this is a team registration
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
