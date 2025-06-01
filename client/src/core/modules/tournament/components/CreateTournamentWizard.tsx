@@ -10,7 +10,7 @@
  * - Comprehensive error handling
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -474,6 +474,9 @@ export function CreateTournamentWizard({
   const queryClient = useQueryClient();
   const { notifyTournamentChanged } = useTournamentChanges();
   
+  // Create a ref for the dialog content to enable scroll to top
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+  
   // Track the current step
   const [step, setStep] = useState(0);
   const totalSteps = 3;
@@ -680,6 +683,14 @@ export function CreateTournamentWizard({
     if (step < totalSteps - 1) {
       setStep(step + 1); // Direct approach without using prev callback
       console.log("[Tournament] Moving to step:", step + 1);
+      
+      // Scroll to top of dialog when moving to next step
+      if (dialogContentRef.current) {
+        dialogContentRef.current.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
     } else {
       // On the final step, submit the form
       console.log("[Tournament] Submitting form from final step");
@@ -715,6 +726,7 @@ export function CreateTournamentWizard({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
+        ref={dialogContentRef}
         className="w-[95%] max-w-[600px] p-4 md:p-6 max-h-[90vh] overflow-y-auto"
         aria-describedby="tournament-wizard-description"
       >
