@@ -141,13 +141,13 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
           <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
             <div className="container mx-auto px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                {isSmallScreen && (
-                  <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="mr-2">
-                        <Menu size={20} />
-                      </Button>
-                    </SheetTrigger>
+                {/* Hamburger menu - always visible for admin navigation */}
+                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="mr-2">
+                      <Menu size={20} />
+                    </Button>
+                  </SheetTrigger>
                     <SheetContent side="left" className="w-[260px] sm:w-[300px] p-0">
                       <div className="px-4 py-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                         <div 
@@ -276,7 +276,6 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       </div>
                     </SheetContent>
                   </Sheet>
-                )}
                 
                 <Button
                   variant="ghost"
