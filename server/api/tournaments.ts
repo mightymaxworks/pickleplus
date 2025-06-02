@@ -85,7 +85,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 /**
  * GET /api/tournaments/:id
- * Get a specific tournament by ID
+ * Get a specific tournament by ID with full details
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -103,17 +103,129 @@ router.get('/:id', async (req: Request, res: Response) => {
     const registrationsCount = await db.select({ count: sql<number>`count(*)` }).from(tournamentRegistrations)
       .where(eq(tournamentRegistrations.tournamentId, parseInt(id)));
     
-    // Combine data
+    // Combine data with proper typing for the unified inheritance structure
     const result = {
       ...tournament[0],
       currentRegistrations: registrationsCount[0].count,
-      brackets: [] // Placeholder for brackets until we implement full tournament bracket functionality
+      currentParticipants: registrationsCount[0].count,
+      brackets: [] // Placeholder for brackets
     };
     
     res.json(result);
   } catch (error) {
     console.error('Error getting tournament:', error);
     res.status(500).json({ message: 'Failed to get tournament' });
+  }
+});
+
+/**
+ * GET /api/tournaments/:id/registrations
+ * Get all registrations for a specific tournament
+ */
+router.get('/:id/registrations', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Verify tournament exists
+    const tournament = await db.select().from(tournaments)
+      .where(eq(tournaments.id, parseInt(id)))
+      .limit(1);
+    
+    if (tournament.length === 0) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+    
+    // Get all registrations for this tournament
+    const registrations = await db.select().from(tournamentRegistrations)
+      .where(eq(tournamentRegistrations.tournamentId, parseInt(id)))
+      .orderBy(desc(tournamentRegistrations.createdAt));
+    
+    res.json(registrations);
+  } catch (error) {
+    console.error('Error getting tournament registrations:', error);
+    res.status(500).json({ message: 'Failed to get tournament registrations' });
+  }
+});
+
+/**
+ * PATCH /api/tournaments/:id
+ * Update a specific tournament
+ */
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    // Verify tournament exists
+    const existingTournament = await db.select().from(tournaments)
+      .where(eq(tournaments.id, parseInt(id)))
+      .limit(1);
+    
+    if (existingTournament.length === 0) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+    
+    // Update tournament
+    const updatedTournament = await db.update(tournaments)
+      .set(updateData)
+      .where(eq(tournaments.id, parseInt(id)))
+      .returning();
+    
+    res.json(updatedTournament[0]);
+  } catch (error) {
+    console.error('Error updating tournament:', error);
+    res.status(500).json({ message: 'Failed to update tournament' });
+  }
+});
+
+/**
+ * DELETE /api/tournaments/:id
+ * Delete a specific tournament
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Verify tournament exists
+    const existingTournament = await db.select().from(tournaments)
+      .where(eq(tournaments.id, parseInt(id)))
+      .limit(1);
+    
+    if (existingTournament.length === 0) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+    
+    // Check if tournament has registrations
+    const registrationsCount = await db.select({ count: sql<number>`count(*)` }).from(tournamentRegistrations)
+      .where(eq(tournamentRegistrations.tournamentId, parseInt(id)));
+    
+    if (registrationsCount[0].count > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete tournament with existing registrations',
+        registrationsCount: registrationsCount[0].count
+      });
+    }
+    
+    // For multi-event tournaments, check for sub-events
+    if (existingTournament[0].isParent) {
+      const subEventsCount = await db.select({ count: sql<number>`count(*)` }).from(tournaments)
+        .where(eq(tournaments.parentTournamentId, parseInt(id)));
+      
+      if (subEventsCount[0].count > 0) {
+        return res.status(400).json({ 
+          message: 'Cannot delete parent tournament with existing sub-events',
+          subEventsCount: subEventsCount[0].count
+        });
+      }
+    }
+    
+    // Delete tournament
+    await db.delete(tournaments).where(eq(tournaments.id, parseInt(id)));
+    
+    res.json({ message: 'Tournament deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting tournament:', error);
+    res.status(500).json({ message: 'Failed to delete tournament' });
   }
 });
 
