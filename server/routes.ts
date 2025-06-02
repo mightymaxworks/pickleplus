@@ -208,6 +208,61 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  // PKL-278651-ADMIN-0015-USER - Admin Users Management API
+  app.get('/api/admin/users', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Check if user is admin
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+      
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const search = req.query.search as string || '';
+      const offset = (page - 1) * limit;
+      
+      // For now, get all active user IDs and then fetch basic user info
+      // This is a simple implementation - in production we'd want proper pagination in the database
+      const userIds = await storage.getAllActiveUserIds();
+      const totalCount = userIds.length;
+      
+      // Get a subset for pagination
+      const paginatedUserIds = userIds.slice(offset, offset + limit);
+      
+      // Fetch basic user information for this page
+      const users = [];
+      for (const userId of paginatedUserIds) {
+        const user = await storage.getUserById(userId);
+        if (user) {
+          users.push({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            displayName: user.displayName,
+            isAdmin: user.isAdmin,
+            isFoundingMember: user.isFoundingMember,
+            xp: user.xp,
+            level: user.level,
+            createdAt: user.createdAt
+          });
+        }
+      }
+      
+      res.json({
+        users,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      });
+    } catch (error) {
+      console.error('[API] Error getting admin users:', error);
+      res.status(500).json({ error: 'Error getting users' });
+    }
+  });
+  
   // PKL-278651-CONN-0004-PASS-REG - Direct implementation of registered events endpoint
   app.get('/api/events/my/registered', isAuthenticated, async (req: Request, res: Response) => {
     try {

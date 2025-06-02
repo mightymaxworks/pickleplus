@@ -13,7 +13,7 @@ import React from 'react';
 import { Activity, Bot, Server } from 'lucide-react';
 import { adminComponentRegistry } from './services/adminComponentRegistry';
 
-// Define system tools navigation items
+// Define system tools navigation items with proper icon functions
 const SYSTEM_HEADER = {
   id: 'system-tools-header',
   label: 'System Tools',
