@@ -261,10 +261,10 @@ export default function App() {
                   />
                   <Route path="/admin/tournaments">
                     {(params) => {
-                      const TournamentAdminDashboard = lazyLoad(() => import('./components/admin/tournaments/TournamentAdminDashboard'));
+                      const TournamentAdminDashboardRedesigned = lazyLoad(() => import('./components/admin/tournaments/TournamentAdminDashboardRedesigned'));
                       return (
                         <AdminProtectedRoute>
-                          <TournamentAdminDashboard />
+                          <TournamentAdminDashboardRedesigned />
                         </AdminProtectedRoute>
                       );
                     }}
