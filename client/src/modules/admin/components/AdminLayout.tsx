@@ -45,6 +45,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
   const categorizedNavItems = useCategorizedNavItems();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toast } = useToast();
   
   // If not authorized, redirect to main page
