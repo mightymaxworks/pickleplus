@@ -378,17 +378,17 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
           
           {/* Main Content with Sidebar */}
           <div className="flex flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-4">
-            {/* Admin Sidebar - Hidden on mobile */}
+            {/* Admin Sidebar - Hidden on mobile, Compact Design */}
             {!isSmallScreen && (
-              <div className="w-64 shrink-0 mr-6">
-                <nav className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24 admin-sidebar">
-                  {/* Categorized Navigation */}
+              <div className="w-48 shrink-0 mr-4">
+                <nav className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24 admin-sidebar">
+                  {/* Compact Navigation */}
                   {categorizedNavItems[NavCategory.DASHBOARD].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    <div className="mb-3">
+                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
                         Dashboard
                       </h3>
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {categorizedNavItems[NavCategory.DASHBOARD]
                           .filter(item => !item.metadata?.desktopVisible === false)
                           .map((item) => (
@@ -399,25 +399,12 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                     </div>
                   )}
                   
-                  {categorizedNavItems[NavCategory.USER_MANAGEMENT].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
-                        User Management
-                      </h3>
-                      <div className="space-y-1">
-                        {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
-                          <NavItem key={item.path || `user-mgmt-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
                   {categorizedNavItems[NavCategory.EVENTS].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    <div className="mb-3">
+                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
                         Events
                       </h3>
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {categorizedNavItems[NavCategory.EVENTS]
                           .filter(item => !item.metadata?.desktopVisible === false)
                           .map((item) => (
@@ -428,51 +415,38 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                     </div>
                   )}
                   
-                  {categorizedNavItems[NavCategory.GAME].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
-                        Game Management
+                  {categorizedNavItems[NavCategory.USER_MANAGEMENT].length > 0 && (
+                    <div className="mb-3">
+                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
+                        Users
                       </h3>
-                      <div className="space-y-1">
-                        {categorizedNavItems[NavCategory.GAME].map((item) => (
-                          <NavItem key={item.path || `game-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
+                      <div className="space-y-0.5">
+                        {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
+                          <NavItem key={item.path || `user-mgmt-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
                   )}
                   
-                  {categorizedNavItems[NavCategory.CONTENT].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
-                        Content
+                  {(categorizedNavItems[NavCategory.GAME].length > 0 || categorizedNavItems[NavCategory.CONTENT].length > 0 || categorizedNavItems[NavCategory.OTHER].length > 0) && (
+                    <div className="mb-3">
+                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
+                        Tools
                       </h3>
-                      <div className="space-y-1">
-                        {categorizedNavItems[NavCategory.CONTENT].map((item) => (
-                          <NavItem key={item.path || `content-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {categorizedNavItems[NavCategory.OTHER].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
-                        Other
-                      </h3>
-                      <div className="space-y-1">
-                        {categorizedNavItems[NavCategory.OTHER].map((item) => (
-                          <NavItem key={item.path || `other-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
+                      <div className="space-y-0.5">
+                        {[...categorizedNavItems[NavCategory.GAME], ...categorizedNavItems[NavCategory.CONTENT], ...categorizedNavItems[NavCategory.OTHER]].map((item) => (
+                          <NavItem key={item.path || `tools-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
                   )}
                   
                   {categorizedNavItems[NavCategory.SYSTEM].length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    <div className="mb-3">
+                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
                         System
                       </h3>
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
                           <NavItem key={item.path || `system-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}

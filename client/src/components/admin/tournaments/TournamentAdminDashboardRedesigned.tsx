@@ -289,7 +289,7 @@ export default function TournamentAdminDashboardRedesigned() {
                                             <div className="flex items-center space-x-2 mb-2">
                                               <h4 className="font-semibold">{subEvent.name}</h4>
                                               <Badge variant="outline" className="text-xs">Sub-Event</Badge>
-                                              <Badge className={subEvent.status === 'active' ? 'bg-green-500' : subEvent.status === 'upcoming' ? 'bg-blue-500' : 'bg-gray-500'} className="text-xs">
+                                              <Badge className={`text-xs ${subEvent.status === 'active' ? 'bg-green-500' : subEvent.status === 'upcoming' ? 'bg-blue-500' : 'bg-gray-500'}`}>
                                                 {subEvent.status}
                                               </Badge>
                                             </div>
