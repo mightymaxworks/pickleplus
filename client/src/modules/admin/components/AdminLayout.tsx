@@ -17,6 +17,7 @@ import { Shield, Settings, LogOut, Home, ArrowLeft, Menu, X, HelpCircle, Chevron
 import { useAdminNavItems, useCategorizedNavItems, NavCategory } from '../hooks/useAdminComponents';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -376,100 +377,10 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
             </div>
           )}
           
-          {/* Main Content with Sidebar */}
-          <div className="flex flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-4">
-            {/* Admin Sidebar - Hidden on mobile, Compact Design */}
-            {!isSmallScreen && (
-              <div className="w-48 shrink-0 mr-4">
-                <nav className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24 admin-sidebar">
-                  {/* Compact Navigation */}
-                  {categorizedNavItems[NavCategory.DASHBOARD].length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
-                        Dashboard
-                      </h3>
-                      <div className="space-y-0.5">
-                        {categorizedNavItems[NavCategory.DASHBOARD]
-                          .filter(item => !item.metadata?.desktopVisible === false)
-                          .map((item) => (
-                            <NavItem key={item.path || `dashboard-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                          ))
-                        }
-                      </div>
-                    </div>
-                  )}
-                  
-                  {categorizedNavItems[NavCategory.EVENTS].length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
-                        Events
-                      </h3>
-                      <div className="space-y-0.5">
-                        {categorizedNavItems[NavCategory.EVENTS]
-                          .filter(item => !item.metadata?.desktopVisible === false)
-                          .map((item) => (
-                            <NavItem key={item.path || `events-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                          ))
-                        }
-                      </div>
-                    </div>
-                  )}
-                  
-                  {categorizedNavItems[NavCategory.USER_MANAGEMENT].length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
-                        Users
-                      </h3>
-                      <div className="space-y-0.5">
-                        {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
-                          <NavItem key={item.path || `user-mgmt-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {(categorizedNavItems[NavCategory.GAME].length > 0 || categorizedNavItems[NavCategory.CONTENT].length > 0 || categorizedNavItems[NavCategory.OTHER].length > 0) && (
-                    <div className="mb-3">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
-                        Tools
-                      </h3>
-                      <div className="space-y-0.5">
-                        {[...categorizedNavItems[NavCategory.GAME], ...categorizedNavItems[NavCategory.CONTENT], ...categorizedNavItems[NavCategory.OTHER]].map((item) => (
-                          <NavItem key={item.path || `tools-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {categorizedNavItems[NavCategory.SYSTEM].length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-1">
-                        System
-                      </h3>
-                      <div className="space-y-0.5">
-                        {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
-                          <NavItem key={item.path || `system-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <Separator className="my-4" />
-                  
-                  <Button
-                    variant="ghost"
-                    className="justify-start w-full px-4 py-3 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => navigate('/admin/settings')}
-                  >
-                    <Settings size={18} className="mr-3" />
-                    <span>Admin Settings</span>
-                  </Button>
-                </nav>
-              </div>
-            )}
-            
-            {/* Main content area */}
-            <div className={`${isSmallScreen ? 'w-full' : 'flex-1'}`}>
+          {/* Full Width Main Content */}
+          <div className="flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-4">
+            {/* Main content area - Full width */}
+            <div className="w-full">
               <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -486,6 +397,175 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
               </div>
             </div>
           </div>
+
+          {/* Hamburger Menu Overlay */}
+          <Dialog open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span>Admin Navigation</span>
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {/* Dashboard Section */}
+                {categorizedNavItems[NavCategory.DASHBOARD].length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      Dashboard
+                    </h3>
+                    <div className="space-y-1">
+                      {categorizedNavItems[NavCategory.DASHBOARD]
+                        .filter(item => !item.metadata?.desktopVisible === false)
+                        .map((item) => (
+                          <Button
+                            key={item.path || `dashboard-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`}
+                            variant="ghost"
+                            className="w-full justify-start text-left"
+                            onClick={() => {
+                              if (item.path) {
+                                navigate(item.path);
+                                setIsMobileMenuOpen(false);
+                              }
+                            }}
+                          >
+                            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                            {item.label}
+                          </Button>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+
+                {/* Events Section */}
+                {categorizedNavItems[NavCategory.EVENTS].length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      Events
+                    </h3>
+                    <div className="space-y-1">
+                      {categorizedNavItems[NavCategory.EVENTS]
+                        .filter(item => !item.metadata?.desktopVisible === false)
+                        .map((item) => (
+                          <Button
+                            key={item.path || `events-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`}
+                            variant="ghost"
+                            className="w-full justify-start text-left"
+                            onClick={() => {
+                              if (item.path) {
+                                navigate(item.path);
+                                setIsMobileMenuOpen(false);
+                              }
+                            }}
+                          >
+                            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                            {item.label}
+                          </Button>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+
+                {/* Users Section */}
+                {categorizedNavItems[NavCategory.USER_MANAGEMENT].length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      User Management
+                    </h3>
+                    <div className="space-y-1">
+                      {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
+                        <Button
+                          key={item.path || `users-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`}
+                          variant="ghost"
+                          className="w-full justify-start text-left"
+                          onClick={() => {
+                            if (item.path) {
+                              navigate(item.path);
+                              setIsMobileMenuOpen(false);
+                            }
+                          }}
+                        >
+                          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                          {item.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tools Section */}
+                {(categorizedNavItems[NavCategory.GAME].length > 0 || categorizedNavItems[NavCategory.CONTENT].length > 0 || categorizedNavItems[NavCategory.OTHER].length > 0) && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      Tools & Content
+                    </h3>
+                    <div className="space-y-1">
+                      {[...categorizedNavItems[NavCategory.GAME], ...categorizedNavItems[NavCategory.CONTENT], ...categorizedNavItems[NavCategory.OTHER]].map((item) => (
+                        <Button
+                          key={item.path || `tools-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`}
+                          variant="ghost"
+                          className="w-full justify-start text-left"
+                          onClick={() => {
+                            if (item.path) {
+                              navigate(item.path);
+                              setIsMobileMenuOpen(false);
+                            }
+                          }}
+                        >
+                          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                          {item.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* System Section */}
+                {categorizedNavItems[NavCategory.SYSTEM].length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      System
+                    </h3>
+                    <div className="space-y-1">
+                      {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
+                        <Button
+                          key={item.path || `system-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`}
+                          variant="ghost"
+                          className="w-full justify-start text-left"
+                          onClick={() => {
+                            if (item.path) {
+                              navigate(item.path);
+                              setIsMobileMenuOpen(false);
+                            }
+                          }}
+                        >
+                          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                          {item.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      navigate('/admin/settings');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Admin Settings
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </HelpProvider>
     </AccessibilityProvider>
