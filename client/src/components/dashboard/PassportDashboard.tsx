@@ -114,66 +114,84 @@ export default function PassportDashboard() {
 
   return (
     <div className="relative max-w-6xl mx-auto px-4 space-y-2 -mt-16 overflow-hidden">
-      {/* Futuristic Background Animations */}
+      {/* Enhanced Futuristic Background Animations */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        {/* Floating geometric shapes */}
+        {/* Large floating geometric shapes - much more visible */}
         <motion.div
-          className="absolute top-10 left-10 w-20 h-20 border border-orange-200/20 rounded-full"
+          className="absolute top-10 left-10 w-32 h-32 border-2 border-orange-400/60 rounded-full bg-orange-100/20"
           animate={{ 
-            y: [0, -20, 0],
+            y: [0, -30, 0],
             rotate: [0, 180, 360],
-            scale: [1, 1.1, 1]
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/3 right-16 w-24 h-24 border-2 border-yellow-400/70 rotate-45 bg-yellow-100/25"
+          animate={{ 
+            y: [0, 25, 0],
+            rotate: [45, 225, 405],
+            opacity: [0.4, 0.8, 0.4]
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-1/3 right-20 w-16 h-16 border border-yellow-200/30 rotate-45"
+          className="absolute bottom-1/3 left-1/3 w-20 h-20 bg-gradient-to-r from-orange-300/40 to-yellow-300/40 rounded-full border border-orange-300/50"
           animate={{ 
-            y: [0, 15, 0],
-            rotate: [45, 225, 405],
-            opacity: [0.2, 0.5, 0.2]
+            x: [0, 40, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.4, 1]
           }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-gradient-to-r from-orange-200/10 to-yellow-200/10 rounded-full"
-          animate={{ 
-            x: [0, 30, 0],
-            y: [0, -25, 0],
-            scale: [1, 1.3, 1]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         />
         
-        {/* Subtle scanning line effect */}
+        {/* More visible scanning line effect */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-100/5 to-transparent h-1"
-          animate={{ y: ["0vh", "100vh"] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-200/30 to-transparent h-3"
+          animate={{ y: ["-10vh", "110vh"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
         />
         
-        {/* Particle effect */}
-        {[...Array(4)].map((_, i) => (
+        {/* Enhanced particle effect */}
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-orange-300/30 rounded-full"
+            className="absolute w-2 h-2 bg-orange-400/60 rounded-full shadow-lg"
             style={{
-              left: `${20 + Math.random() * 60}%`,
-              top: `${20 + Math.random() * 60}%`,
+              left: `${10 + Math.random() * 80}%`,
+              top: `${10 + Math.random() * 80}%`,
             }}
             animate={{
-              y: [0, -80, 0],
-              opacity: [0, 0.8, 0],
-              scale: [0, 1, 0]
+              y: [0, -100, 0],
+              opacity: [0, 1, 0],
+              scale: [0, 1.5, 0]
             }}
             transition={{
-              duration: 4 + Math.random() * 2,
+              duration: 3 + Math.random() * 2,
               repeat: Infinity,
-              delay: Math.random() * 3,
+              delay: Math.random() * 2,
               ease: "easeInOut"
             }}
           />
         ))}
+        
+        {/* Pulsing background orbs */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 w-40 h-40 bg-orange-200/20 rounded-full blur-xl"
+          animate={{ 
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-28 h-28 bg-yellow-200/25 rounded-full blur-lg"
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.15, 0.35, 0.15]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
       </div>
       {/* Player Passport Header with Prominent QR Code */}
       <motion.div
