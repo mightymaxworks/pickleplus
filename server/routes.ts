@@ -903,16 +903,13 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           genderFormats = ['mens_singles', 'mens_doubles', 'mixed_doubles'];
         }
         
-        // Determine age divisions based on user's age
+        // Determine age divisions based on user's age - correct structure: Pro, Open/19+, 35+, 50+, 60+
         const ageDivisions = [];
         if (userAge) {
-          if (userAge >= 18) ageDivisions.push('open');
+          if (userAge >= 19) ageDivisions.push('open');
           if (userAge >= 35) ageDivisions.push('35+');
-          if (userAge >= 40) ageDivisions.push('40+');
           if (userAge >= 50) ageDivisions.push('50+');
           if (userAge >= 60) ageDivisions.push('60+');
-          if (userAge >= 65) ageDivisions.push('65+');
-          if (userAge >= 70) ageDivisions.push('70+');
         } else {
           // Default to open if age unknown
           ageDivisions.push('open');

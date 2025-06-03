@@ -412,14 +412,6 @@ export default function PassportDashboard() {
                         );
                       }
                       
-                      if (userAge >= 40) {
-                        eligibleCategories.push(
-                          { format: 'mens_singles', division: '40+' },
-                          { format: 'mens_doubles', division: '40+' },
-                          { format: 'mixed_doubles', division: '40+' }
-                        );
-                      }
-                      
                       if (userAge >= 50) {
                         eligibleCategories.push(
                           { format: 'mens_singles', division: '50+' },
@@ -427,14 +419,24 @@ export default function PassportDashboard() {
                           { format: 'mixed_doubles', division: '50+' }
                         );
                       }
+                      
+                      if (userAge >= 60) {
+                        eligibleCategories.push(
+                          { format: 'mens_singles', division: '60+' },
+                          { format: 'mens_doubles', division: '60+' },
+                          { format: 'mixed_doubles', division: '60+' }
+                        );
+                      }
 
-                      return eligibleCategories.map((category, index) => {
-                        // Find if user has data for this category
+                      // Filter out only the eligible categories for display (limit to first 6 for layout)
+                      return eligibleCategories.slice(0, 6).map((category, index) => {
+                        // Find if user has data for this category - only show if authentic tournament data exists
                         const categoryData = pcpRankingData?.allCategories?.find(
                           (c: any) => c.format === category.format && c.division === category.division
                         );
 
-                        const isRanked = categoryData && categoryData.rankingPoints > 0;
+                        // Only show as ranked if there's actual tournament participation (not just match points)
+                        const isRanked = categoryData && categoryData.breakdown?.tournamentPoints > 0;
                         const colorScheme = index % 3 === 0 ? 'purple' : index % 3 === 1 ? 'blue' : 'indigo';
 
                         return (
@@ -449,11 +451,11 @@ export default function PassportDashboard() {
                                 {category.format?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} • {category.division}
                               </div>
                               <div className={`text-lg font-black my-1 text-${colorScheme}-600`}>
-                                {isRanked ? `${categoryData.rankingPoints} pts` : 'Not Ranked'}
+                                {isRanked ? `${categoryData.breakdown.tournamentPoints} pts` : 'Not Ranked'}
                               </div>
                               {isRanked ? (
                                 <div className={`text-xs mb-1 text-${colorScheme}-700`}>
-                                  T: {categoryData.breakdown?.tournamentPoints || 0} • M: {categoryData.breakdown?.matchPoints || 0}
+                                  Tournament participation verified
                                 </div>
                               ) : (
                                 <div className={`text-xs mb-1 text-${colorScheme}-600`}>
