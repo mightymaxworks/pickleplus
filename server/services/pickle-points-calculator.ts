@@ -1,14 +1,16 @@
 /**
  * Pickle Points Calculator with Anti-Gaming Protection
  * 
- * Implements the official Pickle Points system with:
+ * Pure activity-based system (NO DUPR dependency):
+ * - Match Win: 15 points
+ * - Match Participation: 5 points
  * - Daily match limits (5 per day)
  * - Drastically reduced points after 2nd match
  * - Weekly profile update restrictions
  * - Pickle+ ecosystem validation
  * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 2.0.0
  * @lastModified 2025-06-03
  */
 
@@ -22,12 +24,14 @@ export interface PointsCalculation {
   canEarnPoints: boolean;
   dailyMatchCount: number;
   isReducedPoints: boolean;
+  activityType: 'match_win' | 'match_participate' | 'profile_update';
 }
 
 export class PicklePointsCalculator {
   
   /**
    * Calculate points for match participation with anti-gaming protection
+   * Pure activity-based system - NO DUPR dependency
    */
   static async calculateMatchPoints(
     userId: number,
@@ -43,8 +47,9 @@ export class PicklePointsCalculator {
     
     const dailyMatchCount = todayMatches.length;
     
-    // Base points calculation
+    // Pure activity-based points calculation (NO DUPR dependency)
     const basePoints = isWinner ? 15 : 5; // Winner: 15, Participant: 5
+    const activityType = isWinner ? 'match_win' : 'match_participate';
     
     // Apply anti-gaming reductions
     if (dailyMatchCount >= 5) {
@@ -55,7 +60,8 @@ export class PicklePointsCalculator {
         reason: "Daily match limit of 5 exceeded - no points awarded",
         canEarnPoints: false,
         dailyMatchCount,
-        isReducedPoints: false
+        isReducedPoints: false,
+        activityType
       };
     }
     
@@ -71,7 +77,8 @@ export class PicklePointsCalculator {
         reason: `Reduced points for match #${dailyMatchCount + 1} of the day`,
         canEarnPoints: true,
         dailyMatchCount,
-        isReducedPoints: true
+        isReducedPoints: true,
+        activityType
       };
     }
     
