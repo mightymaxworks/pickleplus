@@ -13,8 +13,8 @@
  */
 
 export interface TournamentResult {
-  placement: 'winner' | 'runner_up' | 'semi_finalist' | 'quarter_finalist' | 'round_16' | 'round_32' | 'first_round';
-  tournamentLevel: 'club' | 'regional' | 'state' | 'national' | 'international';
+  placement: 'winner' | 'runner_up' | 'semi_finalist' | 'quarter_finalist' | 'round_16' | 'round_32' | 'first_round' | 'round_robin';
+  tournamentLevel: 'club' | 'district' | 'city' | 'provincial' | 'national' | 'regional' | 'international';
   drawSize: number;
   eventDate: Date;
   eventName: string;
@@ -44,6 +44,7 @@ export class ATPRankingCalculator {
   
   /**
    * Base point values for tournament placements
+   * Note: Round robin matches count as first round matches (1 point base)
    */
   private static readonly TOURNAMENT_BASE_POINTS = {
     winner: 100,
@@ -52,18 +53,21 @@ export class ATPRankingCalculator {
     quarter_finalist: 20,
     round_16: 10,
     round_32: 5,
-    first_round: 1
+    first_round: 1,
+    round_robin: 1  // Round robin matches = first round points
   };
 
   /**
-   * Tournament level multipliers
+   * Tournament level multipliers (Official Pickle+ Structure)
    */
   private static readonly TOURNAMENT_LEVEL_MULTIPLIERS = {
     club: 1.0,
-    regional: 2.0,
-    state: 3.0,
-    national: 5.0,
-    international: 8.0
+    district: 1.05,
+    city: 1.2,
+    provincial: 2.0,
+    national: 2.2,
+    regional: 2.7,
+    international: 3.5
   };
 
   /**
@@ -89,8 +93,8 @@ export class ATPRankingCalculator {
    * Calculate points for a tournament result
    */
   static calculateTournamentPoints(result: TournamentResult): number {
-    const basePoints = this.TOURNAMENT_BASE_POINTS[result.placement];
-    const levelMultiplier = this.TOURNAMENT_LEVEL_MULTIPLIERS[result.tournamentLevel];
+    const basePoints = this.TOURNAMENT_BASE_POINTS[result.placement as keyof typeof this.TOURNAMENT_BASE_POINTS];
+    const levelMultiplier = this.TOURNAMENT_LEVEL_MULTIPLIERS[result.tournamentLevel as keyof typeof this.TOURNAMENT_LEVEL_MULTIPLIERS];
     const drawSizeMultiplier = this.getDrawSizeMultiplier(result.drawSize);
     
     return Math.round(basePoints * levelMultiplier * drawSizeMultiplier);
@@ -187,7 +191,7 @@ export class ATPRankingCalculator {
   }
 
   /**
-   * Example calculations for documentation
+   * Example calculations for documentation (Official Pickle+ Tournament Structure)
    */
   static getExampleCalculations(): Array<{
     scenario: string;
@@ -201,19 +205,39 @@ export class ATPRankingCalculator {
         points: 75
       },
       {
-        scenario: "Regional Tournament Runner-up (32 players)",
-        calculation: "60 base × 2.0 level × 1.0 draw = 120 points",
-        points: 120
+        scenario: "District Tournament Runner-up (32 players)",
+        calculation: "60 base × 1.05 level × 1.0 draw = 63 points",
+        points: 63
       },
       {
-        scenario: "National Tournament Semi-finalist (64 players)",
-        calculation: "35 base × 5.0 level × 1.25 draw = 219 points",
-        points: 219
+        scenario: "City Tournament Semi-finalist (24 players)",
+        calculation: "35 base × 1.2 level × 0.75 draw = 32 points",
+        points: 32
       },
       {
-        scenario: "International Tournament Winner (128 players)",
-        calculation: "100 base × 8.0 level × 1.5 draw = 1200 points",
-        points: 1200
+        scenario: "Provincial Tournament Winner (64 players)",
+        calculation: "100 base × 2.0 level × 1.25 draw = 250 points",
+        points: 250
+      },
+      {
+        scenario: "National Tournament Runner-up (128 players)",
+        calculation: "60 base × 2.2 level × 1.5 draw = 198 points",
+        points: 198
+      },
+      {
+        scenario: "Regional Tournament Winner (96 players)",
+        calculation: "100 base × 2.7 level × 1.5 draw = 405 points",
+        points: 405
+      },
+      {
+        scenario: "International Tournament Winner (256 players)",
+        calculation: "100 base × 3.5 level × 1.5 draw = 525 points",
+        points: 525
+      },
+      {
+        scenario: "Round Robin Match (Club level)",
+        calculation: "1 base × 1.0 level × 1.0 draw = 1 point",
+        points: 1
       },
       {
         scenario: "Casual Match Win",
