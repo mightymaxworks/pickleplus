@@ -425,7 +425,17 @@ export default function PassportDashboard() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-yellow-600">Next Reward</p>
-                <p className="text-xl font-bold text-yellow-800">{1000 - (picklePoints % 1000)}</p>
+                <p className="text-xl font-bold text-yellow-800">{(() => {
+                  const rewardTiers = [
+                    { points: 200, reward: "Pro Paddle Grip" },
+                    { points: 500, reward: "Court Time Voucher" },
+                    { points: 1000, reward: "Tournament Entry" },
+                    { points: 2000, reward: "Coaching Session" },
+                    { points: 5000, reward: "Premium Paddle" }
+                  ];
+                  const nextTier = rewardTiers.find(tier => tier.points > picklePoints);
+                  return nextTier ? `${nextTier.points - picklePoints} pts` : "Max Level";
+                })()}</p>
               </div>
             </div>
 
