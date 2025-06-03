@@ -193,7 +193,7 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
           {
             type: 'view_profile',
             label: 'View Profile',
-            endpoint: `/api/users/${scannedPlayerId}`,
+            endpoint: `/api/users/${scannedPlayer.id}`,
             description: 'View player profile and stats'
           }
         ]
@@ -201,7 +201,7 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
 
     case 'coach':
       // Get additional coaching data
-      const recentMatches = await storage.getMatchesByUser(scannedPlayerId, 10, 0, scannedPlayerId);
+      const recentMatches = await storage.getMatchesByUser(scannedPlayer.id, 10, 0, scannedPlayer.id);
       return {
         message: `Analyze ${basePlayerData.displayName}`,
         playerData: {
@@ -213,7 +213,7 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
           {
             type: 'analyze',
             label: 'View Player Analytics',
-            endpoint: `/api/coaching/analytics/${scannedPlayerId}`,
+            endpoint: `/api/coaching/analytics/${scannedPlayer.id}`,
             description: 'View detailed performance analytics'
           },
           {
@@ -275,7 +275,7 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
           {
             type: 'full_admin',
             label: 'Full Player Administration',
-            endpoint: `/api/admin/users/${scannedPlayerId}`,
+            endpoint: `/api/admin/users/${scannedPlayer.id}`,
             description: 'Complete administrative control'
           },
           {
