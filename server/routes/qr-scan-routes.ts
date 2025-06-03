@@ -87,11 +87,11 @@ export async function processQRScan(req: Request, res: Response) {
           tournamentId,
           rawData: qrData
         };
-      } else if (qrData.startsWith('PicklePlus:')) {
-        const playerId = parseInt(qrData.split(':')[1]);
+      } else if (qrData.startsWith('PicklePlus:Player:')) {
+        const passportCode = qrData.split(':')[2];
         parsedData = {
           type: 'player',
-          playerId,
+          passportCode,
           rawData: qrData
         };
       } else {
@@ -157,10 +157,10 @@ async function generateRoleBasedResponse(
  * Handle player QR code scans with role-based responses
  */
 async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserId: number) {
-  const scannedPlayerId = qrData.playerId;
+  const passportCode = qrData.passportCode;
   
-  // Get scanned player info
-  const scannedPlayer = await storage.getUser(scannedPlayerId);
+  // Get scanned player info by passport code
+  const scannedPlayer = await storage.getUserByPassportCode(passportCode);
   if (!scannedPlayer) {
     throw new Error('Scanned player not found');
   }
