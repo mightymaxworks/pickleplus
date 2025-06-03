@@ -424,17 +424,8 @@ export default function PassportDashboard() {
                 <p className="text-xl font-bold text-yellow-800">#47</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Next Milestone</p>
-                <p className="text-xl font-bold text-yellow-800">{(() => {
-                  const currentDupr = user.duprRating || 4.5;
-                  const nextLevel = Math.ceil(currentDupr * 10) / 10;
-                  const pointsNeeded = Math.round((nextLevel - currentDupr) * 10);
-                  
-                  if (pointsNeeded <= 0) {
-                    return `${currentDupr.toFixed(1)} DUPR`;
-                  }
-                  return `${nextLevel.toFixed(1)} DUPR`;
-                })()}</p>
+                <p className="text-sm text-yellow-600">Points Earned</p>
+                <p className="text-xl font-bold text-yellow-800">+{Math.floor(picklePoints * 0.15)}</p>
               </div>
             </div>
 
