@@ -5,15 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import PointsProgressBar from '@/components/xp/XPProgressBar';
-import { getPointsLevelInfo, calculateLevel } from '@/lib/calculateLevel';
 import { Coins, TrendingUp, Award, ShoppingCart } from 'lucide-react';
 
 export default function PointsDemo() {
-  const [currentPoints, setCurrentPoints] = useState(1250);
+  const [currentPoints, setCurrentPoints] = useState(2847);
   const [testAmount, setTestAmount] = useState(100);
-  
-  const levelInfo = getPointsLevelInfo(currentPoints);
-  const level = calculateLevel(currentPoints);
 
   const handleAddPoints = () => {
     setCurrentPoints(prev => prev + testAmount);
@@ -35,7 +31,7 @@ export default function PointsDemo() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Pickle+ Points System Demo</h1>
         <p className="text-muted-foreground">
-          Experience the new **Dill Dollars** currency that replaces XP with real merchant value!
+          Experience the new **Pickle Points** currency that replaces XP with real merchant value!
         </p>
       </div>
 
@@ -45,27 +41,24 @@ export default function PointsDemo() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5 text-green-600" />
-              Your Dill Dollars
+              Your Pickle Points
             </CardTitle>
-            <CardDescription>Spendable points with real value</CardDescription>
+            <CardDescription>Spendable currency with real merchant value</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center">
               <div className="text-4xl font-bold text-green-600">{currentPoints.toLocaleString()}</div>
-              <p className="text-sm text-muted-foreground">Dill Dollars</p>
+              <p className="text-sm text-muted-foreground">Pickle Points</p>
             </div>
             
-            <PointsProgressBar
-              currentPoints={currentPoints}
-              pointsLevel={level}
-              nextLevelPoints={levelInfo.nextLevelPoints}
-              previousLevelPoints={levelInfo.currentLevelPoints}
-            />
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="bg-green-600 h-2.5 rounded-full" style={{width: '65%'}}></div>
+            </div>
             
             <div className="flex justify-between items-center pt-2">
-              <Badge variant="secondary">Level {level}</Badge>
+              <Badge variant="secondary" className="bg-green-100 text-green-700">Points Active</Badge>
               <span className="text-sm text-muted-foreground">
-                {levelInfo.pointsNeededForNextLevel} to next level
+                Ready to spend!
               </span>
             </div>
           </CardContent>
@@ -124,7 +117,7 @@ export default function PointsDemo() {
                     <p className="text-sm text-muted-foreground">{offer.discount}</p>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-green-600">{offer.cost} DD</div>
+                    <div className="font-bold text-green-600">{offer.cost} PP</div>
                     <Button 
                       size="sm" 
                       disabled={currentPoints < offer.cost}
