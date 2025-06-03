@@ -37,10 +37,11 @@ export async function validateMatchSubmission(
     const userId = req.user.id;
     const recentMatches = await storage.getMatchesByUser(userId, 20, 0, userId);
     
-    const validation = AntiGamingService.validateMatchSubmission(
+    const validation = await AntiGamingService.validateMatchSubmission(
       userId,
       req.body,
-      recentMatches
+      recentMatches,
+      storage
     );
 
     // Attach validation results to request

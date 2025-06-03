@@ -29,23 +29,57 @@ export class AntiGamingService {
   /**
    * Validates a match submission for gaming attempts
    */
-  static validateMatchSubmission(
+  static async validateMatchSubmission(
     userId: number, 
     matchData: any,
-    recentMatches: any[]
-  ): ValidationResult {
+    recentMatches: any[],
+    storage?: any
+  ): Promise<ValidationResult> {
     const suspiciousScore = this.calculateSuspiciousScore(userId, matchData, recentMatches);
     
-    // Rate limiting - max 10 matches per day
+    // Validate that opponent exists in Pickle+ ecosystem
+    if (storage) {
+      const opponent = await storage.getUser(matchData.playerTwoId);
+      if (!opponent) {
+        return {
+          isValid: false,
+          reason: "Matches must be played with registered Pickle+ users only",
+          suspiciousScore: 95
+        };
+      }
+      
+      // Check if opponent is active (has logged in within last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      if (opponent.lastVisit && opponent.lastVisit < thirtyDaysAgo) {
+        return {
+          isValid: false,
+          reason: "Opponent must be an active Pickle+ user",
+          suspiciousScore: 80
+        };
+      }
+    }
+    
+    // Rate limiting - max 5 matches per day
     const todayMatches = recentMatches.filter(m => 
       new Date(m.matchDate || m.createdAt).toDateString() === new Date().toDateString()
     );
     
-    if (todayMatches.length >= 10) {
+    if (todayMatches.length >= 5) {
       return {
         isValid: false,
-        reason: "Daily match limit exceeded",
+        reason: "Daily match limit of 5 exceeded",
         suspiciousScore: 90
+      };
+    }
+    
+    // Drastically reduce points after second match of the day
+    if (todayMatches.length >= 2) {
+      return {
+        isValid: true,
+        reason: "Reduced points after second daily match",
+        suspiciousScore: 30
       };
     }
     
@@ -88,21 +122,37 @@ export class AntiGamingService {
   
   /**
    * Validates profile update points to prevent farming
+   * Profile updates can only earn points once per week
    */
   static validateProfileUpdate(
     userId: number,
     oldCompletion: number,
     newCompletion: number,
-    updateData: any
+    updateData: any,
+    lastProfilePointsDate?: Date
   ): ValidationResult {
+    // Check if user already earned profile points this week
+    if (lastProfilePointsDate) {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      if (lastProfilePointsDate > weekAgo) {
+        return {
+          isValid: false,
+          reason: "Profile update points only available once per week",
+          suspiciousScore: 60
+        };
+      }
+    }
+    
     // Prevent rapid profile changes
     const key = `profile_${userId}`;
     const attempts = this.getRecentAttempts(key);
     
-    if (attempts.length >= 5) { // Max 5 profile updates per hour
+    if (attempts.length >= 3) { // Max 3 profile updates per hour
       return {
         isValid: false,
-        reason: "Too many profile updates",
+        reason: "Too many profile updates per hour",
         suspiciousScore: 85
       };
     }
