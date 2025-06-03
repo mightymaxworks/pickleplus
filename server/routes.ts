@@ -964,20 +964,19 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         let matchPoints = 0;
         let pointBreakdown = [];
         
-        // Calculate tournament points with category-specific adjustments
+        // Calculate tournament points from actual tournament participation only
         const baseMultiplier = getCategoryMultiplier(category);
-        const simulatedTournamentResults = [
-          { level: 'club', placement: 'winner', drawSize: 16, points: Math.round(75 * baseMultiplier) },
-          { level: 'district', placement: 'runner_up', drawSize: 32, points: Math.round(63 * baseMultiplier) },
-          { level: 'city', placement: 'semi_finalist', drawSize: 24, points: Math.round(32 * baseMultiplier) }
-        ];
         
-        for (const tournament of simulatedTournamentResults) {
-          tournamentPoints += tournament.points;
+        // Get authentic tournament results from database
+        const tournamentResults = await storage.getTournamentParticipationByUser(userId, category.format, category.division);
+        
+        for (const result of tournamentResults) {
+          const points = Math.round(result.points * baseMultiplier);
+          tournamentPoints += points;
           pointBreakdown.push({
             type: 'tournament',
-            event: `${tournament.level} ${tournament.placement}`,
-            points: tournament.points
+            event: `${result.tournamentLevel} ${result.placement}`,
+            points: points
           });
         }
         
