@@ -28,6 +28,7 @@ import {
   Zap,
   Award,
   Target,
+  Camera,
   Calendar,
   ClipboardList,
   Medal,
@@ -51,6 +52,7 @@ export default function PassportDashboard() {
   const { user } = useAuth();
   const [qrVisible, setQrVisible] = useState(false);
   const [showPassportCode, setShowPassportCode] = useState(false);
+  const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);
   const { toast } = useToast();
   
   // Fetch match statistics and recent matches
@@ -117,6 +119,16 @@ export default function PassportDashboard() {
   const handleJoinTournament = () => {
     // Navigate to tournaments
     window.location.href = '/tournaments';
+  };
+
+  const handlePhotoUploadSuccess = (avatarUrl: string) => {
+    setIsPhotoUploadOpen(false);
+    toast({
+      title: "Profile Photo Updated",
+      description: "Your new profile photo has been uploaded successfully.",
+    });
+    // Refresh user data to show new avatar
+    window.location.reload();
   };
 
   return (
@@ -213,12 +225,13 @@ export default function PassportDashboard() {
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
-                  {/* Profile Photo */}
+                  {/* Profile Photo with Upload Functionality */}
                   <motion.div 
-                    className="relative cursor-pointer"
+                    className="relative cursor-pointer group"
                     whileHover={{ scale: 1.08, rotate: 2 }}
                     whileTap={{ scale: 0.92 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    onClick={() => setIsPhotoUploadOpen(true)}
                   >
                     {user.avatarUrl ? (
                       <img 
@@ -232,6 +245,15 @@ export default function PassportDashboard() {
                         {user.displayName?.split(' ').map(n => n[0]).join('') || user.username.slice(0, 2).toUpperCase()}
                       </div>
                     )}
+                    
+                    {/* Upload overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all duration-300 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center text-white">
+                        <Camera className="w-6 h-6 mb-1" />
+                        <span className="text-xs font-medium">Update Photo</span>
+                      </div>
+                    </div>
+                    
                     <motion.div 
                       className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-3 border-white shadow-lg"
                       animate={{ scale: [1, 1.2, 1] }}
@@ -802,6 +824,14 @@ export default function PassportDashboard() {
           </TabsContent>
         </Tabs>
       </motion.div>
+      
+      {/* Photo Upload Modal */}
+      <PhotoUploadModal
+        isOpen={isPhotoUploadOpen}
+        onClose={() => setIsPhotoUploadOpen(false)}
+        onUploadSuccess={handlePhotoUploadSuccess}
+        currentAvatar={user.avatarUrl || undefined}
+      />
     </div>
   );
 }
