@@ -33,7 +33,8 @@ import {
   Activity,
   ArrowRight,
   Sparkles,
-  DollarSign
+  DollarSign,
+  MapPin
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
@@ -85,33 +86,38 @@ export default function PassportDashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-2 space-y-4 -mt-8">
+    <div className="max-w-6xl mx-auto px-4 py-1 space-y-3 -mt-10">
       {/* Player Passport Header with Prominent QR Code */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-3">
             <div className="flex flex-col lg:flex-row items-center gap-6">
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
                   {/* Profile Photo */}
-                  <div className="relative">
+                  <motion.div 
+                    className="relative cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     {user.avatarUrl ? (
                       <img 
                         src={user.avatarUrl} 
                         alt={user.displayName || user.username} 
-                        className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-orange-300"
+                        className="w-18 h-18 rounded-full object-cover shadow-lg border-3 border-orange-400 hover:border-orange-500 transition-all duration-300"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                      <div className="w-18 h-18 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg hover:shadow-xl transition-all duration-300">
                         {user.displayName?.split(' ').map(n => n[0]).join('') || user.username.slice(0, 2).toUpperCase()}
                       </div>
                     )}
-                  </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                  </motion.div>
                   <div>
                     <h1 className="text-2xl lg:text-3xl font-bold text-orange-900">
                       {user.displayName || user.username}
@@ -149,24 +155,51 @@ export default function PassportDashboard() {
                 </div>
 
                 {/* Ranking Categories */}
-                <div className="mt-4 pt-4 border-t border-orange-200">
-                  <h3 className="text-sm font-semibold text-orange-800 mb-2">Ranking Categories</h3>
+                <div className="mt-3 pt-3 border-t border-orange-200">
+                  <h3 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    Current Season Rankings
+                  </h3>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
-                    <div className="bg-white rounded-lg p-2 border border-orange-100">
+                    <motion.div 
+                      className="bg-white rounded-lg p-2 border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <div className="font-medium text-gray-700">Singles Open</div>
-                      <div className="text-purple-600 font-bold">1,250 pts</div>
-                      <div className="text-gray-500">#12 Local</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 border border-orange-100">
+                      <div className="text-purple-600 font-bold">{user.rankingPoints || 1250} pts</div>
+                      <div className="text-gray-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Rank #12 Regional
+                      </div>
+                    </motion.div>
+                    <motion.div 
+                      className="bg-white rounded-lg p-2 border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <div className="font-medium text-gray-700">Doubles Open</div>
                       <div className="text-purple-600 font-bold">980 pts</div>
-                      <div className="text-gray-500">#18 Local</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 border border-orange-100">
+                      <div className="text-gray-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Rank #18 Regional
+                      </div>
+                    </motion.div>
+                    <motion.div 
+                      className="bg-white rounded-lg p-2 border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <div className="font-medium text-gray-700">Mixed Open</div>
                       <div className="text-purple-600 font-bold">1,100 pts</div>
-                      <div className="text-gray-500">#15 Local</div>
-                    </div>
+                      <div className="text-gray-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Rank #15 Regional
+                      </div>
+                    </motion.div>
+                  </div>
+                  <div className="mt-2 text-xs text-orange-600">
+                    Rankings updated after each tournament • Regional pool: 2,847 players
                   </div>
                 </div>
               </div>
