@@ -269,7 +269,7 @@ export default function PassportDashboard() {
 
                 {/* Key Stats Grid */}
                 <motion.div 
-                  className="grid grid-cols-2 lg:grid-cols-5 gap-3"
+                  className="grid grid-cols-2 lg:grid-cols-6 gap-3"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8, duration: 0.6 }}
@@ -313,6 +313,26 @@ export default function PassportDashboard() {
                   >
                     <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Streak</p>
                     <p className="text-3xl font-black text-indigo-700">{currentStreak}</p>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center lg:text-left bg-gradient-to-r from-orange-100 to-yellow-100 border-2 border-orange-300 rounded-lg p-3 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,165,0,0.2)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    onClick={() => {
+                      if (user.passportCode) {
+                        navigator.clipboard.writeText(user.passportCode);
+                        toast({
+                          title: "Passport Code Copied!",
+                          description: `${user.passportCode} copied to clipboard`,
+                        });
+                      }
+                    }}
+                  >
+                    <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">Passport Code</p>
+                    <p className="text-2xl font-mono font-black text-orange-800">
+                      {user.passportCode || 'LOADING...'}
+                    </p>
+                    <p className="text-xs text-orange-600 mt-1">Tap to Copy</p>
                   </motion.div>
                 </motion.div>
 
@@ -384,7 +404,7 @@ export default function PassportDashboard() {
                     <div className="text-center">
                       <QrCode className="w-24 h-24 text-orange-600 mx-auto mb-2" />
                       <div className="font-mono font-bold text-sm text-orange-700 bg-orange-50 px-2 py-1 rounded border">
-                        {user.passportCode || 'Not Set'}
+                        {user.passportCode || 'LOADING...'}
                       </div>
                     </div>
                   ) : (
