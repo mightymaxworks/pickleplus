@@ -122,6 +122,42 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
     }
   };
 
+  const handleActionClick = async (action: any) => {
+    if (action.type === 'record_match') {
+      toast({
+        title: "Match Recording",
+        description: "Starting match recording workflow...",
+        variant: "default",
+      });
+      
+      console.log('Starting match recording for player:', result?.playerData);
+      
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } else if (action.type === 'verify_identity') {
+      toast({
+        title: "Identity Verification",
+        description: "Player identity verification process started",
+        variant: "default",
+      });
+      
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } else {
+      toast({
+        title: action.label,
+        description: `${action.label} action initiated`,
+        variant: "default",
+      });
+      
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    }
+  };
+
   const handleProcessResult = async () => {
     if (!result) return;
     
@@ -219,10 +255,14 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
                     </p>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
                       {result.actions.map((action: any, index: number) => (
-                        <div key={index} className="p-2 bg-gray-50 rounded-lg">
+                        <button 
+                          key={index} 
+                          className="w-full p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-left border border-gray-200 transition-colors"
+                          onClick={() => handleActionClick(action)}
+                        >
                           <p className="text-sm font-medium text-gray-800">{action.label}</p>
                           <p className="text-xs text-gray-600">{action.description}</p>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>

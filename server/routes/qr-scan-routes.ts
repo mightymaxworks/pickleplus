@@ -235,13 +235,19 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
     case 'referee':
     case 'league_official':
       return {
-        message: `Verify ${basePlayerData.displayName}`,
+        message: `Tournament Management for ${basePlayerData.displayName}`,
         playerData: {
           ...basePlayerData,
           registrationStatus: 'verified',
           eligibilityStatus: 'eligible'
         },
         actions: [
+          {
+            type: 'record_match',
+            label: 'Record Match Result',
+            endpoint: `/api/tournament/match-recording/${scannedPlayer.id}`,
+            description: 'Start match recording workflow with this player'
+          },
           {
             type: 'verify_registration',
             label: 'Verify Registration',
@@ -253,12 +259,6 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
             label: 'Add to Tournament',
             endpoint: '/api/tournaments/bracket/add',
             description: 'Add player to tournament bracket'
-          },
-          {
-            type: 'record_result',
-            label: 'Record Match Result',
-            endpoint: '/api/matches/record',
-            description: 'Record result for this player'
           }
         ]
       };
@@ -273,16 +273,22 @@ async function handlePlayerQRScan(qrData: any, scannerRole: string, scannerUserI
         },
         actions: [
           {
-            type: 'full_admin',
-            label: 'Full Player Administration',
-            endpoint: `/api/admin/users/${scannedPlayer.id}`,
-            description: 'Complete administrative control'
+            type: 'record_match',
+            label: 'Record Match Result',
+            endpoint: `/api/admin/match-recording/${scannedPlayer.id}`,
+            description: 'Start match recording workflow with this player'
           },
           {
             type: 'verify_identity',
             label: 'Verify Identity',
             endpoint: '/api/admin/verify-identity',
             description: 'Verify player identity and credentials'
+          },
+          {
+            type: 'full_admin',
+            label: 'Full Player Administration',
+            endpoint: `/api/admin/users/${scannedPlayer.id}`,
+            description: 'Complete administrative control'
           },
           {
             type: 'system_override',
