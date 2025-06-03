@@ -397,7 +397,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         firstName: 'Mighty',
         lastName: 'Max',
         displayName: 'Mighty Max',
-        dateOfBirth: null,
+        dateOfBirth: '1985-03-15', // 38 years old - will show 35+ rankings
+        gender: 'male',
         avatarUrl: null,
         coverImageUrl: null,
         avatarInitials: 'MM',
@@ -434,6 +435,17 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           mental: 3.7,
           consistency: 4.1,
           overall: 4.0
+        },
+        // External Ratings
+        duprRating: 4.5,
+        utprRating: null,
+        wprRating: null,
+        externalRatings: {
+          dupr: 4.5,
+          utpr: null,
+          wpr: null,
+          verified: true,
+          lastUpdated: new Date()
         },
         // Profile-related
         profileCompletionPct: 85,
