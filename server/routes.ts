@@ -45,6 +45,15 @@ import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth"
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
+import { 
+  createAdministrativeMatch,
+  createBulkMatches,
+  getAdministrativeMatches,
+  updateAdministrativeMatch,
+  cancelAdministrativeMatch,
+  getAvailablePlayers,
+  validateAdminRole
+} from "./routes/administrative-match-routes"; // Administrative Match Creation
 
 /**
  * Register all application routes with the Express app
@@ -782,6 +791,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch pickle points' });
     }
   });
+
+  // Administrative Match Creation Routes
+  app.post("/api/admin/matches", validateAdminRole, createAdministrativeMatch);
+  app.post("/api/admin/matches/bulk", validateAdminRole, createBulkMatches);
+  app.get("/api/admin/matches", validateAdminRole, getAdministrativeMatches);
+  app.put("/api/admin/matches/:matchId", validateAdminRole, updateAdministrativeMatch);
+  app.delete("/api/admin/matches/:matchId", validateAdminRole, cancelAdministrativeMatch);
+  app.get("/api/admin/matches/available-players", validateAdminRole, getAvailablePlayers);
 
   // Default route for API 404s
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
