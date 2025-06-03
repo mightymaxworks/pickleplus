@@ -141,10 +141,12 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
         setTimeout(() => {
           onClose();
         }, 1500);
-      } else if (result.type === "player-connect") {
+      } else if (result.type === "player-connect" || result.type === "player") {
         toast({
-          title: "Player connection",
-          description: "Connected with player!",
+          title: "Player connection successful",
+          description: result.playerData ? 
+            `Connected with ${result.playerData.displayName}` : 
+            "Player connection established",
           variant: "default",
         });
         
@@ -195,13 +197,21 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
                   Ready to check in to tournament #{result.tournamentId}
                 </p>
               </>
-            ) : result.type === "player-connect" ? (
+            ) : result.type === "player-connect" || result.type === "player" ? (
               <>
                 <CheckCircle2 className="h-16 w-16 text-[#2196F3] mb-2" />
-                <h3 className="font-bold text-lg mb-1">Player QR Code</h3>
+                <h3 className="font-bold text-lg mb-1">Player Connection</h3>
                 <p className="text-sm text-gray-500 text-center">
-                  Connect with player #{result.playerId}
+                  {result.playerData ? 
+                    `Found: ${result.playerData.displayName}` : 
+                    'Player connection successful'
+                  }
                 </p>
+                {result.message && (
+                  <p className="text-sm text-blue-600 text-center mt-2">
+                    {result.message}
+                  </p>
+                )}
               </>
             ) : (
               <>
