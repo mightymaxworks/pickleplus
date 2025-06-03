@@ -416,8 +416,8 @@ export default function PassportDashboard() {
                 <p className="text-xl font-bold text-yellow-800">+{Math.floor(picklePoints * 0.08)}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Spending Power</p>
-                <p className="text-xl font-bold text-yellow-800">${(picklePoints * 0.01).toFixed(2)}</p>
+                <p className="text-sm text-yellow-600">Reward Value</p>
+                <p className="text-xl font-bold text-yellow-800">{picklePoints.toLocaleString()} pts</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-yellow-600">Points Rank</p>
