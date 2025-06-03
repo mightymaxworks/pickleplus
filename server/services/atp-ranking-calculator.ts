@@ -40,7 +40,7 @@ export interface RankingPoint {
   division: string;
 }
 
-export class ATPRankingCalculator {
+export class PCPGlobalRankingCalculator {
   
   /**
    * Base point values for tournament placements
@@ -145,6 +145,48 @@ export class ATPRankingCalculator {
       activePoints,
       expiredPoints
     };
+  }
+
+  /**
+   * Calculate rankings for multiple categories (age groups, divisions, formats)
+   * Separates points by format and division for proper category ranking
+   */
+  static calculateCategoryRankings(pointHistory: RankingPoint[]): {
+    [key: string]: {
+      currentPoints: number;
+      activePoints: RankingPoint[];
+      format: string;
+      division: string;
+    }
+  } {
+    const now = new Date();
+    const fiftyTwoWeeksAgo = new Date(now.getTime() - (52 * 7 * 24 * 60 * 60 * 1000));
+
+    // Filter for active points only
+    const activePoints = pointHistory.filter(point => 
+      point.dateEarned >= fiftyTwoWeeksAgo
+    );
+
+    // Group by format and division
+    const categoryRankings: { [key: string]: any } = {};
+
+    activePoints.forEach(point => {
+      const categoryKey = `${point.format}_${point.division}`;
+      
+      if (!categoryRankings[categoryKey]) {
+        categoryRankings[categoryKey] = {
+          currentPoints: 0,
+          activePoints: [],
+          format: point.format,
+          division: point.division
+        };
+      }
+
+      categoryRankings[categoryKey].currentPoints += point.points;
+      categoryRankings[categoryKey].activePoints.push(point);
+    });
+
+    return categoryRankings;
   }
 
   /**

@@ -95,6 +95,19 @@ export default function PassportDashboard() {
     enabled: !!user
   });
 
+  // Fetch PCP Global Ranking data 
+  const { data: pcpRankingData } = useQuery({
+    queryKey: ['pcp-ranking', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/pcp-ranking/${user?.id}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch PCP rankings');
+      return response.json();
+    },
+    enabled: !!user?.id
+  });
+
   // Fetch legacy ranking data for comparison
   const { data: rankingData } = useQuery({
     queryKey: ['rankings', 'passport', user?.id],
@@ -373,11 +386,11 @@ export default function PassportDashboard() {
                   </motion.div>
                 </motion.div>
 
-                {/* ATP-Style Ranking Display */}
+                {/* PCP Global Ranking Display */}
                 <div className="mt-3 pt-3 border-t border-orange-200">
                   <h3 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
-                    ATP-Style Ranking System
+                    PCP Global Ranking System
                   </h3>
                   <div className="grid grid-cols-1 gap-3">
                     <motion.div 
@@ -387,37 +400,37 @@ export default function PassportDashboard() {
                     >
                       <div className="text-center">
                         <div className="font-bold text-lg text-purple-800">
-                          {atpRankingData?.format || 'Men\'s Singles'} • {atpRankingData?.division || 'Open'}
+                          {pcpRankingData?.format?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Men\'s Singles'} • {pcpRankingData?.division || 'Open'}
                         </div>
                         <div className="text-3xl font-black text-purple-600 my-2">
-                          {atpRankingData?.rankingPoints || 0} pts
+                          {pcpRankingData?.rankingPoints || 0} pts
                         </div>
                         <div className="text-sm text-purple-700 mb-2">
-                          Tournament: {atpRankingData?.breakdown?.tournamentPoints || 0} pts • 
-                          Matches: {atpRankingData?.breakdown?.matchPoints || 0} pts
+                          Tournament: {pcpRankingData?.breakdown?.tournamentPoints || 0} pts • 
+                          Matches: {pcpRankingData?.breakdown?.matchPoints || 0} pts
                         </div>
                         <div className="flex items-center justify-center gap-1 text-xs text-purple-600">
                           <Target className="w-3 h-3" />
-                          Next: {atpRankingData?.milestone?.description || 'Competitive Player'}
+                          Next: {pcpRankingData?.milestone?.description || 'Competitive Player'}
                         </div>
                         <div className="mt-2 bg-purple-100 rounded-full h-2 overflow-hidden">
                           <div 
                             className="bg-purple-500 h-full transition-all duration-1000 ease-out"
                             style={{ 
-                              width: atpRankingData?.milestone ? 
-                                `${Math.max(10, (atpRankingData.milestone.current / atpRankingData.milestone.next) * 100)}%` : 
+                              width: pcpRankingData?.milestone ? 
+                                `${Math.max(10, (pcpRankingData.milestone.current / pcpRankingData.milestone.next) * 100)}%` : 
                                 '10%' 
                             }}
                           />
                         </div>
                         <div className="text-xs text-purple-600 mt-1">
-                          {atpRankingData?.milestone?.needed || 0} points to next milestone
+                          {pcpRankingData?.milestone?.needed || 0} points to next milestone
                         </div>
                       </div>
                     </motion.div>
                   </div>
                   <div className="mt-2 text-xs text-orange-600">
-                    {atpRankingData?.system || 'ATP-Style Ranking v1.0 (52-week rolling)'} • Updated after each match
+                    {pcpRankingData?.system || 'PCP Global Ranking System v2.0 (52-week rolling)'} • Category-separated rankings
                   </div>
                 </div>
               </div>

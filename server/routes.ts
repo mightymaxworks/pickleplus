@@ -870,8 +870,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.delete("/api/admin/matches/:matchId", validateAdminRole, cancelAdministrativeMatch);
   app.get("/api/admin/matches/available-players", validateAdminRole, getAvailablePlayers);
 
-  // ATP-Style Ranking Points API endpoint
-  app.get("/api/atp-ranking/:userId", async (req: Request, res: Response) => {
+  // PCP Global Ranking System API endpoint
+  app.get("/api/pcp-ranking/:userId", async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
       const { format = 'mens_singles', division = 'open' } = req.query;
@@ -881,7 +881,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Get user's matches and tournaments for ATP-style calculation
+      // Get user's matches for PCP Global Ranking calculation
       const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
       
       let totalRankingPoints = 0;
@@ -889,7 +889,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       let matchPoints = 0;
       let pointBreakdown = [];
       
-      // Calculate tournament points (using ATP-style structure)
+      // Calculate tournament points (using PCP Global Ranking structure)
       // For now, simulate tournament participation based on match data
       // In production, this would come from actual tournament results
       const simulatedTournamentResults = [
@@ -954,12 +954,20 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           needed: nextMilestone.points - totalRankingPoints,
           description: nextMilestone.description
         },
-        system: "ATP-Style Ranking v1.0 (52-week rolling)"
+        system: "PCP Global Ranking System v2.0 (52-week rolling)"
       });
     } catch (error) {
-      console.error('Error calculating ATP ranking points:', error);
+      console.error('Error calculating PCP Global ranking points:', error);
       res.status(500).json({ error: 'Failed to calculate ranking points' });
     }
+  });
+
+  // Backward compatibility route for ATP ranking (redirects to PCP)
+  app.get("/api/atp-ranking/:userId", async (req: Request, res: Response) => {
+    // Redirect to new PCP Global Ranking endpoint
+    const userId = req.params.userId;
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    res.redirect(`/api/pcp-ranking/${userId}?${queryParams.toString()}`);
   });
 
   // QR Code Scanning Routes with Role Detection
