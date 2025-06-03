@@ -1,18 +1,19 @@
 /**
- * PKL-278651-DASH-0010-REDESIGN
- * Dashboard Page Component
+ * PKL-278651-DASH-0011-PASSPORT
+ * Player Passport Dashboard Component
  * 
- * Updated to use the ModernDashboardContent component with the standard layout system
- * to showcase the redesigned ranking-focused dashboard.
+ * Updated to use the PassportDashboard component featuring prominent QR code
+ * functionality and Pickle Points integration. Replaces horizontal scrolling
+ * with clean, passport-style tabbed layout.
  * 
  * @framework Framework5.3
  * @version 1.0.0
- * @lastModified 2025-05-16
+ * @lastModified 2025-06-03
  */
 
 import React from 'react';
-import ModernDashboardContent from '@/components/dashboard/ModernDashboardContent';
+import PassportDashboard from '@/components/dashboard/PassportDashboard';
 
 export default function Dashboard() {
-  return <ModernDashboardContent />;
+  return <PassportDashboard />;
 }
