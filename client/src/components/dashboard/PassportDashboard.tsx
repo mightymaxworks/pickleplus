@@ -113,14 +113,76 @@ export default function PassportDashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 space-y-2 -mt-16">
+    <div className="relative max-w-6xl mx-auto px-4 space-y-2 -mt-16 overflow-hidden">
+      {/* Futuristic Background Animations */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        {/* Floating geometric shapes */}
+        <motion.div
+          className="absolute top-10 left-10 w-20 h-20 border border-orange-200/20 rounded-full"
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 180, 360],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/3 right-20 w-16 h-16 border border-yellow-200/30 rotate-45"
+          animate={{ 
+            y: [0, 15, 0],
+            rotate: [45, 225, 405],
+            opacity: [0.2, 0.5, 0.2]
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-gradient-to-r from-orange-200/10 to-yellow-200/10 rounded-full"
+          animate={{ 
+            x: [0, 30, 0],
+            y: [0, -25, 0],
+            scale: [1, 1.3, 1]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        
+        {/* Subtle scanning line effect */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-100/5 to-transparent h-1"
+          animate={{ y: ["0vh", "100vh"] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        />
+        
+        {/* Particle effect */}
+        {[...Array(4)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-orange-300/30 rounded-full"
+            style={{
+              left: `${20 + Math.random() * 60}%`,
+              top: `${20 + Math.random() * 60}%`,
+            }}
+            animate={{
+              y: [0, -80, 0],
+              opacity: [0, 0.8, 0],
+              scale: [0, 1, 0]
+            }}
+            transition={{
+              duration: 4 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
       {/* Player Passport Header with Prominent QR Code */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        className="relative z-10"
       >
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
           <CardContent className="p-2">
             <div className="flex flex-col lg:flex-row items-center gap-4">
               {/* Player Information */}
@@ -153,18 +215,20 @@ export default function PassportDashboard() {
                   </motion.div>
                   <div>
                     <motion.h1 
-                      className="text-3xl lg:text-4xl font-black text-orange-900 tracking-tight leading-tight"
+                      className="text-3xl lg:text-4xl font-extrabold text-orange-900 tracking-[-0.02em] leading-[1.1] font-mono"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 }}
+                      style={{ fontFamily: '"SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif' }}
                     >
                       {user.displayName || user.username}
                     </motion.h1>
                     <motion.p 
-                      className="text-orange-700 text-xl font-semibold tracking-wide"
+                      className="text-orange-700 text-lg font-medium tracking-wide uppercase opacity-80"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.4 }}
+                      style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}
                     >
                       @{user.username}
                     </motion.p>
