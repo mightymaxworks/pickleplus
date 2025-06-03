@@ -162,16 +162,16 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Scan QR Code</DialogTitle>
+          <DialogTitle>QR Scanner</DialogTitle>
         </DialogHeader>
         
         {scanning ? (
           <div className="h-64 bg-gray-100 rounded-lg mb-4 flex flex-col items-center justify-center">
             <div className="animate-pulse">
-              <span className="material-icons text-6xl text-[#FF5722] mb-2">qr_code_scanner</span>
+              <Camera className="h-16 w-16 text-[#FF5722] mb-2" />
             </div>
             <p className="text-sm text-gray-500 text-center px-4 animate-pulse">
-              Scanning...
+              Scanning for QR codes...
             </p>
           </div>
         ) : result ? (
@@ -205,16 +205,16 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
         ) : (
           <>
             <div className="h-40 bg-gray-100 rounded-lg mb-4 flex flex-col items-center justify-center">
-              <span className="material-icons text-6xl text-gray-500 mb-2">qr_code_scanner</span>
+              <QrCode className="h-16 w-16 text-gray-500 mb-2" />
               <p className="text-sm text-gray-500 text-center px-4">
-                Enter a QR code value or use the demo scanner
+                Scan QR codes for tournament check-ins and player connections
               </p>
             </div>
             
             <div className="mb-4">
               <input
                 type="text"
-                placeholder="Enter QR code (e.g., PicklePlus:Tournament:1)"
+                placeholder="Or manually enter QR code data"
                 value={qrInput}
                 onChange={(e) => setQrInput(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded"
@@ -225,10 +225,10 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
         
         <p className="text-sm text-gray-500 mb-4 text-center">
           {scanning
-            ? "Scanning for QR codes..."
+            ? "Point your camera at a QR code to scan automatically..."
             : result
-            ? "QR code detected. Process to continue."
-            : "Use this scanner for tournament check-ins and connecting with other players."}
+            ? "QR code detected. Click Process to continue."
+            : "Scan player passport QR codes to connect or tournament QR codes to check in."}
         </p>
         
         <DialogFooter>
@@ -238,14 +238,15 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
                 className="flex-1 bg-[#FF5722] hover:bg-[#E64A19]"
                 onClick={handleSimulatedScan}
               >
-                Demo Scan
+                <Camera className="mr-2 h-4 w-4" />
+                Start Camera
               </Button>
               <Button 
                 className="flex-1"
                 onClick={handleManualEntry}
                 disabled={!qrInput}
               >
-                Process Input
+                Process Code
               </Button>
             </div>
           ) : scanning ? (
