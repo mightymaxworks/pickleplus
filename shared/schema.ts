@@ -529,7 +529,7 @@ export const users = pgTable("users", {
   location: varchar("location", { length: 255 }),
   bio: text("bio"),
   yearOfBirth: integer("year_of_birth"),
-  passportCode: varchar("passport_code", { length: 8 }).unique(), // 8-digit alphanumeric passport code
+  passportCode: varchar("passport_code", { length: 15 }).unique(), // alphanumeric passport code (8 chars for new users, legacy 7 chars supported)
   pointsLevel: integer("points_level").default(1),
   picklePoints: integer("pickle_points").default(0),
   avatarInitials: varchar("avatar_initials", { length: 10 }),
