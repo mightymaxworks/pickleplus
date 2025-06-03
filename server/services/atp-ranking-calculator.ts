@@ -1,14 +1,14 @@
 /**
- * ATP-Style Ranking Calculator for Pickle+
+ * PCP Global Ranking Calculator for Pickle+
  * 
- * Implements a unified ranking system similar to ATP tennis rankings:
- * - Single ranking number per format/division
+ * Implements the PCP Global Ranking System with:
+ * - Separate rankings by age group, division, and category
  * - Rolling 52-week point accumulation
  * - Tournament placement-based points
- * - Automatic point decay
+ * - Format-specific divisions (singles, doubles, mixed)
  * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 2.0.0
  * @lastModified 2025-06-03
  */
 

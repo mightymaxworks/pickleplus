@@ -108,19 +108,6 @@ export default function PassportDashboard() {
     enabled: !!user?.id
   });
 
-  // Fetch Pickle Points from dedicated API endpoint
-  const { data: picklePointsData } = useQuery({
-    queryKey: ['pickle-points', user?.id],
-    queryFn: async () => {
-      const response = await fetch(`/api/pickle-points/${user?.id}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch pickle points');
-      return response.json();
-    },
-    enabled: !!user?.id
-  });
-
   if (!user) return null;
 
   const winRate = matchStats?.winRate || (user.totalMatches ? Math.round((user.matchesWon || 0) / (user.totalMatches || 1) * 100) : 0);
@@ -558,20 +545,20 @@ export default function PassportDashboard() {
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="text-center">
-                <p className="text-sm text-yellow-600">This Week</p>
-                <p className="text-xl font-bold text-yellow-800">+{Math.floor(picklePoints * 0.08)}</p>
+                <p className="text-sm text-yellow-600">Match Wins</p>
+                <p className="text-xl font-bold text-yellow-800">{picklePointsData?.breakdown?.matchWinPoints || 0}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Reward Value</p>
-                <p className="text-xl font-bold text-yellow-800">{picklePoints.toLocaleString()} pts</p>
+                <p className="text-sm text-yellow-600">Participation</p>
+                <p className="text-xl font-bold text-yellow-800">{picklePointsData?.breakdown?.matchParticipationPoints || 0}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Points Rank</p>
-                <p className="text-xl font-bold text-yellow-800">#47</p>
+                <p className="text-sm text-yellow-600">Profile Bonus</p>
+                <p className="text-xl font-bold text-yellow-800">{picklePointsData?.breakdown?.profileBonus || 0}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Points Earned</p>
-                <p className="text-xl font-bold text-yellow-800">+{Math.floor(picklePoints * 0.15)}</p>
+                <p className="text-sm text-yellow-600">System</p>
+                <p className="text-xs font-bold text-yellow-800">{picklePointsData?.system?.split(' ')[0] || 'Activity'}</p>
               </div>
             </div>
 
