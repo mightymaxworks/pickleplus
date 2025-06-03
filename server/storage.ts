@@ -1904,7 +1904,7 @@ export class DatabaseStorage implements IStorage {
       // Select all fields from the user table
       const [user] = await db.select()
         .from(users)
-        .where(eq(users.passportId, passportCode));
+        .where(eq(users.passportCode, passportCode));
       
       // Add any missing fields expected in the User type
       if (user) {
@@ -1978,7 +1978,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    // Import passport generator
+    const { generateUniquePassportCode } = await import('../utils/passport-generator');
+    
+    // Generate unique passport code if not provided
+    const userData = { ...insertUser };
+    if (!userData.passportCode) {
+      userData.passportCode = await generateUniquePassportCode();
+    }
+    
+    const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
 
