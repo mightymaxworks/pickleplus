@@ -98,8 +98,19 @@ export default function PassportDashboard() {
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
-                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    {user.displayName?.split(' ').map(n => n[0]).join('') || user.username.slice(0, 2).toUpperCase()}
+                  {/* Profile Photo */}
+                  <div className="relative">
+                    {user.avatarUrl ? (
+                      <img 
+                        src={user.avatarUrl} 
+                        alt={user.displayName || user.username} 
+                        className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-orange-300"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                        {user.displayName?.split(' ').map(n => n[0]).join('') || user.username.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h1 className="text-2xl lg:text-3xl font-bold text-orange-900">
@@ -114,22 +125,48 @@ export default function PassportDashboard() {
                 </div>
 
                 {/* Key Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                   <div className="text-center lg:text-left">
                     <p className="text-sm text-orange-600 font-medium">DUPR Rating</p>
                     <p className="text-2xl font-bold text-orange-900">{user.duprRating || '4.2'}</p>
                   </div>
                   <div className="text-center lg:text-left">
+                    <p className="text-sm text-orange-600 font-medium">Ranking Points</p>
+                    <p className="text-2xl font-bold text-purple-600">{user.rankingPoints || '1,250'}</p>
+                  </div>
+                  <div className="text-center lg:text-left">
                     <p className="text-sm text-orange-600 font-medium">Win Rate</p>
-                    <p className="text-2xl font-bold text-orange-900">{winRate}%</p>
+                    <p className="text-2xl font-bold text-green-600">{winRate}%</p>
                   </div>
                   <div className="text-center lg:text-left">
                     <p className="text-sm text-orange-600 font-medium">Matches</p>
-                    <p className="text-2xl font-bold text-orange-900">{user.totalMatches || 0}</p>
+                    <p className="text-2xl font-bold text-blue-600">{user.totalMatches || 0}</p>
                   </div>
                   <div className="text-center lg:text-left">
                     <p className="text-sm text-orange-600 font-medium">Streak</p>
-                    <p className="text-2xl font-bold text-orange-900">{currentStreak}</p>
+                    <p className="text-2xl font-bold text-indigo-600">{currentStreak}</p>
+                  </div>
+                </div>
+
+                {/* Ranking Categories */}
+                <div className="mt-4 pt-4 border-t border-orange-200">
+                  <h3 className="text-sm font-semibold text-orange-800 mb-2">Ranking Categories</h3>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                    <div className="bg-white rounded-lg p-2 border border-orange-100">
+                      <div className="font-medium text-gray-700">Singles Open</div>
+                      <div className="text-purple-600 font-bold">1,250 pts</div>
+                      <div className="text-gray-500">#12 Local</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 border border-orange-100">
+                      <div className="font-medium text-gray-700">Doubles Open</div>
+                      <div className="text-purple-600 font-bold">980 pts</div>
+                      <div className="text-gray-500">#18 Local</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 border border-orange-100">
+                      <div className="font-medium text-gray-700">Mixed Open</div>
+                      <div className="text-purple-600 font-bold">1,100 pts</div>
+                      <div className="text-gray-500">#15 Local</div>
+                    </div>
                   </div>
                 </div>
               </div>
