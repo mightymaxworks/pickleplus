@@ -7,11 +7,29 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, CheckCircle2, User, Shield, Trophy, Flag, QrCode, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { tournamentApi } from "@/lib/apiClient";
-import { queryClient } from "@/lib/queryClient";
-import type { QRScanResult } from "@/types";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+interface QRAction {
+  type: string;
+  label: string;
+  endpoint: string;
+  description: string;
+}
+
+interface QRScanResult {
+  type: string;
+  data: string;
+  playerId?: number;
+  tournamentId?: number;
+  scannerRole?: string;
+  actions?: QRAction[];
+  playerData?: any;
+  message?: string;
+}
 
 interface ScanQRModalProps {
   isOpen: boolean;
@@ -52,34 +70,44 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
     }
   };
 
-  const processQrData = (data: string) => {
+  const processQrData = async (data: string) => {
     try {
-      if (data.startsWith("PicklePlus:Tournament:")) {
-        const tournamentId = parseInt(data.split(":")[2], 10);
+      setIsProcessing(true);
+      
+      // Send QR data to backend for role-based processing
+      const response = await apiRequest('POST', '/api/qr/scan', {
+        qrData: data,
+        context: 'modal_scan'
+      });
+      
+      const scanResult = await response.json();
+      
+      if (scanResult.success) {
         setResult({
-          type: "tournament-check-in",
+          type: scanResult.qrType,
           data,
-          tournamentId
-        });
-      } else if (data.startsWith("PicklePlus:")) {
-        const playerId = parseInt(data.split(":")[1], 10);
-        setResult({
-          type: "player-connect",
-          data,
-          playerId
+          scannerRole: scanResult.scannerRole,
+          actions: scanResult.actions || [],
+          playerData: scanResult.playerData,
+          message: scanResult.message,
+          tournamentId: scanResult.tournamentId
         });
       } else {
         setResult({
-          type: "unknown",
-          data
+          type: "error",
+          data,
+          message: scanResult.error || "Failed to process QR code"
         });
       }
     } catch (error) {
-      console.error("Error parsing QR code:", error);
+      console.error("Error processing QR code:", error);
       setResult({
-        type: "unknown",
-        data
+        type: "error",
+        data,
+        message: "Failed to connect to server"
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 

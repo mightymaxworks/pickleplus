@@ -54,6 +54,10 @@ import {
   getAvailablePlayers,
   validateAdminRole
 } from "./routes/administrative-match-routes"; // Administrative Match Creation
+import { 
+  processQRScan,
+  getUserScanPermissions
+} from "./routes/qr-scan-routes"; // QR Code Scanning with Role Detection
 
 /**
  * Register all application routes with the Express app
@@ -799,6 +803,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.put("/api/admin/matches/:matchId", validateAdminRole, updateAdministrativeMatch);
   app.delete("/api/admin/matches/:matchId", validateAdminRole, cancelAdministrativeMatch);
   app.get("/api/admin/matches/available-players", validateAdminRole, getAvailablePlayers);
+
+  // QR Code Scanning Routes with Role Detection
+  app.post("/api/qr/scan", isAuthenticated, processQRScan);
+  app.get("/api/qr/permissions", isAuthenticated, getUserScanPermissions);
 
   // Default route for API 404s
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
