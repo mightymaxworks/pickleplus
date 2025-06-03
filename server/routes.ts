@@ -870,11 +870,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.delete("/api/admin/matches/:matchId", validateAdminRole, cancelAdministrativeMatch);
   app.get("/api/admin/matches/available-players", validateAdminRole, getAvailablePlayers);
 
-  // PCP Global Ranking System API endpoint
+  // PCP Global Ranking System API endpoint with multi-category support
   app.get("/api/pcp-ranking/:userId", async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
-      const { format = 'mens_singles', division = 'open' } = req.query;
+      const { format, division, allCategories = 'true' } = req.query;
       
       const user = await storage.getUser(userId);
       if (!user) {
@@ -884,78 +884,184 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       // Get user's matches for PCP Global Ranking calculation
       const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
       
-      let totalRankingPoints = 0;
-      let tournamentPoints = 0;
-      let matchPoints = 0;
-      let pointBreakdown = [];
+      // Determine user's age division based on year of birth
+      const currentYear = new Date().getFullYear();
+      const userAge = user.yearOfBirth ? currentYear - user.yearOfBirth : null;
       
-      // Calculate tournament points (using PCP Global Ranking structure)
-      // For now, simulate tournament participation based on match data
-      // In production, this would come from actual tournament results
-      const simulatedTournamentResults = [
-        { level: 'club', placement: 'winner', drawSize: 16, points: 75 },
-        { level: 'district', placement: 'runner_up', drawSize: 32, points: 63 },
-        { level: 'city', placement: 'semi_finalist', drawSize: 24, points: 32 }
-      ];
-      
-      for (const tournament of simulatedTournamentResults) {
-        tournamentPoints += tournament.points;
-        pointBreakdown.push({
-          type: 'tournament',
-          event: `${tournament.level} ${tournament.placement}`,
-          points: tournament.points
-        });
-      }
-      
-      // Calculate match points (3 for win, 1 for loss)
-      for (const match of userMatches) {
-        const isWinner = match.winnerId === userId;
-        const points = isWinner ? 3 : 1;
-        matchPoints += points;
+      // Helper function to determine relevant ranking categories for a user
+      function determineRankingCategories(user: any, userAge: number | null) {
+        const categories = [];
         
-        pointBreakdown.push({
-          type: 'match',
-          event: isWinner ? 'Match Win' : 'Match Participation',
-          points: points
+        // Determine gender-based formats (infer from profile data or default to both)
+        let genderFormats = [];
+        if (user.preferredFormat?.includes('mixed')) {
+          genderFormats = ['mens_singles', 'mens_doubles', 'mixed_doubles'];
+        } else if (user.firstName?.toLowerCase().includes('female') || user.displayName?.toLowerCase().includes('ms')) {
+          genderFormats = ['womens_singles', 'womens_doubles', 'mixed_doubles'];
+        } else {
+          // Default to men's formats
+          genderFormats = ['mens_singles', 'mens_doubles', 'mixed_doubles'];
+        }
+        
+        // Determine age divisions based on user's age
+        const ageDivisions = [];
+        if (userAge) {
+          if (userAge >= 18) ageDivisions.push('open');
+          if (userAge >= 35) ageDivisions.push('35+');
+          if (userAge >= 40) ageDivisions.push('40+');
+          if (userAge >= 50) ageDivisions.push('50+');
+          if (userAge >= 60) ageDivisions.push('60+');
+          if (userAge >= 65) ageDivisions.push('65+');
+          if (userAge >= 70) ageDivisions.push('70+');
+        } else {
+          // Default to open if age unknown
+          ageDivisions.push('open');
+        }
+        
+        // Create relevant category combinations (prioritize most relevant)
+        for (const division of ageDivisions) {
+          for (const format of genderFormats) {
+            categories.push({ format, division });
+          }
+        }
+        
+        return categories;
+      }
+
+      // Helper function to get category-specific multipliers
+      function getCategoryMultiplier(category: { format: string; division: string }) {
+        let multiplier = 1.0;
+        
+        // Age division adjustments (older divisions have smaller fields, so points are worth more)
+        if (category.division === '35+') multiplier *= 1.05;
+        else if (category.division === '40+') multiplier *= 1.1;
+        else if (category.division === '50+') multiplier *= 1.15;
+        else if (category.division === '60+') multiplier *= 1.2;
+        else if (category.division === '65+') multiplier *= 1.25;
+        else if (category.division === '70+') multiplier *= 1.3;
+        
+        // Format adjustments (singles formats are more competitive)
+        if (category.format.includes('singles')) multiplier *= 1.1;
+        if (category.format.includes('mixed')) multiplier *= 0.95; // Mixed is often recreational
+        
+        return multiplier;
+      }
+      
+      // If specific format/division requested, use that; otherwise determine all relevant categories
+      let categoriesToCalculate = [];
+      if (format && division) {
+        categoriesToCalculate = [{ format: format as string, division: division as string }];
+      } else {
+        categoriesToCalculate = determineRankingCategories(user, userAge);
+      }
+      
+      // Calculate rankings for each relevant category
+      const categoryRankings = [];
+      
+      for (const category of categoriesToCalculate) {
+        let totalRankingPoints = 0;
+        let tournamentPoints = 0;
+        let matchPoints = 0;
+        let pointBreakdown = [];
+        
+        // Calculate tournament points with category-specific adjustments
+        const baseMultiplier = getCategoryMultiplier(category);
+        const simulatedTournamentResults = [
+          { level: 'club', placement: 'winner', drawSize: 16, points: Math.round(75 * baseMultiplier) },
+          { level: 'district', placement: 'runner_up', drawSize: 32, points: Math.round(63 * baseMultiplier) },
+          { level: 'city', placement: 'semi_finalist', drawSize: 24, points: Math.round(32 * baseMultiplier) }
+        ];
+        
+        for (const tournament of simulatedTournamentResults) {
+          tournamentPoints += tournament.points;
+          pointBreakdown.push({
+            type: 'tournament',
+            event: `${tournament.level} ${tournament.placement}`,
+            points: tournament.points
+          });
+        }
+        
+        // Calculate match points with category adjustments
+        for (const match of userMatches) {
+          const isWinner = match.winnerId === userId;
+          const points = Math.round((isWinner ? 3 : 1) * baseMultiplier);
+          matchPoints += points;
+          
+          pointBreakdown.push({
+            type: 'match',
+            event: isWinner ? 'Match Win' : 'Match Participation',
+            points: points
+          });
+        }
+        
+        totalRankingPoints = tournamentPoints + matchPoints;
+        
+        // Calculate milestone progress
+        const milestones = [
+          { points: 100, description: "Regional Player" },
+          { points: 250, description: "Competitive Player" },
+          { points: 500, description: "Advanced Player" },
+          { points: 1000, description: "Elite Player" },
+          { points: 2000, description: "Professional Level" },
+          { points: 5000, description: "World Class" }
+        ];
+        
+        let nextMilestone = milestones.find(m => totalRankingPoints < m.points);
+        if (!nextMilestone) {
+          nextMilestone = { points: 10000, description: "Legend Status" };
+        }
+        
+        categoryRankings.push({
+          format: category.format,
+          division: category.division,
+          rankingPoints: totalRankingPoints,
+          breakdown: {
+            tournamentPoints,
+            matchPoints,
+            total: totalRankingPoints
+          },
+          pointHistory: pointBreakdown,
+          milestone: {
+            current: totalRankingPoints,
+            next: nextMilestone.points,
+            needed: nextMilestone.points - totalRankingPoints,
+            description: nextMilestone.description
+          }
         });
       }
       
-      totalRankingPoints = tournamentPoints + matchPoints;
+      // Return the primary category (highest points or first relevant) for backward compatibility
+      const primaryCategory = categoryRankings.reduce((highest, current) => 
+        current.rankingPoints > highest.rankingPoints ? current : highest, 
+        categoryRankings[0]
+      ) || {
+        format: 'mens_singles',
+        division: 'open',
+        rankingPoints: 0,
+        breakdown: { tournamentPoints: 0, matchPoints: 0, total: 0 },
+        pointHistory: [],
+        milestone: { current: 0, next: 100, needed: 100, description: 'Regional Player' }
+      };
       
-      // Calculate milestone progress
-      const milestones = [
-        { points: 100, description: "Regional Player" },
-        { points: 250, description: "Competitive Player" },
-        { points: 500, description: "Advanced Player" },
-        { points: 1000, description: "Elite Player" },
-        { points: 2000, description: "Professional Level" },
-        { points: 5000, description: "World Class" }
-      ];
+      const response: any = {
+        userId,
+        format: primaryCategory.format,
+        division: primaryCategory.division,
+        rankingPoints: primaryCategory.rankingPoints,
+        breakdown: primaryCategory.breakdown,
+        pointHistory: primaryCategory.pointHistory,
+        milestone: primaryCategory.milestone,
+        system: "PCP Global Ranking System v2.0 (52-week rolling)",
+        userAge: userAge,
+        totalCategories: categoryRankings.length
+      };
       
-      let nextMilestone = milestones.find(m => totalRankingPoints < m.points);
-      if (!nextMilestone) {
-        nextMilestone = { points: 10000, description: "Legend Status" };
+      // Include all categories if requested (default behavior)
+      if (allCategories === 'true') {
+        response.allCategories = categoryRankings;
       }
       
-      res.json({
-        userId,
-        format,
-        division,
-        rankingPoints: totalRankingPoints,
-        breakdown: {
-          tournamentPoints,
-          matchPoints,
-          total: totalRankingPoints
-        },
-        pointHistory: pointBreakdown,
-        milestone: {
-          current: totalRankingPoints,
-          next: nextMilestone.points,
-          needed: nextMilestone.points - totalRankingPoints,
-          description: nextMilestone.description
-        },
-        system: "PCP Global Ranking System v2.0 (52-week rolling)"
-      });
+      res.json(response);
     } catch (error) {
       console.error('Error calculating PCP Global ranking points:', error);
       res.status(500).json({ error: 'Failed to calculate ranking points' });
