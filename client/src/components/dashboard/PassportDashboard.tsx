@@ -392,96 +392,91 @@ export default function PassportDashboard() {
                     <Trophy className="w-4 h-4" />
                     PCP Global Ranking System
                   </h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    {pcpRankingData?.allCategories?.length > 0 ? (
-                      pcpRankingData.allCategories.slice(0, 3).map((category: any, index: number) => (
-                        <motion.div 
-                          key={`${category.format}-${category.division}`}
-                          className={`bg-gradient-to-r ${
-                            index === 0 
-                              ? 'from-purple-50 to-indigo-50 border-purple-200' 
-                              : 'from-blue-50 to-cyan-50 border-blue-200'
-                          } rounded-lg p-3 border-2 hover:shadow-md transition-all duration-200`}
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
-                        >
-                          <div className="text-center">
-                            <div className={`font-bold text-sm ${
-                              index === 0 ? 'text-purple-800' : 'text-blue-800'
-                            }`}>
-                              {category.format?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Men\'s Singles'} • {category.division || 'Open'}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Render eligible categories */}
+                    {(() => {
+                      // Create eligible categories based on user age - younger players cannot play in older divisions
+                      const userAge = pcpRankingData?.userAge || 25; // Default to 25 if age not available
+                      const eligibleCategories = [
+                        { format: 'mens_singles', division: 'open' },
+                        { format: 'mens_doubles', division: 'open' },
+                        { format: 'mixed_doubles', division: 'open' }
+                      ];
+
+                      // Add age-restricted divisions only if player is old enough
+                      if (userAge >= 35) {
+                        eligibleCategories.push(
+                          { format: 'mens_singles', division: '35+' },
+                          { format: 'mens_doubles', division: '35+' },
+                          { format: 'mixed_doubles', division: '35+' }
+                        );
+                      }
+                      
+                      if (userAge >= 40) {
+                        eligibleCategories.push(
+                          { format: 'mens_singles', division: '40+' },
+                          { format: 'mens_doubles', division: '40+' },
+                          { format: 'mixed_doubles', division: '40+' }
+                        );
+                      }
+                      
+                      if (userAge >= 50) {
+                        eligibleCategories.push(
+                          { format: 'mens_singles', division: '50+' },
+                          { format: 'mens_doubles', division: '50+' },
+                          { format: 'mixed_doubles', division: '50+' }
+                        );
+                      }
+
+                      return eligibleCategories.map((category, index) => {
+                        // Find if user has data for this category
+                        const categoryData = pcpRankingData?.allCategories?.find(
+                          (c: any) => c.format === category.format && c.division === category.division
+                        );
+
+                        const isRanked = categoryData && categoryData.rankingPoints > 0;
+                        const colorScheme = index % 3 === 0 ? 'purple' : index % 3 === 1 ? 'blue' : 'indigo';
+
+                        return (
+                          <motion.div 
+                            key={`${category.format}-${category.division}`}
+                            className={`bg-gradient-to-r from-${colorScheme}-50 to-${colorScheme}-100 rounded-lg p-2 border-2 border-${colorScheme}-200 hover:shadow-md transition-all duration-200`}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                          >
+                            <div className="text-center">
+                              <div className={`font-bold text-xs text-${colorScheme}-800`}>
+                                {category.format?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} • {category.division}
+                              </div>
+                              <div className={`text-lg font-black my-1 text-${colorScheme}-600`}>
+                                {isRanked ? `${categoryData.rankingPoints} pts` : 'Not Ranked'}
+                              </div>
+                              {isRanked ? (
+                                <div className={`text-xs mb-1 text-${colorScheme}-700`}>
+                                  T: {categoryData.breakdown?.tournamentPoints || 0} • M: {categoryData.breakdown?.matchPoints || 0}
+                                </div>
+                              ) : (
+                                <div className={`text-xs mb-1 text-${colorScheme}-600`}>
+                                  No tournament participation
+                                </div>
+                              )}
+                              {isRanked && (
+                                <div className={`mt-1 rounded-full h-1 overflow-hidden bg-${colorScheme}-100`}>
+                                  <div 
+                                    className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
+                                    style={{ 
+                                      width: categoryData.milestone ? 
+                                        `${Math.max(10, (categoryData.milestone.current / categoryData.milestone.next) * 100)}%` : 
+                                        '10%' 
+                                    }}
+                                  />
+                                </div>
+                              )}
                             </div>
-                            <div className={`text-2xl font-black my-1 ${
-                              index === 0 ? 'text-purple-600' : 'text-blue-600'
-                            }`}>
-                              {category.rankingPoints || 0} pts
-                            </div>
-                            <div className={`text-xs mb-1 ${
-                              index === 0 ? 'text-purple-700' : 'text-blue-700'
-                            }`}>
-                              Tournament: {category.breakdown?.tournamentPoints || 0} • 
-                              Matches: {category.breakdown?.matchPoints || 0}
-                            </div>
-                            <div className={`flex items-center justify-center gap-1 text-xs ${
-                              index === 0 ? 'text-purple-600' : 'text-blue-600'
-                            }`}>
-                              <Target className="w-3 h-3" />
-                              Next: {category.milestone?.description || 'Competitive Player'}
-                            </div>
-                            <div className={`mt-1 rounded-full h-1.5 overflow-hidden ${
-                              index === 0 ? 'bg-purple-100' : 'bg-blue-100'
-                            }`}>
-                              <div 
-                                className={`h-full transition-all duration-1000 ease-out ${
-                                  index === 0 ? 'bg-purple-500' : 'bg-blue-500'
-                                }`}
-                                style={{ 
-                                  width: category.milestone ? 
-                                    `${Math.max(10, (category.milestone.current / category.milestone.next) * 100)}%` : 
-                                    '10%' 
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <motion.div 
-                        className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 border-2 border-purple-200 hover:border-purple-300 hover:shadow-md transition-all duration-200"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="text-center">
-                          <div className="font-bold text-lg text-purple-800">
-                            {pcpRankingData?.format?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Men\'s Singles'} • {pcpRankingData?.division || 'Open'}
-                          </div>
-                          <div className="text-3xl font-black text-purple-600 my-2">
-                            {pcpRankingData?.rankingPoints || 0} pts
-                          </div>
-                          <div className="text-sm text-purple-700 mb-2">
-                            Tournament: {pcpRankingData?.breakdown?.tournamentPoints || 0} pts • 
-                            Matches: {pcpRankingData?.breakdown?.matchPoints || 0} pts
-                          </div>
-                          <div className="flex items-center justify-center gap-1 text-xs text-purple-600">
-                            <Target className="w-3 h-3" />
-                            Next: {pcpRankingData?.milestone?.description || 'Competitive Player'}
-                          </div>
-                          <div className="mt-2 bg-purple-100 rounded-full h-2 overflow-hidden">
-                            <div 
-                              className="bg-purple-500 h-full transition-all duration-1000 ease-out"
-                              style={{ 
-                                width: pcpRankingData?.milestone ? 
-                                  `${Math.max(10, (pcpRankingData.milestone.current / pcpRankingData.milestone.next) * 100)}%` : 
-                                  '10%' 
-                              }}
-                            />
-                          </div>
-                          <div className="text-xs text-purple-600 mt-1">
-                            {pcpRankingData?.milestone?.needed || 0} points to next milestone
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
+                          </motion.div>
+                        );
+                      });
+                    })()}
                   </div>
                   <div className="mt-2 text-xs text-orange-600 flex items-center justify-between">
                     <span>{pcpRankingData?.system || 'PCP Global Ranking System v2.0 (52-week rolling)'}</span>

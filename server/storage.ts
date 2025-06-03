@@ -152,6 +152,14 @@ export interface IStorage {
   getEnhancedUserProfile(userId: number): Promise<any>;
   updateUserProfileField(userId: number, field: string, value: any): Promise<boolean>;
   
+  // PCP Global Ranking System - Tournament Participation
+  getTournamentParticipationByUser(userId: number, format: string, division: string): Promise<Array<{
+    tournamentLevel: string;
+    placement: string;
+    points: number;
+    tournamentDate: Date;
+  }>>;
+  
   // PKL-278651-SAGE-0002-CONV - SAGE Conversation Interface
   // Conversation operations
   createConversation(data: InsertCoachingConversation): Promise<CoachingConversation>;
@@ -4008,6 +4016,23 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async getTournamentParticipationByUser(userId: number, format: string, division: string): Promise<Array<{
+    tournamentLevel: string;
+    placement: string;
+    points: number;
+    tournamentDate: Date;
+  }>> {
+    try {
+      // For now, return empty array since we don't have tournament participation data in the database yet
+      // This ensures only authentic data is used and shows "Not Ranked" for all categories
+      console.log(`[Storage] getTournamentParticipationByUser called for userId: ${userId}, format: ${format}, division: ${division}`);
+      return [];
+    } catch (error) {
+      console.error('[Storage] getTournamentParticipationByUser error:', error);
+      return [];
+    }
+  }
+
   async verifyPassportForEvent(passportCode: string, eventId?: number): Promise<{
     valid: boolean;
     userId?: number;
