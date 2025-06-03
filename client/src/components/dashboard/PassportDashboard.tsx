@@ -172,7 +172,7 @@ export default function PassportDashboard() {
                 <div className="mt-3 pt-3 border-t border-orange-200">
                   <h3 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
-                    Current Season Rankings
+                    {rankingData?.userDivision ? `${rankingData.userDivision} Division Rankings` : 'International Rankings'}
                   </h3>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
                     <motion.div 
@@ -180,7 +180,7 @@ export default function PassportDashboard() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="font-medium text-gray-700">Singles Open</div>
+                      <div className="font-medium text-gray-700">{rankingData?.categories?.[0]?.format || 'Singles Open'}</div>
                       <div className="text-purple-600 font-bold">
                         {rankingData?.categories?.[0]?.points || 0} pts
                       </div>
@@ -194,7 +194,7 @@ export default function PassportDashboard() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="font-medium text-gray-700">Doubles Open</div>
+                      <div className="font-medium text-gray-700">{rankingData?.categories?.[1]?.format || 'Doubles Open'}</div>
                       <div className="text-purple-600 font-bold">
                         {rankingData?.categories?.[1]?.points || 0} pts
                       </div>
@@ -208,7 +208,7 @@ export default function PassportDashboard() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="font-medium text-gray-700">Mixed Open</div>
+                      <div className="font-medium text-gray-700">{rankingData?.categories?.[2]?.format || 'Mixed Open'}</div>
                       <div className="text-purple-600 font-bold">
                         {rankingData?.categories?.[2]?.points || 0} pts
                       </div>

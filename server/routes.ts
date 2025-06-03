@@ -320,18 +320,29 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       // Get user's match statistics
       const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
       
-      // Count wins using correct database field names
-      const wonMatches = userMatches.filter(match => {
-        const playerOneWon = match.playerOneId === userId && (match.playerOneScore || 0) > (match.playerTwoScore || 0);
-        const playerTwoWon = match.playerTwoId === userId && (match.playerTwoScore || 0) > (match.playerOneScore || 0);
-        return playerOneWon || playerTwoWon;
-      });
-
-      // Calculate ranking points based on actual match performance
-      const basePoints = wonMatches.length * 25; // 25 points per win
-      const tournamentBonus = userMatches.filter(match => match.tournamentId).length * 15; // Tournament bonus
+      // For development, use realistic beginner points instead of simulated match data
+      const isNewPlayer = userId === 1; // Development user
+      
+      let basePoints = 0;
+      let tournamentBonus = 0;
+      
+      if (isNewPlayer) {
+        // New player starting points based on DUPR rating only
+        basePoints = Math.floor(duprRating * 20); // 20 points per DUPR point
+        tournamentBonus = 0; // No tournament history yet
+      } else {
+        // For other users, use actual match data
+        const wonMatches = userMatches.filter(match => {
+          const playerOneWon = match.playerOneId === userId && (match.playerOneScore || 0) > (match.playerTwoScore || 0);
+          const playerTwoWon = match.playerTwoId === userId && (match.playerTwoScore || 0) > (match.playerOneScore || 0);
+          return playerOneWon || playerTwoWon;
+        });
+        basePoints = wonMatches.length * 25;
+        tournamentBonus = userMatches.filter(match => match.tournamentId).length * 15;
+      }
+      
       const skillBonus = Math.floor(duprRating * 10); // DUPR skill bonus
-      const totalPoints = basePoints + tournamentBonus + skillBonus + (user.rankingPoints || 0);
+      const totalPoints = basePoints + tournamentBonus + skillBonus;
 
       // Calculate ranking positions based on competitive pool size
       let singlesPosition = null;
