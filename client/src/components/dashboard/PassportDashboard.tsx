@@ -39,6 +39,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
+import { useQuery } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 
 export default function PassportDashboard() {
@@ -86,7 +87,7 @@ export default function PassportDashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-1 space-y-3 -mt-10">
+    <div className="max-w-6xl mx-auto px-4 space-y-2 -mt-16">
       {/* Player Passport Header with Prominent QR Code */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -94,8 +95,8 @@ export default function PassportDashboard() {
         transition={{ duration: 0.6 }}
       >
         <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-3">
-            <div className="flex flex-col lg:flex-row items-center gap-6">
+          <CardContent className="p-2">
+            <div className="flex flex-col lg:flex-row items-center gap-4">
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
@@ -170,7 +171,7 @@ export default function PassportDashboard() {
                       <div className="text-purple-600 font-bold">{user.rankingPoints || 1250} pts</div>
                       <div className="text-gray-500 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        Rank #12 Regional
+                        #12 International
                       </div>
                     </motion.div>
                     <motion.div 
@@ -182,7 +183,7 @@ export default function PassportDashboard() {
                       <div className="text-purple-600 font-bold">980 pts</div>
                       <div className="text-gray-500 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        Rank #18 Regional
+                        #18 International
                       </div>
                     </motion.div>
                     <motion.div 
@@ -194,12 +195,12 @@ export default function PassportDashboard() {
                       <div className="text-purple-600 font-bold">1,100 pts</div>
                       <div className="text-gray-500 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        Rank #15 Regional
+                        #15 International
                       </div>
                     </motion.div>
                   </div>
                   <div className="mt-2 text-xs text-orange-600">
-                    Rankings updated after each tournament • Regional pool: 2,847 players
+                    Rankings updated after each tournament • International pool: 28,470 players
                   </div>
                 </div>
               </div>

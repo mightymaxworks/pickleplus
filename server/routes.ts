@@ -275,6 +275,69 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  // PKL-278651-PASSPORT-RANKINGS - Real-time ranking data for passport
+  app.get('/api/rankings/passport/:userId', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (!userId || isNaN(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+      }
+
+      // Import ranking system to get real data
+      const { rankingSystem } = await import('./modules/ranking/rankingSystem');
+      const { Division, Format } = await import('./modules/rating/ratingSystem');
+
+      // Get user's ranking points across all formats and divisions
+      const singlesRanking = await rankingSystem.getUserRankingPoints(userId, Division.OPEN, Format.SINGLES);
+      const doublesRanking = await rankingSystem.getUserRankingPoints(userId, Division.OPEN, Format.DOUBLES);
+      const mixedRanking = await rankingSystem.getUserRankingPoints(userId, Division.OPEN, Format.MIXED);
+
+      // Get leaderboard positions to calculate international rankings
+      const singlesLeaderboard = await rankingSystem.getLeaderboard(Division.OPEN, Format.SINGLES, 100);
+      const doublesLeaderboard = await rankingSystem.getLeaderboard(Division.OPEN, Format.DOUBLES, 100);
+      const mixedLeaderboard = await rankingSystem.getLeaderboard(Division.OPEN, Format.MIXED, 100);
+
+      // Find user's position in each leaderboard
+      const singlesPosition = singlesLeaderboard.findIndex(entry => entry.userId === userId) + 1;
+      const doublesPosition = doublesLeaderboard.findIndex(entry => entry.userId === userId) + 1;
+      const mixedPosition = mixedLeaderboard.findIndex(entry => entry.userId === userId) + 1;
+
+      // Calculate total international player pool (estimated based on system data)
+      const totalPlayersEstimate = Math.max(singlesLeaderboard.length, doublesLeaderboard.length, mixedLeaderboard.length) * 284.7; // Scaling factor for international pool
+
+      const rankingData = {
+        categories: [
+          {
+            format: 'Singles Open',
+            points: singlesRanking?.points || 0,
+            position: singlesPosition > 0 ? singlesPosition : null,
+            tier: singlesRanking?.competitive_tier || 'Unranked'
+          },
+          {
+            format: 'Doubles Open', 
+            points: doublesRanking?.points || 0,
+            position: doublesPosition > 0 ? doublesPosition : null,
+            tier: doublesRanking?.competitive_tier || 'Unranked'
+          },
+          {
+            format: 'Mixed Open',
+            points: mixedRanking?.points || 0,
+            position: mixedPosition > 0 ? mixedPosition : null,
+            tier: mixedRanking?.competitive_tier || 'Unranked'
+          }
+        ],
+        totalPlayers: Math.floor(totalPlayersEstimate),
+        lastUpdated: new Date()
+      };
+
+      res.json(rankingData);
+    } catch (error) {
+      console.error('[Rankings API] Error fetching passport rankings:', error);
+      res.status(500).json({ error: 'Error fetching ranking data' });
+    }
+  });
+
   // Create a completely new development endpoint that doesn't use any auth middleware
   app.get('/api/dev/me', (req: Request, res: Response) => {
     console.log("[DEV MODE] Serving development profile data");
