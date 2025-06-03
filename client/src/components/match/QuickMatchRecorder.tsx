@@ -52,9 +52,15 @@ interface UserSearchResult {
 
 interface QuickMatchRecorderProps {
   onSuccess?: (data?: any) => void;
+  prefilledPlayer?: {
+    id: number;
+    displayName: string;
+    username: string;
+    rating?: number;
+  } | null;
 }
 
-export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
+export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRecorderProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -109,6 +115,27 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     });
   };
   
+  // Initialize with pre-filled player data from QR scan
+  useEffect(() => {
+    if (prefilledPlayer) {
+      const playerData = {
+        id: prefilledPlayer.id,
+        displayName: prefilledPlayer.displayName,
+        username: prefilledPlayer.username,
+        avatarInitials: prefilledPlayer.displayName?.substring(0, 2).toUpperCase() || prefilledPlayer.username.substring(0, 2).toUpperCase()
+      };
+      
+      setPlayerTwoData(playerData);
+      form.setValue("playerTwoId", playerData.id);
+      
+      toast({
+        title: "Opponent Pre-filled",
+        description: `Ready to record match with ${playerData.displayName}`,
+        variant: "default",
+      });
+    }
+  }, [prefilledPlayer, form, toast]);
+
   // Listen for player selection events from DialogPlayerSelect
   useEffect(() => {
     const handlePlayerSelected = (event: CustomEvent) => {

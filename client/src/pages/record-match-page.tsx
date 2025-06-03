@@ -62,8 +62,30 @@ export default function RecordMatchPage() {
   const [showAssessment, setShowAssessment] = useState(false);
   const [assessmentComplete, setAssessmentComplete] = useState(false);
   
-  // Initialize with user's data
+  // Pre-filled player data from QR scan
+  const [prefilledPlayer, setPrefilledPlayer] = useState<any>(null);
+  
+  // Initialize with user's data and check for QR scan data
   useEffect(() => {
+    // Check for pre-filled player data from QR scan
+    const storedPlayerData = sessionStorage.getItem('matchRecordingPlayer');
+    if (storedPlayerData) {
+      try {
+        const playerData = JSON.parse(storedPlayerData);
+        setPrefilledPlayer(playerData);
+        // Clear the data after using it
+        sessionStorage.removeItem('matchRecordingPlayer');
+        
+        toast({
+          title: "Player Pre-filled",
+          description: `Match recording started with ${playerData.displayName}`,
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Failed to parse stored player data:', error);
+      }
+    }
+    
     // Publish event that match recording has started
     eventBus.publish('match:record:started', { userId: user?.id });
     
@@ -74,7 +96,7 @@ export default function RecordMatchPage() {
         eventBus.publish('match:record:cancelled', { userId: user?.id });
       }
     };
-  }, [user, showSuccess]);
+  }, [user, showSuccess, toast]);
   
   // Calculate progress
   const progressPercentage = ((step - 1) / (totalSteps - 1)) * 100;
@@ -198,7 +220,7 @@ export default function RecordMatchPage() {
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardContent className="p-0">
               {/* The actual match recording form */}
-              <QuickMatchRecorder onSuccess={handleMatchComplete} />
+              <QuickMatchRecorder onSuccess={handleMatchComplete} prefilledPlayer={prefilledPlayer} />
             </CardContent>
           </Card>
         )}

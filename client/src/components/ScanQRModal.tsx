@@ -124,17 +124,28 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
 
   const handleActionClick = async (action: any) => {
     if (action.type === 'record_match') {
+      // Navigate to match recording page with pre-filled player data
+      const playerData = result?.playerData;
+      if (playerData) {
+        // Store player data in sessionStorage for the match recording page
+        sessionStorage.setItem('matchRecordingPlayer', JSON.stringify({
+          id: playerData.playerId,
+          displayName: playerData.displayName,
+          username: playerData.username || playerData.displayName,
+          rating: playerData.rating
+        }));
+      }
+      
       toast({
         title: "Match Recording",
-        description: "Starting match recording workflow...",
+        description: "Opening match recording page...",
         variant: "default",
       });
       
-      console.log('Starting match recording for player:', result?.playerData);
+      // Close modal and navigate
+      onClose();
+      window.location.href = '/record-match';
       
-      setTimeout(() => {
-        onClose();
-      }, 1500);
     } else if (action.type === 'verify_identity') {
       toast({
         title: "Identity Verification",
