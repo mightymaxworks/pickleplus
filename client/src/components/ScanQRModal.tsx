@@ -75,7 +75,9 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
   
   const handleManualEntry = () => {
     if (qrInput) {
-      processQrData(qrInput);
+      // Format passport code input as player connection QR data
+      const passportQrData = `PicklePlus:Player:${qrInput}`;
+      processQrData(passportQrData);
     }
   };
 
@@ -221,10 +223,11 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
               <div className="w-full mt-4 px-4">
                 <input
                   type="text"
-                  placeholder="Enter QR code data manually"
+                  placeholder="Enter player's passport code (e.g., MX8K7P2N)"
                   value={qrInput}
-                  onChange={(e) => setQrInput(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                  onChange={(e) => setQrInput(e.target.value.toUpperCase())}
+                  className="w-full p-2 border border-gray-300 rounded text-sm font-mono"
+                  maxLength={8}
                 />
               </div>
             )}
@@ -257,7 +260,7 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
                   setManualEntry(true);
                 }}
               >
-                Manual Entry
+                Enter Passport Code
               </Button>
             </div>
           ) : result ? (
