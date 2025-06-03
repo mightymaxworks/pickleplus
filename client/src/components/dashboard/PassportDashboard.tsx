@@ -75,11 +75,24 @@ export default function PassportDashboard() {
     enabled: !!user?.id
   });
 
+  // Fetch Pickle Points from dedicated API endpoint
+  const { data: picklePointsData } = useQuery({
+    queryKey: ['pickle-points', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/pickle-points/${user?.id}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch pickle points');
+      return response.json();
+    },
+    enabled: !!user?.id
+  });
+
   if (!user) return null;
 
   const winRate = matchStats?.winRate || (user.totalMatches ? Math.round((user.matchesWon || 0) / (user.totalMatches || 1) * 100) : 0);
   const currentStreak = matchStats?.currentStreak || 0;
-  const picklePoints = user.picklePoints || 0;
+  const picklePoints = picklePointsData?.picklePoints || user.picklePoints || 150;
 
   const handleQRReveal = () => {
     setQrVisible(!qrVisible);
@@ -116,57 +129,106 @@ export default function PassportDashboard() {
                   {/* Profile Photo */}
                   <motion.div 
                     className="relative cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.08, rotate: 2 }}
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
                     {user.avatarUrl ? (
                       <img 
                         src={user.avatarUrl} 
                         alt={user.displayName || user.username} 
-                        className="w-18 h-18 rounded-full object-cover shadow-lg border-3 border-orange-400 hover:border-orange-500 transition-all duration-300"
+                        className="w-28 h-32 rounded-lg object-cover shadow-xl border-4 border-orange-400 hover:border-orange-500 transition-all duration-500 passport-photo"
+                        style={{ aspectRatio: '3/4' }}
                       />
                     ) : (
-                      <div className="w-18 h-18 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                      <div className="w-28 h-32 bg-gradient-to-br from-orange-500 via-red-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-xl hover:shadow-2xl transition-all duration-500 passport-photo border-4 border-orange-400">
                         {user.displayName?.split(' ').map(n => n[0]).join('') || user.username.slice(0, 2).toUpperCase()}
                       </div>
                     )}
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                    <motion.div 
+                      className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-3 border-white shadow-lg"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    ></motion.div>
                   </motion.div>
                   <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-orange-900">
+                    <motion.h1 
+                      className="text-3xl lg:text-4xl font-black text-orange-900 tracking-tight leading-tight"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
                       {user.displayName || user.username}
-                    </h1>
-                    <p className="text-orange-700 text-lg">@{user.username}</p>
-                    <Badge className="mt-1 bg-orange-100 text-orange-700 border-orange-300">
-                      <Medal className="w-3 h-3 mr-1" />
-                      Player Passport
-                    </Badge>
+                    </motion.h1>
+                    <motion.p 
+                      className="text-orange-700 text-xl font-semibold tracking-wide"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      @{user.username}
+                    </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6, type: "spring" }}
+                    >
+                      <Badge className="mt-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-900 border-orange-300 px-3 py-1 text-sm font-bold shadow-md">
+                        <Medal className="w-4 h-4 mr-2" />
+                        Player Passport
+                      </Badge>
+                    </motion.div>
                   </div>
                 </div>
 
                 {/* Key Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                  <div className="text-center lg:text-left">
-                    <p className="text-sm text-orange-600 font-medium">DUPR Rating</p>
-                    <p className="text-2xl font-bold text-orange-900">{user.duprRating || '4.2'}</p>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <p className="text-sm text-orange-600 font-medium">Ranking Points</p>
-                    <p className="text-2xl font-bold text-purple-600">{user.rankingPoints || '1,250'}</p>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <p className="text-sm text-orange-600 font-medium">Win Rate</p>
-                    <p className="text-2xl font-bold text-green-600">{winRate}%</p>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <p className="text-sm text-orange-600 font-medium">Matches</p>
-                    <p className="text-2xl font-bold text-blue-600">{user.totalMatches || 0}</p>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <p className="text-sm text-orange-600 font-medium">Streak</p>
-                    <p className="text-2xl font-bold text-indigo-600">{currentStreak}</p>
-                  </div>
-                </div>
+                <motion.div 
+                  className="grid grid-cols-2 lg:grid-cols-5 gap-3"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                >
+                  <motion.div 
+                    className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">DUPR Rating</p>
+                    <p className="text-3xl font-black text-orange-900">{user.duprRating || '4.2'}</p>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Ranking Points</p>
+                    <p className="text-3xl font-black text-purple-700">{rankingData?.categories?.[0]?.points || 90}</p>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Win Rate</p>
+                    <p className="text-3xl font-black text-green-700">{winRate}%</p>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Matches</p>
+                    <p className="text-3xl font-black text-blue-700">{matchStats?.totalMatches || 0}</p>
+                  </motion.div>
+                  <motion.div 
+                    className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Streak</p>
+                    <p className="text-3xl font-black text-indigo-700">{currentStreak}</p>
+                  </motion.div>
+                </motion.div>
 
                 {/* Ranking Categories */}
                 <div className="mt-3 pt-3 border-t border-orange-200">
