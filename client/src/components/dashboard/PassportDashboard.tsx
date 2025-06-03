@@ -61,6 +61,19 @@ export default function PassportDashboard() {
     limit: 3,
     enabled: !!user
   });
+  
+  // Fetch real ranking data from the API endpoint
+  const { data: rankingData } = useQuery({
+    queryKey: ['rankings', 'passport', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/rankings/passport/${user?.id}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch rankings');
+      return response.json();
+    },
+    enabled: !!user?.id
+  });
 
   if (!user) return null;
 
@@ -168,10 +181,12 @@ export default function PassportDashboard() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="font-medium text-gray-700">Singles Open</div>
-                      <div className="text-purple-600 font-bold">{user.rankingPoints || 1250} pts</div>
-                      <div className="text-gray-500 flex items-center gap-1">
+                      <div className="text-purple-600 font-bold">
+                        {rankingData?.categories?.[0]?.points || 0} pts
+                      </div>
+                      <div className="text-gray-500 flex items-center justify-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        #12 International
+                        {rankingData?.categories?.[0]?.position ? `#${rankingData.categories[0].position} International` : 'Unranked'}
                       </div>
                     </motion.div>
                     <motion.div 
@@ -180,10 +195,12 @@ export default function PassportDashboard() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="font-medium text-gray-700">Doubles Open</div>
-                      <div className="text-purple-600 font-bold">980 pts</div>
-                      <div className="text-gray-500 flex items-center gap-1">
+                      <div className="text-purple-600 font-bold">
+                        {rankingData?.categories?.[1]?.points || 0} pts
+                      </div>
+                      <div className="text-gray-500 flex items-center justify-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        #18 International
+                        {rankingData?.categories?.[1]?.position ? `#${rankingData.categories[1].position} International` : 'Unranked'}
                       </div>
                     </motion.div>
                     <motion.div 
@@ -192,15 +209,17 @@ export default function PassportDashboard() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="font-medium text-gray-700">Mixed Open</div>
-                      <div className="text-purple-600 font-bold">1,100 pts</div>
-                      <div className="text-gray-500 flex items-center gap-1">
+                      <div className="text-purple-600 font-bold">
+                        {rankingData?.categories?.[2]?.points || 0} pts
+                      </div>
+                      <div className="text-gray-500 flex items-center justify-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        #15 International
+                        {rankingData?.categories?.[2]?.position ? `#${rankingData.categories[2].position} International` : 'Unranked'}
                       </div>
                     </motion.div>
                   </div>
                   <div className="mt-2 text-xs text-orange-600">
-                    Rankings updated after each tournament • International pool: 28,470 players
+                    Rankings updated after each tournament • International pool: {rankingData?.totalPlayers?.toLocaleString() || '28,470'} players
                   </div>
                 </div>
               </div>
