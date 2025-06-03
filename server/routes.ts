@@ -1,6 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import { Server } from "http";
 import * as http from "http";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 // Use isAuthenticated from auth.ts which has proper passport integration
 import { registerAdminRoutes } from "./routes/admin-routes";
@@ -166,6 +169,61 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Initialize OpenAI client if API key is available
   initializeOpenAI();
   
+  // Configure multer for avatar uploads
+  const uploadDir = path.join(process.cwd(), 'uploads', 'profiles');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const filename = `avatar-${req.user!.id}-${Date.now()}${ext}`;
+      cb(null, filename);
+    }
+  });
+
+  const uploadAvatar = multer({
+    storage: avatarStorage,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+      }
+    }
+  });
+
+  // Avatar upload endpoint
+  app.post("/api/profile/upload-avatar", isAuthenticated, uploadAvatar.single('avatar'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const avatarUrl = `/uploads/profiles/${req.file.filename}`;
+      
+      // Update user's avatar in database
+      await storage.updateUser(req.user!.id, { avatarUrl });
+
+      res.json({ 
+        success: true, 
+        avatarUrl,
+        message: 'Avatar uploaded successfully' 
+      });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+  });
+
   // Basic user info endpoint
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {
     const user = await storage.getUser(req.user!.id);

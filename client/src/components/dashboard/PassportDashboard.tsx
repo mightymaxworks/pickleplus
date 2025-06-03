@@ -36,8 +36,11 @@ import {
   Sparkles,
   DollarSign,
   MapPin,
-  Info
+  Info,
+  Camera,
+  Upload
 } from 'lucide-react';
+import PhotoUploadModal from '@/components/PhotoUploadModal';
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
