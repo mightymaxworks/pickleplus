@@ -38,7 +38,6 @@ import {
   DollarSign,
   MapPin,
   Info,
-  Camera,
   Upload
 } from 'lucide-react';
 import PhotoUploadModal from '@/components/PhotoUploadModal';
