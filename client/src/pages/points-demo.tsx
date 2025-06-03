@@ -106,7 +106,7 @@ export default function PointsDemo() {
               <ShoppingCart className="h-5 w-5 text-purple-600" />
               Merchant Partnerships
             </CardTitle>
-            <CardDescription>Spend your Dill Dollars for real discounts and rewards</CardDescription>
+            <CardDescription>Spend your Pickle Points for real discounts and rewards</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
@@ -137,7 +137,7 @@ export default function PointsDemo() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-orange-600" />
-              Why Dill Dollars?
+              Why Pickle Points?
             </CardTitle>
           </CardHeader>
           <CardContent>
