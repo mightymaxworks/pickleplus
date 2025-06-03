@@ -943,13 +943,26 @@ export function setupAuth(app: Express) {
     // PKL-278651-AUTH-0017-DEBUG - Development-only test user
     // For development, allow a test user to be returned automatically
     if (process.env.NODE_ENV !== 'production' && !req.isAuthenticated()) {
-      console.log('[DEV MODE] Returning development test user');
+      console.log('[DEV MODE] Fetching actual test user from database');
+      try {
+        const { storage } = await import('./storage');
+        const testUser = await storage.getUser(1); // Get actual user from database
+        if (testUser) {
+          console.log('[DEV MODE] Found test user with passport code:', testUser.passportCode);
+          return res.json(testUser);
+        }
+      } catch (error) {
+        console.error('[DEV MODE] Error fetching test user:', error);
+      }
+      
+      // Fallback to hardcoded user if database fetch fails
+      console.log('[DEV MODE] Using fallback test user');
       return res.json({
         id: 1,
         username: 'testdev',
         email: 'dev@pickle.plus',
         isAdmin: true,
-        passportId: '1000MM7',
+        passportCode: 'MX8K7P2N',
         firstName: 'Mighty',
         lastName: 'Max',
         displayName: 'Mighty Max',
