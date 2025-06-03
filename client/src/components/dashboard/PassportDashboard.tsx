@@ -47,6 +47,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 export default function PassportDashboard() {
   const { user } = useAuth();
   const [qrVisible, setQrVisible] = useState(false);
+  const [showPassportCode, setShowPassportCode] = useState(false);
   const { toast } = useToast();
   
   // Fetch match statistics and recent matches
@@ -98,9 +99,10 @@ export default function PassportDashboard() {
 
   const handleQRReveal = () => {
     setQrVisible(!qrVisible);
+    setShowPassportCode(!showPassportCode);
     toast({
-      title: qrVisible ? "QR Code Hidden" : "QR Code Ready",
-      description: qrVisible ? "Your QR code is now hidden" : "Other players can now scan your code to connect!",
+      title: qrVisible ? "Code Hidden" : "Code Revealed",
+      description: qrVisible ? "Your passport code is now hidden" : `Your passport code: ${user.passportCode}`,
     });
   };
 
@@ -378,14 +380,23 @@ export default function PassportDashboard() {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleQRReveal}
                 >
-                  <QrCode className="w-32 h-32 text-orange-600" />
+                  {showPassportCode ? (
+                    <div className="text-center">
+                      <QrCode className="w-24 h-24 text-orange-600 mx-auto mb-2" />
+                      <div className="font-mono font-bold text-sm text-orange-700 bg-orange-50 px-2 py-1 rounded border">
+                        {user.passportCode || 'Not Set'}
+                      </div>
+                    </div>
+                  ) : (
+                    <QrCode className="w-32 h-32 text-orange-600" />
+                  )}
                 </motion.div>
                 <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-300 px-3 py-1">
                   <Scan className="w-3 h-3 mr-1" />
-                  Tap to Reveal Code
+                  {showPassportCode ? 'Code Visible' : 'Tap to Reveal Code'}
                 </Badge>
                 <p className="text-xs text-orange-600 mt-1 text-center max-w-32">
-                  Players scan to initiate matches or view stats
+                  {showPassportCode ? 'Share this code with other players' : 'Players scan to initiate matches or view stats'}
                 </p>
               </div>
             </div>
@@ -544,6 +555,24 @@ export default function PassportDashboard() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Overall Rating</span>
                       <span className="font-semibold">{user.duprRating || '4.2'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Passport Code</span>
+                      <div className="flex items-center gap-2">
+                        {showPassportCode ? (
+                          <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded border">
+                            {user.passportCode || 'Not Set'}
+                          </span>
+                        ) : (
+                          <span className="font-mono text-gray-400">••••••••</span>
+                        )}
+                        <button 
+                          onClick={handleQRReveal}
+                          className="text-xs text-orange-600 hover:text-orange-700 underline"
+                        >
+                          {showPassportCode ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Recent Form</span>
