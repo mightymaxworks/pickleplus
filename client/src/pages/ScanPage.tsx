@@ -160,7 +160,7 @@ export default function ScanPage() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {getRoleCapabilities(userRole).map((capability, index) => (
+              {getRoleCapabilities(userRole).map((capability: string, index: number) => (
                 <li key={index} className="flex items-center text-sm text-orange-700">
                   <div className="w-2 h-2 bg-orange-400 rounded-full mr-3 flex-shrink-0" />
                   {capability}
