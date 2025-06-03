@@ -40,14 +40,23 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<QRScanResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [manualEntry, setManualEntry] = useState(false);
   const [qrInput, setQrInput] = useState('');
   const { toast } = useToast();
 
-  // Reset state when modal closes
+  // Start scanning when modal opens
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setScanning(true);
+      setResult(null);
+      setIsProcessing(false);
+      setManualEntry(false);
+      setQrInput('');
+    } else {
       setScanning(false);
       setResult(null);
+      setIsProcessing(false);
+      setManualEntry(false);
       setQrInput('');
     }
   }, [isOpen]);
@@ -203,24 +212,23 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
             )}
           </div>
         ) : (
-          <>
-            <div className="h-40 bg-gray-100 rounded-lg mb-4 flex flex-col items-center justify-center">
-              <QrCode className="h-16 w-16 text-gray-500 mb-2" />
-              <p className="text-sm text-gray-500 text-center px-4">
-                Scan QR codes for tournament check-ins and player connections
-              </p>
-            </div>
-            
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Or manually enter QR code data"
-                value={qrInput}
-                onChange={(e) => setQrInput(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-          </>
+          <div className="h-40 bg-gray-100 rounded-lg mb-4 flex flex-col items-center justify-center">
+            <QrCode className="h-16 w-16 text-gray-500 mb-2" />
+            <p className="text-sm text-gray-500 text-center px-4">
+              Ready to scan QR codes
+            </p>
+            {manualEntry && (
+              <div className="w-full mt-4 px-4">
+                <input
+                  type="text"
+                  placeholder="Enter QR code data manually"
+                  value={qrInput}
+                  onChange={(e) => setQrInput(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded text-sm"
+                />
+              </div>
+            )}
+          </div>
         )}
         
         <p className="text-sm text-gray-500 mb-4 text-center">
@@ -232,38 +240,62 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
         </p>
         
         <DialogFooter>
-          {!scanning && !result ? (
+          {scanning ? (
             <div className="w-full flex gap-2">
               <Button 
-                className="flex-1 bg-[#FF5722] hover:bg-[#E64A19]"
-                onClick={handleSimulatedScan}
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setScanning(false)}
               >
-                <Camera className="mr-2 h-4 w-4" />
-                Start Camera
+                Stop Scanning
               </Button>
               <Button 
+                variant="outline"
                 className="flex-1"
-                onClick={handleManualEntry}
-                disabled={!qrInput}
+                onClick={() => {
+                  setScanning(false);
+                  setManualEntry(true);
+                }}
               >
-                Process Code
+                Manual Entry
               </Button>
             </div>
-          ) : scanning ? (
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => setScanning(false)}
-            >
-              Cancel Scan
-            </Button>
-          ) : (
+          ) : result ? (
             <Button 
               className="w-full bg-[#4CAF50] hover:bg-[#388E3C]"
               onClick={handleProcessResult}
               disabled={isProcessing}
             >
               {isProcessing ? "Processing..." : "Process QR Code"}
+            </Button>
+          ) : manualEntry ? (
+            <div className="w-full flex gap-2">
+              <Button 
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setManualEntry(false);
+                  setScanning(true);
+                }}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Start Camera
+              </Button>
+              <Button 
+                className="flex-1 bg-[#FF5722] hover:bg-[#E64A19]"
+                onClick={handleManualEntry}
+                disabled={!qrInput}
+              >
+                Process Code
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
+              onClick={() => setScanning(true)}
+            >
+              <Camera className="mr-2 h-4 w-4" />
+              Start Scanning
             </Button>
           )}
         </DialogFooter>
