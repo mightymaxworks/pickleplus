@@ -126,6 +126,7 @@ import FixedTwitterDashboard from './pages/FixedTwitterDashboard' // PKL-278651-
 import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-278651-COMM-0005-DASH-UNIFIED
 import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-278651-COMM-0005-DASH-SIMPLE
 import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
+import PointsDemo from './pages/points-demo' // PKL-278651-POINTS-0001-DEMO - Pickle+ Points Demo
 import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
 import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo
 import DevModernProfilePage from './pages/DevModernProfilePage' // PKL-278651-PROF-0008-DEV - Development Profile Page
@@ -566,6 +567,11 @@ export default function App() {
                   {/* PKL-278651-XP-0002-UI - XP System Dashboard */}
                   <Route path="/xp-dashboard">
                     {(params) => <CentralProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
+                  </Route>
+                  
+                  {/* PKL-278651-POINTS-0001-DEMO - Pickle+ Points Demo */}
+                  <Route path="/points-demo">
+                    {(params) => <CentralProtectedRoute component={PointsDemo} path="/points-demo" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0005-DASH-UNIFIED - Unified Activity-Centric Dashboard Route */}
