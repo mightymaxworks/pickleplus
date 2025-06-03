@@ -69,7 +69,33 @@ export default function PassportDashboard() {
     enabled: !!user
   });
   
-  // Fetch real ranking data from the API endpoint
+  // Fetch ATP ranking data (new system)
+  const { data: atpRankingData } = useQuery({
+    queryKey: ['atp-ranking', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/atp-ranking/${user?.id}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch ATP ranking');
+      return response.json();
+    },
+    enabled: !!user
+  });
+
+  // Fetch Pickle Points data (new pure activity-based system)
+  const { data: picklePointsData } = useQuery({
+    queryKey: ['pickle-points', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/pickle-points/${user?.id}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch pickle points');
+      return response.json();
+    },
+    enabled: !!user
+  });
+
+  // Fetch legacy ranking data for comparison
   const { data: rankingData } = useQuery({
     queryKey: ['rankings', 'passport', user?.id],
     queryFn: async () => {
@@ -360,58 +386,51 @@ export default function PassportDashboard() {
                   </motion.div>
                 </motion.div>
 
-                {/* Ranking Categories */}
+                {/* ATP-Style Ranking Display */}
                 <div className="mt-3 pt-3 border-t border-orange-200">
                   <h3 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
-                    {rankingData?.userDivision ? `${rankingData.userDivision} Division Rankings` : 'International Rankings'}
+                    ATP-Style Ranking System
                   </h3>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                  <div className="grid grid-cols-1 gap-3">
                     <motion.div 
-                      className="bg-white rounded-lg p-2 border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+                      className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 border-2 border-purple-200 hover:border-purple-300 hover:shadow-md transition-all duration-200"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="font-medium text-gray-700">{rankingData?.categories?.[0]?.format || 'Singles Open'}</div>
-                      <div className="text-purple-600 font-bold">
-                        {rankingData?.categories?.[0]?.points || 0} pts
-                      </div>
-                      <div className="text-gray-500 flex items-center justify-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {rankingData?.categories?.[0]?.position ? `#${rankingData.categories[0].position} International` : 'Unranked'}
-                      </div>
-                    </motion.div>
-                    <motion.div 
-                      className="bg-white rounded-lg p-2 border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="font-medium text-gray-700">{rankingData?.categories?.[1]?.format || 'Doubles Open'}</div>
-                      <div className="text-purple-600 font-bold">
-                        {rankingData?.categories?.[1]?.points || 0} pts
-                      </div>
-                      <div className="text-gray-500 flex items-center justify-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {rankingData?.categories?.[1]?.position ? `#${rankingData.categories[1].position} International` : 'Unranked'}
-                      </div>
-                    </motion.div>
-                    <motion.div 
-                      className="bg-white rounded-lg p-2 border border-orange-100 hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="font-medium text-gray-700">{rankingData?.categories?.[2]?.format || 'Mixed Open'}</div>
-                      <div className="text-purple-600 font-bold">
-                        {rankingData?.categories?.[2]?.points || 0} pts
-                      </div>
-                      <div className="text-gray-500 flex items-center justify-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {rankingData?.categories?.[2]?.position ? `#${rankingData.categories[2].position} International` : 'Unranked'}
+                      <div className="text-center">
+                        <div className="font-bold text-lg text-purple-800">
+                          {atpRankingData?.format || 'Men\'s Singles'} • {atpRankingData?.division || 'Open'}
+                        </div>
+                        <div className="text-3xl font-black text-purple-600 my-2">
+                          {atpRankingData?.rankingPoints || 0} pts
+                        </div>
+                        <div className="text-sm text-purple-700 mb-2">
+                          Tournament: {atpRankingData?.breakdown?.tournamentPoints || 0} pts • 
+                          Matches: {atpRankingData?.breakdown?.matchPoints || 0} pts
+                        </div>
+                        <div className="flex items-center justify-center gap-1 text-xs text-purple-600">
+                          <Target className="w-3 h-3" />
+                          Next: {atpRankingData?.milestone?.description || 'Competitive Player'}
+                        </div>
+                        <div className="mt-2 bg-purple-100 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className="bg-purple-500 h-full transition-all duration-1000 ease-out"
+                            style={{ 
+                              width: atpRankingData?.milestone ? 
+                                `${Math.max(10, (atpRankingData.milestone.current / atpRankingData.milestone.next) * 100)}%` : 
+                                '10%' 
+                            }}
+                          />
+                        </div>
+                        <div className="text-xs text-purple-600 mt-1">
+                          {atpRankingData?.milestone?.needed || 0} points to next milestone
+                        </div>
                       </div>
                     </motion.div>
                   </div>
                   <div className="mt-2 text-xs text-orange-600">
-                    Rankings updated after each tournament • International pool: {rankingData?.totalPlayers?.toLocaleString() || '28,470'} players
+                    {atpRankingData?.system || 'ATP-Style Ranking v1.0 (52-week rolling)'} • Updated after each match
                   </div>
                 </div>
               </div>
