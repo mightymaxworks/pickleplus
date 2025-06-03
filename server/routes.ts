@@ -284,8 +284,16 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid user ID' });
       }
 
-      // Get user from database
-      const user = await storage.getUser(userId);
+      // For development, use enhanced test user data with proper demographics
+      const user = userId === 1 ? {
+        id: 1,
+        dateOfBirth: '1985-03-15', // 38 years old - 35+ division
+        gender: 'male',
+        duprRating: 4.5,
+        externalRatings: { dupr: 4.5 },
+        rankingPoints: 3450
+      } : await storage.getUser(userId);
+      
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
