@@ -13,7 +13,12 @@
 
 import React from 'react';
 import PassportDashboard from '@/components/dashboard/PassportDashboard';
+import { StandardLayout } from '@/components/layout/StandardLayout';
 
 export default function Dashboard() {
-  return <PassportDashboard />;
+  return (
+    <StandardLayout>
+      <PassportDashboard />
+    </StandardLayout>
+  );
 }

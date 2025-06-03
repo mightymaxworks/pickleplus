@@ -301,7 +301,7 @@ export default function PassportDashboard() {
                             {match.result === 'win' ? '🏆 Victory' : '📉 Loss'} vs {match.opponentName}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {format(new Date(match.matchDate), 'MMM dd, yyyy')}
+                            {match.matchDate ? format(new Date(match.matchDate), 'MMM dd, yyyy') : 'Recent match'}
                           </p>
                         </div>
                         <div className="text-right">
