@@ -85,28 +85,28 @@ export default function PassportDashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-6">
+    <div className="max-w-6xl mx-auto p-4 space-y-6 -mt-6">
       {/* Player Passport Header with Prominent QR Code */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 shadow-lg">
+        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg">
           <CardContent className="p-6">
             <div className="flex flex-col lg:flex-row items-center gap-8">
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
-                  <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
                     {user.displayName?.split(' ').map(n => n[0]).join('') || user.username.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-emerald-900">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-orange-900">
                       {user.displayName || user.username}
                     </h1>
-                    <p className="text-emerald-700 text-lg">@{user.username}</p>
-                    <Badge className="mt-1 bg-emerald-100 text-emerald-700 border-emerald-300">
+                    <p className="text-orange-700 text-lg">@{user.username}</p>
+                    <Badge className="mt-1 bg-orange-100 text-orange-700 border-orange-300">
                       <Medal className="w-3 h-3 mr-1" />
                       Player Passport
                     </Badge>
@@ -116,20 +116,20 @@ export default function PassportDashboard() {
                 {/* Key Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="text-center lg:text-left">
-                    <p className="text-sm text-emerald-600 font-medium">DUPR Rating</p>
-                    <p className="text-2xl font-bold text-emerald-900">{user.duprRating || '4.2'}</p>
+                    <p className="text-sm text-orange-600 font-medium">DUPR Rating</p>
+                    <p className="text-2xl font-bold text-orange-900">{user.duprRating || '4.2'}</p>
                   </div>
                   <div className="text-center lg:text-left">
-                    <p className="text-sm text-emerald-600 font-medium">Win Rate</p>
-                    <p className="text-2xl font-bold text-emerald-900">{winRate}%</p>
+                    <p className="text-sm text-orange-600 font-medium">Win Rate</p>
+                    <p className="text-2xl font-bold text-orange-900">{winRate}%</p>
                   </div>
                   <div className="text-center lg:text-left">
-                    <p className="text-sm text-emerald-600 font-medium">Matches</p>
-                    <p className="text-2xl font-bold text-emerald-900">{user.totalMatches || 0}</p>
+                    <p className="text-sm text-orange-600 font-medium">Matches</p>
+                    <p className="text-2xl font-bold text-orange-900">{user.totalMatches || 0}</p>
                   </div>
                   <div className="text-center lg:text-left">
-                    <p className="text-sm text-emerald-600 font-medium">Streak</p>
-                    <p className="text-2xl font-bold text-emerald-900">{currentStreak}</p>
+                    <p className="text-sm text-orange-600 font-medium">Streak</p>
+                    <p className="text-2xl font-bold text-orange-900">{currentStreak}</p>
                   </div>
                 </div>
               </div>
@@ -137,18 +137,18 @@ export default function PassportDashboard() {
               {/* Prominent QR Code Section */}
               <div className="flex flex-col items-center">
                 <motion.div 
-                  className="w-40 h-40 bg-white border-4 border-emerald-300 rounded-xl flex items-center justify-center mb-3 shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
+                  className="w-40 h-40 bg-white border-4 border-orange-300 rounded-xl flex items-center justify-center mb-3 shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleQRReveal}
                 >
-                  <QrCode className="w-32 h-32 text-emerald-600" />
+                  <QrCode className="w-32 h-32 text-orange-600" />
                 </motion.div>
-                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-300 px-3 py-1">
+                <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-300 px-3 py-1">
                   <Scan className="w-3 h-3 mr-1" />
                   Tap to Reveal Code
                 </Badge>
-                <p className="text-xs text-emerald-600 mt-1 text-center max-w-32">
+                <p className="text-xs text-orange-600 mt-1 text-center max-w-32">
                   Players scan to initiate matches or view stats
                 </p>
               </div>
