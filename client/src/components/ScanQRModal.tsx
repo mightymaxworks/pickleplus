@@ -212,6 +212,21 @@ export function ScanQRModal({ isOpen, onClose }: ScanQRModalProps) {
                     {result.message}
                   </p>
                 )}
+                {result.actions && result.actions.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-gray-700 text-center">
+                      Available Actions ({result.scannerRole}):
+                    </p>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {result.actions.map((action: any, index: number) => (
+                        <div key={index} className="p-2 bg-gray-50 rounded-lg">
+                          <p className="text-sm font-medium text-gray-800">{action.label}</p>
+                          <p className="text-xs text-gray-600">{action.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <>
