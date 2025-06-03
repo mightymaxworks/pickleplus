@@ -85,7 +85,7 @@ export default function PassportDashboard() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-6 -mt-6">
+    <div className="max-w-6xl mx-auto px-4 py-2 space-y-4 -mt-8">
       {/* Player Passport Header with Prominent QR Code */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -93,8 +93,8 @@ export default function PassportDashboard() {
         transition={{ duration: 0.6 }}
       >
         <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row items-center gap-8">
+          <CardContent className="p-4">
+            <div className="flex flex-col lg:flex-row items-center gap-6">
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
