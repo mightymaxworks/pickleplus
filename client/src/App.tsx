@@ -215,6 +215,7 @@ export default function App() {
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/test-login" component={TestLoginPage} />
                   <Route path="/sage-demo" component={SageDemoPage} />
+                  <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} />
                 
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 
