@@ -1,33 +1,33 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 
-export interface XPProgressBarProps {
-  currentXP: number;
-  level: number;
-  nextLevelXP: number; 
-  previousLevelXP: number;
+export interface PointsProgressBarProps {
+  currentPoints: number;
+  pointsLevel: number;
+  nextLevelPoints: number; 
+  previousLevelPoints: number;
 }
 
-export default function XPProgressBar({ 
-  currentXP, 
-  level, 
-  nextLevelXP, 
-  previousLevelXP 
-}: XPProgressBarProps) {
-  const currentLevelXP = currentXP - previousLevelXP;
-  const levelXPRange = nextLevelXP - previousLevelXP;
-  const progressPercentage = Math.min(Math.round((currentLevelXP / levelXPRange) * 100), 100);
+export default function PointsProgressBar({ 
+  currentPoints, 
+  pointsLevel, 
+  nextLevelPoints, 
+  previousLevelPoints 
+}: PointsProgressBarProps) {
+  const currentLevelPoints = currentPoints - previousLevelPoints;
+  const levelPointsRange = nextLevelPoints - previousLevelPoints;
+  const progressPercentage = Math.min(Math.round((currentLevelPoints / levelPointsRange) * 100), 100);
   
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
-        <div className="font-medium">Level {level}</div>
-        <div className="text-muted-foreground">{currentLevelXP} / {levelXPRange} XP</div>
+        <div className="font-medium">Points Level {pointsLevel}</div>
+        <div className="text-muted-foreground">{currentLevelPoints} / {levelPointsRange} Dill Dollars</div>
       </div>
       <Progress value={progressPercentage} className="h-2" />
       <div className="flex justify-between text-xs text-muted-foreground">
-        <div>Level {level}</div>
-        <div>Level {level + 1}</div>
+        <div>Level {pointsLevel}</div>
+        <div>Level {pointsLevel + 1}</div>
       </div>
     </div>
   );

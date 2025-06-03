@@ -1482,22 +1482,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Helper method to award XP
-  async awardXpToUser(userId: number, xpAmount: number, source: string): Promise<User | undefined> {
+  async awardPointsToUser(userId: number, pointsAmount: number, source: string): Promise<User | undefined> {
     try {
-      // First, update the user's XP
-      const updatedUser = await this.updateUserXP(userId, xpAmount);
+      // First, update the user's points
+      const updatedUser = await this.updateUserPoints(userId, pointsAmount);
       
-      // Also record an XP transaction
+      // Also record a points transaction
       await this.createXpTransaction({
         userId,
-        amount: xpAmount,
+        amount: pointsAmount,
         source,
         transactionType: 'credit'
       });
       
       return updatedUser;
     } catch (error) {
-      console.error('Error awarding XP to user:', error);
+      console.error('Error awarding points to user:', error);
       return undefined;
     }
   }
@@ -2284,64 +2284,46 @@ export class DatabaseStorage implements IStorage {
     return Math.round((completedWeight / totalWeight) * 100);
   }
 
-  async updateUserXP(id: number, xpToAdd: number): Promise<User | undefined> {
+  async updateUserPoints(id: number, pointsToAdd: number): Promise<User | undefined> {
     try {
       // Validate id is a proper number to avoid database errors
       const numericId = Number(id);
       
       if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
-        console.log(`[Storage] updateUserXP called with invalid ID: ${id}, converted to ${numericId}`);
+        console.log(`[Storage] updateUserPoints called with invalid ID: ${id}, converted to ${numericId}`);
         return undefined;
       }
       
-      console.log(`[Storage] updateUserXP called with valid ID: ${numericId} and XP to add: ${xpToAdd}`);
+      console.log(`[Storage] updateUserPoints called with valid ID: ${numericId} and points to add: ${pointsToAdd}`);
       
       const user = await this.getUser(numericId);
       if (!user) {
-        console.log(`[Storage] updateUserXP - User with ID ${numericId} not found`);
+        console.log(`[Storage] updateUserPoints - User with ID ${numericId} not found`);
         return undefined;
       }
 
-      const currentXP = user.xp || 0;
-      const currentLevel = user.level || 1;
+      const currentPoints = user.picklePoints || 0;
+      const currentLevel = user.pointsLevel || 1;
       
-      // Apply XP multiplier if the user is a founding member
-      let finalXpToAdd = xpToAdd;
-      if (user.isFoundingMember && user.xpMultiplier) {
-        // xpMultiplier is stored as a percentage (e.g., 110 for 1.1x)
-        finalXpToAdd = Math.floor(xpToAdd * (user.xpMultiplier / 100));
-        console.log(`[XP] User ${numericId} is a founding member with multiplier ${user.xpMultiplier}%. Adding ${finalXpToAdd}XP instead of ${xpToAdd}XP`);
+      // Apply points multiplier if the user is a founding member
+      let finalPointsToAdd = pointsToAdd;
+      if (user.isFoundingMember && user.pointsMultiplier) {
+        // pointsMultiplier is stored as a percentage (e.g., 110 for 1.1x)
+        finalPointsToAdd = Math.floor(pointsToAdd * (user.pointsMultiplier / 100));
+        console.log(`[Points] User ${numericId} is a founding member with multiplier ${user.pointsMultiplier}%. Adding ${finalPointsToAdd} points instead of ${pointsToAdd} points`);
       }
       
-      // Calculate new XP
-      const newXP = currentXP + finalXpToAdd;
+      // Calculate new points
+      const newPoints = currentPoints + finalPointsToAdd;
       
-      // Get the correct level from the xp_levels table
-      let newLevel = 1; // Default level if no matching level found
-      try {
-        // Query the xp_levels table directly with raw SQL for maximum compatibility
-        const levelResult = await db.execute(
-          `SELECT * FROM xp_levels WHERE ${newXP} >= min_xp AND ${newXP} <= max_xp`
-        );
-        
-        if (levelResult.rows && levelResult.rows.length > 0) {
-          newLevel = levelResult.rows[0].level;
-          console.log(`[XP] User ${numericId} now has ${newXP}XP and level ${newLevel} (from xp_levels table)`);
-        } else {
-          console.log(`[XP] Warning: No matching level found for XP ${newXP}, defaulting to level 1`);
-        }
-      } catch (levelError) {
-        console.error('[XP] Error fetching level from xp_levels table:', levelError);
-        // Fallback to original simple calculation if there's an error with the table
-        console.log('[XP] Falling back to simple level calculation');
-        const xpPerLevel = 1000;
-        newLevel = Math.floor(newXP / xpPerLevel) + 1;
-      }
+      // Calculate new level based on points (1000 points per level)
+      const pointsPerLevel = 1000;
+      const newLevel = Math.floor(newPoints / pointsPerLevel) + 1;
 
       const [updatedUser] = await db.update(users)
         .set({ 
-          xp: newXP,
-          level: newLevel 
+          picklePoints: newPoints,
+          pointsLevel: newLevel 
         })
         .where(eq(users.id, numericId))
         .returning();
@@ -2364,7 +2346,7 @@ export class DatabaseStorage implements IStorage {
       
       return updatedUser;
     } catch (error) {
-      console.error('[Storage] updateUserXP error:', error);
+      console.error('[Storage] updateUserPoints error:', error);
       return undefined;
     }
   }
