@@ -393,20 +393,16 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       
       // Use actual PCP Global Ranking points for consistency
       // Calculate total points from actual match data with hybrid weighting
-      const totalPointsFromMatches = userMatches.reduce((total, match) => {
+      const totalPoints = userMatches.reduce((total, match) => {
         return total + (match.pointsAwarded || 0);
       }, 0);
-      
-      // Add DUPR skill bonus for baseline rating
-      const skillBonus = Math.floor(duprRating * 10);
-      const totalPoints = totalPointsFromMatches + skillBonus;
 
       // Calculate ranking positions based on competitive pool size
       let singlesPosition = null;
       let doublesPosition = null; 
       let mixedPosition = null;
 
-      if (totalPoints > 30) {
+      if (totalPoints > 10) {
         // Estimate competitive pool sizes by division
         const ageDivisionMultiplier = ageDivision === 'Open' ? 1.0 : 
                                      ageDivision === '35+' ? 0.4 : 
