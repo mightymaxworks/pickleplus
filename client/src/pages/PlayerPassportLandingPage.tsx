@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
+import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { 
   QrCode, 
   Shield, 
@@ -166,9 +167,30 @@ const FeatureCard = ({
 // Point System Visualization
 const PointSystemDemo = () => {
   const pointTypes = [
-    { type: 'Tournament', value: 100, color: 'bg-green-500', icon: Trophy },
-    { type: 'League', value: 67, color: 'bg-blue-500', icon: Users },
-    { type: 'Casual', value: 50, color: 'bg-orange-500', icon: Target }
+    { 
+      type: 'Tournament', 
+      impact: 'Maximum Impact', 
+      color: 'bg-green-500', 
+      icon: Trophy,
+      description: 'Sanctioned competitive events',
+      weight: 3
+    },
+    { 
+      type: 'League', 
+      impact: 'High Impact', 
+      color: 'bg-blue-500', 
+      icon: Users,
+      description: 'Organized league play',
+      weight: 2
+    },
+    { 
+      type: 'Casual', 
+      impact: 'Standard Impact', 
+      color: 'bg-orange-500', 
+      icon: Target,
+      description: 'Recreational matches',
+      weight: 1
+    }
   ];
   
   return (
@@ -176,8 +198,8 @@ const PointSystemDemo = () => {
       className="bg-white rounded-xl p-6 shadow-lg"
       variants={fadeIn}
     >
-      <h3 className="text-xl font-bold mb-4 text-center">Hybrid Point System</h3>
-      <p className="text-gray-600 text-center mb-6">Transparent point values for all match types</p>
+      <h3 className="text-xl font-bold mb-4 text-center">Smart Point Weighting</h3>
+      <p className="text-gray-600 text-center mb-6">Different match types contribute differently to your ranking</p>
       
       <div className="space-y-4">
         {pointTypes.map((point, index) => {
@@ -194,11 +216,23 @@ const PointSystemDemo = () => {
                 <div className={`p-2 rounded-full ${point.color} text-white`}>
                   <IconComponent className="w-4 h-4" />
                 </div>
-                <span className="font-medium">{point.type} Matches</span>
+                <div>
+                  <span className="font-medium">{point.type} Matches</span>
+                  <p className="text-xs text-gray-500 mt-1">{point.description}</p>
+                </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-lg">{point.value}%</div>
-                <div className="text-xs text-gray-500">Point Value</div>
+                <div className="flex items-center gap-1 mb-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className={`w-2 h-2 rounded-full ${
+                        i < point.weight ? point.color : 'bg-gray-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="text-xs text-gray-500">{point.impact}</div>
               </div>
             </motion.div>
           );
@@ -208,10 +242,10 @@ const PointSystemDemo = () => {
       <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-4 h-4 text-orange-600" />
-          <span className="font-medium text-orange-900">Anti-Gaming Protection</span>
+          <span className="font-medium text-orange-900">Smart Frequency Controls</span>
         </div>
         <p className="text-sm text-orange-700">
-          Frequency-based reduction prevents point farming from repeated opponents
+          Automatic adjustments prevent point manipulation while encouraging diverse competition
         </p>
       </div>
     </motion.div>
@@ -227,12 +261,7 @@ export default function PlayerPassportLandingPage() {
       <header className="py-4 px-4 sm:px-6 fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P+</span>
-              </div>
-              <span className="font-bold text-lg">Pickle+</span>
-            </div>
+            <PicklePlusTextLogo className="text-xl" />
             <nav className="hidden md:flex items-center space-x-6">
               <a href="#passport" className="text-gray-700 hover:text-orange-600 font-medium">Passport</a>
               <a href="#rankings" className="text-gray-700 hover:text-orange-600 font-medium">Rankings</a>
@@ -452,8 +481,8 @@ export default function PlayerPassportLandingPage() {
             />
             <FeatureCard
               icon={<Trophy className="w-6 h-6" />}
-              title="Hybrid Point System"
-              description="Tournament matches worth 100%, league 67%, casual 50%. Transparent point values for all match types."
+              title="Smart Point Weighting"
+              description="Different match types carry different weights. Tournament play has maximum impact, league has high impact, casual provides standard contribution."
             />
             <FeatureCard
               icon={<Calendar className="w-6 h-6" />}
@@ -515,11 +544,8 @@ export default function PlayerPassportLandingPage() {
       <footer className="py-8 px-4 sm:px-6 bg-gray-900 text-white">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P+</span>
-              </div>
-              <span className="font-bold text-lg">Pickle+</span>
+            <div className="mb-4 md:mb-0">
+              <PicklePlusTextLogo className="text-xl [&>span]:text-white [&>span:last-child]:text-[#2196F3]" />
             </div>
             <div className="text-center md:text-right">
               <p className="text-gray-400">
