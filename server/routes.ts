@@ -119,6 +119,132 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Mount user data API (Framework 5.3 frontend-driven approach)
   app.use('/api/user-data', simpleRatingApi);
   
+  // Match statistics endpoint for dashboard - must be before match assessment routes
+  app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string) || req.user!.id;
+      const timeRange = req.query.timeRange as string || 'all';
+      
+      console.log(`[API][MatchStats] Getting statistics for user ${userId}, timeRange: ${timeRange}`);
+      
+      // Get user's matches
+      const matches = await storage.getMatchesByUser(userId, 100, 0, req.user!.id);
+      
+      // Calculate statistics
+      const totalMatches = matches.length;
+      const matchesWon = matches.filter(match => match.winnerId === userId).length;
+      const matchesLost = totalMatches - matchesWon;
+      const winRate = totalMatches > 0 ? Math.round((matchesWon / totalMatches) * 100) : 0;
+      
+      // Calculate streak
+      let currentStreak = 0;
+      let streakType: 'win' | 'loss' | null = null;
+      
+      if (matches.length > 0) {
+        const sortedMatches = matches.sort((a, b) => 
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        
+        const lastMatch = sortedMatches[0];
+        streakType = lastMatch.winnerId === userId ? 'win' : 'loss';
+        
+        for (const match of sortedMatches) {
+          const isWin = match.winnerId === userId;
+          if ((streakType === 'win' && isWin) || (streakType === 'loss' && !isWin)) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+      
+      console.log(`[API][MatchStats] Stats calculated: ${totalMatches} matches, ${matchesWon} wins, ${winRate}% win rate`);
+      
+      res.json({
+        totalMatches,
+        matchesWon,
+        matchesLost,
+        winRate,
+        currentStreak,
+        streakType,
+        recentMatches: matches.slice(0, 5).map(match => ({
+          id: match.id,
+          date: match.createdAt,
+          opponent: match.playerOneId === userId ? match.playerTwoId : match.playerOneId,
+          result: match.winnerId === userId ? 'win' : 'loss',
+          score: `${match.scorePlayerOne} - ${match.scorePlayerTwo}`,
+          format: match.formatType
+        }))
+      });
+    } catch (error) {
+      console.error("[API][MatchStats] Error getting match statistics:", error);
+      res.status(500).json({ error: "Failed to get match statistics" });
+    }
+  });
+
+  // Match statistics endpoint - must be registered before general match routes
+  app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string) || req.user!.id;
+      const timeRange = req.query.timeRange as string || 'all';
+      
+      console.log(`[API][MatchStats] Getting statistics for user ${userId}, timeRange: ${timeRange}`);
+      
+      // Get user's matches
+      const matches = await storage.getMatchesByUser(userId, 100, 0, req.user!.id);
+      
+      // Calculate statistics
+      const totalMatches = matches.length;
+      const matchesWon = matches.filter(match => match.winnerId === userId).length;
+      const matchesLost = totalMatches - matchesWon;
+      const winRate = totalMatches > 0 ? Math.round((matchesWon / totalMatches) * 100) : 0;
+      
+      // Calculate streak
+      let currentStreak = 0;
+      let streakType: 'win' | 'loss' | null = null;
+      
+      if (matches.length > 0) {
+        const sortedMatches = matches.sort((a, b) => 
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        
+        const lastMatch = sortedMatches[0];
+        streakType = lastMatch.winnerId === userId ? 'win' : 'loss';
+        
+        for (const match of sortedMatches) {
+          const isWin = match.winnerId === userId;
+          if ((streakType === 'win' && isWin) || (streakType === 'loss' && !isWin)) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+      
+      console.log(`[API][MatchStats] Stats calculated: ${totalMatches} matches, ${matchesWon} wins, ${winRate}% win rate`);
+      
+      res.json({
+        totalMatches,
+        matchesWon,
+        matchesLost,
+        winRate,
+        currentStreak,
+        streakType,
+        recentMatches: matches.slice(0, 5).map(match => ({
+          id: match.id,
+          date: match.createdAt,
+          opponent: match.playerOneId === userId ? match.playerTwoId : match.playerOneId,
+          result: match.winnerId === userId ? 'win' : 'loss',
+          score: `${match.scorePlayerOne} - ${match.scorePlayerTwo}`,
+          format: match.formatType
+        }))
+      });
+    } catch (error) {
+      console.error("[API][MatchStats] Error getting match statistics:", error);
+      res.status(500).json({ error: "Failed to get match statistics" });
+    }
+  });
+
   // Mount match assessment routes for CourtIQ
   app.use('/api/match', matchAssessmentRoutes);
   
@@ -1427,6 +1553,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to record match' });
     }
   });
+
+
 
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
