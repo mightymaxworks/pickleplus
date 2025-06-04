@@ -96,13 +96,23 @@ export default function PassportDashboard() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate all user-related queries to force refresh
       queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
+      
+      // Clear the form data
+      setProfileFormData({});
+      
       toast({
         title: "Profile Updated",
         description: "Your profile changes have been saved successfully.",
       });
       setIsPassportExpanded(false);
+      
+      // Force a page refresh to ensure updated data is displayed
+      window.location.reload();
     },
     onError: (error: Error) => {
       toast({
