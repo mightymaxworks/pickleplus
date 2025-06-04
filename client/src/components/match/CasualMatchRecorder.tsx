@@ -84,6 +84,10 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
       
       form.reset();
       setSelectedOpponent(null);
+      
+      // Call the success callback if provided
+      onSuccess?.(data);
+      
       onMatchRecorded?.();
     },
     onError: (error: any) => {
