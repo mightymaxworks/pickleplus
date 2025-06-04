@@ -35,6 +35,9 @@ export interface IStorage {
   getUserCount(): Promise<number>;
   getMatchCount(): Promise<number>;
   getTournamentCount(): Promise<number>;
+  getMatchesByUser(userId: number): Promise<Match[]>;
+  getMatchStats(userId: number, timeRange?: string): Promise<any>;
+  getPicklePoints(userId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -110,6 +113,36 @@ export class DatabaseStorage implements IStorage {
   async getTournamentCount(): Promise<number> {
     // Return placeholder count for tournaments
     return 0;
+  }
+
+  async getMatchesByUser(userId: number): Promise<Match[]> {
+    const userMatches = await db.select()
+      .from(matches)
+      .where(or(eq(matches.player1Id, userId), eq(matches.player2Id, userId)))
+      .orderBy(desc(matches.createdAt))
+      .limit(50);
+    return userMatches;
+  }
+
+  async getMatchStats(userId: number, timeRange?: string): Promise<any> {
+    const userMatches = await this.getMatchesByUser(userId);
+    
+    const totalMatches = userMatches.length;
+    const matchesWon = userMatches.filter(match => match.winnerId === userId).length;
+    const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
+    
+    return {
+      totalMatches,
+      matchesWon,
+      matchesLost: totalMatches - matchesWon,
+      winRate: Math.round(winRate * 100) / 100,
+      recentMatches: userMatches.slice(0, 5)
+    };
+  }
+
+  async getPicklePoints(userId: number): Promise<number> {
+    const user = await this.getUser(userId);
+    return user?.picklePoints || 0;
   }
 }
 
