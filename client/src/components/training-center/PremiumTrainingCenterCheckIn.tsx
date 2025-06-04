@@ -28,6 +28,7 @@ import {
   QrCode,
   CheckCircle,
   UserCheck,
+  Calendar,
   Star,
   DollarSign,
   Zap,
@@ -48,6 +49,7 @@ import {
   Circle,
   PlusCircle
 } from 'lucide-react';
+import TrainingCalendar from './TrainingCalendar';
 
 interface CheckInResponse {
   success: boolean;
