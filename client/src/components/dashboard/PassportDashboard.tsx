@@ -118,6 +118,9 @@ export default function PassportDashboard() {
     enabled: !!user?.id
   });
 
+  // Fetch all ranking positions for competitive motivation
+  const { data: allRankingPositions, isLoading: isLoadingAllPositions } = useAllRankingPositions();
+
   // Fetch legacy ranking data for comparison
   const { data: rankingData } = useQuery({
     queryKey: ['rankings', 'passport', user?.id],
@@ -396,76 +399,112 @@ export default function PassportDashboard() {
                   </motion.div>
                 </motion.div>
 
-                {/* PCP Global Ranking Display */}
+                {/* PCP Global Ranking Display - All Divisions & Formats */}
                 <div className="mt-3 pt-3 border-t border-orange-200">
                   <h3 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
                     PCP Global Ranking System
                   </h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    {/* Display age-division ranking data */}
-                    {pcpRankingData && (
-                      <motion.div 
-                        className="bg-white/70 rounded-lg p-3 border border-purple-200 hover:border-purple-300 transition-all cursor-pointer hover:shadow-md"
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                            <span className="text-sm font-bold text-purple-700 uppercase">
-                              {ageDivision.replace('plus', '+')} Division Singles
-                            </span>
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs border-purple-300 ${
-                              pcpRankingData.status === 'not_ranked' 
-                                ? 'text-orange-600 bg-orange-50' 
-                                : 'text-purple-600 bg-purple-50'
-                            }`}
+                  
+                  {isLoadingAllPositions ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white/50 rounded-lg p-3 border border-gray-200 animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                          <div className="h-6 bg-gray-200 rounded mb-1"></div>
+                          <div className="h-3 bg-gray-200 rounded"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : allRankingPositions?.data?.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {allRankingPositions.data.map((position, index) => {
+                        const formatDisplayName = position.format.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+                        const divisionDisplayName = position.division === 'open' ? 'Open' : `${position.division}+`;
+                        const colorScheme = index % 4 === 0 ? 'purple' : 
+                                          index % 4 === 1 ? 'blue' : 
+                                          index % 4 === 2 ? 'indigo' : 'violet';
+                        const isRanked = position.status === 'ranked';
+                        
+                        return (
+                          <motion.div 
+                            key={`${position.division}-${position.format}`}
+                            className={`bg-white/70 rounded-lg p-3 border border-${colorScheme}-200 hover:border-${colorScheme}-300 transition-all cursor-pointer hover:shadow-md`}
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ type: "spring", stiffness: 300 }}
                           >
-                            {pcpRankingData.status === 'not_ranked' ? 'Unranked' : 'Ranked'}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-2xl font-black text-purple-700">
-                              {pcpRankingData.rankingPoints || 0}
-                            </div>
-                            <div className="text-xs text-purple-600">
-                              {pcpRankingData.status === 'not_ranked' 
-                                ? `${pcpRankingData.matchCount || 0}/${pcpRankingData.requiredMatches || 10} matches`
-                                : `Rank #${pcpRankingData.rank || 'N/A'}`
-                              }
-                            </div>
-                          </div>
-                          {pcpRankingData.status === 'not_ranked' && (
-                            <div className="text-right">
-                              <div className="text-xs text-orange-600 font-medium">
-                                Need {(pcpRankingData.requiredMatches || 10) - (pcpRankingData.matchCount || 0)} more
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-1">
+                                <div className={`w-2 h-2 bg-${colorScheme}-500 rounded-full`}></div>
+                                <span className={`text-xs font-bold text-${colorScheme}-700 uppercase leading-tight`}>
+                                  {divisionDisplayName} {formatDisplayName.split(' ')[1] || formatDisplayName.split(' ')[0]}
+                                </span>
                               </div>
-                              <div className="text-xs text-orange-500">
-                                matches to rank
-                              </div>
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs ${
+                                  isRanked 
+                                    ? `text-${colorScheme}-600 bg-${colorScheme}-50 border-${colorScheme}-300`
+                                    : 'text-orange-600 bg-orange-50 border-orange-300'
+                                }`}
+                              >
+                                {isRanked ? 'Ranked' : 'Unranked'}
+                              </Badge>
                             </div>
-                          )}
-                        </div>
-                        {pcpRankingData.status === 'not_ranked' && (
-                          <div className="mt-2 rounded-full h-1 overflow-hidden bg-purple-100">
-                            <div 
-                              className="h-full transition-all duration-1000 ease-out bg-purple-500"
-                              style={{ 
-                                width: `${Math.max(10, ((pcpRankingData.matchCount || 0) / (pcpRankingData.requiredMatches || 10)) * 100)}%`
-                              }}
-                            />
-                          </div>
-                        )}
-                      </motion.div>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className={`text-lg font-black text-${colorScheme}-700`}>
+                                  {position.rankingPoints}
+                                </div>
+                                <div className={`text-xs text-${colorScheme}-600`}>
+                                  {isRanked 
+                                    ? `Rank #${position.rank}`
+                                    : `${position.matchCount}/${position.requiredMatches} matches`
+                                  }
+                                </div>
+                              </div>
+                              {!isRanked && position.needsMatches > 0 && (
+                                <div className="text-right">
+                                  <div className="text-xs text-orange-600 font-medium">
+                                    Need {position.needsMatches}
+                                  </div>
+                                  <div className="text-xs text-orange-500">
+                                    more
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {!isRanked && (
+                              <div className={`mt-2 rounded-full h-1 overflow-hidden bg-${colorScheme}-100`}>
+                                <div 
+                                  className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
+                                  style={{ 
+                                    width: `${Math.max(10, (position.matchCount / position.requiredMatches) * 100)}%`
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="bg-white/70 rounded-lg p-3 border border-gray-200">
+                      <div className="text-center text-gray-600">
+                        <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <div className="text-sm font-medium">No ranking data available</div>
+                        <div className="text-xs">Play matches to start building your rankings</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-2 text-xs text-orange-600 flex items-center justify-between">
+                    <span>PCP Global Ranking System v2.0 (Multi-Division)</span>
+                    {allRankingPositions?.totalCategories && (
+                      <span className="text-orange-500 font-medium">
+                        {allRankingPositions.totalCategories} eligible categories
+                      </span>
                     )}
-                  </div>
-                  <div className="mt-2 text-xs text-orange-600">
-                    <span>PCP Global Ranking System v2.0 (Age-Division Specific)</span>
                   </div>
                 </div>
               </div>
