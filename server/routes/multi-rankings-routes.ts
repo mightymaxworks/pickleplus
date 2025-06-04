@@ -102,7 +102,7 @@ router.get("/leaderboard", async (req: Request, res: Response) => {
  * Get player ranking position
  * GET /api/multi-rankings/position
  */
-router.get("/position", (req: Request, res: Response) => {
+router.get("/position", async (req: Request, res: Response) => {
   console.log("[API][CRITICAL][MultiRankings] Direct handler called, query:", req.query);
   
   try {
@@ -124,10 +124,83 @@ router.get("/position", (req: Request, res: Response) => {
     const format = req.query.format as string || 'singles';
     const ageDivision = req.query.ageDivision as string || '19plus';
     
-    // Check if user has any matches
-    if (userId === 1) {
-      // Return empty state with clear guidance for user with no matches
-      res.json({
+    // Import storage to get actual user data
+    const { storage } = await import("../storage");
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get user's matches
+    const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
+    
+    // Determine user's age division based on year of birth
+    const currentYear = new Date().getFullYear();
+    const userAge = user.yearOfBirth ? currentYear - user.yearOfBirth : null;
+    
+    // Determine PRIMARY age division only
+    let primaryDivision = 'open';
+    if (userAge) {
+      if (userAge >= 60) primaryDivision = '60+';
+      else if (userAge >= 50) primaryDivision = '50+';
+      else if (userAge >= 35) primaryDivision = '35+';
+      else primaryDivision = 'open';
+    }
+    
+    // Map frontend format to backend format
+    let backendFormat = 'mens_singles';
+    if (format === 'singles') backendFormat = 'mens_singles';
+    else if (format === 'doubles') backendFormat = 'mens_doubles';
+    else if (format === 'mixed') backendFormat = 'mixed_doubles';
+    
+    // Map frontend age division to backend division
+    let backendDivision = primaryDivision;
+    if (ageDivision === '19plus') backendDivision = 'open';
+    else if (ageDivision === '35plus') backendDivision = '35+';
+    else if (ageDivision === '50plus') backendDivision = '50+';
+    else if (ageDivision === '60plus') backendDivision = '60+';
+    
+    // Calculate display points (raw points) and weighted ranking points
+    let displayPoints = 0;
+    let weightedRankingPoints = 0;
+    
+    for (const match of userMatches) {
+      // Only count matches that belong to this specific category
+      let matchBelongsToCategory = false;
+      
+      if (backendFormat === 'mens_singles' && match.formatType === 'singles') {
+        matchBelongsToCategory = true;
+      } else if (backendFormat === 'mens_doubles' && match.formatType === 'doubles') {
+        matchBelongsToCategory = true;
+      } else if (backendFormat === 'mixed_doubles' && match.formatType === 'doubles') {
+        matchBelongsToCategory = false; // For now, treat all doubles as men's doubles
+      }
+      
+      if (matchBelongsToCategory) {
+        const isWinner = match.winnerId === userId;
+        const basePoints = isWinner ? 3 : 1; // Base casual match scoring
+        
+        // For display: Always show full points (no weighting)
+        displayPoints += basePoints;
+        
+        // For ranking: Apply weighting based on match type
+        let weightMultiplier = 1.0;
+        if (match.matchType === 'tournament') {
+          weightMultiplier = 1.0; // 100% weight
+        } else if (match.matchType === 'league') {
+          weightMultiplier = 0.67; // 67% weight
+        } else if (match.matchType === 'casual') {
+          weightMultiplier = 0.5; // 50% weight
+        }
+        
+        weightedRankingPoints += basePoints * weightMultiplier;
+      }
+    }
+    
+    // Check if user has any matches in this category
+    if (displayPoints === 0) {
+      return res.json({
         status: "not_ranked",
         message: "Not currently ranked in this division",
         requiresEnrollment: true,
@@ -142,19 +215,23 @@ router.get("/position", (req: Request, res: Response) => {
           secondaryActionPath: "/leagues"
         }
       });
-    } else {
-      // Return ranking position data for users with matches
-      res.json({
-        userId: userId,
-        format: format,
-        ageDivision: ageDivision,
-        ratingTierId: 1,
-        rankingPoints: 1200,
-        rank: 1,
-        totalPlayers: 250,
-        skillRating: 4.5
-      });
     }
+    
+    // Return ranking position data with correct calculations
+    res.json({
+      userId: userId,
+      format: format,
+      ageDivision: ageDivision,
+      ratingTierId: 1,
+      rankingPoints: displayPoints, // Display uses raw points
+      rank: 1,
+      totalPlayers: 250,
+      skillRating: 4.5,
+      // Additional data for debugging
+      weightedRankingPoints: weightedRankingPoints,
+      matchCount: userMatches.length,
+      primaryDivision: primaryDivision
+    });
   } catch (error) {
     console.error("[API] Error getting ranking position:", error);
     res.status(500).json({ error: "Server error getting ranking position" });
