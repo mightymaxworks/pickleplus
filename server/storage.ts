@@ -210,6 +210,208 @@ export class DatabaseStorage implements IStorage {
   async createAuditLog(data: any): Promise<void> {
     console.log('Audit log entry:', data);
   }
+
+  // Training Center operations
+  async getTrainingCenterByQrCode(qrCode: string): Promise<any> {
+    const [center] = await db.execute(sql`
+      SELECT * FROM training_centers 
+      WHERE qr_code = ${qrCode} AND is_active = true
+    `);
+    return center;
+  }
+
+  async getActiveTrainingCenters(): Promise<any[]> {
+    const centers = await db.execute(sql`
+      SELECT * FROM training_centers 
+      WHERE is_active = true
+      ORDER BY name
+    `);
+    return centers;
+  }
+
+  async getAvailableCoach(centerId: number): Promise<any> {
+    const [coach] = await db.execute(sql`
+      SELECT u.* FROM users u
+      WHERE u.is_coach = true
+      AND u.id NOT IN (
+        SELECT DISTINCT cs.coach_id 
+        FROM coaching_sessions cs 
+        WHERE cs.center_id = ${centerId} 
+        AND cs.status = 'active'
+      )
+      LIMIT 1
+    `);
+    return coach;
+  }
+
+  async getActiveSessionForPlayer(playerId: number): Promise<any> {
+    const [session] = await db.execute(sql`
+      SELECT cs.*, tc.name as center_name, u.display_name as coach_name
+      FROM coaching_sessions cs
+      JOIN training_centers tc ON cs.center_id = tc.id
+      JOIN users u ON cs.coach_id = u.id
+      WHERE cs.player_id = ${playerId} 
+      AND cs.status = 'active'
+    `);
+    return session;
+  }
+
+  async createCoachingSession(sessionData: any): Promise<any> {
+    const [session] = await db.execute(sql`
+      INSERT INTO coaching_sessions (
+        player_id, coach_id, center_id, session_type, 
+        check_in_time, status
+      ) VALUES (
+        ${sessionData.playerId}, ${sessionData.coachId}, ${sessionData.centerId},
+        ${sessionData.sessionType}, ${sessionData.checkInTime.toISOString()}, 
+        ${sessionData.status}
+      ) RETURNING *
+    `);
+    return session;
+  }
+
+  async getCoachingSessionById(sessionId: number): Promise<any> {
+    const [session] = await db.execute(sql`
+      SELECT * FROM coaching_sessions WHERE id = ${sessionId}
+    `);
+    return session;
+  }
+
+  async updateCoachingSession(sessionId: number, updateData: any): Promise<any> {
+    const updates = [];
+    const values = [];
+    
+    if (updateData.playerGoals) {
+      updates.push('player_goals = ?');
+      values.push(updateData.playerGoals);
+    }
+    if (updateData.skillsFocused) {
+      updates.push('skills_focused = ?');
+      values.push(JSON.stringify(updateData.skillsFocused));
+    }
+    if (updateData.status) {
+      updates.push('status = ?');
+      values.push(updateData.status);
+    }
+    if (updateData.checkOutTime) {
+      updates.push('check_out_time = ?');
+      values.push(updateData.checkOutTime.toISOString());
+    }
+    if (updateData.actualDuration) {
+      updates.push('actual_duration = ?');
+      values.push(updateData.actualDuration);
+    }
+    if (updateData.coachObservations) {
+      updates.push('coach_observations = ?');
+      values.push(updateData.coachObservations);
+    }
+    if (updateData.sessionNotes) {
+      updates.push('session_notes = ?');
+      values.push(updateData.sessionNotes);
+    }
+
+    values.push(sessionId);
+    
+    const [session] = await db.execute(sql`
+      UPDATE coaching_sessions 
+      SET ${sql.raw(updates.join(', '))} 
+      WHERE id = ${sessionId} 
+      RETURNING *
+    `);
+    return session;
+  }
+
+  async getChallengesBySkillLevel(skillLevel: string): Promise<any[]> {
+    const challenges = await db.execute(sql`
+      SELECT * FROM challenges 
+      WHERE skill_level = ${skillLevel} AND is_active = true
+      ORDER BY difficulty_rating, name
+    `);
+    return challenges;
+  }
+
+  async getChallengeById(challengeId: number): Promise<any> {
+    const [challenge] = await db.execute(sql`
+      SELECT * FROM challenges WHERE id = ${challengeId}
+    `);
+    return challenge;
+  }
+
+  async createChallengeCompletion(completionData: any): Promise<any> {
+    const [completion] = await db.execute(sql`
+      INSERT INTO challenge_completions (
+        session_id, challenge_id, player_id, coach_id,
+        is_completed, actual_result, success_rate, time_spent,
+        coach_notes, improvement_areas, next_recommendations, completed_at
+      ) VALUES (
+        ${completionData.sessionId}, ${completionData.challengeId}, 
+        ${completionData.playerId}, ${completionData.coachId},
+        ${completionData.isCompleted}, ${JSON.stringify(completionData.actualResult)},
+        ${completionData.successRate}, ${completionData.timeSpent},
+        ${completionData.coachNotes}, ${JSON.stringify(completionData.improvementAreas)},
+        ${completionData.nextRecommendations}, ${completionData.completedAt.toISOString()}
+      ) RETURNING *
+    `);
+    return completion;
+  }
+
+  async awardPlayerBadge(badgeData: any): Promise<any> {
+    const [badge] = await db.execute(sql`
+      INSERT INTO player_badges (
+        player_id, badge_name, session_id, challenge_id, coach_id, earned_at
+      ) VALUES (
+        ${badgeData.playerId}, ${badgeData.badgeName}, ${badgeData.sessionId},
+        ${badgeData.challengeId}, ${badgeData.coachId}, ${badgeData.earnedAt.toISOString()}
+      ) RETURNING *
+    `);
+    return badge;
+  }
+
+  async getSessionSummary(sessionId: number): Promise<any> {
+    const summary = await db.execute(sql`
+      SELECT 
+        cs.*,
+        COUNT(cc.id) as challenges_completed,
+        COUNT(CASE WHEN cc.is_completed = true THEN 1 END) as challenges_successful,
+        COUNT(pb.id) as badges_earned
+      FROM coaching_sessions cs
+      LEFT JOIN challenge_completions cc ON cs.id = cc.session_id
+      LEFT JOIN player_badges pb ON cs.id = pb.session_id
+      WHERE cs.id = ${sessionId}
+      GROUP BY cs.id
+    `);
+    return summary[0];
+  }
+
+  async getPlayerTrainingProgress(playerId: number): Promise<any> {
+    const progress = await db.execute(sql`
+      SELECT 
+        COUNT(DISTINCT cs.id) as total_sessions,
+        COUNT(cc.id) as total_challenges_completed,
+        ROUND(AVG(CASE WHEN cc.is_completed = true THEN 100.0 ELSE 0.0 END), 2) as success_rate,
+        COUNT(pb.id) as badges_earned
+      FROM coaching_sessions cs
+      LEFT JOIN challenge_completions cc ON cs.id = cc.session_id
+      LEFT JOIN player_badges pb ON cs.id = pb.session_id
+      WHERE cs.player_id = ${playerId}
+    `);
+    
+    const recentSessions = await db.execute(sql`
+      SELECT cs.*, tc.name as center_name, u.display_name as coach_name
+      FROM coaching_sessions cs
+      JOIN training_centers tc ON cs.center_id = tc.id
+      JOIN users u ON cs.coach_id = u.id
+      WHERE cs.player_id = ${playerId}
+      ORDER BY cs.check_in_time DESC
+      LIMIT 5
+    `);
+
+    return {
+      ...progress[0],
+      recentSessions,
+      skillProgression: []
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();

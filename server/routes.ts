@@ -62,6 +62,7 @@ import {
   processQRScan,
   getUserScanPermissions
 } from "./routes/qr-scan-routes"; // QR Code Scanning with Role Detection
+import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 
 /**
  * Register all application routes with the Express app
