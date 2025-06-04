@@ -66,17 +66,32 @@ export default function PassportDashboard() {
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
-      const response = await fetch(`/api/users/${user?.id}`, {
+      // First get CSRF token if needed
+      let headers: any = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Get CSRF token for production environments
+      if (process.env.NODE_ENV === 'production') {
+        const csrfResponse = await fetch('/api/csrf-token', {
+          credentials: 'include'
+        });
+        if (csrfResponse.ok) {
+          const { token } = await csrfResponse.json();
+          headers['x-csrf-token'] = token;
+        }
+      }
+      
+      const response = await fetch('/api/profile/update', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
         body: JSON.stringify(profileData),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update profile');
       }
       
       return response.json();
@@ -865,6 +880,7 @@ export default function PassportDashboard() {
                         <label className="text-sm font-medium text-gray-700">Gender</label>
                         <select
                           defaultValue={user.gender || ''}
+                          onChange={(e) => handleFieldChange('gender', e.target.value)}
                           className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         >
                           <option value="">Select Gender</option>
@@ -889,16 +905,10 @@ export default function PassportDashboard() {
                   </Button>
                   <Button
                     className="bg-orange-600 hover:bg-orange-700 text-white"
-                    onClick={() => {
-                      // TODO: Implement save functionality
-                      toast({
-                        title: "Profile Updated",
-                        description: "Your profile changes have been saved successfully.",
-                      });
-                      setIsPassportExpanded(false);
-                    }}
+                    onClick={handleSaveProfile}
+                    disabled={updateProfileMutation.isPending}
                   >
-                    Save Changes
+                    {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
               </CardContent>
