@@ -1072,6 +1072,101 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.redirect(`/api/pcp-ranking/${userId}?${queryParams.toString()}`);
   });
 
+  // Enhanced Match Recording with Hybrid Casual Match Points
+  app.post("/api/matches/record-casual", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { opponentId, matchType, format, division, isWin, score, notes } = req.body;
+      
+      // Validate required fields
+      if (!opponentId || !matchType || !format || !division || isWin === undefined) {
+        return res.status(400).json({ error: "Missing required match data" });
+      }
+
+      // Get opponent frequency for anti-gaming calculations
+      const existingMatches = await storage.getMatchesByUser(req.user.id, 1000, 0, req.user.id);
+      const opponentMatchCount = existingMatches.filter(match => 
+        (match.player1Id === opponentId || match.player2Id === opponentId) &&
+        match.createdAt && new Date(match.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+      ).length;
+
+      // Calculate hybrid points using new system
+      const matchResult = {
+        isWin,
+        matchDate: new Date(),
+        matchType: matchType as 'casual' | 'league' | 'tournament',
+        format,
+        division
+      };
+
+      const PCPGlobalRankingCalculator = (await import('./services/atp-ranking-calculator')).PCPGlobalRankingCalculator;
+      const pointsEarned = PCPGlobalRankingCalculator.calculateMatchPoints(matchResult, opponentMatchCount);
+      
+      // Create match record
+      const match = await storage.createMatch({
+        player1Id: req.user.id,
+        player2Id: opponentId,
+        winnerId: isWin ? req.user.id : opponentId,
+        score: score || '',
+        format,
+        division,
+        matchType,
+        isTestData: false,
+        notes: notes || `Casual match • Points earned: ${pointsEarned} (${matchType})`
+      });
+
+      // Create ranking point record for transparent tracking
+      const rankingPoint = PCPGlobalRankingCalculator.createMatchRankingPoint(
+        matchResult, 
+        `Casual Match vs Player ${opponentId}`
+      );
+      
+      // Award XP for match participation
+      const xpAwarded = isWin ? 15 : 10;
+      await storage.updateUserXP(req.user.id, xpAwarded);
+      
+      // Create activity record
+      await storage.createActivity({
+        userId: req.user.id,
+        type: 'match_recorded',
+        description: `${matchType} match ${isWin ? 'won' : 'played'} • ${pointsEarned} ranking pts • ${xpAwarded} XP`,
+        xpEarned: xpAwarded,
+        metadata: { 
+          matchId: match.id,
+          matchType,
+          pointsEarned,
+          opponentMatchCount,
+          antiGaming: opponentMatchCount > 2
+        }
+      });
+
+      res.json({
+        success: true,
+        match,
+        pointsEarned,
+        xpAwarded,
+        breakdown: {
+          basePoints: matchResult.matchType === 'casual' ? 
+            (isWin ? 1.5 : 0.5) : (isWin ? 2 : 0.7),
+          reductionFactor: opponentMatchCount > 2 ? 
+            PCPGlobalRankingCalculator.getOpponentFrequencyReduction(opponentMatchCount) : 1.0,
+          finalPoints: pointsEarned
+        },
+        antiGaming: {
+          opponentMatchCount,
+          warning: opponentMatchCount > 5 ? 
+            "Points reduced due to frequent matches with same opponent" : null
+        }
+      });
+    } catch (error) {
+      console.error('Error recording casual match:', error);
+      res.status(500).json({ error: 'Failed to record match' });
+    }
+  });
+
   // QR Code Scanning Routes with Role Detection
   app.post("/api/qr/scan", isAuthenticated, processQRScan);
   app.get("/api/qr/permissions", isAuthenticated, getUserScanPermissions);

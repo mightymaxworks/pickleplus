@@ -451,11 +451,11 @@ export default function PassportDashboard() {
                                 {category.format?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} • {category.division}
                               </div>
                               <div className={`text-lg font-black my-1 text-${colorScheme}-600`}>
-                                {isRanked ? `${categoryData.breakdown.tournamentPoints} pts` : 'Not Ranked'}
+                                {isRanked ? `${categoryData.rankingPoints} pts` : 'Not Ranked'}
                               </div>
                               {isRanked ? (
                                 <div className={`text-xs mb-1 text-${colorScheme}-700`}>
-                                  Tournament participation verified
+                                  Tournaments: {categoryData.breakdown?.tournamentPoints || 0} • Matches: {categoryData.breakdown?.matchPoints || 0}
                                 </div>
                               ) : (
                                 <div className={`text-xs mb-1 text-${colorScheme}-600`}>

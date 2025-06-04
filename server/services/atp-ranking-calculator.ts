@@ -25,7 +25,7 @@ export interface TournamentResult {
 export interface MatchResult {
   isWin: boolean;
   matchDate: Date;
-  matchType: 'casual' | 'league';
+  matchType: 'casual' | 'league' | 'tournament';
   format: string;
   division: string;
 }
@@ -82,11 +82,22 @@ export class PCPGlobalRankingCalculator {
   };
 
   /**
-   * Match points (casual/league)
+   * Match points with reduced values for casual matches
+   * Tournament-primary system: casual matches contribute reduced points
    */
   private static readonly MATCH_POINTS = {
-    win: 3,
-    loss: 1
+    casual: {
+      win: 1.5,   // 50% of original 3 points
+      loss: 0.5   // 50% of original 1 point
+    },
+    league: {
+      win: 2,     // 67% value (organized but not tournament)
+      loss: 0.7   // 67% value
+    },
+    tournament: {
+      win: 3,     // Full value for tournament matches
+      loss: 1     // Full value
+    }
   };
 
   /**
@@ -101,10 +112,34 @@ export class PCPGlobalRankingCalculator {
   }
 
   /**
-   * Calculate points for a match result
+   * Calculate points for a match result with type-specific values and anti-gaming limits
    */
-  static calculateMatchPoints(result: MatchResult): number {
-    return result.isWin ? this.MATCH_POINTS.win : this.MATCH_POINTS.loss;
+  static calculateMatchPoints(result: MatchResult, opponentMatchCount: number = 0): number {
+    const matchTypePoints = this.MATCH_POINTS[result.matchType as keyof typeof this.MATCH_POINTS];
+    if (!matchTypePoints) {
+      // Default to casual match points if type not recognized
+      return result.isWin ? this.MATCH_POINTS.casual.win : this.MATCH_POINTS.casual.loss;
+    }
+    
+    let basePoints = result.isWin ? matchTypePoints.win : matchTypePoints.loss;
+    
+    // Apply anti-gaming diminishing returns for frequent matches against same opponent
+    if (result.matchType === 'casual' && opponentMatchCount > 0) {
+      const reductionFactor = this.getOpponentFrequencyReduction(opponentMatchCount);
+      basePoints *= reductionFactor;
+    }
+    
+    return Math.round(basePoints * 10) / 10; // Round to 1 decimal place
+  }
+
+  /**
+   * Anti-gaming: Diminishing returns for frequent matches against same opponent
+   */
+  static getOpponentFrequencyReduction(matchCount: number): number {
+    if (matchCount <= 2) return 1.0;        // Full points for first 3 matches
+    if (matchCount <= 5) return 0.75;       // 75% for matches 4-6
+    if (matchCount <= 10) return 0.5;       // 50% for matches 7-11
+    return 0.25;                            // 25% for matches 12+
   }
 
   /**
@@ -148,7 +183,7 @@ export class PCPGlobalRankingCalculator {
   }
 
   /**
-   * Calculate rankings for multiple categories (age groups, divisions, formats)
+   * Calculate rankings for multiple categories with detailed breakdown
    * Separates points by format and division for proper category ranking
    */
   static calculateCategoryRankings(pointHistory: RankingPoint[]): {
@@ -157,6 +192,12 @@ export class PCPGlobalRankingCalculator {
       activePoints: RankingPoint[];
       format: string;
       division: string;
+      breakdown: {
+        tournamentPoints: number;
+        casualMatchPoints: number;
+        leagueMatchPoints: number;
+        totalMatchPoints: number;
+      };
     }
   } {
     const now = new Date();
@@ -178,12 +219,33 @@ export class PCPGlobalRankingCalculator {
           currentPoints: 0,
           activePoints: [],
           format: point.format,
-          division: point.division
+          division: point.division,
+          breakdown: {
+            tournamentPoints: 0,
+            casualMatchPoints: 0,
+            leagueMatchPoints: 0,
+            totalMatchPoints: 0
+          }
         };
       }
 
       categoryRankings[categoryKey].currentPoints += point.points;
       categoryRankings[categoryKey].activePoints.push(point);
+      
+      // Categorize points for transparent breakdown
+      if (point.eventType === 'tournament') {
+        categoryRankings[categoryKey].breakdown.tournamentPoints += point.points;
+      } else if (point.eventName.includes('casual')) {
+        categoryRankings[categoryKey].breakdown.casualMatchPoints += point.points;
+        categoryRankings[categoryKey].breakdown.totalMatchPoints += point.points;
+      } else if (point.eventName.includes('league')) {
+        categoryRankings[categoryKey].breakdown.leagueMatchPoints += point.points;
+        categoryRankings[categoryKey].breakdown.totalMatchPoints += point.points;
+      } else {
+        // Default to casual match points for unspecified matches
+        categoryRankings[categoryKey].breakdown.casualMatchPoints += point.points;
+        categoryRankings[categoryKey].breakdown.totalMatchPoints += point.points;
+      }
     });
 
     return categoryRankings;
