@@ -419,8 +419,10 @@ export default function PassportDashboard() {
                   ) : allRankingPositions?.data && allRankingPositions.data.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2">
                       {allRankingPositions.data.map((position, index) => {
-                        const formatDisplayName = position.format.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-                        const divisionDisplayName = position.division === 'open' ? 'Open' : `${position.division}+`;
+                        const formatDisplayName = position.format === 'mixed_doubles' ? 'Mixed Doubles' :
+                                                 position.format === 'singles' ? 'Singles' : 'Doubles';
+                        const divisionDisplayName = position.division === 'open' ? 'Open' : 
+                                                   position.division === '35+' ? '35+' : position.division;
                         const colorScheme = index % 4 === 0 ? 'purple' : 
                                           index % 4 === 1 ? 'blue' : 
                                           index % 4 === 2 ? 'indigo' : 'violet';
@@ -479,7 +481,7 @@ export default function PassportDashboard() {
                                 <div 
                                   className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
                                   style={{ 
-                                    width: `${Math.max(10, (position.matchCount / position.requiredMatches) * 100)}%`
+                                    width: `${position.matchCount === 0 ? 0 : Math.max(5, (position.matchCount / position.requiredMatches) * 100)}%`
                                   }}
                                 />
                               </div>
