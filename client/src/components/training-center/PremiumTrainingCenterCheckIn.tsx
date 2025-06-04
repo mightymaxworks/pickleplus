@@ -99,36 +99,52 @@ export default function PremiumTrainingCenterCheckIn() {
     setIsScanning(true);
     setScannerError(null);
     
-    scannerRef.current = new Html5QrcodeScanner(
-      "qr-reader",
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-      },
-      false
-    );
-
-    scannerRef.current.render(
-      (decodedText) => {
-        // Success callback
-        setQrCode(decodedText);
+    // Wait for DOM element to be available
+    setTimeout(() => {
+      const element = document.getElementById("qr-reader");
+      if (!element) {
+        setScannerError("Scanner initialization failed");
         setIsScanning(false);
-        scannerRef.current?.clear();
-        toast({
-          title: "QR Code Scanned",
-          description: `Facility code: ${decodedText}`,
-        });
-      },
-      (error) => {
-        // Error callback - only log errors we care about
-        if (error.includes('NotFoundException')) {
-          // QR code not found in frame - this is normal, don't show error
-          return;
-        }
-        console.warn('QR Scanner error:', error);
+        return;
       }
-    );
+
+      try {
+        scannerRef.current = new Html5QrcodeScanner(
+          "qr-reader",
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          false
+        );
+
+        scannerRef.current.render(
+          (decodedText) => {
+            // Success callback
+            setQrCode(decodedText);
+            setIsScanning(false);
+            scannerRef.current?.clear();
+            toast({
+              title: "QR Code Scanned",
+              description: `Facility code: ${decodedText}`,
+            });
+          },
+          (error) => {
+            // Error callback - only log errors we care about
+            if (error.includes('NotFoundException')) {
+              // QR code not found in frame - this is normal, don't show error
+              return;
+            }
+            console.warn('QR Scanner error:', error);
+          }
+        );
+      } catch (error) {
+        console.error('Scanner initialization error:', error);
+        setScannerError("Failed to start camera scanner");
+        setIsScanning(false);
+      }
+    }, 100);
   };
 
   // Stop QR code scanning
@@ -491,12 +507,30 @@ export default function PremiumTrainingCenterCheckIn() {
                   </>
                 ) : (
                   <div className="space-y-4">
-                    <div className="bg-white rounded-lg p-4 border-2 border-dashed border-blue-300">
-                      <div id="qr-reader" className="w-full"></div>
-                    </div>
-                    <div className="text-center text-sm text-slate-600">
-                      Position QR code within the frame to scan automatically
-                    </div>
+                    {scannerError ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                        <p className="text-red-600 text-sm mb-2">{scannerError}</p>
+                        <Button
+                          onClick={() => {
+                            setScannerError(null);
+                            setIsScanning(false);
+                          }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Try Manual Entry
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-white rounded-lg p-4 border-2 border-dashed border-blue-300">
+                          <div id="qr-reader" className="w-full"></div>
+                        </div>
+                        <div className="text-center text-sm text-slate-600">
+                          Position QR code within the frame to scan automatically
+                        </div>
+                      </>
+                    )}
                     <div className="flex space-x-3">
                       <Button
                         onClick={stopScanning}
