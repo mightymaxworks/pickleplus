@@ -1269,6 +1269,12 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         response.allCategories = categoryRankings;
       }
       
+      // Force no caching to ensure fresh ranking points data
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('ETag', Date.now().toString());
+      
       res.json(response);
     } catch (error) {
       console.error('Error calculating PCP Global ranking points:', error);
