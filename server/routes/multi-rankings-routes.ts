@@ -79,7 +79,8 @@ router.get("/all-positions", async (req: Request, res: Response) => {
           totalPlayersInDivision: division === '35+' ? 45 : 87,
           lastMatchDate: matchCount > 0 ? formatMatches[0]?.matchDate?.toISOString() || new Date().toISOString() : null,
           needsMatches: Math.max(0, 10 - matchCount),
-          winRate
+          winRate,
+          isEligible: true // Always show cards to motivate users to play more matches
         });
       }
     }
