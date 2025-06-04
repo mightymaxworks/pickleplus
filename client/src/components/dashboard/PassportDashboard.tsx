@@ -467,8 +467,11 @@ export default function PassportDashboard() {
                         
                         // Debug specific Open Singles position
                         if (position.division === 'open' && position.format === 'singles') {
+                          const calculatedWidth = position.matchCount === 0 ? 0 : Math.min(100, Math.max(5, (position.matchCount / position.requiredMatches) * 100));
                           console.log('Open Singles data:', position);
                           console.log('Progress calculation:', position.matchCount, '/', position.requiredMatches, '=', (position.matchCount / position.requiredMatches) * 100 + '%');
+                          console.log('Final width value:', calculatedWidth + '%');
+                          console.log('Color scheme:', colorScheme);
                         }
                         
                         return (
