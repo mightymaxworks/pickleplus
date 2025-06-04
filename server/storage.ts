@@ -43,6 +43,21 @@ export interface IStorage {
   getPicklePoints(userId: number): Promise<number>;
   getTournamentParticipationByUser(userId: number): Promise<any[]>;
   createAuditLog(data: any): Promise<void>;
+  
+  // Training Center operations
+  getTrainingCenterByQrCode(qrCode: string): Promise<any>;
+  getActiveTrainingCenters(): Promise<any[]>;
+  getAvailableCoach(centerId: number): Promise<any>;
+  getActiveSessionForPlayer(playerId: number): Promise<any>;
+  createCoachingSession(sessionData: any): Promise<any>;
+  getCoachingSessionById(sessionId: number): Promise<any>;
+  updateCoachingSession(sessionId: number, updateData: any): Promise<any>;
+  getChallengesBySkillLevel(skillLevel: string): Promise<any[]>;
+  getChallengeById(challengeId: number): Promise<any>;
+  createChallengeCompletion(completionData: any): Promise<any>;
+  awardPlayerBadge(badgeData: any): Promise<any>;
+  getSessionSummary(sessionId: number): Promise<any>;
+  getPlayerTrainingProgress(playerId: number): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
