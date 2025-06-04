@@ -331,6 +331,13 @@ export default function App() {
                     pageTitle="Training Center"
                   />
                   
+                  {/* PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration */}
+                  <ProtectedRouteWithLayout
+                    path="/training-center-full"
+                    component={TrainingCenterTabsPage}
+                    pageTitle="Training Center with Calendar"
+                  />
+                  
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
                   <Route path="/roles/demo">
                     {() => <RoleProtectedRoute component={RoleProtectedDemoPage} path="/roles/demo" />}
