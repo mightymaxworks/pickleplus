@@ -170,6 +170,59 @@ export const sessionNotes = pgTable("session_notes", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Class Templates - Recurring class schedules
+export const classTemplates = pgTable("class_templates", {
+  id: serial("id").primaryKey(),
+  centerId: integer("center_id").notNull().references(() => trainingCenters.id),
+  coachId: integer("coach_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull(), // fundamentals, advanced, power, strategy
+  skillLevel: varchar("skill_level", { length: 20 }).notNull(), // beginner, intermediate, advanced
+  maxParticipants: integer("max_participants").default(8),
+  duration: integer("duration").default(60), // minutes
+  pricePerSession: decimal("price_per_session", { precision: 6, scale: 2 }),
+  goals: json("goals").$type<string[]>(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday, 1=Monday, etc.
+  startTime: varchar("start_time", { length: 8 }).notNull(), // HH:mm format
+  endTime: varchar("end_time", { length: 8 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Class Instances - Specific occurrences of classes
+export const classInstances = pgTable("class_instances", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => classTemplates.id),
+  centerId: integer("center_id").notNull().references(() => trainingCenters.id),
+  coachId: integer("coach_id").notNull().references(() => users.id),
+  classDate: timestamp("class_date").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  maxParticipants: integer("max_participants").default(8),
+  currentEnrollment: integer("current_enrollment").default(0),
+  courtNumber: integer("court_number"),
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, in_progress, completed, cancelled
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Class Enrollments - Student bookings for classes
+export const classEnrollments = pgTable("class_enrollments", {
+  id: serial("id").primaryKey(),
+  classInstanceId: integer("class_instance_id").notNull().references(() => classInstances.id),
+  playerId: integer("player_id").notNull().references(() => users.id),
+  enrollmentType: varchar("enrollment_type", { length: 20 }).default("advance"), // advance, walk_in
+  enrolledAt: timestamp("enrolled_at").defaultNow(),
+  attendanceStatus: varchar("attendance_status", { length: 20 }).default("enrolled"), // enrolled, attended, no_show, cancelled
+  paymentStatus: varchar("payment_status", { length: 20 }).default("pending"), // pending, paid, refunded
+  notes: text("notes"),
+  checkedInAt: timestamp("checked_in_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Digital Badges - Achievement rewards
 export const digitalBadges = pgTable("digital_badges", {
   id: serial("id").primaryKey(),
@@ -339,6 +392,45 @@ export const ratingProgressionRelations = relations(ratingProgressions, ({ one }
   })
 }));
 
+export const classTemplateRelations = relations(classTemplates, ({ one, many }) => ({
+  center: one(trainingCenters, {
+    fields: [classTemplates.centerId],
+    references: [trainingCenters.id]
+  }),
+  coach: one(users, {
+    fields: [classTemplates.coachId],
+    references: [users.id]
+  }),
+  instances: many(classInstances)
+}));
+
+export const classInstanceRelations = relations(classInstances, ({ one, many }) => ({
+  template: one(classTemplates, {
+    fields: [classInstances.templateId],
+    references: [classTemplates.id]
+  }),
+  center: one(trainingCenters, {
+    fields: [classInstances.centerId],
+    references: [trainingCenters.id]
+  }),
+  coach: one(users, {
+    fields: [classInstances.coachId],
+    references: [users.id]
+  }),
+  enrollments: many(classEnrollments)
+}));
+
+export const classEnrollmentRelations = relations(classEnrollments, ({ one }) => ({
+  classInstance: one(classInstances, {
+    fields: [classEnrollments.classInstanceId],
+    references: [classInstances.id]
+  }),
+  player: one(users, {
+    fields: [classEnrollments.playerId],
+    references: [users.id]
+  })
+}));
+
 // Zod schemas for validation
 export const insertTrainingCenterSchema = createInsertSchema(trainingCenters);
 export const insertCoachCertificationSchema = createInsertSchema(coachCertifications);
@@ -346,6 +438,9 @@ export const insertCoachingSessionSchema = createInsertSchema(coachingSessions);
 export const insertChallengeSchema = createInsertSchema(challenges);
 export const insertChallengeCompletionSchema = createInsertSchema(challengeCompletions);
 export const insertSessionNotesSchema = createInsertSchema(sessionNotes);
+export const insertClassTemplateSchema = createInsertSchema(classTemplates);
+export const insertClassInstanceSchema = createInsertSchema(classInstances);
+export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 export const insertDigitalBadgeSchema = createInsertSchema(digitalBadges);
 export const insertPlayerBadgeSchema = createInsertSchema(playerBadges);
 export const insertRatingProgressionSchema = createInsertSchema(ratingProgressions);
@@ -353,6 +448,12 @@ export const insertRatingProgressionSchema = createInsertSchema(ratingProgressio
 // TypeScript types
 export type TrainingCenter = typeof trainingCenters.$inferSelect;
 export type InsertTrainingCenter = typeof trainingCenters.$inferInsert;
+export type ClassTemplate = typeof classTemplates.$inferSelect;
+export type InsertClassTemplate = typeof classTemplates.$inferInsert;
+export type ClassInstance = typeof classInstances.$inferSelect;
+export type InsertClassInstance = typeof classInstances.$inferInsert;
+export type ClassEnrollment = typeof classEnrollments.$inferSelect;
+export type InsertClassEnrollment = typeof classEnrollments.$inferInsert;
 export type CoachCertification = typeof coachCertifications.$inferSelect;
 export type InsertCoachCertification = typeof coachCertifications.$inferInsert;
 export type CoachingSession = typeof coachingSessions.$inferSelect;

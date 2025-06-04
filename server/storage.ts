@@ -48,6 +48,17 @@ export interface IStorage {
   getTrainingCenterByQrCode(qrCode: string): Promise<any>;
   getActiveTrainingCenters(): Promise<any[]>;
   getAvailableCoach(centerId: number): Promise<any>;
+  
+  // Calendar operations
+  getWeeklyClassSchedule(centerId: number): Promise<any[]>;
+  getClassesForDate(centerId: number, date: Date): Promise<any[]>;
+  getClassDetails(classId: number): Promise<any>;
+  getClassEnrollment(classId: number, playerId: number): Promise<any>;
+  enrollInClass(enrollment: any): Promise<any>;
+  cancelClassEnrollment(classId: number, playerId: number): Promise<boolean>;
+  getUserEnrolledClasses(playerId: number, upcomingOnly: boolean): Promise<any[]>;
+  createClassTemplate(template: any): Promise<any>;
+  generateClassInstances(templateId: number, startDate: Date, endDate: Date, skipDates: Date[]): Promise<any[]>;
   getAvailableCoachesAtCenter(centerId: number): Promise<any[]>;
   getTrainingCenter(centerId: number): Promise<any>;
   getActiveSessionForPlayer(playerId: number): Promise<any>;
@@ -474,6 +485,209 @@ export class DatabaseStorage implements IStorage {
       recentSessions,
       skillProgression: []
     };
+  }
+
+  // Calendar operations
+  async getWeeklyClassSchedule(centerId: number): Promise<any[]> {
+    const templates = await db.execute(sql`
+      SELECT 
+        ct.*,
+        u.display_name as coach_name
+      FROM class_templates ct
+      JOIN users u ON ct.coach_id = u.id
+      WHERE ct.center_id = ${centerId} 
+      AND ct.is_active = true
+      ORDER BY ct.day_of_week, ct.start_time
+    `);
+    return templates;
+  }
+
+  async getClassesForDate(centerId: number, date: Date): Promise<any[]> {
+    const dayOfWeek = date.getDay();
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const classes = await db.execute(sql`
+      SELECT 
+        ci.*,
+        ct.name,
+        ct.description,
+        ct.goals,
+        ct.skill_level,
+        ct.max_participants,
+        u.display_name as coach_name,
+        COUNT(ce.id) as current_enrollment
+      FROM class_instances ci
+      JOIN class_templates ct ON ci.template_id = ct.id
+      JOIN users u ON ci.coach_id = u.id
+      LEFT JOIN class_enrollments ce ON ci.id = ce.class_instance_id 
+        AND ce.attendance_status != 'cancelled'
+      WHERE ci.center_id = ${centerId}
+      AND DATE(ci.class_date) = ${dateStr}
+      AND ci.status = 'scheduled'
+      GROUP BY ci.id, ct.id, u.id
+      ORDER BY ci.start_time
+    `);
+    return classes;
+  }
+
+  async getClassDetails(classId: number): Promise<any> {
+    const classDetails = await db.execute(sql`
+      SELECT 
+        ci.*,
+        ct.name,
+        ct.description,
+        ct.goals,
+        ct.skill_level,
+        ct.max_participants,
+        ct.price_per_session,
+        u.display_name as coach_name,
+        tc.name as center_name,
+        COUNT(ce.id) as current_enrollment
+      FROM class_instances ci
+      JOIN class_templates ct ON ci.template_id = ct.id
+      JOIN users u ON ci.coach_id = u.id
+      JOIN training_centers tc ON ci.center_id = tc.id
+      LEFT JOIN class_enrollments ce ON ci.id = ce.class_instance_id 
+        AND ce.attendance_status != 'cancelled'
+      WHERE ci.id = ${classId}
+      GROUP BY ci.id, ct.id, u.id, tc.id
+    `);
+    return classDetails[0];
+  }
+
+  async getClassEnrollment(classId: number, playerId: number): Promise<any> {
+    const enrollment = await db.execute(sql`
+      SELECT * FROM class_enrollments 
+      WHERE class_instance_id = ${classId} 
+      AND player_id = ${playerId}
+      AND attendance_status != 'cancelled'
+    `);
+    return enrollment[0];
+  }
+
+  async enrollInClass(enrollment: any): Promise<any> {
+    const [newEnrollment] = await db.execute(sql`
+      INSERT INTO class_enrollments 
+      (class_instance_id, player_id, enrollment_type)
+      VALUES (${enrollment.classInstanceId}, ${enrollment.playerId}, ${enrollment.enrollmentType})
+      RETURNING *
+    `);
+
+    // Update class enrollment count
+    await db.execute(sql`
+      UPDATE class_instances 
+      SET current_enrollment = current_enrollment + 1
+      WHERE id = ${enrollment.classInstanceId}
+    `);
+
+    return newEnrollment;
+  }
+
+  async cancelClassEnrollment(classId: number, playerId: number): Promise<boolean> {
+    const result = await db.execute(sql`
+      UPDATE class_enrollments 
+      SET attendance_status = 'cancelled'
+      WHERE class_instance_id = ${classId} 
+      AND player_id = ${playerId}
+      AND attendance_status != 'cancelled'
+    `);
+
+    if (result.rowCount > 0) {
+      // Update class enrollment count
+      await db.execute(sql`
+        UPDATE class_instances 
+        SET current_enrollment = current_enrollment - 1
+        WHERE id = ${classId}
+      `);
+      return true;
+    }
+    return false;
+  }
+
+  async getUserEnrolledClasses(playerId: number, upcomingOnly: boolean): Promise<any[]> {
+    const timeFilter = upcomingOnly ? sql`AND ci.start_time > NOW()` : sql``;
+    
+    const classes = await db.execute(sql`
+      SELECT 
+        ci.*,
+        ct.name,
+        ct.description,
+        ct.goals,
+        u.display_name as coach_name,
+        tc.name as center_name,
+        ce.enrollment_type,
+        ce.enrolled_at,
+        ce.attendance_status
+      FROM class_enrollments ce
+      JOIN class_instances ci ON ce.class_instance_id = ci.id
+      JOIN class_templates ct ON ci.template_id = ct.id
+      JOIN users u ON ci.coach_id = u.id
+      JOIN training_centers tc ON ci.center_id = tc.id
+      WHERE ce.player_id = ${playerId}
+      AND ce.attendance_status != 'cancelled'
+      ${timeFilter}
+      ORDER BY ci.start_time
+    `);
+    return classes;
+  }
+
+  async createClassTemplate(template: any): Promise<any> {
+    const [newTemplate] = await db.execute(sql`
+      INSERT INTO class_templates 
+      (center_id, coach_id, name, description, category, skill_level, 
+       max_participants, duration, price_per_session, goals, 
+       day_of_week, start_time, end_time)
+      VALUES (${template.centerId}, ${template.coachId}, ${template.name}, 
+              ${template.description}, ${template.category}, ${template.skillLevel},
+              ${template.maxParticipants}, ${template.duration}, ${template.pricePerSession},
+              ${JSON.stringify(template.goals)}, ${template.dayOfWeek}, 
+              ${template.startTime}, ${template.endTime})
+      RETURNING *
+    `);
+    return newTemplate;
+  }
+
+  async generateClassInstances(templateId: number, startDate: Date, endDate: Date, skipDates: Date[]): Promise<any[]> {
+    // Get template details
+    const template = await db.execute(sql`
+      SELECT * FROM class_templates WHERE id = ${templateId}
+    `);
+    
+    if (!template[0]) return [];
+    
+    const templateData = template[0];
+    const instances = [];
+    const current = new Date(startDate);
+    
+    while (current <= endDate) {
+      if (current.getDay() === templateData.day_of_week) {
+        const shouldSkip = skipDates.some(skipDate => 
+          skipDate.toDateString() === current.toDateString()
+        );
+        
+        if (!shouldSkip) {
+          const startTime = new Date(current);
+          const [hours, minutes] = templateData.start_time.split(':');
+          startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          
+          const endTime = new Date(startTime);
+          endTime.setMinutes(endTime.getMinutes() + templateData.duration);
+
+          const [instance] = await db.execute(sql`
+            INSERT INTO class_instances 
+            (template_id, center_id, coach_id, class_date, start_time, end_time, max_participants)
+            VALUES (${templateId}, ${templateData.center_id}, ${templateData.coach_id},
+                    ${current.toISOString()}, ${startTime.toISOString()}, ${endTime.toISOString()},
+                    ${templateData.max_participants})
+            RETURNING *
+          `);
+          instances.push(instance);
+        }
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return instances;
   }
 }
 
