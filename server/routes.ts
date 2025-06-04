@@ -989,15 +989,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           });
         }
         
-        // Calculate match points with category adjustments
+        // Calculate match points directly from database (no multipliers for display consistency)
         for (const match of userMatches) {
-          const isWinner = match.winnerId === userId;
-          const points = Math.round((isWinner ? 3 : 1) * baseMultiplier);
+          // Use the actual points awarded from the database
+          const points = match.pointsAwarded || 0;
           matchPoints += points;
           
           pointBreakdown.push({
             type: 'match',
-            event: isWinner ? 'Match Win' : 'Match Participation',
+            event: match.winnerId === userId ? 'Match Win' : 'Match Participation',
             points: points
           });
         }
