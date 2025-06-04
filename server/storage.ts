@@ -41,6 +41,7 @@ export interface IStorage {
   getMatchStats(userId: number, timeRange?: string): Promise<any>;
   getPicklePoints(userId: number): Promise<number>;
   getTournamentParticipationByUser(userId: number): Promise<any[]>;
+  createAuditLog(data: any): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -79,6 +80,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async updateUserPassword(id: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, id));
   }
 
   async getProfileCompletion(userId: number): Promise<ProfileCompletionTracking | undefined> {
@@ -166,6 +174,10 @@ export class DatabaseStorage implements IStorage {
       startDate: tournament.startDate,
       level: tournament.level || 'local'
     }));
+  }
+
+  async createAuditLog(data: any): Promise<void> {
+    console.log('Audit log entry:', data);
   }
 }
 
