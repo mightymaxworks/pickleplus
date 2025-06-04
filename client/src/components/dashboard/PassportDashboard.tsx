@@ -715,6 +715,7 @@ export default function PassportDashboard() {
                           <input
                             type="text"
                             defaultValue={user.firstName || ''}
+                            onChange={(e) => handleFieldChange('firstName', e.target.value)}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           />
                         </div>
@@ -723,6 +724,7 @@ export default function PassportDashboard() {
                           <input
                             type="text"
                             defaultValue={user.lastName || ''}
+                            onChange={(e) => handleFieldChange('lastName', e.target.value)}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           />
                         </div>
@@ -799,6 +801,7 @@ export default function PassportDashboard() {
                           <input
                             type="text"
                             defaultValue={user.paddleModel || ''}
+                            onChange={(e) => handleFieldChange('paddleModel', e.target.value)}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           />
                         </div>
