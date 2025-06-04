@@ -41,6 +41,7 @@ import {
   Upload
 } from 'lucide-react';
 import PhotoUploadModal from '@/components/PhotoUploadModal';
+import { ComingSoonModal } from '@/components/ui/coming-soon-modal';
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
@@ -53,6 +54,7 @@ export default function PassportDashboard() {
   const [qrVisible, setQrVisible] = useState(false);
   const [showPassportCode, setShowPassportCode] = useState(false);
   const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);
+  const [comingSoonModal, setComingSoonModal] = useState({ isOpen: false, feature: '', description: '' });
   const { toast } = useToast();
   
   // Fetch match statistics and recent matches
@@ -657,11 +659,26 @@ export default function PassportDashboard() {
             </div>
 
             <div className="flex gap-3">
-              <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
+              <Button 
+                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                onClick={() => setComingSoonModal({
+                  isOpen: true,
+                  feature: "Spend Points",
+                  description: "Redeem your Pickle Points for exclusive rewards, merchandise, and tournament entry fees."
+                })}
+              >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Spend Points
               </Button>
-              <Button variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50">
+              <Button 
+                variant="outline" 
+                className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                onClick={() => setComingSoonModal({
+                  isOpen: true,
+                  feature: "Earn More Points",
+                  description: "Discover new ways to earn Pickle Points through challenges, referrals, and community activities."
+                })}
+              >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Earn More
               </Button>
@@ -930,6 +947,13 @@ export default function PassportDashboard() {
         onClose={() => setIsPhotoUploadOpen(false)}
         onUploadSuccess={handlePhotoUploadSuccess}
         currentAvatar={user.avatarUrl || undefined}
+      />
+      
+      <ComingSoonModal
+        isOpen={comingSoonModal.isOpen}
+        onClose={() => setComingSoonModal({ isOpen: false, feature: '', description: '' })}
+        feature={comingSoonModal.feature}
+        description={comingSoonModal.description}
       />
     </div>
   );
