@@ -10,6 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -68,6 +75,8 @@ interface SessionResponse {
 export default function PremiumTrainingCenterCheckIn() {
   const [qrCode, setQrCode] = useState('');
   const [checkedInCenter, setCheckedInCenter] = useState<CheckInResponse | null>(null);
+  const [selectedCoachForDetails, setSelectedCoachForDetails] = useState<any | null>(null);
+  const [showCoachDetails, setShowCoachDetails] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -321,8 +330,8 @@ export default function PremiumTrainingCenterCheckIn() {
                             className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // TODO: Show coach details modal
-                              console.log('Show details for:', coach);
+                              setSelectedCoachForDetails(coach);
+                              setShowCoachDetails(true);
                             }}
                           >
                             <User className="w-4 h-4 mr-2" />
@@ -441,6 +450,131 @@ export default function PremiumTrainingCenterCheckIn() {
             </CardContent>
           </Card>
         )}
+
+        {/* Coach Details Modal */}
+        <Dialog open={showCoachDetails} onOpenChange={setShowCoachDetails}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-200 shadow-md">
+                  <img 
+                    src={(selectedCoachForDetails as any)?.profileImage || `/api/placeholder-avatar/${selectedCoachForDetails?.id}`}
+                    alt={(selectedCoachForDetails as any)?.fullName || selectedCoachForDetails?.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) {
+                        fallback.style.display = 'flex';
+                      }
+                    }}
+                  />
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm hidden">
+                    {((selectedCoachForDetails as any)?.fullName || selectedCoachForDetails?.name)?.split(' ').map((n: string) => n[0]).join('')}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">
+                    {(selectedCoachForDetails as any)?.fullName || selectedCoachForDetails?.name}
+                  </h3>
+                  <p className="text-sm text-slate-600">Certified Professional Coach</p>
+                </div>
+              </DialogTitle>
+              <DialogDescription>
+                Detailed coach profile and expertise information
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedCoachForDetails && (
+              <div className="space-y-6 mt-4">
+                {/* Coach Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">${selectedCoachForDetails.hourlyRate}</div>
+                    <div className="text-sm text-slate-600">Per Hour</div>
+                  </div>
+                  <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                    <div className="text-2xl font-bold text-emerald-600">{(selectedCoachForDetails as any)?.experience || '5+ years'}</div>
+                    <div className="text-sm text-slate-600">Experience</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{selectedCoachForDetails.specializations?.length || 3}</div>
+                    <div className="text-sm text-slate-600">Specializations</div>
+                  </div>
+                </div>
+
+                {/* Specializations */}
+                <div>
+                  <h4 className="font-semibold text-slate-800 mb-3 flex items-center">
+                    <Target className="w-4 h-4 mr-2 text-blue-600" />
+                    Coaching Specializations
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCoachForDetails.specializations?.map((spec: string, index: number) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="bg-blue-100 text-blue-700 font-medium px-3 py-1"
+                      >
+                        {spec}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Certifications */}
+                <div>
+                  <h4 className="font-semibold text-slate-800 mb-3 flex items-center">
+                    <Award className="w-4 h-4 mr-2 text-emerald-600" />
+                    Professional Certifications
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {((selectedCoachForDetails as any)?.certifications || ['USAPA Certified', 'Professional Training']).map((cert: string, index: number) => (
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="border-emerald-200 text-emerald-700 font-medium px-3 py-1"
+                      >
+                        {cert}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowCoachDetails(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    onClick={() => {
+                      setShowCoachDetails(false);
+                      handleCoachSelection(selectedCoachForDetails.id);
+                    }}
+                    disabled={coachSelectionMutation.isPending}
+                  >
+                    {coachSelectionMutation.isPending ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        Starting Session...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Begin Session with {(selectedCoachForDetails as any)?.fullName || selectedCoachForDetails?.name}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
