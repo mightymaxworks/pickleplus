@@ -51,7 +51,7 @@ export function useTotalRankingPoints(userId?: number) {
     queryKey: ['/api/pcp-ranking', userId, Date.now()], // Force fresh data
     enabled: !!userId,
     staleTime: 0, // No caching for now
-    cacheTime: 0, // No background cache
+    gcTime: 0, // No background cache (TanStack Query v5)
     refetchOnWindowFocus: true, // Refetch when window gains focus
     select: (data) => {
       // Use the pre-calculated total from API
