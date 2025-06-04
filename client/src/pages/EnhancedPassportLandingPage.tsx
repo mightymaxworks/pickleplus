@@ -578,7 +578,7 @@ export default function EnhancedPassportLandingPage() {
       </motion.header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6">
+      <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-20">
         <div className="container mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
