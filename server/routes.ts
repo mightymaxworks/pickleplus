@@ -1002,29 +1002,54 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           // Only count if match belongs to this category
           if (matchBelongsToCategory) {
             const isWinner = match.winnerId === userId;
-            let basePoints = isWinner ? 3 : 1; // Base casual match scoring
+            const basePoints = isWinner ? 3 : 1; // Base casual match scoring
             
-            // Apply weighting based on match type
-            let weightedPoints = basePoints;
-            if (match.matchType === 'tournament') {
-              weightedPoints = basePoints * 1.0; // 100% weight
-            } else if (match.matchType === 'league') {
-              weightedPoints = basePoints * 0.67; // 67% weight
-            } else if (match.matchType === 'casual') {
-              weightedPoints = basePoints * 0.5; // 50% weight
-            }
-            
-            matchPoints += weightedPoints;
+            // For DISPLAY: Always show full points (no weighting)
+            matchPoints += basePoints;
             
             pointBreakdown.push({
               type: 'match',
               event: isWinner ? 'Match Win' : 'Match Participation',
-              points: weightedPoints
+              points: basePoints // Display raw points, not weighted
             });
           }
         }
         
-        totalRankingPoints = tournamentPoints + matchPoints;
+        // Calculate weighted ranking points for competitive ranking (separate from display)
+        let weightedMatchPoints = 0;
+        for (const match of userMatches) {
+          // Only count matches that belong to this specific category
+          let matchBelongsToCategory = false;
+          
+          // Check if match format matches category format
+          if (category.format === 'mens_singles' && match.formatType === 'singles') {
+            matchBelongsToCategory = true;
+          } else if (category.format === 'mens_doubles' && match.formatType === 'doubles') {
+            matchBelongsToCategory = true;
+          } else if (category.format === 'mixed_doubles' && match.formatType === 'doubles') {
+            matchBelongsToCategory = false;
+          }
+          
+          if (matchBelongsToCategory) {
+            const isWinner = match.winnerId === userId;
+            const basePoints = isWinner ? 3 : 1;
+            
+            // Apply weighting for competitive ranking calculation only
+            let weightMultiplier = 1.0;
+            if (match.matchType === 'tournament') {
+              weightMultiplier = 1.0; // 100% weight
+            } else if (match.matchType === 'league') {
+              weightMultiplier = 0.67; // 67% weight
+            } else if (match.matchType === 'casual') {
+              weightMultiplier = 0.5; // 50% weight
+            }
+            
+            weightedMatchPoints += basePoints * weightMultiplier;
+          }
+        }
+        
+        totalRankingPoints = tournamentPoints + matchPoints; // Display uses raw points
+        const competitiveRankingPoints = tournamentPoints + weightedMatchPoints; // Ranking uses weighted points
         
         // Calculate milestone progress
         const milestones = [
