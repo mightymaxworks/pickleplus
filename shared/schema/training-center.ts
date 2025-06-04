@@ -45,6 +45,27 @@ export const trainingCenters = pgTable("training_centers", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Training Center Coaches - Coaches assigned to specific centers
+export const trainingCenterCoaches = pgTable("training_center_coaches", {
+  id: serial("id").primaryKey(),
+  centerId: integer("center_id").notNull().references(() => trainingCenters.id),
+  coachId: integer("coach_id").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  specializations: json("specializations").$type<string[]>(),
+  availableHours: json("available_hours").$type<{
+    monday: { start: string; end: string; available?: boolean };
+    tuesday: { start: string; end: string; available?: boolean };
+    wednesday: { start: string; end: string; available?: boolean };
+    thursday: { start: string; end: string; available?: boolean };
+    friday: { start: string; end: string; available?: boolean };
+    saturday: { start: string; end: string; available?: boolean };
+    sunday: { start: string; end: string; available?: boolean };
+  }>(),
+  hourlyRate: decimal("hourly_rate", { precision: 6, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Coach Certifications - Track coach qualifications
 export const coachCertifications = pgTable("coach_certifications", {
   id: serial("id").primaryKey(),

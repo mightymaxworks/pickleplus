@@ -63,6 +63,24 @@ interface Challenge {
   badgeReward: string;
 }
 
+interface Coach {
+  id: number;
+  name: string;
+  specializations: string[];
+  hourlyRate?: number;
+}
+
+interface CheckInResponse {
+  success: boolean;
+  center: {
+    id: number;
+    name: string;
+    address: string;
+    city: string;
+  };
+  availableCoaches: Coach[];
+}
+
 export default function TrainingCenterCheckIn() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -74,6 +92,8 @@ export default function TrainingCenterCheckIn() {
     timeSpent: 0,
     coachNotes: ''
   });
+  const [checkedInCenter, setCheckedInCenter] = useState<CheckInResponse | null>(null);
+  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
 
   // Get available training centers
   const { data: centers = [] } = useQuery({
@@ -107,12 +127,12 @@ export default function TrainingCenterCheckIn() {
     enabled: !!activeSession
   });
 
-  // Check-in mutation
-  const checkInMutation = useMutation({
+  // Step 1: Location check-in mutation
+  const locationCheckInMutation = useMutation({
     mutationFn: async (qrCode: string) => {
       const res = await apiRequest('POST', '/api/training-center/checkin', {
         qrCode,
-        playerId: 1 // TODO: Get actual user ID
+        playerId: 1
       });
       if (!res.ok) {
         const errorData = await res.json();
@@ -120,27 +140,56 @@ export default function TrainingCenterCheckIn() {
       }
       return res.json();
     },
-    onSuccess: (data) => {
-      console.log('Check-in successful:', data);
-      if (data.success && data.session) {
-        toast({
-          title: "Check-in Successful! ✅",
-          description: `Welcome to ${data.session.center}! Your coach is ${data.session.coach}.`,
-        });
-      } else {
-        toast({
-          title: "Check-in Complete",
-          description: "You have successfully checked in to the training center.",
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: ['/api/training-center/session/active'] });
+    onSuccess: (data: CheckInResponse) => {
+      console.log('Location check-in successful:', data);
+      setCheckedInCenter(data);
+      toast({
+        title: "Location Check-in Complete ✅",
+        description: `Welcome to ${data.center.name}! Please select your coach to begin your session.`,
+      });
       setQrCode('');
     },
     onError: (error: any) => {
-      console.error('Check-in error:', error);
+      console.error('Location check-in error:', error);
       toast({
         title: "Check-in Failed",
         description: error.message || "Unable to check in at this time",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Step 2: Coach selection mutation
+  const coachSelectionMutation = useMutation({
+    mutationFn: async (coach: Coach) => {
+      if (!checkedInCenter) throw new Error('No location checked in');
+      
+      const res = await apiRequest('POST', '/api/training-center/select-coach', {
+        centerId: checkedInCenter.center.id,
+        coachId: coach.id,
+        playerId: 1
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Coach selection failed');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      console.log('Coach selection successful:', data);
+      toast({
+        title: "Session Started! ✅",
+        description: `Your training session with ${data.session.coach} has begun at ${data.session.center}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/training-center/session/active'] });
+      setCheckedInCenter(null);
+      setSelectedCoach(null);
+    },
+    onError: (error: any) => {
+      console.error('Coach selection error:', error);
+      toast({
+        title: "Coach Selection Failed",
+        description: error.message || "Unable to select coach at this time",
         variant: "destructive"
       });
     }
@@ -170,7 +219,7 @@ export default function TrainingCenterCheckIn() {
     }
   });
 
-  const handleCheckIn = () => {
+  const handleLocationCheckIn = () => {
     if (!qrCode.trim()) {
       toast({
         title: "QR Code Required",
@@ -179,7 +228,17 @@ export default function TrainingCenterCheckIn() {
       });
       return;
     }
-    checkInMutation.mutate(qrCode);
+    locationCheckInMutation.mutate(qrCode);
+  };
+
+  const handleCoachSelection = (coach: Coach) => {
+    setSelectedCoach(coach);
+    coachSelectionMutation.mutate(coach);
+  };
+
+  const handleQuickCheckIn = (centerQrCode: string) => {
+    setQrCode(centerQrCode);
+    locationCheckInMutation.mutate(centerQrCode);
   };
 
   const handleCompleteChallenge = () => {
@@ -416,11 +475,11 @@ export default function TrainingCenterCheckIn() {
           </div>
           
           <Button 
-            onClick={handleCheckIn} 
-            disabled={checkInMutation.isPending}
+            onClick={handleLocationCheckIn} 
+            disabled={locationCheckInMutation.isPending}
             className="w-full"
           >
-            {checkInMutation.isPending ? 'Checking In...' : 'Check In'}
+            {locationCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
           </Button>
         </CardContent>
       </Card>
@@ -446,16 +505,10 @@ export default function TrainingCenterCheckIn() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setQrCode(center.qrCode);
-                      // Auto-trigger check-in after setting QR code
-                      setTimeout(() => {
-                        checkInMutation.mutate(center.qrCode);
-                      }, 100);
-                    }}
-                    disabled={checkInMutation.isPending}
+                    onClick={() => handleQuickCheckIn(center.qrCode)}
+                    disabled={locationCheckInMutation.isPending}
                   >
-                    {checkInMutation.isPending ? 'Checking In...' : 'Check In Here'}
+                    {locationCheckInMutation.isPending ? 'Checking In...' : 'Check In Here'}
                   </Button>
                 </div>
               </Card>

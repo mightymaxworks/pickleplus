@@ -19,26 +19,20 @@ import {
 
 const router = Router();
 
-// Check-in to training center
+// Step 1: Check-in to training center location
 router.post("/checkin", async (req, res) => {
   try {
     const checkInSchema = z.object({
       qrCode: z.string().min(1, "QR code is required"),
-      playerId: z.number().int().positive("Valid player ID required")
+      playerId: z.number().int().positive("Valid player ID required").optional()
     });
 
-    const { qrCode, playerId } = checkInSchema.parse(req.body);
+    const { qrCode, playerId = 1 } = checkInSchema.parse(req.body); // Default to user 1 for demo
 
     // Find training center by QR code
     const center = await storage.getTrainingCenterByQrCode(qrCode);
     if (!center) {
       return res.status(404).json({ error: "Training center not found" });
-    }
-
-    // Verify player exists
-    const player = await storage.getUser(playerId);
-    if (!player) {
-      return res.status(404).json({ error: "Player not found" });
     }
 
     // Check if player already has an active session
@@ -50,20 +44,59 @@ router.post("/checkin", async (req, res) => {
       });
     }
 
-    // Assign available coach (for now, get first available coach)
-    const availableCoach = await storage.getAvailableCoach(center.id);
-    if (!availableCoach) {
-      return res.status(400).json({ error: "No coaches available at this time" });
+    // Get available coaches at this center
+    const availableCoaches = await storage.getAvailableCoachesAtCenter(center.id);
+    
+    res.json({
+      success: true,
+      center: {
+        id: center.id,
+        name: center.name,
+        address: center.address,
+        city: center.city
+      },
+      availableCoaches: availableCoaches.map(coach => ({
+        id: coach.id,
+        name: coach.displayName || coach.username,
+        specializations: coach.specializations || [],
+        hourlyRate: coach.hourlyRate
+      }))
+    });
+
+  } catch (error) {
+    console.error("Training center check-in error:", error);
+    res.status(500).json({ error: "Failed to check in to training center" });
+  }
+});
+
+// Step 2: Select coach and start session
+router.post("/select-coach", async (req, res) => {
+  try {
+    const selectCoachSchema = z.object({
+      centerId: z.number().int().positive("Valid center ID required"),
+      coachId: z.number().int().positive("Valid coach ID required"),
+      playerId: z.number().int().positive("Valid player ID required").optional()
+    });
+
+    const { centerId, coachId, playerId = 1 } = selectCoachSchema.parse(req.body);
+
+    // Verify center and coach
+    const center = await storage.getTrainingCenter(centerId);
+    const coach = await storage.getUser(coachId);
+    
+    if (!center || !coach) {
+      return res.status(404).json({ error: "Center or coach not found" });
     }
 
     // Create new coaching session
     const sessionData = {
       playerId,
-      coachId: availableCoach.id,
-      centerId: center.id,
-      sessionType: SessionType.INDIVIDUAL,
+      coachId,
+      centerId,
+      sessionType: 'individual' as any,
       checkInTime: new Date(),
-      status: SessionStatus.ACTIVE
+      status: 'active' as any,
+      challengesCompleted: 0
     };
 
     const session = await storage.createCoachingSession(sessionData);
@@ -73,15 +106,16 @@ router.post("/checkin", async (req, res) => {
       session: {
         id: session.id,
         center: center.name,
-        coach: availableCoach.displayName || availableCoach.username,
+        coach: coach.displayName || coach.username,
         checkInTime: session.checkInTime,
-        status: session.status
+        status: session.status,
+        challengesCompleted: 0
       }
     });
 
   } catch (error) {
-    console.error("Training center check-in error:", error);
-    res.status(500).json({ error: "Failed to check in to training center" });
+    console.error("Coach selection error:", error);
+    res.status(500).json({ error: "Failed to select coach and start session" });
   }
 });
 
