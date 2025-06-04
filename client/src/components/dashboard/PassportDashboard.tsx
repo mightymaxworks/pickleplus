@@ -465,15 +465,7 @@ export default function PassportDashboard() {
                                           index % 4 === 2 ? 'indigo' : 'violet';
                         const isRanked = position.status === 'ranked';
                         
-                        // Debug specific Open Singles position
-                        if (position.division === 'open' && position.format === 'singles') {
-                          const calculatedWidth = position.matchCount === 0 ? 0 : Math.min(100, Math.max(5, (position.matchCount / position.requiredMatches) * 100));
-                          console.log('Open Singles data:', position);
-                          console.log('Progress calculation:', position.matchCount, '/', position.requiredMatches, '=', (position.matchCount / position.requiredMatches) * 100 + '%');
-                          console.log('Final width value:', calculatedWidth + '%');
-                          console.log('Color scheme:', colorScheme);
-                        }
-                        
+
                         return (
                           <motion.div 
                             key={`${position.division}-${position.format}`}
@@ -525,9 +517,12 @@ export default function PassportDashboard() {
                             {!isRanked && (
                               <div className={`mt-2 rounded-full h-1.5 overflow-hidden bg-gray-200`}>
                                 <div 
-                                  className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
+                                  className="h-full transition-all duration-1000 ease-out"
                                   style={{ 
-                                    width: `${position.matchCount === 0 ? 0 : Math.min(100, Math.max(5, (position.matchCount / position.requiredMatches) * 100))}%`
+                                    width: `${position.matchCount === 0 ? 0 : Math.min(100, Math.max(5, (position.matchCount / position.requiredMatches) * 100))}%`,
+                                    backgroundColor: colorScheme === 'purple' ? '#a855f7' :
+                                                   colorScheme === 'blue' ? '#3b82f6' :
+                                                   colorScheme === 'indigo' ? '#6366f1' : '#8b5cf6'
                                   }}
                                 />
                               </div>
