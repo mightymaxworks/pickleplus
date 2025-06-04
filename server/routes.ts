@@ -465,8 +465,17 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         categories,
         totalPlayers: 28470, // International competitive player pool
         lastUpdated: new Date(),
+        totalPoints, // Sum of all category points (should be 54)
         userDivision: ageDivision,
-        userSkillLevel: duprRating > 0 ? `${duprRating} DUPR` : 'Unrated'
+        userSkillLevel: duprRating > 0 ? `${duprRating} DUPR` : 'Unrated',
+        systemType: 'Hybrid', // Smart Point Weighting system
+        breakdown: {
+          totalMatches: userMatches.length,
+          wins: userMatches.filter(m => m.winnerId === userId).length,
+          tournaments: 0, // Will be calculated when tournament data is available
+          leagues: 0,
+          casual: userMatches.length
+        }
       };
 
       res.json(rankingData);
