@@ -40,7 +40,7 @@ export function StandardLayout({
   headerProps = {}
 }: StandardLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 mt-[-41px] mb-[-41px]">
       {/* Standard Header */}
       <AppHeader
         hideSearch={hideSearch}
@@ -49,12 +49,10 @@ export function StandardLayout({
         onLogout={onLogout}
         {...headerProps}
       />
-      
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 pt-0 pb-2 relative z-10 flex-1 mt-16">
         {children}
       </main>
-      
       {/* Mobile Navigation */}
       {!hideMobileNav && <MobileNavigation />}
     </div>

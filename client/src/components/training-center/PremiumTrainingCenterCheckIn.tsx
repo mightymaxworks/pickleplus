@@ -93,14 +93,14 @@ export default function PremiumTrainingCenterCheckIn() {
       setCheckedInCenter(data);
       toast({
         title: "🏆 Elite Access Granted",
-        description: `Welcome to ${data.center.name}! Select your preferred coach to begin your premium training experience.`,
+        description: `Welcome to ${data.center.name}! Select your preferred coach to begin your Player Development Hub training experience.`,
       });
       setQrCode('');
     },
     onError: (error: any) => {
       toast({
         title: "Access Denied",
-        description: error.message || "Unable to access training facility",
+        description: error.message || "Unable to access Player Development Hub facility",
         variant: "destructive"
       });
     }
@@ -122,7 +122,7 @@ export default function PremiumTrainingCenterCheckIn() {
       queryClient.invalidateQueries({ queryKey: ['/api/training-center/session/active/1'] });
       toast({
         title: "🎯 Session Activated",
-        description: `Your premium training session with ${data.session.coach} has begun!`,
+        description: `Your Player Development Hub training session with ${data.session.coach} has begun!`,
       });
       setCheckedInCenter(null);
     },
@@ -162,12 +162,12 @@ export default function PremiumTrainingCenterCheckIn() {
           <div className="inline-flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-white/50">
             <Building2 className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Pickle+ Training Hubs
+              Player Development Hub
             </h1>
             <Sparkles className="h-6 w-6 text-amber-500" />
           </div>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Connect with certified coaches at premier pickleball facilities for personalized training
+            Connect with certified coaches at Player Development Hub facilities for personalized training
           </p>
         </div>
 
@@ -311,7 +311,7 @@ export default function PremiumTrainingCenterCheckIn() {
               <div>
                 <CardTitle className="text-2xl text-slate-800">Facility Access</CardTitle>
                 <CardDescription className="text-slate-600">
-                  Scan your facility QR code to begin your premium training experience
+                  Scan your facility QR code to begin your Player Development Hub training experience
                 </CardDescription>
               </div>
             </CardHeader>
@@ -336,7 +336,7 @@ export default function PremiumTrainingCenterCheckIn() {
                   ) : (
                     <div className="flex items-center space-x-2">
                       <Shield className="h-5 w-5" />
-                      <span>Access Premium Facility</span>
+                      <span>Access Player Development Hub</span>
                     </div>
                   )}
                 </Button>
@@ -348,7 +348,7 @@ export default function PremiumTrainingCenterCheckIn() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-800 flex items-center space-x-2">
                   <Building2 className="h-5 w-5 text-blue-600" />
-                  <span>Available Training Hubs</span>
+                  <span>Available Development Centers</span>
                 </h3>
                 <div className="grid gap-3">
                   {centers?.centers?.map((center: any) => (
