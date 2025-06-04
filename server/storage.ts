@@ -38,6 +38,7 @@ export interface IStorage {
   getMatchesByUser(userId: number): Promise<Match[]>;
   getMatchStats(userId: number, timeRange?: string): Promise<any>;
   getPicklePoints(userId: number): Promise<number>;
+  getTournamentParticipationByUser(userId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -143,6 +144,26 @@ export class DatabaseStorage implements IStorage {
   async getPicklePoints(userId: number): Promise<number> {
     const user = await this.getUser(userId);
     return user?.picklePoints || 0;
+  }
+
+  async getTournamentParticipationByUser(userId: number): Promise<any[]> {
+    // Query tournament registrations for the user
+    const registrations = await db.select()
+      .from(tournaments)
+      .where(sql`${tournaments.id} IN (
+        SELECT tournament_id FROM tournament_registrations 
+        WHERE user_id = ${userId}
+      )`)
+      .limit(50);
+    
+    return registrations.map(tournament => ({
+      tournamentId: tournament.id,
+      tournamentName: tournament.name,
+      division: tournament.division,
+      format: tournament.format,
+      startDate: tournament.startDate,
+      level: tournament.level || 'local'
+    }));
   }
 }
 
