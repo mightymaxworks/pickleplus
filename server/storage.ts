@@ -118,7 +118,7 @@ export class DatabaseStorage implements IStorage {
   async getMatchesByUser(userId: number): Promise<Match[]> {
     const userMatches = await db.select()
       .from(matches)
-      .where(or(eq(matches.player1Id, userId), eq(matches.player2Id, userId)))
+      .where(or(eq(matches.playerOneId, userId), eq(matches.playerTwoId, userId)))
       .orderBy(desc(matches.createdAt))
       .limit(50);
     return userMatches;
