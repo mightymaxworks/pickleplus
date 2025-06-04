@@ -53,14 +53,10 @@ export function useTotalRankingPoints(userId?: number) {
     staleTime: 30000, // Cache for 30 seconds
     refetchOnWindowFocus: false,
     select: (data) => {
-      // Calculate total points from all categories
-      const totalPoints = data.allCategories.reduce((sum, category) => {
-        return sum + category.rankingPoints;
-      }, 0);
-      
+      // Use the pre-calculated total from API
       return {
         ...data,
-        totalRankingPoints: totalPoints
+        totalRankingPoints: data.rankingPoints
       };
     }
   });

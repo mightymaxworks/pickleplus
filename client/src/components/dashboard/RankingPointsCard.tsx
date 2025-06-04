@@ -20,8 +20,8 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
     );
   }
 
-  // Display the ranking points directly from API
-  const totalPoints = rankingData?.rankingPoints || 0;
+  // Use the total calculated by the hook, or fall back to API value
+  const totalPoints = rankingData?.totalRankingPoints || rankingData?.rankingPoints || 0;
   
   return (
     <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 shadow-lg">
