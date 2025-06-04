@@ -95,11 +95,20 @@ export default function PassportDashboard() {
     enabled: !!user
   });
 
-  // Fetch PCP Global Ranking data 
+  // Fetch PCP Global Ranking data using new age-division system
+  const currentYear = new Date().getFullYear();
+  const userAge = user?.yearOfBirth ? currentYear - user.yearOfBirth : 0;
+  const ageDivision = userAge >= 35 ? '35plus' : '19plus';
+  
   const { data: pcpRankingData } = useQuery({
-    queryKey: ['pcp-ranking', user?.id],
+    queryKey: ['multi-rankings-position', user?.id, 'singles', ageDivision, 'age-division-v1'],
     queryFn: async () => {
-      const response = await fetch(`/api/pcp-ranking/${user?.id}`, {
+      const params = new URLSearchParams({
+        userId: user?.id?.toString() || '',
+        format: 'singles',
+        ageDivision: ageDivision
+      });
+      const response = await fetch(`/api/multi-rankings/position?${params.toString()}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch PCP rankings');
