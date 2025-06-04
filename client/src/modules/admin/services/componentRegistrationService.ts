@@ -71,11 +71,13 @@ export function registerBounceComponents() {
  */
 export function registerSystemToolsComponents() {
   try {
-    // Import and use the registerSystemItems function to directly register all system nav items
-    const { registerSystemItems } = require('../components/system/SystemToolsNavItems');
-    registerSystemItems();
-    
-    console.log('[Admin] System tools components initialized');
+    // Use dynamic import for browser compatibility
+    import('../components/system/SystemToolsNavItems').then(({ registerSystemItems }) => {
+      registerSystemItems();
+      console.log('[Admin] System tools components initialized');
+    }).catch(error => {
+      console.error('[Admin] Error registering system tools components:', error);
+    });
   } catch (error) {
     console.error('[Admin] Error registering system tools components:', error);
   }

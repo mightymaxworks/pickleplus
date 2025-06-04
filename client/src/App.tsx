@@ -323,6 +323,13 @@ export default function App() {
                     pageTitle="Your Pickleball Journey"
                   />
                   
+                  {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management */}
+                  <ProtectedRouteWithLayout
+                    path="/training-center"
+                    component={TrainingCenterPage}
+                    pageTitle="Training Center"
+                  />
+                  
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
                   <Route path="/roles/demo">
                     {() => <RoleProtectedRoute component={RoleProtectedDemoPage} path="/roles/demo" />}

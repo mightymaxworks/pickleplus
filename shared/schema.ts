@@ -1739,6 +1739,5 @@ export {
   SessionType,
   SessionStatus,
   ChallengeCategory,
-  SkillLevel,
-  BadgeType
+  SkillLevel
 };

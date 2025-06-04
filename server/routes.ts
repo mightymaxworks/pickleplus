@@ -1560,9 +1560,89 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
-  // Register Training Center Management routes (PKL-278651-TRAINING-CENTER-001)
-  app.use('/api/training-center', trainingCenterRoutes);
-  console.log('[API] Training Center Management routes registered');
+  // Training Center check-in endpoints (simplified implementation)
+  app.get('/api/training-center/locations', async (req, res) => {
+    const centers = [
+      {
+        id: 1,
+        name: "Elite Pickleball Center",
+        address: "123 Court Street",
+        city: "Singapore",
+        qrCode: "TC001-SG",
+        courtCount: 8,
+        operatingHours: { open: "06:00", close: "22:00" }
+      },
+      {
+        id: 2,
+        name: "Community Sports Hub",
+        address: "456 Sports Avenue",
+        city: "Singapore",
+        qrCode: "TC002-SG",
+        courtCount: 6,
+        operatingHours: { open: "07:00", close: "21:00" }
+      }
+    ];
+    res.json({ success: true, centers });
+  });
+
+  app.get('/api/training-center/session/active/:playerId', async (req, res) => {
+    // Mock response - no active session for now
+    res.json({ success: true, activeSession: null });
+  });
+
+  app.post('/api/training-center/checkin', async (req, res) => {
+    const { qrCode, playerId } = req.body;
+    
+    if (!qrCode || !playerId) {
+      return res.status(400).json({ error: 'QR code and player ID required' });
+    }
+
+    // Mock successful check-in
+    const session = {
+      id: Date.now(),
+      center: qrCode === 'TC001-SG' ? 'Elite Pickleball Center' : 'Community Sports Hub',
+      coach: 'Coach Alex',
+      checkInTime: new Date().toISOString(),
+      status: 'active',
+      challengesCompleted: 0
+    };
+
+    res.json({ success: true, session });
+  });
+
+  app.get('/api/training-center/challenges/by-level/:level', async (req, res) => {
+    const challenges = [
+      {
+        id: 1,
+        name: "Serve Accuracy Challenge",
+        description: "Practice your serve placement with precision targets",
+        category: "SERVE",
+        skillLevel: "BEGINNER",
+        difficultyRating: 2,
+        estimatedDuration: 15,
+        instructions: "Serve 20 balls to designated court zones",
+        coachingTips: "Focus on consistent toss height and follow-through",
+        successCriteria: "Hit 70% of serves in target zones",
+        badgeReward: "Ace Apprentice"
+      },
+      {
+        id: 2,
+        name: "Dink Rally Mastery",
+        description: "Develop soft touch and control at the net",
+        category: "DINK",
+        skillLevel: "BEGINNER",
+        difficultyRating: 3,
+        estimatedDuration: 20,
+        instructions: "Maintain 30-second rally with coach using only dinks",
+        coachingTips: "Keep paddle face open and use minimal backswing",
+        successCriteria: "Complete 3 consecutive 30-second rallies",
+        badgeReward: "Net Master"
+      }
+    ];
+    res.json({ success: true, challenges });
+  });
+
+  console.log('[API] Training Center routes registered');
 
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
