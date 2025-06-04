@@ -44,10 +44,12 @@ const casualMatchSchema = z.object({
 type CasualMatchFormData = z.infer<typeof casualMatchSchema>;
 
 interface CasualMatchRecorderProps {
+  onSuccess?: (data: any) => void;
+  prefilledPlayer?: any;
   onMatchRecorded?: () => void;
 }
 
-export function CasualMatchRecorder({ onMatchRecorded }: CasualMatchRecorderProps) {
+export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorded }: CasualMatchRecorderProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<{ id: number; name: string } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -147,9 +149,11 @@ export function CasualMatchRecorder({ onMatchRecorded }: CasualMatchRecorderProp
             <div className="space-y-2">
               <label className="text-sm font-medium">Opponent</label>
               <PlayerSearchInput
-                onPlayerSelect={(player) => {
-                  setSelectedOpponent({ id: player.id, name: player.displayName || player.username });
-                  form.setValue('opponentId', player.id);
+                onPlayerSelected={(player) => {
+                  if (player) {
+                    setSelectedOpponent({ id: player.id, name: player.displayName || player.username });
+                    form.setValue('opponentId', player.id);
+                  }
                 }}
                 placeholder="Search for your opponent..."
               />

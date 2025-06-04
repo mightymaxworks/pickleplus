@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import { CasualMatchRecorder } from '@/components/match/CasualMatchRecorder';
 import { PostMatchAssessment } from '@/components/match/PostMatchAssessment';
 import { 
   Card, 
@@ -220,7 +220,7 @@ export default function RecordMatchPage() {
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardContent className="p-0">
               {/* The actual match recording form */}
-              <QuickMatchRecorder onSuccess={handleMatchComplete} prefilledPlayer={prefilledPlayer} />
+              <CasualMatchRecorder onSuccess={handleMatchComplete} prefilledPlayer={prefilledPlayer} />
             </CardContent>
           </Card>
         )}
