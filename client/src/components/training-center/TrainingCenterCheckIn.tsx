@@ -17,7 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   QrCode, 
   MapPin, 
-  Clock, 
+  Clock,
+  Users, 
   User, 
   Trophy, 
   Target,
@@ -516,6 +517,64 @@ export default function TrainingCenterCheckIn() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Coach Selection Interface */}
+      {checkedInCenter && (
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-800">
+              <Users className="h-5 w-5" />
+              Select Your Coach - {checkedInCenter.center.name}
+            </CardTitle>
+            <CardDescription className="text-green-700">
+              Choose your preferred coach to begin your training session
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              {checkedInCenter.availableCoaches.map((coach: Coach) => (
+                <Card key={coach.id} className="p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{coach.name}</h3>
+                      {coach.specializations && coach.specializations.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-1">Specializations:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {coach.specializations.map((spec, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                              >
+                                {spec}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {coach.hourlyRate && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          Rate: ${coach.hourlyRate}/hour
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => handleCoachSelection(coach)}
+                      disabled={coachSelectionMutation.isPending}
+                      className="ml-4"
+                    >
+                      {coachSelectionMutation.isPending && selectedCoach?.id === coach.id
+                        ? 'Starting Session...'
+                        : 'Select Coach'
+                      }
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -48,6 +48,8 @@ export interface IStorage {
   getTrainingCenterByQrCode(qrCode: string): Promise<any>;
   getActiveTrainingCenters(): Promise<any[]>;
   getAvailableCoach(centerId: number): Promise<any>;
+  getAvailableCoachesAtCenter(centerId: number): Promise<any[]>;
+  getTrainingCenter(centerId: number): Promise<any>;
   getActiveSessionForPlayer(playerId: number): Promise<any>;
   createCoachingSession(sessionData: any): Promise<any>;
   getCoachingSessionById(sessionId: number): Promise<any>;
@@ -242,6 +244,49 @@ export class DatabaseStorage implements IStorage {
       LIMIT 1
     `);
     return coach;
+  }
+
+  async getAvailableCoachesAtCenter(centerId: number): Promise<any[]> {
+    // Return mock coaches with specializations for testing
+    return [
+      {
+        id: 2,
+        displayName: "Coach Alex",
+        username: "coach_alex",
+        specializations: ["Forehand Technique", "Strategy", "Doubles Play"],
+        hourlyRate: 75
+      },
+      {
+        id: 3,
+        displayName: "Coach Maria",
+        username: "coach_maria", 
+        specializations: ["Serve Development", "Mental Game", "Tournament Prep"],
+        hourlyRate: 85
+      },
+      {
+        id: 4,
+        displayName: "Coach David",
+        username: "coach_david",
+        specializations: ["Backhand Fundamentals", "Footwork", "Beginner Training"],
+        hourlyRate: 65
+      }
+    ];
+  }
+
+  async getTrainingCenter(centerId: number): Promise<any> {
+    // Return mock training center data
+    return {
+      id: centerId,
+      name: "Community Sports Hub",
+      address: "123 Sports Complex Drive",
+      city: "Singapore",
+      qrCode: "TC001-SG",
+      courtCount: 6,
+      operatingHours: {
+        weekday: "6:00 AM - 10:00 PM",
+        weekend: "7:00 AM - 9:00 PM"
+      }
+    };
   }
 
   async getActiveSessionForPlayer(playerId: number): Promise<any> {
