@@ -465,6 +465,12 @@ export default function PassportDashboard() {
                                           index % 4 === 2 ? 'indigo' : 'violet';
                         const isRanked = position.status === 'ranked';
                         
+                        // Debug specific Open Singles position
+                        if (position.division === 'open' && position.format === 'singles') {
+                          console.log('Open Singles data:', position);
+                          console.log('Progress calculation:', position.matchCount, '/', position.requiredMatches, '=', (position.matchCount / position.requiredMatches) * 100 + '%');
+                        }
+                        
                         return (
                           <motion.div 
                             key={`${position.division}-${position.format}`}
