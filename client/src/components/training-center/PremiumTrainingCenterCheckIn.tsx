@@ -80,6 +80,10 @@ export default function PremiumTrainingCenterCheckIn() {
   const [showCoachDetails, setShowCoachDetails] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
+  const [showGoalSetting, setShowGoalSetting] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<any | null>(null);
+  const [sessionGoals, setSessionGoals] = useState<string[]>([]);
+  const [customGoal, setCustomGoal] = useState('');
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -234,8 +238,40 @@ export default function PremiumTrainingCenterCheckIn() {
     checkInMutation.mutate(qrCode);
   };
 
-  const handleCoachSelection = (coachId: number) => {
-    coachSelectionMutation.mutate(coachId);
+  const handleCoachSelection = (coach: any) => {
+    setSelectedCoach(coach);
+    setShowGoalSetting(true);
+  };
+
+  const predefinedGoals = [
+    "Improve Backhand Technique",
+    "Master Third Shot Drop",
+    "Enhance Net Play",
+    "Develop Serve Consistency",
+    "Footwork & Court Positioning",
+    "Strategy & Shot Selection",
+    "Doubles Communication",
+    "Power & Spin Development"
+  ];
+
+  const handleGoalToggle = (goal: string) => {
+    setSessionGoals(prev => 
+      prev.includes(goal) 
+        ? prev.filter(g => g !== goal)
+        : [...prev, goal]
+    );
+  };
+
+  const handleStartSession = () => {
+    const finalGoals = [...sessionGoals];
+    if (customGoal.trim()) {
+      finalGoals.push(customGoal.trim());
+    }
+    
+    coachSelectionMutation.mutate({
+      coachId: selectedCoach.id,
+      goals: finalGoals
+    });
   };
 
   const activeSession = activeSessionData?.activeSession;
@@ -428,26 +464,133 @@ export default function PremiumTrainingCenterCheckIn() {
                             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCoachSelection(coach.id);
+                              handleCoachSelection(coach);
                             }}
-                            disabled={coachSelectionMutation.isPending}
                           >
-                            {coachSelectionMutation.isPending ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                                Starting...
-                              </>
-                            ) : (
-                              <>
-                                <Play className="w-4 h-4 mr-2" />
-                                Begin Session
-                              </>
-                            )}
+                            <Target className="w-4 h-4 mr-2" />
+                            Set Session Goals
                           </Button>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Session Goal Setting */}
+        {showGoalSetting && selectedCoach && (
+          <Card className="bg-white/90 backdrop-blur-sm border-slate-200/50 shadow-2xl">
+            <CardHeader className="bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-white/20 rounded-full">
+                    <Target className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Session Goals</CardTitle>
+                    <CardDescription className="text-emerald-100">
+                      Set your training objectives with {selectedCoach.fullName || selectedCoach.name}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowGoalSetting(false);
+                    setSelectedCoach(null);
+                    setSessionGoals([]);
+                    setCustomGoal('');
+                  }}
+                  className="text-white hover:bg-white/20"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center space-x-2">
+                    <CheckSquare className="h-5 w-5 text-emerald-600" />
+                    <span>Select Training Focus Areas</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {predefinedGoals.map((goal) => (
+                      <Button
+                        key={goal}
+                        variant={sessionGoals.includes(goal) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleGoalToggle(goal)}
+                        className={`text-left justify-start h-auto p-3 ${
+                          sessionGoals.includes(goal)
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          {sessionGoals.includes(goal) ? (
+                            <CheckCircle className="h-4 w-4" />
+                          ) : (
+                            <Circle className="h-4 w-4" />
+                          )}
+                          <span className="text-sm font-medium">{goal}</span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center space-x-2">
+                    <PlusCircle className="h-5 w-5 text-blue-600" />
+                    <span>Custom Goal (Optional)</span>
+                  </h3>
+                  <Input
+                    placeholder="Describe any specific skill or technique you'd like to work on..."
+                    value={customGoal}
+                    onChange={(e) => setCustomGoal(e.target.value)}
+                    className="bg-white border-slate-200 focus:border-emerald-400 focus:ring-emerald-400/20"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                  <div className="text-sm text-slate-600">
+                    {sessionGoals.length + (customGoal.trim() ? 1 : 0)} goal(s) selected
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowGoalSetting(false);
+                        setSelectedCoach(null);
+                        setSessionGoals([]);
+                        setCustomGoal('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleStartSession}
+                      disabled={coachSelectionMutation.isPending || (sessionGoals.length === 0 && !customGoal.trim())}
+                      className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold"
+                    >
+                      {coachSelectionMutation.isPending ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Starting Session...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <Play className="h-4 w-4" />
+                          <span>Begin Training Session</span>
+                        </div>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
