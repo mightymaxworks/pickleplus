@@ -2,6 +2,7 @@ import {
   users, type User, type InsertUser,
   profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
   matches, type Match, type InsertMatch,
+  tournaments,
   type XpTransaction, type InsertXpTransaction,
   activities, type InsertActivity
 } from "@shared/schema";
