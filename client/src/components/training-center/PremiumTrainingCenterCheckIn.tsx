@@ -283,6 +283,16 @@ export default function PremiumTrainingCenterCheckIn() {
     });
   };
 
+  const handleClassJoin = (coach: any, classItem: any) => {
+    coachSelectionMutation.mutate({
+      coachId: coach.id,
+      goals: classItem.goals,
+      sessionType: 'group_class',
+      className: classItem.name,
+      classTime: classItem.time
+    });
+  };
+
   const activeSession = activeSessionData?.activeSession;
 
   return (
@@ -453,32 +463,81 @@ export default function PremiumTrainingCenterCheckIn() {
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex space-x-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedCoachForDetails(coach);
-                              setShowCoachDetails(true);
-                            }}
-                          >
-                            <User className="w-4 h-4 mr-2" />
-                            Read More
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCoachSelection(coach);
-                            }}
-                          >
-                            <Target className="w-4 h-4 mr-2" />
-                            Set Session Goals
-                          </Button>
+                        {/* Session Type Selection */}
+                        <div className="space-y-3">
+                          <h5 className="text-sm font-medium text-slate-700">Available Sessions:</h5>
+                          
+                          {/* Individual Coaching */}
+                          <div className="border border-slate-200 rounded-lg p-3 hover:bg-blue-50 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-slate-800">1-on-1 Coaching</div>
+                                <div className="text-sm text-slate-600">Personalized training with custom goals</div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCoachSelection(coach);
+                                }}
+                                className="text-blue-700 border-blue-200 hover:bg-blue-50"
+                              >
+                                <Target className="w-4 h-4 mr-2" />
+                                Set Goals
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Group Classes */}
+                          <div className="space-y-2">
+                            {[
+                              { name: "Dinking Fundamentals", goals: ["Master Third Shot Drop", "Enhance Net Play", "Strategy & Shot Selection"], time: "2:00 PM" },
+                              { name: "Power & Spin Workshop", goals: ["Power & Spin Development", "Improve Backhand Technique", "Develop Serve Consistency"], time: "4:00 PM" }
+                            ].map((classItem, idx) => (
+                              <div key={idx} className="border border-slate-200 rounded-lg p-3 hover:bg-emerald-50 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium text-slate-800 flex items-center space-x-2">
+                                      <span>{classItem.name}</span>
+                                      <Badge variant="secondary" className="text-xs">{classItem.time}</Badge>
+                                    </div>
+                                    <div className="text-xs text-slate-600 mt-1">
+                                      Focus: {classItem.goals.slice(0, 2).join(", ")}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleClassJoin(coach, classItem);
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  >
+                                    <Users className="w-4 h-4 mr-2" />
+                                    Join Class
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Coach Details */}
+                          <div className="pt-2 border-t border-slate-200">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full text-slate-600 hover:text-slate-800"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCoachForDetails(coach);
+                                setShowCoachDetails(true);
+                              }}
+                            >
+                              <User className="w-4 h-4 mr-2" />
+                              View Coach Profile
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
