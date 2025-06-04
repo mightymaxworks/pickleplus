@@ -44,6 +44,7 @@ import PhotoUploadModal from '@/components/PhotoUploadModal';
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
+import { useAllRankingPositions } from '@/hooks/use-all-ranking-positions';
 import { useQuery } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 

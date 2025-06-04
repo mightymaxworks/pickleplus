@@ -7,8 +7,51 @@
 
 import { Router, Request, Response } from "express";
 import { isAuthenticated } from "../auth";
+import { AgeDivisionRankingService } from "../services/age-division-ranking-service";
+import { storage } from "../storage";
 
 const router = Router();
+
+/**
+ * Get player's ranking position across all eligible divisions and formats
+ * GET /api/multi-rankings/all-positions
+ */
+router.get("/all-positions", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const ageDivisionService = new AgeDivisionRankingService();
+    const allPositions = await ageDivisionService.getAllPlayerRankingPositions(userId);
+
+    const formattedPositions = allPositions.map(position => ({
+      division: position.division,
+      format: position.format,
+      status: position.isEligible ? 'ranked' : 'not_ranked',
+      rank: position.rank,
+      rankingPoints: position.rankingPoints,
+      matchCount: position.matchCount,
+      requiredMatches: 10,
+      totalPlayersInDivision: position.totalPlayersInDivision,
+      lastMatchDate: position.lastMatchDate,
+      needsMatches: position.isEligible ? 0 : (10 - position.matchCount)
+    }));
+
+    console.log(`[API][MultiRankings] All positions calculated for user ${userId}:`, formattedPositions.length);
+
+    return res.json({
+      success: true,
+      data: formattedPositions,
+      totalCategories: formattedPositions.length
+    });
+
+  } catch (error) {
+    console.error('[API][MultiRankings] Error getting all ranking positions:', error);
+    return res.status(500).json({ error: 'Failed to get ranking positions' });
+  }
+});
 
 /**
  * PKL-278651-RANK-0004-THRESH - Ranking Table Threshold System

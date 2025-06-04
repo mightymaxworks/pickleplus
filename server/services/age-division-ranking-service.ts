@@ -187,6 +187,43 @@ export class AgeDivisionRankingService {
   }
 
   /**
+   * Get player's ranking position across all eligible divisions and formats
+   */
+  async getAllPlayerRankingPositions(userId: number): Promise<PlayerRankingPosition[]> {
+    const user = await storage.getUser(userId);
+    if (!user || !user.yearOfBirth) {
+      return [];
+    }
+
+    const userAge = new Date().getFullYear() - user.yearOfBirth;
+    const eligibleDivisions = ['open']; // Everyone can play open
+    
+    // Add age-restricted divisions based on user's age
+    if (userAge >= 35) eligibleDivisions.push('35+');
+    if (userAge >= 50) eligibleDivisions.push('50+');
+    if (userAge >= 60) eligibleDivisions.push('60+');
+    if (userAge >= 70) eligibleDivisions.push('70+');
+
+    // Determine gender-based formats
+    const formats = user.gender === 'female' 
+      ? ['womens_singles', 'womens_doubles', 'mixed_doubles']
+      : ['mens_singles', 'mens_doubles', 'mixed_doubles'];
+
+    const allPositions: PlayerRankingPosition[] = [];
+
+    // Calculate ranking for each eligible division/format combination
+    for (const division of eligibleDivisions) {
+      for (const format of formats) {
+        const position = await this.getPlayerRankingPosition(userId, division, format);
+        allPositions.push(position);
+      }
+    }
+
+    // Sort by ranking points descending
+    return allPositions.sort((a, b) => b.rankingPoints - a.rankingPoints);
+  }
+
+  /**
    * Get player's ranking position in a specific division and format
    */
   async getPlayerRankingPosition(
