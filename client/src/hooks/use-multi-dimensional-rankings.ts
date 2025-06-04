@@ -97,7 +97,8 @@ export function useMultiDimensionalLeaderboard(
       offset,
       tier,
       minRating,
-      maxRating
+      maxRating,
+      'age-division-v1' // Cache buster for new age-division ranking system
     ],
     queryFn: async ({ queryKey }) => {
       const url = queryKey[0] as string;
@@ -148,7 +149,7 @@ export function useUserRankingPosition(
       format, 
       ageDivision,
       ratingTierId,
-      'v2' // Cache buster to force fresh data after backend fix
+      'age-division-v1' // Cache buster for new age-division ranking system
     ],
     queryFn: async ({ queryKey }) => {
       const url = queryKey[0] as string;

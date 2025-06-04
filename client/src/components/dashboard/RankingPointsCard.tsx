@@ -8,11 +8,21 @@ interface RankingPointsCardProps {
 }
 
 export function RankingPointsCard({ user }: RankingPointsCardProps) {
-  // Direct API call without complex caching
+  // Use new age-division ranking system - determine user's natural age division
+  const currentYear = new Date().getFullYear();
+  const userAge = user?.yearOfBirth ? currentYear - user.yearOfBirth : 0;
+  const ageDivision = userAge >= 35 ? '35plus' : '19plus';
+  
+  // Direct API call using new age-division system
   const { data: rankingData, isLoading } = useQuery({
-    queryKey: ['pcp-ranking-direct', user?.id, Math.random()], // Always fresh
+    queryKey: ['multi-rankings-position', user?.id, 'singles', ageDivision, 'age-division-v1'], 
     queryFn: async () => {
-      const response = await fetch(`/api/pcp-ranking/${user?.id}`);
+      const params = new URLSearchParams({
+        userId: user?.id?.toString() || '',
+        format: 'singles',
+        ageDivision: ageDivision
+      });
+      const response = await fetch(`/api/multi-rankings/position?${params.toString()}`);
       return response.json();
     },
     enabled: !!user?.id,
@@ -30,8 +40,11 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
     );
   }
 
-  // Direct use of API response
+  // Extract points from new age-division ranking system
   const totalPoints = rankingData?.rankingPoints || 0;
+  const status = rankingData?.status;
+  const requiredMatches = rankingData?.requiredMatches || 10;
+  const currentMatches = rankingData?.matchCount || 0;
   
   return (
     <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 shadow-lg">
@@ -47,7 +60,17 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
           <div className="text-4xl font-bold mb-2">
             {totalPoints}
           </div>
-          <div className="text-sm opacity-90">Total Ranking Points</div>
+          <div className="text-sm opacity-90">
+            {status === 'not_ranked' 
+              ? `${ageDivision.toUpperCase()} Division (${currentMatches}/${requiredMatches} matches)`
+              : `${ageDivision.toUpperCase()} Division Points`
+            }
+          </div>
+          {status === 'not_ranked' && (
+            <div className="mt-2 text-xs opacity-75">
+              Need {requiredMatches - currentMatches} more matches to be ranked
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
