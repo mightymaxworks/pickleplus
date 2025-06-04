@@ -124,7 +124,7 @@ export class PCPGlobalRankingCalculator {
     let basePoints = result.isWin ? matchTypePoints.win : matchTypePoints.loss;
     
     // Apply anti-gaming diminishing returns for frequent matches against same opponent
-    if (result.matchType === 'casual' && opponentMatchCount > 0) {
+    if (result.matchType === 'casual' && opponentMatchCount > 2) {
       const reductionFactor = this.getOpponentFrequencyReduction(opponentMatchCount);
       basePoints *= reductionFactor;
     }

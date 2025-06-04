@@ -455,7 +455,7 @@ export default function PassportDashboard() {
                               </div>
                               {isRanked ? (
                                 <div className={`text-xs mb-1 text-${colorScheme}-700`}>
-                                  Tournaments: {categoryData.breakdown?.tournamentPoints || 0} • Matches: {categoryData.breakdown?.matchPoints || 0}
+                                  Tournaments: {categoryData.breakdown?.tournamentPoints || 0} • Matches: {(categoryData.breakdown?.casualMatchPoints || 0) + (categoryData.breakdown?.leagueMatchPoints || 0)}
                                 </div>
                               ) : (
                                 <div className={`text-xs mb-1 text-${colorScheme}-600`}>
