@@ -79,17 +79,31 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Player selection state
+  const [playerOneData, setPlayerOneData] = useState<UserSearchResult | null>(null);
   const [playerTwoData, setPlayerTwoData] = useState<UserSearchResult | null>(null);
   const [playerOnePartnerData, setPlayerOnePartnerData] = useState<UserSearchResult | null>(null);
   const [playerTwoPartnerData, setPlayerTwoPartnerData] = useState<UserSearchResult | null>(null);
   
-  // Current user as player one
-  const playerOneData = user ? {
+  // Check if user is admin or tournament director
+  const isAdmin = user?.isAdmin;
+  
+  // Initialize player one data based on admin status
+  const initialPlayerOneData = user && !isAdmin ? {
     id: user.id,
     displayName: user.displayName || user.username,
     username: user.username,
     avatarInitials: user.avatarInitials || undefined,
   } : null;
+
+  // Initialize player one data on component mount
+  useEffect(() => {
+    if (!isAdmin && user) {
+      setPlayerOneData(initialPlayerOneData);
+    }
+    if (prefilledPlayer) {
+      setPlayerTwoData(prefilledPlayer);
+    }
+  }, [user, isAdmin, prefilledPlayer]);
   
   // Initialize form
   const form = useForm<MatchFormValues>({
@@ -197,7 +211,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     if (totalGames === 1) {
       // Single game - compare scores directly
       return games[0].playerOneScore > games[0].playerTwoScore 
-        ? user?.id 
+        ? playerOneData?.id 
         : playerTwoData?.id;
     } else {
       // Multi-game - count wins
@@ -205,7 +219,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       const playerTwoWins = games.filter(g => g.playerTwoScore > g.playerOneScore).length;
       
       return playerOneWins > playerTwoWins 
-        ? user?.id 
+        ? playerOneData?.id 
         : playerTwoData?.id;
     }
   };
@@ -235,7 +249,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   
   // Form submission handler
   const handleSubmit = async () => {
-    if (!user || !playerTwoData) {
+    if (!user || !playerOneData || !playerTwoData) {
       toast({
         title: "Missing players",
         description: "Please select all required players",
@@ -480,26 +494,49 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           <div className="text-sm font-medium">Players</div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            {/* Your Side */}
+            {/* Player One Side */}
             <Card className="border-dashed">
               <CardHeader className="py-2 sm:py-3 px-3 sm:px-4">
-                <CardTitle className="text-sm font-medium">Your Side</CardTitle>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  Player One
+                  {isAdmin && (
+                    <Badge variant="secondary" className="text-xs">Admin Recording</Badge>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="py-2 px-3 sm:px-4">
-                {/* Current User (You) */}
-                <div className="flex items-center gap-2 sm:gap-3 mb-3">
-                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
-                    {playerOneData?.avatarInitials || playerOneData?.displayName?.charAt(0) || "Y"}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm sm:text-base">
-                      {playerOneData?.displayName || "You"}
+                {/* Player One Selection */}
+                {isAdmin ? (
+                  <DialogPlayerSelect
+                    buttonLabel={playerOneData 
+                      ? playerOneData.displayName || playerOneData.username
+                      : "Select Player One"
+                    }
+                    buttonVariant="outline"
+                    selectedUserId={playerOneData?.id}
+                    onSelect={(player) => {
+                      const event = new CustomEvent('player-selected', {
+                        detail: { field: 'playerOneData', player }
+                      });
+                      handlePlayerSelected(event);
+                    }}
+                    className="w-full justify-start mb-3"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
+                      {playerOneData?.avatarInitials || playerOneData?.displayName?.charAt(0) || "Y"}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      @{playerOneData?.username || "you"}
+                    <div>
+                      <div className="font-medium text-sm sm:text-base">
+                        {playerOneData?.displayName || "You"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        @{playerOneData?.username || "you"}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
                 
                 {/* Partner Selection (Doubles Only) */}
                 {formatType === "doubles" && (
