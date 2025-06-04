@@ -103,7 +103,7 @@ router.get("/leaderboard", async (req: Request, res: Response) => {
  * GET /api/multi-rankings/position
  */
 router.get("/position", async (req: Request, res: Response) => {
-  console.log("[API][CRITICAL][MultiRankings] Direct handler called, query:", req.query);
+  console.log("[API][CRITICAL][MultiRankings] Age-division ranking handler called, query:", req.query);
   
   try {
     // Extract the userId from the query parameters
@@ -124,79 +124,71 @@ router.get("/position", async (req: Request, res: Response) => {
     const format = req.query.format as string || 'singles';
     const ageDivision = req.query.ageDivision as string || '19plus';
     
-    // Import storage to get actual user data
-    const { storage } = await import("../storage");
-    const user = await storage.getUser(userId);
+    // Convert frontend divisions to backend divisions
+    const backendDivision = ageDivision === '19plus' ? '19+' :
+                           ageDivision === '35plus' ? '35+' :
+                           ageDivision === '50plus' ? '50+' :
+                           ageDivision === '60plus' ? '60+' :
+                           ageDivision === '70plus' ? '70+' : '19+';
     
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    console.log("[API][MultiRankings] Using age-division service for format:", format, "division:", backendDivision);
+    
+    // Import the age-division ranking service
+    const { ageDivisionRankingService } = await import("../services/age-division-ranking-service");
+    
+    // Get player's ranking position using the new service
+    const rankingPosition = await ageDivisionRankingService.getPlayerRankingPosition(
+      userId,
+      backendDivision,
+      format
+    );
+    
+    console.log("[API][MultiRankings] Ranking position calculated:", rankingPosition);
+    
+    // Check eligibility (10+ matches required)
+    if (!rankingPosition.isEligible) {
+      return res.json({
+        status: "not_ranked",
+        message: `Need ${10 - rankingPosition.matchCount} more matches to be ranked`,
+        requiresEnrollment: true,
+        format: format,
+        ageDivision: ageDivision,
+        matchCount: rankingPosition.matchCount,
+        requiredMatches: 10,
+        guidance: {
+          title: "Complete ranking requirements",
+          description: "Play more matches to qualify for rankings",
+          primaryAction: "Record matches",
+          primaryActionPath: "/matches/record",
+          secondaryAction: "Find opponents",
+          secondaryActionPath: "/players"
+        }
+      });
     }
-
-    // Get user's matches
-    const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
-    console.log(`[API][MultiRankings] Found ${userMatches.length} matches for user ${userId}`);
     
-    // Determine user's age division based on year of birth
-    const currentYear = new Date().getFullYear();
-    const userAge = user.yearOfBirth ? currentYear - user.yearOfBirth : null;
-    console.log(`[API][MultiRankings] User age: ${userAge} (born ${user.yearOfBirth})`);
-    
-    // Determine PRIMARY age division only
-    let primaryDivision = 'open';
-    if (userAge) {
-      if (userAge >= 60) primaryDivision = '60+';
-      else if (userAge >= 50) primaryDivision = '50+';
-      else if (userAge >= 35) primaryDivision = '35+';
-      else primaryDivision = 'open';
+    // Check for point decay
+    let statusMessage = "";
+    if (rankingPosition.decayFactor < 1.0) {
+      const decayPercentage = Math.round((1 - rankingPosition.decayFactor) * 100);
+      statusMessage = `${decayPercentage}% point decay due to inactivity`;
     }
-    console.log(`[API][MultiRankings] Primary division: ${primaryDivision}`);
     
-    // Map frontend format to backend format
-    let backendFormat = 'mens_singles';
-    if (format === 'singles') backendFormat = 'mens_singles';
-    else if (format === 'doubles') backendFormat = 'mens_doubles';
-    else if (format === 'mixed') backendFormat = 'mixed_doubles';
-    console.log(`[API][MultiRankings] Backend format: ${backendFormat} (from frontend: ${format})`);
-    
-    // Map frontend age division to backend division
-    let backendDivision = primaryDivision;
-    if (ageDivision === '19plus') backendDivision = 'open';
-    else if (ageDivision === '35plus') backendDivision = '35+';
-    else if (ageDivision === '50plus') backendDivision = '50+';
-    else if (ageDivision === '60plus') backendDivision = '60+';
-    console.log(`[API][MultiRankings] Backend division: ${backendDivision} (from frontend: ${ageDivision})`);
-    
-    // Calculate TOTAL display points across ALL categories (exactly like PCP ranking system)
-    let displayPoints = 0;
-    let weightedRankingPoints = 0;
-    
-    // Count points for each category separately for debugging
-    let singlesPoints = 0;
-    let doublesPoints = 0;
-    let mixedDoublesPoints = 0;
-    
-    for (const match of userMatches) {
-      console.log(`[API][MultiRankings] Checking match ${match.id}: formatType=${match.formatType}, matchType=${match.matchType}, winnerId=${match.winnerId}`);
-      
-      const isWinner = match.winnerId === userId;
-      const basePoints = isWinner ? 3 : 1; // Base casual match scoring
-      console.log(`[API][MultiRankings] Match ${match.id}: isWinner=${isWinner}, basePoints=${basePoints}`);
-      
-      // Count ALL matches regardless of selected format - this is the key fix
-      // Categorize matches for debugging breakdown
-      if (match.formatType === 'singles') {
-        singlesPoints += basePoints;
-        console.log(`[API][MultiRankings] Match ${match.id}: Added ${basePoints} to singles (total: ${singlesPoints})`);
-      } else if (match.formatType === 'doubles') {
-        doublesPoints += basePoints;
-        console.log(`[API][MultiRankings] Match ${match.id}: Added ${basePoints} to doubles (total: ${doublesPoints})`);
-      } else if (match.formatType === 'mixed_doubles') {
-        mixedDoublesPoints += basePoints;
-        console.log(`[API][MultiRankings] Match ${match.id}: Added ${basePoints} to mixed doubles (total: ${mixedDoublesPoints})`);
-      }
-      
-      // ALWAYS add to total display points (regardless of format filter)
-      displayPoints += basePoints;
+    // Return ranking position data
+    res.json({
+      userId: userId,
+      format: format,
+      ageDivision: ageDivision,
+      ratingTierId: 1,
+      rankingPoints: rankingPosition.rankingPoints,
+      rank: rankingPosition.rank,
+      totalPlayers: rankingPosition.totalPlayersInDivision,
+      skillRating: 4.5,
+      matchCount: rankingPosition.matchCount,
+      lastMatchDate: rankingPosition.lastMatchDate,
+      decayFactor: rankingPosition.decayFactor,
+      statusMessage: statusMessage,
+      isEligible: rankingPosition.isEligible
+    });
       
       // For ranking: Apply weighting based on match type
       let weightMultiplier = 1.0;
