@@ -1591,17 +1591,62 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   });
 
   app.post('/api/training-center/checkin', async (req, res) => {
-    const { qrCode, playerId } = req.body;
+    const { qrCode, playerId = 1 } = req.body;
     
-    if (!qrCode || !playerId) {
-      return res.status(400).json({ error: 'QR code and player ID required' });
+    if (!qrCode) {
+      return res.status(400).json({ error: 'QR code required' });
     }
 
-    // Mock successful check-in
+    // Find training center by QR code
+    const centerName = qrCode === 'TC001-SG' ? 'Elite Pickleball Center' : 'Community Sports Hub';
+    const center = {
+      id: qrCode === 'TC001-SG' ? 1 : 2,
+      name: centerName,
+      address: qrCode === 'TC001-SG' ? '123 Court Street' : '456 Sports Avenue',
+      city: 'Singapore'
+    };
+
+    // Return available coaches for selection
+    const availableCoaches = [
+      {
+        id: 2,
+        name: "Coach Alex",
+        specializations: ["Forehand Technique", "Strategy", "Doubles Play"],
+        hourlyRate: 75
+      },
+      {
+        id: 3,
+        name: "Coach Maria",
+        specializations: ["Serve Development", "Mental Game", "Tournament Prep"],
+        hourlyRate: 85
+      },
+      {
+        id: 4,
+        name: "Coach David",
+        specializations: ["Backhand Fundamentals", "Footwork", "Beginner Training"],
+        hourlyRate: 65
+      }
+    ];
+
+    res.json({ 
+      success: true, 
+      center,
+      availableCoaches 
+    });
+  });
+
+  app.post('/api/training-center/select-coach', async (req, res) => {
+    const { centerId, coachId, playerId = 1 } = req.body;
+    
+    if (!centerId || !coachId) {
+      return res.status(400).json({ error: 'Center ID and coach ID required' });
+    }
+
+    // Mock session creation
     const session = {
       id: Date.now(),
-      center: qrCode === 'TC001-SG' ? 'Elite Pickleball Center' : 'Community Sports Hub',
-      coach: 'Coach Alex',
+      center: centerId === 1 ? 'Elite Pickleball Center' : 'Community Sports Hub',
+      coach: coachId === 2 ? 'Coach Alex' : coachId === 3 ? 'Coach Maria' : 'Coach David',
       checkInTime: new Date().toISOString(),
       status: 'active',
       challengesCompleted: 0
