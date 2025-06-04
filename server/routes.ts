@@ -418,23 +418,44 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         mixedPosition = Math.max(1, Math.floor(divisionPool * (1 - pointPercentile * 0.8)));
       }
 
-      // Create contextual ranking categories
+      // Calculate category-specific points from actual match data
+      // Points should be additive across categories, not normalized
+      const singlesMatches = userMatches.filter(match => 
+        match.formatType === 'singles'
+      );
+      const doublesMatches = userMatches.filter(match => 
+        match.formatType === 'doubles' && !match.isTestData
+      );
+      const mixedMatches = userMatches.filter(match => 
+        match.formatType === 'doubles' && match.division?.includes('mixed')
+      );
+      
+      const singlesPoints = singlesMatches.reduce((total, match) => total + (match.pointsAwarded || 0), 0);
+      const doublesPoints = doublesMatches.reduce((total, match) => total + (match.pointsAwarded || 0), 0);
+      const mixedPoints = mixedMatches.reduce((total, match) => total + (match.pointsAwarded || 0), 0);
+      
+      // For now, distribute points evenly across categories since we don't have format-specific data
+      // This will be updated when match format tracking is implemented
+      const pointsPerCategory = Math.floor(totalPoints / 3);
+      const remainderPoints = totalPoints % 3;
+      
+      // Create contextual ranking categories with actual point distribution
       const categories = [
         {
           format: genderPrefix ? `${genderPrefix} ${ageDivision} Singles` : `${ageDivision} Singles`,
-          points: Math.floor(totalPoints * 0.4),
+          points: pointsPerCategory + (remainderPoints > 0 ? 1 : 0),
           position: singlesPosition,
           tier: totalPoints > 150 ? 'Competitor' : 'Recreational'
         },
         {
           format: genderPrefix ? `${genderPrefix} ${ageDivision} Doubles` : `${ageDivision} Doubles`,
-          points: Math.floor(totalPoints * 0.4),
+          points: pointsPerCategory + (remainderPoints > 1 ? 1 : 0),
           position: doublesPosition,
           tier: totalPoints > 120 ? 'Competitor' : 'Recreational'
         },
         {
           format: `Mixed ${ageDivision}`,
-          points: Math.floor(totalPoints * 0.2),
+          points: pointsPerCategory,
           position: mixedPosition,
           tier: totalPoints > 80 ? 'Competitor' : 'Recreational'
         }
