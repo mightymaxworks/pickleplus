@@ -1112,13 +1112,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           // Only count matches that belong to this specific category
           let matchBelongsToCategory = false;
           
-          // Check if match format matches category format
+          // Check if match format matches category format - strict categorization
           if (category.format === 'mens_singles' && match.formatType === 'singles') {
             matchBelongsToCategory = true;
           } else if (category.format === 'mens_doubles' && match.formatType === 'doubles') {
+            // Only count as mens_doubles if not explicitly mixed (we don't have mixed data yet)
             matchBelongsToCategory = true;
-          } else if (category.format === 'mixed_doubles' && match.formatType === 'doubles') {
-            // Count doubles matches in mixed_doubles category as well for cross-category aggregation
+          } else if (category.format === 'mixed_doubles' && match.formatType === 'mixed_doubles') {
+            // Only count matches that are explicitly marked as mixed doubles
             matchBelongsToCategory = true;
           }
           
@@ -1144,12 +1145,12 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           // Only count matches that belong to this specific category
           let matchBelongsToCategory = false;
           
-          // Check if match format matches category format
+          // Check if match format matches category format - strict categorization
           if (category.format === 'mens_singles' && match.formatType === 'singles') {
             matchBelongsToCategory = true;
           } else if (category.format === 'mens_doubles' && match.formatType === 'doubles') {
             matchBelongsToCategory = true;
-          } else if (category.format === 'mixed_doubles' && match.formatType === 'doubles') {
+          } else if (category.format === 'mixed_doubles' && match.formatType === 'mixed_doubles') {
             matchBelongsToCategory = true;
           }
           
