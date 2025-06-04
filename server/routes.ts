@@ -1560,7 +1560,9 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
-
+  // Register Training Center Management routes (PKL-278651-TRAINING-CENTER-001)
+  app.use('/api/training-center', trainingCenterRoutes);
+  console.log('[API] Training Center Management routes registered');
 
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });

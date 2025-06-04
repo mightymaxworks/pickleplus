@@ -1709,3 +1709,36 @@ export {
   type NotificationPreference,
   type InsertNotificationPreference
 };
+
+// Export training center schemas (PKL-278651-TRAINING-CENTER-001)
+export {
+  trainingCenters,
+  coachingSessions,
+  challenges,
+  challengeCompletions,
+  digitalBadges,
+  playerBadges,
+  insertTrainingCenterSchema,
+  insertCoachingSessionSchema,
+  insertChallengeSchema,
+  insertChallengeCompletionSchema,
+  insertDigitalBadgeSchema,
+  insertPlayerBadgeSchema,
+  type TrainingCenter,
+  type InsertTrainingCenter,
+  type CoachingSession,
+  type InsertCoachingSession,
+  type Challenge,
+  type InsertChallenge,
+  type ChallengeCompletion,
+  type InsertChallengeCompletion,
+  type DigitalBadge,
+  type InsertDigitalBadge,
+  type PlayerBadge,
+  type InsertPlayerBadge,
+  SessionType,
+  SessionStatus,
+  ChallengeCategory,
+  SkillLevel,
+  BadgeType
+};

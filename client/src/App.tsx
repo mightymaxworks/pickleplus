@@ -130,6 +130,7 @@ import PointsDemo from './pages/points-demo' // PKL-278651-POINTS-0001-DEMO - Pi
 import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
 import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo
 import DevModernProfilePage from './pages/DevModernProfilePage' // PKL-278651-PROF-0008-DEV - Development Profile Page
+import TrainingCenterPage from './pages/training-center' // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
