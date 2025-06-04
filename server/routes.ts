@@ -46,7 +46,7 @@ import sageApiRoutes from "./routes/sage-api-routes"; // PKL-278651-SAGE-0029-AP
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
-import { specialRouter } from "./special-routes"; // Import special critical routes
+// Removed special routes import - using consolidated multi-rankings implementation
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 import { 
   createAdministrativeMatch,

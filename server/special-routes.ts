@@ -462,56 +462,7 @@ specialRouter.get('/user/rating-detail', async (req: Request, res: Response) => 
   }
 });
 
-/**
- * Multi-Rankings Position endpoint - Framework 5.0 Direct Implementation
- * GET /api/multi-rankings/position
- */
-specialRouter.get('/multi-rankings/position', (req: Request, res: Response) => {
-  console.log("[API][CRITICAL][MultiRankings] Direct handler called, query:", req.query);
-  
-  try {
-    // Parse the userId from the query parameters
-    let userId = 1;
-    
-    if (req.query.userId) {
-      try {
-        userId = parseInt(req.query.userId as string);
-        if (isNaN(userId)) {
-          userId = 1;
-        }
-      } catch (e) {
-        console.log("[API][CRITICAL][MultiRankings] Error parsing userId:", e);
-        userId = 1; 
-      }
-    }
-    
-    const format = req.query.format as string || 'singles';
-    const ageDivision = req.query.ageDivision as string || '19plus';
-    
-    // In a production implementation, we would check if the user has completed
-    // enough matches or is enrolled in a competitive league to be ranked
-    
-    // For now, return empty state with clear guidance
-    res.json({
-      status: "not_ranked",
-      message: "Not currently ranked in this division",
-      requiresEnrollment: true,
-      format: format,
-      ageDivision: ageDivision,
-      guidance: {
-        title: "Join the rankings",
-        description: "Participate in an official league or tournament to establish your ranking",
-        primaryAction: "Find tournaments",
-        primaryActionPath: "/tournaments",
-        secondaryAction: "Join a league",
-        secondaryActionPath: "/leagues"
-      }
-    });
-  } catch (error) {
-    console.error("[API][CRITICAL][MultiRankings] Error getting ranking position:", error);
-    res.status(500).json({ error: "Server error getting ranking position" });
-  }
-});
+// Multi-rankings endpoint removed - using consolidated implementation in multi-rankings-routes.ts
 
 /**
  * CourtIQ Tiers endpoint - Framework 5.0 Direct Implementation
