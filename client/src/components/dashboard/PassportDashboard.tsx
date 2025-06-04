@@ -979,12 +979,13 @@ export default function PassportDashboard() {
         currentAvatar={user.avatarUrl || undefined}
       />
       
-      <ComingSoonModal
-        isOpen={comingSoonModal.isOpen}
-        onClose={() => setComingSoonModal({ isOpen: false, feature: '', description: '' })}
-        feature={comingSoonModal.feature}
-        description={comingSoonModal.description}
-      />
+        <ComingSoonModal
+          isOpen={comingSoonModal.isOpen}
+          onClose={() => setComingSoonModal({ isOpen: false, feature: '', description: '' })}
+          feature={comingSoonModal.feature}
+          description={comingSoonModal.description}
+        />
+      </div>
     </div>
   );
 }
