@@ -134,10 +134,12 @@ router.get("/position", async (req: Request, res: Response) => {
 
     // Get user's matches
     const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
+    console.log(`[API][MultiRankings] Found ${userMatches.length} matches for user ${userId}`);
     
     // Determine user's age division based on year of birth
     const currentYear = new Date().getFullYear();
     const userAge = user.yearOfBirth ? currentYear - user.yearOfBirth : null;
+    console.log(`[API][MultiRankings] User age: ${userAge} (born ${user.yearOfBirth})`);
     
     // Determine PRIMARY age division only
     let primaryDivision = 'open';
@@ -147,12 +149,14 @@ router.get("/position", async (req: Request, res: Response) => {
       else if (userAge >= 35) primaryDivision = '35+';
       else primaryDivision = 'open';
     }
+    console.log(`[API][MultiRankings] Primary division: ${primaryDivision}`);
     
     // Map frontend format to backend format
     let backendFormat = 'mens_singles';
     if (format === 'singles') backendFormat = 'mens_singles';
     else if (format === 'doubles') backendFormat = 'mens_doubles';
     else if (format === 'mixed') backendFormat = 'mixed_doubles';
+    console.log(`[API][MultiRankings] Backend format: ${backendFormat} (from frontend: ${format})`);
     
     // Map frontend age division to backend division
     let backendDivision = primaryDivision;
@@ -160,12 +164,15 @@ router.get("/position", async (req: Request, res: Response) => {
     else if (ageDivision === '35plus') backendDivision = '35+';
     else if (ageDivision === '50plus') backendDivision = '50+';
     else if (ageDivision === '60plus') backendDivision = '60+';
+    console.log(`[API][MultiRankings] Backend division: ${backendDivision} (from frontend: ${ageDivision})`);
     
     // Calculate display points (raw points) and weighted ranking points
     let displayPoints = 0;
     let weightedRankingPoints = 0;
     
     for (const match of userMatches) {
+      console.log(`[API][MultiRankings] Checking match ${match.id}: formatType=${match.formatType}, matchType=${match.matchType}, winnerId=${match.winnerId}`);
+      
       // Only count matches that belong to this specific category
       let matchBelongsToCategory = false;
       
@@ -177,9 +184,12 @@ router.get("/position", async (req: Request, res: Response) => {
         matchBelongsToCategory = false; // For now, treat all doubles as men's doubles
       }
       
+      console.log(`[API][MultiRankings] Match ${match.id} belongs to category: ${matchBelongsToCategory}`);
+      
       if (matchBelongsToCategory) {
         const isWinner = match.winnerId === userId;
         const basePoints = isWinner ? 3 : 1; // Base casual match scoring
+        console.log(`[API][MultiRankings] Match ${match.id}: isWinner=${isWinner}, basePoints=${basePoints}`);
         
         // For display: Always show full points (no weighting)
         displayPoints += basePoints;
@@ -195,8 +205,11 @@ router.get("/position", async (req: Request, res: Response) => {
         }
         
         weightedRankingPoints += basePoints * weightMultiplier;
+        console.log(`[API][MultiRankings] Match ${match.id}: weightMultiplier=${weightMultiplier}, weightedPoints=${basePoints * weightMultiplier}`);
       }
     }
+    
+    console.log(`[API][MultiRankings] Final calculation: displayPoints=${displayPoints}, weightedRankingPoints=${weightedRankingPoints}`);
     
     // Check if user has any matches in this category
     if (displayPoints === 0) {

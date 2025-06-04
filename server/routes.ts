@@ -73,10 +73,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   setupAuth(app);
   console.log("[AUTH] Authentication setup complete");
   
-  console.log("[API][CRITICAL] Registering special direct routes before standard routes");
-  // Mount special router first to ensure direct implementation takes precedence
-  app.use('/api', specialRouter);
-  console.log("[API][CRITICAL] Special routes registered successfully");
+  // Remove conflicting special routes - using consolidated multi-rankings implementation instead
   
   // Register route groups
   registerAdminRoutes(app);
