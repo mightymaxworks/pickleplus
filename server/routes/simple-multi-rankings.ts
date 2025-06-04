@@ -74,4 +74,4 @@ router.get("/all-positions", async (req: Request, res: Response) => {
   }
 });
 
-export { router as simpleMultiRankingsRouter };
+export default router;

@@ -29,7 +29,7 @@ import { registerPassportVerificationRoutes } from "./routes/passport-verificati
 import { registerUserRolesRoutes } from "./routes/user-roles-routes"; // PKL-278651-AUTH-0016-PROLES - Role Management
 import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
-import { simpleMultiRankingsRouter } from "./routes/simple-multi-rankings"; // Streamlined rankings
+import simpleMultiRankingsRouter from "./routes/simple-multi-rankings"; // Streamlined rankings
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
 import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (Framework 5.3)
 import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTIQ-0002-ASSESS
@@ -115,6 +115,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount PCP Rankings and CourtIQ API routes - PKL-278651-PRANK-0008-FWK52
   app.use('/api/multi-rankings', multiRankingsRoutes);
+  app.use('/api/simple-multi-rankings', simpleMultiRankingsRouter);
   app.use('/api/courtiq', courtiqRoutes);
   
   // Mount user data API (Framework 5.3 frontend-driven approach)
