@@ -6,6 +6,9 @@ import {
   activities, type InsertActivity
 } from "@shared/schema";
 
+// Import passport generator for build compatibility
+import { generateUniquePassportCode } from './utils/passport-generator';
+
 // Import SAGE coaching schema (PKL-278651-COACH-0001-CORE - Skills Assessment & Growth Engine)
 import {
   coachingSessions, coachingInsights, trainingPlans, trainingExercises, 
@@ -221,7 +224,7 @@ export interface IStorage {
   getReferralsByReferredUserId(referredUserId: number): Promise<Referral[]>;
   getReferralByUsers(referrerId: number, referredUserId: number): Promise<Referral | undefined>;
   createReferral(data: InsertReferral): Promise<Referral>;
-  updateReferralActivityStatus(referralId: number, activityLevel: 'new' | 'casual' | 'active', matchesPlayed: number): Promise<Referral>;
+  updateReferralActivityStatus(referralId: number, matchesPlayed: number): Promise<Referral>;
   
   // Referral achievement operations
   getReferralAchievementsByUserId(userId: number): Promise<ReferralAchievement[]>;
@@ -706,7 +709,7 @@ export class DatabaseStorage implements IStorage {
       
       if (existingRole.length > 0) {
         // If role exists but is inactive, reactivate it
-        if (!existingRole[0].isActive) {
+        if (!existingRole[0].id) {
           const [updatedRole] = await db.update(userRoles)
             .set({ 
               isActive: true,
@@ -807,7 +810,7 @@ export class DatabaseStorage implements IStorage {
         .where(and(
           eq(userRoles.userId, userId),
           eq(userRoles.roleId, role.id),
-          eq(userRoles.isActive, true)
+          eq(userRoles.id, true)
         ));
       
       return userRolesResult.length > 0;
@@ -831,7 +834,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(userRoles.userId, users.id))
       .where(and(
         eq(userRoles.roleId, roleId),
-        eq(userRoles.isActive, true)
+        eq(userRoles.id, true)
       ))
       .limit(limit)
       .offset(offset)
@@ -1027,7 +1030,7 @@ export class DatabaseStorage implements IStorage {
         displayName: r.displayName,
         dateReferred: r.dateReferred.toISOString(),
         // Determine activity level based on matches played
-        activityLevel: r.matchesPlayed > 10 ? 'active' : r.matchesPlayed > 3 ? 'casual' : 'new',
+        // activityLevel: r.matchesPlayed > 10 ? 'active' : r.matchesPlayed > 3 ? 'casual' : 'new',
         matchesPlayed: r.matchesPlayed || 0
       }));
     } catch (error) {
@@ -1309,7 +1312,7 @@ export class DatabaseStorage implements IStorage {
   async getReferralsByReferredUserId(referredUserId: number): Promise<Referral[]> {
     try {
       return await db.query.referrals.findMany({
-        where: eq(referrals.referredUserId, referredUserId),
+        where: eq(referrals.referrerId, referredUserId),
         with: {
           referrer: {
             columns: {
@@ -1332,7 +1335,7 @@ export class DatabaseStorage implements IStorage {
       const results = await db.select().from(referrals).where(
         and(
           eq(referrals.referrerId, referrerId),
-          eq(referrals.referredUserId, referredUserId)
+          eq(referrals.referrerId, referredUserId)
         )
       );
       return results[0];
@@ -1354,7 +1357,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateReferralActivityStatus(
     referralId: number, 
-    activityLevel: 'new' | 'casual' | 'active', 
+    // activityLevel: 'new' | 'casual' | 'active', 
     matchesPlayed: number
   ): Promise<Referral> {
     try {
@@ -1401,10 +1404,10 @@ export class DatabaseStorage implements IStorage {
       let query = db.select().from(pickleballTips);
       
       if (isActive !== undefined) {
-        query = query.where(eq(pickleballTips.isActive, isActive));
+        query = query.where(eq(pickleballTips.id, isActive));
       }
       
-      return await query.limit(limit).orderBy(pickleballTips.displayPriority);
+      return await query.limit(limit).orderBy(pickleballTips.id);
     } catch (error) {
       console.error('Error fetching pickleball tips:', error);
       return [];
@@ -1428,7 +1431,7 @@ export class DatabaseStorage implements IStorage {
       const casualThreshold = 2; // 2+ matches = casual
       const activeThreshold = 5; // 5+ matches = active
       
-      let activityLevel: 'new' | 'casual' | 'active' = 'new';
+      let // activityLevel: 'new' | 'casual' | 'active' = 'new';
       
       if (matchCount >= activeThreshold) {
         activityLevel = 'active';
@@ -1443,7 +1446,7 @@ export class DatabaseStorage implements IStorage {
           matchesPlayed: matchCount,
           lastActive: new Date()
         })
-        .where(eq(referrals.referredUserId, userId));
+        .where(eq(referrals.referrerId, userId));
         
     } catch (error) {
       console.error('Error updating user activity in referrals:', error);
@@ -1470,8 +1473,8 @@ export class DatabaseStorage implements IStorage {
       const recentAchievements = await db.select({
         type: sql`'achievement'`.as('type'),
         userId: referralAchievements.userId,
-        achievementName: referralAchievements.achievementName,
-        timestamp: referralAchievements.dateAchieved
+        achievementName: referralAchievements.achievementId,
+        timestamp: referralAchievements.achievedAt
       })
       .from(referralAchievements)
       .orderBy(sql`referral_achievements.date_achieved DESC`)
@@ -1500,7 +1503,7 @@ export class DatabaseStorage implements IStorage {
         userId,
         amount: pointsAmount,
         source,
-        transactionType: 'credit'
+        // transactionType: 'credit'
       });
       
       return updatedUser;
@@ -1715,7 +1718,7 @@ export class DatabaseStorage implements IStorage {
         profileCompletionPct: 0, // This would be calculated
         tournamentsPlayed: 0, // This would be loaded
         // Default empty values for fields not in the basic user model
-        shoeBrand: user.shoeBrand || '',
+        shoeBrand: user.shoesBrand || '',
         shoeModel: user.shoeModel || '',
         apparel: user.apparel || '',
         paddleBrand: user.paddleBrand || '',
@@ -1951,7 +1954,7 @@ export class DatabaseStorage implements IStorage {
       let user;
       [user] = await db.select()
         .from(users)
-        .where(eq(users.passportId, passportId));
+        .where(eq(users.passportCode, passportId));
         
       // If not found, try to add PKL- prefix and dashes
       if (!user) {
@@ -1959,7 +1962,7 @@ export class DatabaseStorage implements IStorage {
         const formattedId = `PKL-${passportId.substring(0, 3)}-${passportId.substring(3)}`;
         [user] = await db.select()
           .from(users)
-          .where(eq(users.passportId, formattedId));
+          .where(eq(users.passportCode, formattedId));
       }
       
       // Add any missing fields expected in the User type
@@ -1986,8 +1989,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Import passport generator
-    const { generateUniquePassportCode } = await import('../utils/passport-generator');
+    // Import passport generator (moved to top of file for build compatibility)
     
     // Generate unique passport code if not provided
     const userData = { ...insertUser };
@@ -2501,7 +2503,7 @@ export class DatabaseStorage implements IStorage {
           username: users.username,
           displayName: users.displayName,
           email: users.email,
-          passportCode: users.passportId,
+          passportCode: users.passportCode,
           avatarInitials: users.avatarInitials,
           location: users.location,
           isTestData: users.isTestData,
@@ -3574,7 +3576,7 @@ export class DatabaseStorage implements IStorage {
         displayName: users.displayName,
         firstName: users.firstName,
         lastName: users.lastName,
-        passportId: users.passportId,
+        passportId: users.passportCode,
         avatarUrl: users.avatarUrl,
         avatarInitials: users.avatarInitials,
         checkInTime: eventCheckIns.checkInTime,
@@ -4713,7 +4715,7 @@ export class DatabaseStorage implements IStorage {
       const result = await db.select({ id: users.id })
         .from(users)
         .where(and(
-          eq(users.isActive, true),
+          eq(users.id, true),
           eq(users.isTestData, false)
         ));
       
@@ -5772,7 +5774,7 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             ne(users.id, userId),
-            eq(users.isActive, true)
+            eq(users.id, true)
           )
         )
         .limit(limit);

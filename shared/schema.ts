@@ -486,8 +486,7 @@ import {
   // InsightTypes,
   // SessionTypes,
   type DimensionCode,
-  // type InsightType,
-  type SessionType
+  // type InsightType
 } from './schema/sage';
 
 // User table
