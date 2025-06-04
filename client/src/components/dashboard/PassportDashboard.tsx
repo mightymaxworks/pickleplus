@@ -18,7 +18,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { 
   QrCode, 
   Star, 
@@ -987,6 +986,13 @@ export default function PassportDashboard() {
         onClose={() => setIsPhotoUploadOpen(false)}
         onUploadSuccess={handlePhotoUploadSuccess}
         currentAvatar={user.avatarUrl || undefined}
+      />
+      
+      {/* Passport Detail Modal */}
+      <PassportDetailModal
+        user={user as any}
+        isOpen={isPassportDetailOpen}
+        onClose={() => setIsPassportDetailOpen(false)}
       />
       
         <ComingSoonModal
