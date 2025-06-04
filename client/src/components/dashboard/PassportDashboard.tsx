@@ -207,7 +207,7 @@ export default function PassportDashboard() {
         }}></div>
       </div>
 
-      <div className="relative max-w-6xl mx-auto px-4 space-y-1 pt-2 z-10">
+      <div className="relative max-w-6xl mx-auto px-4 space-y-1 -mt-8 z-10">
       {/* Enhanced Futuristic Background Animations */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {/* Large floating geometric shapes - much more visible */}
