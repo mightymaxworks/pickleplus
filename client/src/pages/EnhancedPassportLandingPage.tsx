@@ -32,6 +32,8 @@ import {
   MapPin,
   Crown,
   Smartphone,
+  Menu,
+  X,
   Scan,
   Play,
   ArrowRight,
@@ -268,7 +270,7 @@ const EnhancedPassportDemo = () => {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-2 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
             >
               {rankingData.map((item, index) => (
                 <motion.div
@@ -423,8 +425,8 @@ const EnhancedPassportDemo = () => {
   );
 };
 
-// Floating Feature Cards
-const FloatingFeatureCards = () => {
+// Mobile-Friendly Feature Highlights
+const MobileFeatureHighlights = () => {
   const features = [
     { icon: QrCode, title: "QR Passport", desc: "Instant player identification" },
     { icon: Trophy, title: "Multi-Division Rankings", desc: "Track progress across all categories" },
@@ -434,7 +436,7 @@ const FloatingFeatureCards = () => {
 
   return (
     <motion.div 
-      className="absolute inset-0 pointer-events-none overflow-hidden"
+      className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto px-4"
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
@@ -444,16 +446,11 @@ const FloatingFeatureCards = () => {
         return (
           <motion.div
             key={feature.title}
-            className={`absolute bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 pointer-events-auto cursor-pointer ${
-              index === 0 ? 'top-20 left-10' :
-              index === 1 ? 'top-32 right-10' :
-              index === 2 ? 'bottom-32 left-10' :
-              'bottom-20 right-10'
-            }`}
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center"
             variants={fadeInUp}
-            whileHover={{ scale: 1.05, y: -5 }}
+            whileHover={{ scale: 1.05, y: -2 }}
             animate={{
-              y: [0, -10, 0],
+              y: [0, -5, 0],
               transition: {
                 duration: 3 + index,
                 repeat: Infinity,
@@ -461,8 +458,8 @@ const FloatingFeatureCards = () => {
               }
             }}
           >
-            <Icon className="w-6 h-6 text-white mb-2" />
-            <h4 className="text-white font-medium text-sm">{feature.title}</h4>
+            <Icon className="w-8 h-8 text-white mb-2 mx-auto" />
+            <h4 className="text-white font-medium text-sm mb-1">{feature.title}</h4>
             <p className="text-white/70 text-xs">{feature.desc}</p>
           </motion.div>
         );
@@ -474,6 +471,7 @@ const FloatingFeatureCards = () => {
 export default function EnhancedPassportLandingPage() {
   const [, navigate] = useLocation();
   const [scrollY, setScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -500,6 +498,8 @@ export default function EnhancedPassportLandingPage() {
             <div className="text-xl font-bold" style={{ color: scrollY > 50 ? '#ea580c' : 'white' }}>
               Pickle+
             </div>
+            
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
               <a href="#passport" className={`font-medium transition-colors ${scrollY > 50 ? 'text-gray-700 hover:text-orange-600' : 'text-white/90 hover:text-white'}`}>
                 Passport
@@ -518,14 +518,67 @@ export default function EnhancedPassportLandingPage() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden p-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{ color: scrollY > 50 ? '#ea580c' : 'white' }}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="md:hidden mt-4 pb-4"
+              >
+                <nav className="flex flex-col space-y-4">
+                  <a 
+                    href="#passport" 
+                    className={`font-medium transition-colors ${scrollY > 50 ? 'text-gray-700 hover:text-orange-600' : 'text-white/90 hover:text-white'}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Passport
+                  </a>
+                  <a 
+                    href="#rankings" 
+                    className={`font-medium transition-colors ${scrollY > 50 ? 'text-gray-700 hover:text-orange-600' : 'text-white/90 hover:text-white'}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Rankings
+                  </a>
+                  <a 
+                    href="#features" 
+                    className={`font-medium transition-colors ${scrollY > 50 ? 'text-gray-700 hover:text-orange-600' : 'text-white/90 hover:text-white'}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Features
+                  </a>
+                  <Button 
+                    onClick={() => {
+                      navigate('/auth');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="bg-orange-500 hover:bg-orange-600 text-white border-0 w-full"
+                  >
+                    Get Started
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </nav>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.header>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6">
-        <FloatingFeatureCards />
-        
         <div className="container mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -584,6 +637,9 @@ export default function EnhancedPassportLandingPage() {
                 See Demo
               </Button>
             </motion.div>
+            
+            {/* Mobile-Friendly Feature Highlights */}
+            <MobileFeatureHighlights />
           </motion.div>
         </div>
         
