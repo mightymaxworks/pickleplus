@@ -217,8 +217,15 @@ export async function handleMightymaxLogin(req: Request, res: Response, next: Ne
       return res.status(401).json({ message: "Invalid username or password" });
     }
     
-    // Validate password 
-    if (!(await comparePasswords(password, user.password))) {
+    // Validate password with detailed logging
+    console.log('[SuperAdmin] Testing password for mightymax');
+    console.log('[SuperAdmin] Password received:', password ? `"${password}" (length: ${password.length})` : 'undefined/empty');
+    console.log('[SuperAdmin] Stored hash:', user.password ? `"${user.password}" (length: ${user.password.length})` : 'undefined/empty');
+    
+    const passwordValid = await comparePasswords(password, user.password);
+    console.log('[SuperAdmin] Password validation result:', passwordValid);
+    
+    if (!passwordValid) {
       console.log('[SuperAdmin] Password validation failed for mightymax');
       return res.status(401).json({ message: "Invalid username or password" });
     }
