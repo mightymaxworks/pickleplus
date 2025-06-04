@@ -162,12 +162,12 @@ export default function PremiumTrainingCenterCheckIn() {
           <div className="inline-flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-white/50">
             <Building2 className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Elite Training Centers
+              Pickle+ Training Hubs
             </h1>
             <Sparkles className="h-6 w-6 text-amber-500" />
           </div>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Access premium coaching facilities with world-class amenities and expert instruction
+            Connect with certified coaches at premier pickleball facilities for personalized training
           </p>
         </div>
 
@@ -348,7 +348,7 @@ export default function PremiumTrainingCenterCheckIn() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-800 flex items-center space-x-2">
                   <Building2 className="h-5 w-5 text-blue-600" />
-                  <span>Available Training Centers</span>
+                  <span>Available Training Hubs</span>
                 </h3>
                 <div className="grid gap-3">
                   {centers?.centers?.map((center: any) => (
