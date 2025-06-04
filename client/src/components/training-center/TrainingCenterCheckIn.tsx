@@ -114,17 +114,30 @@ export default function TrainingCenterCheckIn() {
         qrCode,
         playerId: 1 // TODO: Get actual user ID
       });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Check-in failed');
+      }
       return res.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Check-in Successful",
-        description: `Welcome to ${data.session.center}! Your coach is ${data.session.coach}.`
-      });
+      console.log('Check-in successful:', data);
+      if (data.success && data.session) {
+        toast({
+          title: "Check-in Successful! ✅",
+          description: `Welcome to ${data.session.center}! Your coach is ${data.session.coach}.`,
+        });
+      } else {
+        toast({
+          title: "Check-in Complete",
+          description: "You have successfully checked in to the training center.",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/training-center/session/active'] });
       setQrCode('');
     },
     onError: (error: any) => {
+      console.error('Check-in error:', error);
       toast({
         title: "Check-in Failed",
         description: error.message || "Unable to check in at this time",
@@ -433,9 +446,16 @@ export default function TrainingCenterCheckIn() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setQrCode(center.qrCode)}
+                    onClick={() => {
+                      setQrCode(center.qrCode);
+                      // Auto-trigger check-in after setting QR code
+                      setTimeout(() => {
+                        checkInMutation.mutate(center.qrCode);
+                      }, 100);
+                    }}
+                    disabled={checkInMutation.isPending}
                   >
-                    Use QR Code
+                    {checkInMutation.isPending ? 'Checking In...' : 'Check In Here'}
                   </Button>
                 </div>
               </Card>
