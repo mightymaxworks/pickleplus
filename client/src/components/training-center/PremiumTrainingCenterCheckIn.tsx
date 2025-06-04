@@ -3,8 +3,9 @@
  * Sophisticated design matching the passport aesthetic
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,8 +78,67 @@ export default function PremiumTrainingCenterCheckIn() {
   const [checkedInCenter, setCheckedInCenter] = useState<CheckInResponse | null>(null);
   const [selectedCoachForDetails, setSelectedCoachForDetails] = useState<any | null>(null);
   const [showCoachDetails, setShowCoachDetails] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Initialize QR scanner
+  useEffect(() => {
+    return () => {
+      // Cleanup scanner on unmount
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.error);
+      }
+    };
+  }, []);
+
+  // Start QR code scanning
+  const startScanning = () => {
+    setIsScanning(true);
+    setScannerError(null);
+    
+    scannerRef.current = new Html5QrcodeScanner(
+      "qr-reader",
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+      },
+      false
+    );
+
+    scannerRef.current.render(
+      (decodedText) => {
+        // Success callback
+        setQrCode(decodedText);
+        setIsScanning(false);
+        scannerRef.current?.clear();
+        toast({
+          title: "QR Code Scanned",
+          description: `Facility code: ${decodedText}`,
+        });
+      },
+      (error) => {
+        // Error callback - only log errors we care about
+        if (error.includes('NotFoundException')) {
+          // QR code not found in frame - this is normal, don't show error
+          return;
+        }
+        console.warn('QR Scanner error:', error);
+      }
+    );
+  };
+
+  // Stop QR code scanning
+  const stopScanning = () => {
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.error);
+    }
+    setIsScanning(false);
+    setScannerError(null);
+  };
 
   // Get available training centers
   const { data: centers } = useQuery({
@@ -536,6 +596,25 @@ export default function PremiumTrainingCenterCheckIn() {
                         className="border-emerald-200 text-emerald-700 font-medium px-3 py-1"
                       >
                         {cert}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Accolades */}
+                <div>
+                  <h4 className="font-semibold text-slate-800 mb-3 flex items-center">
+                    <Trophy className="w-4 h-4 mr-2 text-yellow-600" />
+                    Awards & Achievements
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {((selectedCoachForDetails as any)?.accolades || ['Excellence Award', 'Professional Achievement']).map((accolade: string, index: number) => (
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="border-yellow-200 text-yellow-700 font-medium px-3 py-1"
+                      >
+                        {accolade}
                       </Badge>
                     ))}
                   </div>

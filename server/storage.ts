@@ -247,28 +247,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableCoachesAtCenter(centerId: number): Promise<any[]> {
-    // Return mock coaches with specializations for testing
+    // Return mock coaches with comprehensive data for testing
     return [
       {
         id: 2,
+        name: "Coach Alex",
+        fullName: "Alexandra Rodriguez",
         displayName: "Coach Alex",
         username: "coach_alex",
+        profileImage: "/uploads/coaches/alexandra-rodriguez.jpg",
         specializations: ["Forehand Technique", "Strategy", "Doubles Play"],
-        hourlyRate: 75
+        hourlyRate: 75,
+        experience: "8 years",
+        certifications: ["USAPA Certified", "PPR Level 3"],
+        accolades: ["2023 Regional Coach of the Year", "Tournament Champion 2022", "Advanced Coaching Certification"]
       },
       {
         id: 3,
+        name: "Coach Maria",
+        fullName: "Maria Santos",
         displayName: "Coach Maria",
-        username: "coach_maria", 
+        username: "coach_maria",
+        profileImage: "/uploads/coaches/maria-santos.jpg",
         specializations: ["Serve Development", "Mental Game", "Tournament Prep"],
-        hourlyRate: 85
+        hourlyRate: 85,
+        experience: "12 years",
+        certifications: ["USAPA Master Trainer", "Sports Psychology Certified"],
+        accolades: ["National Tournament Finalist", "Mental Performance Specialist", "Elite Coach Recognition"]
       },
       {
         id: 4,
+        name: "Coach David",
+        fullName: "David Thompson",
         displayName: "Coach David",
         username: "coach_david",
+        profileImage: "/uploads/coaches/david-thompson.jpg",
         specializations: ["Backhand Fundamentals", "Footwork", "Beginner Training"],
-        hourlyRate: 65
+        hourlyRate: 65,
+        experience: "5 years",
+        certifications: ["USAPA Certified", "Youth Training Specialist"],
+        accolades: ["Rising Coach Award 2023", "Community Impact Recognition", "Skills Development Expert"]
       }
     ];
   }
