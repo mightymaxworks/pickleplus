@@ -38,7 +38,8 @@ import {
   DollarSign,
   MapPin,
   Info,
-  Upload
+  Upload,
+  X
 } from 'lucide-react';
 import PhotoUploadModal from '@/components/PhotoUploadModal';
 import { ComingSoonModal } from '@/components/ui/coming-soon-modal';
@@ -55,7 +56,7 @@ export default function PassportDashboard() {
   const [qrVisible, setQrVisible] = useState(false);
   const [showPassportCode, setShowPassportCode] = useState(false);
   const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);
-  const [isPassportDetailOpen, setIsPassportDetailOpen] = useState(false);
+  const [isPassportExpanded, setIsPassportExpanded] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState({ isOpen: false, feature: '', description: '' });
   const { toast } = useToast();
   
@@ -298,7 +299,7 @@ export default function PassportDashboard() {
       >
         <Card 
           className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm cursor-pointer group"
-          onClick={() => setIsPassportDetailOpen(true)}
+          onClick={() => setIsPassportExpanded(!isPassportExpanded)}
         >
           <CardContent className="p-2">
             <div className="flex flex-col lg:flex-row items-center gap-4">
@@ -587,6 +588,271 @@ export default function PassportDashboard() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Inline Profile Expansion */}
+        <motion.div
+          initial={false}
+          animate={{ 
+            height: isPassportExpanded ? 'auto' : 0,
+            opacity: isPassportExpanded ? 1 : 0 
+          }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          className="overflow-hidden"
+        >
+          {isPassportExpanded && (
+            <Card className="mt-4 bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold text-orange-800">
+                    Edit Profile Details
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsPassportExpanded(false)}
+                    className="text-orange-600 hover:text-orange-800"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">Basic Information</h3>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Display Name</label>
+                        <input
+                          type="text"
+                          defaultValue={user.displayName || ''}
+                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">First Name</label>
+                          <input
+                            type="text"
+                            defaultValue={user.firstName || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Last Name</label>
+                          <input
+                            type="text"
+                            defaultValue={user.lastName || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Location</label>
+                        <input
+                          type="text"
+                          defaultValue={user.location || ''}
+                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Bio</label>
+                        <textarea
+                          defaultValue={user.bio || ''}
+                          rows={3}
+                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Playing Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">Playing Information</h3>
+                    
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Skill Level</label>
+                          <input
+                            type="text"
+                            defaultValue={user.skillLevel || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Playing Since</label>
+                          <input
+                            type="text"
+                            defaultValue={user.playingSince || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Preferred Position</label>
+                        <select
+                          defaultValue={user.preferredPosition || ''}
+                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="">Select Position</option>
+                          <option value="left">Left Side</option>
+                          <option value="right">Right Side</option>
+                          <option value="both">Both Sides</option>
+                        </select>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Paddle Brand</label>
+                          <input
+                            type="text"
+                            defaultValue={user.paddleBrand || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Paddle Model</label>
+                          <input
+                            type="text"
+                            defaultValue={user.paddleModel || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* External Ratings */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">External Ratings</h3>
+                    
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">DUPR Rating</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            defaultValue={user.duprRating || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">USA Pickleball ID</label>
+                          <input
+                            type="text"
+                            defaultValue={(user as any).usaPickleballId || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">IFP Rating</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            defaultValue={user.ifpRating || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">IPTPA Rating</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            defaultValue={user.iptpaRating || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Physical Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">Physical Information</h3>
+                    
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Height (cm)</label>
+                          <input
+                            type="number"
+                            defaultValue={user.height || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Reach (cm)</label>
+                          <input
+                            type="number"
+                            defaultValue={user.reach || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Year of Birth</label>
+                          <input
+                            type="number"
+                            defaultValue={user.yearOfBirth || ''}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Gender</label>
+                        <select
+                          defaultValue={user.gender || ''}
+                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                          <option value="prefer_not_to_say">Prefer not to say</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Save Button */}
+                <div className="mt-6 flex justify-end space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPassportExpanded(false)}
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    onClick={() => {
+                      // TODO: Implement save functionality
+                      toast({
+                        title: "Profile Updated",
+                        description: "Your profile changes have been saved successfully.",
+                      });
+                      setIsPassportExpanded(false);
+                    }}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
       </motion.div>
 
       {/* Pickle Points Hub - Prominent Feature */}
@@ -988,12 +1254,7 @@ export default function PassportDashboard() {
         currentAvatar={user.avatarUrl || undefined}
       />
       
-      {/* Passport Detail Modal */}
-      <PassportDetailModal
-        user={user as any}
-        isOpen={isPassportDetailOpen}
-        onClose={() => setIsPassportDetailOpen(false)}
-      />
+
       
         <ComingSoonModal
           isOpen={comingSoonModal.isOpen}
