@@ -147,7 +147,8 @@ export function useUserRankingPosition(
       userId,
       format, 
       ageDivision,
-      ratingTierId
+      ratingTierId,
+      'v2' // Cache buster to force fresh data after backend fix
     ],
     queryFn: async ({ queryKey }) => {
       const url = queryKey[0] as string;
