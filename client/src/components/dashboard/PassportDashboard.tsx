@@ -477,7 +477,7 @@ export default function PassportDashboard() {
                               )}
                             </div>
                             {!isRanked && (
-                              <div className={`mt-2 rounded-full h-1 overflow-hidden bg-${colorScheme}-100`}>
+                              <div className={`mt-2 rounded-full h-1.5 overflow-hidden bg-gray-200`}>
                                 <div 
                                   className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
                                   style={{ 
