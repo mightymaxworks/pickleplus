@@ -1172,6 +1172,177 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.get("/api/qr/permissions", isAuthenticated, getUserScanPermissions);
 
   // Default route for API 404s
+  // Admin Match Recording Endpoint - PKL-278651-ADMIN-MATCH-001
+  app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { 
+        players, 
+        matchType, 
+        formatType, 
+        games, 
+        scoringSystem, 
+        pointsToWin, 
+        location, 
+        notes,
+        playerOneId // Admin recording - allows specifying player one
+      } = req.body;
+
+      console.log("Match recording request:", { players, matchType, formatType, games, playerOneId });
+
+      // Validate required fields
+      if (!players || !Array.isArray(players) || players.length !== 2) {
+        return res.status(400).json({ error: "Exactly two players required" });
+      }
+
+      if (!matchType || !formatType || !games || !Array.isArray(games)) {
+        return res.status(400).json({ error: "Missing required match data" });
+      }
+
+      // Determine if this is an admin-recorded match
+      const isAdminRecording = playerOneId && playerOneId !== req.user.id;
+      const recordingUserId = isAdminRecording ? playerOneId : req.user.id;
+
+      // Validate admin permissions if recording for another player
+      if (isAdminRecording) {
+        const adminUser = await storage.getUser(req.user.id);
+        if (!adminUser || !adminUser.isAdmin) {
+          return res.status(403).json({ error: "Admin privileges required to record matches for other players" });
+        }
+        console.log(`Admin ${req.user.username} recording match for player ${recordingUserId}`);
+      }
+
+      // Extract player data and validate
+      const playerOne = players[0];
+      const playerTwo = players[1];
+
+      if (!playerOne.userId || !playerTwo.userId) {
+        return res.status(400).json({ error: "Player IDs required" });
+      }
+
+      // Validate that both players exist
+      const playerOneData = await storage.getUser(playerOne.userId);
+      const playerTwoData = await storage.getUser(playerTwo.userId);
+
+      if (!playerOneData || !playerTwoData) {
+        return res.status(400).json({ error: "One or more players not found" });
+      }
+
+      // Calculate winner based on scores
+      const winner = players.find(p => p.isWinner);
+      if (!winner) {
+        return res.status(400).json({ error: "Winner must be specified" });
+      }
+
+      // Format games for storage
+      const formattedGames = games.map((game: any) => ({
+        playerOneScore: game.playerOneScore || 0,
+        playerTwoScore: game.playerTwoScore || 0
+      }));
+
+      // Create match data
+      const matchData = {
+        playerOneId: playerOne.userId,
+        playerTwoId: playerTwo.userId,
+        playerOnePartnerId: playerOne.partnerId || null,
+        playerTwoPartnerId: playerTwo.partnerId || null,
+        winnerId: winner.userId,
+        formatType: formatType as "singles" | "doubles",
+        matchType: matchType as "tournament" | "league" | "casual",
+        scoringSystem: scoringSystem || "traditional",
+        pointsToWin: pointsToWin || 11,
+        location: location || null,
+        notes: notes || null,
+        recordedByUserId: req.user.id, // Track who recorded the match
+        isAdminRecorded: isAdminRecording,
+        games: formattedGames
+      };
+
+      // Calculate hybrid points for both players
+      const PCPGlobalRankingCalculator = (await import('./services/atp-ranking-calculator')).PCPGlobalRankingCalculator;
+      
+      // Get opponent frequency for anti-gaming calculations
+      const playerOneMatches = await storage.getMatchesByUser(playerOne.userId, 1000, 0, playerOne.userId);
+      const playerTwoMatches = await storage.getMatchesByUser(playerTwo.userId, 1000, 0, playerTwo.userId);
+      
+      const playerOneOpponentCount = playerOneMatches.filter(match => 
+        (match.playerOneId === playerTwo.userId || match.playerTwoId === playerTwo.userId) &&
+        match.createdAt && new Date(match.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      ).length;
+
+      const playerTwoOpponentCount = playerTwoMatches.filter(match => 
+        (match.playerOneId === playerOne.userId || match.playerTwoId === playerOne.userId) &&
+        match.createdAt && new Date(match.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      ).length;
+
+      // Calculate points for both players
+      const playerOneResult = {
+        isWin: winner.userId === playerOne.userId,
+        matchDate: new Date(),
+        matchType: matchType as 'casual' | 'league' | 'tournament',
+        format: formatType,
+        division: 'Open' // Default division
+      };
+
+      const playerTwoResult = {
+        isWin: winner.userId === playerTwo.userId,
+        matchDate: new Date(),
+        matchType: matchType as 'casual' | 'league' | 'tournament',
+        format: formatType,
+        division: 'Open'
+      };
+
+      const playerOnePoints = PCPGlobalRankingCalculator.calculateMatchPoints(playerOneResult, playerOneOpponentCount);
+      const playerTwoPoints = PCPGlobalRankingCalculator.calculateMatchPoints(playerTwoResult, playerTwoOpponentCount);
+
+      // Create the match record
+      const match = await storage.createMatch(matchData);
+
+      // Create activity records for both players
+      const playerOneActivity = await storage.createActivity({
+        userId: playerOne.userId,
+        type: 'match_recorded',
+        description: `${matchType} match ${playerOneResult.isWin ? 'won' : 'played'} • ${playerOnePoints} ranking pts${isAdminRecording ? ' (Admin recorded)' : ''}`,
+        metadata: {
+          matchId: match.id,
+          matchType,
+          pointsEarned: playerOnePoints,
+          isAdminRecorded: isAdminRecording,
+          recordedBy: req.user.id
+        }
+      });
+
+      const playerTwoActivity = await storage.createActivity({
+        userId: playerTwo.userId,
+        type: 'match_recorded',
+        description: `${matchType} match ${playerTwoResult.isWin ? 'won' : 'played'} • ${playerTwoPoints} ranking pts${isAdminRecording ? ' (Admin recorded)' : ''}`,
+        metadata: {
+          matchId: match.id,
+          matchType,
+          pointsEarned: playerTwoPoints,
+          isAdminRecorded: isAdminRecording,
+          recordedBy: req.user.id
+        }
+      });
+
+      res.json({
+        success: true,
+        match,
+        playerOnePoints,
+        playerTwoPoints,
+        isAdminRecorded: isAdminRecording,
+        message: isAdminRecording ? "Match recorded successfully by admin" : "Match recorded successfully"
+      });
+
+    } catch (error) {
+      console.error('Error recording match:', error);
+      res.status(500).json({ error: 'Failed to record match' });
+    }
+  });
+
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
   });

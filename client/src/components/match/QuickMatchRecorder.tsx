@@ -31,6 +31,7 @@ import { Users, UserCircle, CheckCircle2, Info, CheckCircle } from "lucide-react
 
 // Match form schema with match type for hybrid point system
 const matchFormSchema = z.object({
+  playerOneId: z.number().int().positive().optional(),
   playerTwoId: z.number().int().positive(),
   playerOnePartnerId: z.number().int().positive().optional(),
   playerTwoPartnerId: z.number().int().positive().optional(),
@@ -158,7 +159,10 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       const { field, player } = event.detail;
       console.log("Player selected event received:", field, player);
       
-      if (field === "playerTwoData") {
+      if (field === "playerOneData") {
+        setPlayerOneData(player);
+        form.setValue("playerOneId", player.id);
+      } else if (field === "playerTwoData") {
         setPlayerTwoData(player);
         form.setValue("playerTwoId", player.id);
       } else if (field === "playerOnePartnerData") {
@@ -288,10 +292,10 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     // Prepare players array
     const players = [
       {
-        userId: user.id,
+        userId: playerOneData.id,
         partnerId: formatType === "doubles" ? playerOnePartnerData?.id : undefined,
         score: String(totalGames === 1 ? games[0].playerOneScore : games.filter(g => g.playerOneScore > g.playerTwoScore).length),
-        isWinner: winnerId === user.id
+        isWinner: winnerId === playerOneData.id
       },
       {
         userId: playerTwoData.id,
@@ -518,9 +522,8 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                       const event = new CustomEvent('player-selected', {
                         detail: { field: 'playerOneData', player }
                       });
-                      handlePlayerSelected(event);
+                      window.dispatchEvent(event);
                     }}
-                    className="w-full justify-start mb-3"
                   />
                 ) : (
                   <div className="flex items-center gap-2 sm:gap-3 mb-3">
