@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import TrainingCalendar from '@/components/training-center/TrainingCalendar';
+import StreamlinedBookingFlow from '@/components/training-center/StreamlinedBookingFlow';
 import { 
   QrCode, 
   User, 
