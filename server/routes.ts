@@ -915,23 +915,18 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           genderFormats = ['mens_singles', 'mens_doubles', 'mixed_doubles'];
         }
         
-        // Determine age divisions based on user's age - correct structure: Pro, Open/19+, 35+, 50+, 60+
-        const ageDivisions = [];
+        // Determine PRIMARY age division only (not all eligible divisions)
+        let primaryDivision = 'open';
         if (userAge) {
-          if (userAge >= 19) ageDivisions.push('open');
-          if (userAge >= 35) ageDivisions.push('35+');
-          if (userAge >= 50) ageDivisions.push('50+');
-          if (userAge >= 60) ageDivisions.push('60+');
-        } else {
-          // Default to open if age unknown
-          ageDivisions.push('open');
+          if (userAge >= 60) primaryDivision = '60+';
+          else if (userAge >= 50) primaryDivision = '50+';
+          else if (userAge >= 35) primaryDivision = '35+';
+          else primaryDivision = 'open';
         }
         
-        // Create relevant category combinations (prioritize most relevant)
-        for (const division of ageDivisions) {
-          for (const format of genderFormats) {
-            categories.push({ format, division });
-          }
+        // Create category combinations for PRIMARY division only
+        for (const format of genderFormats) {
+          categories.push({ format, division: primaryDivision });
         }
         
         return categories;
@@ -989,17 +984,44 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           });
         }
         
-        // Calculate match points directly from database (no multipliers for display consistency)
+        // Calculate match points for this specific category only
         for (const match of userMatches) {
-          // Use the actual points awarded from the database
-          const points = match.pointsAwarded || 0;
-          matchPoints += points;
+          // Only count matches that belong to this specific category
+          let matchBelongsToCategory = false;
           
-          pointBreakdown.push({
-            type: 'match',
-            event: match.winnerId === userId ? 'Match Win' : 'Match Participation',
-            points: points
-          });
+          // Check if match format matches category format
+          if (category.format === 'mens_singles' && match.formatType === 'singles') {
+            matchBelongsToCategory = true;
+          } else if (category.format === 'mens_doubles' && match.formatType === 'doubles') {
+            matchBelongsToCategory = true;
+          } else if (category.format === 'mixed_doubles' && match.formatType === 'doubles') {
+            // For now, treat all doubles as men's doubles unless we have gender info
+            matchBelongsToCategory = false;
+          }
+          
+          // Only count if match belongs to this category
+          if (matchBelongsToCategory) {
+            const isWinner = match.winnerId === userId;
+            let basePoints = isWinner ? 3 : 1; // Base casual match scoring
+            
+            // Apply weighting based on match type
+            let weightedPoints = basePoints;
+            if (match.matchType === 'tournament') {
+              weightedPoints = basePoints * 1.0; // 100% weight
+            } else if (match.matchType === 'league') {
+              weightedPoints = basePoints * 0.67; // 67% weight
+            } else if (match.matchType === 'casual') {
+              weightedPoints = basePoints * 0.5; // 50% weight
+            }
+            
+            matchPoints += weightedPoints;
+            
+            pointBreakdown.push({
+              type: 'match',
+              event: isWinner ? 'Match Win' : 'Match Participation',
+              points: weightedPoints
+            });
+          }
         }
         
         totalRankingPoints = tournamentPoints + matchPoints;
