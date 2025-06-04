@@ -52,32 +52,25 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
   const [ageDivision, setAgeDivision] = useState<AgeDivision>('19plus');
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Fetch total ranking points across all categories
+  // Fetch total ranking points directly from the PCP API (it returns total at root level)
   const {
-    data: totalRankingData,
-    isLoading: isTotalLoading,
-    isError: isTotalError,
-    refetch: refetchTotal
+    data: rankingApiData,
+    isLoading,
+    isError,
+    error: queryError,
+    refetch
   } = useTotalRankingPoints(user?.id);
   
-  // Use the category-specific hook for detailed view when expanded
-  const {
-    position,
-    history,
-    tiers,
-    isLoading: isCategoryLoading,
-    isError: isCategoryError,
-    error: queryError,
-    refetch: refetchCategory
-  } = usePCPGlobalRankingData(user?.id, format, ageDivision);
-  
-  // Use total data for main display, category data for expanded view
-  const isLoading = isTotalLoading || (isExpanded && isCategoryLoading);
-  const isError = isTotalError || (isExpanded && isCategoryError);
-  const refetch = () => {
-    refetchTotal();
-    refetchCategory();
-  };
+  // Extract data we need
+  const totalRankingPoints = rankingApiData?.rankingPoints || 0;
+  const allCategories = rankingApiData?.allCategories || [];
+  const tiers = rankingApiData?.tiers || [
+    { id: 1, name: 'Bronze', minRating: 0, maxRating: 99, colorCode: '#CD7F32' },
+    { id: 2, name: 'Silver', minRating: 100, maxRating: 299, colorCode: '#C0C0C0' },
+    { id: 3, name: 'Gold', minRating: 300, maxRating: 599, colorCode: '#FFD700' },
+    { id: 4, name: 'Platinum', minRating: 600, maxRating: 999, colorCode: '#E5E4E2' },
+    { id: 5, name: 'Diamond', minRating: 1000, maxRating: 9999, colorCode: '#B9F2FF' }
+  ];
   
   // Calculate recent gain (last 7 days)
   const sevenDaysAgo = React.useMemo(() => {
@@ -89,7 +82,7 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
   // Format and prepare the ranking data
   const rankingData = React.useMemo(() => {
     // If data is loading or there's an error, return default values
-    if (isLoading || isError || (!totalRankingData && !position) || !tiers.length) {
+    if (isLoading || isError || !rankingApiData || !tiers.length) {
       return {
         points: 0,
         tier: 'Bronze',
@@ -105,16 +98,11 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
       };
     }
     
-    // Use total ranking points for main display - the API already returns the total at root level
-    const totalPoints = totalRankingData?.rankingPoints || totalRankingData?.totalRankingPoints || 0;
-    const hasMatches = totalPoints > 0;
+    // Use total ranking points - the API returns it at the root level
+    const hasMatches = totalRankingPoints > 0;
     
     // Check for insufficient data or not ranked status
-    const hasInsufficientData = !hasMatches && position?.status === "insufficient_data";
-    const isNotRanked = !hasMatches && position?.status === "not_ranked";
-    
-    // If we have insufficient data or not ranked status, return default values with flags
-    if (hasInsufficientData || isNotRanked) {
+    if (!hasMatches) {
       return {
         points: 0,
         tier: 'Bronze',
@@ -124,32 +112,26 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
         nextTierThreshold: tiers.length > 1 ? tiers[1].minRating : 100,
         percentToNextTier: 0,
         recentGain: 0,
-        hasInsufficientData,
-        isNotRanked,
-        message: hasInsufficientData 
-          ? `Play ${position?.requiredMatches || 3} more matches to receive your initial ranking`
-          : "Complete your first match to join the rankings!"
+        hasInsufficientData: true,
+        isNotRanked: true,
+        message: "Complete your first match to join the rankings!"
       };
     }
     
-    // Calculate recent ranking gains/losses (use category-specific data for now)
-    const recentHistory = history
-      .filter(entry => new Date(entry.timestamp || '') >= sevenDaysAgo)
-      .filter(entry => entry.format === format && entry.ageDivision === ageDivision);
-    
-    const recentGain = recentHistory.reduce((acc, entry) => {
-      // If we don't have old/new ranking fields, use a default gain of 0
-      if (!entry.oldRanking || !entry.newRanking) return acc;
-      return acc + (entry.newRanking - entry.oldRanking);
+    // Calculate recent ranking gains from match history across all categories
+    const recentGain = allCategories.reduce((total, category) => {
+      const recentPoints = category.pointHistory
+        .filter(entry => new Date().getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000) // Last 7 days
+        .reduce((sum, entry) => sum + entry.points, 0);
+      return total + recentPoints;
     }, 0);
     
     // Determine tier based on total points and calculate progress to next tier
-    const rankingPoints = totalPoints;
     const sortedTiers = [...tiers].sort((a, b) => a.minRating - b.minRating);
     
     const userTier = sortedTiers.find(tier => 
-      rankingPoints >= tier.minRating && 
-      (tier.maxRating === undefined || rankingPoints <= tier.maxRating)
+      totalRankingPoints >= tier.minRating && 
+      (tier.maxRating === undefined || totalRankingPoints <= tier.maxRating)
     ) || sortedTiers[0];
     
     const tierIndex = sortedTiers.findIndex(tier => tier.id === userTier.id);
@@ -160,11 +142,11 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
     const currentTierMin = userTier.minRating;
     const nextTierMin = nextTier.minRating;
     const pointsRange = nextTierMin - currentTierMin;
-    const pointsEarned = rankingPoints - currentTierMin;
+    const pointsEarned = totalRankingPoints - currentTierMin;
     const percentToNextTier = Math.min(99, Math.max(0, Math.floor((pointsEarned / pointsRange) * 100)));
     
     return {
-      points: rankingPoints,
+      points: totalRankingPoints,
       tier: userTier.name,
       tierIndex,
       totalTiers: sortedTiers.length,
@@ -176,7 +158,7 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
       isNotRanked: false,
       message: ''
     };
-  }, [isLoading, isError, totalRankingData, position, history, tiers, format, ageDivision, sevenDaysAgo]);
+  }, [isLoading, isError, rankingApiData, totalRankingPoints, allCategories, tiers]);
   
   // Get proper tier color
   const getTierColor = (tierName: string) => {

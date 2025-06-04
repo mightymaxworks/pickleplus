@@ -28,11 +28,19 @@ interface CategoryRankingPoints {
 
 interface TotalRankingPointsResponse {
   userId: number;
-  totalRankingPoints: number;
+  rankingPoints: number; // The API returns this at root level
+  totalRankingPoints?: number; // Calculated value
   allCategories: CategoryRankingPoints[];
   totalCategories: number;
   system: string;
   userAge: number;
+  tiers?: Array<{
+    id: number;
+    name: string;
+    minRating: number;
+    maxRating?: number;
+    colorCode: string;
+  }>;
 }
 
 /**
