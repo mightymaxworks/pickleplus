@@ -189,60 +189,6 @@ router.get("/position", async (req: Request, res: Response) => {
       statusMessage: statusMessage,
       isEligible: rankingPosition.isEligible
     });
-      
-      // For ranking: Apply weighting based on match type
-      let weightMultiplier = 1.0;
-      if (match.matchType === 'tournament') {
-        weightMultiplier = 1.0; // 100% weight
-      } else if (match.matchType === 'league') {
-        weightMultiplier = 0.67; // 67% weight
-      } else if (match.matchType === 'casual') {
-        weightMultiplier = 0.5; // 50% weight
-      }
-      
-      weightedRankingPoints += basePoints * weightMultiplier;
-      console.log(`[API][MultiRankings] Match ${match.id}: weightMultiplier=${weightMultiplier}, weightedPoints=${basePoints * weightMultiplier}`);
-    }
-    
-    console.log(`[API][MultiRankings] Category breakdown: Singles=${singlesPoints}, Doubles=${doublesPoints}, Mixed=${mixedDoublesPoints}`);
-    console.log(`[API][MultiRankings] Total points across all categories: ${displayPoints}`);
-    
-    console.log(`[API][MultiRankings] Final calculation: displayPoints=${displayPoints}, weightedRankingPoints=${weightedRankingPoints}`);
-    
-    // Check if user has any matches in this category
-    if (displayPoints === 0) {
-      return res.json({
-        status: "not_ranked",
-        message: "Not currently ranked in this division",
-        requiresEnrollment: true,
-        format: format,
-        ageDivision: ageDivision,
-        guidance: {
-          title: "Join the rankings",
-          description: "Participate in an official league or tournament to establish your ranking",
-          primaryAction: "Find tournaments",
-          primaryActionPath: "/tournaments",
-          secondaryAction: "Join a league",
-          secondaryActionPath: "/leagues"
-        }
-      });
-    }
-    
-    // Return ranking position data with correct calculations
-    res.json({
-      userId: userId,
-      format: format,
-      ageDivision: ageDivision,
-      ratingTierId: 1,
-      rankingPoints: displayPoints, // Display uses raw points
-      rank: 1,
-      totalPlayers: 250,
-      skillRating: 4.5,
-      // Additional data for debugging
-      weightedRankingPoints: weightedRankingPoints,
-      matchCount: userMatches.length,
-      primaryDivision: primaryDivision
-    });
   } catch (error) {
     console.error("[API] Error getting ranking position:", error);
     res.status(500).json({ error: "Server error getting ranking position" });
