@@ -391,29 +391,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       // Get user's match statistics
       const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
       
-      // For development, use realistic beginner points instead of simulated match data
-      const isNewPlayer = userId === 1; // Development user
+      // Use actual PCP Global Ranking points for consistency
+      // Calculate total points from actual match data with hybrid weighting
+      const totalPointsFromMatches = userMatches.reduce((total, match) => {
+        return total + (match.pointsAwarded || 0);
+      }, 0);
       
-      let basePoints = 0;
-      let tournamentBonus = 0;
-      
-      if (isNewPlayer) {
-        // New player starting points based on DUPR rating only
-        basePoints = Math.floor(duprRating * 20); // 20 points per DUPR point
-        tournamentBonus = 0; // No tournament history yet
-      } else {
-        // For other users, use actual match data
-        const wonMatches = userMatches.filter(match => {
-          const playerOneWon = match.playerOneId === userId && (match.playerOneScore || 0) > (match.playerTwoScore || 0);
-          const playerTwoWon = match.playerTwoId === userId && (match.playerTwoScore || 0) > (match.playerOneScore || 0);
-          return playerOneWon || playerTwoWon;
-        });
-        basePoints = wonMatches.length * 25;
-        tournamentBonus = userMatches.filter(match => match.tournamentId).length * 15;
-      }
-      
-      const skillBonus = Math.floor(duprRating * 10); // DUPR skill bonus
-      const totalPoints = basePoints + tournamentBonus + skillBonus;
+      // Add DUPR skill bonus for baseline rating
+      const skillBonus = Math.floor(duprRating * 10);
+      const totalPoints = totalPointsFromMatches + skillBonus;
 
       // Calculate ranking positions based on competitive pool size
       let singlesPosition = null;
