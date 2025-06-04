@@ -347,7 +347,7 @@ export default function PassportDashboard() {
                     transition={{ type: "spring", stiffness: 300 }}
                   >
                     <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Ranking Points</p>
-                    <p className="text-3xl font-black text-purple-700">{rankingData?.categories?.[0]?.points || 90}</p>
+                    <p className="text-3xl font-black text-purple-700">{pcpRankingData?.rankingPoints || 0}</p>
                   </motion.div>
                   <motion.div 
                     className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
@@ -401,107 +401,71 @@ export default function PassportDashboard() {
                     <Trophy className="w-4 h-4" />
                     PCP Global Ranking System
                   </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Render eligible categories */}
-                    {(() => {
-                      // Create eligible categories based on user age - younger players cannot play in older divisions
-                      const userAge = pcpRankingData?.userAge || 25; // Default to 25 if age not available
-                      const eligibleCategories = [
-                        { format: 'mens_singles', division: 'open' },
-                        { format: 'mens_doubles', division: 'open' },
-                        { format: 'mixed_doubles', division: 'open' }
-                      ];
-
-                      // Add age-restricted divisions only if player is old enough
-                      if (userAge >= 35) {
-                        eligibleCategories.push(
-                          { format: 'mens_singles', division: '35+' },
-                          { format: 'mens_doubles', division: '35+' },
-                          { format: 'mixed_doubles', division: '35+' }
-                        );
-                      }
-                      
-                      if (userAge >= 50) {
-                        eligibleCategories.push(
-                          { format: 'mens_singles', division: '50+' },
-                          { format: 'mens_doubles', division: '50+' },
-                          { format: 'mixed_doubles', division: '50+' }
-                        );
-                      }
-                      
-                      if (userAge >= 60) {
-                        eligibleCategories.push(
-                          { format: 'mens_singles', division: '60+' },
-                          { format: 'mens_doubles', division: '60+' },
-                          { format: 'mixed_doubles', division: '60+' }
-                        );
-                      }
-
-                      // Filter out only the eligible categories for display (limit to first 6 for layout)
-                      return eligibleCategories.slice(0, 6).map((category, index) => {
-                        // Find if user has data for this category - only show if authentic tournament data exists
-                        const categoryData = pcpRankingData?.allCategories?.find(
-                          (c: any) => c.format === category.format && c.division === category.division
-                        );
-
-                        // Only show as ranked if there's actual tournament participation (not just match points)
-                        const isRanked = categoryData && categoryData.breakdown?.tournamentPoints > 0;
-                        const colorScheme = index % 3 === 0 ? 'purple' : index % 3 === 1 ? 'blue' : 'indigo';
-
-                        return (
-                          <motion.div 
-                            key={`${category.format}-${category.division}`}
-                            className={`bg-gradient-to-r from-${colorScheme}-50 to-${colorScheme}-100 rounded-lg p-2 border-2 border-${colorScheme}-200 hover:shadow-md transition-all duration-200`}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
+                  <div className="grid grid-cols-1 gap-2">
+                    {/* Display age-division ranking data */}
+                    {pcpRankingData && (
+                      <motion.div 
+                        className="bg-white/70 rounded-lg p-3 border border-purple-200 hover:border-purple-300 transition-all cursor-pointer hover:shadow-md"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <span className="text-sm font-bold text-purple-700 uppercase">
+                              {ageDivision.replace('plus', '+')} Division Singles
+                            </span>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs border-purple-300 ${
+                              pcpRankingData.status === 'not_ranked' 
+                                ? 'text-orange-600 bg-orange-50' 
+                                : 'text-purple-600 bg-purple-50'
+                            }`}
                           >
-                            <div className="text-center">
-                              <div className={`font-bold text-xs text-${colorScheme}-800`}>
-                                {category.format?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} • {category.division}
-                              </div>
-                              <div className={`text-lg font-black my-1 text-${colorScheme}-600`}>
-                                {isRanked ? `${categoryData.rankingPoints} pts` : 'Not Ranked'}
-                              </div>
-                              {isRanked ? (
-                                <div className={`text-xs mb-1 text-${colorScheme}-700`}>
-                                  Tournaments: {categoryData.breakdown?.tournamentPoints || 0} • Matches: {(categoryData.breakdown?.casualMatchPoints || 0) + (categoryData.breakdown?.leagueMatchPoints || 0)}
-                                </div>
-                              ) : (
-                                <div className={`text-xs mb-1 text-${colorScheme}-600`}>
-                                  No tournament participation
-                                </div>
-                              )}
-                              {isRanked && (
-                                <div className={`mt-1 rounded-full h-1 overflow-hidden bg-${colorScheme}-100`}>
-                                  <div 
-                                    className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
-                                    style={{ 
-                                      width: categoryData.milestone ? 
-                                        `${Math.max(10, (categoryData.milestone.current / categoryData.milestone.next) * 100)}%` : 
-                                        '10%' 
-                                    }}
-                                  />
-                                </div>
-                              )}
+                            {pcpRankingData.status === 'not_ranked' ? 'Unranked' : 'Ranked'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-black text-purple-700">
+                              {pcpRankingData.rankingPoints || 0}
                             </div>
-                          </motion.div>
-                        );
-                      });
-                    })()}
-                  </div>
-                  <div className="mt-2 text-xs text-orange-600 flex items-center justify-between">
-                    <span>{pcpRankingData?.system || 'PCP Global Ranking System v2.0 (52-week rolling)'}</span>
-                    {pcpRankingData?.totalCategories > 3 && (
-                      <span className="text-orange-500 font-medium">
-                        +{pcpRankingData.totalCategories - 3} more categories
-                      </span>
+                            <div className="text-xs text-purple-600">
+                              {pcpRankingData.status === 'not_ranked' 
+                                ? `${pcpRankingData.matchCount || 0}/${pcpRankingData.requiredMatches || 10} matches`
+                                : `Rank #${pcpRankingData.rank || 'N/A'}`
+                              }
+                            </div>
+                          </div>
+                          {pcpRankingData.status === 'not_ranked' && (
+                            <div className="text-right">
+                              <div className="text-xs text-orange-600 font-medium">
+                                Need {(pcpRankingData.requiredMatches || 10) - (pcpRankingData.matchCount || 0)} more
+                              </div>
+                              <div className="text-xs text-orange-500">
+                                matches to rank
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {pcpRankingData.status === 'not_ranked' && (
+                          <div className="mt-2 rounded-full h-1 overflow-hidden bg-purple-100">
+                            <div 
+                              className="h-full transition-all duration-1000 ease-out bg-purple-500"
+                              style={{ 
+                                width: `${Math.max(10, ((pcpRankingData.matchCount || 0) / (pcpRankingData.requiredMatches || 10)) * 100)}%`
+                              }}
+                            />
+                          </div>
+                        )}
+                      </motion.div>
                     )}
                   </div>
-                  {pcpRankingData?.userAge && (
-                    <div className="mt-1 text-xs text-orange-500">
-                      Age {pcpRankingData.userAge} • Eligible for {pcpRankingData?.totalCategories || 1} ranking categories
-                    </div>
-                  )}
+                  <div className="mt-2 text-xs text-orange-600">
+                    <span>PCP Global Ranking System v2.0 (Age-Division Specific)</span>
+                  </div>
                 </div>
               </div>
               
