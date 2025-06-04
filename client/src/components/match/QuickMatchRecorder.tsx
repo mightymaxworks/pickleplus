@@ -29,12 +29,13 @@ import {
 } from "@/components/ui/tooltip";
 import { Users, UserCircle, CheckCircle2, Info, CheckCircle } from "lucide-react";
 
-// Match form schema with only essential fields
+// Match form schema with match type for hybrid point system
 const matchFormSchema = z.object({
   playerTwoId: z.number().int().positive(),
   playerOnePartnerId: z.number().int().positive().optional(),
   playerTwoPartnerId: z.number().int().positive().optional(),
   formatType: z.enum(["singles", "doubles"]).default("singles"),
+  matchType: z.enum(["tournament", "league", "casual"]).default("casual"),
   notes: z.string().optional(),
 });
 
@@ -68,6 +69,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   
   // Match state
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
+  const [matchType, setMatchType] = useState<"tournament" | "league" | "casual">("casual");
   const [scoringSystem, setScoringSystem] = useState<"traditional" | "rally">("traditional");
   const [pointsToWin, setPointsToWin] = useState<11 | 15 | 21>(11);
   const [totalGames, setTotalGames] = useState(1);
@@ -308,7 +310,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         scoringSystem,
         pointsToWin,
         division,
-        matchType: "casual" as 'casual', // Type assertion to match MatchData interface
+        matchType, // Use the selected match type for hybrid point system
         eventTier: "local",
         players,
         // Ensure gameScores is properly formatted for database storage
@@ -442,6 +444,33 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
               <span className="text-sm">Doubles</span>
             </ToggleGroupItem>
           </ToggleGroup>
+        </div>
+
+        {/* Match Type Selection for Hybrid Point System */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Match Type</div>
+          <ToggleGroup 
+            type="single" 
+            value={matchType}
+            onValueChange={(value) => value && setMatchType(value as "tournament" | "league" | "casual")}
+            className="justify-start flex w-full"
+          >
+            <ToggleGroupItem value="tournament" className="gap-2 flex-1 h-10 sm:h-auto">
+              <span className="text-sm">Tournament</span>
+              <Badge variant="secondary" className="text-xs">100%</Badge>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="league" className="gap-2 flex-1 h-10 sm:h-auto">
+              <span className="text-sm">League</span>
+              <Badge variant="secondary" className="text-xs">67%</Badge>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="casual" className="gap-2 flex-1 h-10 sm:h-auto">
+              <span className="text-sm">Casual</span>
+              <Badge variant="secondary" className="text-xs">50%</Badge>
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <div className="text-xs text-muted-foreground">
+            Point values: Tournament matches earn full points, League matches earn 67%, Casual matches earn 50%
+          </div>
         </div>
         
         <Separator />
