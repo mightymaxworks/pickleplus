@@ -139,6 +139,11 @@ export default function PassportDashboard() {
   const winRate = matchStats?.winRate || (user.totalMatches ? Math.round((user.matchesWon || 0) / (user.totalMatches || 1) * 100) : 0);
   const currentStreak = matchStats?.currentStreak || 0;
   const picklePoints = picklePointsData?.picklePoints || user.picklePoints || 150;
+  
+  // Calculate total ranking points from all categories
+  const totalRankingPoints = allRankingPositions?.data?.reduce((total, position) => {
+    return total + (position.rankingPoints || 0);
+  }, 0) || 0;
 
   const handleQRReveal = () => {
     setQrVisible(!qrVisible);
@@ -351,7 +356,7 @@ export default function PassportDashboard() {
                     transition={{ type: "spring", stiffness: 300 }}
                   >
                     <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Ranking Points</p>
-                    <p className="text-3xl font-black text-purple-700">{pcpRankingData?.rankingPoints || 0}</p>
+                    <p className="text-3xl font-black text-purple-700">{totalRankingPoints}</p>
                   </motion.div>
                   <motion.div 
                     className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
