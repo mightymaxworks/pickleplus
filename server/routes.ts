@@ -1038,7 +1038,12 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         });
       }
       
-      // Return the primary category (highest points or first relevant) for backward compatibility
+      // Calculate total ranking points across all categories (additive system)
+      const totalRankingPoints = categoryRankings.reduce((sum, category) => sum + category.rankingPoints, 0);
+      const totalTournamentPoints = categoryRankings.reduce((sum, category) => sum + category.breakdown.tournamentPoints, 0);
+      const totalMatchPoints = categoryRankings.reduce((sum, category) => sum + category.breakdown.matchPoints, 0);
+      
+      // Get primary category for format/division display
       const primaryCategory = categoryRankings.reduce((highest, current) => 
         current.rankingPoints > highest.rankingPoints ? current : highest, 
         categoryRankings[0]
@@ -1051,14 +1056,38 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         milestone: { current: 0, next: 100, needed: 100, description: 'Regional Player' }
       };
       
+      // Calculate milestone progress based on total points
+      const milestones = [
+        { points: 100, description: "Regional Player" },
+        { points: 250, description: "Competitive Player" },
+        { points: 500, description: "Advanced Player" },
+        { points: 1000, description: "Elite Player" },
+        { points: 2000, description: "Professional Level" },
+        { points: 5000, description: "World Class" }
+      ];
+      
+      let nextMilestone = milestones.find(m => totalRankingPoints < m.points);
+      if (!nextMilestone) {
+        nextMilestone = { points: 10000, description: "Legend Status" };
+      }
+      
       const response: any = {
         userId,
         format: primaryCategory.format,
         division: primaryCategory.division,
-        rankingPoints: primaryCategory.rankingPoints,
-        breakdown: primaryCategory.breakdown,
+        rankingPoints: totalRankingPoints, // Total across all categories
+        breakdown: {
+          tournamentPoints: totalTournamentPoints,
+          matchPoints: totalMatchPoints,
+          total: totalRankingPoints
+        },
         pointHistory: primaryCategory.pointHistory,
-        milestone: primaryCategory.milestone,
+        milestone: {
+          current: totalRankingPoints,
+          next: nextMilestone.points,
+          needed: nextMilestone.points - totalRankingPoints,
+          description: nextMilestone.description
+        },
         system: "PCP Global Ranking System v2.0 (52-week rolling)",
         userAge: userAge,
         totalCategories: categoryRankings.length
