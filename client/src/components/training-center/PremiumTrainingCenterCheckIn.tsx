@@ -49,6 +49,7 @@ import {
   Circle,
   PlusCircle
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TrainingCalendar from './TrainingCalendar';
 
 interface CheckInResponse {
