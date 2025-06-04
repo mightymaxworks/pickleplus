@@ -27,6 +27,15 @@ export interface AllRankingPositionsResponse {
 export function useAllRankingPositions() {
   return useQuery<AllRankingPositionsResponse>({
     queryKey: ["/api/multi-rankings/all-positions"],
+    queryFn: async () => {
+      const response = await fetch('/api/multi-rankings/all-positions', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch ranking positions');
+      }
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
