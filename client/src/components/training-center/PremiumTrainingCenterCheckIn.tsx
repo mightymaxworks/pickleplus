@@ -42,7 +42,11 @@ import {
   MapPinned,
   Building2,
   Crown,
-  Flame
+  Flame,
+  X,
+  CheckSquare,
+  Circle,
+  PlusCircle
 } from 'lucide-react';
 
 interface CheckInResponse {
@@ -199,23 +203,28 @@ export default function PremiumTrainingCenterCheckIn() {
 
   // Coach selection mutation
   const coachSelectionMutation = useMutation({
-    mutationFn: async (coachId: number) => {
+    mutationFn: async (sessionData: { coachId: number; goals: string[] }) => {
       if (!checkedInCenter) throw new Error('No center selected');
       
       const response = await apiRequest('POST', '/api/training-center/select-coach', {
         centerId: checkedInCenter.center.id,
-        coachId,
-        playerId: 1
+        coachId: sessionData.coachId,
+        playerId: 1,
+        sessionGoals: sessionData.goals
       });
       return response.json();
     },
     onSuccess: (data: SessionResponse) => {
       queryClient.invalidateQueries({ queryKey: ['/api/training-center/session/active/1'] });
       toast({
-        title: "🎯 Session Activated",
-        description: `Your Player Development Hub training session with ${data.session.coach} has begun!`,
+        title: "Session Activated",
+        description: `Your training session with ${data.session.coach} has begun!`,
       });
       setCheckedInCenter(null);
+      setShowGoalSetting(false);
+      setSelectedCoach(null);
+      setSessionGoals([]);
+      setCustomGoal('');
     },
     onError: (error: any) => {
       toast({
