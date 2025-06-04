@@ -512,10 +512,10 @@ export default function PremiumTrainingCenterCheckIn() {
                                       e.stopPropagation();
                                       handleClassJoin(coach, classItem);
                                     }}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-sm transition-all duration-200 hover:shadow-md"
                                   >
-                                    <Users className="w-4 h-4 mr-2" />
-                                    Join Class
+                                    <Users className="w-4 h-4 mr-1.5" />
+                                    Join
                                   </Button>
                                 </div>
                               </div>
