@@ -23,6 +23,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(insertUser: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
+  updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
   updateUserPassword(id: number, hashedPassword: string): Promise<void>;
   
   // Profile completion tracking
@@ -79,6 +80,21 @@ export class DatabaseStorage implements IStorage {
       .set(userData)
       .where(eq(users.id, id))
       .returning();
+    return user;
+  }
+
+  async updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User> {
+    console.log(`[Storage] Updating profile for user ${id} with data:`, profileData);
+    const [user] = await db.update(users)
+      .set(profileData)
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
+    
+    console.log(`[Storage] Profile updated successfully for user ${id}`);
     return user;
   }
 
