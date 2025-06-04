@@ -47,7 +47,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
 import { useAllRankingPositions } from '@/hooks/use-all-ranking-positions';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 
@@ -58,7 +58,58 @@ export default function PassportDashboard() {
   const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);
   const [isPassportExpanded, setIsPassportExpanded] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState({ isOpen: false, feature: '', description: '' });
+  const [profileFormData, setProfileFormData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (profileData: any) => {
+      const response = await fetch(`/api/users/${user?.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(profileData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      toast({
+        title: "Profile Updated",
+        description: "Your profile changes have been saved successfully.",
+      });
+      setIsPassportExpanded(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle form field changes
+  const handleFieldChange = (field: string, value: string) => {
+    setProfileFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Save profile changes
+  const handleSaveProfile = () => {
+    updateProfileMutation.mutate(profileFormData);
+  };
   
   // Fetch match statistics and recent matches
   const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStatistics({ 
@@ -628,6 +679,7 @@ export default function PassportDashboard() {
                         <input
                           type="text"
                           defaultValue={user.displayName || ''}
+                          onChange={(e) => handleFieldChange('displayName', e.target.value)}
                           className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         />
                       </div>
