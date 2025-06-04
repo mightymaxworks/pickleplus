@@ -1118,8 +1118,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           } else if (category.format === 'mens_doubles' && match.formatType === 'doubles') {
             matchBelongsToCategory = true;
           } else if (category.format === 'mixed_doubles' && match.formatType === 'doubles') {
-            // For now, treat all doubles as men's doubles unless we have gender info
-            matchBelongsToCategory = false;
+            // Count doubles matches in mixed_doubles category as well for cross-category aggregation
+            matchBelongsToCategory = true;
           }
           
           // Only count if match belongs to this category
@@ -1150,7 +1150,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           } else if (category.format === 'mens_doubles' && match.formatType === 'doubles') {
             matchBelongsToCategory = true;
           } else if (category.format === 'mixed_doubles' && match.formatType === 'doubles') {
-            matchBelongsToCategory = false;
+            matchBelongsToCategory = true;
           }
           
           if (matchBelongsToCategory) {
