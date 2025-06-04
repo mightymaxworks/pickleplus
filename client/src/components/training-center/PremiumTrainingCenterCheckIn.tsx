@@ -264,16 +264,19 @@ export default function PremiumTrainingCenterCheckIn() {
                           <div className="relative">
                             <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-200 shadow-md">
                               <img 
-                                src={coach.profileImage || `/api/placeholder-avatar/${coach.id}`}
-                                alt={coach.fullName || coach.name}
+                                src={(coach as any).profileImage || `/api/placeholder-avatar/${coach.id}`}
+                                alt={(coach as any).fullName || coach.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (fallback) {
+                                    fallback.style.display = 'flex';
+                                  }
                                 }}
                               />
                               <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-lg hidden">
-                                {(coach.fullName || coach.name).split(' ').map(n => n[0]).join('')}
+                                {((coach as any).fullName || coach.name).split(' ').map((n: string) => n[0]).join('')}
                               </div>
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -283,7 +286,7 @@ export default function PremiumTrainingCenterCheckIn() {
                           
                           <div className="flex-1">
                             <h4 className="text-lg font-bold text-slate-800 mb-1">
-                              {coach.fullName || coach.name}
+                              {(coach as any).fullName || coach.name}
                             </h4>
                             <div className="flex items-center space-x-2 text-sm text-slate-600 mb-2">
                               <MapPin className="w-4 h-4" />

@@ -1590,6 +1590,31 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     res.json({ success: true, activeSession: null });
   });
 
+  // Placeholder avatar endpoint for training center coaches
+  app.get('/api/placeholder-avatar/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    
+    // Generate SVG avatar with initials based on coach ID
+    const coachInitials = id === '2' ? 'AR' : id === '3' ? 'MS' : 'DT';
+    const svg = `
+      <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="32" fill="url(#grad${id})" />
+        <text x="32" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">
+          ${coachInitials}
+        </text>
+      </svg>
+    `;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(svg);
+  });
+
   app.post('/api/training-center/checkin', async (req, res) => {
     const { qrCode, playerId = 1 } = req.body;
     
