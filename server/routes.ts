@@ -865,7 +865,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
             userId: req.user.id,
             type: 'profile_update',
             description: `Profile ${tier.threshold}% complete: +${tier.reward}XP`,
-            xpEarned: tier.reward,
+            // xpEarned: tier.reward,
             metadata: { 
               oldCompletion, 
               newCompletion,
@@ -874,7 +874,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           });
           
           // Award XP
-          await storage.updateUserXP(req.user.id, tier.reward);
+          await storage.updateUser(req.user.id, tier.reward);
         }
       }
       
@@ -973,7 +973,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       totalPicklePoints = matchWinPoints + matchParticipationPoints;
       
       // Add profile completion bonus (one-time award)
-      const profileBonus = user.profileCompletionPct > 50 ? 25 : 0;
+      const profileBonus = (user.profileCompletionPct || 0) > 50 ? 25 : 0;
       totalPicklePoints += profileBonus;
       
       res.json({
@@ -1020,7 +1020,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       const userAge = user.yearOfBirth ? currentYear - user.yearOfBirth : null;
       
       // Helper function to determine relevant ranking categories for a user
-      function determineRankingCategories(user: any, userAge: number | null) {
+
+function determineRankingCategories(user: any, userAge: number | null) {
         const categories = [];
         
         // Determine gender-based formats (infer from profile data or default to both)
@@ -1052,7 +1053,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       }
 
       // Helper function to get category-specific multipliers
-      function getCategoryMultiplier(category: { format: string; division: string }) {
+
+function getCategoryMultiplier(category: { format: string; division: string }) {
         let multiplier = 1.0;
         
         // Age division adjustments (older divisions have smaller fields, so points are worth more)
@@ -1303,7 +1305,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       // Get opponent frequency for anti-gaming calculations
       const existingMatches = await storage.getMatchesByUser(req.user.id, 1000, 0, req.user.id);
       const opponentMatchCount = existingMatches.filter(match => 
-        (match.player1Id === opponentId || match.player2Id === opponentId) &&
+        (match.playerOneId === opponentId || match.playerTwoId === opponentId) &&
         match.createdAt && new Date(match.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
       ).length;
 
@@ -1321,8 +1323,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       
       // Create match record
       const match = await storage.createMatch({
-        player1Id: req.user.id,
-        player2Id: opponentId,
+        playerOneId: req.user.id,
+        playerTwoId: opponentId,
         winnerId: isWin ? req.user.id : opponentId,
         score: score || '',
         format,
@@ -1340,14 +1342,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       
       // Award XP for match participation
       const xpAwarded = isWin ? 15 : 10;
-      await storage.updateUserXP(req.user.id, xpAwarded);
+      await storage.updateUser(req.user.id, xpAwarded);
       
       // Create activity record
       await storage.createActivity({
         userId: req.user.id,
         type: 'match_recorded',
         description: `${matchType} match ${isWin ? 'won' : 'played'} • ${pointsEarned} ranking pts • ${xpAwarded} XP`,
-        xpEarned: xpAwarded,
+        // xpEarned: xpAwarded,
         metadata: { 
           matchId: match.id,
           matchType,

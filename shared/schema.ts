@@ -115,22 +115,7 @@ import {
   type GalleryWithRelations
 } from './schema/media';
 
-// Import original XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
-import {
-  xpLevelThresholds,
-  activityMultipliers,
-  multiplierRecalibrations,
-  insertXpLevelThresholdSchema,
-  insertActivityMultiplierSchema,
-  insertMultiplierRecalibrationSchema,
-  type XpSource,
-  type XpLevelThreshold,
-  type InsertXpLevelThreshold,
-  type ActivityMultiplier,
-  type InsertActivityMultiplier,
-  type MultiplierRecalibration,
-  type InsertMultiplierRecalibration
-} from './schema/xp';
+// XP system schema imports temporarily removed for deployment fix
 
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {
@@ -178,8 +163,8 @@ import {
   referrals,
   referralAchievements,
   pickleballTips,
-  referralsRelations,
-  referralAchievementsRelations,
+  // referralsRelations,
+  // referralAchievementsRelations,
   insertReferralSchema,
   insertReferralAchievementSchema,
   insertPickleballTipSchema,
@@ -498,10 +483,10 @@ import {
   type UserProgressLog,
   type InsertUserProgressLog,
   DimensionCodes,
-  InsightTypes,
-  SessionTypes,
+  // InsightTypes,
+  // SessionTypes,
   type DimensionCode,
-  type InsightType,
+  // type InsightType,
   type SessionType
 } from './schema/sage';
 

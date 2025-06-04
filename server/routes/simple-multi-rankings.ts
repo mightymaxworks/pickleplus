@@ -33,7 +33,7 @@ router.get("/all-positions", async (req: Request, res: Response) => {
         // Calculate actual match count for this format
         const formatMatches = userMatches.filter(match => {
           if (format === 'mixed_doubles') {
-            return match.formatType === 'doubles' && (match.division?.includes('mixed') || match.category?.includes('mixed'));
+            return match.formatType === 'doubles' && (match.division?.includes('mixed') || match.division?.includes('mixed'));
           }
           return match.formatType === format;
         });
