@@ -45,7 +45,7 @@ export function registerUserSearchRoutes(app: express.Express): void {
           sql`lower(${users.firstName}) like ${`%${term}%`}`,
           sql`lower(${users.lastName}) like ${`%${term}%`}`,
           // Flexible passport ID search using normalized form
-          sql`${users.passportId} like ${`%${normalizedQuery}%`}`
+          sql`${users.passportCode} like ${`%${normalizedQuery}%`}`
         )
       );
       
@@ -81,7 +81,7 @@ export function registerUserSearchRoutes(app: express.Express): void {
         avatarUrl: users.avatarUrl,
         avatarInitials: users.avatarInitials,
         isFoundingMember: users.isFoundingMember,
-        passportId: users.passportId
+        passportCode: users.passportCode
       })
       .from(users)
       .where(whereClause)
@@ -100,7 +100,7 @@ export function registerUserSearchRoutes(app: express.Express): void {
         avatarUrl: player.avatarUrl,
         avatarInitials: player.avatarInitials,
         isFoundingMember: player.isFoundingMember,
-        passportId: player.passportId
+        passportCode: player.passportCode
       }));
       
       res.json(formattedPlayers);
