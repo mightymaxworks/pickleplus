@@ -518,7 +518,7 @@ export default function PassportDashboard() {
                                 <div 
                                   className={`h-full transition-all duration-1000 ease-out bg-${colorScheme}-500`}
                                   style={{ 
-                                    width: `${position.matchCount === 0 ? 0 : Math.max(5, (position.matchCount / position.requiredMatches) * 100)}%`
+                                    width: `${position.matchCount === 0 ? 0 : Math.min(100, Math.max(5, (position.matchCount / position.requiredMatches) * 100))}%`
                                   }}
                                 />
                               </div>
