@@ -272,13 +272,13 @@ export function setupAuth(app: Express) {
   // Create session configuration
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "pickle-plus-secret-key",
-    resave: true, // Changed to true to ensure session is saved on each request
-    saveUninitialized: true, // Changed to true to create session for all requests
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't create session until something stored
     store: storage.sessionStore,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      secure: false, // Set to false for development to work in Replit
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       sameSite: "lax",
       path: '/'
     },
@@ -286,8 +286,8 @@ export function setupAuth(app: Express) {
   };
 
   // Configure session middleware
-  // Trust the first proxy to work with Replit
-  app.set('trust proxy', 1);
+  // Trust the first proxy to work with Replit and other proxies
+  app.set('trust proxy', true);
   
   app.use(session(sessionSettings));
   
