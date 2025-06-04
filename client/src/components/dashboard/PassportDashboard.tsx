@@ -632,7 +632,7 @@ export default function PassportDashboard() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-yellow-600">System</p>
-                <p className="text-xs font-bold text-yellow-800">{picklePointsData?.system?.split(' ')[0] || 'Activity'}</p>
+                <p className="text-xs font-bold text-yellow-800">Hybrid</p>
               </div>
             </div>
 
