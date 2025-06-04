@@ -416,7 +416,7 @@ export default function PassportDashboard() {
                         </div>
                       ))}
                     </div>
-                  ) : allRankingPositions?.data?.length > 0 ? (
+                  ) : allRankingPositions?.data && allRankingPositions.data.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2">
                       {allRankingPositions.data.map((position, index) => {
                         const formatDisplayName = position.format.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
