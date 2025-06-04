@@ -1,0 +1,59 @@
+/**
+ * Hook for fetching total ranking points across all categories
+ * This provides the aggregated ranking points that users see on their dashboard
+ */
+import { useQuery } from "@tanstack/react-query";
+
+interface CategoryRankingPoints {
+  format: string;
+  division: string;
+  rankingPoints: number;
+  breakdown: {
+    tournamentPoints: number;
+    matchPoints: number;
+    total: number;
+  };
+  pointHistory: Array<{
+    type: string;
+    event: string;
+    points: number;
+  }>;
+  milestone: {
+    current: number;
+    next: number;
+    needed: number;
+    description: string;
+  };
+}
+
+interface TotalRankingPointsResponse {
+  userId: number;
+  totalRankingPoints: number;
+  allCategories: CategoryRankingPoints[];
+  totalCategories: number;
+  system: string;
+  userAge: number;
+}
+
+/**
+ * Fetch total ranking points across all categories for a user
+ */
+export function useTotalRankingPoints(userId?: number) {
+  return useQuery<TotalRankingPointsResponse>({
+    queryKey: ['/api/pcp-ranking', userId],
+    enabled: !!userId,
+    staleTime: 30000, // Cache for 30 seconds
+    refetchOnWindowFocus: false,
+    select: (data) => {
+      // Calculate total points from all categories
+      const totalPoints = data.allCategories.reduce((sum, category) => {
+        return sum + category.rankingPoints;
+      }, 0);
+      
+      return {
+        ...data,
+        totalRankingPoints: totalPoints
+      };
+    }
+  });
+}

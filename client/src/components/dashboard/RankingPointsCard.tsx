@@ -38,6 +38,7 @@ import {
   RatingTier 
 } from "@shared/multi-dimensional-rankings";
 import { usePCPGlobalRankingData } from "@/hooks/use-pcp-global-rankings";
+import { useTotalRankingPoints } from "@/hooks/use-total-ranking-points";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -51,16 +52,32 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
   const [ageDivision, setAgeDivision] = useState<AgeDivision>('19plus');
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Use the custom hook to fetch data from the API
+  // Fetch total ranking points across all categories
+  const {
+    data: totalRankingData,
+    isLoading: isTotalLoading,
+    isError: isTotalError,
+    refetch: refetchTotal
+  } = useTotalRankingPoints(user?.id);
+  
+  // Use the category-specific hook for detailed view when expanded
   const {
     position,
     history,
     tiers,
-    isLoading,
-    isError,
+    isLoading: isCategoryLoading,
+    isError: isCategoryError,
     error: queryError,
-    refetch
+    refetch: refetchCategory
   } = usePCPGlobalRankingData(user?.id, format, ageDivision);
+  
+  // Use total data for main display, category data for expanded view
+  const isLoading = isTotalLoading || (isExpanded && isCategoryLoading);
+  const isError = isTotalError || (isExpanded && isCategoryError);
+  const refetch = () => {
+    refetchTotal();
+    refetchCategory();
+  };
   
   // Calculate recent gain (last 7 days)
   const sevenDaysAgo = React.useMemo(() => {
@@ -72,7 +89,7 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
   // Format and prepare the ranking data
   const rankingData = React.useMemo(() => {
     // If data is loading or there's an error, return default values
-    if (isLoading || isError || !position || !tiers.length) {
+    if (isLoading || isError || (!totalRankingData && !position) || !tiers.length) {
       return {
         points: 0,
         tier: 'Bronze',
@@ -88,9 +105,13 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
       };
     }
     
+    // Use total ranking points for main display
+    const totalPoints = totalRankingData?.totalRankingPoints || 0;
+    const hasMatches = totalPoints > 0;
+    
     // Check for insufficient data or not ranked status
-    const hasInsufficientData = position.status === "insufficient_data";
-    const isNotRanked = position.status === "not_ranked";
+    const hasInsufficientData = !hasMatches && position?.status === "insufficient_data";
+    const isNotRanked = !hasMatches && position?.status === "not_ranked";
     
     // If we have insufficient data or not ranked status, return default values with flags
     if (hasInsufficientData || isNotRanked) {
@@ -106,12 +127,12 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
         hasInsufficientData,
         isNotRanked,
         message: hasInsufficientData 
-          ? `Play ${position.requiredMatches || 3} more matches to receive your initial ranking`
+          ? `Play ${position?.requiredMatches || 3} more matches to receive your initial ranking`
           : "Complete your first match to join the rankings!"
       };
     }
     
-    // Calculate recent ranking gains/losses
+    // Calculate recent ranking gains/losses (use category-specific data for now)
     const recentHistory = history
       .filter(entry => new Date(entry.timestamp || '') >= sevenDaysAgo)
       .filter(entry => entry.format === format && entry.ageDivision === ageDivision);
@@ -122,8 +143,8 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
       return acc + (entry.newRanking - entry.oldRanking);
     }, 0);
     
-    // Determine tier based on points and calculate progress to next tier
-    const rankingPoints = position.rankingPoints || 0;
+    // Determine tier based on total points and calculate progress to next tier
+    const rankingPoints = totalPoints;
     const sortedTiers = [...tiers].sort((a, b) => a.minRating - b.minRating);
     
     const userTier = sortedTiers.find(tier => 
@@ -155,7 +176,7 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
       isNotRanked: false,
       message: ''
     };
-  }, [isLoading, isError, position, history, tiers, format, ageDivision, sevenDaysAgo]);
+  }, [isLoading, isError, totalRankingData, position, history, tiers, format, ageDivision, sevenDaysAgo]);
   
   // Get proper tier color
   const getTierColor = (tierName: string) => {
