@@ -363,7 +363,7 @@ export default function PremiumTrainingCenterCheckIn() {
                               <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
                               <span className="font-semibold text-emerald-600">${coach.hourlyRate}/hr</span>
                             </div>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 mb-2">
                               {coach.specializations.slice(0, 3).map((spec, index) => (
                                 <Badge 
                                   key={index} 
@@ -379,6 +379,16 @@ export default function PremiumTrainingCenterCheckIn() {
                                 </Badge>
                               )}
                             </div>
+                            
+                            {/* Coach Accolades */}
+                            {(coach as any).accolades && (coach as any).accolades.length > 0 && (
+                              <div className="flex items-center space-x-1 text-xs text-amber-600">
+                                <Trophy className="w-3 h-3" />
+                                <span className="font-medium truncate">
+                                  {(coach as any).accolades[0]}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -444,29 +454,67 @@ export default function PremiumTrainingCenterCheckIn() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="max-w-md mx-auto space-y-4">
-                <Input
-                  placeholder="Enter facility access code (e.g., TC001-SG)"
-                  value={qrCode}
-                  onChange={(e) => setQrCode(e.target.value)}
-                  className="text-center text-lg h-12 border-slate-300 focus:border-blue-500"
-                />
-                <Button 
-                  onClick={handleCheckIn}
-                  disabled={checkInMutation.isPending || !qrCode.trim()}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
-                >
-                  {checkInMutation.isPending ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Accessing Facility...</span>
+                {!isScanning ? (
+                  <>
+                    <div className="flex space-x-3">
+                      <Input
+                        placeholder="Manual entry: TC001-SG or TC002-SG"
+                        value={qrCode}
+                        onChange={(e) => setQrCode(e.target.value)}
+                        className="flex-1 text-center text-lg h-12 border-slate-300 focus:border-blue-500"
+                      />
+                      <Button
+                        onClick={startScanning}
+                        variant="outline"
+                        className="h-12 px-4 border-blue-300 text-blue-700 hover:bg-blue-50"
+                      >
+                        <QrCode className="h-5 w-5" />
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Shield className="h-5 w-5" />
-                      <span>Access Player Development Hub</span>
+                    <Button 
+                      onClick={handleCheckIn}
+                      disabled={checkInMutation.isPending || !qrCode.trim()}
+                      className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
+                    >
+                      {checkInMutation.isPending ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Accessing Facility...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-5 w-5" />
+                          <span>Access Player Development Hub</span>
+                        </div>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-lg p-4 border-2 border-dashed border-blue-300">
+                      <div id="qr-reader" className="w-full"></div>
                     </div>
-                  )}
-                </Button>
+                    <div className="text-center text-sm text-slate-600">
+                      Position QR code within the frame to scan automatically
+                    </div>
+                    <div className="flex space-x-3">
+                      <Button
+                        onClick={stopScanning}
+                        variant="outline"
+                        className="flex-1 h-12"
+                      >
+                        Cancel Scan
+                      </Button>
+                      <Button
+                        onClick={handleCheckIn}
+                        disabled={checkInMutation.isPending || !qrCode.trim()}
+                        className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                      >
+                        Access Hub
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Separator className="my-6" />
