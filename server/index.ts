@@ -117,7 +117,7 @@ app.use((req, res, next) => {
   }
 
   // For Cloud Run deployment, port 8080 must be used for production
-  // For local development, default to port 5000
+  // For local development, use port 5000 to match workflow configuration
   // Always use process.env.PORT if provided by the platform
   const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 8080 : 5000);
   serverHttp.listen({

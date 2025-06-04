@@ -269,25 +269,40 @@ export async function handleMightymaxLogin(req: Request, res: Response, next: Ne
 }
 
 export function setupAuth(app: Express) {
-  // Create session configuration
+  // Production-optimized session configuration
+  const isProduction = process.env.NODE_ENV === 'production';
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "pickle-plus-secret-key",
-    resave: false, // Don't save session if unmodified
-    saveUninitialized: false, // Don't create session until something stored
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      secure: false, // Keep false for Replit deployment compatibility
       sameSite: "lax",
       path: '/'
     },
-    name: "pickle_session_id" // Custom cookie name to avoid conflicts
+    name: "pickle_session_id"
   };
 
-  // Configure session middleware
-  // Trust the first proxy to work with Replit and other proxies
-  app.set('trust proxy', true);
+  // Configure for deployment environment
+  app.set('trust proxy', 1);
+  
+  // Add production CORS headers
+  if (isProduction) {
+    app.use((req, res, next) => {
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Origin', req.headers.origin);
+      res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+      
+      if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+      }
+      next();
+    });
+  }
   
   app.use(session(sessionSettings));
   
