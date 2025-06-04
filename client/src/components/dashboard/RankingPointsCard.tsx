@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTotalRankingPoints } from '@/hooks/use-total-ranking-points';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy } from 'lucide-react';
 
@@ -8,7 +8,17 @@ interface RankingPointsCardProps {
 }
 
 export function RankingPointsCard({ user }: RankingPointsCardProps) {
-  const { data: rankingData, isLoading } = useTotalRankingPoints(user?.id);
+  // Direct API call without complex caching
+  const { data: rankingData, isLoading } = useQuery({
+    queryKey: ['pcp-ranking-direct', user?.id, Math.random()], // Always fresh
+    queryFn: async () => {
+      const response = await fetch(`/api/pcp-ranking/${user?.id}`);
+      return response.json();
+    },
+    enabled: !!user?.id,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
   
   if (isLoading) {
     return (
@@ -20,8 +30,8 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
     );
   }
 
-  // Use the total calculated by the hook, or fall back to API value
-  const totalPoints = rankingData?.totalRankingPoints || rankingData?.rankingPoints || 0;
+  // Direct use of API response
+  const totalPoints = rankingData?.rankingPoints || 0;
   
   return (
     <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0 shadow-lg">

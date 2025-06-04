@@ -48,10 +48,11 @@ interface TotalRankingPointsResponse {
  */
 export function useTotalRankingPoints(userId?: number) {
   return useQuery<TotalRankingPointsResponse>({
-    queryKey: ['/api/pcp-ranking', userId],
+    queryKey: ['/api/pcp-ranking', userId, Date.now()], // Force fresh data
     enabled: !!userId,
-    staleTime: 30000, // Cache for 30 seconds
-    refetchOnWindowFocus: false,
+    staleTime: 0, // No caching for now
+    cacheTime: 0, // No background cache
+    refetchOnWindowFocus: true, // Refetch when window gains focus
     select: (data) => {
       // Use the pre-calculated total from API
       return {
