@@ -23,6 +23,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(insertUser: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
+  updateUserPassword(id: number, hashedPassword: string): Promise<void>;
   
   // Profile completion tracking
   getProfileCompletion(userId: number): Promise<ProfileCompletionTracking | undefined>;
