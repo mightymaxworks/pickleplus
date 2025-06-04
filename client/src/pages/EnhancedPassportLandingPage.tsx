@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
+import pickleLogoPath from "@assets/Pickle (2).png";
 import { 
   QrCode, 
   Shield, 
@@ -495,8 +496,12 @@ export default function EnhancedPassportLandingPage() {
       >
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
-            <div className="text-xl font-bold" style={{ color: scrollY > 50 ? '#ea580c' : 'white' }}>
-              Pickle+
+            <div className="flex items-center">
+              <img 
+                src={pickleLogoPath} 
+                alt="Pickle+" 
+                className="h-8 w-auto"
+              />
             </div>
             
             {/* Desktop Navigation */}
