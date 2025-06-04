@@ -166,48 +166,54 @@ router.get("/position", async (req: Request, res: Response) => {
     else if (ageDivision === '60plus') backendDivision = '60+';
     console.log(`[API][MultiRankings] Backend division: ${backendDivision} (from frontend: ${ageDivision})`);
     
-    // Calculate display points (raw points) and weighted ranking points
+    // Calculate TOTAL display points across ALL categories (exactly like PCP ranking system)
     let displayPoints = 0;
     let weightedRankingPoints = 0;
+    
+    // Count points for each category separately for debugging
+    let singlesPoints = 0;
+    let doublesPoints = 0;
+    let mixedDoublesPoints = 0;
     
     for (const match of userMatches) {
       console.log(`[API][MultiRankings] Checking match ${match.id}: formatType=${match.formatType}, matchType=${match.matchType}, winnerId=${match.winnerId}`);
       
-      // Only count matches that belong to this specific category
-      let matchBelongsToCategory = false;
+      const isWinner = match.winnerId === userId;
+      const basePoints = isWinner ? 3 : 1; // Base casual match scoring
+      console.log(`[API][MultiRankings] Match ${match.id}: isWinner=${isWinner}, basePoints=${basePoints}`);
       
-      if (backendFormat === 'mens_singles' && match.formatType === 'singles') {
-        matchBelongsToCategory = true;
-      } else if (backendFormat === 'mens_doubles' && match.formatType === 'doubles') {
-        matchBelongsToCategory = true;
-      } else if (backendFormat === 'mixed_doubles' && match.formatType === 'doubles') {
-        matchBelongsToCategory = false; // For now, treat all doubles as men's doubles
+      // Count ALL matches regardless of selected format - this is the key fix
+      // Categorize matches for debugging breakdown
+      if (match.formatType === 'singles') {
+        singlesPoints += basePoints;
+        console.log(`[API][MultiRankings] Match ${match.id}: Added ${basePoints} to singles (total: ${singlesPoints})`);
+      } else if (match.formatType === 'doubles') {
+        doublesPoints += basePoints;
+        console.log(`[API][MultiRankings] Match ${match.id}: Added ${basePoints} to doubles (total: ${doublesPoints})`);
+      } else if (match.formatType === 'mixed_doubles') {
+        mixedDoublesPoints += basePoints;
+        console.log(`[API][MultiRankings] Match ${match.id}: Added ${basePoints} to mixed doubles (total: ${mixedDoublesPoints})`);
       }
       
-      console.log(`[API][MultiRankings] Match ${match.id} belongs to category: ${matchBelongsToCategory}`);
+      // ALWAYS add to total display points (regardless of format filter)
+      displayPoints += basePoints;
       
-      if (matchBelongsToCategory) {
-        const isWinner = match.winnerId === userId;
-        const basePoints = isWinner ? 3 : 1; // Base casual match scoring
-        console.log(`[API][MultiRankings] Match ${match.id}: isWinner=${isWinner}, basePoints=${basePoints}`);
-        
-        // For display: Always show full points (no weighting)
-        displayPoints += basePoints;
-        
-        // For ranking: Apply weighting based on match type
-        let weightMultiplier = 1.0;
-        if (match.matchType === 'tournament') {
-          weightMultiplier = 1.0; // 100% weight
-        } else if (match.matchType === 'league') {
-          weightMultiplier = 0.67; // 67% weight
-        } else if (match.matchType === 'casual') {
-          weightMultiplier = 0.5; // 50% weight
-        }
-        
-        weightedRankingPoints += basePoints * weightMultiplier;
-        console.log(`[API][MultiRankings] Match ${match.id}: weightMultiplier=${weightMultiplier}, weightedPoints=${basePoints * weightMultiplier}`);
+      // For ranking: Apply weighting based on match type
+      let weightMultiplier = 1.0;
+      if (match.matchType === 'tournament') {
+        weightMultiplier = 1.0; // 100% weight
+      } else if (match.matchType === 'league') {
+        weightMultiplier = 0.67; // 67% weight
+      } else if (match.matchType === 'casual') {
+        weightMultiplier = 0.5; // 50% weight
       }
+      
+      weightedRankingPoints += basePoints * weightMultiplier;
+      console.log(`[API][MultiRankings] Match ${match.id}: weightMultiplier=${weightMultiplier}, weightedPoints=${basePoints * weightMultiplier}`);
     }
+    
+    console.log(`[API][MultiRankings] Category breakdown: Singles=${singlesPoints}, Doubles=${doublesPoints}, Mixed=${mixedDoublesPoints}`);
+    console.log(`[API][MultiRankings] Total points across all categories: ${displayPoints}`);
     
     console.log(`[API][MultiRankings] Final calculation: displayPoints=${displayPoints}, weightedRankingPoints=${weightedRankingPoints}`);
     
