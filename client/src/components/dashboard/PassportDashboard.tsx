@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
+import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { 
   QrCode, 
   Star, 
@@ -48,12 +49,14 @@ import { useRecentMatches } from '@/hooks/use-recent-matches';
 import { useAllRankingPositions } from '@/hooks/use-all-ranking-positions';
 import { useQuery } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
+import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 
 export default function PassportDashboard() {
   const { user } = useAuth();
   const [qrVisible, setQrVisible] = useState(false);
   const [showPassportCode, setShowPassportCode] = useState(false);
   const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);
+  const [isPassportDetailOpen, setIsPassportDetailOpen] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState({ isOpen: false, feature: '', description: '' });
   const { toast } = useToast();
   
@@ -294,7 +297,10 @@ export default function PassportDashboard() {
         transition={{ duration: 0.6 }}
         className="relative z-10"
       >
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+        <Card 
+          className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm cursor-pointer group"
+          onClick={() => setIsPassportDetailOpen(true)}
+        >
           <CardContent className="p-2">
             <div className="flex flex-col lg:flex-row items-center gap-4">
               {/* Player Information */}
