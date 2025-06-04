@@ -611,6 +611,13 @@ export const users = pgTable("users", {
   externalRatingsVerified: boolean("external_ratings_verified").default(false),
   lastExternalRatingUpdate: timestamp("last_external_rating_update"),
   
+  // Additional fields for deployment compatibility
+  xp: integer("xp").default(0),
+  level: integer("level").default(1),
+  dateOfBirth: date("date_of_birth"),
+  gender: varchar("gender", { length: 20 }),
+  externalRatings: jsonb("external_ratings"),
+  
   // Privacy settings - Default visibility profiles
   privacyProfile: varchar("privacy_profile", { length: 30 }).default("standard"),
   
