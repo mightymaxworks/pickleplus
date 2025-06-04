@@ -130,7 +130,7 @@ import {
   type InsertActivityMultiplier,
   type MultiplierRecalibration,
   type InsertMultiplierRecalibration
-} from './schema/xp-original';
+} from './schema/xp';
 
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {
@@ -224,19 +224,7 @@ import {
   type InsertBounceInteraction
 } from './schema/bounce';
 
-// Import Bounce gamification schema (PKL-278651-BOUNCE-0004-GAME - Bounce Gamification)
-import {
-  bounceAchievements,
-  userBounceAchievements,
-  bounceAchievementsRelations,
-  userBounceAchievementsRelations,
-  insertBounceAchievementSchema,
-  insertUserBounceAchievementSchema,
-  type BounceAchievement,
-  type InsertBounceAchievement,
-  type UserBounceAchievement,
-  type InsertUserBounceAchievement
-} from './schema/bounce-achievements';
+// Bounce gamification schema already imported above
 
 // Import CourtIQ™ Rating System schema (PKL-278651-RATINGS-0001-COURTIQ - Multi-dimensional Rating System)
 import {

@@ -511,7 +511,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
                           user.gender === 'male' ? "Men's" : '';
 
       // Get DUPR rating for skill level context
-      const duprRating = user.duprRating || user.externalRatings?.dupr || 0;
+      const duprRating = user.duprRating || (user.externalRatings as any)?.dupr || 0;
       
       // Get user's match statistics
       const userMatches = await storage.getMatchesByUser(userId, 100, 0, userId);
@@ -663,10 +663,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           consistency: 4.1,
           overall: 4.0
         },
-        // External Ratings
-        duprRating: 4.5,
-        utprRating: null,
-        wprRating: null,
+        // External Ratings (consolidated)
         externalRatings: {
           dupr: 4.5,
           utpr: null,
@@ -687,10 +684,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         courtCoverage: 4,
         preferredSurface: 'Indoor',
         indoorOutdoorPreference: 'Indoor',
-        // External ratings
-        duprRating: 5.0,
-        utprRating: 5.2,
-        wprRating: 5.0,
+
         externalRatingsVerified: true,
         achievements: []
       });
