@@ -28,6 +28,8 @@ import {
   Target,
   Sparkles,
   ChevronRight,
+  User,
+  Play,
   Clock3,
   MapPinned,
   Building2,
@@ -107,7 +109,7 @@ export default function PremiumTrainingCenterCheckIn() {
   });
 
   // Coach selection mutation
-  const selectCoachMutation = useMutation({
+  const coachSelectionMutation = useMutation({
     mutationFn: async (coachId: number) => {
       if (!checkedInCenter) throw new Error('No center selected');
       
@@ -148,7 +150,7 @@ export default function PremiumTrainingCenterCheckIn() {
   };
 
   const handleCoachSelection = (coachId: number) => {
-    selectCoachMutation.mutate(coachId);
+    coachSelectionMutation.mutate(coachId);
   };
 
   const activeSession = activeSessionData?.activeSession;
@@ -246,7 +248,7 @@ export default function PremiumTrainingCenterCheckIn() {
                 <div className="flex items-center space-x-2 mb-6">
                   <Award className="h-5 w-5 text-amber-500" />
                   <h3 className="text-lg font-semibold text-slate-800">
-                    Select Your Elite Coach
+                    Select Your Coach
                   </h3>
                 </div>
                 
@@ -254,43 +256,96 @@ export default function PremiumTrainingCenterCheckIn() {
                   {checkedInCenter.availableCoaches.map((coach) => (
                     <Card 
                       key={coach.id} 
-                      className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-slate-200 bg-gradient-to-r from-white to-slate-50"
-                      onClick={() => handleCoachSelection(coach.id)}
+                      className="border-slate-200 bg-gradient-to-r from-white via-slate-50 to-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                              <UserCheck className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-slate-800">{coach.name}</h4>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {coach.specializations.slice(0, 2).map((spec, index) => (
-                                  <Badge 
-                                    key={index} 
-                                    variant="secondary" 
-                                    className="text-xs bg-blue-100 text-blue-700"
-                                  >
-                                    {spec}
-                                  </Badge>
-                                ))}
-                                {coach.specializations.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{coach.specializations.length - 2} more
-                                  </Badge>
-                                )}
+                      <CardContent className="p-6">
+                        {/* Micro Passport Header */}
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="relative">
+                            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-200 shadow-md">
+                              <img 
+                                src={coach.profileImage || `/api/placeholder-avatar/${coach.id}`}
+                                alt={coach.fullName || coach.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                                }}
+                              />
+                              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-lg hidden">
+                                {(coach.fullName || coach.name).split(' ').map(n => n[0]).join('')}
                               </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center space-x-1 text-slate-600">
-                              <DollarSign className="h-4 w-4" />
-                              <span className="font-semibold">{coach.hourlyRate}</span>
-                              <span className="text-sm">/hr</span>
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                              <Award className="w-3 h-3 text-white" />
                             </div>
-                            <ChevronRight className="h-5 w-5 text-slate-400 mt-1" />
                           </div>
+                          
+                          <div className="flex-1">
+                            <h4 className="text-lg font-bold text-slate-800 mb-1">
+                              {coach.fullName || coach.name}
+                            </h4>
+                            <div className="flex items-center space-x-2 text-sm text-slate-600 mb-2">
+                              <MapPin className="w-4 h-4" />
+                              <span>Certified Coach</span>
+                              <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                              <span className="font-semibold text-emerald-600">${coach.hourlyRate}/hr</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {coach.specializations.slice(0, 3).map((spec, index) => (
+                                <Badge 
+                                  key={index} 
+                                  variant="secondary" 
+                                  className="text-xs bg-blue-100 text-blue-700 font-medium"
+                                >
+                                  {spec}
+                                </Badge>
+                              ))}
+                              {coach.specializations.length > 3 && (
+                                <Badge variant="outline" className="text-xs text-slate-600">
+                                  +{coach.specializations.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex space-x-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // TODO: Show coach details modal
+                              console.log('Show details for:', coach);
+                            }}
+                          >
+                            <User className="w-4 h-4 mr-2" />
+                            Read More
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCoachSelection(coach.id);
+                            }}
+                            disabled={coachSelectionMutation.isPending}
+                          >
+                            {coachSelectionMutation.isPending ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                                Starting...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Begin Session
+                              </>
+                            )}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

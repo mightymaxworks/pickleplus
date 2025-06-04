@@ -1611,20 +1611,32 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
       {
         id: 2,
         name: "Coach Alex",
+        fullName: "Alexandra Rodriguez",
+        profileImage: "/uploads/coaches/alexandra-rodriguez.jpg",
         specializations: ["Forehand Technique", "Strategy", "Doubles Play"],
-        hourlyRate: 75
+        hourlyRate: 75,
+        experience: "8 years",
+        certifications: ["USAPA Certified", "PPR Level 3"]
       },
       {
         id: 3,
         name: "Coach Maria",
+        fullName: "Maria Santos",
+        profileImage: "/uploads/coaches/maria-santos.jpg",
         specializations: ["Serve Development", "Mental Game", "Tournament Prep"],
-        hourlyRate: 85
+        hourlyRate: 85,
+        experience: "12 years",
+        certifications: ["USAPA Certified", "Sports Psychology"]
       },
       {
         id: 4,
         name: "Coach David",
+        fullName: "David Thompson",
+        profileImage: "/uploads/coaches/david-thompson.jpg",
         specializations: ["Backhand Fundamentals", "Footwork", "Beginner Training"],
-        hourlyRate: 65
+        hourlyRate: 65,
+        experience: "5 years",
+        certifications: ["USAPA Certified", "Youth Development"]
       }
     ];
 
