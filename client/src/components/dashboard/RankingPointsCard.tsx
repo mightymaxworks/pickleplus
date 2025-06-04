@@ -105,8 +105,8 @@ export function RankingPointsCard({ user }: RankingPointsCardProps) {
       };
     }
     
-    // Use total ranking points for main display
-    const totalPoints = totalRankingData?.totalRankingPoints || 0;
+    // Use total ranking points for main display - the API already returns the total at root level
+    const totalPoints = totalRankingData?.rankingPoints || totalRankingData?.totalRankingPoints || 0;
     const hasMatches = totalPoints > 0;
     
     // Check for insufficient data or not ranked status
