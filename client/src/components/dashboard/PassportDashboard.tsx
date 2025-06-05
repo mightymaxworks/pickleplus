@@ -285,8 +285,7 @@ export default function PassportDashboard() {
           backgroundSize: '60px 60px'
         }}></div>
       </div>
-
-      <div className="relative max-w-6xl mx-auto px-4 space-y-1 -mt-8 z-10">
+      <div className="relative max-w-6xl mx-auto px-4 space-y-1 z-10 mt-[40px] mb-[40px]">
       {/* Enhanced Futuristic Background Animations */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {/* Large floating geometric shapes - much more visible */}
