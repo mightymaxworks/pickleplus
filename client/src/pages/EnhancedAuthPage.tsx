@@ -32,10 +32,11 @@ const registerSchema = insertUserSchema.extend({
   // Make firstName and lastName required fields
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  // Add date of birth validation
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
   termsAccepted: z.boolean().refine(val => val === true, {
     message: "You must accept the terms and conditions",
   }),
-  founderCode: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
@@ -105,13 +106,14 @@ export default function EnhancedAuthPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
-      firstName: "", // Add firstName field
-      lastName: "",  // Add lastName field
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
       displayName: "",
       yearOfBirth: undefined,
+      dateOfBirth: "",
       location: "",
       playingSince: "",
       skillLevel: "",
@@ -122,7 +124,6 @@ export default function EnhancedAuthPage() {
       matchesWon: 0,
       totalTournaments: 0,
       termsAccepted: false,
-      founderCode: "",
     },
   });
 
@@ -475,8 +476,30 @@ export default function EnhancedAuthPage() {
                               )}
                             />
                           </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={registerForm.control}
+                              name="dateOfBirth"
+                              render={({ field }) => (
+                                <FormItem className="space-y-1">
+                                  <FormLabel>Date of Birth</FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                      <Input 
+                                        type="date"
+                                        className="pl-9"
+                                        {...field} 
+                                        value={field.value || ""} 
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                             
-                          <div className="grid grid-cols-1 gap-4">
                             <FormField
                               control={registerForm.control}
                               name="displayName"
@@ -641,52 +664,7 @@ export default function EnhancedAuthPage() {
                             )}
                           />
 
-                          <div 
-                            className="p-3 bg-[#FFD700]/10 rounded-lg cursor-pointer hover:bg-[#FFD700]/20 transition-colors"
-                            onClick={() => setShowFounderSection(!showFounderSection)}  
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="bg-[#FFD700]/25 p-1 rounded">
-                                <Info size={16} className="text-[#FFD700]" />
-                              </div>
-                              <div className="text-sm font-medium">I have a Founding Member code</div>
-                              <ArrowRight size={14} className={`ml-auto transition-transform ${showFounderSection ? 'rotate-90' : ''}`} />
-                            </div>
-                            
-                            <AnimatePresence>
-                              {showFounderSection && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{ duration: 0.3 }}
-                                >
-                                  <div className="mt-3 pt-3 border-t border-[#FFD700]/20">
-                                    <FormField
-                                      control={registerForm.control}
-                                      name="founderCode"
-                                      render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                          <FormLabel className="text-[#FFD700]">Founding Member Code</FormLabel>
-                                          <FormControl>
-                                            <Input 
-                                              placeholder="Enter your code" 
-                                              className="border-[#FFD700]/30 focus:border-[#FFD700]"
-                                              {...field} 
-                                            />
-                                          </FormControl>
-                                          <FormMessage />
-                                          <p className="text-xs text-gray-500">
-                                            Enter your exclusive founding member code to unlock special benefits
-                                          </p>
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
+
 
                           <FormField
                             control={registerForm.control}
