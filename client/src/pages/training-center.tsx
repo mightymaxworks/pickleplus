@@ -51,18 +51,36 @@ interface ClassDetails {
   id: number;
   name: string;
   description: string;
-  detailedDescription?: string;
+  skill_level: string;
   category: string;
-  skillLevel: string;
+  duration: number;
+  max_participants: number;
+  min_participants?: number;
+  price_per_session: number;
+  coach_id: number;
+  coach_name: string;
+  coach_bio?: string;
+  coach_certifications?: string[];
+  coach_rating?: number;
+  coach_reviews_count?: number;
+  goals?: string[];
+  date: string;
+  start_time: string;
+  end_time: string;
+  current_enrollment: number;
+  status: string;
+  center_id: number;
+  
+  // Legacy compatibility fields
+  detailedDescription?: string;
+  skillLevel?: string;
   intensityLevel?: string;
   classFormat?: string;
-  maxParticipants: number;
+  maxParticipants?: number;
   minEnrollment?: number;
   optimalCapacity?: number;
-  currentEnrollment: number;
-  duration: number;
-  price: number;
-  goals?: string[];
+  currentEnrollment?: number;
+  price?: number;
   prerequisites?: string[];
   equipmentRequired?: string[];
   equipmentProvided?: string[];
@@ -70,13 +88,12 @@ interface ClassDetails {
   teachingMethods?: string[];
   cancellationPolicy?: string;
   makeupPolicy?: string;
-  startTime: string;
-  endTime: string;
-  date: string;
-  court: number;
+  startTime?: string;
+  endTime?: string;
+  court?: number;
   waitlistCount?: number;
   waitlistPosition?: number;
-  coach: {
+  coach?: {
     id: number;
     name: string;
     avatar?: string;
@@ -88,7 +105,7 @@ interface ClassDetails {
     reviewCount?: number;
     teachingStyle?: string;
   };
-  facility: {
+  facility?: {
     name: string;
     address: string;
   };
@@ -240,9 +257,9 @@ export default function PlayerDevelopmentHub() {
   };
 
   const getClassStatusBadge = (classItem: ClassDetails) => {
-    const currentEnrollment = classItem.currentEnrollment;
-    const maxParticipants = classItem.maxParticipants;
-    const minEnrollment = classItem.minEnrollment || 1;
+    const currentEnrollment = classItem.current_enrollment || classItem.currentEnrollment || 0;
+    const maxParticipants = classItem.max_participants || classItem.maxParticipants || 0;
+    const minEnrollment = classItem.min_participants || classItem.minEnrollment || 1;
     
     if (currentEnrollment >= maxParticipants) {
       return <Badge variant="destructive">Full</Badge>;
@@ -552,16 +569,16 @@ export default function PlayerDevelopmentHub() {
                                     
                                     <div className="flex items-center text-sm text-gray-600 mb-2">
                                       <Clock className="w-4 h-4 mr-2" />
-                                      {classItem.startTime} - {classItem.endTime}
+                                      {classItem.start_time} - {classItem.end_time}
                                     </div>
                                     
                                     <div className="flex items-center justify-between">
-                                      <Badge className={`${getSkillLevelColor(classItem.skillLevel)}`}>
-                                        {classItem.skillLevel}
+                                      <Badge className={`${getSkillLevelColor(classItem.skill_level)}`}>
+                                        {classItem.skill_level}
                                       </Badge>
                                       <div className="flex items-center text-sm text-gray-500">
                                         <Users className="w-4 h-4 mr-1" />
-                                        {classItem.currentEnrollment}/{classItem.maxParticipants}
+                                        {classItem.current_enrollment}/{classItem.max_participants}
                                       </div>
                                     </div>
                                   </CardContent>

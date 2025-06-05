@@ -435,6 +435,12 @@ export default function App() {
                     component={CoachPage}
                     pageTitle="AI Coach"
                   />
+                  {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management */}
+                  <ProtectedRouteWithLayout 
+                    path="/training-center"
+                    component={TrainingCenterPage}
+                    pageTitle="Training Center"
+                  />
                   <Route path="/record-match">
                     {(params) => <CentralProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
                   </Route>
