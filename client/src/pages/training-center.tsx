@@ -100,6 +100,8 @@ export default function PlayerDevelopmentHub() {
   const [selectedFacility, setSelectedFacility] = useState<TrainingCenter | null>(null);
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date()));
   const [selectedClass, setSelectedClass] = useState<ClassDetails | null>(null);
+  const [showEnhancedModal, setShowEnhancedModal] = useState(false);
+  const [userEnrollmentStatus, setUserEnrollmentStatus] = useState<'not_enrolled' | 'enrolled' | 'waitlisted'>('not_enrolled');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -631,28 +633,28 @@ export default function PlayerDevelopmentHub() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
-                          {selectedClass.start_time} - {selectedClass.end_time}
+                          {selectedClass.startTime} - {selectedClass.endTime}
                         </div>
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4" />
-                          {selectedClass.current_enrollment}/{selectedClass.max_participants} enrolled
+                          {selectedClass.currentEnrollment}/{selectedClass.maxParticipants} enrolled
                         </div>
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-4 h-4" />
-                          ${selectedClass.price_per_session}
+                          ${selectedClass.price}
                         </div>
                       </div>
                       
-                      {selectedClass.current_enrollment < selectedClass.min_participants && (
+                      {selectedClass.currentEnrollment < (selectedClass.minEnrollment || 1) && (
                         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <div className="flex items-center gap-2 text-yellow-800">
                             <AlertTriangle className="w-4 h-4" />
                             <span className="text-sm font-medium">
-                              Minimum enrollment required: {selectedClass.min_participants} participants
+                              Minimum enrollment required: {selectedClass.minEnrollment || 1} participants
                             </span>
                           </div>
                           <p className="text-xs text-yellow-700 mt-1">
-                            Need {selectedClass.min_participants - selectedClass.current_enrollment} more participants for this class to proceed
+                            Need {(selectedClass.minEnrollment || 1) - selectedClass.currentEnrollment} more participants for this class to proceed
                           </p>
                         </div>
                       )}
@@ -665,27 +667,27 @@ export default function PlayerDevelopmentHub() {
                           <User className="w-8 h-8 text-gray-500" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-semibold">{selectedClass.coach_name}</h4>
+                          <h4 className="text-lg font-semibold">{selectedClass.coach.name}</h4>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star 
                                 key={i} 
-                                className={`w-4 h-4 ${i < selectedClass.coach_rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
+                                className={`w-4 h-4 ${i < (selectedClass.coach.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
                               />
                             ))}
                             <span className="text-sm text-gray-600 ml-1">
-                              {selectedClass.coach_rating.toFixed(1)} ({selectedClass.coach_reviews_count} reviews)
+                              {(selectedClass.coach.rating || 0).toFixed(1)} ({selectedClass.coach.reviewCount || 0} reviews)
                             </span>
                           </div>
                         </div>
                       </div>
                       
-                      <p className="text-gray-600 mb-4">{selectedClass.coach_bio}</p>
+                      <p className="text-gray-600 mb-4">{selectedClass.coach.bio || 'No bio available'}</p>
                       
                       <div className="space-y-2">
                         <h5 className="font-semibold">Certifications:</h5>
                         <div className="flex flex-wrap gap-2">
-                          {selectedClass.coach_certifications.map((cert: string, index: number) => (
+                          {(selectedClass.coach.certifications || []).map((cert: string, index: number) => (
                             <Badge key={index} variant="outline" className="flex items-center gap-1">
                               <Award className="w-3 h-3" />
                               {cert}
@@ -702,7 +704,7 @@ export default function PlayerDevelopmentHub() {
                         What you'll learn:
                       </h5>
                       <ul className="space-y-1">
-                        {selectedClass.goals.map((goal: string, index: number) => (
+                        {(selectedClass.goals || []).map((goal: string, index: number) => (
                           <li key={index} className="flex items-center gap-2 text-sm">
                             <CheckCircle className="w-4 h-4 text-green-600" />
                             {goal}
@@ -719,15 +721,14 @@ export default function PlayerDevelopmentHub() {
                       <Button 
                         onClick={handleConfirmBooking} 
                         disabled={
-                          selectedClass.current_enrollment >= selectedClass.max_participants ||
-                          selectedClass.status === 'cancelled' ||
+                          selectedClass.currentEnrollment >= selectedClass.maxParticipants ||
                           enrollMutation.isPending
                         }
                         className="flex-1"
                       >
                         {enrollMutation.isPending ? 'Processing...' : (
                           <>
-                            Confirm & Pay ${selectedClass.price_per_session}
+                            Confirm & Pay ${selectedClass.price}
                             <ArrowRight className="w-4 h-4 ml-2" />
                           </>
                         )}
@@ -751,9 +752,9 @@ export default function PlayerDevelopmentHub() {
                   {selectedClass && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h3 className="font-semibold text-lg">{selectedClass.name}</h3>
-                      <p className="text-gray-600">with {selectedClass.coach_name}</p>
+                      <p className="text-gray-600">with {selectedClass.coach.name}</p>
                       <p className="text-sm text-gray-500">
-                        {selectedClass.date} • {selectedClass.start_time} - {selectedClass.end_time}
+                        {selectedClass.date} • {selectedClass.startTime} - {selectedClass.endTime}
                       </p>
                       <p className="text-sm text-gray-500">{selectedFacility?.name}</p>
                     </div>
