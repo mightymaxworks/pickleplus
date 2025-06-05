@@ -65,15 +65,26 @@ router.get("/classes/:centerId", async (req, res) => {
         current_enrollment: 5,
         minEnrollment: 3,
         price_per_session: 45.00,
-        coach: coaches.find(c => c.firstName === "Mike") || {
-          id: 1,
-          name: "Mike Rodriguez",
-          bio: "Passionate about introducing newcomers to pickleball. Specializes in beginner instruction and youth development programs.",
-          rating: 4.7,
-          reviewCount: 89,
-          certifications: ["USAPA Certified", "Youth Development Specialist"],
-          specializations: ["Beginner Instruction", "Youth Programs", "Group Classes"]
-        },
+        coach: (() => {
+          const mikeCoach = coaches.find(c => c.firstName === "Mike");
+          return mikeCoach ? {
+            id: mikeCoach.id,
+            name: `${mikeCoach.firstName} ${mikeCoach.lastName}`,
+            bio: mikeCoach.bio || "Passionate about introducing newcomers to pickleball. Specializes in beginner instruction and youth development programs.",
+            rating: 4.7,
+            reviewCount: 89,
+            certifications: ["USAPA Certified", "Youth Development Specialist"],
+            specializations: ["Beginner Instruction", "Youth Programs", "Group Classes"]
+          } : {
+            id: 1,
+            name: "Mike Rodriguez",
+            bio: "Passionate about introducing newcomers to pickleball. Specializes in beginner instruction and youth development programs.",
+            rating: 4.7,
+            reviewCount: 89,
+            certifications: ["USAPA Certified", "Youth Development Specialist"],
+            specializations: ["Beginner Instruction", "Youth Programs", "Group Classes"]
+          };
+        })(),
         goals: ["Learn proper technique", "Meet other beginners", "Build confidence"],
         category: "Beginner",
         date: date || new Date().toISOString().split('T')[0],
@@ -95,15 +106,26 @@ router.get("/classes/:centerId", async (req, res) => {
         current_enrollment: 4,
         minEnrollment: 4,
         price_per_session: 65.00,
-        coach: coaches.find(c => c.firstName === "Sarah") || {
-          id: 2,
-          name: "Sarah Chen",
-          bio: "Former professional tennis player turned pickleball specialist. 8+ years coaching experience with focus on technique refinement and competitive strategy.",
-          rating: 4.9,
-          reviewCount: 127,
-          certifications: ["USAPA Certified", "PPR Level 3", "CPR Certified"],
-          specializations: ["Advanced Strategy", "Tournament Prep", "Technique Refinement"]
-        },
+        coach: (() => {
+          const sarahCoach = coaches.find(c => c.firstName === "Sarah");
+          return sarahCoach ? {
+            id: sarahCoach.id,
+            name: `${sarahCoach.firstName} ${sarahCoach.lastName}`,
+            bio: sarahCoach.bio || "Former professional tennis player turned pickleball specialist. 8+ years coaching experience with focus on technique refinement and competitive strategy.",
+            rating: 4.9,
+            reviewCount: 127,
+            certifications: sarahCoach.certifications ? JSON.parse(sarahCoach.certifications) : ["USAPA Certified", "PPR Level 3", "CPR Certified"],
+            specializations: sarahCoach.specializations ? JSON.parse(sarahCoach.specializations) : ["Advanced Strategy", "Tournament Prep", "Technique Refinement"]
+          } : {
+            id: 2,
+            name: "Sarah Chen",
+            bio: "Former professional tennis player turned pickleball specialist. 8+ years coaching experience with focus on technique refinement and competitive strategy.",
+            rating: 4.9,
+            reviewCount: 127,
+            certifications: ["USAPA Certified", "PPR Level 3", "CPR Certified"],
+            specializations: ["Advanced Strategy", "Tournament Prep", "Technique Refinement"]
+          };
+        })(),
         goals: ["Advanced tactics", "Competitive preparation", "Strategic thinking"],
         category: "Intermediate",
         date: date || new Date().toISOString().split('T')[0],

@@ -708,7 +708,7 @@ export default function PlayerDevelopmentHub() {
                       <div className="space-y-2">
                         <h5 className="font-semibold">Certifications:</h5>
                         <div className="flex flex-wrap gap-2">
-                          {(selectedClass.coach.certifications || []).map((cert: string, index: number) => (
+                          {(selectedClass.coach?.certifications || []).map((cert: string, index: number) => (
                             <Badge key={index} variant="outline" className="flex items-center gap-1">
                               <Award className="w-3 h-3" />
                               {cert}
