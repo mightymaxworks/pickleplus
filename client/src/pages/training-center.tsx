@@ -213,6 +213,26 @@ export default function PlayerDevelopmentHub() {
     setActiveTab('class-details');
   };
 
+  const handleViewEnhancedDetails = (classItem: ClassDetails) => {
+    setSelectedClass(classItem);
+    setShowEnhancedModal(true);
+  };
+
+  const handleEnrollInClass = (classId: number) => {
+    enrollMutation.mutate(classId);
+    setShowEnhancedModal(false);
+    setUserEnrollmentStatus('enrolled');
+  };
+
+  const handleJoinWaitlist = (classId: number) => {
+    toast({
+      title: "Joined Waitlist",
+      description: "You've been added to the waitlist for this class.",
+    });
+    setShowEnhancedModal(false);
+    setUserEnrollmentStatus('waitlisted');
+  };
+
   const handleConfirmBooking = () => {
     if (selectedClass) {
       enrollMutation.mutate(selectedClass.id);
@@ -784,6 +804,42 @@ export default function PlayerDevelopmentHub() {
           </Tabs>
         </div>
       </div>
+
+      {/* Enhanced Class Detail Modal - Phase 2 Implementation */}
+      <EnhancedClassDetailModal
+        isOpen={showEnhancedModal}
+        onClose={() => setShowEnhancedModal(false)}
+        classData={selectedClass ? {
+          ...selectedClass,
+          detailedDescription: selectedClass.detailedDescription || selectedClass.description,
+          intensityLevel: selectedClass.intensityLevel || 'Moderate',
+          classFormat: selectedClass.classFormat || 'Group Class',
+          optimalCapacity: selectedClass.optimalCapacity || selectedClass.maxParticipants,
+          waitlistCount: selectedClass.waitlistCount || 0,
+          goals: selectedClass.goals || ['Improve technique', 'Build confidence', 'Have fun'],
+          prerequisites: selectedClass.prerequisites || [],
+          equipmentRequired: selectedClass.equipmentRequired || ['Paddle', 'Comfortable athletic wear'],
+          equipmentProvided: selectedClass.equipmentProvided || ['Balls', 'Court access'],
+          skillsFocused: selectedClass.skillsFocused || ['Serving', 'Volleying', 'Strategy'],
+          teachingMethods: selectedClass.teachingMethods || ['Demonstration', 'Practice drills', 'Game play'],
+          cancellationPolicy: selectedClass.cancellationPolicy || '24-hour cancellation policy',
+          makeupPolicy: selectedClass.makeupPolicy || 'Makeup classes available within 30 days',
+          coach: {
+            ...selectedClass.coach,
+            avatar: selectedClass.coach.avatar || '',
+            bio: selectedClass.coach.bio || 'Experienced pickleball instructor dedicated to helping players improve their game.',
+            yearsExperience: selectedClass.coach.yearsExperience || 5,
+            certifications: selectedClass.coach.certifications || ['USAPA Certified', 'First Aid/CPR'],
+            specializations: selectedClass.coach.specializations || ['Beginner instruction', 'Strategy development'],
+            rating: selectedClass.coach.rating || 4.8,
+            reviewCount: selectedClass.coach.reviewCount || 47,
+            teachingStyle: selectedClass.coach.teachingStyle || 'Patient and encouraging with focus on fundamentals'
+          }
+        } : null}
+        onEnroll={handleEnrollInClass}
+        onJoinWaitlist={handleJoinWaitlist}
+        userEnrollmentStatus={userEnrollmentStatus}
+      />
     </StandardLayout>
   );
 }
