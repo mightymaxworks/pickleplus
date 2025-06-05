@@ -36,6 +36,9 @@ export interface IStorage {
   getProfileCompletion(userId: number): Promise<ProfileCompletionTracking | undefined>;
   updateProfileCompletion(userId: number, data: Partial<InsertProfileCompletionTracking>): Promise<ProfileCompletionTracking>;
   
+  // User roles operations
+  getUserRoles(userId: number): Promise<any[]>;
+  
   // Placeholder methods for build compatibility
   awardXpToUser(userId: number, amount: number, source: string): Promise<void>;
   createConciergeInteraction(data: any): Promise<any>;
@@ -169,6 +172,11 @@ export class DatabaseStorage implements IStorage {
 
   async updateProfileCompletion(userId: number, data: Partial<InsertProfileCompletionTracking>): Promise<ProfileCompletionTracking> {
     return {} as ProfileCompletionTracking; // Placeholder
+  }
+
+  async getUserRoles(userId: number): Promise<any[]> {
+    // Return empty roles array for new users - no special roles assigned
+    return [];
   }
 
   async awardXpToUser(userId: number, amount: number, source: string): Promise<void> {
