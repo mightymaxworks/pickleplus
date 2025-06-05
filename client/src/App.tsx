@@ -325,18 +325,24 @@ export default function App() {
                   />
                   
                   {/* PKL-278651-PLAYER-DEVELOPMENT-HUB - Player Development Hub */}
-                  <ProtectedRouteWithLayout
-                    path="/player-development-hub"
-                    component={TrainingCenterPage}
-                    pageTitle="Player Development Hub"
-                  />
+                  {/* DEPLOYMENT CONTROL: Disabled in production - remove this condition to enable */}
+                  {process.env.NODE_ENV !== 'production' && (
+                    <ProtectedRouteWithLayout
+                      path="/player-development-hub"
+                      component={TrainingCenterPage}
+                      pageTitle="Player Development Hub"
+                    />
+                  )}
                   
                   {/* PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration */}
-                  <ProtectedRouteWithLayout
-                    path="/training-center-full"
-                    component={TrainingCenterTabsPage}
-                    pageTitle="Training Center with Calendar"
-                  />
+                  {/* DEPLOYMENT CONTROL: Disabled in production - remove this condition to enable */}
+                  {process.env.NODE_ENV !== 'production' && (
+                    <ProtectedRouteWithLayout
+                      path="/training-center-full"
+                      component={TrainingCenterTabsPage}
+                      pageTitle="Training Center with Calendar"
+                    />
+                  )}
                   
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
                   <Route path="/roles/demo">
