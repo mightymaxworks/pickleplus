@@ -40,14 +40,10 @@ export const registerSchema = insertUserSchema
     // Make firstName and lastName required for new registrations
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    // Add restriction for test usernames
+    // Username validation
     username: z.string()
       .min(3, "Username must be at least 3 characters")
-      .max(50, "Username cannot exceed 50 characters")
-      .refine(
-        (username) => !username.toLowerCase().includes('test'), 
-        { message: "Username cannot contain the word 'test'" }
-      ),
+      .max(50, "Username cannot exceed 50 characters"),
   });
 
 // Also export registerUserSchema for backward compatibility
