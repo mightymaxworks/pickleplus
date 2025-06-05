@@ -688,16 +688,16 @@ export default function PlayerDevelopmentHub() {
                           <User className="w-8 h-8 text-gray-500" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-semibold">{selectedClass.coach.name}</h4>
+                          <h4 className="text-lg font-semibold">{selectedClass.coach?.name || 'Coach TBD'}</h4>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star 
                                 key={i} 
-                                className={`w-4 h-4 ${i < (selectedClass.coach.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
+                                className={`w-4 h-4 ${i < (selectedClass.coach?.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
                               />
                             ))}
                             <span className="text-sm text-gray-600 ml-1">
-                              {(selectedClass.coach.rating || 0).toFixed(1)} ({selectedClass.coach.reviewCount || 0} reviews)
+                              {(selectedClass.coach?.rating || 0).toFixed(1)} ({selectedClass.coach?.reviewCount || 0} reviews)
                             </span>
                           </div>
                         </div>
