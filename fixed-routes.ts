@@ -1332,7 +1332,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           rank: 5,
           format: 'singles',
           ageDivision: '19plus',
-          skillRating: 4.2
+          skillRating: 0
         },
         {
           id: 2,
@@ -1342,7 +1342,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           rank: 3,
           format: 'singles',
           ageDivision: '19plus',
-          skillRating: 4.3
+          skillRating: 0
         },
         {
           id: 3,
