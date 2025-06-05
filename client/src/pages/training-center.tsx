@@ -265,6 +265,7 @@ export default function PlayerDevelopmentHub() {
   };
 
   const getSkillLevelColor = (level: string) => {
+    if (!level) return 'bg-gray-100 text-gray-800';
     switch (level.toLowerCase()) {
       case 'beginner': return 'bg-green-100 text-green-800';
       case 'intermediate': return 'bg-yellow-100 text-yellow-800';
