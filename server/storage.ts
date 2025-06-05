@@ -7,6 +7,8 @@ import {
   activities, type InsertActivity
 } from "@shared/schema";
 
+import { communityStorageImplementation, type CommunityStorage } from './storage/community-storage';
+
 import { generateUniquePassportCode } from './utils/passport-generator';
 import { db } from "./db";
 import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql } from "drizzle-orm";
@@ -15,7 +17,7 @@ import connectPg from "connect-pg-simple";
 
 const PostgresSessionStore = connectPg(session);
 
-export interface IStorage {
+export interface IStorage extends CommunityStorage {
   sessionStore: any;
   
   // User operations
@@ -93,6 +95,208 @@ export class DatabaseStorage implements IStorage {
       conString: process.env.DATABASE_URL,
       createTableIfMissing: true 
     });
+  }
+
+  // Database access method for community operations
+  getDb(): any {
+    return db;
+  }
+
+  // Community operations - delegate to community storage implementation
+  async getCommunities(filters?: any): Promise<any[]> {
+    return await communityStorageImplementation.getCommunities.call({ getDb: () => db }, filters);
+  }
+
+  async getRecommendedCommunities(userId: number, limit?: number): Promise<any[]> {
+    return await communityStorageImplementation.getRecommendedCommunities.call({ getDb: () => db }, userId, limit);
+  }
+
+  async getCommunityById(id: number): Promise<any> {
+    return await communityStorageImplementation.getCommunityById.call({ getDb: () => db }, id);
+  }
+
+  async getCommunitiesByCreator(userId: number): Promise<any[]> {
+    return await communityStorageImplementation.getCommunitiesByCreator.call({ getDb: () => db }, userId);
+  }
+
+  async createCommunity(communityData: any): Promise<any> {
+    return await communityStorageImplementation.createCommunity.call({ getDb: () => db }, communityData);
+  }
+
+  async updateCommunity(id: number, updates: any): Promise<any> {
+    return await communityStorageImplementation.updateCommunity.call({ getDb: () => db }, id, updates);
+  }
+
+  async incrementCommunityMemberCount(communityId: number): Promise<void> {
+    return await communityStorageImplementation.incrementCommunityMemberCount.call({ getDb: () => db }, communityId);
+  }
+
+  async decrementCommunityMemberCount(communityId: number): Promise<void> {
+    return await communityStorageImplementation.decrementCommunityMemberCount.call({ getDb: () => db }, communityId);
+  }
+
+  async incrementCommunityEventCount(communityId: number): Promise<void> {
+    return await communityStorageImplementation.incrementCommunityEventCount.call({ getDb: () => db }, communityId);
+  }
+
+  async decrementCommunityEventCount(communityId: number): Promise<void> {
+    return await communityStorageImplementation.decrementCommunityEventCount.call({ getDb: () => db }, communityId);
+  }
+
+  async incrementCommunityPostCount(communityId: number): Promise<void> {
+    return await communityStorageImplementation.incrementCommunityPostCount.call({ getDb: () => db }, communityId);
+  }
+
+  async decrementCommunityPostCount(communityId: number): Promise<void> {
+    return await communityStorageImplementation.decrementCommunityPostCount.call({ getDb: () => db }, communityId);
+  }
+
+  async getCommunityMembers(communityId: number): Promise<any[]> {
+    return await communityStorageImplementation.getCommunityMembers.call({ getDb: () => db }, communityId);
+  }
+
+  async getCommunityMembership(communityId: number, userId: number): Promise<any> {
+    return await communityStorageImplementation.getCommunityMembership.call({ getDb: () => db }, communityId, userId);
+  }
+
+  async getCommunityMembershipsByUserId(userId: number): Promise<any[]> {
+    return await communityStorageImplementation.getCommunityMembershipsByUserId.call({ getDb: () => db }, userId);
+  }
+
+  async createCommunityMember(memberData: any): Promise<any> {
+    return await communityStorageImplementation.createCommunityMember.call({ getDb: () => db }, memberData);
+  }
+
+  async updateCommunityMembership(communityId: number, userId: number, updates: any): Promise<any> {
+    return await communityStorageImplementation.updateCommunityMembership.call({ getDb: () => db }, communityId, userId, updates);
+  }
+
+  async deleteCommunityMembership(communityId: number, userId: number): Promise<boolean> {
+    return await communityStorageImplementation.deleteCommunityMembership.call({ getDb: () => db }, communityId, userId);
+  }
+
+  async getCommunityAdminCount(communityId: number): Promise<number> {
+    return await communityStorageImplementation.getCommunityAdminCount.call({ getDb: () => db }, communityId);
+  }
+
+  async getCommunityPosts(communityId: number, options?: any): Promise<any[]> {
+    return await communityStorageImplementation.getCommunityPosts.call({ getDb: () => db }, communityId, options);
+  }
+
+  async getCommunityPostById(postId: number): Promise<any> {
+    return await communityStorageImplementation.getCommunityPostById.call({ getDb: () => db }, postId);
+  }
+
+  async createCommunityPost(postData: any): Promise<any> {
+    return await communityStorageImplementation.createCommunityPost.call({ getDb: () => db }, postData);
+  }
+
+  async updateCommunityPost(postId: number, updates: any): Promise<any> {
+    return await communityStorageImplementation.updateCommunityPost.call({ getDb: () => db }, postId, updates);
+  }
+
+  async deleteCommunityPost(postId: number): Promise<boolean> {
+    return await communityStorageImplementation.deleteCommunityPost.call({ getDb: () => db }, postId);
+  }
+
+  async incrementPostCommentCount(postId: number): Promise<void> {
+    return await communityStorageImplementation.incrementPostCommentCount.call({ getDb: () => db }, postId);
+  }
+
+  async decrementPostCommentCount(postId: number): Promise<void> {
+    return await communityStorageImplementation.decrementPostCommentCount.call({ getDb: () => db }, postId);
+  }
+
+  async incrementPostLikeCount(postId: number): Promise<void> {
+    return await communityStorageImplementation.incrementPostLikeCount.call({ getDb: () => db }, postId);
+  }
+
+  async decrementPostLikeCount(postId: number): Promise<void> {
+    return await communityStorageImplementation.decrementPostLikeCount.call({ getDb: () => db }, postId);
+  }
+
+  async getCommunityEvents(communityId: number, options?: any): Promise<any[]> {
+    return await communityStorageImplementation.getCommunityEvents.call({ getDb: () => db }, communityId, options);
+  }
+
+  async getCommunityEventById(eventId: number): Promise<any> {
+    return await communityStorageImplementation.getCommunityEventById.call({ getDb: () => db }, eventId);
+  }
+
+  async createCommunityEvent(eventData: any): Promise<any> {
+    return await communityStorageImplementation.createCommunityEvent.call({ getDb: () => db }, eventData);
+  }
+
+  async updateCommunityEvent(eventId: number, updates: any): Promise<any> {
+    return await communityStorageImplementation.updateCommunityEvent.call({ getDb: () => db }, eventId, updates);
+  }
+
+  async deleteCommunityEvent(eventId: number): Promise<boolean> {
+    return await communityStorageImplementation.deleteCommunityEvent.call({ getDb: () => db }, eventId);
+  }
+
+  async incrementEventAttendeeCount(eventId: number): Promise<void> {
+    return await communityStorageImplementation.incrementEventAttendeeCount.call({ getDb: () => db }, eventId);
+  }
+
+  async decrementEventAttendeeCount(eventId: number): Promise<void> {
+    return await communityStorageImplementation.decrementEventAttendeeCount.call({ getDb: () => db }, eventId);
+  }
+
+  async getEventAttendees(eventId: number): Promise<any[]> {
+    return await communityStorageImplementation.getEventAttendees.call({ getDb: () => db }, eventId);
+  }
+
+  async getEventAttendance(eventId: number, userId: number): Promise<any> {
+    return await communityStorageImplementation.getEventAttendance.call({ getDb: () => db }, eventId, userId);
+  }
+
+  async createEventAttendance(attendanceData: any): Promise<any> {
+    return await communityStorageImplementation.createEventAttendance.call({ getDb: () => db }, attendanceData);
+  }
+
+  async updateEventAttendance(eventId: number, userId: number, updates: any): Promise<any> {
+    return await communityStorageImplementation.updateEventAttendance.call({ getDb: () => db }, eventId, userId, updates);
+  }
+
+  async cancelEventAttendance(eventId: number, userId: number): Promise<boolean> {
+    return await communityStorageImplementation.cancelEventAttendance.call({ getDb: () => db }, eventId, userId);
+  }
+
+  async getPostComments(postId: number): Promise<any[]> {
+    return await communityStorageImplementation.getPostComments.call({ getDb: () => db }, postId);
+  }
+
+  async createCommunityPostComment(commentData: any): Promise<any> {
+    return await communityStorageImplementation.createCommunityPostComment.call({ getDb: () => db }, commentData);
+  }
+
+  async deleteComment(commentId: number): Promise<boolean> {
+    return await communityStorageImplementation.deleteComment.call({ getDb: () => db }, commentId);
+  }
+
+  async getPostLike(postId: number, userId: number): Promise<any> {
+    return await communityStorageImplementation.getPostLike.call({ getDb: () => db }, postId, userId);
+  }
+
+  async createPostLike(likeData: any): Promise<any> {
+    return await communityStorageImplementation.createPostLike.call({ getDb: () => db }, likeData);
+  }
+
+  async deletePostLike(postId: number, userId: number): Promise<boolean> {
+    return await communityStorageImplementation.deletePostLike.call({ getDb: () => db }, postId, userId);
+  }
+
+  async createCommunityJoinRequest(requestData: any): Promise<any> {
+    return await communityStorageImplementation.createCommunityJoinRequest.call({ getDb: () => db }, requestData);
+  }
+
+  async getCommunityJoinRequests(communityId: number): Promise<any[]> {
+    return await communityStorageImplementation.getCommunityJoinRequests.call({ getDb: () => db }, communityId);
+  }
+
+  async updateJoinRequestStatus(requestId: number, status: string, reviewedByUserId: number): Promise<any> {
+    return await communityStorageImplementation.updateJoinRequestStatus.call({ getDb: () => db }, requestId, status, reviewedByUserId);
   }
 
   async getUser(id: number): Promise<User | undefined> {
