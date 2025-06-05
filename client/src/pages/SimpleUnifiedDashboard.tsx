@@ -826,7 +826,6 @@ const SimpleUnifiedDashboard: React.FC = () => {
           <MessageCircle className="h-6 w-6" />
         </Button>
       </div>
-    </div>
 
       {/* Coming Soon Modals */}
       <ComingSoonModal
@@ -845,6 +844,7 @@ const SimpleUnifiedDashboard: React.FC = () => {
         description="Discover and join tournaments in your area. Browse upcoming events, register for competitions, and track your tournament history."
       />
     </div>
+    </>
   );
 };
 
