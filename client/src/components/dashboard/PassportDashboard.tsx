@@ -134,6 +134,17 @@ export default function PassportDashboard() {
   
   // Save profile changes
   const handleSaveProfile = () => {
+    console.log('Profile form data before save:', profileFormData);
+    
+    if (Object.keys(profileFormData).length === 0) {
+      toast({
+        title: "No Changes",
+        description: "Please make some changes before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     updateProfileMutation.mutate(profileFormData);
   };
   
