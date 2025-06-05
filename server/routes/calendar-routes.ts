@@ -114,8 +114,8 @@ router.get("/classes/:centerId", async (req, res) => {
             bio: sarahCoach.bio || "Former professional tennis player turned pickleball specialist. 8+ years coaching experience with focus on technique refinement and competitive strategy.",
             rating: 4.9,
             reviewCount: 127,
-            certifications: sarahCoach.certifications ? JSON.parse(sarahCoach.certifications) : ["USAPA Certified", "PPR Level 3", "CPR Certified"],
-            specializations: sarahCoach.specializations ? JSON.parse(sarahCoach.specializations) : ["Advanced Strategy", "Tournament Prep", "Technique Refinement"]
+            certifications: ["USAPA Certified", "PPR Level 3", "CPR Certified"],
+            specializations: ["Advanced Strategy", "Tournament Prep", "Technique Refinement"]
           } : {
             id: 2,
             name: "Sarah Chen",
