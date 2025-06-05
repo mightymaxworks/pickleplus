@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
-import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
+// Onboarding system disabled - removed TutorialProvider import
 import { CommunityProvider } from '@/lib/providers/CommunityProvider' // PKL-278651-COMM-0014-CONT
 import { GuidedTaskProvider } from '@/contexts/BounceGuidedTaskContext' // PKL-278651-BOUNCE-0008-ASSIST
 import { SageDataProvider } from '@/contexts/SageDataContext' // PKL-278651-SAGE-0029-API
@@ -19,7 +19,7 @@ import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' 
 import { ProtectedRouteWithLayout } from './lib/protected-route-with-layout' // PKL-278651-UI-0001-STDROUTE
 import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute' // PKL-278651-AUTH-0008-ROLES
 import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-CORE
-import OnboardingCompletePage from './pages/onboarding-complete-page' // PKL-278651-COURTIQ-0002-GUIDANCE
+// Onboarding complete page removed - onboarding system disabled
 import RoleProtectedDemoPage from './pages/RoleProtectedDemoPage' // PKL-278651-AUTH-0008-ROLES
 import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
 
@@ -43,7 +43,7 @@ import {
   LazyBracketDetailsPage,
   LazyLeaderboardPage,
   LazyMasteryPathsPage,
-  LazyOnboardingPage,
+  // LazyOnboardingPage removed - onboarding system disabled
   LazyEventDiscoveryPage,
   LazyMyEventsPage,
   LazyAdminDashboardPage,
@@ -180,7 +180,7 @@ export default function App() {
         <AuthProvider>
           <UserDataProvider>
             <TournamentChangeProvider>
-              <TutorialProvider>
+              {/* TutorialProvider removed - onboarding system disabled */}
                 <CommunityProvider>
                   <GuidedTaskProvider>
                     <SageDataProvider>
@@ -211,8 +211,7 @@ export default function App() {
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
                   {/* DISABLED: Onboarding system disabled for all new users */}
-                  {/* <Route path="/onboarding" component={LazyOnboardingPage} />
-                  <Route path="/onboarding-complete" component={OnboardingCompletePage} /> */}
+                  {/* Onboarding routes completely removed - system disabled */}
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
@@ -694,7 +693,7 @@ export default function App() {
                     </SageDataProvider>
                   </GuidedTaskProvider>
                 </CommunityProvider>
-              </TutorialProvider>
+              {/* TutorialProvider closing tag removed - onboarding system disabled */}
             </TournamentChangeProvider>
           </UserDataProvider>
         </AuthProvider>
