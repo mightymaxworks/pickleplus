@@ -461,7 +461,7 @@ export default function PassportDashboard() {
                     transition={{ type: "spring", stiffness: 300 }}
                   >
                     <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">DUPR Rating</p>
-                    <p className="text-3xl font-black text-orange-900">{user.duprRating || '4.2'}</p>
+                    <p className="text-3xl font-black text-orange-900">{user.duprRating || '0'}</p>
                   </motion.div>
                   <motion.div 
                     className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
