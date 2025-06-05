@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,8 @@ import { Info, ArrowRight, AlertCircle, ChevronLeft, Mail, Lock, User, MapPin, C
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Create schemas for the forms
 const loginSchema = z.object({
@@ -76,8 +78,43 @@ export default function EnhancedAuthPage() {
   const { login, register, user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [showFounderSection, setShowFounderSection] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
   const { toast } = useToast();
+
+  // Mock address autocomplete function - for production, this would use a geocoding service
+  const searchAddresses = async (query: string) => {
+    if (query.length < 3) {
+      setLocationSuggestions([]);
+      return;
+    }
+
+    // Mock data - in production, this would call a geocoding API like Google Places or Mapbox
+    const mockAddresses = [
+      `${query}, Singapore`,
+      `${query}, New York, NY, USA`,
+      `${query}, Los Angeles, CA, USA`,
+      `${query}, Toronto, ON, Canada`,
+      `${query}, London, UK`,
+      `${query}, Sydney, NSW, Australia`,
+      `${query} Street, Singapore`,
+      `${query} Avenue, Singapore`,
+    ].filter(addr => addr.toLowerCase().includes(query.toLowerCase()));
+
+    setLocationSuggestions(mockAddresses.slice(0, 5));
+  };
+
+  // Debounce location search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (locationQuery) {
+        searchAddresses(locationQuery);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [locationQuery]);
 
   // Redirect if user is already logged in - with debug logging
   useEffect(() => {
@@ -593,15 +630,59 @@ export default function EnhancedAuthPage() {
                                 <FormItem className="space-y-1">
                                   <FormLabel>Location</FormLabel>
                                   <FormControl>
-                                    <div className="relative">
-                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                      <Input 
-                                        placeholder="City, State" 
-                                        className="pl-9"
-                                        {...field} 
-                                        value={field.value || ""} 
-                                      />
-                                    </div>
+                                    <Popover open={showLocationSuggestions} onOpenChange={setShowLocationSuggestions}>
+                                      <PopoverTrigger asChild>
+                                        <div className="relative">
+                                          <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                          <Input 
+                                            placeholder="Start typing your address..." 
+                                            className="pl-9"
+                                            {...field}
+                                            value={field.value || ""}
+                                            onChange={(e) => {
+                                              field.onChange(e);
+                                              setLocationQuery(e.target.value);
+                                              setShowLocationSuggestions(e.target.value.length >= 3);
+                                            }}
+                                            onFocus={() => {
+                                              if (field.value && field.value.length >= 3) {
+                                                setShowLocationSuggestions(true);
+                                              }
+                                            }}
+                                          />
+                                        </div>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-80 p-0" align="start">
+                                        <Command>
+                                          <CommandList>
+                                            {locationSuggestions.length > 0 ? (
+                                              <CommandGroup>
+                                                {locationSuggestions.map((suggestion, index) => (
+                                                  <CommandItem
+                                                    key={index}
+                                                    onSelect={() => {
+                                                      field.onChange(suggestion);
+                                                      setShowLocationSuggestions(false);
+                                                      setLocationQuery(suggestion);
+                                                    }}
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <MapPin className="mr-2 h-4 w-4" />
+                                                    {suggestion}
+                                                  </CommandItem>
+                                                ))}
+                                              </CommandGroup>
+                                            ) : (
+                                              <CommandEmpty>
+                                                {locationQuery.length < 3 
+                                                  ? "Type at least 3 characters to search" 
+                                                  : "No addresses found"}
+                                              </CommandEmpty>
+                                            )}
+                                          </CommandList>
+                                        </Command>
+                                      </PopoverContent>
+                                    </Popover>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
