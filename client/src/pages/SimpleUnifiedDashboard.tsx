@@ -217,7 +217,12 @@ const DashboardHeader: React.FC = () => {
 };
 
 // Quick action buttons
-const QuickActions: React.FC = () => {
+interface QuickActionsProps {
+  onShowPlayerModal: () => void;
+  onShowTournamentModal: () => void;
+}
+
+const QuickActions: React.FC<QuickActionsProps> = ({ onShowPlayerModal, onShowTournamentModal }) => {
   return (
     <div className="container mt-4">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -225,7 +230,11 @@ const QuickActions: React.FC = () => {
           <Activity className="h-5 w-5" />
           <span>Play Now</span>
         </Button>
-        <Button className="h-14 flex-col gap-1" variant="outline">
+        <Button 
+          className="h-14 flex-col gap-1" 
+          variant="outline"
+          onClick={onShowPlayerModal}
+        >
           <UserPlus className="h-5 w-5" />
           <span>Find Players</span>
         </Button>
@@ -529,12 +538,18 @@ const PlayerLeaderboard: React.FC = () => {
 
 // Main dashboard component
 const SimpleUnifiedDashboard: React.FC = () => {
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [showTournamentModal, setShowTournamentModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <DashboardHeader />
       
       <main className="flex-1 pb-16 md:pb-12">
-        <QuickActions />
+        <QuickActions 
+          onShowPlayerModal={() => setShowPlayerModal(true)}
+          onShowTournamentModal={() => setShowTournamentModal(true)}
+        />
         
         <div className="container mt-6">
           <Tabs defaultValue="feed" className="space-y-4">
@@ -589,8 +604,8 @@ const SimpleUnifiedDashboard: React.FC = () => {
                       <p className="text-sm text-muted-foreground mb-3">
                         Find players and schedule your next game
                       </p>
-                      <Button variant="default" disabled>
-                        Find Players <span className="ml-2 text-xs">(Coming Soon)</span>
+                      <Button variant="default" onClick={() => setShowPlayerModal(true)}>
+                        Find Players
                       </Button>
                     </Card>
                   </div>
@@ -811,6 +826,24 @@ const SimpleUnifiedDashboard: React.FC = () => {
           <MessageCircle className="h-6 w-6" />
         </Button>
       </div>
+    </div>
+
+      {/* Coming Soon Modals */}
+      <ComingSoonModal
+        isOpen={showPlayerModal}
+        onClose={() => setShowPlayerModal(false)}
+        feature="player"
+        title="Player Discovery"
+        description="Find and connect with players in your area. This feature will help you discover compatible playing partners based on skill level, location, and availability."
+      />
+
+      <ComingSoonModal
+        isOpen={showTournamentModal}
+        onClose={() => setShowTournamentModal(false)}
+        feature="tournament"
+        title="Tournament Discovery"
+        description="Discover and join tournaments in your area. Browse upcoming events, register for competitions, and track your tournament history."
+      />
     </div>
   );
 };
