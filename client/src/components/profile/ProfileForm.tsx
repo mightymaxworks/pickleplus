@@ -1,5 +1,6 @@
 import { ProfileCompletionData } from "@/types";
 import { EnhancedUser } from "@/types/enhanced-user";
+import { PADDLE_BRAND_OPTIONS } from "@/constants/paddleBrands";
 import { 
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
 } from "@/components/ui/form";
@@ -478,25 +479,11 @@ export function ProfileForm() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="selkirk">Selkirk</SelectItem>
-                              <SelectItem value="paddletek">Paddletek</SelectItem>
-                              <SelectItem value="engage">Engage</SelectItem>
-                              <SelectItem value="joola">JOOLA</SelectItem>
-                              <SelectItem value="franklin">Franklin</SelectItem>
-                              <SelectItem value="prolite">ProLite</SelectItem>
-                              <SelectItem value="gamma">Gamma</SelectItem>
-                              <SelectItem value="oneshot">OneShot</SelectItem>
-                              <SelectItem value="onix">Onix</SelectItem>
-                              <SelectItem value="diadem">Diadem</SelectItem>
-                              <SelectItem value="head">HEAD</SelectItem>
-                              <SelectItem value="gearbox">Gearbox</SelectItem>
-                              <SelectItem value="prince">Prince</SelectItem>
-                              <SelectItem value="warrior">Warrior</SelectItem>
-                              <SelectItem value="yonex">Yonex</SelectItem>
-                              <SelectItem value="crbn">CRBN</SelectItem>
-                              <SelectItem value="adidas">Adidas</SelectItem>
-                              <SelectItem value="shot3">SHOT3</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
+                              {PADDLE_BRAND_OPTIONS.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
