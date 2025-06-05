@@ -1,139 +1,122 @@
 /**
  * Coming Soon Modal Component
- * Displays an elegant modal for features that are not yet available
+ * Shows an engaging animation for upcoming features
  */
 
-import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users, Trophy, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Rocket, Star, Trophy } from "lucide-react";
 
 interface ComingSoonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  feature: 'tournament' | 'player' | 'general';
-  title?: string;
+  feature: string;
   description?: string;
 }
 
-const featureConfig = {
-  tournament: {
-    title: 'Tournament Discovery',
-    description: 'Find and join tournaments in your area',
-    icon: Trophy,
-    features: [
-      'Browse local tournaments',
-      'Filter by skill level and format',
-      'Instant registration',
-      'Live bracket tracking',
-      'Prize pool information'
-    ],
-    launchDate: 'Summer 2025'
-  },
-  player: {
-    title: 'Player Search',
-    description: 'Connect with players and build your network',
-    icon: Users,
-    features: [
-      'Search players by location',
-      'Filter by skill level',
-      'Send match invitations',
-      'View player profiles',
-      'Build your connections'
-    ],
-    launchDate: 'Spring 2025'
-  },
-  general: {
-    title: 'Coming Soon',
-    description: 'This feature is currently in development',
-    icon: Sparkles,
-    features: [
-      'Enhanced functionality',
-      'Improved user experience',
-      'New features and capabilities'
-    ],
-    launchDate: 'Coming Soon'
-  }
-};
-
-export function ComingSoonModal({ 
-  isOpen, 
-  onClose, 
-  feature, 
-  title, 
-  description 
-}: ComingSoonModalProps) {
-  const config = featureConfig[feature];
-  const Icon = config.icon;
-  
-  const displayTitle = title || config.title;
-  const displayDescription = description || config.description;
+export function ComingSoonModal({ isOpen, onClose, feature, description }: ComingSoonModalProps) {
+  const floatingIcons = [
+    { icon: Sparkles, delay: 0, color: "text-yellow-500" },
+    { icon: Rocket, delay: 0.2, color: "text-blue-500" },
+    { icon: Star, delay: 0.4, color: "text-purple-500" },
+    { icon: Trophy, delay: 0.6, color: "text-orange-500" }
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full flex items-center justify-center">
-            <Icon className="h-8 w-8 text-orange-600" />
-          </div>
-          <DialogTitle className="text-xl font-bold">
-            {displayTitle}
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-orange-500 to-purple-600 bg-clip-text text-transparent">
+            Coming Soon!
           </DialogTitle>
-          <DialogDescription className="text-base">
-            {displayDescription}
-          </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-orange-600" />
-              <span className="font-medium text-orange-800">Launch Timeline</span>
-            </div>
-            <Badge variant="outline" className="w-full justify-center bg-white">
-              {config.launchDate}
-            </Badge>
+        <div className="text-center space-y-6 py-6">
+          {/* Floating Icons Animation */}
+          <div className="relative h-20 overflow-hidden">
+            <AnimatePresence>
+              {floatingIcons.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ y: 50, opacity: 0, rotate: 0 }}
+                    animate={{ 
+                      y: [50, -10, 50], 
+                      opacity: [0, 1, 0], 
+                      rotate: [0, 360, 720],
+                      x: [0, Math.random() * 100 - 50, 0]
+                    }}
+                    transition={{
+                      duration: 3,
+                      delay: item.delay,
+                      repeat: Infinity,
+                      repeatDelay: 1
+                    }}
+                    className={`absolute left-1/2 transform -translate-x-1/2 ${item.color}`}
+                  >
+                    <Icon className="w-8 h-8" />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              What to Expect
-            </h4>
-            <ul className="space-y-2">
-              {config.features.map((featureItem, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                  {featureItem}
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-gray-600" />
-              <span className="font-medium text-gray-800">Stay Updated</span>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">
-              We'll notify you when this feature becomes available
+
+          {/* Feature Title */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="space-y-2"
+          >
+            <h3 className="text-xl font-semibold text-gray-900">
+              {feature}
+            </h3>
+            {description && (
+              <p className="text-gray-600 text-sm">
+                {description}
+              </p>
+            )}
+          </motion.div>
+
+          {/* Animated Message */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="bg-gradient-to-r from-orange-50 to-purple-50 rounded-lg p-4 border border-orange-200"
+          >
+            <p className="text-gray-700 font-medium">
+              We're cooking up something amazing! 🔥
             </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full"
-              onClick={onClose}
-            >
-              Got it, thanks!
-            </Button>
-          </div>
+            <p className="text-sm text-gray-600 mt-1">
+              This feature is in development and will be available soon.
+            </p>
+          </motion.div>
+
+          {/* Pulse Effect Background */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-orange-400/10 to-purple-400/10 rounded-lg"
+            animate={{
+              scale: [1, 1.05, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+
+        <div className="flex justify-center">
+          <Button 
+            onClick={onClose}
+            className="bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white"
+          >
+            Got it!
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
