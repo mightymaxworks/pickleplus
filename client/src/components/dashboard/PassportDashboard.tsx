@@ -50,6 +50,7 @@ import { useAllRankingPositions } from '@/hooks/use-all-ranking-positions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
+import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 
 export default function PassportDashboard() {
   const { user } = useAuth();
@@ -789,11 +790,18 @@ export default function PassportDashboard() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-sm font-medium text-gray-700">Paddle Brand</label>
-                          <input
-                            type="text"
+                          <select
                             defaultValue={user.paddleBrand || ''}
+                            onChange={(e) => handleFieldChange('paddleBrand', e.target.value)}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          />
+                          >
+                            <option value="">Select paddle brand</option>
+                            {PADDLE_BRAND_OPTIONS.map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-700">Paddle Model</label>
