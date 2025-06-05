@@ -220,11 +220,16 @@ export default function App() {
                   <Route path="/sage-demo" component={SageDemoPage} />
                   <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} />
                   
-                  {/* QR Code Scanning Page */}
+                  {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 
                     component={lazyLoad(() => import('./pages/ScanPage'))} 
                     pageTitle="QR Scanner"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/qr-test" 
+                    component={lazyLoad(() => import('./pages/QRScannerTestPage'))} 
+                    pageTitle="QR Scanner Test"
                   />
                 
                   {/* Protected Routes - Now using StandardLayout */}
