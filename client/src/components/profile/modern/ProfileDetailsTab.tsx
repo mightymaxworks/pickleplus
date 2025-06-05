@@ -263,25 +263,8 @@ export default function ProfileDetailsTab({
                       editable={isCurrentUser}
                       placeholder="Brand"
                       render={(value, editing, onChange) => {
-                        // Define our brand options once
-                        const brandOptions = [
-                          { value: "SHOT3", label: "SHOT3" },
-                          { value: "Joola", label: "Joola" },
-                          { value: "Engage", label: "Engage" },
-                          { value: "Paddletek", label: "Paddletek" },
-                          { value: "Onix", label: "Onix" },
-                          { value: "Head", label: "Head" },
-                          { value: "ProKennex", label: "ProKennex" },
-                          { value: "Franklin", label: "Franklin" },
-                          { value: "Gamma", label: "Gamma" },
-                          { value: "Gearbox", label: "Gearbox" },
-                          { value: "Prince", label: "Prince" },
-                          { value: "CRBN", label: "CRBN" },
-                          { value: "Electrum", label: "Electrum" },
-                          { value: "Diadem", label: "Diadem" },
-                          { value: "SHOT3", label: "SHOT3" },
-                          { value: "Other", label: "Other" }
-                        ];
+                        // Use centralized brand options with SHOT3 prominently featured
+                        const brandOptions = PADDLE_BRAND_OPTIONS;
                         
                         const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                           onChange(e.target.value);
