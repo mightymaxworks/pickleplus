@@ -42,6 +42,7 @@ import {
 import ProfileStatsTab from '@/components/profile/streamlined/tabs/ProfileStatsTab';
 import { EditableProfileHeader } from '@/components/profile/EditableProfileHeader';
 import { EnhancedProfileCompletion } from '@/components/profile/EnhancedProfileCompletion';
+import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 
 /**
  * Streamlined Profile Page
@@ -109,29 +110,7 @@ const StreamlinedProfilePage: FC = () => {
     { value: 'all-court', label: 'All-Court' },
   ];
   
-  const paddleBrandOptions = [
-    { value: 'SHOT3', label: 'SHOT3' },
-    { value: 'Selkirk', label: 'Selkirk' },
-    { value: 'Joola', label: 'Joola' },
-    { value: 'Engage', label: 'Engage' },
-    { value: 'Paddletek', label: 'Paddletek' },
-    { value: 'Onix', label: 'Onix' },
-    { value: 'Head', label: 'Head' },
-    { value: 'ProKennex', label: 'ProKennex' },
-    { value: 'Franklin', label: 'Franklin' },
-    { value: 'Gamma', label: 'Gamma' },
-    { value: 'Gearbox', label: 'Gearbox' },
-    { value: 'Prince', label: 'Prince' },
-    { value: 'CRBN', label: 'CRBN' },
-    { value: 'Electrum', label: 'Electrum' },
-    { value: 'Diadem', label: 'Diadem' },
-    { value: 'Yonex', label: 'Yonex' },
-    { value: 'Wilson', label: 'Wilson' },
-    { value: 'Babolat', label: 'Babolat' },
-    { value: 'Prolite', label: 'Prolite' },
-    { value: 'Vulcan', label: 'Vulcan' },
-    { value: 'Other', label: 'Other' },
-  ];
+  const paddleBrandOptions = PADDLE_BRAND_OPTIONS;
   
   const apparelBrandOptions = [
     { value: 'Nike', label: 'Nike' },
