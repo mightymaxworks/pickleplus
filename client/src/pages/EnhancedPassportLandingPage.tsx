@@ -807,10 +807,11 @@ export default function EnhancedPassportLandingPage() {
               <Button 
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-orange-600 font-medium px-8 py-4 text-lg"
+                disabled
+                className="border-white text-white/50 font-medium px-8 py-4 text-lg cursor-not-allowed"
               >
                 <Users className="w-5 h-5 mr-2" />
-                Find Players
+                Find Players <span className="ml-2">(Coming Soon)</span>
               </Button>
             </motion.div>
           </motion.div>

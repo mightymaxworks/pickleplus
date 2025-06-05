@@ -588,7 +588,9 @@ const SimpleUnifiedDashboard: React.FC = () => {
                       <p className="text-sm text-muted-foreground mb-3">
                         Find players and schedule your next game
                       </p>
-                      <Button variant="default">Find Players</Button>
+                      <Button variant="default" disabled>
+                        Find Players <span className="ml-2 text-xs">(Coming Soon)</span>
+                      </Button>
                     </Card>
                   </div>
                 </TabsContent>
