@@ -52,7 +52,53 @@ import { apiRequest } from "@/lib/queryClient";
 import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
 import { MultiGameScoreInput } from "./MultiGameScoreInput";
 
-// Game schema for a single game in a match
+// Game schema for a single game in a match with comprehensive pickleball scoring validation
+const createGameSchema = (pointsToWin: number) => z.object({
+  playerOneScore: z.number().int().min(0).max(99),
+  playerTwoScore: z.number().int().min(0).max(99),
+}).refine(data => {
+  // No tied scores allowed - one player must win
+  return data.playerOneScore !== data.playerTwoScore;
+}, {
+  message: "Scores cannot be tied - one player must win the game",
+  path: ["playerTwoScore"]
+}).refine(data => {
+  const winnerScore = Math.max(data.playerOneScore, data.playerTwoScore);
+  const loserScore = Math.min(data.playerOneScore, data.playerTwoScore);
+  
+  // Winner must reach minimum points to win
+  if (winnerScore < pointsToWin) {
+    return false;
+  }
+  
+  // If loser has reached pointsToWin-1 or more, winner must win by 2
+  if (loserScore >= pointsToWin - 1) {
+    return winnerScore - loserScore >= 2;
+  }
+  
+  return true;
+}, (data) => {
+  const winnerScore = Math.max(data.playerOneScore, data.playerTwoScore);
+  const loserScore = Math.min(data.playerOneScore, data.playerTwoScore);
+  
+  if (winnerScore < pointsToWin) {
+    return {
+      message: `Winner must score at least ${pointsToWin} points`,
+      path: ["playerTwoScore"]
+    };
+  }
+  
+  if (loserScore >= pointsToWin - 1 && winnerScore - loserScore < 2) {
+    return {
+      message: `Must win by 2 points when opponent reaches ${pointsToWin - 1} or more`,
+      path: ["playerTwoScore"]
+    };
+  }
+  
+  return { message: "Invalid score", path: ["playerTwoScore"] };
+});
+
+// Base game schema for form initialization
 const gameSchema = z.object({
   playerOneScore: z.number().int().min(0).max(99),
   playerTwoScore: z.number().int().min(0).max(99),
@@ -105,6 +151,35 @@ const matchFormSchema = z.object({
 }, {
   message: "Partner IDs are required for doubles matches",
   path: ["playerOnePartnerId"]
+}).refine(data => {
+  // Validate each game score based on points-to-win setting
+  const pointsToWin = data.pointsToWin;
+  
+  for (let i = 0; i < data.gameScores.length; i++) {
+    const game = data.gameScores[i];
+    const winnerScore = Math.max(game.playerOneScore, game.playerTwoScore);
+    const loserScore = Math.min(game.playerOneScore, game.playerTwoScore);
+    
+    // No tied scores
+    if (game.playerOneScore === game.playerTwoScore) {
+      return false;
+    }
+    
+    // Winner must reach minimum points
+    if (winnerScore < pointsToWin) {
+      return false;
+    }
+    
+    // Win by 2 rule when opponent reaches pointsToWin-1 or more
+    if (loserScore >= pointsToWin - 1 && winnerScore - loserScore < 2) {
+      return false;
+    }
+  }
+  
+  return true;
+}, {
+  message: "Invalid game scores - check pickleball scoring rules",
+  path: ["gameScores"]
 });
 
 type MatchFormValues = z.infer<typeof matchFormSchema>;

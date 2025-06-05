@@ -34,6 +34,30 @@ export function MultiGameScoreInput({
 }: MultiGameScoreInputProps) {
   const [activeTab, setActiveTab] = useState("1");
 
+  // Validate individual game score based on pickleball rules
+  const validateGameScore = (score: GameScore) => {
+    const { playerOneScore, playerTwoScore } = score;
+    const winnerScore = Math.max(playerOneScore, playerTwoScore);
+    const loserScore = Math.min(playerOneScore, playerTwoScore);
+    
+    // No tied scores allowed
+    if (playerOneScore === playerTwoScore) {
+      return { isValid: false, message: "Scores cannot be tied - one player must win" };
+    }
+    
+    // Winner must reach minimum points to win
+    if (winnerScore < pointsToWin) {
+      return { isValid: false, message: `Winner must score at least ${pointsToWin} points` };
+    }
+    
+    // Win by 2 rule when opponent reaches pointsToWin-1 or more
+    if (loserScore >= pointsToWin - 1 && winnerScore - loserScore < 2) {
+      return { isValid: false, message: `Must win by 2 points when opponent reaches ${pointsToWin - 1} or more` };
+    }
+    
+    return { isValid: true, message: "" };
+  };
+
   // Update a specific game's score
   const updateGameScore = (index: number, newScore: GameScore) => {
     const updatedGames = [...games];
@@ -41,16 +65,16 @@ export function MultiGameScoreInput({
     onChange(updatedGames);
   };
 
-  // Calculate number of wins
-  const playerOneWins = games.filter(game => 
-    game.playerOneScore >= pointsToWin && 
-    game.playerOneScore >= game.playerTwoScore + 2
-  ).length;
+  // Calculate number of wins using proper validation
+  const playerOneWins = games.filter(game => {
+    const validation = validateGameScore(game);
+    return validation.isValid && game.playerOneScore > game.playerTwoScore;
+  }).length;
   
-  const playerTwoWins = games.filter(game => 
-    game.playerTwoScore >= pointsToWin && 
-    game.playerTwoScore >= game.playerOneScore + 2
-  ).length;
+  const playerTwoWins = games.filter(game => {
+    const validation = validateGameScore(game);
+    return validation.isValid && game.playerTwoScore > game.playerOneScore;
+  }).length;
 
   // Calculate games needed to win
   const gamesToWin = Math.ceil(totalGames / 2);
