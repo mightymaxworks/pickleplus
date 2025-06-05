@@ -210,8 +210,9 @@ export default function App() {
                   <Route path="/login" component={LazyAuthPage} />
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
-                  <Route path="/onboarding" component={LazyOnboardingPage} />
-                  <Route path="/onboarding-complete" component={OnboardingCompletePage} />
+                  {/* DISABLED: Onboarding system disabled for all new users */}
+                  {/* <Route path="/onboarding" component={LazyOnboardingPage} />
+                  <Route path="/onboarding-complete" component={OnboardingCompletePage} /> */}
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
@@ -435,12 +436,12 @@ export default function App() {
                     component={CoachPage}
                     pageTitle="AI Coach"
                   />
-                  {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management */}
-                  <ProtectedRouteWithLayout 
+                  {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management - DISABLED FOR DEPLOYMENT */}
+                  {/* <ProtectedRouteWithLayout 
                     path="/training-center"
                     component={TrainingCenterPage}
                     pageTitle="Training Center"
-                  />
+                  /> */}
                   <Route path="/record-match">
                     {(params) => <CentralProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
                   </Route>
