@@ -27,6 +27,11 @@ export interface IStorage {
   updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
   updateUserPassword(id: number, hashedPassword: string): Promise<void>;
   
+  // Password reset operations
+  createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
+  getPasswordResetToken(token: string): Promise<{ email: string; expiresAt: Date } | undefined>;
+  deletePasswordResetToken(token: string): Promise<void>;
+  
   // Profile completion tracking
   getProfileCompletion(userId: number): Promise<ProfileCompletionTracking | undefined>;
   updateProfileCompletion(userId: number, data: Partial<InsertProfileCompletionTracking>): Promise<ProfileCompletionTracking>;
@@ -137,6 +142,25 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, id));
+  }
+
+  // Password reset operations - implemented as memory store for now
+  private passwordResetTokens = new Map<string, { email: string; expiresAt: Date }>();
+
+  async createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void> {
+    this.passwordResetTokens.set(token, { email, expiresAt });
+  }
+
+  async getPasswordResetToken(token: string): Promise<{ email: string; expiresAt: Date } | undefined> {
+    const tokenData = this.passwordResetTokens.get(token);
+    if (tokenData && tokenData.expiresAt > new Date()) {
+      return tokenData;
+    }
+    return undefined;
+  }
+
+  async deletePasswordResetToken(token: string): Promise<void> {
+    this.passwordResetTokens.delete(token);
   }
 
   async getProfileCompletion(userId: number): Promise<ProfileCompletionTracking | undefined> {

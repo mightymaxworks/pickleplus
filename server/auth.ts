@@ -864,6 +864,90 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // Forgot password route
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.status(200).json({ message: "If this email is registered, you will receive a password reset link" });
+      }
+      
+      // Generate secure reset token
+      const crypto = await import('crypto');
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+      
+      // Store reset token
+      await storage.createPasswordResetToken(email, resetToken, expiresAt);
+      
+      console.log(`[Auth] Password reset token generated for ${email}: ${resetToken}`);
+      
+      // In production, you would send an email here
+      // For now, we'll log the reset link
+      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+      console.log(`[Auth] Password reset link: ${resetLink}`);
+      
+      res.status(200).json({ 
+        message: "If this email is registered, you will receive a password reset link",
+        // For development only - remove in production
+        resetToken,
+        resetLink
+      });
+      
+    } catch (error) {
+      console.error('[Auth] Forgot password error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Reset password route
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+      
+      // Validate token
+      const tokenData = await storage.getPasswordResetToken(token);
+      if (!tokenData) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(tokenData.email);
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update password
+      await storage.updateUserPassword(user.id, hashedPassword);
+      
+      // Delete reset token
+      await storage.deletePasswordResetToken(token);
+      
+      console.log(`[Auth] Password reset successful for user ${user.username} (${user.email})`);
+      
+      res.status(200).json({ message: "Password reset successful" });
+      
+    } catch (error) {
+      console.error('[Auth] Reset password error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // CSRF token route - Provides a CSRF token for authenticated users
   app.get("/api/auth/csrf-token", isAuthenticated, (req, res) => {
     console.log("[API][Auth] Generating CSRF token for user:", (req.user as any).id);
