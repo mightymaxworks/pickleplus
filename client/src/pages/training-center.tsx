@@ -38,6 +38,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { format, addDays, startOfWeek, addWeeks, isSameDay } from "date-fns";
+import { EnhancedClassDetailModal } from "@/components/training-center/EnhancedClassDetailModal";
 
 interface TrainingCenter {
   id: number;
@@ -91,27 +92,6 @@ interface ClassDetails {
     name: string;
     address: string;
   };
-}
-  name: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  duration: number;
-  skill_level: string;
-  max_participants: number;
-  min_participants: number;
-  current_enrollment: number;
-  price_per_session: number;
-  coach_name: string;
-  coach_id: number;
-  coach_bio: string;
-  coach_certifications: string[];
-  coach_rating: number;
-  coach_reviews_count: number;
-  goals: string[];
-  category: string;
-  date: string;
-  status: 'available' | 'full' | 'cancelled' | 'minimum_not_met';
 }
 
 export default function PlayerDevelopmentHub() {
@@ -238,23 +218,21 @@ export default function PlayerDevelopmentHub() {
   };
 
   const getClassStatusBadge = (classItem: ClassDetails) => {
-    const { current_enrollment, max_participants, min_participants, status } = classItem;
+    const currentEnrollment = classItem.currentEnrollment;
+    const maxParticipants = classItem.maxParticipants;
+    const minEnrollment = classItem.minEnrollment || 1;
     
-    if (status === 'cancelled') {
-      return <Badge variant="destructive">Cancelled</Badge>;
-    }
-    
-    if (current_enrollment >= max_participants) {
+    if (currentEnrollment >= maxParticipants) {
       return <Badge variant="destructive">Full</Badge>;
     }
     
-    if (current_enrollment < min_participants) {
+    if (currentEnrollment < minEnrollment) {
       return <Badge variant="outline" className="text-yellow-600 border-yellow-300">
-        Need {min_participants - current_enrollment} more
+        Need {minEnrollment - currentEnrollment} more
       </Badge>;
     }
     
-    const spotsLeft = max_participants - current_enrollment;
+    const spotsLeft = maxParticipants - currentEnrollment;
     if (spotsLeft <= 2) {
       return <Badge variant="outline" className="text-orange-600 border-orange-300">
         {spotsLeft} spots left
@@ -541,26 +519,26 @@ export default function PlayerDevelopmentHub() {
                                     <div className="flex justify-between items-start mb-3">
                                       <div className="flex-1">
                                         <h3 className="font-semibold text-lg">{classItem.name}</h3>
-                                        <p className="text-gray-600 text-sm">{classItem.coach_name}</p>
+                                        <p className="text-gray-600 text-sm">{classItem.coach.name}</p>
                                       </div>
                                       <div className="text-right">
-                                        <div className="font-bold text-lg">${classItem.price_per_session}</div>
+                                        <div className="font-bold text-lg">${classItem.price}</div>
                                         {getClassStatusBadge(classItem)}
                                       </div>
                                     </div>
                                     
                                     <div className="flex items-center text-sm text-gray-600 mb-2">
                                       <Clock className="w-4 h-4 mr-2" />
-                                      {classItem.start_time} - {classItem.end_time}
+                                      {classItem.startTime} - {classItem.endTime}
                                     </div>
                                     
                                     <div className="flex items-center justify-between">
-                                      <Badge className={`${getSkillLevelColor(classItem.skill_level)}`}>
-                                        {classItem.skill_level}
+                                      <Badge className={`${getSkillLevelColor(classItem.skillLevel)}`}>
+                                        {classItem.skillLevel}
                                       </Badge>
                                       <div className="flex items-center text-sm text-gray-500">
                                         <Users className="w-4 h-4 mr-1" />
-                                        {classItem.current_enrollment}/{classItem.max_participants}
+                                        {classItem.currentEnrollment}/{classItem.maxParticipants}
                                       </div>
                                     </div>
                                   </CardContent>
@@ -599,22 +577,22 @@ export default function PlayerDevelopmentHub() {
                                         <div className="space-y-1">
                                           <div className="font-medium text-sm">{classItem.name}</div>
                                           <div className="text-xs text-gray-600">
-                                            {classItem.start_time} - {classItem.end_time}
+                                            {classItem.startTime} - {classItem.endTime}
                                           </div>
                                           <div className="text-xs text-gray-600">
-                                            {classItem.coach_name}
+                                            {classItem.coach.name}
                                           </div>
                                           <div className="flex items-center justify-between">
-                                            <Badge className={`text-xs ${getSkillLevelColor(classItem.skill_level)}`}>
-                                              {classItem.skill_level}
+                                            <Badge className={`text-xs ${getSkillLevelColor(classItem.skillLevel)}`}>
+                                              {classItem.skillLevel}
                                             </Badge>
                                             <div className="text-xs text-gray-500">
-                                              {classItem.current_enrollment}/{classItem.max_participants}
+                                              {classItem.currentEnrollment}/{classItem.maxParticipants}
                                             </div>
                                           </div>
                                           <div className="flex items-center justify-between">
                                             {getClassStatusBadge(classItem)}
-                                            <div className="text-xs font-medium">${classItem.price_per_session}</div>
+                                            <div className="text-xs font-medium">${classItem.price}</div>
                                           </div>
                                         </div>
                                       </Card>
