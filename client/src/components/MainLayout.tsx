@@ -80,10 +80,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
   };
 
-  // Create the base navigation items
+  // Create the base navigation items - removed tournaments and profile per user request
   const baseNavigationItems: NavigationItem[] = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
-    { name: 'Tournaments', path: '/tournaments', icon: <Trophy className="h-5 w-5" /> },
     { name: 'Matches', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
     { name: 'Achievements', path: '/achievements', icon: <Award className="h-5 w-5" /> },
     { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
@@ -103,7 +102,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       icon: <Users className="h-5 w-5" />,
       badge: { text: 'New', variant: 'outline' }
     },
-    { name: 'Profile', path: '/profile/modern', icon: <UserCircle className="h-5 w-5" /> },
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];
 

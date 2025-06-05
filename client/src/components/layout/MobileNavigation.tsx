@@ -27,7 +27,6 @@ export function MobileNavigation() {
     { icon: <Calendar size={20} />, label: 'Matches', path: '/matches' },
     { icon: <Users size={20} />, label: 'Communities', path: '/communities' },
     { icon: <Award size={20} />, label: 'Mastery', path: '/mastery-paths' },
-    { icon: <User size={20} />, label: 'Profile', path: '/profile' },
   ];
 
   // Mobile navigation bar removed as per user request

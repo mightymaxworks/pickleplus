@@ -131,18 +131,12 @@ export function AppHeader({
     }
   };
 
-  // Default navigation items
+  // Default navigation items - removed profile, picklepass, tournaments, onboarding per user request
   const defaultNavItems = [
     { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
     { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
-    { label: 'Tournaments', icon: <Award size={18} />, path: '/tournaments' },
     { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
-    // Temporarily disabled until MasteryPathsPage is implemented
-    // { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
-    { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
     { label: 'Referrals', icon: <Share size={18} />, path: '/referrals' },
-    { label: 'Onboarding', icon: <LifeBuoy size={18} />, path: '/onboarding' },
-    { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
     { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
     // Removed Icons Test per user request (2025-04-21)
     ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])

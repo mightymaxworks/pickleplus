@@ -70,9 +70,6 @@ export function Header() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLocation("/profile")}>
-                  Profile
-                </DropdownMenuItem>
                 {user?.isAdmin && (
                   <>
                     <DropdownMenuItem onClick={() => setLocation("/admin/dashboard")}>
