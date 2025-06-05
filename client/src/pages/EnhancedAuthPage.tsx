@@ -83,26 +83,36 @@ export default function EnhancedAuthPage() {
   const [locationQuery, setLocationQuery] = useState("");
   const { toast } = useToast();
 
-  // Mock address autocomplete function - for production, this would use a geocoding service
+  // OpenStreetMap Nominatim address autocomplete function
   const searchAddresses = async (query: string) => {
     if (query.length < 3) {
       setLocationSuggestions([]);
       return;
     }
 
-    // Mock data - in production, this would call a geocoding API like Google Places or Mapbox
-    const mockAddresses = [
-      `${query}, Singapore`,
-      `${query}, New York, NY, USA`,
-      `${query}, Los Angeles, CA, USA`,
-      `${query}, Toronto, ON, Canada`,
-      `${query}, London, UK`,
-      `${query}, Sydney, NSW, Australia`,
-      `${query} Street, Singapore`,
-      `${query} Avenue, Singapore`,
-    ].filter(addr => addr.toLowerCase().includes(query.toLowerCase()));
+    try {
+      // Using OpenStreetMap Nominatim API (free, no API key required)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            'User-Agent': 'PicklePlus/1.0 (pickleball community platform)'
+          }
+        }
+      );
 
-    setLocationSuggestions(mockAddresses.slice(0, 5));
+      if (!response.ok) {
+        throw new Error('Failed to fetch addresses');
+      }
+
+      const data = await response.json();
+      const addresses = data.map((item: any) => item.display_name).slice(0, 5);
+      setLocationSuggestions(addresses);
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      // Fallback to no suggestions on error
+      setLocationSuggestions([]);
+    }
   };
 
   // Debounce location search
