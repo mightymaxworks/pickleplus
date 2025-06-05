@@ -253,8 +253,19 @@ export default function PassportDashboard() {
   };
 
   const handleJoinTournament = () => {
-    // Navigate to tournaments
-    window.location.href = '/tournaments';
+    setComingSoonModal({
+      isOpen: true,
+      feature: 'Tournament Registration',
+      description: 'Our tournament discovery and registration system is launching soon! You\'ll be able to browse upcoming tournaments, register with one click, and track your tournament history.'
+    });
+  };
+
+  const handleFindPlayers = () => {
+    setComingSoonModal({
+      isOpen: true,
+      feature: 'Player Discovery',
+      description: 'The player finder feature is coming soon! Connect with players in your area, find practice partners, and organize friendly matches based on skill level and availability.'
+    });
   };
 
   const handlePhotoUploadSuccess = (avatarUrl: string) => {
@@ -1163,7 +1174,7 @@ export default function PassportDashboard() {
                     <Calendar className="w-4 h-4 mr-2" />
                     Join Tournament
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button onClick={handleFindPlayers} variant="outline" className="w-full justify-start">
                     <Users className="w-4 h-4 mr-2" />
                     Find Players
                   </Button>
