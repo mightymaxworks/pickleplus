@@ -237,24 +237,45 @@ export default function PlayerDevelopmentHub() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 mb-8">
+            {/* Mobile: Vertical tab indicators */}
+            <div className="block sm:hidden mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Booking Progress</h2>
+                <div className="text-sm text-gray-500">
+                  Step {activeTab === 'facility-selection' ? '1' : activeTab === 'weekly-calendar' ? '2' : activeTab === 'class-details' ? '3' : '4'} of 4
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <div className={`h-2 flex-1 rounded ${activeTab === 'facility-selection' ? 'bg-blue-600' : selectedFacility ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                <div className={`h-2 flex-1 rounded ${activeTab === 'weekly-calendar' ? 'bg-blue-600' : selectedClass ? 'bg-green-500' : selectedFacility ? 'bg-gray-300' : 'bg-gray-200'}`}></div>
+                <div className={`h-2 flex-1 rounded ${activeTab === 'class-details' ? 'bg-blue-600' : activeTab === 'booking-confirmed' ? 'bg-green-500' : selectedClass ? 'bg-gray-300' : 'bg-gray-200'}`}></div>
+                <div className={`h-2 flex-1 rounded ${activeTab === 'booking-confirmed' ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+              </div>
+            </div>
+
+            {/* Desktop: Horizontal tabs */}
+            <TabsList className="hidden sm:grid w-full grid-cols-4 mb-8">
               <TabsTrigger value="facility-selection" className="flex items-center space-x-2">
                 <QrCode className="w-4 h-4" />
-                <span>Facility Selection</span>
+                <span className="hidden md:inline">Facility Selection</span>
+                <span className="md:hidden">Facility</span>
               </TabsTrigger>
               <TabsTrigger value="weekly-calendar" className="flex items-center space-x-2" disabled={!selectedFacility}>
                 <Calendar className="w-4 h-4" />
-                <span>Weekly Calendar</span>
+                <span className="hidden md:inline">Weekly Calendar</span>
+                <span className="md:hidden">Calendar</span>
               </TabsTrigger>
               <TabsTrigger value="class-details" className="flex items-center space-x-2" disabled={!selectedClass}>
                 <User className="w-4 h-4" />
-                <span>Class Details</span>
+                <span className="hidden md:inline">Class Details</span>
+                <span className="md:hidden">Details</span>
               </TabsTrigger>
               <TabsTrigger value="booking-confirmed" className="flex items-center space-x-2" disabled>
                 <CheckCircle className="w-4 h-4" />
-                <span>Confirmed</span>
+                <span className="hidden md:inline">Confirmed</span>
+                <span className="md:hidden">Done</span>
               </TabsTrigger>
             </TabsList>
 
@@ -415,7 +436,97 @@ export default function PlayerDevelopmentHub() {
                       {loadingSchedule ? (
                         <div className="text-center py-8">Loading schedule...</div>
                       ) : (
-                        <div className="grid grid-cols-7 gap-4">
+                        <>
+                        {/* Mobile-first responsive calendar */}
+                        <div className="block lg:hidden">
+                          {/* Mobile: Single column with day tabs */}
+                          <div className="mb-4">
+                            <div className="flex overflow-x-auto space-x-2 pb-2">
+                              {weekDays.map((day) => {
+                                const dateKey = format(day, 'yyyy-MM-dd');
+                                const dayClasses = weeklySchedule?.schedule?.[dateKey] || [];
+                                const isToday = isSameDay(day, new Date());
+                                const isSelected = format(day, 'yyyy-MM-dd') === format(currentWeek, 'yyyy-MM-dd');
+
+                                return (
+                                  <button
+                                    key={dateKey}
+                                    onClick={() => setCurrentWeek(startOfWeek(day))}
+                                    className={`min-w-[80px] p-3 rounded-lg text-center transition-colors ${
+                                      isToday 
+                                        ? 'bg-blue-600 text-white' 
+                                        : isSelected 
+                                        ? 'bg-blue-100 text-blue-800' 
+                                        : 'bg-gray-50 text-gray-700'
+                                    }`}
+                                  >
+                                    <div className="font-semibold text-sm">{format(day, 'EEE')}</div>
+                                    <div className="text-xs">{format(day, 'MMM d')}</div>
+                                    {dayClasses.length > 0 && (
+                                      <div className="w-2 h-2 bg-current rounded-full mx-auto mt-1 opacity-60"></div>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Mobile: Selected day classes */}
+                          <div className="space-y-3">
+                            {(() => {
+                              const selectedDateKey = format(currentWeek, 'yyyy-MM-dd');
+                              const selectedDayClasses = weeklySchedule?.schedule?.[selectedDateKey] || [];
+                              
+                              if (selectedDayClasses.length === 0) {
+                                return (
+                                  <div className="text-center text-gray-400 py-8">
+                                    <Calendar className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                                    <p>No classes scheduled for this day</p>
+                                  </div>
+                                );
+                              }
+
+                              return selectedDayClasses.map((classItem: ClassDetails) => (
+                                <Card 
+                                  key={`mobile-${classItem.id}-${selectedDateKey}`}
+                                  className="cursor-pointer hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+                                  onClick={() => handleClassSelection(classItem)}
+                                >
+                                  <CardContent className="p-4">
+                                    <div className="flex justify-between items-start mb-3">
+                                      <div className="flex-1">
+                                        <h3 className="font-semibold text-lg">{classItem.name}</h3>
+                                        <p className="text-gray-600 text-sm">{classItem.coach_name}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="font-bold text-lg">${classItem.price_per_session}</div>
+                                        {getClassStatusBadge(classItem)}
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center text-sm text-gray-600 mb-2">
+                                      <Clock className="w-4 h-4 mr-2" />
+                                      {classItem.start_time} - {classItem.end_time}
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between">
+                                      <Badge className={`${getSkillLevelColor(classItem.skill_level)}`}>
+                                        {classItem.skill_level}
+                                      </Badge>
+                                      <div className="flex items-center text-sm text-gray-500">
+                                        <Users className="w-4 h-4 mr-1" />
+                                        {classItem.current_enrollment}/{classItem.max_participants}
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+
+                        {/* Desktop: 7-column grid layout */}
+                        <div className="hidden lg:grid lg:grid-cols-7 gap-4">
                           {weekDays.map((day) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const dayClasses = weeklySchedule?.schedule?.[dateKey] || [];
@@ -436,7 +547,7 @@ export default function PlayerDevelopmentHub() {
                                   ) : (
                                     dayClasses.map((classItem: ClassDetails) => (
                                       <Card 
-                                        key={`${classItem.id}-${dateKey}`}
+                                        key={`desktop-${classItem.id}-${dateKey}`}
                                         className="cursor-pointer hover:shadow-md transition-shadow p-2"
                                         onClick={() => handleClassSelection(classItem)}
                                       >
@@ -469,6 +580,7 @@ export default function PlayerDevelopmentHub() {
                             );
                           })}
                         </div>
+                        </>
                       )}
                     </CardContent>
                   </Card>
