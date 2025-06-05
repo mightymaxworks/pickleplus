@@ -188,50 +188,73 @@ export default function QRScannerTestPage() {
         <CardHeader>
           <CardTitle>Test QR Codes</CardTitle>
           <CardDescription>
-            Use these sample QR codes to test the scanner functionality
+            Click these sample QR codes to simulate scanning (for testing in development)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-center space-y-2">
-              <div className="p-4 border rounded-lg">
-                <QrCode className="h-12 w-12 mx-auto text-blue-600" />
-              </div>
-              <Badge variant="default">Player Passport</Badge>
+              <Button
+                variant="outline"
+                className="p-4 h-auto flex-col space-y-2 border-2 hover:border-blue-500"
+                onClick={() => handleScanSuccess("PICKLE+ID:MX8K7P2N")}
+              >
+                <QrCode className="h-12 w-12 text-blue-600" />
+                <Badge variant="default">Player Passport</Badge>
+              </Button>
               <p className="text-xs text-muted-foreground">
                 PICKLE+ID:MX8K7P2N
               </p>
             </div>
             
             <div className="text-center space-y-2">
-              <div className="p-4 border rounded-lg">
-                <QrCode className="h-12 w-12 mx-auto text-green-600" />
-              </div>
-              <Badge variant="secondary">Match Code</Badge>
+              <Button
+                variant="outline"
+                className="p-4 h-auto flex-col space-y-2 border-2 hover:border-green-500"
+                onClick={() => handleScanSuccess("MATCH-1234")}
+              >
+                <QrCode className="h-12 w-12 text-green-600" />
+                <Badge variant="secondary">Match Code</Badge>
+              </Button>
               <p className="text-xs text-muted-foreground">
                 MATCH-1234
               </p>
             </div>
             
             <div className="text-center space-y-2">
-              <div className="p-4 border rounded-lg">
-                <QrCode className="h-12 w-12 mx-auto text-purple-600" />
-              </div>
-              <Badge variant="outline">Tournament</Badge>
+              <Button
+                variant="outline"
+                className="p-4 h-auto flex-col space-y-2 border-2 hover:border-purple-500"
+                onClick={() => handleScanSuccess("TOURN-5678")}
+              >
+                <QrCode className="h-12 w-12 text-purple-600" />
+                <Badge variant="outline">Tournament</Badge>
+              </Button>
               <p className="text-xs text-muted-foreground">
                 TOURN-5678
               </p>
             </div>
             
             <div className="text-center space-y-2">
-              <div className="p-4 border rounded-lg">
-                <QrCode className="h-12 w-12 mx-auto text-orange-600" />
-              </div>
-              <Badge variant="destructive">Event</Badge>
+              <Button
+                variant="outline"
+                className="p-4 h-auto flex-col space-y-2 border-2 hover:border-orange-500"
+                onClick={() => handleScanSuccess("EVENT-9012")}
+              >
+                <QrCode className="h-12 w-12 text-orange-600" />
+                <Badge variant="destructive">Event</Badge>
+              </Button>
               <p className="text-xs text-muted-foreground">
                 EVENT-9012
               </p>
             </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Development Testing:</strong> Click the QR code buttons above to simulate scanning different types of codes. 
+              In production, these would be actual QR codes that can be scanned with the camera.
+            </p>
           </div>
         </CardContent>
       </Card>

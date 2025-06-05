@@ -116,6 +116,19 @@ export function UnifiedQRScanner({
       return;
     }
 
+    // Check if we're in a restricted environment (like Replit browser)
+    if (window.location.hostname.includes('replit') || 
+        window.location.hostname.includes('localhost') ||
+        !navigator.mediaDevices || 
+        !navigator.mediaDevices.getUserMedia) {
+      toast({
+        title: "Camera Restricted",
+        description: "Camera access is not available in this environment. Use file upload or test with real QR codes in a deployed environment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       scannerRef.current.render(handleScanSuccess, handleScanError);
       setIsScanning(true);
@@ -123,7 +136,7 @@ export function UnifiedQRScanner({
       console.error("Error starting scanner:", error);
       toast({
         title: "Scanner Error",
-        description: "Failed to start scanning. Please check camera permissions.",
+        description: "Failed to start scanning. Please check camera permissions or use file upload.",
         variant: "destructive",
       });
     }
