@@ -132,6 +132,7 @@ import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK
 import DevModernProfilePage from './pages/DevModernProfilePage' // PKL-278651-PROF-0008-DEV - Development Profile Page
 import TrainingCenterPage from './pages/training-center' // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 import TrainingCenterTabsPage from './pages/training-center-tabs' // PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration
+import FontTestPage from './pages/FontTestPage' // Font comparison test page
 
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -684,6 +685,11 @@ export default function App() {
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">
                     {(params) => <TestLoginPage />}
+                  </Route>
+                  
+                  {/* Font Test Page for typography comparison */}
+                  <Route path="/font-test">
+                    {(params) => <FontTestPage />}
                   </Route>
                   
                   <Route component={LazyNotFoundPage} />
