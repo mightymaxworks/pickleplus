@@ -24,6 +24,7 @@ export interface IStorage extends CommunityStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByPassportCode(passportCode: string): Promise<User | undefined>;
   createUser(insertUser: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
   updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
@@ -311,6 +312,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUserByPassportCode(passportCode: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.passportCode, passportCode));
     return user || undefined;
   }
 
