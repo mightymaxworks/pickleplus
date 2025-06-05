@@ -773,7 +773,7 @@ export default function PlayerDevelopmentHub() {
                   {selectedClass && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h3 className="font-semibold text-lg">{selectedClass.name}</h3>
-                      <p className="text-gray-600">with {selectedClass.coach.name}</p>
+                      <p className="text-gray-600">with {selectedClass.coach?.name || 'Instructor'}</p>
                       <p className="text-sm text-gray-500">
                         {selectedClass.date} • {selectedClass.startTime} - {selectedClass.endTime}
                       </p>
@@ -826,7 +826,7 @@ export default function PlayerDevelopmentHub() {
           teachingMethods: selectedClass.teachingMethods || ['Demonstration', 'Practice drills', 'Game play'],
           cancellationPolicy: selectedClass.cancellationPolicy || '24-hour cancellation policy',
           makeupPolicy: selectedClass.makeupPolicy || 'Makeup classes available within 30 days',
-          coach: {
+          coach: selectedClass.coach ? {
             ...selectedClass.coach,
             avatar: selectedClass.coach.avatar || '',
             bio: selectedClass.coach.bio || 'Experienced pickleball instructor dedicated to helping players improve their game.',
@@ -836,6 +836,17 @@ export default function PlayerDevelopmentHub() {
             rating: selectedClass.coach.rating || 4.8,
             reviewCount: selectedClass.coach.reviewCount || 47,
             teachingStyle: selectedClass.coach.teachingStyle || 'Patient and encouraging with focus on fundamentals'
+          } : {
+            id: 0,
+            name: 'Instructor',
+            avatar: '',
+            bio: 'Experienced pickleball instructor dedicated to helping players improve their game.',
+            yearsExperience: 5,
+            certifications: ['USAPA Certified', 'First Aid/CPR'],
+            specializations: ['Beginner instruction', 'Strategy development'],
+            rating: 4.8,
+            reviewCount: 47,
+            teachingStyle: 'Patient and encouraging with focus on fundamentals'
           },
           facility: {
             name: selectedFacility?.name || 'Training Center',
