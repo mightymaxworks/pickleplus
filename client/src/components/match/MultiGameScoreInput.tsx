@@ -3,6 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { VisualScoreInput } from "./VisualScoreInput";
 import { Badge } from "@/components/ui/badge";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GameScore {
   playerOneScore: number;
@@ -196,6 +198,22 @@ export function MultiGameScoreInput({
           ))}
         </Tabs>
       )}
+
+      {/* Validation errors for each game */}
+      {games.map((game, index) => {
+        const validation = validateGameScore(game);
+        if (!validation.isValid && (game.playerOneScore > 0 || game.playerTwoScore > 0)) {
+          return (
+            <Alert key={index} variant="destructive" className="mt-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Game {index + 1}: {validation.message}
+              </AlertDescription>
+            </Alert>
+          );
+        }
+        return null;
+      })}
 
       {/* Match result message */}
       {matchIsComplete && (
