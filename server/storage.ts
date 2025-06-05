@@ -39,6 +39,9 @@ export interface IStorage {
   // User roles operations
   getUserRoles(userId: number): Promise<any[]>;
   
+  // Coach operations
+  getCoaches(): Promise<User[]>;
+  
   // Placeholder methods for build compatibility
   awardXpToUser(userId: number, amount: number, source: string): Promise<void>;
   createConciergeInteraction(data: any): Promise<any>;

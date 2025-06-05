@@ -703,7 +703,7 @@ export default function PlayerDevelopmentHub() {
                         </div>
                       </div>
                       
-                      <p className="text-gray-600 mb-4">{selectedClass.coach.bio || 'No bio available'}</p>
+                      <p className="text-gray-600 mb-4">{selectedClass.coach?.bio || 'No bio available'}</p>
                       
                       <div className="space-y-2">
                         <h5 className="font-semibold">Certifications:</h5>

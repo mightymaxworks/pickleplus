@@ -51,7 +51,8 @@ async function createTrainingCenterSampleData() {
           lastName: "Chen",
           bio: "Former professional tennis player turned pickleball specialist. 8+ years coaching experience with focus on technique refinement and competitive strategy.",
           isCoach: true,
-          password: "hashedpassword123" // In real app, this would be properly hashed
+          password: "hashedpassword123", // In real app, this would be properly hashed
+          avatarInitials: "SC"
         },
         {
           username: "coach_mike", 
@@ -61,7 +62,8 @@ async function createTrainingCenterSampleData() {
           lastName: "Rodriguez",
           bio: "Passionate about introducing newcomers to pickleball. Specializes in beginner instruction and youth development programs.",
           isCoach: true,
-          password: "hashedpassword123"
+          password: "hashedpassword123",
+          avatarInitials: "MR"
         },
         {
           username: "coach_emma",
@@ -71,7 +73,8 @@ async function createTrainingCenterSampleData() {
           lastName: "Thompson",
           bio: "Fitness-focused pickleball coach emphasizing movement efficiency and injury prevention. Former physiotherapist with sports specialization.",
           isCoach: true,
-          password: "hashedpassword123"
+          password: "hashedpassword123",
+          avatarInitials: "ET"
         }
       ]);
       console.log('Coach users created');

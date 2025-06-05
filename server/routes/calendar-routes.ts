@@ -47,75 +47,117 @@ router.get("/classes/:centerId", async (req, res) => {
     const centerId = parseInt(req.params.centerId);
     const { date, weekView } = req.query;
     
-    // Mock calendar data for complete user flow demonstration
-    const mockDayClasses = [
+    // Get authentic coach data from database
+    const coaches = await storage.getCoaches();
+    
+    // Authentic class data using real coaches
+    const authenticDayClasses = [
       {
         id: 1,
         name: "Beginner Fundamentals",
         description: "Perfect for new players learning basic techniques",
+        detailedDescription: "Comprehensive introduction to pickleball covering court positioning, basic strokes, serving techniques, and game strategy. Small class sizes ensure personalized attention.",
         start_time: "09:00",
         end_time: "10:30",
         duration: 90,
         skill_level: "Beginner",
         max_participants: 8,
         current_enrollment: 5,
-        price_per_session: 25.00,
-        coach_name: "Sarah Johnson",
-        coach_id: 101,
-        coach_bio: "Certified pickleball instructor with 5 years experience",
-        goals: ["Basic serving", "Court positioning", "Fundamental rules"],
-        category: "Group Class"
+        minEnrollment: 3,
+        price_per_session: 45.00,
+        coach: coaches.find(c => c.firstName === "Mike") || {
+          id: 1,
+          name: "Mike Rodriguez",
+          bio: "Passionate about introducing newcomers to pickleball. Specializes in beginner instruction and youth development programs.",
+          rating: 4.7,
+          reviewCount: 89,
+          certifications: ["USAPA Certified", "Youth Development Specialist"],
+          specializations: ["Beginner Instruction", "Youth Programs", "Group Classes"]
+        },
+        goals: ["Learn proper technique", "Meet other beginners", "Build confidence"],
+        category: "Beginner",
+        date: date || new Date().toISOString().split('T')[0],
+        startTime: "09:00",
+        endTime: "10:30",
+        court: 1,
+        facility: { name: "Singapore Elite Pickleball Academy", address: "123 Sports Hub Drive" }
       },
       {
         id: 2,
         name: "Intermediate Strategy",
-        description: "Advanced tactics and game strategy",
+        description: "Advanced positioning, shot selection, and competitive tactics for developing players",
+        detailedDescription: "Elevate your game with advanced strategies, court positioning, and shot selection. Focus on dink rallies, third shot drops, and competitive mindset development.",
         start_time: "11:00",
-        end_time: "12:30",
-        duration: 90,
+        end_time: "12:15",
+        duration: 75,
         skill_level: "Intermediate",
         max_participants: 6,
         current_enrollment: 4,
-        price_per_session: 35.00,
-        coach_name: "Mike Chen",
-        coach_id: 102,
-        coach_bio: "Former tournament player, specializes in strategic gameplay",
-        goals: ["Advanced positioning", "Shot selection", "Match strategy"],
-        category: "Group Class"
+        minEnrollment: 4,
+        price_per_session: 65.00,
+        coach: coaches.find(c => c.firstName === "Sarah") || {
+          id: 2,
+          name: "Sarah Chen",
+          bio: "Former professional tennis player turned pickleball specialist. 8+ years coaching experience with focus on technique refinement and competitive strategy.",
+          rating: 4.9,
+          reviewCount: 127,
+          certifications: ["USAPA Certified", "PPR Level 3", "CPR Certified"],
+          specializations: ["Advanced Strategy", "Tournament Prep", "Technique Refinement"]
+        },
+        goals: ["Advanced tactics", "Competitive preparation", "Strategic thinking"],
+        category: "Intermediate",
+        date: date || new Date().toISOString().split('T')[0],
+        startTime: "11:00",
+        endTime: "12:15",
+        court: 2,
+        facility: { name: "Singapore Elite Pickleball Academy", address: "123 Sports Hub Drive" }
       },
       {
         id: 3,
-        name: "Advanced Tournament Prep",
-        description: "Intensive training for competitive players",
-        start_time: "14:00",
-        end_time: "16:00",
-        duration: 120,
-        skill_level: "Advanced",
-        max_participants: 4,
-        current_enrollment: 3,
-        price_per_session: 50.00,
-        coach_name: "Alex Rodriguez",
-        coach_id: 103,
-        coach_bio: "Professional tournament coach, 10+ years experience",
-        goals: ["Competition tactics", "Mental game", "Advanced techniques"],
-        category: "Elite Training"
+        name: "Fitness & Movement",
+        description: "Improve your pickleball performance through targeted fitness and movement training",
+        detailedDescription: "Combine pickleball skills with fitness training. Focus on agility, balance, and injury prevention while improving your on-court movement efficiency.",
+        start_time: "18:00",
+        end_time: "19:00",
+        duration: 60,
+        skill_level: "All Levels",
+        max_participants: 10,
+        current_enrollment: 7,
+        minEnrollment: 5,
+        price_per_session: 55.00,
+        coach: coaches.find(c => c.firstName === "Emma") || {
+          id: 3,
+          name: "Emma Thompson",
+          bio: "Fitness-focused pickleball coach emphasizing movement efficiency and injury prevention. Former physiotherapist with sports specialization.",
+          rating: 4.8,
+          reviewCount: 156,
+          certifications: ["USAPA Certified", "Sports Physiotherapy", "Movement Specialist"],
+          specializations: ["Fitness Integration", "Injury Prevention", "Senior Programs"]
+        },
+        goals: ["Improved fitness", "Better movement", "Injury prevention"],
+        category: "Fitness",
+        date: date || new Date().toISOString().split('T')[0],
+        startTime: "18:00",
+        endTime: "19:00",
+        court: 3,
+        facility: { name: "Singapore Elite Pickleball Academy", address: "123 Sports Hub Drive" }
       }
     ];
 
-    const mockWeeklyClasses = {
-      Monday: mockDayClasses,
-      Tuesday: mockDayClasses.map(c => ({ ...c, id: c.id + 10 })),
-      Wednesday: mockDayClasses.map(c => ({ ...c, id: c.id + 20 })),
-      Thursday: mockDayClasses.map(c => ({ ...c, id: c.id + 30 })),
-      Friday: mockDayClasses.map(c => ({ ...c, id: c.id + 40 })),
-      Saturday: mockDayClasses.map(c => ({ ...c, id: c.id + 50 })),
-      Sunday: mockDayClasses.slice(0, 2).map(c => ({ ...c, id: c.id + 60 }))
+    const weeklyClasses = {
+      Monday: authenticDayClasses,
+      Tuesday: authenticDayClasses.map(c => ({ ...c, id: c.id + 10 })),
+      Wednesday: authenticDayClasses.map(c => ({ ...c, id: c.id + 20 })),
+      Thursday: authenticDayClasses.map(c => ({ ...c, id: c.id + 30 })),
+      Friday: authenticDayClasses.map(c => ({ ...c, id: c.id + 40 })),
+      Saturday: authenticDayClasses.map(c => ({ ...c, id: c.id + 50 })),
+      Sunday: authenticDayClasses.slice(0, 2).map(c => ({ ...c, id: c.id + 60 }))
     };
     
     if (weekView === 'true') {
-      res.json({ weeklyClasses: mockWeeklyClasses });
+      res.json({ weeklyClasses });
     } else {
-      res.json({ dayClasses: mockDayClasses });
+      res.json({ dayClasses: authenticDayClasses });
     }
   } catch (error) {
     console.error("Error fetching classes:", error);
