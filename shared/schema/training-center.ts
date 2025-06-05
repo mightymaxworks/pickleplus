@@ -170,22 +170,35 @@ export const sessionNotes = pgTable("session_notes", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// Class Templates - Recurring class schedules
+// Class Templates - Recurring class schedules with enhanced details
 export const classTemplates = pgTable("class_templates", {
   id: serial("id").primaryKey(),
   centerId: integer("center_id").notNull().references(() => trainingCenters.id),
   coachId: integer("coach_id").notNull().references(() => users.id),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
+  detailedDescription: text("detailed_description"), // Rich text with full class information
   category: varchar("category", { length: 50 }).notNull(), // fundamentals, advanced, power, strategy
   skillLevel: varchar("skill_level", { length: 20 }).notNull(), // beginner, intermediate, advanced
+  intensityLevel: varchar("intensity_level", { length: 20 }).default("moderate"), // light, moderate, high, intense
+  classFormat: varchar("class_format", { length: 20 }).default("group"), // individual, group, team
   maxParticipants: integer("max_participants").default(8),
+  minEnrollment: integer("min_enrollment").default(1), // Minimum required for class to proceed
+  optimalCapacity: integer("optimal_capacity").default(6), // Target enrollment for best experience
   duration: integer("duration").default(60), // minutes
   pricePerSession: decimal("price_per_session", { precision: 6, scale: 2 }),
   goals: json("goals").$type<string[]>(),
+  prerequisites: json("prerequisites").$type<string[]>(), // Required skills or prior classes
+  equipmentRequired: json("equipment_required").$type<string[]>(), // Equipment students must bring
+  equipmentProvided: json("equipment_provided").$type<string[]>(), // Equipment facility provides
+  skillsFocused: json("skills_focused").$type<string[]>(), // Primary skills covered
+  teachingMethods: json("teaching_methods").$type<string[]>(), // Drilling, games, theory, etc.
+  cancellationPolicy: text("cancellation_policy"), // Class cancellation rules
+  makeupPolicy: text("makeup_policy"), // Make-up class policies
   dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday, 1=Monday, etc.
   startTime: varchar("start_time", { length: 8 }).notNull(), // HH:mm format
   endTime: varchar("end_time", { length: 8 }).notNull(),
+  autoCancelHours: integer("auto_cancel_hours").default(24), // Hours before class to auto-cancel if min not met
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -220,6 +233,66 @@ export const classEnrollments = pgTable("class_enrollments", {
   paymentStatus: varchar("payment_status", { length: 20 }).default("pending"), // pending, paid, refunded
   notes: text("notes"),
   checkedInAt: timestamp("checked_in_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Class Waitlist - Queue management for full classes
+export const classWaitlist = pgTable("class_waitlist", {
+  id: serial("id").primaryKey(),
+  classInstanceId: integer("class_instance_id").notNull().references(() => classInstances.id),
+  playerId: integer("player_id").notNull().references(() => users.id),
+  position: integer("position").notNull(), // Position in waitlist queue
+  joinedAt: timestamp("joined_at").defaultNow(),
+  notifiedAt: timestamp("notified_at"), // When spot became available
+  expiresAt: timestamp("expires_at"), // When notification expires
+  status: varchar("status", { length: 20 }).default("waiting"), // waiting, notified, expired, enrolled, cancelled
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Enhanced Coach Profiles - Detailed coach information
+export const coachProfiles = pgTable("coach_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  professionalBio: text("professional_bio"),
+  yearsExperience: integer("years_experience").default(0),
+  certifications: json("certifications").$type<string[]>(),
+  specializations: json("specializations").$type<string[]>(), // singles, doubles, beginners, advanced, fitness
+  teachingStyle: varchar("teaching_style", { length: 50 }), // technical, motivational, analytical, fun
+  languages: json("languages").$type<string[]>(),
+  hourlyRate: decimal("hourly_rate", { precision: 6, scale: 2 }),
+  profileImageUrl: varchar("profile_image_url", { length: 200 }),
+  coverImageUrl: varchar("cover_image_url", { length: 200 }),
+  personalMotto: varchar("personal_motto", { length: 200 }),
+  achievements: json("achievements").$type<string[]>(),
+  playingBackground: text("playing_background"), // Competitive history
+  coachingPhilosophy: text("coaching_philosophy"),
+  availabilityNotes: text("availability_notes"),
+  isVerified: boolean("is_verified").default(false),
+  verificationLevel: varchar("verification_level", { length: 20 }).default("basic"), // basic, certified, expert
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Coach Reviews - Student feedback and ratings
+export const coachReviews = pgTable("coach_reviews", {
+  id: serial("id").primaryKey(),
+  coachId: integer("coach_id").notNull().references(() => users.id),
+  reviewerId: integer("reviewer_id").notNull().references(() => users.id),
+  sessionId: integer("session_id").references(() => coachingSessions.id),
+  classInstanceId: integer("class_instance_id").references(() => classInstances.id),
+  overallRating: decimal("overall_rating", { precision: 2, scale: 1 }).notNull(), // 1.0-5.0
+  technicalSkillRating: decimal("technical_skill_rating", { precision: 2, scale: 1 }),
+  communicationRating: decimal("communication_rating", { precision: 2, scale: 1 }),
+  enthusiasmRating: decimal("enthusiasm_rating", { precision: 2, scale: 1 }),
+  organizationRating: decimal("organization_rating", { precision: 2, scale: 1 }),
+  reviewTitle: varchar("review_title", { length: 100 }),
+  reviewText: text("review_text"),
+  improvementAreas: json("improvement_areas").$type<string[]>(),
+  wouldRecommend: boolean("would_recommend"),
+  isVerified: boolean("is_verified").default(false), // Verified attendance
+  isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -417,7 +490,8 @@ export const classInstanceRelations = relations(classInstances, ({ one, many }) 
     fields: [classInstances.coachId],
     references: [users.id]
   }),
-  enrollments: many(classEnrollments)
+  enrollments: many(classEnrollments),
+  waitlist: many(classWaitlist)
 }));
 
 export const classEnrollmentRelations = relations(classEnrollments, ({ one }) => ({
@@ -431,6 +505,44 @@ export const classEnrollmentRelations = relations(classEnrollments, ({ one }) =>
   })
 }));
 
+export const classWaitlistRelations = relations(classWaitlist, ({ one }) => ({
+  classInstance: one(classInstances, {
+    fields: [classWaitlist.classInstanceId],
+    references: [classInstances.id]
+  }),
+  player: one(users, {
+    fields: [classWaitlist.playerId],
+    references: [users.id]
+  })
+}));
+
+export const coachProfileRelations = relations(coachProfiles, ({ one, many }) => ({
+  user: one(users, {
+    fields: [coachProfiles.userId],
+    references: [users.id]
+  }),
+  reviews: many(coachReviews)
+}));
+
+export const coachReviewRelations = relations(coachReviews, ({ one }) => ({
+  coach: one(users, {
+    fields: [coachReviews.coachId],
+    references: [users.id]
+  }),
+  reviewer: one(users, {
+    fields: [coachReviews.reviewerId],
+    references: [users.id]
+  }),
+  session: one(coachingSessions, {
+    fields: [coachReviews.sessionId],
+    references: [coachingSessions.id]
+  }),
+  classInstance: one(classInstances, {
+    fields: [coachReviews.classInstanceId],
+    references: [classInstances.id]
+  })
+}));
+
 // Zod schemas for validation
 export const insertTrainingCenterSchema = createInsertSchema(trainingCenters);
 export const insertCoachCertificationSchema = createInsertSchema(coachCertifications);
@@ -441,6 +553,9 @@ export const insertSessionNotesSchema = createInsertSchema(sessionNotes);
 export const insertClassTemplateSchema = createInsertSchema(classTemplates);
 export const insertClassInstanceSchema = createInsertSchema(classInstances);
 export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
+export const insertClassWaitlistSchema = createInsertSchema(classWaitlist);
+export const insertCoachProfileSchema = createInsertSchema(coachProfiles);
+export const insertCoachReviewSchema = createInsertSchema(coachReviews);
 export const insertDigitalBadgeSchema = createInsertSchema(digitalBadges);
 export const insertPlayerBadgeSchema = createInsertSchema(playerBadges);
 export const insertRatingProgressionSchema = createInsertSchema(ratingProgressions);
