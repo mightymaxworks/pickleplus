@@ -149,14 +149,42 @@ export default function ModernDashboardContent() {
         </motion.div>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Ranking Points Card - Primary Focus */}
+          {/* Ranking Points Grid - Multiple Ranking Systems */}
           <motion.div 
             className="lg:col-span-8"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <RankingPointsCard user={user} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* PCP Rankings */}
+              <RankingPointsCard user={user} />
+              
+              {/* DUPR Rankings Card */}
+              <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white border-0 shadow-lg">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    <Star className="h-5 w-5 mr-2" />
+                    DUPR Rating
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold mb-2">
+                      {user.duprRating || "0"}
+                    </div>
+                    <div className="text-sm opacity-90">
+                      Dynamic Universal Pickleball Rating
+                    </div>
+                    {(!user.duprRating || user.duprRating === 0) && (
+                      <div className="mt-2 text-xs opacity-75">
+                        Play matches to establish your DUPR rating
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </motion.div>
           
           {/* Action Panel */}
@@ -318,7 +346,7 @@ export default function ModernDashboardContent() {
                   {/* DUPR Rating */}
                   <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">DUPR Rating</div>
-                    <div className="text-2xl font-bold">{user.duprRating || "4.5"}</div>
+                    <div className="text-2xl font-bold">{user.duprRating || "0"}</div>
                     <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">External verified rating</div>
                   </div>
                   
