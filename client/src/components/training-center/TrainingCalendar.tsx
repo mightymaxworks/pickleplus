@@ -57,13 +57,15 @@ export default function TrainingCalendar({ centerId, centerName, userId }: Train
   const { toast } = useToast();
 
   // Fetch classes for selected date
-  const { data: dailyClasses = [], isLoading: loadingClasses } = useQuery({
+  const { data: classesResponse, isLoading: loadingClasses } = useQuery({
     queryKey: ['/api/calendar/classes', centerId, selectedDate.toISOString().split('T')[0]],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/calendar/classes/${centerId}?date=${selectedDate.toISOString().split('T')[0]}`);
       return response.json();
     }
   });
+
+  const dailyClasses = classesResponse?.dayClasses || [];
 
   // Fetch user's enrolled classes
   const { data: enrolledClasses = [] } = useQuery({
