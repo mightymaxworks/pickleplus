@@ -151,12 +151,18 @@ const FontTestPage: React.FC = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className={`font-semibold text-lg ${font.className}`}>
+                    <h3 
+                      className="font-semibold text-lg"
+                      style={{ fontFamily: font.family }}
+                    >
                       {font.name}
                     </h3>
                     <Badge variant="outline">{font.category}</Badge>
                   </div>
-                  <div className={`text-base mb-2 ${font.className}`}>
+                  <div 
+                    className="text-base mb-2"
+                    style={{ fontFamily: font.family }}
+                  >
                     The quick brown fox jumps over the lazy dog
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{font.description}</p>
@@ -168,7 +174,7 @@ const FontTestPage: React.FC = () => {
         </div>
 
         {/* Sample Content with Selected Font */}
-        <div className={`space-y-8 ${selectedFont.className}`}>
+        <div className="space-y-8" style={{ fontFamily: selectedFont.family }}>
           <div className="text-center mb-8">
             <Badge className="mb-4">Currently previewing: {selectedFont.name}</Badge>
           </div>
