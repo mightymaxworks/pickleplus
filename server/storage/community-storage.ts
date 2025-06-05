@@ -4,7 +4,7 @@
  * 
  * This file implements the database operations for community features.
  */
-import { desc, eq, and, or, like, sql, ilike, inArray } from 'drizzle-orm';
+import { desc, asc, eq, and, or, like, sql, ilike, inArray } from 'drizzle-orm';
 import type { DatabaseStorage } from '../storage';
 import {
   communities,
@@ -188,21 +188,71 @@ export const communityStorageImplementation: CommunityStorage = {
   // Community operations
   async getCommunities(filters = {}): Promise<Community[]> {
     const db = this.getDb();
-    const { location, skillLevel, tags, search, limit = 20, offset = 0 } = filters;
+    const { 
+      location, 
+      skillLevel, 
+      tags, 
+      search, 
+      limit = 20, 
+      offset = 0,
+      sort,
+      popular,
+      featured,
+      isPrivate
+    } = filters;
     
     console.log('[PKL-278651-COMM-0020-DEFGRP] Fetching communities with query:', filters);
     
-    // Per user request, we're only showing the Pickle+ Giveaway community (ID 3)
-    // and hiding all other test communities
-    let query = db.select().from(communities).where(eq(communities.id, 3));
+    let query = db.select().from(communities);
     
-    // Log for debugging
-    console.log('[PKL-278651-COMM-0020-DEFGRP] Only showing the Pickle+ Giveaway community (ID 3)');
+    // Apply filters
+    const conditions = [];
     
+    // Note: isActive field doesn't exist in current schema, so we skip this filter
+    
+    // Privacy filter
+    if (isPrivate !== undefined) {
+      conditions.push(eq(communities.isPrivate, isPrivate));
+    } else {
+      // Default to public communities only
+      conditions.push(eq(communities.isPrivate, false));
+    }
+    
+    // Location filter
+    if (location) {
+      conditions.push(eq(communities.location, location));
+    }
+    
+    // Skill level filter
+    if (skillLevel) {
+      conditions.push(eq(communities.skillLevel, skillLevel));
+    }
+    
+    // Note: isFeatured field doesn't exist in current schema, so we skip featured filter
+    
+    // Apply all conditions
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Apply sorting
+    if (sort === 'newest' || sort === 'created_at') {
+      query = query.orderBy(desc(communities.createdAt));
+    } else if (sort === 'oldest') {
+      query = query.orderBy(asc(communities.createdAt));
+    } else if (sort === 'name_asc') {
+      query = query.orderBy(asc(communities.name));
+    } else if (sort === 'name_desc') {
+      query = query.orderBy(desc(communities.name));
+    } else {
+      // Default sorting
+      query = query.orderBy(desc(communities.createdAt));
+    }
+    
+    // Apply pagination
     return await query
       .limit(limit)
-      .offset(offset)
-      .orderBy(desc(communities.createdAt));
+      .offset(offset);
   },
   
   async getCommunityById(id: number): Promise<Community | undefined> {
