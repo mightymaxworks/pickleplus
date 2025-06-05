@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save as SaveIcon, CheckCircle, Clock, User, MapPin, Award, Calendar, Sword, Hand as HandIcon, Info } from "lucide-react";
 
 import { ProfileImageEditor } from "@/components/profile/ProfileImageEditor";
+import { PADDLE_BRAND_OPTIONS } from "@/constants/paddleBrands";
 
 // Form validation schema
 const profileSchema = z.object({
@@ -553,22 +554,11 @@ export default function ProfileEdit() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="Selkirk">Selkirk</SelectItem>
-                                <SelectItem value="Joola">Joola</SelectItem>
-                                <SelectItem value="Engage">Engage</SelectItem>
-                                <SelectItem value="Paddletek">Paddletek</SelectItem>
-                                <SelectItem value="Onix">Onix</SelectItem>
-                                <SelectItem value="Head">Head</SelectItem>
-                                <SelectItem value="ProKennex">ProKennex</SelectItem>
-                                <SelectItem value="Franklin">Franklin</SelectItem>
-                                <SelectItem value="Gamma">Gamma</SelectItem>
-                                <SelectItem value="Gearbox">Gearbox</SelectItem>
-                                <SelectItem value="Prince">Prince</SelectItem>
-                                <SelectItem value="CRBN">CRBN</SelectItem>
-                                <SelectItem value="Electrum">Electrum</SelectItem>
-                                <SelectItem value="Diadem">Diadem</SelectItem>
-                                <SelectItem value="SHOT3">SHOT3</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
+                                {PADDLE_BRAND_OPTIONS.map(option => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
