@@ -542,10 +542,10 @@ export default function PlayerDevelopmentHub() {
                                     <div className="flex justify-between items-start mb-3">
                                       <div className="flex-1">
                                         <h3 className="font-semibold text-lg">{classItem.name}</h3>
-                                        <p className="text-gray-600 text-sm">{classItem.coach?.name || 'Coach TBA'}</p>
+                                        <p className="text-gray-600 text-sm">{classItem.coach_name || 'Coach TBA'}</p>
                                       </div>
                                       <div className="text-right">
-                                        <div className="font-bold text-lg">${classItem.price}</div>
+                                        <div className="font-bold text-lg">${classItem.price_per_session}</div>
                                         {getClassStatusBadge(classItem)}
                                       </div>
                                     </div>
