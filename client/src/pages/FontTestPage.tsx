@@ -13,7 +13,7 @@ import { Trophy, Users, Star, BarChart3, Calendar, MapPin } from 'lucide-react';
 const fonts = [
   {
     name: 'Inter',
-    family: 'Inter, sans-serif',
+    family: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
     className: 'font-inter',
     googleFont: 'Inter:wght@300;400;500;600;700',
     description: 'Clean, highly legible sans-serif perfect for modern web apps',
@@ -22,7 +22,7 @@ const fonts = [
   },
   {
     name: 'Poppins',
-    family: 'Poppins, sans-serif',
+    family: '"Poppins", system-ui, sans-serif',
     className: 'font-poppins',
     googleFont: 'Poppins:wght@300;400;500;600;700',
     description: 'Rounded, friendly geometric sans-serif',
@@ -31,7 +31,7 @@ const fonts = [
   },
   {
     name: 'Space Grotesk',
-    family: 'Space Grotesk, sans-serif',
+    family: '"Space Grotesk", "Helvetica Neue", sans-serif',
     className: 'font-space-grotesk',
     googleFont: 'Space+Grotesk:wght@300;400;500;600;700',
     description: 'Contemporary with subtle character for headings',
@@ -39,80 +39,57 @@ const fonts = [
     bestFor: 'Headlines, tech brands'
   },
   {
-    name: 'Plus Jakarta Sans',
-    family: 'Plus Jakarta Sans, sans-serif',
-    className: 'font-plus-jakarta',
-    googleFont: 'Plus+Jakarta+Sans:wght@300;400;500;600;700',
-    description: 'Modern Indonesian-inspired design',
-    category: 'Sans-serif',
-    bestFor: 'Clean interfaces'
+    name: 'Monospace Demo',
+    family: '"Courier New", Courier, monospace',
+    className: 'font-mono',
+    googleFont: '',
+    description: 'Fixed-width font for code and technical content',
+    category: 'Monospace',
+    bestFor: 'Code, technical text'
   },
   {
-    name: 'Manrope',
-    family: 'Manrope, sans-serif',
-    className: 'font-manrope',
-    googleFont: 'Manrope:wght@300;400;500;600;700',
-    description: 'Open-source font designed specifically for digital interfaces',
-    category: 'Sans-serif',
-    bestFor: 'Digital products'
+    name: 'Serif Demo',
+    family: '"Times New Roman", Times, serif',
+    className: 'font-serif',
+    googleFont: '',
+    description: 'Classic serif font for traditional documents',
+    category: 'Serif',
+    bestFor: 'Documents, formal text'
   },
   {
-    name: 'Outfit',
-    family: 'Outfit, sans-serif',
-    className: 'font-outfit',
-    googleFont: 'Outfit:wght@300;400;500;600;700',
-    description: 'Modern, versatile sans-serif with excellent readability',
-    category: 'Sans-serif',
-    bestFor: 'Versatile applications'
+    name: 'Fantasy Demo',
+    family: 'Impact, "Arial Black", sans-serif',
+    className: 'font-fantasy',
+    googleFont: '',
+    description: 'Bold display font for headlines and emphasis',
+    category: 'Display',
+    bestFor: 'Headlines, impact text'
   }
 ];
 
 const FontTestPage: React.FC = () => {
   const [selectedFont, setSelectedFont] = useState(fonts[0]);
 
-  // Load Google Fonts dynamically
+  // Load Google Fonts for the first 3 options only
   React.useEffect(() => {
-    // Create a comprehensive font loading URL
-    const fontUrl = 'https://fonts.googleapis.com/css2?' + [
-      'family=Inter:wght@300;400;500;600;700',
-      'family=Poppins:wght@300;400;500;600;700',
-      'family=Space+Grotesk:wght@300;400;500;600;700',
-      'family=Plus+Jakarta+Sans:wght@300;400;500;600;700',
-      'family=Manrope:wght@300;400;500;600;700',
-      'family=Outfit:wght@300;400;500;600;700'
-    ].join('&') + '&display=swap';
+    const googleFonts = fonts.filter(font => font.googleFont);
+    if (googleFonts.length > 0) {
+      const fontUrl = 'https://fonts.googleapis.com/css2?' + 
+        googleFonts.map(font => `family=${font.googleFont}`).join('&') + 
+        '&display=swap';
 
-    const link = document.createElement('link');
-    link.href = fontUrl;
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    document.head.appendChild(link);
+      const link = document.createElement('link');
+      link.href = fontUrl;
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      document.head.appendChild(link);
 
-    // Also add fallback font loading via @import in a style element
-    const style = document.createElement('style');
-    style.textContent = `
-      @import url('${fontUrl}');
-      
-      .font-inter * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-poppins * { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-space-grotesk * { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-plus-jakarta * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-manrope * { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-outfit * { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      
-      .font-inter { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-poppins { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-space-grotesk { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-plus-jakarta { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-manrope { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-      .font-outfit { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(link);
-      document.head.removeChild(style);
-    };
+      return () => {
+        if (document.head.contains(link)) {
+          document.head.removeChild(link);
+        }
+      };
+    }
   }, []);
 
   const sampleContent = {
