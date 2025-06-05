@@ -1732,6 +1732,11 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
 
   console.log('[API] Training Center routes registered');
 
+  // QR Code Scanning Routes - PKL-278651-QR-SCAN-0001
+  app.post('/api/qr/scan', isAuthenticated, processQRScan);
+  app.get('/api/qr/permissions', isAuthenticated, getUserScanPermissions);
+  console.log('[API] QR scanning routes registered');
+
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
   });
