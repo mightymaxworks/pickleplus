@@ -170,6 +170,18 @@ export default function PlayerDevelopmentHub() {
     }
   };
 
+  const handleQuickFacilityAccess = (facilityId: string) => {
+    const facility = trainingCenters.find((c: TrainingCenter) => c.id.toString() === facilityId);
+    if (facility) {
+      setSelectedFacility(facility);
+      setActiveTab('weekly-calendar');
+      toast({
+        title: "Facility Access",
+        description: `Viewing calendar for ${facility.name}`,
+      });
+    }
+  };
+
   const handleClassSelection = (classItem: ClassDetails) => {
     setSelectedClass(classItem);
     setActiveTab('class-details');
@@ -288,42 +300,10 @@ export default function PlayerDevelopmentHub() {
                     <span>Select Training Facility</span>
                   </CardTitle>
                   <CardDescription>
-                    Scan QR code, enter facility code, or select from available centers
+                    Choose your preferred training center from the options below
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* QR Code / Manual Entry */}
-                  <div>
-                    <h3 className="font-semibold mb-3 flex items-center gap-2">
-                      <QrCode className="w-5 h-5" />
-                      Scan QR Code or Enter Facility Code
-                    </h3>
-                    <form onSubmit={handleFacilitySubmit} className="flex gap-3">
-                      <Input
-                        placeholder="Enter facility code (e.g., TC001-SG)"
-                        value={facilityInput}
-                        onChange={(e) => setFacilityInput(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button 
-                        type="submit" 
-                        disabled={facilityCheckIn.isPending}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        {facilityCheckIn.isPending ? 'Checking...' : 'Access'}
-                      </Button>
-                    </form>
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">or</span>
-                    </div>
-                  </div>
-
                   {/* Facility Dropdown */}
                   <div>
                     <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -347,32 +327,53 @@ export default function PlayerDevelopmentHub() {
                     </Select>
                   </div>
 
-                  {/* Quick Access Buttons */}
+                  {/* Quick Access Cards */}
                   <div>
                     <h3 className="font-semibold mb-3">Quick Access</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => setFacilityInput('TC001-SG')}
-                        className="h-auto p-4 flex flex-col items-center space-y-2"
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card 
+                        className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-blue-300"
+                        onClick={() => handleQuickFacilityAccess('1')}
                       >
-                        <Building2 className="w-6 h-6 text-blue-600" />
-                        <div className="text-center">
-                          <div className="font-semibold">Singapore Elite</div>
-                          <div className="text-sm text-gray-500">TC001-SG</div>
-                        </div>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setFacilityInput('TC002-SG')}
-                        className="h-auto p-4 flex flex-col items-center space-y-2"
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg">Singapore Elite</h3>
+                              <p className="text-sm text-gray-600 mb-2">123 Marina Bay Street, Singapore</p>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <MapPin className="w-4 h-4 mr-1" />
+                                2.5 km away
+                              </div>
+                            </div>
+                            <div className="flex items-center text-blue-600">
+                              <span className="text-sm font-medium mr-2">View Calendar</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card 
+                        className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-300"
+                        onClick={() => handleQuickFacilityAccess('2')}
                       >
-                        <Building2 className="w-6 h-6 text-green-600" />
-                        <div className="text-center">
-                          <div className="font-semibold">Marina Bay Courts</div>
-                          <div className="text-sm text-gray-500">TC002-SG</div>
-                        </div>
-                      </Button>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg">Marina Bay Courts</h3>
+                              <p className="text-sm text-gray-600 mb-2">456 Orchard Road, Singapore</p>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <MapPin className="w-4 h-4 mr-1" />
+                                3.2 km away
+                              </div>
+                            </div>
+                            <div className="flex items-center text-green-600">
+                              <span className="text-sm font-medium mr-2">View Calendar</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </div>
                 </CardContent>
