@@ -23,6 +23,7 @@ import EditableProfileField from "./EditableProfileField";
 import { EnhancedUser } from "@/types/enhanced-user";
 import { useProfileFieldXp } from "@/hooks/useProfileFieldXp";
 import { queryClient } from "@/lib/queryClient";
+import { PADDLE_BRAND_OPTIONS } from "@/constants/paddleBrands";
 
 interface ProfileDetailsTabProps {
   user: EnhancedUser;
@@ -264,7 +265,7 @@ export default function ProfileDetailsTab({
                       render={(value, editing, onChange) => {
                         // Define our brand options once
                         const brandOptions = [
-                          { value: "Selkirk", label: "Selkirk" },
+                          { value: "SHOT3", label: "SHOT3" },
                           { value: "Joola", label: "Joola" },
                           { value: "Engage", label: "Engage" },
                           { value: "Paddletek", label: "Paddletek" },
@@ -360,7 +361,7 @@ export default function ProfileDetailsTab({
                       render={(value, editing, onChange) => {
                         // Define our brand options once
                         const brandOptions = [
-                          { value: "Selkirk", label: "Selkirk" },
+                          { value: "SHOT3", label: "SHOT3" },
                           { value: "Joola", label: "Joola" },
                           { value: "Engage", label: "Engage" },
                           { value: "Paddletek", label: "Paddletek" },
