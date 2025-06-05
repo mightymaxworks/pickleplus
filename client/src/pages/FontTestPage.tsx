@@ -14,6 +14,7 @@ const fonts = [
   {
     name: 'Inter',
     family: 'Inter, sans-serif',
+    className: 'font-inter',
     googleFont: 'Inter:wght@300;400;500;600;700',
     description: 'Clean, highly legible sans-serif perfect for modern web apps',
     category: 'Sans-serif',
@@ -22,6 +23,7 @@ const fonts = [
   {
     name: 'Poppins',
     family: 'Poppins, sans-serif',
+    className: 'font-poppins',
     googleFont: 'Poppins:wght@300;400;500;600;700',
     description: 'Rounded, friendly geometric sans-serif',
     category: 'Sans-serif',
@@ -30,6 +32,7 @@ const fonts = [
   {
     name: 'Space Grotesk',
     family: 'Space Grotesk, sans-serif',
+    className: 'font-space-grotesk',
     googleFont: 'Space+Grotesk:wght@300;400;500;600;700',
     description: 'Contemporary with subtle character for headings',
     category: 'Sans-serif',
@@ -38,6 +41,7 @@ const fonts = [
   {
     name: 'Plus Jakarta Sans',
     family: 'Plus Jakarta Sans, sans-serif',
+    className: 'font-plus-jakarta',
     googleFont: 'Plus+Jakarta+Sans:wght@300;400;500;600;700',
     description: 'Modern Indonesian-inspired design',
     category: 'Sans-serif',
@@ -46,6 +50,7 @@ const fonts = [
   {
     name: 'Manrope',
     family: 'Manrope, sans-serif',
+    className: 'font-manrope',
     googleFont: 'Manrope:wght@300;400;500;600;700',
     description: 'Open-source font designed specifically for digital interfaces',
     category: 'Sans-serif',
@@ -54,6 +59,7 @@ const fonts = [
   {
     name: 'Outfit',
     family: 'Outfit, sans-serif',
+    className: 'font-outfit',
     googleFont: 'Outfit:wght@300;400;500;600;700',
     description: 'Modern, versatile sans-serif with excellent readability',
     category: 'Sans-serif',
@@ -66,13 +72,46 @@ const FontTestPage: React.FC = () => {
 
   // Load Google Fonts dynamically
   React.useEffect(() => {
+    // Create a comprehensive font loading URL
+    const fontUrl = 'https://fonts.googleapis.com/css2?' + [
+      'family=Inter:wght@300;400;500;600;700',
+      'family=Poppins:wght@300;400;500;600;700',
+      'family=Space+Grotesk:wght@300;400;500;600;700',
+      'family=Plus+Jakarta+Sans:wght@300;400;500;600;700',
+      'family=Manrope:wght@300;400;500;600;700',
+      'family=Outfit:wght@300;400;500;600;700'
+    ].join('&') + '&display=swap';
+
     const link = document.createElement('link');
-    link.href = `https://fonts.googleapis.com/css2?${fonts.map(font => font.googleFont).join('&')}&display=swap`;
+    link.href = fontUrl;
     link.rel = 'stylesheet';
+    link.type = 'text/css';
     document.head.appendChild(link);
+
+    // Also add fallback font loading via @import in a style element
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('${fontUrl}');
+      
+      .font-inter * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-poppins * { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-space-grotesk * { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-plus-jakarta * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-manrope * { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-outfit * { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      
+      .font-inter { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-poppins { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-space-grotesk { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-plus-jakarta { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-manrope { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+      .font-outfit { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
+    `;
+    document.head.appendChild(style);
 
     return () => {
       document.head.removeChild(link);
+      document.head.removeChild(style);
     };
   }, []);
 
@@ -112,13 +151,13 @@ const FontTestPage: React.FC = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 
-                      className="font-semibold text-lg"
-                      style={{ fontFamily: font.family }}
-                    >
+                    <h3 className={`font-semibold text-lg ${font.className}`}>
                       {font.name}
                     </h3>
                     <Badge variant="outline">{font.category}</Badge>
+                  </div>
+                  <div className={`text-base mb-2 ${font.className}`}>
+                    The quick brown fox jumps over the lazy dog
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{font.description}</p>
                   <div className="text-xs text-gray-500">Best for: {font.bestFor}</div>
@@ -129,10 +168,7 @@ const FontTestPage: React.FC = () => {
         </div>
 
         {/* Sample Content with Selected Font */}
-        <div 
-          className="space-y-8"
-          style={{ fontFamily: selectedFont.family }}
-        >
+        <div className={`space-y-8 ${selectedFont.className}`}>
           <div className="text-center mb-8">
             <Badge className="mb-4">Currently previewing: {selectedFont.name}</Badge>
           </div>
