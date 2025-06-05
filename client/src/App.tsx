@@ -324,11 +324,11 @@ export default function App() {
                     pageTitle="Your Pickleball Journey"
                   />
                   
-                  {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management */}
+                  {/* PKL-278651-PLAYER-DEVELOPMENT-HUB - Player Development Hub */}
                   <ProtectedRouteWithLayout
-                    path="/training-center"
+                    path="/player-development-hub"
                     component={TrainingCenterPage}
-                    pageTitle="Training Center"
+                    pageTitle="Player Development Hub"
                   />
                   
                   {/* PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration */}
