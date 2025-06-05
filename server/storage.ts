@@ -298,6 +298,14 @@ export class DatabaseStorage implements IStorage {
     return coach;
   }
 
+  async getCoaches(): Promise<User[]> {
+    const coaches = await db.select()
+      .from(users)
+      .where(eq(users.isCoach, true))
+      .orderBy(asc(users.firstName));
+    return coaches;
+  }
+
   async getAvailableCoachesAtCenter(centerId: number): Promise<any[]> {
     // Return mock coaches with comprehensive data for testing
     return [
