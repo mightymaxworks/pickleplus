@@ -256,6 +256,26 @@ export default function PassportDashboard() {
     window.location.reload();
   };
 
+  const handleFieldChange = (field: string, value: string) => {
+    setProfileFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveProfile = () => {
+    if (Object.keys(profileFormData).length === 0) {
+      toast({
+        title: "No Changes",
+        description: "Please make some changes before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateProfileMutation.mutate(profileFormData);
+  };
+
   return (
     <div className="relative min-h-screen">
       {/* Sophisticated Cool-Toned Background */}
