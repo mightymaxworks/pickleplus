@@ -541,7 +541,7 @@ export default function PlayerDevelopmentHub() {
                                     <div className="flex justify-between items-start mb-3">
                                       <div className="flex-1">
                                         <h3 className="font-semibold text-lg">{classItem.name}</h3>
-                                        <p className="text-gray-600 text-sm">{classItem.coach.name}</p>
+                                        <p className="text-gray-600 text-sm">{classItem.coach?.name || 'Coach TBA'}</p>
                                       </div>
                                       <div className="text-right">
                                         <div className="font-bold text-lg">${classItem.price}</div>
@@ -602,7 +602,7 @@ export default function PlayerDevelopmentHub() {
                                             {classItem.startTime} - {classItem.endTime}
                                           </div>
                                           <div className="text-xs text-gray-600">
-                                            {classItem.coach.name}
+                                            {classItem.coach?.name || 'Coach TBA'}
                                           </div>
                                           <div className="flex items-center justify-between">
                                             <Badge className={`text-xs ${getSkillLevelColor(classItem.skillLevel)}`}>
@@ -815,6 +815,7 @@ export default function PlayerDevelopmentHub() {
           intensityLevel: selectedClass.intensityLevel || 'Moderate',
           classFormat: selectedClass.classFormat || 'Group Class',
           optimalCapacity: selectedClass.optimalCapacity || selectedClass.maxParticipants,
+          minEnrollment: selectedClass.minEnrollment || 2,
           waitlistCount: selectedClass.waitlistCount || 0,
           goals: selectedClass.goals || ['Improve technique', 'Build confidence', 'Have fun'],
           prerequisites: selectedClass.prerequisites || [],
@@ -834,6 +835,10 @@ export default function PlayerDevelopmentHub() {
             rating: selectedClass.coach.rating || 4.8,
             reviewCount: selectedClass.coach.reviewCount || 47,
             teachingStyle: selectedClass.coach.teachingStyle || 'Patient and encouraging with focus on fundamentals'
+          },
+          facility: {
+            name: selectedFacility?.name || 'Training Center',
+            address: selectedFacility?.address || 'Location TBA'
           }
         } : null}
         onEnroll={handleEnrollInClass}
