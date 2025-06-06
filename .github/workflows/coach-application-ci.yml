@@ -42,6 +42,9 @@ jobs:
     - name: Run coach workflow validation
       run: node scripts/test-coach-workflow.js
       
+    - name: Run comprehensive production readiness validation
+      run: node scripts/comprehensive-coach-validation.js
+      
     - name: Run unit tests
       run: npm test -- --testPathPattern=coach
       continue-on-error: true

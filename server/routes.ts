@@ -267,6 +267,50 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Mount AI Coach routes - PKL-278651-COACH-0001-AI
   app.use('/api/coach', coachRoutes);
   
+  // Coach Application Submit Endpoint - PKL-278651-COACH-001
+  app.post('/api/coach/application/submit', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { coachType, bio, experience, hourlyRate, specializations, availability, certifications } = req.body;
+      
+      console.log(`[API][CoachApplication] User ${userId} submitting coach application`);
+      
+      // Validate required fields
+      if (!coachType || !bio || !experience) {
+        return res.status(400).json({ 
+          error: "Missing required fields: coachType, bio, experience" 
+        });
+      }
+      
+      // Create the application record
+      const applicationData = {
+        userId,
+        coachType,
+        bio,
+        experience: parseInt(experience),
+        hourlyRate: parseFloat(hourlyRate) || 50.00,
+        specializations: Array.isArray(specializations) ? specializations : [],
+        availability: availability || {},
+        status: 'pending',
+        submittedAt: new Date()
+      };
+      
+      // For now, store in a simple format until database schema is fully implemented
+      console.log(`[API][CoachApplication] Application data:`, applicationData);
+      
+      res.status(201).json({
+        success: true,
+        message: "Coach application submitted successfully",
+        applicationId: `temp-${userId}-${Date.now()}`, // Temporary ID
+        status: 'pending'
+      });
+      
+    } catch (error) {
+      console.error("[API][CoachApplication] Error submitting application:", error);
+      res.status(500).json({ error: "Failed to submit coach application" });
+    }
+  });
+  
   // Mount simplified SAGE Pickleball Knowledge routes for testing
   app.use('/api/simple-sage', simpleSageRoutes);
   
