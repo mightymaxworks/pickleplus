@@ -1170,6 +1170,10 @@ export default function PassportDashboard() {
                     <ClipboardList className="w-4 h-4 mr-2" />
                     Record New Match
                   </Button>
+                  <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
+                    <Award className="w-4 h-4 mr-2" />
+                    Become a Coach
+                  </Button>
                   <Button onClick={handleJoinTournament} variant="outline" className="w-full justify-start">
                     <Calendar className="w-4 h-4 mr-2" />
                     Join Tournament

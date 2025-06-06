@@ -176,6 +176,46 @@ import {
   type InsertPickleballTip
 } from './schema/referrals';
 
+// Import Coach Management system schema (PKL-278651-COACH-001 - Comprehensive Coach Application and Management System)
+import {
+  coachApplications,
+  coachCertifications,
+  coachProfiles,
+  coachPayments,
+  coachFacilityAssignments,
+  coachReviews,
+  coachingSessions,
+  coachApplicationsRelations,
+  coachCertificationsRelations,
+  coachProfilesRelations,
+  coachReviewsRelations,
+  coachingSessionsRelations,
+  insertCoachApplicationSchema,
+  insertCoachCertificationSchema,
+  insertCoachProfileSchema,
+  insertCoachPaymentSchema,
+  insertCoachReviewSchema,
+  insertCoachingSessionSchema,
+  CoachApplicationStatus,
+  CoachType,
+  VerificationLevel,
+  type CoachApplication,
+  type InsertCoachApplication,
+  type CoachCertification,
+  type InsertCoachCertification,
+  type CoachProfile,
+  type InsertCoachProfile,
+  type CoachPayment,
+  type InsertCoachPayment,
+  type CoachReview,
+  type InsertCoachReview,
+  type CoachingSession,
+  type InsertCoachingSession,
+  type CoachApplicationStatusType,
+  type CoachTypeType,
+  type VerificationLevelType
+} from './schema/coach-management';
+
 // Import Bounce testing system schema (PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System)
 import {
   bounceTestRuns,
