@@ -268,6 +268,11 @@ export default function PassportDashboard() {
     });
   };
 
+  const handleBecomeCoach = () => {
+    // Navigate to coach application form
+    window.location.href = '/coach/apply';
+  };
+
   const handlePhotoUploadSuccess = (avatarUrl: string) => {
     setIsPhotoUploadOpen(false);
     toast({

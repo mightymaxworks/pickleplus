@@ -4,7 +4,12 @@ import {
   matches, type Match, type InsertMatch,
   tournaments,
   type XpTransaction, type InsertXpTransaction,
-  activities, type InsertActivity
+  activities, type InsertActivity,
+  coachApplications, type CoachApplication, type InsertCoachApplication,
+  coachCertifications, type CoachCertification, type InsertCoachCertification,
+  coachProfiles, type CoachProfile, type InsertCoachProfile,
+  coachReviews, type CoachReview, type InsertCoachReview,
+  coachingSessions, type CoachingSession, type InsertCoachingSession
 } from "@shared/schema";
 
 import { communityStorageImplementation, type CommunityStorage } from './storage/community-storage';
@@ -45,6 +50,29 @@ export interface IStorage extends CommunityStorage {
   
   // Coach operations
   getCoaches(): Promise<User[]>;
+  
+  // Coach Application operations
+  createCoachApplication(data: InsertCoachApplication): Promise<CoachApplication>;
+  getCoachApplication(id: number): Promise<CoachApplication | undefined>;
+  getCoachApplicationByUserId(userId: number): Promise<CoachApplication | undefined>;
+  updateCoachApplicationStatus(id: number, status: string, reviewerId?: number, rejectionReason?: string): Promise<CoachApplication>;
+  
+  // Coach Profile operations
+  createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile>;
+  getCoachProfile(userId: number): Promise<CoachProfile | undefined>;
+  updateCoachProfile(userId: number, data: Partial<InsertCoachProfile>): Promise<CoachProfile>;
+  
+  // Coach Certification operations
+  addCoachCertification(data: InsertCoachCertification): Promise<CoachCertification>;
+  getCoachCertifications(applicationId: number): Promise<CoachCertification[]>;
+  
+  // Coach Review operations
+  createCoachReview(data: InsertCoachReview): Promise<CoachReview>;
+  getCoachReviews(coachId: number): Promise<CoachReview[]>;
+  
+  // Coaching Session operations
+  createCoachingSession(data: InsertCoachingSession): Promise<CoachingSession>;
+  getCoachingSessions(coachId: number): Promise<CoachingSession[]>;
   
   // Placeholder methods for build compatibility
   awardXpToUser(userId: number, amount: number, source: string): Promise<void>;
