@@ -53,6 +53,8 @@ import {
   
   // PKL-278651-COACH-0001-CORE - S.A.G.E. Coaching System
   LazySageCoachingPage,
+  // PKL-278651-COACH-001 - Coach Management System
+  LazyCoachApplicationPage,
   LazyReportsPage,
   LazySettingsPage,
   LazyMobileTestPage,
@@ -440,6 +442,13 @@ export default function App() {
                     path="/coach"
                     component={CoachPage}
                     pageTitle="AI Coach"
+                  />
+                  
+                  {/* PKL-278651-COACH-001 - Coach Application */}
+                  <ProtectedRouteWithLayout 
+                    path="/coach/apply"
+                    component={LazyCoachApplicationPage}
+                    pageTitle="Become a Coach"
                   />
                   {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management - DISABLED FOR DEPLOYMENT */}
                   {/* <ProtectedRouteWithLayout 
