@@ -37,6 +37,7 @@ import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (
 import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTIQ-0002-ASSESS
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
+import coachManagementRoutes from "./routes/coach-routes"; // PKL-278651-COACH-001 - Coach Management System
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
@@ -127,6 +128,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount user data API (Framework 5.3 frontend-driven approach)
   app.use('/api/user-data', simpleRatingApi);
+  
+  // Mount coach management routes
+  app.use('/api/coach', coachManagementRoutes);
   
   // Match statistics endpoint for dashboard - must be before match assessment routes
   app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
