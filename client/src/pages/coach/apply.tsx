@@ -86,9 +86,13 @@ export default function CoachApplication() {
     teachingPhilosophy: '',
     specializations: [],
     availabilityData: {},
+    availability: [],
     previousExperience: '',
+    athleticBackground: '',
     references: [{ name: '', email: '', phone: '', relationship: '' }],
     backgroundCheckConsent: false,
+    termsAccepted: false,
+    codeOfConductAccepted: false,
     emergencyContact: { name: '', phone: '', relationship: '' },
     certifications: []
   });
