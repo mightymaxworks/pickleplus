@@ -29,6 +29,7 @@ export interface IStorage extends CommunityStorage {
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
   updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
   updateUserPassword(id: number, hashedPassword: string): Promise<void>;
+  searchPlayers(query: string): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
@@ -358,6 +359,26 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, id));
+  }
+
+  async searchPlayers(query: string): Promise<User[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    
+    const results = await db.select()
+      .from(users)
+      .where(
+        or(
+          sql`LOWER(${users.username}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.firstName}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.lastName}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.passportCode}) LIKE ${searchTerm}`,
+          sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchTerm}`
+        )
+      )
+      .limit(20)
+      .orderBy(users.username);
+    
+    return results;
   }
 
   // Password reset operations - implemented as memory store for now

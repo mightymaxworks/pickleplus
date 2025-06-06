@@ -361,6 +361,23 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     const user = await storage.getUser(req.user!.id);
     res.json(user);
   });
+
+  // Player search endpoint for QR scanner fallback
+  app.get("/api/players/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+
+      const players = await storage.searchPlayers(query);
+      res.json(players);
+    } catch (error) {
+      console.error('Player search error:', error);
+      res.status(500).json({ error: 'Failed to search players' });
+    }
+  });
   
   // Framework 5.3 direct solution: Special endpoint to fix mightymax admin access
   app.get("/api/auth/special-login", async (req: Request, res: Response) => {
