@@ -8,8 +8,10 @@ import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Upload, X, CheckCircle, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Camera, Upload, X, CheckCircle, AlertCircle, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { PlayerSearchFallback } from "./PlayerSearchFallback";
 
 interface UnifiedQRScannerProps {
   onScanSuccess: (data: string) => void;
@@ -202,73 +204,100 @@ export function UnifiedQRScanner({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {/* Scanner container */}
-        <div 
-          id={elementId}
-          className={`${!isScanning ? 'hidden' : ''} w-full`}
-        />
-        
-        {/* Last scan result */}
-        {lastScan && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="h-4 w-4" />
-              <span className="font-medium">Last Scan:</span>
-            </div>
-            <p className="text-sm text-green-700 mt-1 break-all">{lastScan}</p>
-          </div>
-        )}
-        
-        {/* Controls */}
-        <div className="flex gap-2">
-          {!isScanning ? (
-            <Button
-              onClick={startScanning}
-              disabled={!scannerReady}
-              className="flex-1"
-            >
-              <Camera className="mr-2 h-4 w-4" />
-              Start Scanning
-            </Button>
-          ) : (
-            <Button
-              onClick={stopScanning}
-              variant="destructive"
-              className="flex-1"
-            >
-              Stop Scanning
-            </Button>
-          )}
+      <CardContent>
+        <Tabs defaultValue="scan" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="scan" className="flex items-center gap-2">
+              <Camera className="h-4 w-4" />
+              QR Scanner
+            </TabsTrigger>
+            <TabsTrigger value="search" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Search Players
+            </TabsTrigger>
+          </TabsList>
           
-          {lastScan && !isScanning && (
-            <Button
-              onClick={resumeScanning}
-              variant="outline"
-            >
-              Scan Again
-            </Button>
-          )}
-        </div>
-        
-        {/* Status indicators */}
-        <div className="text-sm text-center">
-          {!scannerReady && (
-            <div className="flex items-center justify-center gap-2 text-orange-600">
-              <AlertCircle className="h-4 w-4" />
-              Initializing scanner...
+          <TabsContent value="scan" className="mt-4 space-y-4">
+            {/* Scanner container */}
+            <div 
+              id={elementId}
+              className={`${!isScanning ? 'hidden' : ''} w-full`}
+            />
+            
+            {/* Last scan result */}
+            {lastScan && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-800">
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="font-medium">Last Scan:</span>
+                </div>
+                <p className="text-sm text-green-700 mt-1 break-all">{lastScan}</p>
+              </div>
+            )}
+            
+            {/* Controls */}
+            <div className="flex gap-2">
+              {!isScanning ? (
+                <Button
+                  onClick={startScanning}
+                  disabled={!scannerReady}
+                  className="flex-1"
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Start Scanning
+                </Button>
+              ) : (
+                <Button
+                  onClick={stopScanning}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  Stop Scanning
+                </Button>
+              )}
+              
+              {lastScan && !isScanning && (
+                <Button
+                  onClick={resumeScanning}
+                  variant="outline"
+                >
+                  Scan Again
+                </Button>
+              )}
             </div>
-          )}
-          {scannerReady && !isScanning && !lastScan && (
-            <p className="text-muted-foreground">Click "Start Scanning" to begin</p>
-          )}
-          {isScanning && (
-            <div className="flex items-center justify-center gap-2 text-blue-600">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
-              Point camera at QR code or upload image
+            
+            {/* Status indicators */}
+            <div className="text-sm text-center">
+              {!scannerReady && (
+                <div className="flex items-center justify-center gap-2 text-orange-600">
+                  <AlertCircle className="h-4 w-4" />
+                  Initializing scanner...
+                </div>
+              )}
+              {scannerReady && !isScanning && !lastScan && (
+                <p className="text-muted-foreground">Click "Start Scanning" to begin</p>
+              )}
+              {isScanning && (
+                <div className="flex items-center justify-center gap-2 text-blue-600">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+                  Point camera at QR code or upload image
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="search" className="mt-4">
+            <PlayerSearchFallback
+              onPlayerSelect={(passportCode) => {
+                // Format the passport code as a QR scan result
+                const qrData = `PICKLE+ID:${passportCode}`;
+                onScanSuccess(qrData);
+              }}
+              title="Player Database Search"
+              description="Search for players when QR scanning isn't available"
+            />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
