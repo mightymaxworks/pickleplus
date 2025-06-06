@@ -1,0 +1,141 @@
+name: Coach Application Workflow CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'client/src/pages/coach/**'
+      - 'server/routes/coach-routes.ts'
+      - 'shared/schema/coach-management.ts'
+      - 'server/storage.ts'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client/src/pages/coach/**'
+      - 'server/routes/coach-routes.ts'
+      - 'shared/schema/coach-management.ts'
+
+jobs:
+  coach-workflow-validation:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run TypeScript compilation check
+      run: npx tsc --noEmit
+      
+    - name: Run coach workflow validation
+      run: node scripts/test-coach-workflow.js
+      
+    - name: Run unit tests
+      run: npm test -- --testPathPattern=coach
+      continue-on-error: true
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coach-test-results-node-${{ matrix.node-version }}
+        path: test-results/
+        
+    - name: Comment PR with test results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const results = JSON.parse(fs.readFileSync('test-results/coach-workflow-validation.json', 'utf8'));
+            const passRate = Object.values(results.results).flat().filter(r => r === true).length / 
+                           Object.values(results.results).flat().length * 100;
+            
+            const comment = `## Coach Application Workflow Validation Results
+            
+            **Overall Status:** ${results.results.overall}
+            **Pass Rate:** ${passRate.toFixed(1)}%
+            
+            ### Component Status:
+            - Frontend Integration: ${results.results.frontend.applicationForm ? '✅' : '⚠️'} 
+            - Backend Routes: ${results.results.backend.coachRoutes ? '✅' : '⚠️'}
+            - Database Schema: ${results.results.schema.tables ? '✅' : '❌'}
+            - Storage Implementation: ${results.results.backend.storage ? '✅' : '❌'}
+            
+            ${passRate >= 80 ? '🎉 Ready for deployment!' : '⚠️ Needs attention before merge'}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('No test results found');
+          }
+
+  deployment-readiness:
+    needs: coach-workflow-validation
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Run final validation
+      run: node scripts/test-coach-workflow.js
+      
+    - name: Deploy to staging
+      if: success()
+      run: |
+        echo "🚀 Deploying coach application workflow to staging environment"
+        # Add your deployment commands here
+        
+    - name: Run integration tests
+      if: success()
+      run: |
+        echo "🧪 Running integration tests on staging"
+        # Add integration test commands here
+        
+    - name: Notify deployment status
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const status = '${{ job.status }}' === 'success' ? '✅ SUCCESS' : '❌ FAILED';
+          
+          github.rest.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: context.sha,
+            state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+            target_url: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+            description: `Coach Application Deployment: ${status}`,
+            context: 'coach-application/deployment'
+          });

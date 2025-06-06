@@ -1,0 +1,69 @@
+{
+  "timestamp": "2025-06-06T23:10:14.462Z",
+  "readinessScore": 57.1,
+  "checks": {
+    "database": {
+      "schema": true,
+      "connectivity": true,
+      "migrations": false
+    },
+    "api": {
+      "endpoints": false,
+      "authentication": true,
+      "validation": true,
+      "errorHandling": true
+    },
+    "frontend": {
+      "components": false,
+      "routing": true,
+      "forms": false,
+      "navigation": true
+    },
+    "integration": {
+      "endToEnd": false,
+      "userExperience": true,
+      "dataFlow": false
+    }
+  },
+  "categories": [
+    {
+      "name": "Database",
+      "score": 66.66666666666666,
+      "details": {
+        "schema": true,
+        "connectivity": true,
+        "migrations": false
+      }
+    },
+    {
+      "name": "API",
+      "score": 75,
+      "details": {
+        "endpoints": false,
+        "authentication": true,
+        "validation": true,
+        "errorHandling": true
+      }
+    },
+    {
+      "name": "Frontend",
+      "score": 50,
+      "details": {
+        "components": false,
+        "routing": true,
+        "forms": false,
+        "navigation": true
+      }
+    },
+    {
+      "name": "Integration",
+      "score": 33.33333333333333,
+      "details": {
+        "endToEnd": false,
+        "userExperience": true,
+        "dataFlow": false
+      }
+    }
+  ],
+  "recommendation": "NOT_READY"
+}

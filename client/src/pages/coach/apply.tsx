@@ -45,6 +45,7 @@ interface CoachApplicationData {
   specializations: string[];
   availabilityData: Record<string, any>;
   previousExperience: string;
+  hourlyRate?: number;
   references: Array<{
     name: string;
     email: string;
@@ -122,14 +123,66 @@ export default function CoachApplication() {
     'Custom/Other'
   ];
 
+  // Form validation
+  const validateCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        if (!applicationData.coachType) {
+          toast({
+            title: "Validation Error",
+            description: "Please select a coach type",
+            variant: "destructive"
+          });
+          return false;
+        }
+        if (!applicationData.experienceYears || applicationData.experienceYears < 1) {
+          toast({
+            title: "Validation Error", 
+            description: "Please enter valid years of experience",
+            variant: "destructive"
+          });
+          return false;
+        }
+        return true;
+      case 2:
+        if (!applicationData.teachingPhilosophy || applicationData.teachingPhilosophy.length < 50) {
+          toast({
+            title: "Validation Error",
+            description: "Teaching philosophy must be at least 50 characters",
+            variant: "destructive"
+          });
+          return false;
+        }
+        if (applicationData.specializations.length === 0) {
+          toast({
+            title: "Validation Error",
+            description: "Please select at least one specialization",
+            variant: "destructive"
+          });
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
   // Submit application mutation
   const submitApplicationMutation = useMutation({
     mutationFn: async (data: CoachApplicationData) => {
-      const response = await fetch('/api/coach/applications', {
+      const response = await fetch('/api/coach/application/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          coachType: data.coachType,
+          bio: data.teachingPhilosophy,
+          experience: data.experienceYears,
+          hourlyRate: data.hourlyRate || 50.00,
+          specializations: data.specializations,
+          availability: data.availabilityData || {},
+          certifications: data.certifications || []
+        })
       });
       
       if (!response.ok) {
@@ -145,8 +198,11 @@ export default function CoachApplication() {
         description: "Your coach application has been submitted for review. You'll receive an email update within 2-3 business days.",
         variant: "default"
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach/application/status'] });
       // Redirect to dashboard
-      window.location.href = '/';
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
     },
     onError: (error: Error) => {
       toast({
@@ -204,7 +260,7 @@ export default function CoachApplication() {
   };
 
   const nextStep = () => {
-    if (currentStep < totalSteps) {
+    if (validateCurrentStep() && currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
