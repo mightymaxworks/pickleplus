@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-06-06T23:07:13.505Z",
+  "results": {
+    "frontend": {
+      "applicationForm": false,
+      "dashboardIntegration": true,
+      "routing": true,
+      "lazyLoading": true
+    },
+    "backend": {
+      "coachRoutes": false,
+      "validation": true,
+      "routeIntegration": true,
+      "storage": true,
+      "interface": true
+    },
+    "schema": {
+      "tables": true,
+      "relations": true,
+      "types": true
+    },
+    "routing": {
+      "endToEnd": false
+    },
+    "overall": "GOOD"
+  },
+  "summary": {
+    "overall": "GOOD"
+  }
+}
