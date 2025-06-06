@@ -28,9 +28,13 @@ import {
   User,
   GraduationCap,
   Calendar,
+  BookOpen,
+  Users,
+  Plus,
+  Info,
+  Shield,
   MapPin,
   Clock,
-  Shield,
   Phone,
   Mail,
   ArrowRight,
@@ -44,7 +48,9 @@ interface CoachApplicationData {
   teachingPhilosophy: string;
   specializations: string[];
   availabilityData: Record<string, any>;
+  availability?: string[];
   previousExperience: string;
+  athleticBackground?: string;
   hourlyRate?: number;
   references: Array<{
     name: string;
@@ -53,6 +59,8 @@ interface CoachApplicationData {
     relationship: string;
   }>;
   backgroundCheckConsent: boolean;
+  termsAccepted?: boolean;
+  codeOfConductAccepted?: boolean;
   emergencyContact: {
     name: string;
     phone: string;
@@ -280,11 +288,14 @@ export default function CoachApplication() {
       case 3:
         return applicationData.previousExperience.length > 20;
       case 4:
-        return applicationData.references.every(ref => ref.name && ref.email) && 
-               applicationData.emergencyContact.name && 
-               applicationData.emergencyContact.phone;
+        return applicationData.references.length >= 2 && 
+               applicationData.references.every(ref => ref.name && ref.email) && 
+               applicationData.emergencyContact?.name && 
+               applicationData.emergencyContact?.phone;
       case 5:
-        return applicationData.backgroundCheckConsent;
+        return applicationData.backgroundCheckConsent && 
+               applicationData.termsAccepted && 
+               applicationData.codeOfConductAccepted;
       default:
         return false;
     }
@@ -451,18 +462,255 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Additional steps 3, 4, 5 would continue here - truncated for brevity */}
-            {currentStep >= 3 && (
+            {/* Step 3: Previous Experience */}
+            {currentStep === 3 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-center space-y-4"
+                className="space-y-6"
               >
-                <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto" />
-                <h2 className="text-2xl font-bold text-gray-900">Step {currentStep} - Coming Soon</h2>
-                <p className="text-gray-600">
-                  Additional application steps are being finalized. Please proceed to submit your initial application.
-                </p>
+                <div className="text-center mb-6">
+                  <BookOpen className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Previous Experience</h2>
+                  <p className="text-gray-600">Share your relevant coaching, teaching, or athletic experience</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Previous Coaching/Teaching Experience
+                    </label>
+                    <Textarea
+                      value={applicationData.previousExperience}
+                      onChange={(e) => handleInputChange('previousExperience', e.target.value)}
+                      placeholder="Describe your previous coaching, teaching, or mentoring experience. Include sports coached, age groups, levels, and any notable achievements..."
+                      className="min-h-32"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      {applicationData.previousExperience.length}/500 characters (minimum 20 required)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Athletic Background
+                    </label>
+                    <Textarea
+                      value={applicationData.athleticBackground || ''}
+                      onChange={(e) => handleInputChange('athleticBackground', e.target.value)}
+                      placeholder="Describe your athletic background, including any competitive experience in pickleball or other sports..."
+                      className="min-h-24"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Availability
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        'Weekday Mornings',
+                        'Weekday Afternoons', 
+                        'Weekday Evenings',
+                        'Weekend Mornings',
+                        'Weekend Afternoons',
+                        'Weekend Evenings'
+                      ].map((time) => (
+                        <label key={time} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={applicationData.availability?.includes(time) || false}
+                            onChange={(e) => {
+                              const current = applicationData.availability || [];
+                              const updated = e.target.checked
+                                ? [...current, time]
+                                : current.filter(t => t !== time);
+                              handleInputChange('availability', updated);
+                            }}
+                            className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <span className="text-sm text-gray-700">{time}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 4: References & Emergency Contact */}
+            {currentStep === 4 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-6">
+                  <Users className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">References & Contact</h2>
+                  <p className="text-gray-600">Provide references and emergency contact information</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="block text-sm font-medium text-gray-700">References</label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addReference}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Reference
+                      </Button>
+                    </div>
+                    
+                    {applicationData.references.map((ref, index) => (
+                      <Card key={index} className="p-4 mb-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Input
+                            placeholder="Full Name"
+                            value={ref.name}
+                            onChange={(e) => updateReference(index, 'name', e.target.value)}
+                          />
+                          <Input
+                            placeholder="Email"
+                            type="email"
+                            value={ref.email}
+                            onChange={(e) => updateReference(index, 'email', e.target.value)}
+                          />
+                          <Input
+                            placeholder="Phone Number"
+                            value={ref.phone}
+                            onChange={(e) => updateReference(index, 'phone', e.target.value)}
+                          />
+                          <Input
+                            placeholder="Relationship"
+                            value={ref.relationship}
+                            onChange={(e) => updateReference(index, 'relationship', e.target.value)}
+                          />
+                        </div>
+                      </Card>
+                    ))}
+                    
+                    {applicationData.references.length === 0 && (
+                      <p className="text-sm text-gray-500 italic">No references added yet. Add at least 2 references.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Emergency Contact</label>
+                    <Card className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          placeholder="Contact Name"
+                          value={applicationData.emergencyContact?.name || ''}
+                          onChange={(e) => handleInputChange('emergencyContact', {
+                            ...applicationData.emergencyContact,
+                            name: e.target.value
+                          })}
+                        />
+                        <Input
+                          placeholder="Phone Number"
+                          value={applicationData.emergencyContact?.phone || ''}
+                          onChange={(e) => handleInputChange('emergencyContact', {
+                            ...applicationData.emergencyContact,
+                            phone: e.target.value
+                          })}
+                        />
+                        <Input
+                          placeholder="Relationship"
+                          value={applicationData.emergencyContact?.relationship || ''}
+                          onChange={(e) => handleInputChange('emergencyContact', {
+                            ...applicationData.emergencyContact,
+                            relationship: e.target.value
+                          })}
+                        />
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 5: Legal & Background Check */}
+            {currentStep === 5 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-6">
+                  <Shield className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Legal & Background Check</h2>
+                  <p className="text-gray-600">Complete required legal agreements and background check consent</p>
+                </div>
+
+                <div className="space-y-6">
+                  <Card className="p-6 bg-blue-50 border-blue-200">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <Info className="w-5 h-5 text-blue-600 mt-1" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-blue-900 mb-1">Background Check Information</h3>
+                        <p className="text-sm text-blue-700">
+                          All coaches are required to complete a background check through our verified partner. 
+                          This ensures the safety of all players in our community.
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <div className="space-y-4">
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={applicationData.backgroundCheckConsent || false}
+                        onChange={(e) => handleInputChange('backgroundCheckConsent', e.target.checked)}
+                        className="mt-1 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">Background Check Consent</span>
+                        <p className="text-sm text-gray-600">
+                          I consent to a background check being conducted as part of the coach application process.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={applicationData.termsAccepted || false}
+                        onChange={(e) => handleInputChange('termsAccepted', e.target.checked)}
+                        className="mt-1 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">Terms and Conditions</span>
+                        <p className="text-sm text-gray-600">
+                          I agree to the <a href="#" className="text-emerald-600 underline">coaching terms and conditions</a> and community guidelines.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={applicationData.codeOfConductAccepted || false}
+                        onChange={(e) => handleInputChange('codeOfConductAccepted', e.target.checked)}
+                        className="mt-1 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">Code of Conduct</span>
+                        <p className="text-sm text-gray-600">
+                          I agree to uphold the <a href="#" className="text-emerald-600 underline">coach code of conduct</a> and maintain professional standards.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
               </motion.div>
             )}
           </CardContent>
