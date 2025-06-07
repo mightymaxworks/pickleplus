@@ -81,7 +81,7 @@ export default function CoachApplication() {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
   const [applicationData, setApplicationData] = useState<CoachApplicationData>({
-    coachType: '',
+    coachType: 'independent',
     experienceYears: 0,
     teachingPhilosophy: '',
     specializations: [],
@@ -286,7 +286,7 @@ export default function CoachApplication() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return applicationData.coachType && applicationData.experienceYears > 0;
+        return applicationData.experienceYears > 0;
       case 2:
         return applicationData.teachingPhilosophy.length > 50 && applicationData.specializations.length > 0;
       case 3:
@@ -371,23 +371,15 @@ export default function CoachApplication() {
                 </div>
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Coach Type</label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {coachTypes.map((type) => (
-                        <div
-                          key={type.value}
-                          onClick={() => handleInputChange('coachType', type.value)}
-                          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                            applicationData.coachType === type.value
-                              ? 'border-emerald-500 bg-emerald-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <h3 className="font-medium text-gray-900 mb-1">{type.label}</h3>
-                          <p className="text-sm text-gray-600">{type.description}</p>
-                        </div>
-                      ))}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-emerald-600 mt-0.5" />
+                      <div>
+                        <h3 className="font-medium text-emerald-900 mb-1">Independent Coach Application</h3>
+                        <p className="text-sm text-emerald-700">
+                          All coaches on our platform operate as independent contractors, setting their own rates and managing their own schedules. You'll have full control over your coaching business.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -733,7 +725,7 @@ export default function CoachApplication() {
           </Button>
 
           <div className="flex gap-3">
-            {currentStep < 3 ? (
+            {currentStep < totalSteps ? (
               <Button
                 onClick={nextStep}
                 disabled={!canProceed()}
