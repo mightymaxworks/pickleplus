@@ -51,7 +51,9 @@ interface CoachApplicationData {
   availability?: string[];
   previousExperience: string;
   athleticBackground?: string;
+  achievements?: string;
   hourlyRate?: number;
+  groupRate?: number;
   references: Array<{
     name: string;
     email: string;
@@ -89,6 +91,9 @@ export default function CoachApplication() {
     availability: [],
     previousExperience: '',
     athleticBackground: '',
+    achievements: '',
+    hourlyRate: 0,
+    groupRate: 0,
     references: [{ name: '', email: '', phone: '', relationship: '' }],
     backgroundCheckConsent: false,
     termsAccepted: false,
@@ -292,10 +297,7 @@ export default function CoachApplication() {
       case 3:
         return applicationData.previousExperience.length > 20;
       case 4:
-        return applicationData.references.length >= 2 && 
-               applicationData.references.every(ref => ref.name && ref.email) && 
-               applicationData.emergencyContact?.name && 
-               applicationData.emergencyContact?.phone;
+        return applicationData.hourlyRate && applicationData.hourlyRate > 0;
       case 5:
         return applicationData.backgroundCheckConsent && 
                applicationData.termsAccepted && 
@@ -542,90 +544,81 @@ export default function CoachApplication() {
                 className="space-y-6"
               >
                 <div className="text-center mb-6">
-                  <Users className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">References & Contact</h2>
-                  <p className="text-gray-600">Provide references and emergency contact information</p>
+                  <Star className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Show off your achievements! 🏅</h2>
+                  <p className="text-gray-600">Tell us about your accomplishments and set your coaching rates</p>
                 </div>
 
                 <div className="space-y-6">
+                  {/* Achievements Section */}
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="block text-sm font-medium text-gray-700">References</label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addReference}
-                        className="flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Reference
-                      </Button>
-                    </div>
-                    
-                    {applicationData.references.map((ref, index) => (
-                      <Card key={index} className="p-4 mb-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Input
-                            placeholder="Full Name"
-                            value={ref.name}
-                            onChange={(e) => updateReference(index, 'name', e.target.value)}
-                          />
-                          <Input
-                            placeholder="Email"
-                            type="email"
-                            value={ref.email}
-                            onChange={(e) => updateReference(index, 'email', e.target.value)}
-                          />
-                          <Input
-                            placeholder="Phone Number"
-                            value={ref.phone}
-                            onChange={(e) => updateReference(index, 'phone', e.target.value)}
-                          />
-                          <Input
-                            placeholder="Relationship"
-                            value={ref.relationship}
-                            onChange={(e) => updateReference(index, 'relationship', e.target.value)}
-                          />
-                        </div>
-                      </Card>
-                    ))}
-                    
-                    {applicationData.references.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">No references added yet. Add at least 2 references.</p>
-                    )}
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Your Achievements & Accolades
+                    </label>
+                    <Textarea
+                      value={applicationData.achievements || ''}
+                      onChange={(e) => handleInputChange('achievements', e.target.value)}
+                      placeholder="Tell us about your accomplishments! Tournament wins, certifications, playing achievements, coaching successes, awards, or any other highlights you're proud of..."
+                      rows={5}
+                      className="resize-none"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Optional - but we'd love to hear about what makes you special!
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Emergency Contact</label>
-                    <Card className="p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Coaching Rates Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Individual Lesson Rate (per hour) *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                         <Input
-                          placeholder="Contact Name"
-                          value={applicationData.emergencyContact?.name || ''}
-                          onChange={(e) => handleInputChange('emergencyContact', {
-                            ...applicationData.emergencyContact,
-                            name: e.target.value
-                          })}
-                        />
-                        <Input
-                          placeholder="Phone Number"
-                          value={applicationData.emergencyContact?.phone || ''}
-                          onChange={(e) => handleInputChange('emergencyContact', {
-                            ...applicationData.emergencyContact,
-                            phone: e.target.value
-                          })}
-                        />
-                        <Input
-                          placeholder="Relationship"
-                          value={applicationData.emergencyContact?.relationship || ''}
-                          onChange={(e) => handleInputChange('emergencyContact', {
-                            ...applicationData.emergencyContact,
-                            relationship: e.target.value
-                          })}
+                          type="number"
+                          min="20"
+                          max="500"
+                          value={applicationData.hourlyRate || ''}
+                          onChange={(e) => handleInputChange('hourlyRate', parseInt(e.target.value) || 0)}
+                          placeholder="50"
+                          className="pl-8"
                         />
                       </div>
-                    </Card>
+                      <p className="text-sm text-gray-500 mt-1">Your rate for 1-on-1 coaching sessions</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Group Lesson Rate (per hour)
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <Input
+                          type="number"
+                          min="20"
+                          max="300"
+                          value={applicationData.groupRate || ''}
+                          onChange={(e) => handleInputChange('groupRate', parseInt(e.target.value) || 0)}
+                          placeholder="30"
+                          className="pl-8"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">Your rate for group coaching sessions</p>
+                    </div>
+                  </div>
+
+                  {/* Rate Guidelines */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <h3 className="font-medium text-blue-900 mb-1">Rate Setting Tips</h3>
+                        <p className="text-sm text-blue-700">
+                          Consider your experience level, local market rates, and the value you provide. You can always adjust your rates later as you build your reputation on the platform.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
