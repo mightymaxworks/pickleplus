@@ -337,11 +337,11 @@ export default function CoachApplication() {
         >
           <div className="flex items-center justify-center gap-3 mb-4">
             <Award className="w-8 h-8 text-emerald-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Become a Coach</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Become a Coach on Pickle+</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Join our coaching community and help players improve their pickleball skills. 
-            Complete this application to get started on your coaching journey.
+            Ready to share your passion for pickleball? Join our amazing coaching community and help players level up their game! 
+            We'd love to learn more about you and get you started on this exciting journey.
           </p>
         </motion.div>
 
@@ -366,8 +366,8 @@ export default function CoachApplication() {
               >
                 <div className="text-center mb-6">
                   <User className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Basic Information</h2>
-                  <p className="text-gray-600">Tell us about your coaching goals and experience level</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Let's get to know you!</h2>
+                  <p className="text-gray-600">First, tell us a bit about your pickleball background and coaching experience</p>
                 </div>
 
                 <div className="space-y-6">
@@ -375,9 +375,9 @@ export default function CoachApplication() {
                     <div className="flex items-start gap-3">
                       <Info className="w-5 h-5 text-emerald-600 mt-0.5" />
                       <div>
-                        <h3 className="font-medium text-emerald-900 mb-1">Independent Coach Application</h3>
+                        <h3 className="font-medium text-emerald-900 mb-1">Welcome to our coaching family!</h3>
                         <p className="text-sm text-emerald-700">
-                          All coaches on our platform operate as independent contractors, setting their own rates and managing their own schedules. You'll have full control over your coaching business.
+                          As a coach on Pickle+, you'll be your own boss! Set your own rates, choose your schedule, and build your coaching business the way you want. We're here to support you every step of the way.
                         </p>
                       </div>
                     </div>
@@ -385,7 +385,7 @@ export default function CoachApplication() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Years of Pickleball Experience
+                      How many years have you been playing or coaching pickleball? ⭐
                     </label>
                     <Input
                       type="number"
@@ -410,19 +410,19 @@ export default function CoachApplication() {
               >
                 <div className="text-center mb-6">
                   <GraduationCap className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Teaching Philosophy</h2>
-                  <p className="text-gray-600">Share your approach to coaching and areas of expertise</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">What's your coaching style? 🎾</h2>
+                  <p className="text-gray-600">Tell us about your approach to helping players improve and what makes you special!</p>
                 </div>
 
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Teaching Philosophy & Approach
+                      Tell us about your coaching philosophy! 💡
                     </label>
                     <Textarea
                       value={applicationData.teachingPhilosophy}
                       onChange={(e) => handleInputChange('teachingPhilosophy', e.target.value)}
-                      placeholder="Describe your teaching philosophy, coaching style, and what makes you effective as a coach..."
+                      placeholder="What's your approach to teaching? How do you motivate players? What makes your coaching style unique? We'd love to hear your story!"
                       rows={6}
                       className="resize-none"
                     />
@@ -433,7 +433,7 @@ export default function CoachApplication() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Areas of Specialization (Select all that apply)
+                      What areas are you most excited to teach? (Select all that apply) 🏆
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {specializationOptions.map((spec) => (
