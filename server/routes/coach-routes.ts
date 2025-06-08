@@ -1,6 +1,7 @@
 /**
  * Coach Management API Routes
  * PKL-278651-COACH-001 - Sprint 1: Core Infrastructure & Application Flow
+ * PKL-278651-COACH-DUAL-ROLE - Dual Role Assignment Support
  */
 
 import { Router } from 'express';
@@ -213,6 +214,94 @@ const stubStorage = {
     return null;
   }
 };
+
+// PUT /api/admin/coaches/:id/roles - Update coach role assignments (Admin only)
+router.put('/admin/coaches/:id/roles', async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const coachId = parseInt(req.params.id);
+    const { roles, facilityId, notes } = req.body;
+
+    // Validate role assignments
+    const roleSchema = z.array(z.object({
+      roleType: z.enum(['independent', 'facility', 'guest', 'volunteer']),
+      isActive: z.boolean(),
+      facilityId: z.number().optional(),
+      notes: z.string().optional()
+    }));
+
+    const validatedRoles = roleSchema.parse(roles);
+    const activeRoles = validatedRoles.filter(r => r.isActive);
+
+    if (activeRoles.length === 0) {
+      return res.status(400).json({ 
+        message: 'A coach must have at least one active role' 
+      });
+    }
+
+    // Update coach profile with new roles
+    await storage.updateCoachRoles?.(coachId, {
+      roles: activeRoles,
+      facilityId,
+      notes,
+      updatedBy: req.user.id,
+      updatedAt: new Date()
+    });
+
+    res.json({
+      message: 'Coach roles updated successfully',
+      activeRoles: activeRoles.map(r => r.roleType)
+    });
+
+  } catch (error) {
+    console.error('Error updating coach roles:', error);
+    
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message
+        }))
+      });
+    }
+
+    res.status(500).json({ 
+      message: 'Failed to update coach roles' 
+    });
+  }
+});
+
+// GET /api/admin/coaches - Get all coaches for admin management
+router.get('/admin/coaches', async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const coaches = await storage.getAllCoaches?.() || [];
+    
+    res.json({
+      coaches: coaches.map(coach => ({
+        id: coach.id,
+        userId: coach.userId,
+        name: coach.displayName || coach.username,
+        currentRoles: coach.coachType ? [coach.coachType] : [],
+        status: coach.isActive ? 'active' : 'inactive',
+        averageRating: coach.averageRating || 0,
+        totalSessions: coach.totalSessions || 0,
+        joinedAt: coach.createdAt
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error fetching coaches:', error);
+    res.status(500).json({ message: 'Failed to fetch coaches' });
+  }
+});
 
 // Temporarily enhance storage with stub methods if they don't exist
 if (!storage.createCoachApplication) {

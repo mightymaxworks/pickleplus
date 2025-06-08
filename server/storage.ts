@@ -237,6 +237,11 @@ export interface IStorage extends CommunityStorage {
   createCoachingSession(data: InsertCoachingSession): Promise<CoachingSession>;
   getCoachingSessions(coachId: number): Promise<CoachingSession[]>;
   
+  // Admin Coach Role Management operations
+  updateCoachRoles(coachId: number, roleData: any): Promise<void>;
+  getAllCoaches(): Promise<any[]>;
+  logAdminAction(actionData: any): Promise<void>;
+  
   // Placeholder methods for build compatibility
   awardXpToUser(userId: number, amount: number, source: string): Promise<void>;
   createConciergeInteraction(data: any): Promise<any>;
