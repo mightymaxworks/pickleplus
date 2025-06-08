@@ -14,12 +14,12 @@ async function createCoachApplicationTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS coach_applications (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id),
+        user_id INTEGER NOT NULL,
         coach_type VARCHAR(50) NOT NULL DEFAULT 'independent',
         application_status VARCHAR(50) NOT NULL DEFAULT 'pending',
         submitted_at TIMESTAMP DEFAULT NOW(),
         reviewed_at TIMESTAMP,
-        reviewer_id INTEGER REFERENCES users(id),
+        reviewer_id INTEGER,
         rejection_reason TEXT,
         
         experience_years INTEGER NOT NULL,
@@ -44,7 +44,7 @@ async function createCoachApplicationTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS coach_certifications (
         id SERIAL PRIMARY KEY,
-        application_id INTEGER NOT NULL REFERENCES coach_applications(id) ON DELETE CASCADE,
+        application_id INTEGER NOT NULL,
         certification_type VARCHAR(100) NOT NULL,
         issuing_organization VARCHAR(200) NOT NULL,
         certification_number VARCHAR(100),
@@ -52,7 +52,7 @@ async function createCoachApplicationTables() {
         expiration_date TIMESTAMP,
         document_url VARCHAR(500),
         verification_status VARCHAR(50) NOT NULL DEFAULT 'pending',
-        verified_by INTEGER REFERENCES users(id),
+        verified_by INTEGER,
         verified_at TIMESTAMP,
         notes TEXT,
         
@@ -65,7 +65,7 @@ async function createCoachApplicationTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS coach_profiles (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+        user_id INTEGER NOT NULL UNIQUE,
         coach_type VARCHAR(50) NOT NULL,
         verification_level VARCHAR(50) NOT NULL DEFAULT 'basic',
         is_active BOOLEAN NOT NULL DEFAULT true,
@@ -85,7 +85,7 @@ async function createCoachApplicationTables() {
         student_retention_rate DECIMAL(5,2) DEFAULT 0,
         
         approved_at TIMESTAMP,
-        approved_by INTEGER REFERENCES users(id),
+        approved_by INTEGER,
         last_active_at TIMESTAMP DEFAULT NOW(),
         
         created_at TIMESTAMP DEFAULT NOW(),
@@ -97,8 +97,8 @@ async function createCoachApplicationTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS coach_reviews (
         id SERIAL PRIMARY KEY,
-        coach_id INTEGER NOT NULL REFERENCES users(id),
-        student_id INTEGER NOT NULL REFERENCES users(id),
+        coach_id INTEGER NOT NULL,
+        student_id INTEGER NOT NULL,
         session_id INTEGER,
         rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
         review_text TEXT,
@@ -117,8 +117,8 @@ async function createCoachApplicationTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS coaching_sessions (
         id SERIAL PRIMARY KEY,
-        coach_id INTEGER NOT NULL REFERENCES users(id),
-        student_id INTEGER NOT NULL REFERENCES users(id),
+        coach_id INTEGER NOT NULL,
+        student_id INTEGER NOT NULL,
         session_type VARCHAR(50) NOT NULL,
         session_status VARCHAR(50) NOT NULL DEFAULT 'scheduled',
         scheduled_at TIMESTAMP NOT NULL,
