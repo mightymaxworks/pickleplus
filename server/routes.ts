@@ -281,7 +281,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         individualRate,
         groupRate,
         backgroundCheckConsent,
-        certifications 
+        certifications,
+        pcpCertificationInterest,
+        pcpCertificationEmail
       } = req.body;
       
       console.log(`[API][CoachApplication] User ${userId} submitting coach application`);
@@ -339,6 +341,39 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
               verificationStatus: 'pending' as const
             });
           }
+        }
+      }
+
+      // Store PCP certification interest if expressed
+      if (pcpCertificationInterest) {
+        try {
+          const { pool } = await import('./db');
+          await pool.query(`
+            INSERT INTO pcp_certification_interest (
+              user_id, 
+              coach_application_id, 
+              interest_expressed, 
+              email_for_updates,
+              source,
+              created_at
+            ) VALUES ($1, $2, $3, $4, $5, NOW())
+            ON CONFLICT (user_id, coach_application_id) 
+            DO UPDATE SET 
+              interest_expressed = EXCLUDED.interest_expressed,
+              email_for_updates = EXCLUDED.email_for_updates,
+              created_at = NOW()
+          `, [
+            userId, 
+            application.id, 
+            true, 
+            pcpCertificationEmail || null,
+            'coach_application'
+          ]);
+          
+          console.log(`[API][CoachApplication] PCP certification interest recorded for user ${userId}`);
+        } catch (error) {
+          console.error('[API][CoachApplication] Error recording PCP certification interest:', error);
+          // Don't fail the application if PCP interest recording fails
         }
       }
 

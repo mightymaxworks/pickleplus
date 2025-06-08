@@ -102,6 +102,9 @@ export default function CoachApplication() {
     certifications: []
   });
 
+  const [pcpCertificationInterest, setPcpCertificationInterest] = useState(false);
+  const [pcpCertificationEmail, setPcpCertificationEmail] = useState('');
+
   const totalSteps = 5;
   const progress = (currentStep / totalSteps) * 100;
 
@@ -201,7 +204,9 @@ export default function CoachApplication() {
           individualRate: data.hourlyRate,
           groupRate: data.groupRate,
           backgroundCheckConsent: data.backgroundCheckConsent,
-          certifications: data.certifications || []
+          certifications: data.certifications || [],
+          pcpCertificationInterest: pcpCertificationInterest,
+          pcpCertificationEmail: pcpCertificationEmail
         })
       });
       
@@ -406,6 +411,122 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
+            {/* PCP Certification Promotion - Appears between Step 1 and 2 */}
+            {currentStep === 2 && !pcpCertificationInterest && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 mb-8"
+              >
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-blue-100 p-3 rounded-lg">
+                      <Award className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-blue-900 mb-2">
+                        Get PCP Certified - Boost Your Coaching Credentials
+                      </h3>
+                      <p className="text-blue-800 mb-4">
+                        Want to stand out as a top-tier coach? The Pickleball Coaching Professional (PCP) 
+                        certification is the gold standard in pickleball instruction, recognized by facilities 
+                        and players nationwide.
+                      </p>
+                      
+                      <div className="grid md:grid-cols-2 gap-4 mb-6">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-blue-900">Benefits Include:</h4>
+                          <ul className="text-sm text-blue-700 space-y-1">
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              Higher coaching rates and credibility
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              Access to exclusive coaching resources
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              Priority placement in coach directories
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-blue-900">Program Features:</h4>
+                          <ul className="text-sm text-blue-700 space-y-1">
+                            <li className="flex items-center gap-2">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              Comprehensive online coursework
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              Practical skill assessments
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              Ongoing education opportunities
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          onClick={() => setPcpCertificationInterest(true)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Yes, I'm interested in PCP Certification
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setPcpCertificationInterest(true)}
+                          className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                        >
+                          Continue without certification info
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* PCP Certification Interest Form */}
+            {currentStep === 2 && pcpCertificationInterest && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 mb-8"
+              >
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Award className="w-6 h-6 text-green-600" />
+                    <h3 className="text-lg font-semibold text-green-900">
+                      Great choice! We'll keep you informed about PCP Certification
+                    </h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email for certification updates (optional)
+                      </label>
+                      <Input
+                        type="email"
+                        value={pcpCertificationEmail}
+                        onChange={(e) => setPcpCertificationEmail(e.target.value)}
+                        placeholder={user?.email || "Enter your email address"}
+                        className="max-w-md"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        We'll send you information about upcoming PCP certification courses and early bird discounts
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Step 2: Teaching Philosophy & Specializations */}
             {currentStep === 2 && (
               <motion.div
@@ -415,8 +536,8 @@ export default function CoachApplication() {
               >
                 <div className="text-center mb-6">
                   <GraduationCap className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">What's your coaching style? 🎾</h2>
-                  <p className="text-gray-600">Tell us about your approach to helping players improve and what makes you special!</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">What's your coaching style?</h2>
+                  <p className="text-gray-600">Tell us about your approach to helping players improve and what makes you special</p>
                 </div>
 
                 <div className="space-y-6">
