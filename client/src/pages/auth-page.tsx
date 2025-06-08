@@ -36,13 +36,14 @@ const loginSchema = z.object({
   rememberMe: z.boolean().optional().default(false),
 });
 
-// Registration form schema
+// Registration form schema - aligned with server expectations
 const registerSchema = z.object({
-  displayName: z.string().min(2, { message: "Display name must be at least 2 characters" }),
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
   username: z.string().min(3, { message: "Username must be at least 3 characters" })
     .regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }),
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string(),
   yearOfBirth: z.number().optional().nullable(),
   location: z.string().optional(),
@@ -101,7 +102,8 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      displayName: "",
+      firstName: "",
+      lastName: "",
       username: "",
       email: "",
       password: "",
@@ -134,7 +136,7 @@ export default function AuthPage() {
   // Handle registration form submission
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     try {
-      const { confirmPassword, redemptionCode, agreeToTerms, displayName, yearOfBirth, location, playingSince, skillLevel, ...credentials } = values;
+      const { confirmPassword, redemptionCode, agreeToTerms, ...credentials } = values;
       
       // First check if passwords match to give immediate feedback
       if (credentials.password !== confirmPassword) {
@@ -150,18 +152,17 @@ export default function AuthPage() {
         username: credentials.username,
         email: credentials.email,
         password: credentials.password,
-        confirmPassword: confirmPassword, // Include confirmPassword for validation
-        displayName: displayName, // Server expects displayName, not firstName/lastName
-        firstName: displayName.split(' ')[0] || displayName, // Extract first name from display name
-        lastName: displayName.split(' ').slice(1).join(' ') || '', // Extract last name from display name
-        yearOfBirth: yearOfBirth || undefined,
-        location: location || undefined,
-        playingSince: playingSince || undefined,
-        skillLevel: skillLevel || undefined,
+        firstName: credentials.firstName,
+        lastName: credentials.lastName,
+        displayName: `${credentials.firstName} ${credentials.lastName}`, // Combine names for display
+        yearOfBirth: credentials.yearOfBirth || undefined,
+        location: credentials.location || undefined,
+        playingSince: credentials.playingSince || undefined,
+        skillLevel: credentials.skillLevel || undefined,
         redemptionCode: redemptionCode || undefined
       };
       
-      console.log("Sending registration data:", { ...registrationData, password: "[REDACTED]", confirmPassword: "[REDACTED]" });
+      console.log("Sending registration data:", { ...registrationData, password: "[REDACTED]" });
       await register(registrationData);
       // Success and error are handled by the register function
     } catch (error: any) {
@@ -313,27 +314,51 @@ export default function AuthPage() {
                       <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                         {/* Basic Info Section */}
                         <div className="space-y-4">
-                          <FormField
-                            control={registerForm.control}
-                            name="displayName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Display Name</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                    <Input 
-                                      placeholder="Enter your full name"
-                                      className="pl-10"
-                                      {...field}
-                                      disabled={isLoading}
-                                    />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={registerForm.control}
+                              name="firstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>First Name</FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                      <Input 
+                                        placeholder="First name"
+                                        className="pl-10"
+                                        {...field}
+                                        disabled={isLoading}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={registerForm.control}
+                              name="lastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Last Name</FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                      <Input 
+                                        placeholder="Last name"
+                                        className="pl-10"
+                                        {...field}
+                                        disabled={isLoading}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
