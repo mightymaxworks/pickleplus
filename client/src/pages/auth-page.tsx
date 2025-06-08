@@ -108,7 +108,7 @@ export default function AuthPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      yearOfBirth: null,
+      yearOfBirth: undefined,
       location: "",
       playingSince: "",
       skillLevel: "",
