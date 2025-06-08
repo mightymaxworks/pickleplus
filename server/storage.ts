@@ -4,13 +4,176 @@ import {
   matches, type Match, type InsertMatch,
   tournaments,
   type XpTransaction, type InsertXpTransaction,
-  activities, type InsertActivity,
-  type CoachApplication, type InsertCoachApplication,
-  type CoachCertification, type InsertCoachCertification,
-  type CoachProfile, type InsertCoachProfile,
-  type CoachReview, type InsertCoachReview,
-  type CoachingSession, type InsertCoachingSession
+  activities, type InsertActivity
 } from "@shared/schema";
+
+// Define coach types directly since they're not exported from schema yet
+interface CoachApplication {
+  id: number;
+  userId: number;
+  coachType: string;
+  applicationStatus: string;
+  submittedAt: Date;
+  reviewedAt?: Date;
+  reviewerId?: number;
+  rejectionReason?: string;
+  experienceYears: number;
+  teachingPhilosophy: string;
+  specializations: string[];
+  availabilityData: Record<string, any>;
+  previousExperience?: string;
+  refContacts: any[];
+  backgroundCheckConsent: boolean;
+  insuranceDetails: Record<string, any>;
+  emergencyContact: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface InsertCoachApplication {
+  userId: number;
+  coachType?: string;
+  applicationStatus?: string;
+  experienceYears: number;
+  teachingPhilosophy: string;
+  specializations: string[];
+  availabilityData: Record<string, any>;
+  previousExperience?: string;
+  refContacts?: any[];
+  backgroundCheckConsent: boolean;
+  insuranceDetails?: Record<string, any>;
+  emergencyContact?: Record<string, any>;
+}
+
+interface CoachCertification {
+  id: number;
+  applicationId: number;
+  certificationType: string;
+  issuingOrganization: string;
+  certificationNumber?: string;
+  issuedDate?: Date;
+  expirationDate?: Date;
+  documentUrl?: string;
+  verificationStatus: string;
+  verifiedBy?: number;
+  verifiedAt?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface InsertCoachCertification {
+  applicationId: number;
+  certificationType: string;
+  issuingOrganization: string;
+  certificationNumber?: string;
+  issuedDate?: Date;
+  expirationDate?: Date;
+  documentUrl?: string;
+  verificationStatus?: string;
+  notes?: string;
+}
+
+interface CoachProfile {
+  id: number;
+  userId: number;
+  coachType: string;
+  verificationLevel: string;
+  isActive: boolean;
+  bio?: string;
+  specializations: string[];
+  teachingStyle?: string;
+  languagesSpoken: string[];
+  hourlyRate?: number;
+  sessionTypes: string[];
+  availabilitySchedule: Record<string, any>;
+  averageRating: number;
+  totalReviews: number;
+  totalSessions: number;
+  studentRetentionRate: number;
+  approvedAt?: Date;
+  approvedBy?: number;
+  lastActiveAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface InsertCoachProfile {
+  userId: number;
+  coachType: string;
+  verificationLevel?: string;
+  isActive?: boolean;
+  bio?: string;
+  specializations: string[];
+  teachingStyle?: string;
+  languagesSpoken?: string[];
+  hourlyRate?: number;
+  sessionTypes?: string[];
+  availabilitySchedule?: Record<string, any>;
+}
+
+interface CoachReview {
+  id: number;
+  coachId: number;
+  studentId: number;
+  sessionId?: number;
+  rating: number;
+  reviewText?: string;
+  reviewDate: Date;
+  isVerified: boolean;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface InsertCoachReview {
+  coachId: number;
+  studentId: number;
+  sessionId?: number;
+  rating: number;
+  reviewText?: string;
+  isVerified?: boolean;
+  isPublic?: boolean;
+}
+
+interface CoachingSession {
+  id: number;
+  coachId: number;
+  studentId: number;
+  sessionType: string;
+  sessionStatus: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+  locationType?: string;
+  locationDetails?: string;
+  priceAmount?: number;
+  currency: string;
+  paymentStatus: string;
+  sessionNotes?: string;
+  feedbackForStudent?: string;
+  studentGoals: any[];
+  sessionSummary?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface InsertCoachingSession {
+  coachId: number;
+  studentId: number;
+  sessionType: string;
+  sessionStatus?: string;
+  scheduledAt: Date;
+  durationMinutes?: number;
+  locationType?: string;
+  locationDetails?: string;
+  priceAmount?: number;
+  currency?: string;
+  paymentStatus?: string;
+  sessionNotes?: string;
+  feedbackForStudent?: string;
+  studentGoals?: any[];
+  sessionSummary?: string;
+}
 
 import { communityStorageImplementation, type CommunityStorage } from './storage/community-storage';
 
@@ -1000,56 +1163,54 @@ export class DatabaseStorage implements IStorage {
 
   // Coach Application operations
   async createCoachApplication(data: InsertCoachApplication): Promise<CoachApplication> {
-    const [application] = await db
-      .insert(coachApplications)
-      .values({
-        ...data,
-        submittedAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-      .returning();
-    return application;
+    const result = await db.execute(sql`
+      INSERT INTO coach_applications (
+        user_id, coach_type, application_status, experience_years, teaching_philosophy,
+        specializations, availability_data, previous_experience, ref_contacts,
+        background_check_consent, insurance_details, emergency_contact,
+        submitted_at, created_at, updated_at
+      ) VALUES (
+        ${data.userId}, ${data.coachType || 'independent'}, ${data.applicationStatus || 'pending'},
+        ${data.experienceYears}, ${data.teachingPhilosophy},
+        ${JSON.stringify(data.specializations)}, ${JSON.stringify(data.availabilityData)},
+        ${data.previousExperience || ''}, ${JSON.stringify(data.refContacts || [])},
+        ${data.backgroundCheckConsent}, ${JSON.stringify(data.insuranceDetails || {})},
+        ${JSON.stringify(data.emergencyContact || {})},
+        NOW(), NOW(), NOW()
+      ) RETURNING *
+    `);
+    return result.rows[0] as CoachApplication;
   }
 
   async getCoachApplication(id: number): Promise<CoachApplication | undefined> {
-    const [application] = await db
-      .select()
-      .from(coachApplications)
-      .where(eq(coachApplications.id, id));
-    return application;
+    const result = await db.execute(sql`
+      SELECT * FROM coach_applications WHERE id = ${id}
+    `);
+    return result.rows[0] as CoachApplication | undefined;
   }
 
   async getCoachApplicationByUserId(userId: number): Promise<CoachApplication | undefined> {
-    const [application] = await db
-      .select()
-      .from(coachApplications)
-      .where(eq(coachApplications.userId, userId))
-      .orderBy(desc(coachApplications.submittedAt));
-    return application;
+    const result = await db.execute(sql`
+      SELECT * FROM coach_applications 
+      WHERE user_id = ${userId} 
+      ORDER BY submitted_at DESC 
+      LIMIT 1
+    `);
+    return result.rows[0] as CoachApplication | undefined;
   }
 
   async updateCoachApplicationStatus(id: number, status: string, reviewerId?: number, rejectionReason?: string): Promise<CoachApplication> {
-    const updateData: any = {
-      applicationStatus: status,
-      reviewedAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    if (reviewerId) {
-      updateData.reviewerId = reviewerId;
-    }
-    
-    if (rejectionReason) {
-      updateData.rejectionReason = rejectionReason;
-    }
-
-    const [application] = await db
-      .update(coachApplications)
-      .set(updateData)
-      .where(eq(coachApplications.id, id))
-      .returning();
-    return application;
+    const result = await db.execute(sql`
+      UPDATE coach_applications 
+      SET application_status = ${status}, 
+          reviewed_at = NOW(), 
+          updated_at = NOW(),
+          reviewer_id = ${reviewerId || null},
+          rejection_reason = ${rejectionReason || null}
+      WHERE id = ${id} 
+      RETURNING *
+    `);
+    return result.rows[0] as any;
   }
 
   // Coach Profile operations
