@@ -38,7 +38,6 @@ import {
   Clock,
   Phone,
   Mail,
-  ArrowRight,
   ArrowLeft,
   Star
 } from 'lucide-react';
