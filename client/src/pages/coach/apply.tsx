@@ -307,7 +307,7 @@ export default function CoachApplication() {
       case 3:
         return applicationData.teachingPhilosophy.length > 50 && applicationData.specializations.length > 0;
       case 4:
-        return applicationData.previousExperience.length > 20;
+        return true; // Achievements step - optional content
       case 5:
         return applicationData.hourlyRate && applicationData.hourlyRate > 0;
       case 6:
@@ -685,7 +685,7 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 4: References & Emergency Contact */}
+            {/* Step 4: Achievements */}
             {currentStep === 4 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -695,7 +695,7 @@ export default function CoachApplication() {
                 <div className="text-center mb-6">
                   <Star className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">Show off your achievements! 🏅</h2>
-                  <p className="text-gray-600">Tell us about your accomplishments and set your coaching rates</p>
+                  <p className="text-gray-600">Tell us about your accomplishments and what makes you special</p>
                 </div>
 
                 <div className="space-y-6">
@@ -715,7 +715,24 @@ export default function CoachApplication() {
                       Optional - but we'd love to hear about what makes you special!
                     </p>
                   </div>
+                </div>
+              </motion.div>
+            )}
 
+            {/* Step 5: Coaching Rates */}
+            {currentStep === 5 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-6">
+                  <Clock className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Set Your Coaching Rates</h2>
+                  <p className="text-gray-600">Define your pricing for individual and group coaching sessions</p>
+                </div>
+
+                <div className="space-y-6">
                   {/* Coaching Rates Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
