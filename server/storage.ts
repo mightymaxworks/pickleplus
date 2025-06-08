@@ -1337,6 +1337,107 @@ export class DatabaseStorage implements IStorage {
     
     return coaches;
   }
+
+  // Admin Coach Role Management Methods
+  async updateCoachRoles(coachId: number, roleData: any): Promise<void> {
+    try {
+      // Get the coach profile first
+      const [profile] = await db
+        .select()
+        .from(coachProfiles)
+        .where(eq(coachProfiles.userId, coachId));
+
+      if (!profile) {
+        throw new Error('Coach profile not found');
+      }
+
+      // Update coach profile with new role information
+      const activeRoles = roleData.roles.map((r: any) => r.roleType);
+      const primaryRole = activeRoles[0] || 'independent';
+
+      await db
+        .update(coachProfiles)
+        .set({
+          coachType: primaryRole,
+          updatedAt: new Date()
+        })
+        .where(eq(coachProfiles.userId, coachId));
+
+      // If facility role is assigned, create facility assignment record
+      if (activeRoles.includes('facility') && roleData.facilityId) {
+        await db.execute(sql`
+          INSERT INTO coach_facility_assignments (coach_id, facility_id, assignment_date, is_active, notes)
+          VALUES (${coachId}, ${roleData.facilityId}, NOW(), true, ${roleData.notes || ''})
+          ON CONFLICT (coach_id, facility_id) 
+          DO UPDATE SET is_active = true, notes = EXCLUDED.notes, updated_at = NOW()
+        `);
+      }
+
+      console.log(`Coach roles updated for user ${coachId}: ${activeRoles.join(', ')}`);
+    } catch (error) {
+      console.error('Error updating coach roles:', error);
+      throw error;
+    }
+  }
+
+  async getAllCoaches(): Promise<any[]> {
+    try {
+      const coaches = await db.execute(sql`
+        SELECT 
+          u.id,
+          u.username,
+          u.first_name,
+          u.last_name,
+          u.email,
+          u.profile_image_url,
+          cp.coach_type,
+          cp.is_active,
+          cp.average_rating,
+          cp.total_sessions,
+          cp.created_at,
+          COALESCE(u.first_name || ' ' || u.last_name, u.username) as display_name,
+          ARRAY_AGG(DISTINCT cfa.facility_id) FILTER (WHERE cfa.is_active = true) as facility_assignments
+        FROM users u
+        INNER JOIN coach_profiles cp ON u.id = cp.user_id
+        LEFT JOIN coach_facility_assignments cfa ON u.id = cfa.coach_id AND cfa.is_active = true
+        WHERE cp.is_active = true
+        GROUP BY u.id, u.username, u.first_name, u.last_name, u.email, u.profile_image_url,
+                 cp.coach_type, cp.is_active, cp.average_rating, cp.total_sessions, cp.created_at
+        ORDER BY cp.created_at DESC
+      `);
+
+      return coaches.rows.map((coach: any) => ({
+        id: coach.id,
+        userId: coach.id,
+        username: coach.username,
+        displayName: coach.display_name,
+        email: coach.email,
+        profileImageUrl: coach.profile_image_url,
+        coachType: coach.coach_type,
+        isActive: coach.is_active,
+        averageRating: coach.average_rating,
+        totalSessions: coach.total_sessions,
+        createdAt: coach.created_at,
+        facilityAssignments: coach.facility_assignments || []
+      }));
+    } catch (error) {
+      console.error('Error fetching all coaches:', error);
+      return [];
+    }
+  }
+
+  async logAdminAction(actionData: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO admin_action_logs (admin_id, action_type, target_id, target_type, details, timestamp)
+        VALUES (${actionData.adminId}, ${actionData.action}, ${actionData.targetId}, 'coach', ${JSON.stringify(actionData.details)}, NOW())
+      `);
+      console.log(`Admin action logged: ${actionData.action} by admin ${actionData.adminId}`);
+    } catch (error) {
+      console.error('Error logging admin action:', error);
+      // Don't throw error for logging failure
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
