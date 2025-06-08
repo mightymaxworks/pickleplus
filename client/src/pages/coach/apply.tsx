@@ -165,6 +165,8 @@ export default function CoachApplication() {
         }
         return true;
       case 2:
+        return true; // PCP certification step - always can proceed
+      case 3:
         if (!applicationData.teachingPhilosophy || applicationData.teachingPhilosophy.length < 50) {
           toast({
             title: "Validation Error",
@@ -474,14 +476,20 @@ export default function CoachApplication() {
 
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Button
-                          onClick={() => setPcpCertificationInterest(true)}
+                          onClick={() => {
+                            setPcpCertificationInterest(true);
+                            setCurrentStep(currentStep + 1);
+                          }}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2"
                         >
                           I'm Interested
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => setPcpCertificationInterest(false)}
+                          onClick={() => {
+                            setPcpCertificationInterest(false);
+                            setCurrentStep(currentStep + 1);
+                          }}
                           className="border-blue-300 text-blue-700 hover:bg-blue-50 text-sm px-3 py-2"
                         >
                           Maybe Later
