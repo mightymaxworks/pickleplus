@@ -73,12 +73,12 @@ async function createTestCoaches(): Promise<void> {
     // Create test users and coach profiles
     for (let i = 1; i <= 3; i++) {
       await db.execute(sql`
-        INSERT INTO users (id, username, email, first_name, last_name, passport_code, created_at)
-        VALUES (${i}, ${'testcoach' + i}, ${'coach' + i + '@test.com'}, ${'Coach'}, ${'Test' + i}, ${'TC' + i + 'TEST'}, NOW())
+        INSERT INTO users (id, username, email, display_name, passport_code, created_at)
+        VALUES (${i + 100}, ${'testcoach' + i}, ${'coach' + i + '@test.com'}, ${'Coach Test' + i}, ${'TC' + i + 'TEST'}, NOW())
         ON CONFLICT (id) DO UPDATE SET 
           username = EXCLUDED.username,
           email = EXCLUDED.email,
-          updated_at = NOW()
+          last_updated = NOW()
       `);
       
       // Create coach profile
