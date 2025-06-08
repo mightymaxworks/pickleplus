@@ -271,38 +271,85 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.post('/api/coach/application/submit', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { coachType, bio, experience, hourlyRate, specializations, availability, certifications } = req.body;
+      const { 
+        teachingPhilosophy, 
+        experienceYears, 
+        specializations, 
+        previousExperience,
+        availabilityData,
+        achievements,
+        individualRate,
+        groupRate,
+        backgroundCheckConsent,
+        certifications 
+      } = req.body;
       
       console.log(`[API][CoachApplication] User ${userId} submitting coach application`);
       
-      // Validate required fields
-      if (!coachType || !bio || !experience) {
+      // Validate required fields matching the 5-step form
+      if (!teachingPhilosophy || !experienceYears || !individualRate || backgroundCheckConsent === undefined) {
         return res.status(400).json({ 
-          error: "Missing required fields: coachType, bio, experience" 
+          error: "Missing required fields: teachingPhilosophy, experienceYears, individualRate, backgroundCheckConsent" 
+        });
+      }
+
+      // Check if user already has a pending or approved application
+      const existingApplication = await storage.getCoachApplicationByUserId(userId);
+      if (existingApplication) {
+        return res.status(409).json({
+          error: "You already have an existing coach application",
+          status: existingApplication.applicationStatus
         });
       }
       
-      // Create the application record
+      // Create the application record with proper schema mapping
       const applicationData = {
         userId,
-        coachType,
-        bio,
-        experience: parseInt(experience),
-        hourlyRate: parseFloat(hourlyRate) || 50.00,
+        coachType: 'independent' as const, // All applications are for independent coaches
+        experienceYears: parseInt(experienceYears),
+        teachingPhilosophy,
         specializations: Array.isArray(specializations) ? specializations : [],
-        availability: availability || {},
-        status: 'pending',
-        submittedAt: new Date()
+        availabilityData: availabilityData || {},
+        previousExperience: previousExperience || '',
+        backgroundCheckConsent: Boolean(backgroundCheckConsent),
+        applicationStatus: 'pending' as const
+      };
+
+      // Store rates and achievements in availability data for now
+      applicationData.availabilityData = {
+        ...applicationData.availabilityData,
+        rates: {
+          individual: parseFloat(individualRate),
+          group: groupRate ? parseFloat(groupRate) : null
+        },
+        achievements: achievements || ''
       };
       
-      // For now, store in a simple format until database schema is fully implemented
-      console.log(`[API][CoachApplication] Application data:`, applicationData);
+      const application = await storage.createCoachApplication(applicationData);
       
+      // Add certifications if provided
+      if (certifications && Array.isArray(certifications) && certifications.length > 0) {
+        for (const cert of certifications) {
+          if (cert.type && cert.organization) {
+            await storage.addCoachCertification({
+              applicationId: application.id,
+              certificationType: cert.type,
+              issuingOrganization: cert.organization,
+              certificationNumber: cert.number || '',
+              verificationStatus: 'pending' as const
+            });
+          }
+        }
+      }
+
+      console.log(`[API][CoachApplication] Application created with ID: ${application.id}`);
+
       res.status(201).json({
         success: true,
-        message: "Coach application submitted successfully",
-        applicationId: `temp-${userId}-${Date.now()}`, // Temporary ID
-        status: 'pending'
+        message: "Coach application submitted successfully! We'll review your application and get back to you within 3-5 business days.",
+        applicationId: application.id,
+        status: application.applicationStatus,
+        submittedAt: application.submittedAt
       });
       
     } catch (error) {

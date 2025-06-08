@@ -192,12 +192,15 @@ export default function CoachApplication() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          coachType: data.coachType,
-          bio: data.teachingPhilosophy,
-          experience: data.experienceYears,
-          hourlyRate: data.hourlyRate || 50.00,
+          teachingPhilosophy: data.teachingPhilosophy,
+          experienceYears: data.experienceYears,
           specializations: data.specializations,
-          availability: data.availabilityData || {},
+          previousExperience: data.previousExperience,
+          availabilityData: data.availabilityData,
+          achievements: data.achievements,
+          individualRate: data.hourlyRate,
+          groupRate: data.groupRate,
+          backgroundCheckConsent: data.backgroundCheckConsent,
           certifications: data.certifications || []
         })
       });

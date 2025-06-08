@@ -5,11 +5,11 @@ import {
   tournaments,
   type XpTransaction, type InsertXpTransaction,
   activities, type InsertActivity,
-  coachApplications, type CoachApplication, type InsertCoachApplication,
-  coachCertifications, type CoachCertification, type InsertCoachCertification,
-  coachProfiles, type CoachProfile, type InsertCoachProfile,
-  coachReviews, type CoachReview, type InsertCoachReview,
-  coachingSessions, type CoachingSession, type InsertCoachingSession
+  type CoachApplication, type InsertCoachApplication,
+  type CoachCertification, type InsertCoachCertification,
+  type CoachProfile, type InsertCoachProfile,
+  type CoachReview, type InsertCoachReview,
+  type CoachingSession, type InsertCoachingSession
 } from "@shared/schema";
 
 import { communityStorageImplementation, type CommunityStorage } from './storage/community-storage';
@@ -996,6 +996,180 @@ export class DatabaseStorage implements IStorage {
     }
     
     return instances;
+  }
+
+  // Coach Application operations
+  async createCoachApplication(data: InsertCoachApplication): Promise<CoachApplication> {
+    const [application] = await db
+      .insert(coachApplications)
+      .values({
+        ...data,
+        submittedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return application;
+  }
+
+  async getCoachApplication(id: number): Promise<CoachApplication | undefined> {
+    const [application] = await db
+      .select()
+      .from(coachApplications)
+      .where(eq(coachApplications.id, id));
+    return application;
+  }
+
+  async getCoachApplicationByUserId(userId: number): Promise<CoachApplication | undefined> {
+    const [application] = await db
+      .select()
+      .from(coachApplications)
+      .where(eq(coachApplications.userId, userId))
+      .orderBy(desc(coachApplications.submittedAt));
+    return application;
+  }
+
+  async updateCoachApplicationStatus(id: number, status: string, reviewerId?: number, rejectionReason?: string): Promise<CoachApplication> {
+    const updateData: any = {
+      applicationStatus: status,
+      reviewedAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    if (reviewerId) {
+      updateData.reviewerId = reviewerId;
+    }
+    
+    if (rejectionReason) {
+      updateData.rejectionReason = rejectionReason;
+    }
+
+    const [application] = await db
+      .update(coachApplications)
+      .set(updateData)
+      .where(eq(coachApplications.id, id))
+      .returning();
+    return application;
+  }
+
+  // Coach Profile operations
+  async createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile> {
+    const [profile] = await db
+      .insert(coachProfiles)
+      .values({
+        ...data,
+        approvedAt: new Date(),
+        lastActiveAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return profile;
+  }
+
+  async getCoachProfile(userId: number): Promise<CoachProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(coachProfiles)
+      .where(eq(coachProfiles.userId, userId));
+    return profile;
+  }
+
+  async updateCoachProfile(userId: number, data: Partial<InsertCoachProfile>): Promise<CoachProfile> {
+    const [profile] = await db
+      .update(coachProfiles)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(coachProfiles.userId, userId))
+      .returning();
+    return profile;
+  }
+
+  // Coach Certification operations
+  async addCoachCertification(data: InsertCoachCertification): Promise<CoachCertification> {
+    const [certification] = await db
+      .insert(coachCertifications)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return certification;
+  }
+
+  async getCoachCertifications(applicationId: number): Promise<CoachCertification[]> {
+    return db
+      .select()
+      .from(coachCertifications)
+      .where(eq(coachCertifications.applicationId, applicationId))
+      .orderBy(desc(coachCertifications.createdAt));
+  }
+
+  // Coach Review operations
+  async createCoachReview(data: InsertCoachReview): Promise<CoachReview> {
+    const [review] = await db
+      .insert(coachReviews)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return review;
+  }
+
+  async getCoachReviews(coachId: number): Promise<CoachReview[]> {
+    return db
+      .select()
+      .from(coachReviews)
+      .where(eq(coachReviews.coachId, coachId))
+      .orderBy(desc(coachReviews.createdAt));
+  }
+
+  // Coaching Session operations
+  async createCoachingSession(data: InsertCoachingSession): Promise<CoachingSession> {
+    const [session] = await db
+      .insert(coachingSessions)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return session;
+  }
+
+  async getCoachingSessions(coachId: number): Promise<CoachingSession[]> {
+    return db
+      .select()
+      .from(coachingSessions)
+      .where(eq(coachingSessions.coachId, coachId))
+      .orderBy(desc(coachingSessions.scheduledAt));
+  }
+
+  async getCoaches(): Promise<User[]> {
+    // Get users who have approved coach profiles
+    const coaches = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        passportCode: users.passportCode,
+        isAdmin: users.isAdmin,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt
+      })
+      .from(users)
+      .innerJoin(coachProfiles, eq(users.id, coachProfiles.userId))
+      .where(eq(coachProfiles.isActive, true));
+    
+    return coaches;
   }
 }
 
