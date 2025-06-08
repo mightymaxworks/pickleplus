@@ -105,7 +105,7 @@ export default function CoachApplication() {
   const [pcpCertificationInterest, setPcpCertificationInterest] = useState(false);
   const [pcpCertificationEmail, setPcpCertificationEmail] = useState('');
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const progress = (currentStep / totalSteps) * 100;
 
   // Coach type options
@@ -425,11 +425,11 @@ export default function CoachApplication() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-blue-900 mb-2">
-                        Get PCP Certified - Boost Your Coaching Credentials
+                        PCP Coaching Certification Programme
                       </h3>
                       <p className="text-blue-800 mb-4">
-                        Want to stand out as a top-tier coach? The Pickleball Coaching Professional (PCP) 
-                        certification is the gold standard in pickleball instruction, recognized by facilities 
+                        Want to stand out as a top-tier coach? The PCP Coaching Certification Programme 
+                        is the gold standard in pickleball instruction, recognized by facilities 
                         and players nationwide.
                       </p>
                       
@@ -473,16 +473,16 @@ export default function CoachApplication() {
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Button
                           onClick={() => setPcpCertificationInterest(true)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2"
                         >
-                          Yes, I'm interested in PCP Certification
+                          I'm Interested
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => setPcpCertificationInterest(true)}
-                          className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                          onClick={() => setPcpCertificationInterest(false)}
+                          className="border-blue-300 text-blue-700 hover:bg-blue-50 text-sm px-3 py-2"
                         >
-                          Continue without certification info
+                          Maybe Later
                         </Button>
                       </div>
                     </div>
@@ -527,8 +527,23 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 2: Teaching Philosophy & Specializations */}
+            {/* Step 2: Continue Application */}
             {currentStep === 2 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-6">
+                  <ArrowRight className="w-12 h-12 text-emerald-600 mx-auto mb-3" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Let's continue with your application</h2>
+                  <p className="text-gray-600">Ready to share more about your coaching style and experience</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: Teaching Philosophy & Specializations */}
+            {currentStep === 3 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -584,8 +599,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 3: Previous Experience */}
-            {currentStep === 3 && (
+            {/* Step 4: Previous Experience */}
+            {currentStep === 4 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
