@@ -28,6 +28,7 @@ import {
   User,
   GraduationCap,
   Calendar,
+  ArrowRight,
   BookOpen,
   Users,
   Plus,
@@ -301,12 +302,14 @@ export default function CoachApplication() {
       case 1:
         return applicationData.experienceYears > 0;
       case 2:
-        return applicationData.teachingPhilosophy.length > 50 && applicationData.specializations.length > 0;
+        return true; // PCP certification step - always can proceed
       case 3:
-        return applicationData.previousExperience.length > 20;
+        return applicationData.teachingPhilosophy.length > 50 && applicationData.specializations.length > 0;
       case 4:
-        return applicationData.hourlyRate && applicationData.hourlyRate > 0;
+        return applicationData.previousExperience.length > 20;
       case 5:
+        return applicationData.hourlyRate && applicationData.hourlyRate > 0;
+      case 6:
         return applicationData.backgroundCheckConsent && 
                applicationData.termsAccepted && 
                applicationData.codeOfConductAccepted;
@@ -763,8 +766,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 5: Legal & Background Check */}
-            {currentStep === 5 && (
+            {/* Step 6: Legal & Background Check */}
+            {currentStep === 6 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
