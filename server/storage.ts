@@ -1184,14 +1184,14 @@ export class DatabaseStorage implements IStorage {
         NOW(), NOW(), NOW()
       ) RETURNING *
     `);
-    return result.rows[0] as CoachApplication;
+    return result.rows[0] as any;
   }
 
   async getCoachApplication(id: number): Promise<CoachApplication | undefined> {
     const result = await db.execute(sql`
       SELECT * FROM coach_applications WHERE id = ${id}
     `);
-    return result.rows[0] as CoachApplication | undefined;
+    return result.rows[0] as any;
   }
 
   async getCoachApplicationByUserId(userId: number): Promise<CoachApplication | undefined> {
@@ -1201,7 +1201,7 @@ export class DatabaseStorage implements IStorage {
       ORDER BY submitted_at DESC 
       LIMIT 1
     `);
-    return result.rows[0] as CoachApplication | undefined;
+    return result.rows[0] as any;
   }
 
   async updateCoachApplicationStatus(id: number, status: string, reviewerId?: number, rejectionReason?: string): Promise<CoachApplication> {
