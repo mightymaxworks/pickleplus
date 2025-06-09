@@ -1387,7 +1387,9 @@ export class DatabaseStorage implements IStorage {
         SELECT 
           ca.*,
           u.username as user_name,
-          u.email as user_email
+          u.email as user_email,
+          u.first_name,
+          u.last_name
         FROM coach_applications ca
         LEFT JOIN users u ON ca.user_id = u.id
         ORDER BY ca.submitted_at DESC

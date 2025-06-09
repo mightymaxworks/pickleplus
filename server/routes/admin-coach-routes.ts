@@ -17,24 +17,24 @@ router.get('/coach-applications', async (req, res) => {
     // Transform applications for admin interface
     const transformedApplications = applications.map(app => ({
       id: app.id,
-      userId: app.userId,
-      userName: app.userName || 'Unknown User',
-      email: app.email || '',
-      coachType: app.coachType,
-      applicationStatus: app.applicationStatus,
-      submittedAt: app.submittedAt,
+      userId: app.user_id,
+      userName: app.user_name || 'Unknown User',
+      email: app.user_email || '',
+      coachType: app.coach_type,
+      applicationStatus: app.application_status,
+      submittedAt: app.submitted_at,
       personalInfo: {
-        firstName: app.firstName || '',
-        lastName: app.lastName || '',
+        firstName: app.first_name || '',
+        lastName: app.last_name || '',
         phone: app.phone || '',
-        email: app.email || '',
+        email: app.user_email || '',
         dateOfBirth: app.dateOfBirth || '',
-        emergencyContact: app.emergencyContact || ''
+        emergencyContact: app.emergency_contact || ''
       },
       experience: {
         yearsPlaying: app.yearsPlaying || 0,
-        yearsCoaching: app.yearsCoaching || 0,
-        previousExperience: app.previousExperience || '',
+        yearsCoaching: app.experience_years || 0,
+        previousExperience: app.previous_experience || '',
         achievements: Array.isArray(app.achievements) ? app.achievements : []
       },
       certifications: {
@@ -43,9 +43,9 @@ router.get('/coach-applications', async (req, res) => {
         otherCertifications: Array.isArray(app.otherCertifications) ? app.otherCertifications : []
       },
       availability: {
-        schedule: typeof app.availabilityData === 'string' 
-          ? JSON.parse(app.availabilityData || '{}') 
-          : (app.availabilityData || {}),
+        schedule: typeof app.availability_data === 'string' 
+          ? JSON.parse(app.availability_data || '{}') 
+          : (app.availability_data || {}),
         preferredTimes: Array.isArray(app.preferredTimes) ? app.preferredTimes : []
       },
       rates: {
@@ -56,10 +56,10 @@ router.get('/coach-applications', async (req, res) => {
       },
       specializations: Array.isArray(app.specializations) 
         ? app.specializations 
-        : (typeof app.specializations === 'string' ? [app.specializations] : []),
-      references: typeof app.references === 'string'
-        ? JSON.parse(app.references || '[]')
-        : (Array.isArray(app.references) ? app.references : []),
+        : (typeof app.specializations === 'string' ? JSON.parse(app.specializations || '[]') : []),
+      references: typeof app.ref_contacts === 'string'
+        ? JSON.parse(app.ref_contacts || '[]')
+        : (Array.isArray(app.ref_contacts) ? app.ref_contacts : []),
       adminNotes: app.adminNotes || '',
       reviewedBy: app.reviewedBy,
       reviewedAt: app.reviewedAt
