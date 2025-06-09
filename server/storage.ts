@@ -242,6 +242,17 @@ export interface IStorage extends CommunityStorage {
   getAllCoaches(): Promise<any[]>;
   logAdminAction(actionData: any): Promise<void>;
   
+  // Player Management Admin operations
+  getAllPlayersForAdmin(): Promise<any[]>;
+  getPlayerDetailsForAdmin(playerId: number): Promise<any>;
+  updatePlayerForAdmin(playerId: number, updateData: any): Promise<any>;
+  suspendPlayer(playerId: number, reason?: string): Promise<boolean>;
+  activatePlayer(playerId: number): Promise<boolean>;
+  banPlayer(playerId: number, reason?: string): Promise<boolean>;
+  updatePlayerNotes(playerId: number, notes: string): Promise<boolean>;
+  getPlayerActivity(playerId: number, limit: number): Promise<any[]>;
+  getPlayerStatsSummary(): Promise<any>;
+  
   // Placeholder methods for build compatibility
   awardXpToUser(userId: number, amount: number, source: string): Promise<void>;
   createConciergeInteraction(data: any): Promise<any>;
@@ -1626,6 +1637,340 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error logging admin action:', error);
       // Don't throw error for logging failure
+    }
+  }
+
+  // Player Management Admin operations
+  async getAllPlayersForAdmin(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          u.*,
+          COALESCE(stats.total_matches, 0) as total_matches,
+          COALESCE(stats.wins, 0) as wins,
+          CASE 
+            WHEN COALESCE(stats.total_matches, 0) > 0 
+            THEN ROUND((COALESCE(stats.wins, 0)::decimal / stats.total_matches::decimal) * 100, 1)
+            ELSE 0 
+          END as win_rate,
+          COALESCE(achievements.achievement_list, ARRAY[]::text[]) as achievements,
+          COALESCE(certs.certification_list, ARRAY[]::text[]) as certifications,
+          CASE 
+            WHEN cp.coach_type IS NOT NULL THEN cp.coach_type
+            WHEN ca.application_status = 'approved' THEN 'certified'
+            WHEN ca.application_status = 'pending' THEN 'aspiring'
+            ELSE 'none'
+          END as coaching_status
+        FROM users u
+        LEFT JOIN (
+          SELECT 
+            player_id,
+            COUNT(*) as total_matches,
+            SUM(CASE WHEN winner_id = player_id THEN 1 ELSE 0 END) as wins
+          FROM (
+            SELECT player1_id as player_id, winner_id FROM matches
+            UNION ALL
+            SELECT player2_id as player_id, winner_id FROM matches
+          ) match_data
+          GROUP BY player_id
+        ) stats ON u.id = stats.player_id
+        LEFT JOIN (
+          SELECT 
+            user_id,
+            ARRAY_AGG(achievement_name) as achievement_list
+          FROM user_achievements 
+          GROUP BY user_id
+        ) achievements ON u.id = achievements.user_id
+        LEFT JOIN (
+          SELECT 
+            user_id,
+            ARRAY_AGG(certification_name) as certification_list
+          FROM user_certifications 
+          GROUP BY user_id
+        ) certs ON u.id = certs.user_id
+        LEFT JOIN coach_profiles cp ON u.id = cp.user_id
+        LEFT JOIN coach_applications ca ON u.id = ca.user_id
+        ORDER BY u.created_at DESC
+      `);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        displayName: row.display_name,
+        dateOfBirth: row.date_of_birth,
+        phone: row.phone,
+        location: row.location,
+        duprRating: row.dupr_rating,
+        pcpRating: row.pcp_rating,
+        skillLevel: row.skill_level || 'beginner',
+        status: row.account_status || 'active',
+        membershipType: row.membership_type || 'free',
+        joinedDate: row.created_at,
+        lastActive: row.last_login,
+        totalMatches: row.total_matches,
+        winRate: row.win_rate,
+        achievements: row.achievements || [],
+        certifications: row.certifications || [],
+        coachingStatus: row.coaching_status,
+        notes: row.admin_notes
+      }));
+    } catch (error) {
+      console.error('Error fetching players for admin:', error);
+      return [];
+    }
+  }
+
+  async getPlayerDetailsForAdmin(playerId: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          u.*,
+          COALESCE(stats.total_matches, 0) as total_matches,
+          COALESCE(stats.wins, 0) as wins,
+          CASE 
+            WHEN COALESCE(stats.total_matches, 0) > 0 
+            THEN ROUND((COALESCE(stats.wins, 0)::decimal / stats.total_matches::decimal) * 100, 1)
+            ELSE 0 
+          END as win_rate,
+          COALESCE(achievements.achievement_list, ARRAY[]::text[]) as achievements,
+          COALESCE(certs.certification_list, ARRAY[]::text[]) as certifications
+        FROM users u
+        LEFT JOIN (
+          SELECT 
+            player_id,
+            COUNT(*) as total_matches,
+            SUM(CASE WHEN winner_id = player_id THEN 1 ELSE 0 END) as wins
+          FROM (
+            SELECT player1_id as player_id, winner_id FROM matches
+            UNION ALL
+            SELECT player2_id as player_id, winner_id FROM matches
+          ) match_data
+          GROUP BY player_id
+        ) stats ON u.id = stats.player_id
+        LEFT JOIN (
+          SELECT 
+            user_id,
+            ARRAY_AGG(achievement_name) as achievement_list
+          FROM user_achievements 
+          GROUP BY user_id
+        ) achievements ON u.id = achievements.user_id
+        LEFT JOIN (
+          SELECT 
+            user_id,
+            ARRAY_AGG(certification_name) as certification_list
+          FROM user_certifications 
+          GROUP BY user_id
+        ) certs ON u.id = certs.user_id
+        WHERE u.id = ${playerId}
+      `);
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        displayName: row.display_name,
+        dateOfBirth: row.date_of_birth,
+        phone: row.phone,
+        location: row.location,
+        duprRating: row.dupr_rating,
+        pcpRating: row.pcp_rating,
+        skillLevel: row.skill_level || 'beginner',
+        status: row.account_status || 'active',
+        membershipType: row.membership_type || 'free',
+        joinedDate: row.created_at,
+        lastActive: row.last_login,
+        totalMatches: row.total_matches,
+        winRate: row.win_rate,
+        achievements: row.achievements || [],
+        certifications: row.certifications || [],
+        notes: row.admin_notes
+      };
+    } catch (error) {
+      console.error('Error fetching player details for admin:', error);
+      return null;
+    }
+  }
+
+  async updatePlayerForAdmin(playerId: number, updateData: any): Promise<any> {
+    try {
+      const setClause = [];
+      const values = [];
+      
+      if (updateData.skillLevel) {
+        setClause.push('skill_level = ?');
+        values.push(updateData.skillLevel);
+      }
+      if (updateData.membershipType) {
+        setClause.push('membership_type = ?');
+        values.push(updateData.membershipType);
+      }
+      if (updateData.status) {
+        setClause.push('account_status = ?');
+        values.push(updateData.status);
+      }
+      if (updateData.notes) {
+        setClause.push('admin_notes = ?');
+        values.push(updateData.notes);
+      }
+      
+      if (setClause.length === 0) return null;
+      
+      values.push(playerId);
+      
+      await db.execute(sql`
+        UPDATE users 
+        SET ${sql.raw(setClause.join(', '))}
+        WHERE id = ${playerId}
+      `);
+      
+      return await this.getPlayerDetailsForAdmin(playerId);
+    } catch (error) {
+      console.error('Error updating player for admin:', error);
+      return null;
+    }
+  }
+
+  async suspendPlayer(playerId: number, reason?: string): Promise<boolean> {
+    try {
+      await db.execute(sql`
+        UPDATE users 
+        SET account_status = 'suspended',
+            admin_notes = COALESCE(admin_notes, '') || ${reason ? `\n[SUSPENDED] ${reason}` : '\n[SUSPENDED] No reason provided'}
+        WHERE id = ${playerId}
+      `);
+      return true;
+    } catch (error) {
+      console.error('Error suspending player:', error);
+      return false;
+    }
+  }
+
+  async activatePlayer(playerId: number): Promise<boolean> {
+    try {
+      await db.execute(sql`
+        UPDATE users 
+        SET account_status = 'active'
+        WHERE id = ${playerId}
+      `);
+      return true;
+    } catch (error) {
+      console.error('Error activating player:', error);
+      return false;
+    }
+  }
+
+  async banPlayer(playerId: number, reason?: string): Promise<boolean> {
+    try {
+      await db.execute(sql`
+        UPDATE users 
+        SET account_status = 'banned',
+            admin_notes = COALESCE(admin_notes, '') || ${reason ? `\n[BANNED] ${reason}` : '\n[BANNED] No reason provided'}
+        WHERE id = ${playerId}
+      `);
+      return true;
+    } catch (error) {
+      console.error('Error banning player:', error);
+      return false;
+    }
+  }
+
+  async updatePlayerNotes(playerId: number, notes: string): Promise<boolean> {
+    try {
+      await db.execute(sql`
+        UPDATE users 
+        SET admin_notes = ${notes}
+        WHERE id = ${playerId}
+      `);
+      return true;
+    } catch (error) {
+      console.error('Error updating player notes:', error);
+      return false;
+    }
+  }
+
+  async getPlayerActivity(playerId: number, limit: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          'match' as activity_type,
+          m.id as activity_id,
+          m.created_at as timestamp,
+          CASE 
+            WHEN m.winner_id = ${playerId} THEN 'Won match'
+            ELSE 'Lost match'
+          END as description,
+          JSON_BUILD_OBJECT(
+            'opponent_id', CASE WHEN m.player1_id = ${playerId} THEN m.player2_id ELSE m.player1_id END,
+            'score', m.score,
+            'tournament_id', m.tournament_id
+          ) as details
+        FROM matches m
+        WHERE m.player1_id = ${playerId} OR m.player2_id = ${playerId}
+        
+        UNION ALL
+        
+        SELECT 
+          'tournament' as activity_type,
+          te.tournament_id as activity_id,
+          te.created_at as timestamp,
+          'Joined tournament' as description,
+          JSON_BUILD_OBJECT('tournament_id', te.tournament_id) as details
+        FROM tournament_entries te
+        WHERE te.player_id = ${playerId}
+        
+        ORDER BY timestamp DESC
+        LIMIT ${limit}
+      `);
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching player activity:', error);
+      return [];
+    }
+  }
+
+  async getPlayerStatsSummary(): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_players,
+          COUNT(CASE WHEN account_status = 'active' THEN 1 END) as active_players,
+          COUNT(CASE WHEN membership_type = 'premium' THEN 1 END) as premium_members,
+          COUNT(CASE WHEN membership_type = 'coach' THEN 1 END) as coach_members,
+          COUNT(CASE WHEN account_status = 'suspended' THEN 1 END) as suspended_players,
+          COUNT(CASE WHEN account_status = 'banned' THEN 1 END) as banned_players,
+          AVG(CASE WHEN dupr_rating IS NOT NULL THEN dupr_rating END) as avg_dupr_rating,
+          COUNT(CASE WHEN skill_level = 'beginner' THEN 1 END) as beginners,
+          COUNT(CASE WHEN skill_level = 'intermediate' THEN 1 END) as intermediate_players,
+          COUNT(CASE WHEN skill_level = 'advanced' THEN 1 END) as advanced_players,
+          COUNT(CASE WHEN skill_level = 'pro' THEN 1 END) as pro_players
+        FROM users
+      `);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error fetching player stats summary:', error);
+      return {
+        total_players: 0,
+        active_players: 0,
+        premium_members: 0,
+        coach_members: 0,
+        suspended_players: 0,
+        banned_players: 0,
+        avg_dupr_rating: 0,
+        beginners: 0,
+        intermediate_players: 0,
+        advanced_players: 0,
+        pro_players: 0
+      };
     }
   }
 }
