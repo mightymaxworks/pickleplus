@@ -1646,49 +1646,19 @@ export class DatabaseStorage implements IStorage {
       const result = await db.execute(sql`
         SELECT 
           u.*,
-          COALESCE(stats.total_matches, 0) as total_matches,
-          COALESCE(stats.wins, 0) as wins,
+          COALESCE(u.total_matches, 0) as total_matches,
+          COALESCE(u.matches_won, 0) as wins,
           CASE 
-            WHEN COALESCE(stats.total_matches, 0) > 0 
-            THEN ROUND((COALESCE(stats.wins, 0)::decimal / stats.total_matches::decimal) * 100, 1)
+            WHEN COALESCE(u.total_matches, 0) > 0 
+            THEN ROUND((COALESCE(u.matches_won, 0)::decimal / u.total_matches::decimal) * 100, 1)
             ELSE 0 
           END as win_rate,
-          COALESCE(achievements.achievement_list, ARRAY[]::text[]) as achievements,
-          COALESCE(certs.certification_list, ARRAY[]::text[]) as certifications,
           CASE 
-            WHEN cp.coach_type IS NOT NULL THEN cp.coach_type
             WHEN ca.application_status = 'approved' THEN 'certified'
             WHEN ca.application_status = 'pending' THEN 'aspiring'
             ELSE 'none'
           END as coaching_status
         FROM users u
-        LEFT JOIN (
-          SELECT 
-            player_id,
-            COUNT(*) as total_matches,
-            SUM(CASE WHEN winner_id = player_id THEN 1 ELSE 0 END) as wins
-          FROM (
-            SELECT player1_id as player_id, winner_id FROM matches
-            UNION ALL
-            SELECT player2_id as player_id, winner_id FROM matches
-          ) match_data
-          GROUP BY player_id
-        ) stats ON u.id = stats.player_id
-        LEFT JOIN (
-          SELECT 
-            user_id,
-            ARRAY_AGG(achievement_name) as achievement_list
-          FROM user_achievements 
-          GROUP BY user_id
-        ) achievements ON u.id = achievements.user_id
-        LEFT JOIN (
-          SELECT 
-            user_id,
-            ARRAY_AGG(certification_name) as certification_list
-          FROM user_certifications 
-          GROUP BY user_id
-        ) certs ON u.id = certs.user_id
-        LEFT JOIN coach_profiles cp ON u.id = cp.user_id
         LEFT JOIN coach_applications ca ON u.id = ca.user_id
         ORDER BY u.created_at DESC
       `);
