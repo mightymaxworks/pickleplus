@@ -162,12 +162,12 @@ export default function CoachApplicationsPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className={statusColors[application.applicationStatus]}>
+              <Badge className={statusColors[application.applicationStatus as keyof typeof statusColors] || statusColors.pending}>
                 {getStatusIcon(application.applicationStatus)}
-                {application.applicationStatus.replace('_', ' ')}
+                {(application.applicationStatus || 'pending').replace('_', ' ')}
               </Badge>
               <Badge variant="outline">
-                {application.coachType}
+                {application.coachType || 'Unknown Type'}
               </Badge>
             </div>
           </div>
