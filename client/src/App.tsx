@@ -552,6 +552,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* PKL-278651-PLAYER-ADMIN-001 - Player Management */}
+                  <Route path="/admin/players">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./pages/admin/player-management')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   {/* PKL-278651-BOUNCE-0001-CORE: Bounce Testing System Route */}
                   <Route path="/admin/bounce">
                     {(params) => (

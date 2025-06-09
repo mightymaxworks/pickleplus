@@ -56,6 +56,18 @@ export function registerUserManagementComponents() {
 }
 
 /**
+ * Register player management components
+ * PKL-278651-PLAYER-ADMIN-001
+ */
+export function registerPlayerManagementComponents() {
+  // Import and register player management nav item
+  const { AdminPlayerManagementNavItem } = require('../components/user-management/AdminPlayerManagementNavItem');
+  adminComponentRegistry.registerNavItem('core', AdminPlayerManagementNavItem);
+  
+  console.log('[Admin] Player Management components registered');
+}
+
+/**
  * Register Bounce testing system components
  * PKL-278651-BOUNCE-0001-CORE
  */
@@ -64,6 +76,17 @@ export function registerBounceComponents() {
   adminComponentRegistry.registerNavItem('bounce', BounceAdminNavItem);
   
   console.log('[Admin] Bounce testing components registered');
+}
+
+/**
+ * Register player management components
+ * PKL-278651-PLAYER-ADMIN-001
+ */
+export function registerPlayerManagementComponents() {
+  // Register player management nav item
+  adminComponentRegistry.registerNavItem('players', AdminPlayerManagementNavItem);
+  
+  console.log('[Admin] Player management components registered');
 }
 
 /**
@@ -107,6 +130,7 @@ export function registerAllAdminComponents() {
   registerReportingComponents();
   registerFeedbackComponents();
   registerUserManagementComponents(); // Added User Management
+  registerPlayerManagementComponents(); // Added Player Management
   registerBounceComponents(); // Added Bounce Testing System
   registerCoachComponents(); // Added Coach Management
   registerSystemToolsComponents(); // Added System Tools
