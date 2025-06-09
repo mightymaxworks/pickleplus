@@ -1380,22 +1380,210 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Admin coach management methods
+  async getAllCoachApplications(): Promise<any[]> {
+    try {
+      const applications = await db.execute(sql`
+        SELECT 
+          ca.*,
+          u.username as user_name,
+          u.email as user_email
+        FROM coach_applications ca
+        LEFT JOIN users u ON ca.user_id = u.id
+        ORDER BY ca.submitted_at DESC
+      `);
+      
+      return applications.rows;
+    } catch (error) {
+      console.error('Error fetching coach applications:', error);
+      throw error;
+    }
+  }
+
+  async updateCoachApplicationStatus(applicationId: number, statusData: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE coach_applications 
+        SET 
+          application_status = ${statusData.status},
+          admin_notes = ${statusData.adminNotes || ''},
+          reviewed_by = ${statusData.reviewedBy},
+          reviewed_at = ${statusData.reviewedAt}
+        WHERE id = ${applicationId}
+      `);
+    } catch (error) {
+      console.error('Error updating coach application status:', error);
+      throw error;
+    }
+  }
+
+  async createCoachProfile(profileData: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO coach_profiles (
+          user_id, name, bio, specialties, certifications, 
+          experience_years, rating, total_reviews, hourly_rate,
+          is_verified, availability_schedule, created_at, updated_at
+        ) VALUES (
+          ${profileData.userId},
+          ${profileData.name},
+          ${profileData.bio},
+          ${JSON.stringify(profileData.specialties)},
+          ${JSON.stringify(profileData.certifications)},
+          ${profileData.experienceYears},
+          ${profileData.rating},
+          ${profileData.totalReviews},
+          ${profileData.hourlyRate},
+          ${profileData.isVerified},
+          ${JSON.stringify(profileData.availabilitySchedule)},
+          NOW(),
+          NOW()
+        )
+      `);
+    } catch (error) {
+      console.error('Error creating coach profile:', error);
+      throw error;
+    }
+  }
+
+  async getCoachPerformanceMetrics(coachId: number): Promise<any> {
+    try {
+      const performance = await db.execute(sql`
+        SELECT 
+          cp.*,
+          u.username,
+          u.email,
+          COUNT(DISTINCT cs.id) as total_sessions,
+          AVG(cr.rating) as average_rating,
+          COUNT(DISTINCT cr.id) as total_reviews
+        FROM coach_profiles cp
+        LEFT JOIN users u ON cp.user_id = u.id
+        LEFT JOIN coaching_sessions cs ON cp.user_id = cs.coach_id
+        LEFT JOIN coach_reviews cr ON cp.user_id = cr.coach_id
+        WHERE cp.user_id = ${coachId}
+        GROUP BY cp.id, u.username, u.email
+      `);
+      
+      return performance.rows[0] || null;
+    } catch (error) {
+      console.error('Error fetching coach performance metrics:', error);
+      throw error;
+    }
+  }
+
+  async updateCoachVerificationStatus(coachId: number, verificationData: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE coach_profiles 
+        SET 
+          is_verified = ${verificationData.isVerified},
+          updated_at = NOW()
+        WHERE user_id = ${coachId}
+      `);
+    } catch (error) {
+      console.error('Error updating coach verification status:', error);
+      throw error;
+    }
+  }
+
+  async getAllCoachesWithDetails(): Promise<any[]> {
+    try {
+      const coaches = await db.execute(sql`
+        SELECT 
+          cp.*,
+          u.username,
+          u.email,
+          u.display_name,
+          ARRAY_AGG(DISTINCT cfa.facility_id) FILTER (WHERE cfa.is_active = true) as facility_assignments
+        FROM coach_profiles cp
+        LEFT JOIN users u ON cp.user_id = u.id
+        LEFT JOIN coach_facility_assignments cfa ON cp.user_id = cfa.coach_id AND cfa.is_active = true
+        GROUP BY cp.id, u.username, u.email, u.display_name
+        ORDER BY cp.created_at DESC
+      `);
+      
+      return coaches.rows;
+    } catch (error) {
+      console.error('Error fetching coaches with details:', error);
+      throw error;
+    }
+  }
+
+  async assignCoachToFacility(assignmentData: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO coach_facility_assignments (
+          coach_id, facility_id, assignment_date, is_active, notes, created_at, updated_at
+        ) VALUES (
+          ${assignmentData.coachId},
+          ${assignmentData.facilityId},
+          ${assignmentData.assignmentDate},
+          ${assignmentData.isActive},
+          ${assignmentData.notes},
+          NOW(),
+          NOW()
+        )
+        ON CONFLICT (coach_id, facility_id) 
+        DO UPDATE SET 
+          is_active = EXCLUDED.is_active,
+          notes = EXCLUDED.notes,
+          updated_at = NOW()
+      `);
+    } catch (error) {
+      console.error('Error assigning coach to facility:', error);
+      throw error;
+    }
+  }
+
+  async removeCoachFromFacility(coachId: number, facilityId: number): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE coach_facility_assignments 
+        SET is_active = false, updated_at = NOW()
+        WHERE coach_id = ${coachId} AND facility_id = ${facilityId}
+      `);
+    } catch (error) {
+      console.error('Error removing coach from facility:', error);
+      throw error;
+    }
+  }
+
+  async logAdminAction(actionData: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO admin_action_logs (
+          admin_id, action_type, target_id, target_type, details, timestamp
+        ) VALUES (
+          ${actionData.adminId},
+          ${actionData.actionType},
+          ${actionData.targetId},
+          ${actionData.targetType},
+          ${JSON.stringify(actionData.details)},
+          NOW()
+        )
+      `);
+    } catch (error) {
+      console.error('Error logging admin action:', error);
+      throw error;
+    }
+  }
+
   async getAllCoaches(): Promise<any[]> {
     try {
       const coaches = await db.execute(sql`
         SELECT 
           u.id,
           u.username,
-          u.first_name,
-          u.last_name,
+          u.display_name,
           u.email,
-          u.profile_image_url,
-          cp.coach_type,
-          cp.is_active,
-          cp.average_rating,
-          cp.total_sessions,
+          u.avatar_url,
+          cp.name,
+          cp.bio,
+          cp.specialties,
+          cp.is_verified,
+          cp.rating,
+          cp.total_reviews,
           cp.created_at,
-          COALESCE(u.first_name || ' ' || u.last_name, u.username) as display_name,
           ARRAY_AGG(DISTINCT cfa.facility_id) FILTER (WHERE cfa.is_active = true) as facility_assignments
         FROM users u
         INNER JOIN coach_profiles cp ON u.id = cp.user_id

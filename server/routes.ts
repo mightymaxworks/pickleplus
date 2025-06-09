@@ -38,6 +38,7 @@ import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTI
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
 import coachManagementRoutes from "./routes/coach-routes"; // PKL-278651-COACH-001 - Coach Management System
+import adminCoachRoutes from "./routes/admin-coach-routes"; // PKL-278651-COACH-ADMIN-001 - Admin Coach Management
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
@@ -1883,6 +1884,10 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   app.post('/api/qr/scan', isAuthenticated, processQRScan);
   app.get('/api/qr/permissions', isAuthenticated, getUserScanPermissions);
   console.log('[API] QR scanning routes registered');
+
+  // Admin Coach Management Routes - PKL-278651-COACH-ADMIN-001
+  app.use('/api/admin', adminCoachRoutes);
+  console.log('[API] Admin coach management routes registered');
 
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
