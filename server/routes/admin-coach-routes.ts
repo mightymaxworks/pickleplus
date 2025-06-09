@@ -29,7 +29,9 @@ router.get('/coach-applications', async (req, res) => {
         phone: app.phone || '',
         email: app.user_email || '',
         dateOfBirth: app.dateOfBirth || '',
-        emergencyContact: app.emergency_contact || ''
+        emergencyContact: typeof app.emergency_contact === 'string' 
+          ? JSON.parse(app.emergency_contact || '{}') 
+          : (app.emergency_contact || {})
       },
       experience: {
         yearsPlaying: app.yearsPlaying || 0,

@@ -282,7 +282,11 @@ export default function CoachApplicationsPage() {
             </div>
             <div className="col-span-2">
               <Label>Emergency Contact</Label>
-              <p className="text-sm text-gray-600">{application.personalInfo.emergencyContact}</p>
+              <p className="text-sm text-gray-600">
+                {typeof application.personalInfo.emergencyContact === 'object' 
+                  ? JSON.stringify(application.personalInfo.emergencyContact) 
+                  : application.personalInfo.emergencyContact || 'Not provided'}
+              </p>
             </div>
           </div>
         </TabsContent>
