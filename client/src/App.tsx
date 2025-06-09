@@ -1,4 +1,4 @@
-import { Fragment, useEffect, Suspense } from 'react'
+import React, { Fragment, useEffect, Suspense } from 'react'
 import { Route, Switch, useLocation } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
@@ -548,7 +548,7 @@ export default function App() {
                   <Route path="/admin/coach-applications">
                     {(params) => (
                       <AdminProtectedRoute>
-                        {lazyLoad(() => import('./pages/admin/coach-applications'))}
+                        {React.createElement(lazyLoad(() => import('./pages/admin/coach-applications')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>

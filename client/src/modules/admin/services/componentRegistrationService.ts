@@ -18,6 +18,7 @@ import { registerReportingComponents } from './reportingComponentRegistration';
 import { registerFeedbackComponents } from './feedbackComponentRegistration';
 import BounceAdminNavItem from '../components/bounce/BounceAdminNavItem';
 import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-0016-SYS-TOOLS
+import AdminCoachNavItem from '../components/coach/AdminCoachNavItem'; // PKL-278651-COACH-ADMIN-001
 // Import settings module to register its components
 import '../components/settings';
 
@@ -66,6 +67,17 @@ export function registerBounceComponents() {
 }
 
 /**
+ * Register coach management components
+ * PKL-278651-COACH-ADMIN-001
+ */
+export function registerCoachComponents() {
+  // Register coach applications nav item
+  adminComponentRegistry.registerNavItem('coach', AdminCoachNavItem);
+  
+  console.log('[Admin] Coach management components registered');
+}
+
+/**
  * Register system tools components
  * PKL-278651-ADMIN-0016-SYS-TOOLS
  */
@@ -96,6 +108,7 @@ export function registerAllAdminComponents() {
   registerFeedbackComponents();
   registerUserManagementComponents(); // Added User Management
   registerBounceComponents(); // Added Bounce Testing System
+  registerCoachComponents(); // Added Coach Management
   registerSystemToolsComponents(); // Added System Tools
   
   console.log('[Admin] Admin components registered');
