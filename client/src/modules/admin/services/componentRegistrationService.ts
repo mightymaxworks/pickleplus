@@ -20,6 +20,7 @@ import { registerFeedbackComponents } from './feedbackComponentRegistration';
 import BounceAdminNavItem from '../components/bounce/BounceAdminNavItem';
 import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-0016-SYS-TOOLS
 import AdminCoachNavItem from '../components/coach/AdminCoachNavItem'; // PKL-278651-COACH-ADMIN-001
+import TrainingCenterAdminNavItem from '../components/training-center/TrainingCenterAdminNavItem'; // PKL-278651-TRAINING-CENTER-ADMIN-001
 // Import settings module to register its components
 import '../components/settings';
 
