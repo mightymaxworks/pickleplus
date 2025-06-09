@@ -385,7 +385,7 @@ export default function CoachApplicationsPage() {
           <div>
             <Label>Teaching Philosophy</Label>
             <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
-              {application.teachingPhilosophy || 'Not provided'}
+              {(application as any).teachingPhilosophy || 'Not provided'}
             </p>
           </div>
         </TabsContent>
