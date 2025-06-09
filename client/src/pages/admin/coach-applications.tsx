@@ -201,9 +201,9 @@ export default function CoachApplicationsPage() {
                   {spec}
                 </Badge>
               ))}
-              {application.specializations.length > 3 && (
+              {(application.specializations || []).length > 3 && (
                 <Badge variant="secondary" className="text-xs">
-                  +{application.specializations.length - 3} more
+                  +{(application.specializations || []).length - 3} more
                 </Badge>
               )}
             </div>
