@@ -68,6 +68,7 @@ router.get('/coach-applications', async (req, res) => {
       references: typeof app.ref_contacts === 'string'
         ? JSON.parse(app.ref_contacts || '[]')
         : (Array.isArray(app.ref_contacts) ? app.ref_contacts : []),
+      teachingPhilosophy: app.teaching_philosophy || '',
       adminNotes: app.adminNotes || '',
       reviewedBy: app.reviewedBy,
       reviewedAt: app.reviewedAt

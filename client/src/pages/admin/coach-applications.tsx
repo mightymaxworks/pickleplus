@@ -58,6 +58,7 @@ interface CoachApplication {
     relationship: string;
     contact: string;
   }>;
+  teachingPhilosophy?: string;
   adminNotes?: string;
   reviewedBy?: number;
   reviewedAt?: string;
@@ -252,12 +253,11 @@ export default function CoachApplicationsPage() {
       </DialogHeader>
 
       <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="personal">Personal</TabsTrigger>
           <TabsTrigger value="experience">Experience</TabsTrigger>
           <TabsTrigger value="certifications">Certifications</TabsTrigger>
-          <TabsTrigger value="availability">Availability</TabsTrigger>
-          <TabsTrigger value="references">References</TabsTrigger>
+          <TabsTrigger value="availability">Rates & Philosophy</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal" className="space-y-4">
@@ -372,17 +372,13 @@ export default function CoachApplicationsPage() {
             <div>
               <Label>Individual Rate</Label>
               <p className="text-sm text-gray-600">
-                ${typeof application.availability === 'object' && application.availability.individual 
-                  ? application.availability.individual 
-                  : 'Not specified'}/hour
+                ${(application.availability as any)?.individual || 'Not specified'}/hour
               </p>
             </div>
             <div>
               <Label>Group Rate</Label>
               <p className="text-sm text-gray-600">
-                ${typeof application.availability === 'object' && application.availability.group 
-                  ? application.availability.group 
-                  : 'Not specified'}/hour
+                ${(application.availability as any)?.group || 'Not specified'}/hour
               </p>
             </div>
           </div>
@@ -394,28 +390,7 @@ export default function CoachApplicationsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="references" className="space-y-4">
-          {application.references.map((ref, index) => (
-            <Card key={index}>
-              <CardContent className="pt-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label>Name</Label>
-                    <p className="text-sm text-gray-600">{ref.name}</p>
-                  </div>
-                  <div>
-                    <Label>Relationship</Label>
-                    <p className="text-sm text-gray-600">{ref.relationship}</p>
-                  </div>
-                  <div>
-                    <Label>Contact</Label>
-                    <p className="text-sm text-gray-600">{ref.contact}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
+
       </Tabs>
     </div>
   );
