@@ -111,7 +111,7 @@ export default function PlayerManagement() {
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const { toast } = useToast();
 
-  const { data: players = [], isLoading } = useQuery({
+  const { data: players = [], isLoading } = useQuery<Player[]>({
     queryKey: ['/api/admin/players'],
     enabled: true
   });
@@ -178,7 +178,7 @@ export default function PlayerManagement() {
   });
 
   // Filter players based on search and filters
-  const filteredPlayers = players.filter((player: Player) => {
+  const filteredPlayers = players.filter((player) => {
     const matchesSearch = 
       player.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -254,7 +254,7 @@ export default function PlayerManagement() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Players</p>
                 <p className="text-2xl font-bold">
-                  {players.filter((p: Player) => p.status === 'active').length}
+                  {players.filter((p) => p.status === 'active').length}
                 </p>
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function PlayerManagement() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Premium Members</p>
                 <p className="text-2xl font-bold">
-                  {players.filter((p: Player) => p.membershipType === 'premium').length}
+                  {players.filter((p) => p.membershipType === 'premium').length}
                 </p>
               </div>
             </div>
@@ -280,7 +280,7 @@ export default function PlayerManagement() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Coaches</p>
                 <p className="text-2xl font-bold">
-                  {players.filter((p: Player) => p.membershipType === 'coach').length}
+                  {players.filter((p) => p.membershipType === 'coach').length}
                 </p>
               </div>
             </div>
@@ -370,7 +370,7 @@ export default function PlayerManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredPlayers.map((player: Player) => (
+            {filteredPlayers.map((player) => (
               <div key={player.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">

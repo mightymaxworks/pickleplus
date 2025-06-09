@@ -1890,6 +1890,10 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   app.use('/api/admin', adminCoachRoutes);
   console.log('[API] Admin coach management routes registered');
 
+  // Admin Player Management Routes - PKL-278651-PLAYER-ADMIN-001
+  app.use('/api/admin', adminPlayerRoutes);
+  console.log('[API] Admin player management routes registered');
+
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
   });
