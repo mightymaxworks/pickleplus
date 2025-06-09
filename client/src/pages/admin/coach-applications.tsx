@@ -322,9 +322,14 @@ export default function CoachApplicationsPage() {
           <div>
             <Label>Achievements</Label>
             <div className="flex flex-wrap gap-1 mt-1">
-              {application.experience.achievements.map((achievement, index) => (
+              {(Array.isArray(application.experience.achievements) ? application.experience.achievements : [])
+                .filter(achievement => achievement && achievement.trim())
+                .map((achievement, index) => (
                 <Badge key={index} variant="secondary">{achievement}</Badge>
               ))}
+              {(!Array.isArray(application.experience.achievements) || application.experience.achievements.length === 0) && (
+                <span className="text-sm text-gray-500">No achievements listed</span>
+              )}
             </div>
           </div>
           <div>

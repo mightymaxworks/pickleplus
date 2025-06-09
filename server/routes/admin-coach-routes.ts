@@ -36,10 +36,26 @@ router.get('/coach-applications', async (req, res) => {
         previousExperience: app.previous_experience || '',
         achievements: (() => {
           try {
+            // First check if achievements is stored as a separate field
+            if (Array.isArray(app.achievements)) {
+              return app.achievements;
+            }
+            
+            // Then check availability_data for achievements
             const availData = typeof app.availability_data === 'string' 
               ? JSON.parse(app.availability_data) 
               : app.availability_data;
-            return availData?.achievements ? [availData.achievements] : [];
+            
+            if (Array.isArray(availData?.achievements)) {
+              return availData.achievements;
+            }
+            
+            // If it's a string, treat it as a single achievement
+            if (typeof availData?.achievements === 'string' && availData.achievements.trim()) {
+              return [availData.achievements];
+            }
+            
+            return [];
           } catch {
             return [];
           }
