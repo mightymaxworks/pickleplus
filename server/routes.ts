@@ -68,6 +68,7 @@ import {
   getUserScanPermissions
 } from "./routes/qr-scan-routes"; // QR Code Scanning with Role Detection
 import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-278651-TRAINING-CENTER-001 - Training Center Management
+import trainingCenterAdminRoutes from "./routes/training-center-admin-routes"; // PKL-278651-TRAINING-CENTER-ADMIN-001 - Training Center Admin
 
 /**
  * Register all application routes with the Express app
@@ -115,6 +116,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerUserRolesRoutes(app); // PKL-278651-AUTH-0016-PROLES - Role Management
   registerJournalRoutes(app); // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
   registerSageDrillsRoutes(app); // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
+  
+  // Training Center Admin Routes
+  app.use('/api/admin/training-centers', trainingCenterAdminRoutes);
   
   // Mount security routes
   app.use('/api/security', securityRoutes);

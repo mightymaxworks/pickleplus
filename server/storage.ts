@@ -1643,7 +1643,7 @@ export class DatabaseStorage implements IStorage {
   // Training Center Admin Methods
   async getTrainingCentersWithStats(): Promise<any[]> {
     try {
-      const result = await this.pool.query(`
+      const result = await db.execute(sql`
         SELECT 
           tc.id,
           tc.name,
@@ -1667,7 +1667,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCoachesWithDetails(): Promise<any[]> {
     try {
-      const result = await this.pool.query(`
+      const result = await db.execute(sql`
         SELECT 
           u.id,
           CONCAT(u.first_name, ' ', u.last_name) as name,
@@ -1697,7 +1697,7 @@ export class DatabaseStorage implements IStorage {
 
   async getClassSessionsWithEnrollment(): Promise<any[]> {
     try {
-      const result = await this.pool.query(`
+      const result = await db.execute(sql`
         SELECT 
           cs.id,
           cs.name,
@@ -1722,44 +1722,43 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCoachStatus(coachId: number, status: string): Promise<void> {
-    await this.pool.query(`
+    await db.execute(sql`
       UPDATE coach_applications 
-      SET application_status = $1, updated_at = NOW()
-      WHERE user_id = $2
-    `, [status === 'active' ? 'approved' : status, coachId]);
+      SET application_status = ${status === 'active' ? 'approved' : status}, updated_at = NOW()
+      WHERE user_id = ${coachId}
+    `);
   }
 
   async updateClassSessionStatus(classId: number, status: string): Promise<void> {
-    await this.pool.query(`
+    await db.execute(sql`
       UPDATE class_sessions 
-      SET status = $1, updated_at = NOW()
-      WHERE id = $2
-    `, [status, classId]);
+      SET status = ${status}, updated_at = NOW()
+      WHERE id = ${classId}
+    `);
   }
 
   async createTrainingCenter(centerData: any): Promise<any> {
-    const result = await this.pool.query(`
+    const result = await db.execute(sql`
       INSERT INTO training_centers (
         name, description, address, city, state, country, 
         postal_code, phone, email, website, capacity, qr_code
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ) VALUES (${centerData.name}, ${centerData.description}, ${centerData.address},
+        ${centerData.city}, ${centerData.state}, ${centerData.country},
+        ${centerData.postalCode}, ${centerData.phone}, ${centerData.email},
+        ${centerData.website}, ${centerData.capacity}, ${centerData.qrCode})
       RETURNING *
-    `, [
-      centerData.name, centerData.description, centerData.address,
-      centerData.city, centerData.state, centerData.country,
-      centerData.postalCode, centerData.phone, centerData.email,
-      centerData.website, centerData.capacity, centerData.qrCode
-    ]);
+    `);
     return result.rows[0];
   }
 
   async updateTrainingCenter(centerId: number, updateData: any): Promise<any> {
-    const result = await this.pool.query(`
+    const result = await db.execute(sql`
       UPDATE training_centers 
-      SET name = $1, description = $2, address = $3, capacity = $4, updated_at = NOW()
-      WHERE id = $5
+      SET name = ${updateData.name}, description = ${updateData.description}, 
+          address = ${updateData.address}, capacity = ${updateData.capacity}, updated_at = NOW()
+      WHERE id = ${centerId}
       RETURNING *
-    `, [updateData.name, updateData.description, updateData.address, updateData.capacity, centerId]);
+    `);
     return result.rows[0];
   }
 
