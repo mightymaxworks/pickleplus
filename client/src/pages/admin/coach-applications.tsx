@@ -77,6 +77,12 @@ const statusIcons = {
   rejected: XCircle
 };
 
+// Status icon helper function
+const getStatusIcon = (status: string) => {
+  const IconComponent = statusIcons[status as keyof typeof statusIcons] || Clock;
+  return <IconComponent className="w-3 h-3 mr-1" />;
+};
+
 export default function CoachApplicationsPage() {
   const [selectedTab, setSelectedTab] = useState('pending');
   const [selectedApplication, setSelectedApplication] = useState<CoachApplication | null>(null);
@@ -149,15 +155,15 @@ export default function CoachApplicationsPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">
-                {application.personalInfo.firstName} {application.personalInfo.lastName}
+                {application.personalInfo?.firstName || 'Unknown'} {application.personalInfo?.lastName || 'User'}
               </CardTitle>
               <CardDescription>
-                {application.email} • Applied {new Date(application.submittedAt).toLocaleDateString()}
+                {application.email || 'No email'} • Applied {application.submittedAt ? new Date(application.submittedAt).toLocaleDateString() : 'Date unavailable'}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Badge className={statusColors[application.applicationStatus]}>
-                <StatusIcon className="w-3 h-3 mr-1" />
+                {getStatusIcon(application.applicationStatus)}
                 {application.applicationStatus.replace('_', ' ')}
               </Badge>
               <Badge variant="outline">
@@ -170,27 +176,27 @@ export default function CoachApplicationsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">{application.experience.yearsCoaching}y coaching</span>
+              <span className="text-sm">{application.experience?.yearsCoaching || 0}y coaching</span>
             </div>
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-gray-500" />
               <span className="text-sm">
-                {application.certifications.pcpCertified ? 'PCP Certified' : 'No PCP'}
+                {application.certifications?.pcpCertified ? 'PCP Certified' : 'No PCP'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">{application.personalInfo.phone}</span>
+              <span className="text-sm">{application.personalInfo?.phone || 'No phone'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">${application.rates.hourlyRate}/hr</span>
+              <span className="text-sm">${application.rates?.hourlyRate || 0}/hr</span>
             </div>
           </div>
           
           <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-1">
-              {application.specializations.slice(0, 3).map((spec, index) => (
+              {(application.specializations || []).slice(0, 3).map((spec, index) => (
                 <Badge key={index} variant="secondary" className="text-xs">
                   {spec}
                 </Badge>
