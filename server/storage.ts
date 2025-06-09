@@ -1649,9 +1649,9 @@ export class DatabaseStorage implements IStorage {
           tc.name,
           tc.address,
           tc.qr_code,
-          tc.capacity,
+          COALESCE(tc.capacity, 0) as capacity,
           COUNT(DISTINCT cs.id) as active_classes,
-          COALESCE(SUM(cs.price * cs.enrolled_count), 0) as total_revenue
+          COALESCE(SUM(cs.price), 0) as total_revenue
         FROM training_centers tc
         LEFT JOIN class_sessions cs ON tc.id = cs.training_center_id 
           AND cs.status IN ('scheduled', 'active')
@@ -1669,23 +1669,25 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db.execute(sql`
         SELECT 
-          u.id,
-          CONCAT(u.first_name, ' ', u.last_name) as name,
-          u.email,
-          CASE WHEN ca.application_status = 'approved' THEN true ELSE false END as pcp_certified,
-          ARRAY['Fundamentals', 'Strategy'] as specialties,
-          COALESCE(ca.hourly_rate, 50) as hourly_rate,
-          4.8 as rating,
-          COUNT(cs.id) as total_sessions,
-          CASE 
-            WHEN ca.application_status = 'approved' THEN 'active'
-            WHEN ca.application_status = 'pending' THEN 'pending' 
-            ELSE 'suspended'
-          END as status
-        FROM users u
-        INNER JOIN coach_applications ca ON u.id = ca.user_id
-        LEFT JOIN class_sessions cs ON u.id = cs.coach_id
-        GROUP BY u.id, u.first_name, u.last_name, u.email, ca.application_status, ca.hourly_rate
+          c.id,
+          c.name,
+          c.email,
+          COALESCE(c.pcp_certified, false) as pcp_certified,
+          COALESCE(c.certification_level, 'Pending') as certification_level,
+          COALESCE(c.hourly_rate, 50) as hourly_rate,
+          COALESCE(c.status, 'pending') as status,
+          COUNT(cs.id) as total_sessions
+        FROM coaches c
+        LEFT JOIN class_sessions cs ON c.id = cs.coach_id
+        GROUP BY c.id, c.name, c.email, c.pcp_certified, c.certification_level, c.hourly_rate, c.status
+        ORDER BY c.name
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching coaches with details:', error);
+      return [];
+    }
+  }
         ORDER BY u.first_name, u.last_name
       `);
       return result.rows;
