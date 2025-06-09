@@ -14,6 +14,7 @@ import {
 } from '../components/passport';
 import { AdminMobileTestNavItem } from '../components/mobile-test';
 import { AdminUserManagementNavItem } from '../components/user-management';
+import { AdminPlayerManagementNavItem } from '../components/user-management/AdminPlayerManagementNavItem'; // PKL-278651-PLAYER-ADMIN-001
 import { registerReportingComponents } from './reportingComponentRegistration';
 import { registerFeedbackComponents } from './feedbackComponentRegistration';
 import BounceAdminNavItem from '../components/bounce/BounceAdminNavItem';
@@ -55,17 +56,7 @@ export function registerUserManagementComponents() {
   console.log('[Admin] User Management components registered');
 }
 
-/**
- * Register player management components
- * PKL-278651-PLAYER-ADMIN-001
- */
-export function registerPlayerManagementComponents() {
-  // Import and register player management nav item
-  const { AdminPlayerManagementNavItem } = require('../components/user-management/AdminPlayerManagementNavItem');
-  adminComponentRegistry.registerNavItem('core', AdminPlayerManagementNavItem);
-  
-  console.log('[Admin] Player Management components registered');
-}
+
 
 /**
  * Register Bounce testing system components
