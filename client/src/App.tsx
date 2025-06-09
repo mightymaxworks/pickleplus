@@ -544,6 +544,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* PKL-278651-COACH-ADMIN-001 - Coach Applications Management */}
+                  <Route path="/admin/coach-applications">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        {lazyLoad(() => import('./pages/admin/coach-applications'))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   {/* PKL-278651-BOUNCE-0001-CORE: Bounce Testing System Route */}
                   <Route path="/admin/bounce">
                     {(params) => (

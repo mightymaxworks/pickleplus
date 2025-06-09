@@ -3,8 +3,9 @@
  * Backend endpoints for coach application review and management
  */
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { storage } from '../storage';
+import { isAuthenticated } from '../auth';
 
 const router = Router();
 
