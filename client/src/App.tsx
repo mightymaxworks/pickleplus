@@ -288,6 +288,16 @@ export default function App() {
                       );
                     }}
                   </Route>
+                  <Route path="/admin/training-centers">
+                    {(params) => {
+                      const TrainingCentersAdminPage = lazyLoad(() => import('./pages/admin/training-centers'));
+                      return (
+                        <AdminProtectedRoute>
+                          <TrainingCentersAdminPage />
+                        </AdminProtectedRoute>
+                      );
+                    }}
+                  </Route>
                   <Route path="/admin/tournaments/:id">
                     {(params) => (
                       <AdminProtectedRoute>

@@ -93,6 +93,17 @@ export function registerCoachComponents() {
 }
 
 /**
+ * Register training center management components
+ * PKL-278651-TRAINING-CENTER-ADMIN-001
+ */
+export function registerTrainingCenterComponents() {
+  // Register training center admin nav item
+  adminComponentRegistry.registerNavItem('training-center', TrainingCenterAdminNavItem);
+  
+  console.log('[Admin] Training center management components registered');
+}
+
+/**
  * Register system tools components
  * PKL-278651-ADMIN-0016-SYS-TOOLS
  */
@@ -125,6 +136,7 @@ export function registerAllAdminComponents() {
   registerPlayerManagementComponents(); // Added Player Management
   registerBounceComponents(); // Added Bounce Testing System
   registerCoachComponents(); // Added Coach Management
+  registerTrainingCenterComponents(); // Added Training Center Management
   registerSystemToolsComponents(); // Added System Tools
   
   console.log('[Admin] Admin components registered');

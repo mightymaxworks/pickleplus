@@ -1640,6 +1640,129 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Training Center Admin Methods
+  async getTrainingCentersWithStats(): Promise<any[]> {
+    try {
+      const result = await this.pool.query(`
+        SELECT 
+          tc.id,
+          tc.name,
+          tc.address,
+          tc.qr_code,
+          tc.capacity,
+          COUNT(DISTINCT cs.id) as active_classes,
+          COALESCE(SUM(cs.price * cs.enrolled_count), 0) as total_revenue
+        FROM training_centers tc
+        LEFT JOIN class_sessions cs ON tc.id = cs.training_center_id 
+          AND cs.status IN ('scheduled', 'active')
+        GROUP BY tc.id, tc.name, tc.address, tc.qr_code, tc.capacity
+        ORDER BY tc.name
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching training centers with stats:', error);
+      return [];
+    }
+  }
+
+  async getCoachesWithDetails(): Promise<any[]> {
+    try {
+      const result = await this.pool.query(`
+        SELECT 
+          u.id,
+          CONCAT(u.first_name, ' ', u.last_name) as name,
+          u.email,
+          CASE WHEN ca.application_status = 'approved' THEN true ELSE false END as pcp_certified,
+          ARRAY['Fundamentals', 'Strategy'] as specialties,
+          COALESCE(ca.hourly_rate, 50) as hourly_rate,
+          4.8 as rating,
+          COUNT(cs.id) as total_sessions,
+          CASE 
+            WHEN ca.application_status = 'approved' THEN 'active'
+            WHEN ca.application_status = 'pending' THEN 'pending' 
+            ELSE 'suspended'
+          END as status
+        FROM users u
+        INNER JOIN coach_applications ca ON u.id = ca.user_id
+        LEFT JOIN class_sessions cs ON u.id = cs.coach_id
+        GROUP BY u.id, u.first_name, u.last_name, u.email, ca.application_status, ca.hourly_rate
+        ORDER BY u.first_name, u.last_name
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching coaches with details:', error);
+      return [];
+    }
+  }
+
+  async getClassSessionsWithEnrollment(): Promise<any[]> {
+    try {
+      const result = await this.pool.query(`
+        SELECT 
+          cs.id,
+          cs.name,
+          CONCAT(u.first_name, ' ', u.last_name) as coach_name,
+          tc.name as center_name,
+          cs.date::date as date,
+          cs.time as time,
+          cs.max_participants as capacity,
+          cs.enrolled_count as enrolled,
+          cs.price,
+          cs.status
+        FROM class_sessions cs
+        LEFT JOIN users u ON cs.coach_id = u.id
+        LEFT JOIN training_centers tc ON cs.training_center_id = tc.id
+        ORDER BY cs.date DESC, cs.time
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching class sessions with enrollment:', error);
+      return [];
+    }
+  }
+
+  async updateCoachStatus(coachId: number, status: string): Promise<void> {
+    await this.pool.query(`
+      UPDATE coach_applications 
+      SET application_status = $1, updated_at = NOW()
+      WHERE user_id = $2
+    `, [status === 'active' ? 'approved' : status, coachId]);
+  }
+
+  async updateClassSessionStatus(classId: number, status: string): Promise<void> {
+    await this.pool.query(`
+      UPDATE class_sessions 
+      SET status = $1, updated_at = NOW()
+      WHERE id = $2
+    `, [status, classId]);
+  }
+
+  async createTrainingCenter(centerData: any): Promise<any> {
+    const result = await this.pool.query(`
+      INSERT INTO training_centers (
+        name, description, address, city, state, country, 
+        postal_code, phone, email, website, capacity, qr_code
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING *
+    `, [
+      centerData.name, centerData.description, centerData.address,
+      centerData.city, centerData.state, centerData.country,
+      centerData.postalCode, centerData.phone, centerData.email,
+      centerData.website, centerData.capacity, centerData.qrCode
+    ]);
+    return result.rows[0];
+  }
+
+  async updateTrainingCenter(centerId: number, updateData: any): Promise<any> {
+    const result = await this.pool.query(`
+      UPDATE training_centers 
+      SET name = $1, description = $2, address = $3, capacity = $4, updated_at = NOW()
+      WHERE id = $5
+      RETURNING *
+    `, [updateData.name, updateData.description, updateData.address, updateData.capacity, centerId]);
+    return result.rows[0];
+  }
+
   // Player Management Admin operations
   async getAllPlayersForAdmin(): Promise<any[]> {
     try {

@@ -50,8 +50,8 @@ import sageExtendedKnowledgeRoutes from "./routes/sage-extended-knowledge-routes
 import sageDashboardRoutes from "./routes/sage-dashboard-routes"; // PKL-278651-COACH-0022-API - SAGE Dashboard Integration
 import sageApiRoutes from "./routes/sage-api-routes"; // PKL-278651-SAGE-0029-API - SAGE API for User Data
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
-import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
+import { requireAdmin } from "./middleware/auth";
 // Removed special routes import - using consolidated multi-rankings implementation
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 import { 
