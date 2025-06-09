@@ -28,16 +28,22 @@ router.get('/coach-applications', async (req, res) => {
         lastName: app.last_name || '',
         phone: app.phone || '',
         email: app.user_email || '',
-        dateOfBirth: app.dateOfBirth || '',
-        emergencyContact: typeof app.emergency_contact === 'string' 
-          ? JSON.parse(app.emergency_contact || '{}') 
-          : (app.emergency_contact || {})
+        dateOfBirth: app.date_of_birth || ''
       },
       experience: {
-        yearsPlaying: app.yearsPlaying || 0,
+        yearsPlaying: 0,
         yearsCoaching: app.experience_years || 0,
         previousExperience: app.previous_experience || '',
-        achievements: Array.isArray(app.achievements) ? app.achievements : []
+        achievements: (() => {
+          try {
+            const availData = typeof app.availability_data === 'string' 
+              ? JSON.parse(app.availability_data) 
+              : app.availability_data;
+            return availData?.achievements ? [availData.achievements] : [];
+          } catch {
+            return [];
+          }
+        })()
       },
       certifications: {
         pcpCertified: app.pcpCertified || false,

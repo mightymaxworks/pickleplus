@@ -270,23 +270,36 @@ export default function CoachApplicationsPage() {
             </div>
             <div>
               <Label>Email</Label>
-              <p className="text-sm text-gray-600">{application.personalInfo.email}</p>
+              <p className="text-sm text-gray-600">{application.personalInfo.email || 'Not provided'}</p>
             </div>
             <div>
               <Label>Phone</Label>
-              <p className="text-sm text-gray-600">{application.personalInfo.phone}</p>
+              <p className="text-sm text-gray-600">{application.personalInfo.phone || 'Not provided'}</p>
             </div>
             <div>
               <Label>Date of Birth</Label>
-              <p className="text-sm text-gray-600">{application.personalInfo.dateOfBirth}</p>
+              <p className="text-sm text-gray-600">{application.personalInfo.dateOfBirth || 'Not provided'}</p>
             </div>
-            <div className="col-span-2">
-              <Label>Emergency Contact</Label>
-              <p className="text-sm text-gray-600">
-                {typeof application.personalInfo.emergencyContact === 'object' 
-                  ? JSON.stringify(application.personalInfo.emergencyContact) 
-                  : application.personalInfo.emergencyContact || 'Not provided'}
-              </p>
+            {application.personalInfo.dateOfBirth && (
+              <div>
+                <Label>Age</Label>
+                <p className="text-sm text-gray-600">
+                  {(() => {
+                    const birthDate = new Date(application.personalInfo.dateOfBirth);
+                    const today = new Date();
+                    const age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                      return age - 1;
+                    }
+                    return age;
+                  })()} years old
+                </p>
+              </div>
+            )}
+            <div>
+              <Label>Coach Type</Label>
+              <p className="text-sm text-gray-600 capitalize">{application.coachType || 'Not specified'}</p>
             </div>
           </div>
         </TabsContent>
@@ -355,17 +368,29 @@ export default function CoachApplicationsPage() {
         </TabsContent>
 
         <TabsContent value="availability" className="space-y-4">
-          <div>
-            <Label>Hourly Rate</Label>
-            <p className="text-sm text-gray-600">${application.rates.hourlyRate}/hour</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Individual Rate</Label>
+              <p className="text-sm text-gray-600">
+                ${typeof application.availability === 'object' && application.availability.individual 
+                  ? application.availability.individual 
+                  : 'Not specified'}/hour
+              </p>
+            </div>
+            <div>
+              <Label>Group Rate</Label>
+              <p className="text-sm text-gray-600">
+                ${typeof application.availability === 'object' && application.availability.group 
+                  ? application.availability.group 
+                  : 'Not specified'}/hour
+              </p>
+            </div>
           </div>
           <div>
-            <Label>Preferred Times</Label>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {application.availability.preferredTimes.map((time, index) => (
-                <Badge key={index} variant="outline">{time}</Badge>
-              ))}
-            </div>
+            <Label>Teaching Philosophy</Label>
+            <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+              {application.teachingPhilosophy || 'Not provided'}
+            </p>
           </div>
         </TabsContent>
 
