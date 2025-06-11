@@ -29,7 +29,6 @@ import {
   DollarSign,
   Award,
   Eye,
-  Activity,
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
@@ -76,22 +75,27 @@ export default function TrainingCentersAdminPage() {
   const queryClient = useQueryClient();
 
   // Fetch training centers data
-  const { data: centers = [], isLoading: centersLoading } = useQuery({
-    queryKey: ['/api/admin/training-centers'],
-    queryFn: () => apiRequest('GET', '/api/admin/training-centers').then(res => res.json())
+  const { data: centersResponse, isLoading: centersLoading } = useQuery({
+    queryKey: ['/api/admin/training-centers/centers'],
+    queryFn: () => apiRequest('GET', '/api/admin/training-centers/centers').then(res => res.json())
   });
 
   // Fetch coaches data
-  const { data: coaches = [], isLoading: coachesLoading } = useQuery({
-    queryKey: ['/api/admin/coaches'],
-    queryFn: () => apiRequest('GET', '/api/admin/coaches').then(res => res.json())
+  const { data: coachesResponse, isLoading: coachesLoading } = useQuery({
+    queryKey: ['/api/admin/training-centers/coaches'],
+    queryFn: () => apiRequest('GET', '/api/admin/training-centers/coaches').then(res => res.json())
   });
 
   // Fetch classes data
-  const { data: classes = [], isLoading: classesLoading } = useQuery({
-    queryKey: ['/api/admin/classes'],
-    queryFn: () => apiRequest('GET', '/api/admin/classes').then(res => res.json())
+  const { data: classesResponse, isLoading: classesLoading } = useQuery({
+    queryKey: ['/api/admin/training-centers/classes'],
+    queryFn: () => apiRequest('GET', '/api/admin/training-centers/classes').then(res => res.json())
   });
+
+  // Extract data from API responses with safe array handling
+  const centers = Array.isArray(centersResponse?.data) ? centersResponse.data : [];
+  const coaches = Array.isArray(coachesResponse?.data) ? coachesResponse.data : [];
+  const classes = Array.isArray(classesResponse?.data) ? classesResponse.data : [];
 
   const OverviewDashboard = () => (
     <div className="space-y-6">
@@ -115,9 +119,9 @@ export default function TrainingCentersAdminPage() {
             <CardTitle className="text-sm font-medium text-gray-600">Active Coaches</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{coaches.filter(c => c.status === 'active').length}</div>
+            <div className="text-2xl font-bold">{coaches.filter((c: any) => c.status === 'active').length}</div>
             <p className="text-xs text-gray-500">
-              {coaches.filter(c => c.pcpCertified).length} PCP Certified
+              {coaches.filter((c: any) => c.pcp_certified).length} PCP Certified
             </p>
           </CardContent>
         </Card>
@@ -127,9 +131,9 @@ export default function TrainingCentersAdminPage() {
             <CardTitle className="text-sm font-medium text-gray-600">Today's Classes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{classes.filter(c => c.status === 'scheduled').length}</div>
+            <div className="text-2xl font-bold">{classes.filter((c: any) => c.status === 'scheduled').length}</div>
             <p className="text-xs text-blue-600">
-              {classes.reduce((sum, c) => sum + c.enrolled, 0)} students enrolled
+              {classes.reduce((sum: number, c: any) => sum + (c.enrolled || 0), 0)} students enrolled
             </p>
           </CardContent>
         </Card>
