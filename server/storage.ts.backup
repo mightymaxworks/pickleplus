@@ -1695,18 +1695,47 @@ export class DatabaseStorage implements IStorage {
         SELECT 
           cs.id,
           cs.name,
-          'Coach Name' as coach_name,
+          c.name as coach_name,
           tc.name as center_name,
-          COALESCE(cs.capacity, 0) as capacity,
-          0 as enrolled,
+          cs.capacity,
+          COUNT(ce.id) as enrolled,
           cs.status,
           cs.scheduled_date,
           cs.start_time,
           cs.end_time,
           cs.price
         FROM class_sessions cs
+        LEFT JOIN coaches c ON cs.coach_id = c.id
         LEFT JOIN training_centers tc ON cs.training_center_id = tc.id
+        LEFT JOIN class_enrollments ce ON cs.id = ce.class_instance_id
+        GROUP BY cs.id, cs.name, c.name, tc.name, cs.capacity, cs.status, cs.scheduled_date, cs.start_time, cs.end_time, cs.price
         ORDER BY cs.scheduled_date, cs.start_time
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching class sessions with enrollment:', error);
+      return [];
+    }
+  }
+
+  async getClassSessionsWithEnrollment(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          cs.id,
+          cs.name,
+          CONCAT(u.first_name, ' ', u.last_name) as coach_name,
+          tc.name as center_name,
+          cs.date::date as date,
+          cs.time as time,
+          cs.max_participants as capacity,
+          cs.enrolled_count as enrolled,
+          cs.price,
+          cs.status
+        FROM class_sessions cs
+        LEFT JOIN users u ON cs.coach_id = u.id
+        LEFT JOIN training_centers tc ON cs.training_center_id = tc.id
+        ORDER BY cs.date DESC, cs.time
       `);
       return result.rows;
     } catch (error) {
