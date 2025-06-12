@@ -4,8 +4,7 @@
  */
 
 import { Router } from 'express';
-import pkg from 'pg';
-const { Pool } = pkg;
+import { pool } from '../db.js';
 
 const router = Router();
 
@@ -92,7 +91,7 @@ router.get('/profile/:playerId', async (req, res) => {
       SELECT * FROM player_pcp_profiles 
       WHERE player_id = $1
     `;
-    const profileResult = await db.query(profileQuery, [playerId]);
+    const profileResult = await pool.query(profileQuery, [playerId]);
 
     let profile = profileResult.rows[0];
 
@@ -103,7 +102,7 @@ router.get('/profile/:playerId', async (req, res) => {
         VALUES ($1, 1)
         RETURNING *
       `;
-      const newProfileResult = await db.query(createQuery, [playerId]);
+      const newProfileResult = await pool.query(createQuery, [playerId]);
       
       return res.json({
         success: true,
