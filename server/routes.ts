@@ -48,6 +48,7 @@ import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIA
 import sageConciergeRoutes from "./routes/sage-concierge-routes"; // PKL-278651-SAGE-0013-CONCIERGE - SAGE Concierge
 import sageExtendedKnowledgeRoutes from "./routes/sage-extended-knowledge-routes"; // PKL-278651-SAGE-0016-EXTENDED-KB - SAGE Extended Knowledge Base
 import sageDashboardRoutes from "./routes/sage-dashboard-routes"; // PKL-278651-COACH-0022-API - SAGE Dashboard Integration
+import pcpApiRoutes from "./routes/pcp-api-routes"; // PCP Coaching Ecosystem - Sprint 1
 import sageApiRoutes from "./routes/sage-api-routes"; // PKL-278651-SAGE-0029-API - SAGE API for User Data
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
@@ -119,6 +120,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Training Center Admin Routes
   app.use('/api/admin/training-centers', trainingCenterAdminRoutes);
+  
+  // PCP Coaching Ecosystem Routes - Sprint 1
+  app.use('/api/pcp', pcpApiRoutes);
   
   // Mount security routes
   app.use('/api/security', securityRoutes);
