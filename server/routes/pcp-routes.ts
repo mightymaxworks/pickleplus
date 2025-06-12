@@ -99,22 +99,22 @@ router.get('/profile/:playerId', async (req, res) => {
     const assessments = await pool.query(`
       SELECT * FROM pcp_skill_assessments 
       WHERE profile_id = $1 
-      ORDER BY created_at DESC 
+      ORDER BY assessment_date DESC 
       LIMIT 5
     `, [profile.id]);
 
     // Get current goals
     const goals = await pool.query(`
       SELECT * FROM pcp_goals 
-      WHERE profile_id = $1 AND status = 'active'
-      ORDER BY created_at DESC
+      WHERE profile_id = $1 AND achieved = false
+      ORDER BY created_date DESC
     `, [profile.id]);
 
     // Get achievements
     const achievements = await pool.query(`
       SELECT * FROM pcp_achievements 
       WHERE profile_id = $1 
-      ORDER BY earned_at DESC 
+      ORDER BY earned_date DESC 
       LIMIT 10
     `, [profile.id]);
 
