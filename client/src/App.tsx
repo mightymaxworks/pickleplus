@@ -335,6 +335,18 @@ export default function App() {
                     pageTitle="S.A.G.E. Coaching"
                   />
                   
+                  {/* PCP Coaching Ecosystem - Sprint 1 */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/pcp"
+                    component={lazyLoad(() => import('./pages/coach/pcp-dashboard'))}
+                    pageTitle="PCP Coaching Dashboard"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/coach/pcp-assessment"
+                    component={lazyLoad(() => import('./pages/coach/pcp-assessment'))}
+                    pageTitle="PCP Player Assessment"
+                  />
+                  
                   {/* PKL-278651-JOUR-001 - PickleJourney™ */}
                   <ProtectedRouteWithLayout
                     path="/journey"
