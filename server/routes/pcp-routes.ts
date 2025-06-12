@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { pool } from '../db.js';
+import { pool } from '../db';
 
 const router = Router();
 
@@ -273,9 +273,10 @@ router.post('/assessment', async (req, res) => {
 // GET /api/pcp/drills - Get drill library
 router.get('/drills', async (req, res) => {
   try {
-    const { category, skill_target, difficulty } = req.query;
+    console.log('PCP Drills: Starting query execution');
+    const { category, skill_focus, difficulty_level } = req.query;
     
-    let query = 'SELECT * FROM coaching_drills WHERE is_public = true';
+    let query = 'SELECT * FROM pcp_drill_library WHERE 1=1';
     const params: any[] = [];
     let paramCount = 0;
 
@@ -285,21 +286,23 @@ router.get('/drills', async (req, res) => {
       params.push(category);
     }
 
-    if (skill_target) {
+    if (skill_focus) {
       paramCount++;
-      query += ` AND (primary_skill_target = $${paramCount} OR $${paramCount} = ANY(secondary_skill_targets))`;
-      params.push(skill_target);
+      query += ` AND skill_focus = $${paramCount}`;
+      params.push(skill_focus);
     }
 
-    if (difficulty) {
+    if (difficulty_level) {
       paramCount++;
       query += ` AND difficulty_level = $${paramCount}`;
-      params.push(difficulty);
+      params.push(difficulty_level);
     }
 
-    query += ' ORDER BY name';
+    query += ' ORDER BY category, difficulty_level, name';
 
+    console.log('PCP Drills: Executing query:', query, 'with params:', params);
     const result = await pool.query(query, params);
+    console.log('PCP Drills: Query result rows:', result.rows.length);
 
     res.json({
       success: true,
