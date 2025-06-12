@@ -55,7 +55,7 @@ async function createPCPCoachingEcosystemSchema() {
       CREATE TABLE IF NOT EXISTS pcp_skill_assessments (
         id SERIAL PRIMARY KEY,
         profile_id INTEGER REFERENCES player_pcp_profiles(id),
-        coach_id INTEGER REFERENCES training_center_coaches(id),
+        coach_id INTEGER REFERENCES coaches(id),
         assessment_date TIMESTAMP DEFAULT NOW(),
         session_id INTEGER, -- Link to training session if applicable
         
@@ -148,8 +148,8 @@ async function createPCPCoachingEcosystemSchema() {
         mastery_criteria TEXT,
         
         -- Metadata
-        created_by INTEGER REFERENCES training_center_coaches(id),
-        facility_id INTEGER REFERENCES training_centers(id),
+        created_by INTEGER REFERENCES coaches(id),
+        facility_id INTEGER REFERENCES training_center_facilities(id),
         is_public BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW(),
@@ -163,7 +163,7 @@ async function createPCPCoachingEcosystemSchema() {
       CREATE TABLE IF NOT EXISTS drill_performance_logs (
         id SERIAL PRIMARY KEY,
         player_id INTEGER REFERENCES users(id),
-        coach_id INTEGER REFERENCES training_center_coaches(id),
+        coach_id INTEGER REFERENCES coaches(id),
         drill_id INTEGER REFERENCES coaching_drills(id),
         session_date TIMESTAMP DEFAULT NOW(),
         session_id INTEGER, -- link to training session
@@ -207,7 +207,7 @@ async function createPCPCoachingEcosystemSchema() {
       CREATE TABLE IF NOT EXISTS pcp_goals (
         id SERIAL PRIMARY KEY,
         profile_id INTEGER REFERENCES player_pcp_profiles(id),
-        coach_id INTEGER REFERENCES training_center_coaches(id),
+        coach_id INTEGER REFERENCES coaches(id),
         created_date TIMESTAMP DEFAULT NOW(),
         target_date TIMESTAMP,
         completed_date TIMESTAMP,
@@ -274,7 +274,7 @@ async function createPCPCoachingEcosystemSchema() {
         shared_count INTEGER DEFAULT 0,
         
         -- Achievement verification
-        verified_by INTEGER REFERENCES training_center_coaches(id),
+        verified_by INTEGER REFERENCES coaches(id),
         verification_notes TEXT
       );
     `);
@@ -344,9 +344,9 @@ async function createPCPCoachingEcosystemSchema() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS coach_calibration_sessions (
         id SERIAL PRIMARY KEY,
-        facility_id INTEGER REFERENCES training_centers(id),
+        facility_id INTEGER REFERENCES training_center_facilities(id),
         session_date TIMESTAMP DEFAULT NOW(),
-        facilitator_id INTEGER REFERENCES training_center_coaches(id),
+        facilitator_id INTEGER REFERENCES coaches(id),
         
         -- Calibration details
         calibration_type VARCHAR(50), -- 'assessment_consistency', 'drill_evaluation', 'rating_standards'
@@ -371,7 +371,7 @@ async function createPCPCoachingEcosystemSchema() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS facility_performance_metrics (
         id SERIAL PRIMARY KEY,
-        facility_id INTEGER REFERENCES training_centers(id),
+        facility_id INTEGER REFERENCES training_center_facilities(id),
         metric_date DATE DEFAULT CURRENT_DATE,
         
         -- Student development metrics
