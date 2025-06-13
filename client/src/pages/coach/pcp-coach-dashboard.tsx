@@ -117,7 +117,32 @@ export default function PCPCoachDashboard() {
     }
   };
 
-  const data = dashboardData || mockDashboardData;
+  // Ensure data structure with safe defaults
+  const data = {
+    myPlayers: dashboardData?.myPlayers || mockDashboardData.myPlayers || [],
+    recentAssessments: dashboardData?.recentAssessments || [],
+    upcomingSessions: dashboardData?.upcomingSessions || [],
+    drillLibrary: drillsData || [],
+    myStats: dashboardData?.myStats || mockDashboardData.myStats
+  };
+  
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -197,7 +222,7 @@ export default function PCPCoachDashboard() {
           {/* Players Tab */}
           <TabsContent value="players" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {data.myPlayers.map((player) => (
+              {(data.myPlayers || []).map((player) => (
                 <Card key={player.id} className="hover:shadow-lg transition-shadow cursor-pointer"
                       onClick={() => setSelectedPlayer(player)}>
                   <CardHeader>
@@ -304,7 +329,7 @@ export default function PCPCoachDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {data.drillLibrary.map((drill, index) => (
+                  {(data.drillLibrary || []).map((drill, index) => (
                     <Card key={drill.id || index} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
