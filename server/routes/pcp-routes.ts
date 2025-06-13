@@ -545,14 +545,22 @@ router.get('/profile/:id', async (req, res) => {
       LIMIT 10
     `, [playerId]);
 
+    // Convert string ratings to numbers
+    const playerData = {
+      ...player,
+      overall_rating: parseFloat(player.overall_rating),
+      technical_rating: parseFloat(player.technical_rating),
+      tactical_rating: parseFloat(player.tactical_rating),
+      physical_rating: parseFloat(player.physical_rating),
+      mental_rating: parseFloat(player.mental_rating),
+      assessmentHistory: historyResult.rows,
+      goals: [], // Placeholder for future goal tracking
+      achievements: [] // Placeholder for future achievement system
+    };
+
     res.json({
       success: true,
-      data: {
-        ...player,
-        assessmentHistory: historyResult.rows,
-        goals: [], // Placeholder for future goal tracking
-        achievements: [] // Placeholder for future achievement system
-      }
+      data: playerData
     });
 
   } catch (error) {

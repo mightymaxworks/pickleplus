@@ -47,7 +47,18 @@ export default function PCPPlayerProgress() {
     queryFn: async () => {
       const response = await fetch(`/api/pcp/profile/${playerId}`);
       if (!response.ok) throw new Error('Failed to fetch player progress');
-      return response.json().then(result => result.data);
+      const result = await response.json();
+      // Handle the nested structure from the API
+      if (result.data && result.data.profile) {
+        return {
+          ...result.data.profile,
+          name: result.data.profile.name || `Player ${playerId}`,
+          assessmentHistory: result.data.recentAssessments || [],
+          goals: result.data.currentGoals || [],
+          achievements: result.data.recentAchievements || []
+        };
+      }
+      return result.data;
     },
     enabled: !!playerId
   });

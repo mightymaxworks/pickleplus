@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ interface CoachDashboardData {
 
 export default function PCPCoachDashboard() {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerProfile | null>(null);
+  const [location, setLocation] = useLocation();
 
   // Fetch coach dashboard data
   const { data: dashboardData, isLoading } = useQuery<CoachDashboardData>({
@@ -292,7 +294,7 @@ export default function PCPCoachDashboard() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.open(`/coach/pcp/progress/${player.id}`, '_blank');
+                          setLocation(`/coach/pcp/progress/${player.id}`);
                         }}
                       >
                         View Progress
@@ -302,7 +304,7 @@ export default function PCPCoachDashboard() {
                         className="bg-blue-600 hover:bg-blue-700"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.open(`/coach/pcp-assessment?playerId=${player.id}`, '_blank');
+                          setLocation(`/coach/pcp-assessment?playerId=${player.id}`);
                         }}
                       >
                         New Assessment
@@ -330,7 +332,7 @@ export default function PCPCoachDashboard() {
                   <p className="text-gray-600">No recent assessments</p>
                   <Button 
                     className="mt-4 bg-blue-600 hover:bg-blue-700"
-                    onClick={() => window.open('/coach/pcp-assessment', '_blank')}
+                    onClick={() => setLocation('/coach/pcp-assessment')}
                   >
                     Conduct Assessment
                   </Button>
