@@ -342,7 +342,7 @@ export default function App() {
                     pageTitle="PCP Coaching Dashboard"
                   />
                   <ProtectedRouteWithLayout
-                    path="/coach/pcp/progress/:id"
+                    path="/coach/pcp/player-progress/:id"
                     component={lazyLoad(() => import('./pages/coach/pcp-player-progress'))}
                     pageTitle="Player Progress Report"
                   />
