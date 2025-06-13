@@ -12,6 +12,7 @@ import { QueryClient } from "@tanstack/react-query";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      queryFn: getQueryFn({ on401: "returnNull" }) as any,
       retry: 1,
       refetchOnWindowFocus: false,
       // Performance optimizations

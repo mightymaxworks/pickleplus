@@ -43,6 +43,16 @@ interface PlayerProgress {
   achievements: any[];
 }
 
+interface PCPApiResponse {
+  success: boolean;
+  data: {
+    profile: PlayerProgress;
+    recentAssessments: any[];
+    currentGoals: any[];
+    recentAchievements: any[];
+  };
+}
+
 interface SkillComponent {
   name: string;
   rating: number;
@@ -81,11 +91,19 @@ export default function PCPPlayerProgress() {
     enabled: !!playerId
   });
 
-  // Fetch player progress data
-  const { data: playerData, isLoading, error } = useQuery({
+  // Fetch player progress data - using the correct endpoint that returns profile data
+  const { data: playerResponse, isLoading, error } = useQuery({
     queryKey: [`/api/pcp/profile/${playerId}`],
     enabled: !!playerId
   });
+
+  // Extract player data from API response structure
+  const playerData = playerResponse?.success && playerResponse?.data?.profile ? {
+    ...playerResponse.data.profile,
+    assessmentHistory: playerResponse.data.recentAssessments || [],
+    goals: playerResponse.data.currentGoals || [],
+    achievements: playerResponse.data.recentAchievements || []
+  } : null;
 
   console.log('Player Progress Debug:', {
     playerId,
