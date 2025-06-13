@@ -57,6 +57,7 @@ interface AssessmentData {
     backhandBlockVolley: number;
     backhandDriveVolley: number;
     backhandDinkVolley: number;
+    [key: string]: number;
   };
   tacticalSkills: {
     shotSelection: number;
