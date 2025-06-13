@@ -264,7 +264,7 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
     const executeWithRetry = async (): Promise<any> => {
       try {
         // Use cache-aware apiRequest with built-in retry for network/server errors
-        const response = await apiRequest("GET", url, undefined, { 
+        const response = await apiRequest("GET", url as string, undefined, { 
           cacheDuration, 
           forceFresh 
         });
@@ -272,7 +272,7 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
         // Handle specific status codes with custom behavior
         if (response.status === 401) {
           if (on401 === "returnNull") {
-            console.log(`[API] Unauthorized access to ${url}, returning null as configured`);
+            console.log(`[API] Unauthorized access to ${url as string}, returning null as configured`);
             return null;
           }
           throw new Error("Unauthorized: You need to log in to access this resource");
@@ -283,7 +283,7 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
         }
         
         if (response.status === 404) {
-          console.warn(`[API] Resource not found: ${url}`);
+          console.warn(`[API] Resource not found: ${url as string}`);
           return null; // Return null for not found resources instead of throwing
         }
         
