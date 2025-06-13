@@ -489,4 +489,79 @@ router.post('/goal', async (req, res) => {
   }
 });
 
+// GET /api/pcp/profile/:id - Get individual player profile for progress page
+router.get('/profile/:id', async (req, res) => {
+  try {
+    const playerId = parseInt(req.params.id);
+    
+    if (isNaN(playerId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid player ID'
+      });
+    }
+
+    // Get player profile data
+    const profileResult = await pool.query(`
+      SELECT 
+        pcp.id,
+        u.username as name,
+        pcp.overall_rating,
+        pcp.technical_rating,
+        pcp.tactical_rating,
+        pcp.physical_rating,
+        pcp.mental_rating,
+        pcp.total_assessments,
+        pcp.last_assessment_date,
+        pcp.current_focus_areas
+      FROM player_pcp_profiles pcp
+      JOIN users u ON pcp.player_id = u.id
+      WHERE pcp.id = $1
+    `, [playerId]);
+
+    if (profileResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Player not found'
+      });
+    }
+
+    const player = profileResult.rows[0];
+
+    // Get assessment history (last 10 assessments)
+    const historyResult = await pool.query(`
+      SELECT 
+        assessment_date,
+        overall_rating,
+        technical_rating,
+        tactical_rating,
+        physical_rating,
+        mental_rating,
+        trigger_event,
+        coach_notes
+      FROM pcp_rating_history
+      WHERE profile_id = $1
+      ORDER BY assessment_date DESC
+      LIMIT 10
+    `, [playerId]);
+
+    res.json({
+      success: true,
+      data: {
+        ...player,
+        assessmentHistory: historyResult.rows,
+        goals: [], // Placeholder for future goal tracking
+        achievements: [] // Placeholder for future achievement system
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching player profile:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch player profile'
+    });
+  }
+});
+
 export default router;

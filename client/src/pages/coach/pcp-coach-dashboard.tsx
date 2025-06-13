@@ -287,10 +287,24 @@ export default function PCPCoachDashboard() {
                       )}
                     </div>
                     <div className="flex justify-between items-center mt-4">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`/coach/pcp/progress/${player.id}`, '_blank');
+                        }}
+                      >
                         View Progress
                       </Button>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`/coach/pcp-assessment?playerId=${player.id}`, '_blank');
+                        }}
+                      >
                         New Assessment
                         <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
@@ -314,7 +328,10 @@ export default function PCPCoachDashboard() {
                 <div className="text-center py-8">
                   <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No recent assessments</p>
-                  <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
+                  <Button 
+                    className="mt-4 bg-blue-600 hover:bg-blue-700"
+                    onClick={() => window.open('/coach/pcp-assessment', '_blank')}
+                  >
                     Conduct Assessment
                   </Button>
                 </div>
