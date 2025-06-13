@@ -76,11 +76,13 @@ router.get('/profile/:playerId', async (req, res) => {
   try {
     const { playerId } = req.params;
 
-    // Get or create player profile
-    let profileResult = await pool.query(
-      'SELECT * FROM player_pcp_profiles WHERE player_id = $1',
-      [playerId]
-    );
+    // Get or create player profile with username
+    let profileResult = await pool.query(`
+      SELECT pcp.*, u.username as name 
+      FROM player_pcp_profiles pcp
+      LEFT JOIN users u ON pcp.player_id = u.id
+      WHERE pcp.player_id = $1
+    `, [playerId]);
 
     if (profileResult.rows.length === 0) {
       // Create new profile
@@ -528,6 +530,7 @@ router.get('/profile/:id', async (req, res) => {
     }
 
     const player = profileResult.rows[0];
+    console.log('Player data from DB:', player);
 
     // Get assessment history (last 10 assessments)
     const historyResult = await pool.query(`
