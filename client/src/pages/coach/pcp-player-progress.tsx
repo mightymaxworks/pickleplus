@@ -154,106 +154,115 @@ export default function PCPPlayerProgress() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="pt-6 px-6 pb-6">
-        <div className="max-w-7xl mx-auto space-y-6 mt-[33px] mb-[33px]">
-          {/* Enhanced Header */}
-          <div className="flex items-center justify-between bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setLocation('/coach/pcp')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="border-l border-gray-200 pl-4">
-                <h1 className="text-3xl font-bold text-gray-900">{playerData.name}</h1>
-                <p className="text-gray-600 flex items-center mt-1">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Comprehensive Progress Analytics
-                </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50 animate-in fade-in duration-700">
+      <div className="pt-4 px-3 sm:px-6 pb-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 mt-4 sm:mt-8 mb-4 sm:mb-8">
+          {/* Enhanced Mobile-First Header */}
+          <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg border border-white/20 animate-in slide-in-from-top duration-500">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="self-start transform transition-all duration-200 hover:scale-105 hover:shadow-md"
+                  onClick={() => setLocation('/coach/pcp')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <div className="sm:border-l border-gray-200 sm:pl-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 animate-in slide-in-from-left duration-700">{playerData.name}</h1>
+                  <p className="text-gray-600 flex items-center mt-1 text-sm sm:text-base animate-in slide-in-from-left duration-700 delay-150">
+                    <BarChart3 className="h-4 w-4 mr-2 animate-pulse" />
+                    Progress Analytics
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="text-blue-600">
-                {playerData.total_assessments} Assessments
-              </Badge>
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => setLocation(`/coach/pcp/assessment/${playerId}`)}
-              >
-                <Target className="h-4 w-4 mr-2" />
-                New Assessment
-              </Button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                <Badge variant="outline" className="text-blue-600 text-center animate-in scale-in duration-500 delay-300">
+                  {playerData.total_assessments} Assessments
+                </Badge>
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                  onClick={() => setLocation(`/coach/pcp/assessment/${playerId}`)}
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">New Assessment</span>
+                  <span className="sm:hidden">Assess</span>
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Enhanced Analytics Tabs */}
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-white p-1 rounded-lg shadow-sm">
-              <TabsTrigger value="overview" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                <BarChart3 className="h-4 w-4" />
+          {/* Enhanced Mobile-Optimized Analytics Tabs */}
+          <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom duration-500 delay-200">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 bg-white/90 backdrop-blur-sm p-1 rounded-xl shadow-lg border border-white/20 gap-1">
+              <TabsTrigger value="overview" className="flex items-center justify-center space-x-1 sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse" />
                 <span>Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="skills" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                <Brain className="h-4 w-4" />
-                <span>Skill Analysis</span>
+              <TabsTrigger value="skills" className="flex items-center justify-center space-x-1 sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm">
+                <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Skills</span>
+                <span className="sm:hidden">Skills</span>
               </TabsTrigger>
-              <TabsTrigger value="progress" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                <TrendingUp className="h-4 w-4" />
-                <span>Progress Timeline</span>
+              <TabsTrigger value="progress" className="flex items-center justify-center space-x-1 sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm col-span-2 sm:col-span-1">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Progress</span>
+                <span className="sm:hidden">Timeline</span>
               </TabsTrigger>
-              <TabsTrigger value="goals" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                <Target className="h-4 w-4" />
-                <span>Goals & Development</span>
+              <TabsTrigger value="goals" className="flex items-center justify-center space-x-1 sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm">
+                <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Goals</span>
+                <span className="sm:hidden">Dev</span>
               </TabsTrigger>
-              <TabsTrigger value="comparison" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                <Users className="h-4 w-4" />
-                <span>Peer Comparison</span>
+              <TabsTrigger value="comparison" className="flex items-center justify-center space-x-1 sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm">
+                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Compare</span>
+                <span className="sm:hidden">Peers</span>
               </TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              {/* Enhanced Quick Stats with Visual Indicators */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="border-l-4 border-blue-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Activity className="h-5 w-5 mr-2 text-blue-600" />
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
+              {/* Enhanced Quick Stats with Mobile-First Visual Indicators */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                <Card className="border-l-4 border-blue-500 hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-blue-50 animate-in slide-in-from-left duration-500 delay-100">
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-base sm:text-lg flex items-center">
+                      <Activity className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600 animate-bounce" />
                       Overall Rating
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-4xl font-bold text-blue-600 mb-3">
+                    <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-3 animate-in scale-in duration-700 delay-200">
                       {playerData.overall_rating.toFixed(1)}
                     </div>
-                    <Progress value={playerData.overall_rating * 20} className="h-4 mb-3" />
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <Progress value={playerData.overall_rating * 20} className="h-3 sm:h-4 mb-3 animate-in slide-in-from-left duration-500 delay-300" />
+                    <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                       <span>{playerData.total_assessments} assessments</span>
                       <span className="text-blue-600 font-medium">Target: 3.5</span>
                     </div>
-                    <div className="mt-2 flex items-center text-xs text-green-600">
+                    <div className="mt-2 flex items-center text-xs text-green-600 animate-pulse">
                       <TrendingUp className="h-3 w-3 mr-1" />
                       Improving trend
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-green-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Zap className="h-5 w-5 mr-2 text-green-600" />
+                <Card className="border-l-4 border-green-500 hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-green-50 animate-in slide-in-from-left duration-500 delay-200">
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-base sm:text-lg flex items-center">
+                      <Zap className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
                       Technical
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-4xl font-bold text-green-600 mb-3">
+                    <div className="text-3xl sm:text-4xl font-bold text-green-600 mb-3 animate-in scale-in duration-700 delay-300">
                       {playerData.technical_rating.toFixed(1)}
                     </div>
-                    <Progress value={playerData.technical_rating * 20} className="h-4 mb-3" />
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <Progress value={playerData.technical_rating * 20} className="h-3 sm:h-4 mb-3 animate-in slide-in-from-left duration-500 delay-400" />
+                    <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                       <span>40% weight</span>
                       <Badge variant="outline" className="text-green-600 border-green-200">Strongest</Badge>
                     </div>
@@ -263,21 +272,21 @@ export default function PCPPlayerProgress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-orange-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Brain className="h-5 w-5 mr-2 text-orange-600" />
+                <Card className="border-l-4 border-orange-500 hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-orange-50 animate-in slide-in-from-left duration-500 delay-300">
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-base sm:text-lg flex items-center">
+                      <Brain className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-orange-600" />
                       Tactical
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-4xl font-bold text-orange-600 mb-3">
+                    <div className="text-3xl sm:text-4xl font-bold text-orange-600 mb-3 animate-in scale-in duration-700 delay-400">
                       {playerData.tactical_rating.toFixed(1)}
                     </div>
-                    <Progress value={playerData.tactical_rating * 20} className="h-4 mb-3" />
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <Progress value={playerData.tactical_rating * 20} className="h-3 sm:h-4 mb-3 animate-in slide-in-from-left duration-500 delay-500" />
+                    <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                       <span>25% weight</span>
-                      <Badge variant="outline" className="text-orange-600 border-orange-200">Focus Area</Badge>
+                      <Badge variant="outline" className="text-orange-600 border-orange-200 animate-pulse">Focus Area</Badge>
                     </div>
                     <div className="mt-2 text-xs text-gray-500">
                       Court positioning, shot selection
@@ -285,30 +294,30 @@ export default function PCPPlayerProgress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-purple-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Activity className="h-5 w-5 mr-2 text-purple-600" />
+                <Card className="border-l-4 border-purple-500 hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-purple-50 animate-in slide-in-from-left duration-500 delay-400">
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-base sm:text-lg flex items-center">
+                      <Activity className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-purple-600" />
                       Physical & Mental
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between mb-3">
-                      <div>
-                        <div className="text-2xl font-bold text-purple-600">
+                      <div className="animate-in scale-in duration-700 delay-500">
+                        <div className="text-xl sm:text-2xl font-bold text-purple-600">
                           {playerData.physical_rating.toFixed(1)}
                         </div>
                         <div className="text-xs text-gray-500">Physical (20%)</div>
                       </div>
-                      <div>
-                        <div className="text-2xl font-bold text-indigo-600">
+                      <div className="animate-in scale-in duration-700 delay-600">
+                        <div className="text-xl sm:text-2xl font-bold text-indigo-600">
                           {playerData.mental_rating.toFixed(1)}
                         </div>
                         <div className="text-xs text-gray-500">Mental (15%)</div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Progress value={playerData.physical_rating * 20} className="h-2" />
+                      <Progress value={playerData.physical_rating * 20} className="h-2 animate-in slide-in-from-left duration-500 delay-600" />
                       <Progress value={playerData.mental_rating * 20} className="h-2" />
                     </div>
                   </CardContent>
