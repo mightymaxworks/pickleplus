@@ -129,14 +129,16 @@ export default function PCPCoachDashboard() {
   // Show loading state while data is being fetched
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="h-24 bg-gray-200 rounded"></div>
-              ))}
+      <div className="min-h-screen bg-gray-50">
+        <div className="pt-6 px-6 pb-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="h-24 bg-gray-200 rounded"></div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -145,22 +147,24 @@ export default function PCPCoachDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">PCP Coach Dashboard</h1>
-            <p className="text-gray-600 mt-1">Professional Coaching Certification Programme</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Main content with proper spacing for navigation */}
+      <div className="pt-6 px-6 pb-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Page Header - Reduced size to accommodate main nav */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Coach Dashboard</h1>
+              <p className="text-gray-600 mt-1">PCP Coaching Certification Programme</p>
+            </div>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Calendar className="h-4 w-4 mr-2" />
+              Schedule Session
+            </Button>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule Session
-          </Button>
-        </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -329,7 +333,7 @@ export default function PCPCoachDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(data.drillLibrary || []).map((drill, index) => (
+                  {(data.drillLibrary || []).map((drill: any, index: number) => (
                     <Card key={drill.id || index} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
@@ -385,6 +389,7 @@ export default function PCPCoachDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
