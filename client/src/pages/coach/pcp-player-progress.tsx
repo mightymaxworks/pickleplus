@@ -101,6 +101,12 @@ export default function PCPPlayerProgress() {
   const apiResponse = playerResponse as any;
   const playerData = apiResponse?.success && apiResponse?.data?.profile ? {
     ...apiResponse.data.profile,
+    // Convert string ratings to numbers for proper calculations
+    overall_rating: parseFloat(apiResponse.data.profile.overall_rating) || 0,
+    technical_rating: parseFloat(apiResponse.data.profile.technical_rating) || 0,
+    tactical_rating: parseFloat(apiResponse.data.profile.tactical_rating) || 0,
+    physical_rating: parseFloat(apiResponse.data.profile.physical_rating) || 0,
+    mental_rating: parseFloat(apiResponse.data.profile.mental_rating) || 0,
     assessmentHistory: apiResponse.data.recentAssessments || [],
     goals: apiResponse.data.currentGoals || [],
     achievements: apiResponse.data.recentAchievements || []
