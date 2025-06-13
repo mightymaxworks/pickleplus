@@ -22,12 +22,36 @@ function calculateOverallPCPRating(assessment: any): {
   mental: number;
   overall: number;
 } {
+  // Calculate groundstrokes average from detailed breakdown
+  const groundstrokesAverage = calculateDimensionalRating([
+    assessment.forehand_topspin,
+    assessment.forehand_slice,
+    assessment.backhand_topspin,
+    assessment.backhand_slice
+  ]);
+
+  // Calculate net play average from detailed breakdown
+  const netPlayAverage = calculateDimensionalRating([
+    assessment.forehand_dead_dink,
+    assessment.forehand_topspin_dink,
+    assessment.forehand_slice_dink,
+    assessment.backhand_dead_dink,
+    assessment.backhand_topspin_dink,
+    assessment.backhand_slice_dink,
+    assessment.forehand_block_volley,
+    assessment.forehand_drive_volley,
+    assessment.forehand_dink_volley,
+    assessment.backhand_block_volley,
+    assessment.backhand_drive_volley,
+    assessment.backhand_dink_volley
+  ]);
+
   // Technical Skills (40% weight)
   const technical = calculateDimensionalRating([
     assessment.serve_execution,
     assessment.return_technique,
-    assessment.groundstrokes,
-    assessment.net_play,
+    groundstrokesAverage,
+    netPlayAverage,
     assessment.third_shot,
     assessment.overhead_defense,
     assessment.shot_creativity,

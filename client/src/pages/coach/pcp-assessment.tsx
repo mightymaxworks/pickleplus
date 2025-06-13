@@ -25,12 +25,30 @@ interface AssessmentData {
   // Technical Skills (40% weight)
   serve_execution: number;
   return_technique: number;
-  groundstrokes: number;
-  net_play: number;
   third_shot: number;
   overhead_defense: number;
   shot_creativity: number;
   court_movement: number;
+  
+  // Groundstrokes Breakdown
+  forehand_topspin: number;
+  forehand_slice: number;
+  backhand_topspin: number;
+  backhand_slice: number;
+  
+  // Net Play Breakdown
+  forehand_dead_dink: number;
+  forehand_topspin_dink: number;
+  forehand_slice_dink: number;
+  backhand_dead_dink: number;
+  backhand_topspin_dink: number;
+  backhand_slice_dink: number;
+  forehand_block_volley: number;
+  forehand_drive_volley: number;
+  forehand_dink_volley: number;
+  backhand_block_volley: number;
+  backhand_drive_volley: number;
+  backhand_dink_volley: number;
   
   // Tactical Awareness (25% weight)
   shot_selection: number;
@@ -105,12 +123,30 @@ export default function PCPAssessment() {
     // Technical Skills
     serve_execution: 2.0,
     return_technique: 2.0,
-    groundstrokes: 2.0,
-    net_play: 2.0,
     third_shot: 2.0,
     overhead_defense: 2.0,
     shot_creativity: 2.0,
     court_movement: 2.0,
+    
+    // Groundstrokes Breakdown
+    forehand_topspin: 2.0,
+    forehand_slice: 2.0,
+    backhand_topspin: 2.0,
+    backhand_slice: 2.0,
+    
+    // Net Play Breakdown
+    forehand_dead_dink: 2.0,
+    forehand_topspin_dink: 2.0,
+    forehand_slice_dink: 2.0,
+    backhand_dead_dink: 2.0,
+    backhand_topspin_dink: 2.0,
+    backhand_slice_dink: 2.0,
+    forehand_block_volley: 2.0,
+    forehand_drive_volley: 2.0,
+    forehand_dink_volley: 2.0,
+    backhand_block_volley: 2.0,
+    backhand_drive_volley: 2.0,
+    backhand_dink_volley: 2.0,
     
     // Tactical Awareness
     shot_selection: 2.0,
@@ -174,11 +210,35 @@ export default function PCPAssessment() {
     return skills.reduce((sum, skill) => sum + skill, 0) / skills.length;
   };
 
+  // Calculate groundstrokes average from detailed breakdown
+  const groundstrokesAverage = calculateDimensionalAverage([
+    assessment.forehand_topspin,
+    assessment.forehand_slice,
+    assessment.backhand_topspin,
+    assessment.backhand_slice
+  ]);
+
+  // Calculate net play average from detailed breakdown
+  const netPlayAverage = calculateDimensionalAverage([
+    assessment.forehand_dead_dink,
+    assessment.forehand_topspin_dink,
+    assessment.forehand_slice_dink,
+    assessment.backhand_dead_dink,
+    assessment.backhand_topspin_dink,
+    assessment.backhand_slice_dink,
+    assessment.forehand_block_volley,
+    assessment.forehand_drive_volley,
+    assessment.forehand_dink_volley,
+    assessment.backhand_block_volley,
+    assessment.backhand_drive_volley,
+    assessment.backhand_dink_volley
+  ]);
+
   const technicalAverage = calculateDimensionalAverage([
     assessment.serve_execution,
     assessment.return_technique,
-    assessment.groundstrokes,
-    assessment.net_play,
+    groundstrokesAverage,
+    netPlayAverage,
     assessment.third_shot,
     assessment.overhead_defense,
     assessment.shot_creativity,
@@ -373,18 +433,119 @@ export default function PCPAssessment() {
                   onChange={(value) => updateSkill('return_technique', value)}
                   description="Ability to return serves effectively"
                 />
-                <SkillSlider
-                  label="Groundstrokes"
-                  value={assessment.groundstrokes}
-                  onChange={(value) => updateSkill('groundstrokes', value)}
-                  description="Forehand and backhand fundamentals"
-                />
-                <SkillSlider
-                  label="Net Play"
-                  value={assessment.net_play}
-                  onChange={(value) => updateSkill('net_play', value)}
-                  description="Volleys, dinks, and net positioning"
-                />
+              </div>
+              
+              {/* Groundstrokes Breakdown Section */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-blue-600">Groundstrokes Breakdown</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <SkillSlider
+                    label="Forehand Topspin"
+                    value={assessment.forehand_topspin}
+                    onChange={(value) => updateSkill('forehand_topspin', value)}
+                    description="Power and consistency of forehand topspin shots"
+                  />
+                  <SkillSlider
+                    label="Forehand Slice"
+                    value={assessment.forehand_slice}
+                    onChange={(value) => updateSkill('forehand_slice', value)}
+                    description="Control and placement of forehand slice shots"
+                  />
+                  <SkillSlider
+                    label="Backhand Topspin"
+                    value={assessment.backhand_topspin}
+                    onChange={(value) => updateSkill('backhand_topspin', value)}
+                    description="Power and consistency of backhand topspin shots"
+                  />
+                  <SkillSlider
+                    label="Backhand Slice"
+                    value={assessment.backhand_slice}
+                    onChange={(value) => updateSkill('backhand_slice', value)}
+                    description="Control and placement of backhand slice shots"
+                  />
+                </div>
+              </div>
+
+              {/* Net Play Breakdown Section */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-blue-600">Net Play Breakdown</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <SkillSlider
+                    label="Forehand Dead Dink"
+                    value={assessment.forehand_dead_dink}
+                    onChange={(value) => updateSkill('forehand_dead_dink', value)}
+                    description="Soft, controlled forehand dinks"
+                  />
+                  <SkillSlider
+                    label="Forehand Topspin Dink"
+                    value={assessment.forehand_topspin_dink}
+                    onChange={(value) => updateSkill('forehand_topspin_dink', value)}
+                    description="Aggressive forehand dinks with topspin"
+                  />
+                  <SkillSlider
+                    label="Forehand Slice Dink"
+                    value={assessment.forehand_slice_dink}
+                    onChange={(value) => updateSkill('forehand_slice_dink', value)}
+                    description="Defensive forehand dinks with slice"
+                  />
+                  <SkillSlider
+                    label="Backhand Dead Dink"
+                    value={assessment.backhand_dead_dink}
+                    onChange={(value) => updateSkill('backhand_dead_dink', value)}
+                    description="Soft, controlled backhand dinks"
+                  />
+                  <SkillSlider
+                    label="Backhand Topspin Dink"
+                    value={assessment.backhand_topspin_dink}
+                    onChange={(value) => updateSkill('backhand_topspin_dink', value)}
+                    description="Aggressive backhand dinks with topspin"
+                  />
+                  <SkillSlider
+                    label="Backhand Slice Dink"
+                    value={assessment.backhand_slice_dink}
+                    onChange={(value) => updateSkill('backhand_slice_dink', value)}
+                    description="Defensive backhand dinks with slice"
+                  />
+                  <SkillSlider
+                    label="Forehand Block Volley"
+                    value={assessment.forehand_block_volley}
+                    onChange={(value) => updateSkill('forehand_block_volley', value)}
+                    description="Defensive forehand volleys at the net"
+                  />
+                  <SkillSlider
+                    label="Forehand Drive Volley"
+                    value={assessment.forehand_drive_volley}
+                    onChange={(value) => updateSkill('forehand_drive_volley', value)}
+                    description="Aggressive forehand volleys with pace"
+                  />
+                  <SkillSlider
+                    label="Forehand Dink Volley"
+                    value={assessment.forehand_dink_volley}
+                    onChange={(value) => updateSkill('forehand_dink_volley', value)}
+                    description="Soft forehand volleys from transition zone"
+                  />
+                  <SkillSlider
+                    label="Backhand Block Volley"
+                    value={assessment.backhand_block_volley}
+                    onChange={(value) => updateSkill('backhand_block_volley', value)}
+                    description="Defensive backhand volleys at the net"
+                  />
+                  <SkillSlider
+                    label="Backhand Drive Volley"
+                    value={assessment.backhand_drive_volley}
+                    onChange={(value) => updateSkill('backhand_drive_volley', value)}
+                    description="Aggressive backhand volleys with pace"
+                  />
+                  <SkillSlider
+                    label="Backhand Dink Volley"
+                    value={assessment.backhand_dink_volley}
+                    onChange={(value) => updateSkill('backhand_dink_volley', value)}
+                    description="Soft backhand volleys from transition zone"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SkillSlider
                   label="Third Shot"
                   value={assessment.third_shot}
