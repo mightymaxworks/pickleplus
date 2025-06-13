@@ -343,7 +343,7 @@ export default function App() {
                   />
                   <ProtectedRouteWithLayout
                     path="/coach/pcp-assessment"
-                    component={lazyLoad(() => import('./pages/coach/pcp-assessment'))}
+                    component={lazyLoad(() => import('./pages/coach/pcp-enhanced-assessment'))}
                     pageTitle="PCP Player Assessment"
                   />
                   
