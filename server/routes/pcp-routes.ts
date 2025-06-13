@@ -321,7 +321,7 @@ router.get('/drills', async (req, res) => {
 // GET /api/pcp/coach/dashboard - Get coach dashboard data
 router.get('/coach/dashboard', async (req, res) => {
   try {
-    // Get coach's players (for now, get all players with PCP profiles)
+    // Get real students (exclude the coach themselves - user ID 1 is mightymax)
     const playersResult = await pool.query(`
       SELECT 
         pcp.id,
@@ -336,6 +336,7 @@ router.get('/coach/dashboard', async (req, res) => {
         pcp.current_focus_areas
       FROM player_pcp_profiles pcp
       JOIN users u ON pcp.player_id = u.id
+      WHERE u.id != 1
       ORDER BY pcp.last_assessment_date DESC NULLS LAST
       LIMIT 20
     `);
