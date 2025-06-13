@@ -338,7 +338,7 @@ export default function App() {
                   {/* PCP Coaching Ecosystem - Sprint 1 */}
                   <ProtectedRouteWithLayout
                     path="/coach/pcp"
-                    component={lazyLoad(() => import('./pages/coach/pcp-dashboard'))}
+                    component={lazyLoad(() => import('./pages/coach/pcp-coach-dashboard'))}
                     pageTitle="PCP Coaching Dashboard"
                   />
                   <ProtectedRouteWithLayout

@@ -318,6 +318,77 @@ router.get('/drills', async (req, res) => {
   }
 });
 
+// GET /api/pcp/coach/dashboard - Get coach dashboard data
+router.get('/coach/dashboard', async (req, res) => {
+  try {
+    // Get coach's players (for now, get all players with PCP profiles)
+    const playersResult = await pool.query(`
+      SELECT 
+        pcp.id,
+        u.username as name,
+        pcp.overall_rating,
+        pcp.technical_rating,
+        pcp.tactical_rating,
+        pcp.physical_rating,
+        pcp.mental_rating,
+        pcp.total_assessments,
+        pcp.last_assessment_date,
+        pcp.current_focus_areas
+      FROM player_pcp_profiles pcp
+      JOIN users u ON pcp.player_id = u.id
+      ORDER BY pcp.last_assessment_date DESC NULLS LAST
+      LIMIT 20
+    `);
+
+    // Get recent assessments
+    const assessmentsResult = await pool.query(`
+      SELECT 
+        sa.id,
+        sa.assessment_date,
+        sa.calculated_overall,
+        u.username as player_name
+      FROM pcp_skill_assessments sa
+      JOIN player_pcp_profiles pcp ON sa.profile_id = pcp.id
+      JOIN users u ON pcp.player_id = u.id
+      ORDER BY sa.assessment_date DESC
+      LIMIT 10
+    `);
+
+    // Calculate coach stats
+    const statsResult = await pool.query(`
+      SELECT 
+        COUNT(DISTINCT pcp.id) as total_players,
+        COUNT(sa.id) FILTER (WHERE sa.assessment_date >= CURRENT_DATE - INTERVAL '30 days') as assessments_this_month
+      FROM player_pcp_profiles pcp
+      LEFT JOIN pcp_skill_assessments sa ON sa.profile_id = pcp.id
+    `);
+
+    const stats = statsResult.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        myPlayers: playersResult.rows,
+        recentAssessments: assessmentsResult.rows,
+        upcomingSessions: [], // TODO: Implement when session scheduling is added
+        myStats: {
+          totalPlayers: parseInt(stats.total_players) || 0,
+          assessmentsThisMonth: parseInt(stats.assessments_this_month) || 0,
+          averageImprovement: 18, // TODO: Calculate from historical data
+          hoursCoached: 156 // TODO: Calculate from session data
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching coach dashboard data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch coach dashboard data'
+    });
+  }
+});
+
 // GET /api/pcp/recommendations/:playerId - Get personalized drill recommendations
 router.get('/recommendations/:playerId', async (req, res) => {
   try {
