@@ -85,14 +85,24 @@ router.get('/profile/:playerId', async (req, res) => {
     `, [playerId]);
 
     if (profileResult.rows.length === 0) {
-      // Create new profile
-      profileResult = await pool.query(`
+      // Create new profile and get username
+      const newProfileResult = await pool.query(`
         INSERT INTO player_pcp_profiles (
           player_id, facility_id, overall_rating, technical_rating,
           tactical_rating, physical_rating, mental_rating, total_assessments
         ) VALUES ($1, 1, 2.0, 2.0, 2.0, 2.0, 2.0, 0)
         RETURNING *
       `, [playerId]);
+      
+      // Get username for the new profile
+      const userResult = await pool.query(`
+        SELECT username FROM users WHERE id = $1
+      `, [playerId]);
+      
+      profileResult.rows[0] = {
+        ...newProfileResult.rows[0],
+        name: userResult.rows[0]?.username || `Player ${playerId}`
+      };
     }
 
     const profile = profileResult.rows[0];
