@@ -206,6 +206,13 @@ export default function PCPAssessment() {
     }));
   };
 
+  const updateTextField = (field: 'session_notes' | 'assessment_type', value: string) => {
+    setAssessment(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const calculateDimensionalAverage = (skills: number[]): number => {
     return skills.reduce((sum, skill) => sum + skill, 0) / skills.length;
   };
@@ -708,7 +715,7 @@ export default function PCPAssessment() {
           <Textarea
             placeholder="Record specific observations, breakthrough moments, areas for improvement, and recommendations for next session..."
             value={assessment.session_notes}
-            onChange={(e) => updateSkill('session_notes', e.target.value)}
+            onChange={(e) => updateTextField('session_notes', e.target.value)}
             rows={4}
           />
         </CardContent>

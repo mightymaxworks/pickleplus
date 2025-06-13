@@ -208,12 +208,17 @@ router.post('/assessment', async (req, res) => {
 
     const profile = profileResult.rows[0];
 
-    // Insert skill assessment
+    // Insert skill assessment with detailed technical breakdown
     const assessmentResult = await pool.query(`
       INSERT INTO pcp_skill_assessments (
         profile_id, coach_id, assessment_type,
-        serve_execution, return_technique, groundstrokes, net_play, third_shot,
+        serve_execution, return_technique, third_shot,
         overhead_defense, shot_creativity, court_movement,
+        forehand_topspin, forehand_slice, backhand_topspin, backhand_slice,
+        forehand_dead_dink, forehand_topspin_dink, forehand_slice_dink,
+        backhand_dead_dink, backhand_topspin_dink, backhand_slice_dink,
+        forehand_block_volley, forehand_drive_volley, forehand_dink_volley,
+        backhand_block_volley, backhand_drive_volley, backhand_dink_volley,
         shot_selection, court_positioning, pattern_recognition, risk_management, communication,
         footwork, balance_stability, reaction_time, endurance,
         focus_concentration, pressure_performance, adaptability, sportsmanship,
@@ -221,7 +226,8 @@ router.post('/assessment', async (req, res) => {
         calculated_overall, session_notes, confidence_level
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
-        $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31
+        $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31,
+        $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43
       ) RETURNING id
     `, [
       profile.id,
@@ -229,12 +235,28 @@ router.post('/assessment', async (req, res) => {
       assessment.assessment_type,
       assessment.serve_execution,
       assessment.return_technique,
-      assessment.groundstrokes,
-      assessment.net_play,
       assessment.third_shot || 2.0,
       assessment.overhead_defense || 2.0,
       assessment.shot_creativity || 2.0,
       assessment.court_movement || 2.0,
+      // Groundstrokes breakdown
+      assessment.forehand_topspin || 2.0,
+      assessment.forehand_slice || 2.0,
+      assessment.backhand_topspin || 2.0,
+      assessment.backhand_slice || 2.0,
+      // Net play breakdown
+      assessment.forehand_dead_dink || 2.0,
+      assessment.forehand_topspin_dink || 2.0,
+      assessment.forehand_slice_dink || 2.0,
+      assessment.backhand_dead_dink || 2.0,
+      assessment.backhand_topspin_dink || 2.0,
+      assessment.backhand_slice_dink || 2.0,
+      assessment.forehand_block_volley || 2.0,
+      assessment.forehand_drive_volley || 2.0,
+      assessment.forehand_dink_volley || 2.0,
+      assessment.backhand_block_volley || 2.0,
+      assessment.backhand_drive_volley || 2.0,
+      assessment.backhand_dink_volley || 2.0,
       assessment.shot_selection,
       assessment.court_positioning,
       assessment.pattern_recognition || 2.0,
