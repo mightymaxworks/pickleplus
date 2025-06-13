@@ -48,6 +48,26 @@ export default function PCPPlayerProgress() {
       const response = await fetch(`/api/pcp/profile/${playerId}`);
       if (!response.ok) throw new Error('Failed to fetch player progress');
       const result = await response.json();
+      
+      // Handle the nested structure from the API
+      if (result.data && result.data.profile) {
+        const profile = result.data.profile;
+        return {
+          id: profile.id,
+          name: profile.name || `Player ${profile.player_id}`,
+          overall_rating: parseFloat(profile.overall_rating) || 0,
+          technical_rating: parseFloat(profile.technical_rating) || 0,
+          tactical_rating: parseFloat(profile.tactical_rating) || 0,
+          physical_rating: parseFloat(profile.physical_rating) || 0,
+          mental_rating: parseFloat(profile.mental_rating) || 0,
+          total_assessments: profile.total_assessments || 0,
+          last_assessment_date: profile.last_assessment_date,
+          current_focus_areas: profile.current_focus_areas || [],
+          assessmentHistory: result.data.recentAssessments || [],
+          goals: result.data.currentGoals || [],
+          achievements: result.data.recentAchievements || []
+        };
+      }
       return result.data;
     },
     enabled: !!playerId

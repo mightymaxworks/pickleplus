@@ -505,6 +505,7 @@ router.get('/profile/:id', async (req, res) => {
     const profileResult = await pool.query(`
       SELECT 
         pcp.id,
+        pcp.player_id,
         u.username as name,
         pcp.overall_rating,
         pcp.technical_rating,
@@ -545,22 +546,22 @@ router.get('/profile/:id', async (req, res) => {
       LIMIT 10
     `, [playerId]);
 
-    // Convert string ratings to numbers
-    const playerData = {
-      ...player,
-      overall_rating: parseFloat(player.overall_rating),
-      technical_rating: parseFloat(player.technical_rating),
-      tactical_rating: parseFloat(player.tactical_rating),
-      physical_rating: parseFloat(player.physical_rating),
-      mental_rating: parseFloat(player.mental_rating),
-      assessmentHistory: historyResult.rows,
-      goals: [], // Placeholder for future goal tracking
-      achievements: [] // Placeholder for future achievement system
-    };
-
+    // Return structured response with profile data
     res.json({
       success: true,
-      data: playerData
+      data: {
+        profile: {
+          ...player,
+          overall_rating: parseFloat(player.overall_rating),
+          technical_rating: parseFloat(player.technical_rating),
+          tactical_rating: parseFloat(player.tactical_rating),
+          physical_rating: parseFloat(player.physical_rating),
+          mental_rating: parseFloat(player.mental_rating)
+        },
+        recentAssessments: historyResult.rows,
+        currentGoals: [], // Placeholder for future goal tracking
+        recentAchievements: [] // Placeholder for future achievement system
+      }
     });
 
   } catch (error) {
