@@ -16,9 +16,16 @@ import {
   Target,
   Award,
   BarChart3,
-  Star
+  Star,
+  Brain,
+  Zap,
+  Activity,
+  Eye,
+  Users,
+  CheckCircle2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PlayerProgress {
   id: number;
@@ -36,10 +43,43 @@ interface PlayerProgress {
   achievements: any[];
 }
 
+interface SkillComponent {
+  name: string;
+  rating: number;
+  trend: 'up' | 'down' | 'stable';
+  lastImprovement: string;
+}
+
+interface DimensionBreakdown {
+  technical: SkillComponent[];
+  tactical: SkillComponent[];
+  physical: SkillComponent[];
+  mental: SkillComponent[];
+}
+
 export default function PCPPlayerProgress() {
   const params = useParams();
   const [location, setLocation] = useLocation();
   const playerId = params.id;
+
+  // Fetch detailed skill breakdown data
+  const { data: skillData } = useQuery({
+    queryKey: [`/api/pcp/skill-breakdown/${playerId}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/pcp/skill-breakdown/${playerId}`);
+      if (!response.ok) {
+        // Return structured empty data if endpoint doesn't exist yet
+        return {
+          technical: [],
+          tactical: [],
+          physical: [],
+          mental: []
+        };
+      }
+      return response.json();
+    },
+    enabled: !!playerId
+  });
 
   // Fetch player progress data
   const { data: playerData, isLoading } = useQuery<PlayerProgress>({
@@ -110,9 +150,9 @@ export default function PCPPlayerProgress() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-6 px-6 pb-6">
-        <div className="max-w-6xl mx-auto space-y-6 mt-[33px] mb-[33px]">
-          {/* Header */}
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto space-y-6 mt-[33px] mb-[33px]">
+          {/* Enhanced Header */}
+          <div className="flex items-center justify-between bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center space-x-4">
               <Button 
                 variant="outline" 
@@ -121,19 +161,52 @@ export default function PCPPlayerProgress() {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{playerData.name}</h1>
-                <p className="text-gray-600">Player Progress Report</p>
+              <div className="border-l border-gray-200 pl-4">
+                <h1 className="text-3xl font-bold text-gray-900">{playerData.name}</h1>
+                <p className="text-gray-600 flex items-center mt-1">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Comprehensive Progress Analytics
+                </p>
               </div>
             </div>
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => window.open(`/coach/pcp-assessment?playerId=${playerId}`, '_blank')}
-            >
-              <Target className="h-4 w-4 mr-2" />
-              New Assessment
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Badge variant="outline" className="text-blue-600">
+                {playerData.total_assessments} Assessments
+              </Badge>
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => setLocation(`/coach/pcp/assessment/${playerId}`)}
+              >
+                <Target className="h-4 w-4 mr-2" />
+                New Assessment
+              </Button>
+            </div>
           </div>
+
+          {/* Enhanced Analytics Tabs */}
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5 bg-white p-1 rounded-lg shadow-sm">
+              <TabsTrigger value="overview" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <BarChart3 className="h-4 w-4" />
+                <span>Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="skills" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <Brain className="h-4 w-4" />
+                <span>Skill Analysis</span>
+              </TabsTrigger>
+              <TabsTrigger value="progress" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <TrendingUp className="h-4 w-4" />
+                <span>Progress Timeline</span>
+              </TabsTrigger>
+              <TabsTrigger value="goals" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <Target className="h-4 w-4" />
+                <span>Goals & Development</span>
+              </TabsTrigger>
+              <TabsTrigger value="comparison" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <Users className="h-4 w-4" />
+                <span>Peer Comparison</span>
+              </TabsTrigger>
+            </TabsList>
 
           {/* Current Ratings Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
