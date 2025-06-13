@@ -82,9 +82,16 @@ export default function PCPPlayerProgress() {
   });
 
   // Fetch player progress data
-  const { data: playerData, isLoading } = useQuery<PlayerProgress>({
+  const { data: playerData, isLoading, error } = useQuery({
     queryKey: [`/api/pcp/profile/${playerId}`],
     enabled: !!playerId
+  });
+
+  console.log('Player Progress Debug:', {
+    playerId,
+    playerData,
+    isLoading,
+    error: error?.message
   });
 
   if (isLoading) {
