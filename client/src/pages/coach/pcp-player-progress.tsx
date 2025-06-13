@@ -324,43 +324,43 @@ export default function PCPPlayerProgress() {
                 </Card>
               </div>
 
-              {/* Performance Insights and Assessment Timeline */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="border-l-4 border-green-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+              {/* Enhanced Mobile-First Performance Insights and Assessment Timeline */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+                <Card className="border-l-4 border-green-500 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-green-50 animate-in slide-in-from-bottom duration-500 delay-500">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <CardTitle className="flex items-center text-base sm:text-lg">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600 animate-pulse" />
                       Performance Insights
                     </CardTitle>
-                    <CardDescription>AI-powered analysis and coaching recommendations</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">AI-powered analysis and coaching recommendations</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <CardContent className="space-y-3 sm:space-y-4">
+                    <div className="p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200 animate-in slide-in-from-left duration-500 delay-600 hover:bg-green-100 transition-colors">
                       <div className="flex items-center mb-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-800">Strongest Performance Area</span>
+                        <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2 animate-bounce" />
+                        <span className="font-medium text-green-800 text-sm sm:text-base">Strongest Performance Area</span>
                       </div>
-                      <p className="text-green-700 text-sm">
+                      <p className="text-green-700 text-xs sm:text-sm leading-relaxed">
                         Technical skills show consistent improvement with exceptional serve execution ({(playerData.technical_rating * 1.2).toFixed(1)}/5.0) 
                         and solid groundstroke development. Continue building on this foundation.
                       </p>
                     </div>
-                    <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="p-3 sm:p-4 bg-orange-50 rounded-lg border border-orange-200 animate-in slide-in-from-left duration-500 delay-700 hover:bg-orange-100 transition-colors">
                       <div className="flex items-center mb-2">
-                        <Eye className="h-5 w-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-800">Primary Development Focus</span>
+                        <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 mr-2" />
+                        <span className="font-medium text-orange-800 text-sm sm:text-base">Primary Development Focus</span>
                       </div>
-                      <p className="text-orange-700 text-sm">
+                      <p className="text-orange-700 text-xs sm:text-sm leading-relaxed">
                         Tactical awareness requires attention. Recommend focused sessions on court positioning, 
                         shot selection timing, and pattern recognition to improve game intelligence.
                       </p>
                     </div>
-                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200 animate-in slide-in-from-left duration-500 delay-800 hover:bg-blue-100 transition-colors">
                       <div className="flex items-center mb-2">
-                        <Brain className="h-5 w-5 text-blue-600 mr-2" />
-                        <span className="font-medium text-blue-800">Next Training Priority</span>
+                        <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-800 text-sm sm:text-base">Next Training Priority</span>
                       </div>
-                      <p className="text-blue-700 text-sm">
+                      <p className="text-blue-700 text-xs sm:text-sm leading-relaxed">
                         Mental game development showing potential. Work on pressure handling during competitive play 
                         and maintaining focus during extended rallies.
                       </p>
@@ -368,13 +368,13 @@ export default function PCPPlayerProgress() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-purple-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+                <Card className="border-l-4 border-purple-500 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-purple-50 animate-in slide-in-from-bottom duration-500 delay-600">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <CardTitle className="flex items-center text-base sm:text-lg">
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-purple-600 animate-pulse" />
                       Assessment Timeline
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       Latest assessment: {playerData.last_assessment_date ? 
                         new Date(playerData.last_assessment_date).toLocaleDateString() : 
                         'No assessments yet'
@@ -383,11 +383,11 @@ export default function PCPPlayerProgress() {
                   </CardHeader>
                   <CardContent>
                     {playerData.assessmentHistory.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {playerData.assessmentHistory.slice(0, 4).map((assessment: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">
+                          <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 hover:scale-102 transition-all duration-200 animate-in slide-in-from-right delay-700" style={{animationDelay: `${700 + index * 100}ms`}}>
+                            <div className="flex-1 mb-2 sm:mb-0">
+                              <p className="font-medium text-sm sm:text-base">
                                 {new Date(assessment.assessment_date).toLocaleDateString('en-US', { 
                                   month: 'short', 
                                   day: 'numeric',
@@ -398,15 +398,17 @@ export default function PCPPlayerProgress() {
                                 {assessment.trigger_event || 'Regular Assessment'}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <Badge variant="outline" className="mb-1 font-mono">
-                                {assessment.overall_rating}
-                              </Badge>
-                              <p className="text-xs text-gray-500">Overall</p>
+                            <div className="flex justify-between sm:block sm:text-right">
+                              <div>
+                                <Badge variant="outline" className="mb-1 font-mono text-xs animate-pulse">
+                                  {assessment.overall_rating}
+                                </Badge>
+                                <p className="text-xs text-gray-500">Overall</p>
+                              </div>
                               {index < playerData.assessmentHistory.length - 1 && (
                                 <div className="flex items-center mt-1">
                                   {assessment.overall_rating > playerData.assessmentHistory[index + 1]?.overall_rating ? (
-                                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                                    <TrendingUp className="h-3 w-3 text-green-500 mr-1 animate-bounce" />
                                   ) : (
                                     <div className="h-3 w-3 mr-1" />
                                   )}
@@ -416,19 +418,23 @@ export default function PCPPlayerProgress() {
                           </div>
                         ))}
                         {playerData.assessmentHistory.length > 4 && (
-                          <div className="text-center">
-                            <Button variant="ghost" size="sm" className="text-blue-600">
+                          <div className="text-center animate-in fade-in duration-500 delay-1000">
+                            <Button variant="ghost" size="sm" className="text-blue-600 hover:scale-105 transition-all duration-200">
                               View All {playerData.assessmentHistory.length} Assessments
                             </Button>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 font-medium">No assessments recorded yet</p>
-                        <p className="text-sm text-gray-400 mt-1">Complete the first assessment to begin progress tracking</p>
-                        <Button className="mt-3" size="sm" onClick={() => setLocation(`/coach/pcp/assessment/${playerId}`)}>
+                      <div className="text-center py-6 sm:py-8 animate-in scale-in duration-500 delay-700">
+                        <BarChart3 className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3 animate-pulse" />
+                        <p className="text-gray-500 font-medium text-sm sm:text-base">No assessments recorded yet</p>
+                        <p className="text-xs sm:text-sm text-gray-400 mt-1">Complete the first assessment to begin progress tracking</p>
+                        <Button 
+                          className="mt-3 transform transition-all duration-200 hover:scale-105 hover:shadow-lg" 
+                          size="sm" 
+                          onClick={() => setLocation(`/coach/pcp/assessment/${playerId}`)}
+                        >
                           Create First Assessment
                         </Button>
                       </div>
@@ -480,28 +486,28 @@ export default function PCPPlayerProgress() {
               </Card>
             </TabsContent>
 
-            {/* Goals & Development Tab */}
-            <TabsContent value="goals" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Target className="h-5 w-5 mr-2" />
+            {/* Enhanced Mobile-First Goals & Development Tab */}
+            <TabsContent value="goals" className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+                <Card className="hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-blue-50 animate-in slide-in-from-left duration-500">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <CardTitle className="flex items-center text-base sm:text-lg">
+                      <Target className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-pulse" />
                       Active Goals
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {playerData.goals && playerData.goals.length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         {playerData.goals.map((goal: any, index: number) => (
-                          <div key={index} className="p-4 border rounded-lg">
-                            <div className="flex justify-between items-start mb-3">
-                              <h4 className="font-medium">{goal.title}</h4>
-                              <Badge variant="outline">Active</Badge>
+                          <div key={index} className="p-3 sm:p-4 border rounded-lg hover:shadow-md hover:scale-102 transition-all duration-200 animate-in slide-in-from-bottom delay-200" style={{animationDelay: `${200 + index * 100}ms`}}>
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
+                              <h4 className="font-medium text-sm sm:text-base">{goal.title}</h4>
+                              <Badge variant="outline" className="self-start animate-pulse">Active</Badge>
                             </div>
-                            <p className="text-sm text-gray-600 mb-3">{goal.description}</p>
-                            <Progress value={goal.progress || 0} className="h-3 mb-2" />
-                            <div className="flex justify-between text-sm text-gray-500">
+                            <p className="text-xs sm:text-sm text-gray-600 mb-3">{goal.description}</p>
+                            <Progress value={goal.progress || 0} className="h-2 sm:h-3 mb-2 animate-in slide-in-from-left duration-500" />
+                            <div className="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm text-gray-500 gap-1">
                               <span>{goal.progress || 0}% complete</span>
                               <span>Target: {goal.target_date}</span>
                             </div>
@@ -509,43 +515,43 @@ export default function PCPPlayerProgress() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">No active goals</p>
-                        <Button variant="outline" className="mt-3">Set New Goal</Button>
+                      <div className="text-center py-6 sm:py-8 animate-in scale-in duration-500">
+                        <Target className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3 animate-pulse" />
+                        <p className="text-gray-500 text-sm sm:text-base">No active goals</p>
+                        <Button variant="outline" className="mt-3 transform transition-all duration-200 hover:scale-105 hover:shadow-md">Set New Goal</Button>
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Award className="h-5 w-5 mr-2" />
+                <Card className="hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-yellow-50 animate-in slide-in-from-right duration-500 delay-100">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <CardTitle className="flex items-center text-base sm:text-lg">
+                      <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                       Achievements
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {playerData.achievements && playerData.achievements.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {playerData.achievements.map((achievement: any, index: number) => (
-                          <div key={index} className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
-                            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                              <Star className="h-6 w-6 text-yellow-600" />
+                          <div key={index} className="flex items-center space-x-2 sm:space-x-3 p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 hover:scale-102 transition-all duration-200 animate-in slide-in-from-right delay-300" style={{animationDelay: `${300 + index * 100}ms`}}>
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full flex items-center justify-center animate-bounce">
+                              <Star className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium">{achievement.title}</p>
-                              <p className="text-sm text-gray-600">{achievement.description}</p>
+                              <p className="font-medium text-sm sm:text-base">{achievement.title}</p>
+                              <p className="text-xs sm:text-sm text-gray-600">{achievement.description}</p>
                               <p className="text-xs text-gray-500">{achievement.date}</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <Award className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">No achievements yet</p>
-                        <p className="text-sm text-gray-400">Complete assessments to unlock achievement badges</p>
+                      <div className="text-center py-6 sm:py-8 animate-in scale-in duration-500 delay-200">
+                        <Award className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3 animate-pulse" />
+                        <p className="text-gray-500 text-sm sm:text-base">No achievements yet</p>
+                        <p className="text-xs sm:text-sm text-gray-400">Complete assessments to unlock achievement badges</p>
                       </div>
                     )}
                   </CardContent>
