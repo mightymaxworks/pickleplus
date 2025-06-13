@@ -398,16 +398,91 @@ export default function PCPEnhancedAssessment() {
                 <div>
                   <h3 className="text-lg font-semibold mb-4 text-blue-600">Core Technical Skills</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {['serveExecution', 'returnTechnique', 'thirdShot', 'overheadDefense', 'shotCreativity', 'courtMovement'].map((skill) => (
+                    {['serveExecution', 'thirdShot', 'shotCreativity', 'courtMovement'].map((skill) => (
                       <div key={skill} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label className="text-sm font-medium capitalize">
                             {skill.replace(/([A-Z])/g, ' $1').trim()}
                           </Label>
-                          <Badge variant="outline">{assessmentData.technicalSkills[skill]}/10</Badge>
+                          <Badge variant="outline">{(assessmentData.technicalSkills as any)[skill]}/10</Badge>
                         </div>
                         <Slider
-                          value={[assessmentData.technicalSkills[skill]]}
+                          value={[(assessmentData.technicalSkills as any)[skill]]}
+                          onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                          max={10}
+                          min={1}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Return Technique Breakdown */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-indigo-600">Return Technique Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['forehandReturnCrossCourt', 'forehandReturnDownLine', 'backhandReturnCrossCourt', 'backhandReturnDownLine'].map((skill) => (
+                      <div key={skill} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium capitalize">
+                            {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </Label>
+                          <Badge variant="outline">{(assessmentData.technicalSkills as any)[skill]}/10</Badge>
+                        </div>
+                        <Slider
+                          value={[(assessmentData.technicalSkills as any)[skill]]}
+                          onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                          max={10}
+                          min={1}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Drop Shot Breakdown */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-orange-600">Drop Shot Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['forehandEasyDropShot', 'forehandTopspinDropShot', 'forehandSliceDropShot', 'backhandEasyDropShot', 'backhandTopspinDropShot', 'backhandSliceDropShot'].map((skill) => (
+                      <div key={skill} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium capitalize">
+                            {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </Label>
+                          <Badge variant="outline">{(assessmentData.technicalSkills as any)[skill]}/10</Badge>
+                        </div>
+                        <Slider
+                          value={[(assessmentData.technicalSkills as any)[skill]]}
+                          onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                          max={10}
+                          min={1}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Lob Breakdown */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-teal-600">Lob Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['forehandLob', 'backhandLob'].map((skill) => (
+                      <div key={skill} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium capitalize">
+                            {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </Label>
+                          <Badge variant="outline">{(assessmentData.technicalSkills as any)[skill]}/10</Badge>
+                        </div>
+                        <Slider
+                          value={[(assessmentData.technicalSkills as any)[skill]]}
                           onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
                           max={10}
                           min={1}
@@ -474,7 +549,7 @@ export default function PCPEnhancedAssessment() {
                   </div>
 
                   {/* Volley Variations */}
-                  <div>
+                  <div className="mb-6">
                     <h4 className="text-md font-medium mb-3 text-gray-700">Volley Variations</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {['forehandBlockVolley', 'forehandDriveVolley', 'forehandDinkVolley', 'backhandBlockVolley', 'backhandDriveVolley', 'backhandDinkVolley'].map((skill) => (
@@ -483,10 +558,35 @@ export default function PCPEnhancedAssessment() {
                             <Label className="text-sm font-medium capitalize">
                               {skill.replace(/([A-Z])/g, ' $1').trim()}
                             </Label>
-                            <Badge variant="outline">{assessmentData.technicalSkills[skill]}/10</Badge>
+                            <Badge variant="outline">{(assessmentData.technicalSkills as any)[skill]}/10</Badge>
                           </div>
                           <Slider
-                            value={[assessmentData.technicalSkills[skill]]}
+                            value={[(assessmentData.technicalSkills as any)[skill]]}
+                            onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                            max={10}
+                            min={1}
+                            step={0.5}
+                            className="w-full"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Smash Variations */}
+                  <div>
+                    <h4 className="text-md font-medium mb-3 text-gray-700">Overhead Smash</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {['forehandSmash', 'backhandSmash'].map((skill) => (
+                        <div key={skill} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium capitalize">
+                              {skill.replace(/([A-Z])/g, ' $1').trim()}
+                            </Label>
+                            <Badge variant="outline">{(assessmentData.technicalSkills as any)[skill]}/10</Badge>
+                          </div>
+                          <Slider
+                            value={[(assessmentData.technicalSkills as any)[skill]]}
                             onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
                             max={10}
                             min={1}
