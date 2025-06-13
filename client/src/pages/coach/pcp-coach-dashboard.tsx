@@ -238,8 +238,8 @@ export default function PCPCoachDashboard() {
                         <div>
                           <p className="text-sm text-gray-600">Mental</p>
                           <div className="flex items-center space-x-2">
-                            <Progress value={player.mental_rating * 10} className="flex-1" />
-                            <span className="text-sm font-medium">{player.mental_rating.toFixed(1)}</span>
+                            <Progress value={parseFloat(player.mental_rating.toString()) * 10} className="flex-1" />
+                            <span className="text-sm font-medium">{parseFloat(player.mental_rating.toString()).toFixed(1)}</span>
                           </div>
                         </div>
                       </div>
