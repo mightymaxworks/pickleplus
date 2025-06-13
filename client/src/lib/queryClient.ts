@@ -255,8 +255,8 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
     forceFresh = false
   } = options;
   
-  return async ({ queryKey }: { queryKey: string[] }) => {
-    const [url] = queryKey;
+  return async ({ queryKey }: { queryKey: readonly unknown[] }) => {
+    const url = queryKey[0] as string;
     let retryCount = 0;
     const maxRetries = 2;
     

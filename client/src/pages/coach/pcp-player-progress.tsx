@@ -92,17 +92,18 @@ export default function PCPPlayerProgress() {
   });
 
   // Fetch player progress data - using the correct endpoint that returns profile data
-  const { data: playerResponse, isLoading, error } = useQuery({
+  const { data: playerResponse, isLoading, error } = useQuery<PCPApiResponse>({
     queryKey: [`/api/pcp/profile/${playerId}`],
     enabled: !!playerId
   });
 
   // Extract player data from API response structure
-  const playerData = playerResponse?.success && playerResponse?.data?.profile ? {
-    ...playerResponse.data.profile,
-    assessmentHistory: playerResponse.data.recentAssessments || [],
-    goals: playerResponse.data.currentGoals || [],
-    achievements: playerResponse.data.recentAchievements || []
+  const apiResponse = playerResponse as any;
+  const playerData = apiResponse?.success && apiResponse?.data?.profile ? {
+    ...apiResponse.data.profile,
+    assessmentHistory: apiResponse.data.recentAssessments || [],
+    goals: apiResponse.data.currentGoals || [],
+    achievements: apiResponse.data.recentAchievements || []
   } : null;
 
   console.log('Player Progress Debug:', {
@@ -368,7 +369,7 @@ export default function PCPPlayerProgress() {
                   <CardContent>
                     {playerData.assessmentHistory.length > 0 ? (
                       <div className="space-y-3">
-                        {playerData.assessmentHistory.slice(0, 4).map((assessment, index) => (
+                        {playerData.assessmentHistory.slice(0, 4).map((assessment: any, index: number) => (
                           <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div className="flex-1">
                               <p className="font-medium text-sm">
@@ -477,7 +478,7 @@ export default function PCPPlayerProgress() {
                   <CardContent>
                     {playerData.goals && playerData.goals.length > 0 ? (
                       <div className="space-y-4">
-                        {playerData.goals.map((goal, index) => (
+                        {playerData.goals.map((goal: any, index: number) => (
                           <div key={index} className="p-4 border rounded-lg">
                             <div className="flex justify-between items-start mb-3">
                               <h4 className="font-medium">{goal.title}</h4>
@@ -512,7 +513,7 @@ export default function PCPPlayerProgress() {
                   <CardContent>
                     {playerData.achievements && playerData.achievements.length > 0 ? (
                       <div className="space-y-3">
-                        {playerData.achievements.map((achievement, index) => (
+                        {playerData.achievements.map((achievement: any, index: number) => (
                           <div key={index} className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
                             <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                               <Star className="h-6 w-6 text-yellow-600" />
