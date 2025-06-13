@@ -76,12 +76,14 @@ router.get('/profile/:playerId', async (req, res) => {
   try {
     const { playerId } = req.params;
 
-    // Get or create player profile with username
+    // Get player profile with username - check by profile ID first, then by player_id
     let profileResult = await pool.query(`
       SELECT pcp.*, u.username as name 
       FROM player_pcp_profiles pcp
       LEFT JOIN users u ON pcp.player_id = u.id
-      WHERE pcp.player_id = $1
+      WHERE pcp.id = $1 OR pcp.player_id = $1
+      ORDER BY CASE WHEN pcp.id = $1 THEN 1 ELSE 2 END
+      LIMIT 1
     `, [playerId]);
 
     if (profileResult.rows.length === 0) {
@@ -582,6 +584,104 @@ router.get('/profile/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch player profile'
+    });
+  }
+});
+
+// GET /api/pcp/skill-breakdown/:playerId - Get detailed skill breakdown for player
+router.get('/skill-breakdown/:playerId', async (req, res) => {
+  try {
+    const playerId = parseInt(req.params.playerId);
+    
+    if (isNaN(playerId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid player ID'
+      });
+    }
+
+    // Get player profile
+    const profileResult = await pool.query(`
+      SELECT 
+        pcp.*,
+        u.username as name
+      FROM player_pcp_profiles pcp
+      JOIN users u ON pcp.player_id = u.id
+      WHERE pcp.id = $1
+    `, [playerId]);
+
+    if (profileResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Player not found'
+      });
+    }
+
+    const profile = profileResult.rows[0];
+
+    // Get latest detailed skill assessment
+    const latestAssessmentResult = await pool.query(`
+      SELECT 
+        serve_execution, return_technique, groundstrokes, net_play, third_shot,
+        overhead_defense, shot_creativity, court_movement,
+        shot_selection, court_positioning, pattern_recognition, risk_management, communication,
+        footwork, balance_stability, reaction_time, endurance,
+        focus_concentration, pressure_performance, adaptability, sportsmanship,
+        assessment_date
+      FROM pcp_skill_assessments
+      WHERE profile_id = $1
+      ORDER BY assessment_date DESC
+      LIMIT 1
+    `, [playerId]);
+
+    // Create skill breakdown structure
+    const skillBreakdown = {
+      technical: {
+        serve_execution: latestAssessmentResult.rows[0]?.serve_execution || profile.technical_rating,
+        return_technique: latestAssessmentResult.rows[0]?.return_technique || profile.technical_rating,
+        groundstrokes: latestAssessmentResult.rows[0]?.groundstrokes || profile.technical_rating,
+        net_play: latestAssessmentResult.rows[0]?.net_play || profile.technical_rating,
+        third_shot: latestAssessmentResult.rows[0]?.third_shot || profile.technical_rating,
+        overhead_defense: latestAssessmentResult.rows[0]?.overhead_defense || profile.technical_rating,
+        shot_creativity: latestAssessmentResult.rows[0]?.shot_creativity || profile.technical_rating,
+        court_movement: latestAssessmentResult.rows[0]?.court_movement || profile.technical_rating
+      },
+      tactical: {
+        shot_selection: latestAssessmentResult.rows[0]?.shot_selection || profile.tactical_rating,
+        court_positioning: latestAssessmentResult.rows[0]?.court_positioning || profile.tactical_rating,
+        pattern_recognition: latestAssessmentResult.rows[0]?.pattern_recognition || profile.tactical_rating,
+        risk_management: latestAssessmentResult.rows[0]?.risk_management || profile.tactical_rating,
+        communication: latestAssessmentResult.rows[0]?.communication || profile.tactical_rating
+      },
+      physical: {
+        footwork: latestAssessmentResult.rows[0]?.footwork || profile.physical_rating,
+        balance_stability: latestAssessmentResult.rows[0]?.balance_stability || profile.physical_rating,
+        reaction_time: latestAssessmentResult.rows[0]?.reaction_time || profile.physical_rating,
+        endurance: latestAssessmentResult.rows[0]?.endurance || profile.physical_rating
+      },
+      mental: {
+        focus_concentration: latestAssessmentResult.rows[0]?.focus_concentration || profile.mental_rating,
+        pressure_performance: latestAssessmentResult.rows[0]?.pressure_performance || profile.mental_rating,
+        adaptability: latestAssessmentResult.rows[0]?.adaptability || profile.mental_rating,
+        sportsmanship: latestAssessmentResult.rows[0]?.sportsmanship || profile.mental_rating
+      }
+    };
+
+    res.json({
+      success: true,
+      data: {
+        playerName: profile.name,
+        overallRating: parseFloat(profile.overall_rating),
+        lastAssessment: latestAssessmentResult.rows[0]?.assessment_date || profile.last_assessment_date,
+        skillBreakdown
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching skill breakdown:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch skill breakdown'
     });
   }
 });
