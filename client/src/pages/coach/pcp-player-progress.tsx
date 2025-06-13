@@ -110,7 +110,7 @@ export default function PCPPlayerProgress() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="pt-6 px-6 pb-6">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6 mt-[33px] mb-[33px]">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
