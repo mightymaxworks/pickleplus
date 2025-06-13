@@ -34,29 +34,46 @@ interface AssessmentData {
   assessmentType: 'initial' | 'progress' | 'final';
   technicalSkills: {
     serveExecution: number;
-    returnTechnique: number;
     thirdShot: number;
-    overheadDefense: number;
     shotCreativity: number;
     courtMovement: number;
-    // Detailed Groundstrokes Breakdown
+    // Return Technique Breakdown
+    forehandReturnCrossCourt: number;
+    forehandReturnDownLine: number;
+    backhandReturnCrossCourt: number;
+    backhandReturnDownLine: number;
+    // Groundstrokes Breakdown
     forehandTopspin: number;
     forehandSlice: number;
     backhandTopspin: number;
     backhandSlice: number;
-    // Detailed Net Play Breakdown
+    // Drop Shot Breakdown
+    forehandEasyDropShot: number;
+    forehandTopspinDropShot: number;
+    forehandSliceDropShot: number;
+    backhandEasyDropShot: number;
+    backhandTopspinDropShot: number;
+    backhandSliceDropShot: number;
+    // Lob Breakdown
+    forehandLob: number;
+    backhandLob: number;
+    // Net Play Breakdown (Dinks)
     forehandDeadDink: number;
     forehandTopspinDink: number;
     forehandSliceDink: number;
     backhandDeadDink: number;
     backhandTopspinDink: number;
     backhandSliceDink: number;
+    // Net Play Breakdown (Volleys)
     forehandBlockVolley: number;
     forehandDriveVolley: number;
     forehandDinkVolley: number;
     backhandBlockVolley: number;
     backhandDriveVolley: number;
     backhandDinkVolley: number;
+    // Net Play Breakdown (Smashes)
+    forehandSmash: number;
+    backhandSmash: number;
     [key: string]: number;
   };
   tacticalSkills: {
@@ -107,29 +124,46 @@ export default function PCPEnhancedAssessment() {
     assessmentType: 'progress',
     technicalSkills: {
       serveExecution: 5,
-      returnTechnique: 5,
       thirdShot: 5,
-      overheadDefense: 5,
       shotCreativity: 5,
       courtMovement: 5,
-      // Detailed Groundstrokes Breakdown
+      // Return Technique Breakdown
+      forehandReturnCrossCourt: 5,
+      forehandReturnDownLine: 5,
+      backhandReturnCrossCourt: 5,
+      backhandReturnDownLine: 5,
+      // Groundstrokes Breakdown
       forehandTopspin: 5,
       forehandSlice: 5,
       backhandTopspin: 5,
       backhandSlice: 5,
-      // Detailed Net Play Breakdown
+      // Drop Shot Breakdown
+      forehandEasyDropShot: 5,
+      forehandTopspinDropShot: 5,
+      forehandSliceDropShot: 5,
+      backhandEasyDropShot: 5,
+      backhandTopspinDropShot: 5,
+      backhandSliceDropShot: 5,
+      // Lob Breakdown
+      forehandLob: 5,
+      backhandLob: 5,
+      // Net Play Breakdown (Dinks)
       forehandDeadDink: 5,
       forehandTopspinDink: 5,
       forehandSliceDink: 5,
       backhandDeadDink: 5,
       backhandTopspinDink: 5,
       backhandSliceDink: 5,
+      // Net Play Breakdown (Volleys)
       forehandBlockVolley: 5,
       forehandDriveVolley: 5,
       forehandDinkVolley: 5,
       backhandBlockVolley: 5,
       backhandDriveVolley: 5,
-      backhandDinkVolley: 5
+      backhandDinkVolley: 5,
+      // Net Play Breakdown (Smashes)
+      forehandSmash: 5,
+      backhandSmash: 5
     },
     tacticalSkills: {
       shotSelection: 5,
