@@ -149,7 +149,7 @@ export default function PCPCoachDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main content with proper spacing for navigation */}
-      <div className="pt-6 px-6 pb-6">
+      <div className="pt-6 px-6 pb-6 mt-[54px] mb-[54px]">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Page Header - Reduced size to accommodate main nav */}
           <div className="flex items-center justify-between">
