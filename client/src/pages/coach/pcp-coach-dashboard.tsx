@@ -204,7 +204,7 @@ export default function PCPCoachDashboard() {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{player.name}</CardTitle>
                       <Badge variant="secondary">
-                        {player.overall_rating.toFixed(1)} Overall
+                        {parseFloat(player.overall_rating.toString()).toFixed(1)} Overall
                       </Badge>
                     </div>
                     <CardDescription>
@@ -217,22 +217,22 @@ export default function PCPCoachDashboard() {
                         <div>
                           <p className="text-sm text-gray-600">Technical</p>
                           <div className="flex items-center space-x-2">
-                            <Progress value={player.technical_rating * 10} className="flex-1" />
-                            <span className="text-sm font-medium">{player.technical_rating.toFixed(1)}</span>
+                            <Progress value={parseFloat(player.technical_rating.toString()) * 10} className="flex-1" />
+                            <span className="text-sm font-medium">{parseFloat(player.technical_rating.toString()).toFixed(1)}</span>
                           </div>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Tactical</p>
                           <div className="flex items-center space-x-2">
-                            <Progress value={player.tactical_rating * 10} className="flex-1" />
-                            <span className="text-sm font-medium">{player.tactical_rating.toFixed(1)}</span>
+                            <Progress value={parseFloat(player.tactical_rating.toString()) * 10} className="flex-1" />
+                            <span className="text-sm font-medium">{parseFloat(player.tactical_rating.toString()).toFixed(1)}</span>
                           </div>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Physical</p>
                           <div className="flex items-center space-x-2">
-                            <Progress value={player.physical_rating * 10} className="flex-1" />
-                            <span className="text-sm font-medium">{player.physical_rating.toFixed(1)}</span>
+                            <Progress value={parseFloat(player.physical_rating.toString()) * 10} className="flex-1" />
+                            <span className="text-sm font-medium">{parseFloat(player.physical_rating.toString()).toFixed(1)}</span>
                           </div>
                         </div>
                         <div>
