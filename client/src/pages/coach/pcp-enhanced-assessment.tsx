@@ -35,12 +35,28 @@ interface AssessmentData {
   technicalSkills: {
     serveExecution: number;
     returnTechnique: number;
-    groundstrokes: number;
-    netPlay: number;
     thirdShot: number;
     overheadDefense: number;
     shotCreativity: number;
     courtMovement: number;
+    // Detailed Groundstrokes Breakdown
+    forehandTopspin: number;
+    forehandSlice: number;
+    backhandTopspin: number;
+    backhandSlice: number;
+    // Detailed Net Play Breakdown
+    forehandDeadDink: number;
+    forehandTopspinDink: number;
+    forehandSliceDink: number;
+    backhandDeadDink: number;
+    backhandTopspinDink: number;
+    backhandSliceDink: number;
+    forehandBlockVolley: number;
+    forehandDriveVolley: number;
+    forehandDinkVolley: number;
+    backhandBlockVolley: number;
+    backhandDriveVolley: number;
+    backhandDinkVolley: number;
   };
   tacticalSkills: {
     shotSelection: number;
@@ -91,12 +107,28 @@ export default function PCPEnhancedAssessment() {
     technicalSkills: {
       serveExecution: 5,
       returnTechnique: 5,
-      groundstrokes: 5,
-      netPlay: 5,
       thirdShot: 5,
       overheadDefense: 5,
       shotCreativity: 5,
-      courtMovement: 5
+      courtMovement: 5,
+      // Detailed Groundstrokes Breakdown
+      forehandTopspin: 5,
+      forehandSlice: 5,
+      backhandTopspin: 5,
+      backhandSlice: 5,
+      // Detailed Net Play Breakdown
+      forehandDeadDink: 5,
+      forehandTopspinDink: 5,
+      forehandSliceDink: 5,
+      backhandDeadDink: 5,
+      backhandTopspinDink: 5,
+      backhandSliceDink: 5,
+      forehandBlockVolley: 5,
+      forehandDriveVolley: 5,
+      forehandDinkVolley: 5,
+      backhandBlockVolley: 5,
+      backhandDriveVolley: 5,
+      backhandDinkVolley: 5
     },
     tacticalSkills: {
       shotSelection: 5,
@@ -140,10 +172,59 @@ export default function PCPEnhancedAssessment() {
 
   const submitAssessment = useMutation({
     mutationFn: async (data: AssessmentData) => {
+      // Transform camelCase to snake_case for server
+      const serverData = {
+        profile_id: data.playerId,
+        coach_id: data.coachId,
+        assessment_type: data.assessmentType,
+        serve_execution: data.technicalSkills.serveExecution,
+        return_technique: data.technicalSkills.returnTechnique,
+        third_shot: data.technicalSkills.thirdShot,
+        overhead_defense: data.technicalSkills.overheadDefense,
+        shot_creativity: data.technicalSkills.shotCreativity,
+        court_movement: data.technicalSkills.courtMovement,
+        // Detailed groundstrokes
+        forehand_topspin: data.technicalSkills.forehandTopspin,
+        forehand_slice: data.technicalSkills.forehandSlice,
+        backhand_topspin: data.technicalSkills.backhandTopspin,
+        backhand_slice: data.technicalSkills.backhandSlice,
+        // Detailed net play
+        forehand_dead_dink: data.technicalSkills.forehandDeadDink,
+        forehand_topspin_dink: data.technicalSkills.forehandTopspinDink,
+        forehand_slice_dink: data.technicalSkills.forehandSliceDink,
+        backhand_dead_dink: data.technicalSkills.backhandDeadDink,
+        backhand_topspin_dink: data.technicalSkills.backhandTopspinDink,
+        backhand_slice_dink: data.technicalSkills.backhandSliceDink,
+        forehand_block_volley: data.technicalSkills.forehandBlockVolley,
+        forehand_drive_volley: data.technicalSkills.forehandDriveVolley,
+        forehand_dink_volley: data.technicalSkills.forehandDinkVolley,
+        backhand_block_volley: data.technicalSkills.backhandBlockVolley,
+        backhand_drive_volley: data.technicalSkills.backhandDriveVolley,
+        backhand_dink_volley: data.technicalSkills.backhandDinkVolley,
+        // Tactical skills
+        shot_selection: data.tacticalSkills.shotSelection,
+        court_positioning: data.tacticalSkills.courtPositioning,
+        pattern_recognition: data.tacticalSkills.patternRecognition,
+        risk_management: data.tacticalSkills.riskManagement,
+        communication: data.tacticalSkills.communication,
+        // Physical skills
+        footwork: data.physicalSkills.footwork,
+        balance_stability: data.physicalSkills.balanceStability,
+        reaction_time: data.physicalSkills.reactionTime,
+        endurance: data.physicalSkills.endurance,
+        // Mental skills
+        focus_concentration: data.mentalSkills.focusConcentration,
+        pressure_performance: data.mentalSkills.pressurePerformance,
+        adaptability: data.mentalSkills.adaptability,
+        sportsmanship: data.mentalSkills.sportsmanship,
+        confidence_level: data.confidenceLevel,
+        session_notes: data.sessionNotes
+      };
+      
       const response = await fetch('/api/pcp/assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(serverData)
       });
       if (!response.ok) throw new Error('Failed to submit assessment');
       return response.json();
@@ -272,30 +353,116 @@ export default function PCPEnhancedAssessment() {
           <TabsContent value="technical">
             <Card>
               <CardHeader>
-                <CardTitle>Technical Skills Assessment</CardTitle>
+                <CardTitle>Technical Skills Assessment (40% weight)</CardTitle>
                 <CardDescription>
-                  Evaluate fundamental stroke technique and execution
+                  Comprehensive evaluation of stroke technique and execution
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {Object.entries(assessmentData.technicalSkills).map(([skill, value]) => (
-                  <div key={skill} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium capitalize">
-                        {skill.replace(/([A-Z])/g, ' $1').trim()}
-                      </Label>
-                      <Badge variant="outline">{value}/10</Badge>
-                    </div>
-                    <Slider
-                      value={[value]}
-                      onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
-                      max={10}
-                      min={1}
-                      step={0.5}
-                      className="w-full"
-                    />
+              <CardContent className="space-y-8">
+                {/* Core Technical Skills */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-blue-600">Core Technical Skills</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['serveExecution', 'returnTechnique', 'thirdShot', 'overheadDefense', 'shotCreativity', 'courtMovement'].map((skill) => (
+                      <div key={skill} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium capitalize">
+                            {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </Label>
+                          <Badge variant="outline">{assessmentData.technicalSkills[skill]}/10</Badge>
+                        </div>
+                        <Slider
+                          value={[assessmentData.technicalSkills[skill]]}
+                          onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                          max={10}
+                          min={1}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {/* Groundstrokes Breakdown */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-green-600">Groundstrokes Breakdown</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['forehandTopspin', 'forehandSlice', 'backhandTopspin', 'backhandSlice'].map((skill) => (
+                      <div key={skill} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium capitalize">
+                            {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </Label>
+                          <Badge variant="outline">{assessmentData.technicalSkills[skill]}/10</Badge>
+                        </div>
+                        <Slider
+                          value={[assessmentData.technicalSkills[skill]]}
+                          onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                          max={10}
+                          min={1}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Net Play Breakdown */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-purple-600">Net Play Breakdown</h3>
+                  
+                  {/* Dink Variations */}
+                  <div className="mb-6">
+                    <h4 className="text-md font-medium mb-3 text-gray-700">Dink Variations</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {['forehandDeadDink', 'forehandTopspinDink', 'forehandSliceDink', 'backhandDeadDink', 'backhandTopspinDink', 'backhandSliceDink'].map((skill) => (
+                        <div key={skill} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium capitalize">
+                              {skill.replace(/([A-Z])/g, ' $1').trim()}
+                            </Label>
+                            <Badge variant="outline">{assessmentData.technicalSkills[skill]}/10</Badge>
+                          </div>
+                          <Slider
+                            value={[assessmentData.technicalSkills[skill]]}
+                            onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                            max={10}
+                            min={1}
+                            step={0.5}
+                            className="w-full"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Volley Variations */}
+                  <div>
+                    <h4 className="text-md font-medium mb-3 text-gray-700">Volley Variations</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {['forehandBlockVolley', 'forehandDriveVolley', 'forehandDinkVolley', 'backhandBlockVolley', 'backhandDriveVolley', 'backhandDinkVolley'].map((skill) => (
+                        <div key={skill} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium capitalize">
+                              {skill.replace(/([A-Z])/g, ' $1').trim()}
+                            </Label>
+                            <Badge variant="outline">{assessmentData.technicalSkills[skill]}/10</Badge>
+                          </div>
+                          <Slider
+                            value={[assessmentData.technicalSkills[skill]]}
+                            onValueChange={(newValue) => updateSkillValue('technicalSkills', skill, newValue[0])}
+                            max={10}
+                            min={1}
+                            step={0.5}
+                            className="w-full"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
