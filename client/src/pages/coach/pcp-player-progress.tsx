@@ -158,9 +158,10 @@ export default function PCPPlayerProgress() {
       <div className="pt-4 px-3 sm:px-6 pb-6">
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 mt-4 sm:mt-8 mb-4 sm:mb-8">
           {/* Enhanced Mobile-First Header */}
-          <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg border border-white/20 animate-in slide-in-from-top duration-500">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="bg-white/90 backdrop-blur-sm p-3 sm:p-6 rounded-xl shadow-lg border border-white/20 animate-in slide-in-from-top duration-500">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {/* Top row - Back button and title */}
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -171,22 +172,25 @@ export default function PCPPlayerProgress() {
                   Back
                 </Button>
                 <div className="sm:border-l border-gray-200 sm:pl-4">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 animate-in slide-in-from-left duration-700">{playerData.name}</h1>
+                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900 animate-in slide-in-from-left duration-700">{playerData.name}</h1>
                   <p className="text-gray-600 flex items-center mt-1 text-sm sm:text-base animate-in slide-in-from-left duration-700 delay-150">
                     <BarChart3 className="h-4 w-4 mr-2 animate-pulse" />
                     Progress Analytics
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                <Badge variant="outline" className="text-blue-600 text-center animate-in scale-in duration-500 delay-300">
+              
+              {/* Bottom row - Badges and buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 sm:justify-end">
+                <Badge variant="outline" className="text-blue-600 text-center animate-in scale-in duration-500 delay-300 whitespace-nowrap">
                   {playerData.total_assessments} Assessments
                 </Badge>
                 <Button 
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-all duration-200 hover:scale-105 hover:shadow-lg whitespace-nowrap"
                   onClick={() => setLocation(`/coach/pcp/assessment/${playerId}`)}
                 >
-                  <Target className="h-4 w-4 mr-2" />
+                  <Target className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span className="hidden sm:inline">New Assessment</span>
                   <span className="sm:hidden">Assess</span>
                 </Button>
