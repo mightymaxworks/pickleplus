@@ -98,7 +98,7 @@ async function validateDeploymentReadiness() {
 
     const insertResult = await sql`
       INSERT INTO pcp_skill_assessments ${sql(testAssessment)}
-      RETURNING id, created_at
+      RETURNING id, assessment_date
     `;
     test('Assessment data insertion', 10, insertResult.length > 0);
 
