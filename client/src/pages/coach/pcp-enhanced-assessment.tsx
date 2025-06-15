@@ -27,6 +27,7 @@ import {
   Activity
 } from 'lucide-react';
 import EnhancedPhysicalFitnessAssessment from './pcp-enhanced-physical-fitness';
+import EnhancedMentalSkillsAssessment from './pcp-enhanced-mental-skills';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
@@ -116,10 +117,36 @@ interface AssessmentData {
     recoveryBetweenPoints: number;
   };
   mentalSkills: {
-    focusConcentration: number;
-    pressurePerformance: number;
-    adaptability: number;
+    // Focus & Concentration (4 components)
+    sustainedAttention: number;
+    selectiveAttention: number;
+    dividedAttention: number;
+    attentionRecovery: number;
+    // Emotional Regulation (4 components)
+    frustrationManagement: number;
+    anxietyControl: number;
+    excitementRegulation: number;
+    emotionalStability: number;
+    // Competitive Mindset (4 components)
+    confidenceBuilding: number;
+    resilience: number;
+    competitiveness: number;
+    mentalToughness: number;
+    // Strategic Thinking (4 components)
+    problemSolving: number;
+    patternRecognition: number;
+    decisionMaking: number;
+    gamePlanning: number;
+    // Communication & Teamwork (4 components)
+    partnerCommunication: number;
+    positiveSelfTalk: number;
+    bodyLanguage: number;
     sportsmanship: number;
+    // Performance Psychology (4 components)
+    preShotRoutine: number;
+    visualization: number;
+    flowState: number;
+    postErrorRecovery: number;
   };
   confidenceLevel: number;
   sessionNotes: string;
@@ -229,10 +256,36 @@ export default function PCPEnhancedAssessment() {
       recoveryBetweenPoints: 5
     },
     mentalSkills: {
-      focusConcentration: 5,
-      pressurePerformance: 5,
-      adaptability: 5,
-      sportsmanship: 5
+      // Focus & Concentration (4 components)
+      sustainedAttention: 5,
+      selectiveAttention: 5,
+      dividedAttention: 5,
+      attentionRecovery: 5,
+      // Emotional Regulation (4 components)
+      frustrationManagement: 5,
+      anxietyControl: 5,
+      excitementRegulation: 5,
+      emotionalStability: 5,
+      // Competitive Mindset (4 components)
+      confidenceBuilding: 5,
+      resilience: 5,
+      competitiveness: 5,
+      mentalToughness: 5,
+      // Strategic Thinking (4 components)
+      problemSolving: 5,
+      patternRecognition: 5,
+      decisionMaking: 5,
+      gamePlanning: 5,
+      // Communication & Teamwork (4 components)
+      partnerCommunication: 5,
+      positiveSelfTalk: 5,
+      bodyLanguage: 5,
+      sportsmanship: 5,
+      // Performance Psychology (4 components)
+      preShotRoutine: 5,
+      visualization: 5,
+      flowState: 5,
+      postErrorRecovery: 5
     },
     confidenceLevel: 5,
     sessionNotes: '',
@@ -320,11 +373,36 @@ export default function PCPEnhancedAssessment() {
         mental_stamina: data.physicalSkills.mentalStamina,
         heat_tolerance: data.physicalSkills.heatTolerance,
         recovery_between_points: data.physicalSkills.recoveryBetweenPoints,
-        // Mental skills
-        focus_concentration: data.mentalSkills.focusConcentration,
-        pressure_performance: data.mentalSkills.pressurePerformance,
-        adaptability: data.mentalSkills.adaptability,
-        sportsmanship: data.mentalSkills.sportsmanship,
+        // Mental skills - Focus & Concentration
+        sustained_attention: data.mentalSkills.sustainedAttention,
+        selective_attention: data.mentalSkills.selectiveAttention,
+        divided_attention: data.mentalSkills.dividedAttention,
+        attention_recovery: data.mentalSkills.attentionRecovery,
+        // Mental skills - Emotional Regulation
+        frustration_management: data.mentalSkills.frustrationManagement,
+        anxiety_control: data.mentalSkills.anxietyControl,
+        excitement_regulation: data.mentalSkills.excitementRegulation,
+        emotional_stability: data.mentalSkills.emotionalStability,
+        // Mental skills - Competitive Mindset
+        confidence_building: data.mentalSkills.confidenceBuilding,
+        resilience: data.mentalSkills.resilience,
+        competitiveness: data.mentalSkills.competitiveness,
+        mental_toughness: data.mentalSkills.mentalToughness,
+        // Mental skills - Strategic Thinking
+        problem_solving: data.mentalSkills.problemSolving,
+        pattern_recognition_mental: data.mentalSkills.patternRecognition,
+        decision_making_mental: data.mentalSkills.decisionMaking,
+        game_planning: data.mentalSkills.gamePlanning,
+        // Mental skills - Communication & Teamwork
+        partner_communication: data.mentalSkills.partnerCommunication,
+        positive_self_talk: data.mentalSkills.positiveSelfTalk,
+        body_language: data.mentalSkills.bodyLanguage,
+        sportsmanship_mental: data.mentalSkills.sportsmanship,
+        // Mental skills - Performance Psychology
+        pre_shot_routine: data.mentalSkills.preShotRoutine,
+        visualization: data.mentalSkills.visualization,
+        flow_state: data.mentalSkills.flowState,
+        post_error_recovery: data.mentalSkills.postErrorRecovery,
         confidence_level: data.confidenceLevel,
         session_notes: data.sessionNotes
       };
@@ -715,36 +793,12 @@ export default function PCPEnhancedAssessment() {
             />
           </TabsContent>
 
-          {/* Mental Skills */}
+          {/* Enhanced Mental Skills */}
           <TabsContent value="mental">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mental Skills Assessment</CardTitle>
-                <CardDescription>
-                  Evaluate psychological resilience and competitive mindset
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {Object.entries(assessmentData.mentalSkills).map(([skill, value]) => (
-                  <div key={skill} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium capitalize">
-                        {skill.replace(/([A-Z])/g, ' $1').trim()}
-                      </Label>
-                      <Badge variant="outline">{value}/10</Badge>
-                    </div>
-                    <Slider
-                      value={[value]}
-                      onValueChange={(newValue) => updateSkillValue('mentalSkills', skill, newValue[0])}
-                      max={10}
-                      min={1}
-                      step={0.5}
-                      className="w-full"
-                    />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <EnhancedMentalSkillsAssessment
+              mentalSkills={assessmentData.mentalSkills}
+              onUpdate={(skills) => setAssessmentData(prev => ({ ...prev, mentalSkills: skills }))}
+            />
           </TabsContent>
         </Tabs>
 
