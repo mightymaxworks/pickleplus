@@ -23,8 +23,10 @@ import {
   Heart,
   Eye,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Activity
 } from 'lucide-react';
+import EnhancedPhysicalFitnessAssessment from './pcp-enhanced-physical-fitness';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
@@ -84,10 +86,34 @@ interface AssessmentData {
     communication: number;
   };
   physicalSkills: {
-    footwork: number;
-    balanceStability: number;
-    reactionTime: number;
-    endurance: number;
+    // Footwork & Agility (6 components)
+    lateralMovement: number;
+    forwardBackwardTransitions: number;
+    splitStepTiming: number;
+    multidirectionalChanges: number;
+    crossoverSteps: number;
+    recoverySteps: number;
+    // Balance & Stability (6 components)
+    dynamicBalance: number;
+    staticBalance: number;
+    coreStability: number;
+    singleLegBalance: number;
+    balanceRecovery: number;
+    weightTransfer: number;
+    // Reaction & Response (6 components)
+    visualReaction: number;
+    auditoryReaction: number;
+    decisionSpeed: number;
+    handEyeCoordination: number;
+    anticipationSkills: number;
+    recoveryReaction: number;
+    // Endurance & Conditioning (6 components)
+    aerobicCapacity: number;
+    anaerobicPower: number;
+    muscularEndurance: number;
+    mentalStamina: number;
+    heatTolerance: number;
+    recoveryBetweenPoints: number;
   };
   mentalSkills: {
     focusConcentration: number;
@@ -173,10 +199,34 @@ export default function PCPEnhancedAssessment() {
       communication: 5
     },
     physicalSkills: {
-      footwork: 5,
-      balanceStability: 5,
-      reactionTime: 5,
-      endurance: 5
+      // Footwork & Agility (6 components)
+      lateralMovement: 5,
+      forwardBackwardTransitions: 5,
+      splitStepTiming: 5,
+      multidirectionalChanges: 5,
+      crossoverSteps: 5,
+      recoverySteps: 5,
+      // Balance & Stability (6 components)
+      dynamicBalance: 5,
+      staticBalance: 5,
+      coreStability: 5,
+      singleLegBalance: 5,
+      balanceRecovery: 5,
+      weightTransfer: 5,
+      // Reaction & Response (6 components)
+      visualReaction: 5,
+      auditoryReaction: 5,
+      decisionSpeed: 5,
+      handEyeCoordination: 5,
+      anticipationSkills: 5,
+      recoveryReaction: 5,
+      // Endurance & Conditioning (6 components)
+      aerobicCapacity: 5,
+      anaerobicPower: 5,
+      muscularEndurance: 5,
+      mentalStamina: 5,
+      heatTolerance: 5,
+      recoveryBetweenPoints: 5
     },
     mentalSkills: {
       focusConcentration: 5,
@@ -242,11 +292,34 @@ export default function PCPEnhancedAssessment() {
         pattern_recognition: data.tacticalSkills.patternRecognition,
         risk_management: data.tacticalSkills.riskManagement,
         communication: data.tacticalSkills.communication,
-        // Physical skills
-        footwork: data.physicalSkills.footwork,
-        balance_stability: data.physicalSkills.balanceStability,
-        reaction_time: data.physicalSkills.reactionTime,
-        endurance: data.physicalSkills.endurance,
+        // Physical skills - Footwork & Agility
+        lateral_movement: data.physicalSkills.lateralMovement,
+        forward_backward_transitions: data.physicalSkills.forwardBackwardTransitions,
+        split_step_timing: data.physicalSkills.splitStepTiming,
+        multidirectional_changes: data.physicalSkills.multidirectionalChanges,
+        crossover_steps: data.physicalSkills.crossoverSteps,
+        recovery_steps: data.physicalSkills.recoverySteps,
+        // Physical skills - Balance & Stability
+        dynamic_balance: data.physicalSkills.dynamicBalance,
+        static_balance: data.physicalSkills.staticBalance,
+        core_stability: data.physicalSkills.coreStability,
+        single_leg_balance: data.physicalSkills.singleLegBalance,
+        balance_recovery: data.physicalSkills.balanceRecovery,
+        weight_transfer: data.physicalSkills.weightTransfer,
+        // Physical skills - Reaction & Response
+        visual_reaction: data.physicalSkills.visualReaction,
+        auditory_reaction: data.physicalSkills.auditoryReaction,
+        decision_speed: data.physicalSkills.decisionSpeed,
+        hand_eye_coordination: data.physicalSkills.handEyeCoordination,
+        anticipation_skills: data.physicalSkills.anticipationSkills,
+        recovery_reaction: data.physicalSkills.recoveryReaction,
+        // Physical skills - Endurance & Conditioning
+        aerobic_capacity: data.physicalSkills.aerobicCapacity,
+        anaerobic_power: data.physicalSkills.anaerobicPower,
+        muscular_endurance: data.physicalSkills.muscularEndurance,
+        mental_stamina: data.physicalSkills.mentalStamina,
+        heat_tolerance: data.physicalSkills.heatTolerance,
+        recovery_between_points: data.physicalSkills.recoveryBetweenPoints,
         // Mental skills
         focus_concentration: data.mentalSkills.focusConcentration,
         pressure_performance: data.mentalSkills.pressurePerformance,
@@ -634,36 +707,12 @@ export default function PCPEnhancedAssessment() {
             </Card>
           </TabsContent>
 
-          {/* Physical Skills */}
+          {/* Enhanced Physical Fitness */}
           <TabsContent value="physical">
-            <Card>
-              <CardHeader>
-                <CardTitle>Physical Skills Assessment</CardTitle>
-                <CardDescription>
-                  Evaluate athleticism and court mobility
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {Object.entries(assessmentData.physicalSkills).map(([skill, value]) => (
-                  <div key={skill} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium capitalize">
-                        {skill.replace(/([A-Z])/g, ' $1').trim()}
-                      </Label>
-                      <Badge variant="outline">{value}/10</Badge>
-                    </div>
-                    <Slider
-                      value={[value]}
-                      onValueChange={(newValue) => updateSkillValue('physicalSkills', skill, newValue[0])}
-                      max={10}
-                      min={1}
-                      step={0.5}
-                      className="w-full"
-                    />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <EnhancedPhysicalFitnessAssessment
+              physicalSkills={assessmentData.physicalSkills}
+              onUpdate={(skills) => setAssessmentData(prev => ({ ...prev, physicalSkills: skills }))}
+            />
           </TabsContent>
 
           {/* Mental Skills */}
