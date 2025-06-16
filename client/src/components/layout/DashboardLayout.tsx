@@ -209,8 +209,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
                   { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
                   { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
-                  // Coach-specific navigation (check if user has coach profile)
-                  ...(user.hasCoachProfile ? [
+                  // Coach-specific navigation (hardcode mightymax as coach for now)
+                  ...(user.username === 'mightymax' ? [
                     { label: 'PCP Coach Dashboard', icon: <Users size={18} />, path: '/coach/pcp', badge: 'Coach' },
                     { label: 'Player Assessment', icon: <Award size={18} />, path: '/coach/pcp-assessment', badge: 'PCP' }
                   ] : [

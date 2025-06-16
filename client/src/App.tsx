@@ -474,6 +474,18 @@ export default function App() {
                     component={LazyCoachApplicationPage}
                     pageTitle="Become a Coach"
                   />
+                  
+                  {/* Player-Coach Connection Pages */}
+                  <ProtectedRouteWithLayout 
+                    path="/find-coaches"
+                    component={lazyLoad(() => import('./pages/find-coaches'))}
+                    pageTitle="Find Coaches"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/my-coach"
+                    component={lazyLoad(() => import('./pages/my-coach'))}
+                    pageTitle="My Coach"
+                  />
                   {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management - DISABLED FOR DEPLOYMENT */}
                   {/* <ProtectedRouteWithLayout 
                     path="/training-center"
