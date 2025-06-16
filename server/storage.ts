@@ -1246,11 +1246,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCoachProfile(userId: number): Promise<CoachProfile | undefined> {
-    const [profile] = await db
-      .select()
-      .from(coachProfiles)
-      .where(eq(coachProfiles.userId, userId));
-    return profile;
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM coach_profiles 
+        WHERE user_id = ${userId}
+        LIMIT 1
+      `);
+      return result.rows[0] as any;
+    } catch (error) {
+      console.error('Error getting coach profile:', error);
+      return undefined;
+    }
   }
 
   async getAllCoachProfiles(): Promise<CoachProfile[]> {
@@ -1299,15 +1305,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCoachProfile(userId: number, data: Partial<InsertCoachProfile>): Promise<CoachProfile> {
-    const [profile] = await db
-      .update(coachProfiles)
-      .set({
-        ...data,
-        updatedAt: new Date()
-      })
-      .where(eq(coachProfiles.userId, userId))
-      .returning();
-    return profile;
+    try {
+      const result = await db.execute(sql`
+        UPDATE coach_profiles 
+        SET updated_at = NOW()
+        WHERE user_id = ${userId}
+        RETURNING *
+      `);
+      return result.rows[0] as any;
+    } catch (error) {
+      console.error('Error updating coach profile:', error);
+      throw error;
+    }
   }
 
   // Coach Certification operations

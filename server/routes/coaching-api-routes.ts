@@ -6,32 +6,15 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { sql } from 'drizzle-orm';
+import { storage } from '../storage';
 
 const router = Router();
 
 // Get all available coaches for discovery
 router.get('/available', async (req, res) => {
   try {
-    const coaches = await db.execute(sql`
-      SELECT 
-        cp.id,
-        cp.user_id as "userId",
-        cp.name,
-        cp.bio,
-        cp.specialties,
-        cp.certifications,
-        cp.experience_years as "experienceYears",
-        cp.rating,
-        cp.total_reviews as "totalReviews",
-        cp.hourly_rate as "hourlyRate",
-        cp.profile_image_url as "profileImageUrl",
-        cp.is_verified as "isVerified"
-      FROM coach_profiles cp
-      WHERE cp.is_verified = true
-      ORDER BY cp.rating DESC NULLS LAST, cp.total_reviews DESC NULLS LAST
-    `);
-
-    res.json(coaches.rows);
+    const coaches = await storage.getAllCoachProfiles();
+    res.json(coaches);
   } catch (error) {
     console.error('Error fetching available coaches:', error);
     res.status(500).json({ 

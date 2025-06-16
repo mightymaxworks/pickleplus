@@ -38,7 +38,7 @@ import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTI
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
 import coachManagementRoutes from "./routes/coach-routes"; // PKL-278651-COACH-001 - Coach Management System
-import coachingApiRoutes from "./routes/coaching-api-routes"; // Player-Coach Connection System
+import coachingApiRoutes from "./routes/coaching-api-simple"; // Player-Coach Connection System
 import adminCoachRoutes from "./routes/admin-coach-routes"; // PKL-278651-COACH-ADMIN-001 - Admin Coach Management
 import adminPlayerRoutes from "./routes/admin-player-routes"; // PKL-278651-PLAYER-ADMIN-001 - Admin Player Management
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
