@@ -38,6 +38,7 @@ import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTI
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
 import coachManagementRoutes from "./routes/coach-routes"; // PKL-278651-COACH-001 - Coach Management System
+import coachingApiRoutes from "./routes/coaching-api-routes"; // Player-Coach Connection System
 import adminCoachRoutes from "./routes/admin-coach-routes"; // PKL-278651-COACH-ADMIN-001 - Admin Coach Management
 import adminPlayerRoutes from "./routes/admin-player-routes"; // PKL-278651-PLAYER-ADMIN-001 - Admin Player Management
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
@@ -276,6 +277,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount AI Coach routes - PKL-278651-COACH-0001-AI
   app.use('/api/coach', coachRoutes);
+  
+  // Mount Player-Coach Connection routes
+  app.use('/api/coaching', coachingApiRoutes);
   
   // Coach Application Submit Endpoint - PKL-278651-COACH-001
   app.post('/api/coach/application/submit', isAuthenticated, async (req: any, res) => {
