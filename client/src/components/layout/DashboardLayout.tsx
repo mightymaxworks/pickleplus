@@ -209,6 +209,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
                   { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
                   { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
+                  // Coach-specific navigation (check if user has coach profile)
+                  ...(user.hasCoachProfile ? [
+                    { label: 'PCP Coach Dashboard', icon: <Users size={18} />, path: '/coach/pcp', badge: 'Coach' },
+                    { label: 'Player Assessment', icon: <Award size={18} />, path: '/coach/pcp-assessment', badge: 'PCP' }
+                  ] : [
+                    // Player navigation - find coaches
+                    { label: 'Find Coaches', icon: <Users size={18} />, path: '/find-coaches' },
+                    { label: 'My Coach', icon: <Award size={18} />, path: '/my-coach' }
+                  ]),
                   { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
                   { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
                   /* PKL-278651-COMM-0007-ICONS - Custom Icons Test */
