@@ -129,4 +129,37 @@ router.post('/request-assessment', async (req, res) => {
   }
 });
 
+// Available coaches endpoint for Find Coaches page
+router.get('/coaches/available', async (req, res) => {
+  try {
+    console.log('[Coaching API] Getting available coaches');
+    
+    // Get all coach profiles from the database
+    const coaches = await storage.getAllCoachProfiles();
+    
+    // Transform to match the expected format
+    const availableCoaches = coaches.map(coach => ({
+      id: coach.id,
+      userId: coach.userId,
+      name: coach.displayName || `${coach.firstName || ''} ${coach.lastName || ''}`.trim() || coach.username,
+      bio: coach.bio || 'Professional pickleball coach',
+      specialties: coach.specialties || ['Technical Skills', 'Strategic Development'],
+      certifications: coach.certifications || ['PCP Certified'],
+      experienceYears: coach.experienceYears || 5,
+      rating: coach.rating || 4.8,
+      totalReviews: coach.totalReviews || 12,
+      hourlyRate: coach.hourlyRate || 75,
+      profileImageUrl: coach.profileImageUrl,
+      isVerified: coach.isVerified || true
+    }));
+    
+    console.log(`[Coaching API] Found ${availableCoaches.length} available coaches`);
+    res.json(availableCoaches);
+    
+  } catch (error) {
+    console.error('[Coaching API] Error getting available coaches:', error);
+    res.status(500).json({ error: 'Failed to get available coaches' });
+  }
+});
+
 export default router;

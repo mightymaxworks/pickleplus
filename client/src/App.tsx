@@ -352,6 +352,18 @@ export default function App() {
                     pageTitle="PCP Player Assessment"
                   />
                   
+                  {/* Player-Coach Connection System */}
+                  <ProtectedRouteWithLayout
+                    path="/find-coaches"
+                    component={lazyLoad(() => import('./pages/find-coaches'))}
+                    pageTitle="Find Coaches"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/my-coach"
+                    component={lazyLoad(() => import('./pages/my-coach'))}
+                    pageTitle="My Coach"
+                  />
+                  
                   {/* PKL-278651-JOUR-001 - PickleJourney™ */}
                   <ProtectedRouteWithLayout
                     path="/journey"

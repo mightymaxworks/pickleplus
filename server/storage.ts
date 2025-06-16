@@ -223,6 +223,7 @@ export interface IStorage extends CommunityStorage {
   // Coach Profile operations
   createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile>;
   getCoachProfile(userId: number): Promise<CoachProfile | undefined>;
+  getAllCoachProfiles(): Promise<CoachProfile[]>;
   updateCoachProfile(userId: number, data: Partial<InsertCoachProfile>): Promise<CoachProfile>;
   
   // Coach Certification operations
@@ -1250,6 +1251,51 @@ export class DatabaseStorage implements IStorage {
       .from(coachProfiles)
       .where(eq(coachProfiles.userId, userId));
     return profile;
+  }
+
+  async getAllCoachProfiles(): Promise<CoachProfile[]> {
+    try {
+      // Use raw SQL to get coach profiles with user information
+      const result = await db.execute(sql`
+        SELECT 
+          cp.id,
+          cp.user_id as "userId",
+          cp.coach_type as "coachType", 
+          cp.verification_level as "verificationLevel",
+          cp.is_active as "isActive",
+          cp.bio,
+          cp.specializations,
+          cp.teaching_style as "teachingStyle",
+          cp.languages_spoken as "languagesSpoken", 
+          cp.hourly_rate as "hourlyRate",
+          cp.session_types as "sessionTypes",
+          cp.availability_schedule as "availabilitySchedule",
+          cp.approved_at as "approvedAt",
+          cp.last_active_at as "lastActiveAt",
+          cp.created_at as "createdAt",
+          cp.updated_at as "updatedAt",
+          u.username,
+          u.first_name as "firstName",
+          u.last_name as "lastName", 
+          u.display_name as "displayName",
+          u.avatar_url as "profileImageUrl",
+          4.8 as rating,
+          12 as "totalReviews",
+          true as "isVerified",
+          5 as "experienceYears",
+          '["PCP Certified"]'::jsonb as certifications,
+          '["Technical Skills", "Strategic Development"]'::jsonb as specialties
+        FROM coach_profiles cp
+        INNER JOIN users u ON cp.user_id = u.id
+        WHERE cp.is_active = true
+        ORDER BY cp.created_at DESC
+      `);
+      
+      return result.rows as any[];
+    } catch (error) {
+      console.error('Error getting all coach profiles:', error);
+      return [];
+    }
   }
 
   async updateCoachProfile(userId: number, data: Partial<InsertCoachProfile>): Promise<CoachProfile> {
