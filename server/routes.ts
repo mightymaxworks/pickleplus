@@ -143,6 +143,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Mount coach management routes
   app.use('/api/coach', coachManagementRoutes);
   
+  // Mount coaching API routes for player-coach connection
+  app.use('/api/coaches', coachingApiRoutes);
+  
   // Match statistics endpoint for dashboard - must be before match assessment routes
   app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -279,7 +282,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.use('/api/coach', coachRoutes);
   
   // Mount Player-Coach Connection routes
-  app.use('/api/coaching', coachingApiRoutes);
+
   
   // Coach Application Submit Endpoint - PKL-278651-COACH-001
   app.post('/api/coach/application/submit', isAuthenticated, async (req: any, res) => {
