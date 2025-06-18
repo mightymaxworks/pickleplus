@@ -70,7 +70,7 @@ export default function PassportDashboard() {
     retry: false
   });
   
-  const isCoach = coachProfile && coachProfile.id;
+  const isCoach = coachProfile && (coachProfile as any).id;
   
   // Profile update mutation
   const updateProfileMutation = useMutation({
