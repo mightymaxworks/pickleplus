@@ -63,7 +63,7 @@ export default function FindCoachesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 mt-[56px] mb-[56px]">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
