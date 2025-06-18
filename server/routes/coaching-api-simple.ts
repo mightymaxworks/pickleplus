@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { db } from '../db';
+import { db, pool } from '../db';
 import { sql } from 'drizzle-orm';
 
 const router = Router();
@@ -324,17 +324,36 @@ router.put('/my-profile', async (req, res) => {
       }
     }
 
-    // Execute update using direct SQL
-    await db.execute(sql`
-      UPDATE coach_profiles 
-      SET bio = ${bio || null}, 
-          experience_years = ${validExperienceYears}, 
-          hourly_rate = ${validHourlyRate},
-          specialties = ${specialtiesArray},
-          certifications = ${certificationsArray},
-          updated_at = NOW()
-      WHERE user_id = ${userId}
-    `);
+    // Use PostgreSQL pool directly for proper array handling
+    const client = await pool.connect();
+    try {
+      let updateQuery = `
+        UPDATE coach_profiles 
+        SET bio = $1, 
+            experience_years = $2, 
+            hourly_rate = $3,
+            updated_at = NOW()
+      `;
+      
+      const params = [bio || null, validExperienceYears, validHourlyRate];
+      
+      if (specialtiesArray !== null) {
+        updateQuery += `, specialties = $${params.length + 1}`;
+        params.push(specialtiesArray);
+      }
+      
+      if (certificationsArray !== null) {
+        updateQuery += `, certifications = $${params.length + 1}`;
+        params.push(certificationsArray);
+      }
+      
+      updateQuery += ` WHERE user_id = $${params.length + 1}`;
+      params.push(userId);
+      
+      await client.query(updateQuery, params);
+    } finally {
+      client.release();
+    }
 
     // Get updated profile
     const result = await db.execute(sql`
