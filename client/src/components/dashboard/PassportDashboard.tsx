@@ -148,7 +148,12 @@ export default function PassportDashboard() {
       return { success: true };
     },
     onSuccess: (data) => {
-      // Invalidate all user-related queries to force refresh
+      // Update cache with fresh data if available
+      if (data && data.id) {
+        queryClient.setQueryData(['/api/coaches/my-profile'], data);
+      }
+      
+      // Invalidate queries to trigger fresh fetches
       queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
@@ -162,9 +167,6 @@ export default function PassportDashboard() {
         description: "Your profile changes have been saved successfully.",
       });
       setIsPassportExpanded(false);
-      
-      // Force a page refresh to ensure updated data is displayed
-      window.location.reload();
     },
     onError: (error: Error) => {
       toast({
