@@ -22,6 +22,7 @@ import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-COR
 // Onboarding complete page removed - onboarding system disabled
 import RoleProtectedDemoPage from './pages/RoleProtectedDemoPage' // PKL-278651-AUTH-0008-ROLES
 import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
+import { LanguageProvider } from '@/contexts/LanguageContext' // Language internationalization
 
 
 // Import module initializations
@@ -180,9 +181,10 @@ export default function App() {
   return (
     <div className="app-container">
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <UserDataProvider>
-            <TournamentChangeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <UserDataProvider>
+              <TournamentChangeProvider>
               {/* TutorialProvider removed - onboarding system disabled */}
                 <CommunityProvider>
                   <GuidedTaskProvider>
@@ -778,7 +780,8 @@ export default function App() {
               {/* TutorialProvider closing tag removed - onboarding system disabled */}
             </TournamentChangeProvider>
           </UserDataProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </LanguageProvider>
         <Toaster />
       </QueryClientProvider>
     </div>
