@@ -324,49 +324,33 @@ router.put('/my-profile', async (req, res) => {
       }
     }
 
-    // Use a transaction-like approach with multiple updates
-    // First update the basic fields
-    await db.execute(sql`
+    // Build a single comprehensive update query
+    const updateFields = [];
+    const updateValues = [];
+    
+    updateFields.push('bio = $1', 'experience_years = $2', 'hourly_rate = $3', 'updated_at = NOW()');
+    updateValues.push(bio || null, validExperienceYears, validHourlyRate);
+    
+    if (specialtiesArray !== null) {
+      updateFields.push(`specialties = $${updateValues.length + 1}`);
+      updateValues.push(specialtiesArray);
+    }
+    
+    if (certificationsArray !== null) {
+      updateFields.push(`certifications = $${updateValues.length + 1}`);
+      updateValues.push(certificationsArray);
+    }
+    
+    updateFields.push(`user_id = $${updateValues.length + 1}`);
+    updateValues.push(userId);
+    
+    const queryText = `
       UPDATE coach_profiles 
-      SET 
-        bio = ${bio || null},
-        experience_years = ${validExperienceYears},
-        hourly_rate = ${validHourlyRate},
-        updated_at = NOW()
-      WHERE user_id = ${userId}
-    `);
+      SET ${updateFields.slice(0, -1).join(', ')}
+      WHERE ${updateFields[updateFields.length - 1]}
+    `;
     
-    // Update specialties array using PostgreSQL array literal syntax
-    if (specialtiesArray !== null && specialtiesArray.length > 0) {
-      const specialtiesLiteral = `{${specialtiesArray.map(s => `"${s.replace(/"/g, '\\"')}"`).join(',')}}`;
-      await db.execute(sql`
-        UPDATE coach_profiles 
-        SET specialties = ${specialtiesLiteral}::text[]
-        WHERE user_id = ${userId}
-      `);
-    } else if (specialtiesArray !== null) {
-      await db.execute(sql`
-        UPDATE coach_profiles 
-        SET specialties = '{}'::text[]
-        WHERE user_id = ${userId}
-      `);
-    }
-    
-    // Update certifications array using PostgreSQL array literal syntax
-    if (certificationsArray !== null && certificationsArray.length > 0) {
-      const certificationsLiteral = `{${certificationsArray.map(s => `"${s.replace(/"/g, '\\"')}"`).join(',')}}`;
-      await db.execute(sql`
-        UPDATE coach_profiles 
-        SET certifications = ${certificationsLiteral}::text[]
-        WHERE user_id = ${userId}
-      `);
-    } else if (certificationsArray !== null) {
-      await db.execute(sql`
-        UPDATE coach_profiles 
-        SET certifications = '{}'::text[]
-        WHERE user_id = ${userId}
-      `);
-    }
+    await db.execute(sql.raw(queryText, updateValues));
 
     // Get updated profile
     const result = await db.execute(sql`

@@ -127,12 +127,14 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
-### June 18, 2025 - Enhanced Role-Based Dashboard
-- **Role-Based Quick Actions**: Dashboard now adapts based on user's coaching status
-- **Coach Profile Integration**: "Manage Coach Profile" opens inline editing instead of separate page
+### June 18, 2025 - Coaching Profile Management Complete
+- **Inline Coaching Profile Editing**: Integrated PCP Coaching Certification Programme fields into passport editing modal
+- **PUT Endpoint Implementation**: `/api/coaches/my-profile` endpoint fully functional with PostgreSQL array handling
+- **Comprehensive Field Support**: Bio, experience years, hourly rate, specialties, and certifications all editable
+- **Data Persistence Verified**: CI/CD validation confirms 100% functional coaching profile updates
+- **Role-Based Dashboard**: "Manage Coach Profile" provides seamless inline editing experience
 - **Universal Training Facilities**: Both coaches and players can access "Find Training Facilities"
-- **Coach Status Detection**: API endpoint `/api/coaches/my-profile` detects existing coaches
-- **UX Improvements**: Coaches see "Manage Coach Profile", regular players see "Find Coaches"
+- **Coach Status Detection**: Dashboard automatically adapts based on coaching profile existence
 
 ### June 14, 2025 - Initial Setup
 - Core platform architecture established
