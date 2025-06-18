@@ -48,12 +48,15 @@ import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
 import { useAllRankingPositions } from '@/hooks/use-all-ranking-positions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 
 export default function PassportDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [qrVisible, setQrVisible] = useState(false);
   const [showPassportCode, setShowPassportCode] = useState(false);
   const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);

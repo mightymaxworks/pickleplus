@@ -184,25 +184,25 @@ export default function App() {
         <LanguageProvider>
           <AuthProvider>
             <UserDataProvider>
-              <TournamentChangeProvider>
-              {/* TutorialProvider removed - onboarding system disabled */}
+                <TournamentChangeProvider>
+                {/* TutorialProvider removed - onboarding system disabled */}
                 <CommunityProvider>
                   <GuidedTaskProvider>
                     <SageDataProvider>
                       <DerivedDataProvider>
                         <Suspense fallback={<LazyLoadingFallback />}>
-                      {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) - Only for authenticated users */}
-                      <AuthenticationWrapper>
-                        <SimpleBugReportButton position="bottom-right" />
-                      </AuthenticationWrapper>
-                      
-                      {/* PKL-278651-BOUNCE-0008-ASSIST - Add Bounce Floating Widget */}
-                      <BounceFloatingWidget />
-                      
-                      {/* Match Recording Button - Only shown when user is authenticated */}
-                      <AuthenticationWrapper>
-                        <QuickMatchFAB />
-                      </AuthenticationWrapper>
+                          {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) - Only for authenticated users */}
+                          <AuthenticationWrapper>
+                            <SimpleBugReportButton position="bottom-right" />
+                          </AuthenticationWrapper>
+                          
+                          {/* PKL-278651-BOUNCE-0008-ASSIST - Add Bounce Floating Widget */}
+                          <BounceFloatingWidget />
+                          
+                          {/* Match Recording Button - Only shown when user is authenticated */}
+                          <AuthenticationWrapper>
+                            <QuickMatchFAB />
+                          </AuthenticationWrapper>
                     
                     {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
                     {/* Removed to focus on launch priorities */}
