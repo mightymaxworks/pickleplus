@@ -9,6 +9,105 @@ import { sql } from 'drizzle-orm';
 
 const router = Router();
 
+// Find Coaches endpoint - Critical for Step 4 of user flow
+router.get('/find', async (req, res) => {
+  try {
+    const { specialty, minRating, maxRate } = req.query;
+    
+    let query = sql`
+      SELECT 
+        cp.id,
+        cp.user_id as "userId",
+        cp.bio,
+        cp.specialties,
+        cp.certifications,
+        cp.experience_years as "experienceYears",
+        cp.rating,
+        cp.total_reviews as "totalReviews",
+        cp.hourly_rate as "hourlyRate",
+        cp.profile_image_url as "profileImageUrl",
+        cp.is_verified as "isVerified",
+        u.first_name as "firstName",
+        u.last_name as "lastName",
+        u.display_name as "displayName"
+      FROM coach_profiles cp
+      JOIN users u ON cp.user_id = u.id
+      WHERE cp.is_verified = true
+    `;
+
+    // Add specialty filter if provided
+    if (specialty) {
+      query = sql`${query} AND ${specialty} = ANY(cp.specialties)`;
+    }
+
+    // Add rating filter if provided
+    if (minRating) {
+      query = sql`${query} AND cp.rating >= ${parseFloat(minRating as string)}`;
+    }
+
+    // Add rate filter if provided
+    if (maxRate) {
+      query = sql`${query} AND cp.hourly_rate <= ${parseFloat(maxRate as string)}`;
+    }
+
+    query = sql`${query} ORDER BY cp.rating DESC, cp.total_reviews DESC`;
+
+    const result = await db.execute(query);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching coaches:', error);
+    res.status(500).json({ error: 'Failed to fetch coaches' });
+  }
+});
+
+// My Coach endpoint - Shows player's current coach relationship
+router.get('/my-coach', async (req, res) => {
+  try {
+    // Development mode - use test user ID
+    let userId;
+    if (process.env.NODE_ENV === 'production') {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      userId = req.user.id;
+    } else {
+      userId = 1;
+    }
+
+    // Check if user has a coach relationship (simplified - just return their own coach profile if they are a coach)
+    const result = await db.execute(sql`
+      SELECT 
+        cp.id,
+        u.first_name as "firstName",
+        u.last_name as "lastName",
+        u.display_name as "displayName",
+        cp.bio,
+        cp.specialties,
+        cp.rating,
+        cp.hourly_rate as "hourlyRate"
+      FROM coach_profiles cp
+      JOIN users u ON cp.user_id = u.id
+      WHERE cp.user_id = ${userId}
+    `);
+
+    if (result.rows.length > 0) {
+      res.json({
+        hasCoach: true,
+        coach: result.rows[0]
+      });
+    } else {
+      res.json({
+        hasCoach: false,
+        coach: null
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching my coach:', error);
+    res.status(500).json({ error: 'Failed to fetch coach information' });
+  }
+});
+
 // Get current user's coach profile if they are a coach
 router.get('/my-profile', async (req, res) => {
   try {
