@@ -337,8 +337,11 @@ export default function PassportDashboard() {
   }
 
   const handleFindTrainingFacilities = () => {
-    // Navigate to training facilities page
-    window.location.href = '/training-center';
+    setComingSoonModal({
+      isOpen: true,
+      feature: 'Training Facilities',
+      description: 'Our training facility discovery system is launching soon! You\'ll be able to find nearby training centers, view their amenities, and book courts and classes directly through the platform.'
+    });
   };
 
   const handlePhotoUploadSuccess = (avatarUrl: string) => {
