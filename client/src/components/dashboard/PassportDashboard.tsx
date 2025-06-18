@@ -76,14 +76,23 @@ export default function PassportDashboard() {
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
       // Separate coaching fields from user profile fields
-      const {
-        coachBio,
-        experienceYears,
-        hourlyRate,
-        specialties,
-        certifications,
-        ...userProfileData
-      } = profileData;
+      const coachingFields = ['coachBio', 'experienceYears', 'hourlyRate', 'specialties', 'certifications'];
+      const userProfileData: any = {};
+      const coachingData: any = {};
+      
+      // Split fields based on whether they're coaching-related
+      Object.keys(profileData).forEach(key => {
+        if (coachingFields.includes(key)) {
+          // Map field names for coaching profile
+          if (key === 'coachBio') {
+            coachingData.bio = profileData[key];
+          } else {
+            coachingData[key] = profileData[key];
+          }
+        } else {
+          userProfileData[key] = profileData[key];
+        }
+      });
 
       // First get CSRF token if needed
       let headers: any = {
@@ -101,29 +110,25 @@ export default function PassportDashboard() {
         }
       }
       
-      // Update user profile
-      const response = await fetch('/api/profile/update', {
-        method: 'PATCH',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify(userProfileData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to update profile');
+      // Update user profile if there are non-coaching fields
+      if (Object.keys(userProfileData).length > 0) {
+        const response = await fetch('/api/profile/update', {
+          method: 'PATCH',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(userProfileData),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to update profile');
+        }
       }
 
       // Update coaching profile if coaching fields are present and user is a coach
-      if (isCoach && (coachBio !== undefined || experienceYears !== undefined || hourlyRate !== undefined || specialties !== undefined || certifications !== undefined)) {
-        const coachingData = {
-          bio: coachBio,
-          experienceYears,
-          hourlyRate,
-          specialties,
-          certifications
-        };
-
+      const hasCoachingChanges = isCoach && Object.keys(coachingData).length > 0;
+      
+      if (hasCoachingChanges) {
         const coachResponse = await fetch('/api/coaches/my-profile', {
           method: 'PUT',
           headers,
@@ -135,9 +140,12 @@ export default function PassportDashboard() {
           const errorData = await coachResponse.json().catch(() => ({}));
           throw new Error(errorData.message || 'Failed to update coaching profile');
         }
+        
+        return coachResponse.json();
       }
       
-      return response.json();
+      // Return success if only user profile was updated
+      return { success: true };
     },
     onSuccess: (data) => {
       // Invalidate all user-related queries to force refresh
@@ -168,7 +176,7 @@ export default function PassportDashboard() {
   });
   
   // Handle form field changes
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = (field: string, value: any) => {
     setProfileFormData(prev => ({
       ...prev,
       [field]: value
