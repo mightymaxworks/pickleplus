@@ -42,7 +42,7 @@ export default function FindCoachesPage() {
   ];
 
   const filteredCoaches = coaches?.filter((coach: Coach) => 
-    !selectedSpecialty || coach.specialties.includes(selectedSpecialty)
+    !selectedSpecialty || (coach.specialties && Array.isArray(coach.specialties) && coach.specialties.includes(selectedSpecialty))
   ) || [];
 
   if (isLoading) {

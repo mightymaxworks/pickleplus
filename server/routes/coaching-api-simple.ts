@@ -18,54 +18,46 @@ router.get('/available', async (req, res) => {
         cp.id,
         cp.user_id as "userId",
         cp.bio,
-        cp.specializations,
-        cp.teaching_style as "teachingStyle",
-        cp.languages_spoken as "languagesSpoken", 
+        cp.specialties,
+        cp.certifications,
+        cp.experience_years as "experienceYears",
+        cp.rating,
+        cp.total_reviews as "totalReviews",
         cp.hourly_rate as "hourlyRate",
-        cp.session_types as "sessionTypes",
+        cp.profile_image_url as "profileImageUrl",
+        cp.is_verified as "isVerified",
         cp.availability_schedule as "availabilitySchedule",
-        cp.approved_at as "approvedAt",
-        cp.last_active_at as "lastActiveAt",
         cp.created_at as "createdAt",
         cp.updated_at as "updatedAt",
         u.username,
         u.first_name as "firstName",
         u.last_name as "lastName", 
         u.display_name as "displayName",
-        u.avatar_url as "profileImageUrl",
-        4.8 as rating,
-        12 as "totalReviews",
-        true as "isVerified",
-        5 as "experienceYears",
-        '["PCP Coaching Certification Programme"]'::jsonb as certifications,
-        '["Technical Skills", "Strategic Development"]'::jsonb as specialties
+        u.avatar_url as "avatarUrl"
       FROM coach_profiles cp
       INNER JOIN users u ON cp.user_id = u.id
-      WHERE cp.is_active = true
+      WHERE cp.is_verified = true
       ORDER BY cp.created_at DESC
     `);
 
-    // Format the response data
+    // Format the response data using actual database values
     const coaches = result.rows.map((coach: any) => ({
       id: coach.id,
       userId: coach.userId,
       name: coach.displayName || `${coach.firstName || ''} ${coach.lastName || ''}`.trim() || coach.username,
-      bio: coach.bio || 'Experienced pickleball coach ready to help you improve your game.',
-      specializations: coach.specializations || ['Technical Skills', 'Strategic Development'],
-      hourlyRate: coach.hourlyRate || 75,
-      rating: coach.rating || 4.8,
-      totalReviews: coach.totalReviews || 12,
-      isVerified: coach.isVerified !== false,
-      experienceYears: coach.experienceYears || 5,
-      certifications: coach.certifications || ['PCP Coaching Certification Programme'],
-      profileImageUrl: coach.profileImageUrl || '/api/placeholder/150/150',
+      bio: coach.bio,
+      specialties: coach.specialties || [],
+      hourlyRate: coach.hourlyRate,
+      rating: coach.rating,
+      totalReviews: coach.totalReviews,
+      isVerified: coach.isVerified,
+      experienceYears: coach.experienceYears,
+      certifications: coach.certifications || [],
+      profileImageUrl: coach.profileImageUrl || coach.avatarUrl,
       username: coach.username,
       firstName: coach.firstName,
       lastName: coach.lastName,
       displayName: coach.displayName,
-      teachingStyle: coach.teachingStyle,
-      languagesSpoken: coach.languagesSpoken,
-      sessionTypes: coach.sessionTypes,
       availabilitySchedule: coach.availabilitySchedule,
       createdAt: coach.createdAt
     }));
