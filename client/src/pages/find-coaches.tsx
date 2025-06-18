@@ -128,7 +128,7 @@ export default function FindCoachesPage() {
                       </h3>
                       <div className="flex items-center gap-1 text-sm text-gray-600">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span>{coach.rating?.toFixed(1) || '5.0'}</span>
+                        <span>{coach.rating ? Number(coach.rating).toFixed(1) : '0.0'}</span>
                         <span>({coach.totalReviews || 0} reviews)</span>
                       </div>
                     </div>
@@ -149,7 +149,7 @@ export default function FindCoachesPage() {
                   </div>
                   <div className="flex items-center gap-1 font-semibold">
                     <DollarSign className="h-4 w-4" />
-                    ${coach.hourlyRate}/hour
+                    ${coach.hourlyRate ? Number(coach.hourlyRate).toFixed(0) : '0'}/hour
                   </div>
                 </div>
 
@@ -157,12 +157,12 @@ export default function FindCoachesPage() {
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-700">Specialties:</h4>
                   <div className="flex flex-wrap gap-1">
-                    {coach.specialties.slice(0, 3).map(specialty => (
+                    {coach.specialties && Array.isArray(coach.specialties) && coach.specialties.slice(0, 3).map(specialty => (
                       <Badge key={specialty} variant="outline" className="text-xs">
                         {specialty}
                       </Badge>
                     ))}
-                    {coach.specialties.length > 3 && (
+                    {coach.specialties && coach.specialties.length > 3 && (
                       <Badge variant="outline" className="text-xs">
                         +{coach.specialties.length - 3} more
                       </Badge>
@@ -174,11 +174,14 @@ export default function FindCoachesPage() {
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-700">Certifications:</h4>
                   <div className="flex flex-wrap gap-1">
-                    {coach.certifications.slice(0, 2).map(cert => (
+                    {coach.certifications && Array.isArray(coach.certifications) && coach.certifications.slice(0, 2).map(cert => (
                       <Badge key={cert} variant="secondary" className="text-xs">
                         {cert}
                       </Badge>
                     ))}
+                    {(!coach.certifications || !Array.isArray(coach.certifications) || coach.certifications.length === 0) && (
+                      <span className="text-xs text-gray-500">No certifications listed</span>
+                    )}
                   </div>
                 </div>
 
