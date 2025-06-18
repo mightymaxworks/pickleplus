@@ -9,6 +9,60 @@ import { sql } from 'drizzle-orm';
 
 const router = Router();
 
+// Get current user's coach profile if they are a coach
+router.get('/my-profile', async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const result = await db.execute(sql`
+      SELECT 
+        cp.id,
+        cp.user_id as "userId",
+        cp.bio,
+        cp.specialties,
+        cp.certifications,
+        cp.experience_years as "experienceYears",
+        cp.rating,
+        cp.total_reviews as "totalReviews",
+        cp.hourly_rate as "hourlyRate",
+        cp.profile_image_url as "profileImageUrl",
+        cp.is_verified as "isVerified",
+        cp.availability_schedule as "availabilitySchedule",
+        cp.created_at as "createdAt",
+        cp.updated_at as "updatedAt"
+      FROM coach_profiles cp
+      WHERE cp.user_id = ${req.user.id}
+    `);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Coach profile not found' });
+    }
+
+    const coach = result.rows[0];
+    res.json({
+      id: coach.id,
+      userId: coach.userId,
+      bio: coach.bio,
+      specialties: coach.specialties || [],
+      hourlyRate: coach.hourlyRate,
+      rating: parseFloat(coach.rating) || 0,
+      totalReviews: coach.totalReviews || 0,
+      experienceYears: coach.experienceYears || 0,
+      isVerified: coach.isVerified,
+      profileImageUrl: coach.profileImageUrl,
+      availabilitySchedule: coach.availabilitySchedule || [],
+      certifications: coach.certifications || [],
+      createdAt: coach.createdAt,
+      updatedAt: coach.updatedAt
+    });
+  } catch (error) {
+    console.error('[COACHING-API] Error getting coach profile:', error);
+    res.status(500).json({ error: 'Failed to get coach profile' });
+  }
+});
+
 // Get all available coaches for discovery
 router.get('/available', async (req, res) => {
   try {

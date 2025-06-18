@@ -64,6 +64,14 @@ export default function PassportDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Check if user is already a coach
+  const { data: coachProfile, isLoading: isCoachLoading } = useQuery({
+    queryKey: ['/api/coaches/my-profile'],
+    retry: false
+  });
+  
+  const isCoach = coachProfile && coachProfile.id;
+  
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
@@ -271,6 +279,21 @@ export default function PassportDashboard() {
   const handleBecomeCoach = () => {
     // Navigate to coach application form
     window.location.href = '/coach/apply';
+  }
+
+  const handleManageCoachProfile = () => {
+    // Navigate to coach profile management
+    window.location.href = '/coach/profile';
+  }
+
+  const handleFindCoaches = () => {
+    // Navigate to find coaches page
+    window.location.href = '/find-coaches';
+  }
+
+  const handleFindTrainingFacilities = () => {
+    // Navigate to training facilities page
+    window.location.href = '/training-center';
   };
 
   const handlePhotoUploadSuccess = (avatarUrl: string) => {
@@ -1175,10 +1198,34 @@ export default function PassportDashboard() {
                     <ClipboardList className="w-4 h-4 mr-2" />
                     Record New Match
                   </Button>
-                  <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
-                    <Award className="w-4 h-4 mr-2" />
-                    Become a Coach
-                  </Button>
+                  
+                  {/* Role-based coaching action */}
+                  {isCoach ? (
+                    <Button onClick={handleManageCoachProfile} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
+                      <Award className="w-4 h-4 mr-2" />
+                      Manage Coach Profile
+                    </Button>
+                  ) : (
+                    <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
+                      <Award className="w-4 h-4 mr-2" />
+                      Become a Coach
+                    </Button>
+                  )}
+                  
+                  {/* Quick actions for regular players */}
+                  {!isCoach && (
+                    <>
+                      <Button onClick={handleFindCoaches} variant="outline" className="w-full justify-start">
+                        <Users className="w-4 h-4 mr-2" />
+                        Find Coaches
+                      </Button>
+                      <Button onClick={handleFindTrainingFacilities} variant="outline" className="w-full justify-start">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Find Training Facilities
+                      </Button>
+                    </>
+                  )}
+                  
                   <Button onClick={handleJoinTournament} variant="outline" className="w-full justify-start">
                     <Calendar className="w-4 h-4 mr-2" />
                     Join Tournament
