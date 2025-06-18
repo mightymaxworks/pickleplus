@@ -287,29 +287,86 @@ router.put('/my-profile', async (req, res) => {
 
     const { bio, experienceYears, hourlyRate, specialties, certifications } = req.body;
 
-    // Convert specialties and certifications from string to array if needed
-    let specialtiesArray = specialties;
-    let certificationsArray = certifications;
-    
-    if (typeof specialties === 'string' && specialties.trim()) {
-      specialtiesArray = specialties.split(',').map(s => s.trim()).filter(s => s);
-    }
-    
-    if (typeof certifications === 'string' && certifications.trim()) {
-      certificationsArray = certifications.split(',').map(s => s.trim()).filter(s => s);
+    // Convert and validate experienceYears
+    let validExperienceYears = null;
+    if (experienceYears !== undefined && experienceYears !== null && experienceYears !== '') {
+      const parsedYears = parseInt(experienceYears.toString());
+      if (!isNaN(parsedYears) && parsedYears >= 0) {
+        validExperienceYears = parsedYears;
+      }
     }
 
+    // Convert and validate hourlyRate
+    let validHourlyRate = null;
+    if (hourlyRate !== undefined && hourlyRate !== null && hourlyRate !== '') {
+      const parsedRate = parseFloat(hourlyRate.toString());
+      if (!isNaN(parsedRate) && parsedRate >= 0) {
+        validHourlyRate = parsedRate;
+      }
+    }
+
+    // Convert specialties and certifications to proper arrays
+    let specialtiesArray = null;
+    if (specialties !== undefined && specialties !== null) {
+      if (Array.isArray(specialties)) {
+        specialtiesArray = specialties.filter(s => s && s.trim());
+      } else if (typeof specialties === 'string' && specialties.trim()) {
+        specialtiesArray = specialties.split(',').map(s => s.trim()).filter(s => s);
+      }
+    }
+    
+    let certificationsArray = null;
+    if (certifications !== undefined && certifications !== null) {
+      if (Array.isArray(certifications)) {
+        certificationsArray = certifications.filter(s => s && s.trim());
+      } else if (typeof certifications === 'string' && certifications.trim()) {
+        certificationsArray = certifications.split(',').map(s => s.trim()).filter(s => s);
+      }
+    }
+
+    // Use a transaction-like approach with multiple updates
+    // First update the basic fields
     await db.execute(sql`
       UPDATE coach_profiles 
       SET 
         bio = ${bio || null},
-        experience_years = ${experienceYears ? parseInt(experienceYears.toString()) : null},
-        hourly_rate = ${hourlyRate ? parseFloat(hourlyRate.toString()) : null},
-        specialties = ${specialtiesArray || null},
-        certifications = ${certificationsArray || null},
+        experience_years = ${validExperienceYears},
+        hourly_rate = ${validHourlyRate},
         updated_at = NOW()
       WHERE user_id = ${userId}
     `);
+    
+    // Update specialties array using PostgreSQL array literal syntax
+    if (specialtiesArray !== null && specialtiesArray.length > 0) {
+      const specialtiesLiteral = `{${specialtiesArray.map(s => `"${s.replace(/"/g, '\\"')}"`).join(',')}}`;
+      await db.execute(sql`
+        UPDATE coach_profiles 
+        SET specialties = ${specialtiesLiteral}::text[]
+        WHERE user_id = ${userId}
+      `);
+    } else if (specialtiesArray !== null) {
+      await db.execute(sql`
+        UPDATE coach_profiles 
+        SET specialties = '{}'::text[]
+        WHERE user_id = ${userId}
+      `);
+    }
+    
+    // Update certifications array using PostgreSQL array literal syntax
+    if (certificationsArray !== null && certificationsArray.length > 0) {
+      const certificationsLiteral = `{${certificationsArray.map(s => `"${s.replace(/"/g, '\\"')}"`).join(',')}}`;
+      await db.execute(sql`
+        UPDATE coach_profiles 
+        SET certifications = ${certificationsLiteral}::text[]
+        WHERE user_id = ${userId}
+      `);
+    } else if (certificationsArray !== null) {
+      await db.execute(sql`
+        UPDATE coach_profiles 
+        SET certifications = '{}'::text[]
+        WHERE user_id = ${userId}
+      `);
+    }
 
     // Get updated profile
     const result = await db.execute(sql`
