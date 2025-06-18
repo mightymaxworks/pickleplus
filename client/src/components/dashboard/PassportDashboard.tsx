@@ -282,8 +282,8 @@ export default function PassportDashboard() {
   }
 
   const handleManageCoachProfile = () => {
-    // Navigate to coach profile management
-    window.location.href = '/coach/profile';
+    // Open the inline profile editing modal instead of navigating to separate page
+    setIsPassportExpanded(true);
   }
 
   const handleFindCoaches = () => {
@@ -1209,6 +1209,14 @@ export default function PassportDashboard() {
                     <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
                       <Award className="w-4 h-4 mr-2" />
                       Become a Coach
+                    </Button>
+                  )}
+                  
+                  {/* Quick actions for coaches */}
+                  {isCoach && (
+                    <Button onClick={handleFindTrainingFacilities} variant="outline" className="w-full justify-start">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Find Training Facilities
                     </Button>
                   )}
                   
