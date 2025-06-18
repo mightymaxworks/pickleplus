@@ -934,7 +934,7 @@ export default function PassportDashboard() {
                             <input
                               type="number"
                               defaultValue={(coachProfile as any)?.experienceYears || ''}
-                              onChange={(e) => handleFieldChange('experienceYears', parseInt(e.target.value))}
+                              onChange={(e) => handleFieldChange('experienceYears', e.target.value ? parseInt(e.target.value) : 0)}
                               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                             />
                           </div>
@@ -943,7 +943,7 @@ export default function PassportDashboard() {
                             <input
                               type="number"
                               defaultValue={(coachProfile as any)?.hourlyRate || ''}
-                              onChange={(e) => handleFieldChange('hourlyRate', parseFloat(e.target.value))}
+                              onChange={(e) => handleFieldChange('hourlyRate', e.target.value ? parseFloat(e.target.value) : 0)}
                               className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                             />
                           </div>
@@ -953,7 +953,7 @@ export default function PassportDashboard() {
                           <label className="text-sm font-medium text-gray-700">Specialties</label>
                           <textarea
                             defaultValue={(coachProfile as any)?.specialties?.join(', ') || ''}
-                            onChange={(e) => handleFieldChange('specialties', e.target.value.split(', ').filter(s => s.trim()))}
+                            onChange={(e) => handleFieldChange('specialties', e.target.value ? e.target.value.split(', ').filter(s => s.trim()) : [])}
                             rows={2}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                             placeholder="e.g., Beginner Training, Tournament Prep, Technical Analysis"
@@ -964,7 +964,7 @@ export default function PassportDashboard() {
                           <label className="text-sm font-medium text-gray-700">Certifications</label>
                           <textarea
                             defaultValue={(coachProfile as any)?.certifications?.join(', ') || ''}
-                            onChange={(e) => handleFieldChange('certifications', e.target.value.split(', ').filter(s => s.trim()))}
+                            onChange={(e) => handleFieldChange('certifications', e.target.value ? e.target.value.split(', ').filter(s => s.trim()) : [])}
                             rows={2}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                             placeholder="e.g., PPR Certified, Level 3 Instructor, USA Pickleball Certified"
