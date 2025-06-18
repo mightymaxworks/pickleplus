@@ -75,6 +75,16 @@ export default function PassportDashboard() {
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
+      // Separate coaching fields from user profile fields
+      const {
+        coachBio,
+        experienceYears,
+        hourlyRate,
+        specialties,
+        certifications,
+        ...userProfileData
+      } = profileData;
+
       // First get CSRF token if needed
       let headers: any = {
         'Content-Type': 'application/json',
@@ -91,16 +101,40 @@ export default function PassportDashboard() {
         }
       }
       
+      // Update user profile
       const response = await fetch('/api/profile/update', {
         method: 'PATCH',
         headers,
         credentials: 'include',
-        body: JSON.stringify(profileData),
+        body: JSON.stringify(userProfileData),
       });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      // Update coaching profile if coaching fields are present and user is a coach
+      if (isCoach && (coachBio !== undefined || experienceYears !== undefined || hourlyRate !== undefined || specialties !== undefined || certifications !== undefined)) {
+        const coachingData = {
+          bio: coachBio,
+          experienceYears,
+          hourlyRate,
+          specialties,
+          certifications
+        };
+
+        const coachResponse = await fetch('/api/coaches/my-profile', {
+          method: 'PUT',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(coachingData),
+        });
+
+        if (!coachResponse.ok) {
+          const errorData = await coachResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to update coaching profile');
+        }
       }
       
       return response.json();
@@ -110,6 +144,7 @@ export default function PassportDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coaches/my-profile'] });
       
       // Clear the form data
       setProfileFormData({});
@@ -867,6 +902,69 @@ export default function PassportDashboard() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Coaching Information - Only show for coaches */}
+                  {isCoach && (
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wide">PCP Coaching Certification Programme</h3>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Coach Bio</label>
+                          <textarea
+                            defaultValue={(coachProfile as any)?.bio || ''}
+                            onChange={(e) => handleFieldChange('coachBio', e.target.value)}
+                            rows={3}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            placeholder="Describe your coaching philosophy and experience..."
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Experience Years</label>
+                            <input
+                              type="number"
+                              defaultValue={(coachProfile as any)?.experienceYears || ''}
+                              onChange={(e) => handleFieldChange('experienceYears', parseInt(e.target.value))}
+                              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Hourly Rate ($)</label>
+                            <input
+                              type="number"
+                              defaultValue={(coachProfile as any)?.hourlyRate || ''}
+                              onChange={(e) => handleFieldChange('hourlyRate', parseFloat(e.target.value))}
+                              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Specialties</label>
+                          <textarea
+                            defaultValue={(coachProfile as any)?.specialties?.join(', ') || ''}
+                            onChange={(e) => handleFieldChange('specialties', e.target.value.split(', ').filter(s => s.trim()))}
+                            rows={2}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            placeholder="e.g., Beginner Training, Tournament Prep, Technical Analysis"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Certifications</label>
+                          <textarea
+                            defaultValue={(coachProfile as any)?.certifications?.join(', ') || ''}
+                            onChange={(e) => handleFieldChange('certifications', e.target.value.split(', ').filter(s => s.trim()))}
+                            rows={2}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            placeholder="e.g., PPR Certified, Level 3 Instructor, USA Pickleball Certified"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* External Ratings */}
                   <div className="space-y-4">

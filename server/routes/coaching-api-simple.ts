@@ -270,4 +270,95 @@ router.post('/request-session', async (req, res) => {
   }
 });
 
+// Update current user's coach profile
+router.put('/my-profile', async (req, res) => {
+  try {
+    // Development mode - use test user ID
+    let userId;
+    if (process.env.NODE_ENV === 'production') {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      userId = req.user.id;
+    } else {
+      // Development mode - use mightymax's user ID
+      userId = 1;
+    }
+
+    const { bio, experienceYears, hourlyRate, specialties, certifications } = req.body;
+
+    // Convert specialties and certifications from string to array if needed
+    let specialtiesArray = specialties;
+    let certificationsArray = certifications;
+    
+    if (typeof specialties === 'string' && specialties.trim()) {
+      specialtiesArray = specialties.split(',').map(s => s.trim()).filter(s => s);
+    }
+    
+    if (typeof certifications === 'string' && certifications.trim()) {
+      certificationsArray = certifications.split(',').map(s => s.trim()).filter(s => s);
+    }
+
+    await db.execute(sql`
+      UPDATE coach_profiles 
+      SET 
+        bio = ${bio || null},
+        experience_years = ${experienceYears ? parseInt(experienceYears.toString()) : null},
+        hourly_rate = ${hourlyRate ? parseFloat(hourlyRate.toString()) : null},
+        specialties = ${specialtiesArray || null},
+        certifications = ${certificationsArray || null},
+        updated_at = NOW()
+      WHERE user_id = ${userId}
+    `);
+
+    // Get updated profile
+    const result = await db.execute(sql`
+      SELECT 
+        cp.id,
+        cp.user_id as "userId",
+        cp.bio,
+        cp.specialties,
+        cp.certifications,
+        cp.experience_years as "experienceYears",
+        cp.rating,
+        cp.total_reviews as "totalReviews",
+        cp.hourly_rate as "hourlyRate",
+        cp.profile_image_url as "profileImageUrl",
+        cp.is_verified as "isVerified",
+        cp.availability_schedule as "availabilitySchedule",
+        cp.created_at as "createdAt",
+        cp.updated_at as "updatedAt"
+      FROM coach_profiles cp
+      WHERE cp.user_id = ${userId}
+    `);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Coach profile not found' });
+    }
+
+    const coach = result.rows[0] as any;
+    const updatedProfile = {
+      id: coach.id,
+      userId: coach.userId,
+      bio: coach.bio,
+      specialties: coach.specialties || [],
+      hourlyRate: coach.hourlyRate,
+      rating: parseFloat(String(coach.rating || 0)) || 0,
+      totalReviews: coach.totalReviews || 0,
+      experienceYears: coach.experienceYears || 0,
+      isVerified: coach.isVerified,
+      profileImageUrl: coach.profileImageUrl,
+      certifications: coach.certifications || [],
+      availabilitySchedule: coach.availabilitySchedule,
+      createdAt: coach.createdAt,
+      updatedAt: coach.updatedAt
+    };
+
+    res.json(updatedProfile);
+  } catch (error) {
+    console.error('Error updating coach profile:', error);
+    res.status(500).json({ error: 'Failed to update coach profile' });
+  }
+});
+
 export default router;
