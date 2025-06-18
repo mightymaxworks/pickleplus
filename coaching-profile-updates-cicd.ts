@@ -386,6 +386,8 @@ async function testFrontendIntegration(): Promise<void> {
         false,
         'Frontend'
       );
+    }
+
   } catch (error) {
     addTest(
       'Frontend Integration',
