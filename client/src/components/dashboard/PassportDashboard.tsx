@@ -484,6 +484,10 @@ export default function PassportDashboard() {
             <div className="flex flex-col lg:flex-row items-center gap-4">
               {/* Player Information */}
               <div className="flex-1 text-center lg:text-left">
+                {/* Language Toggle - Top Right */}
+                <div className="flex justify-end mb-2">
+                  <LanguageToggle />
+                </div>
                 <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
                   {/* Profile Photo with Upload Functionality */}
                   <motion.div 
@@ -546,7 +550,7 @@ export default function PassportDashboard() {
                     >
                       <Badge className="mt-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-900 border-orange-300 px-3 py-1 text-sm font-bold shadow-md">
                         <Medal className="w-4 h-4 mr-2" />
-                        Player Passport
+                        {t('Player Passport', '球员护照')}
                       </Badge>
                     </motion.div>
                   </div>
@@ -564,7 +568,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">DUPR Rating</p>
+                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">{t('DUPR Rating', 'DUPR评级')}</p>
                     <p className="text-3xl font-black text-orange-900">{user.duprRating || '0'}</p>
                   </motion.div>
                   <motion.div 
@@ -572,7 +576,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Ranking Points</p>
+                    <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">{t('Ranking Points', '排名积分')}</p>
                     <p className="text-3xl font-black text-purple-700">{totalRankingPoints}</p>
                   </motion.div>
                   <motion.div 
@@ -580,7 +584,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Win Rate</p>
+                    <p className="text-xs text-green-600 font-bold uppercase tracking-wider">{t('Win Rate', '胜率')}</p>
                     <p className="text-3xl font-black text-green-700">{winRate}%</p>
                   </motion.div>
                   <motion.div 
@@ -588,7 +592,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Matches</p>
+                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{t('Matches', '比赛')}</p>
                     <p className="text-3xl font-black text-blue-700">{matchStats?.totalMatches || 0}</p>
                   </motion.div>
                   <motion.div 
@@ -596,7 +600,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Streak</p>
+                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">{t('Streak', '连胜')}</p>
                     <p className="text-3xl font-black text-indigo-700">{currentStreak}</p>
                   </motion.div>
                   <motion.div 
