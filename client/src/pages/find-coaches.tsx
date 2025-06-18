@@ -70,7 +70,7 @@ export default function FindCoachesPage() {
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">Find Your Perfect Coach</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Connect with PCP Coaching Certification Programme certified coaches who can help take your game to the next level
+            Connect with expert coaches who will transform your skills and elevate your performance on the court
           </p>
         </div>
 

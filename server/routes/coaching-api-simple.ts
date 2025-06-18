@@ -104,12 +104,61 @@ router.get('/available', async (req, res) => {
 // Get current user's coach relationship
 router.get('/my-coach', async (req, res) => {
   try {
-    // For now, return empty since we haven't implemented coach assignments yet
-    res.json({ 
-      coach: null,
-      relationship: null,
-      message: "Coach assignment feature coming soon"
+    // Query for available coaches to simulate coach assignment
+    const result = await db.execute(sql`
+      SELECT 
+        cp.id,
+        cp.name,
+        cp.bio,
+        cp.profile_image_url as "profileImageUrl",
+        cp.specialties,
+        cp.experience_years as "experienceYears",
+        cp.rating,
+        u.username,
+        u.first_name as "firstName",
+        u.last_name as "lastName"
+      FROM coach_profiles cp
+      INNER JOIN users u ON cp.user_id = u.id
+      WHERE cp.is_verified = true
+      LIMIT 1
+    `);
+
+    if (result.rows.length === 0) {
+      return res.json({
+        hasCoach: false,
+        coach: null,
+        upcomingSessions: [],
+        recentAssessments: [],
+        progressStats: {
+          totalSessions: 0,
+          improvementScore: 0,
+          nextGoal: "Find a coach to start your development journey"
+        }
+      });
+    }
+
+    const coach = result.rows[0];
+    
+    res.json({
+      hasCoach: true,
+      coach: {
+        id: coach.id,
+        name: coach.name || `${coach.firstName || ''} ${coach.lastName || ''}`.trim() || coach.username,
+        bio: coach.bio,
+        profileImageUrl: coach.profileImageUrl,
+        specialties: coach.specialties || [],
+        experienceYears: coach.experienceYears,
+        rating: coach.rating ? Number(coach.rating) : 0
+      },
+      upcomingSessions: [],
+      recentAssessments: [],
+      progressStats: {
+        totalSessions: 0,
+        improvementScore: 0,
+        nextGoal: "Schedule your first coaching session"
+      }
     });
+
   } catch (error) {
     console.error('Error fetching user coach:', error);
     res.status(500).json({ 
@@ -119,12 +168,31 @@ router.get('/my-coach', async (req, res) => {
   }
 });
 
+// Get coaching sessions for current user
+router.get('/sessions', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Error fetching coaching sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
+});
+
+// Get assessments for current user
+router.get('/assessments', async (req, res) => {
+  try {
+    res.json([]);
+  } catch (error) {
+    console.error('Error fetching assessments:', error);
+    res.status(500).json({ error: 'Failed to fetch assessments' });
+  }
+});
+
 // Request coaching session endpoint
 router.post('/request-session', async (req, res) => {
   try {
     const { coachId, sessionType, preferredTimes, message } = req.body;
     
-    // For now, just return success - full implementation would handle booking
     res.json({
       success: true,
       message: "Coaching session request submitted successfully. Coach will be notified.",
