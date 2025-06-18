@@ -145,6 +145,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount coaching API routes for player-coach connection
   app.use('/api/coaches', coachingApiRoutes);
+  app.use('/api/coaching', coachingApiRoutes);
   
   // Match statistics endpoint for dashboard - must be before match assessment routes
   app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
