@@ -617,11 +617,11 @@ export default function PassportDashboard() {
                       }
                     }}
                   >
-                    <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">Passport Code</p>
+                    <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">{t('Passport Code', '护照代码')}</p>
                     <p className="text-2xl font-mono font-black text-orange-800">
                       {user.passportCode || 'LOADING...'}
                     </p>
-                    <p className="text-xs text-orange-600 mt-1">Tap to Copy</p>
+                    <p className="text-xs text-orange-600 mt-1">{t('Tap to Copy', '点击复制')}</p>
                   </motion.div>
                 </motion.div>
 
