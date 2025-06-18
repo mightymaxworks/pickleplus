@@ -324,33 +324,17 @@ router.put('/my-profile', async (req, res) => {
       }
     }
 
-    // Build a single comprehensive update query
-    const updateFields = [];
-    const updateValues = [];
-    
-    updateFields.push('bio = $1', 'experience_years = $2', 'hourly_rate = $3', 'updated_at = NOW()');
-    updateValues.push(bio || null, validExperienceYears, validHourlyRate);
-    
-    if (specialtiesArray !== null) {
-      updateFields.push(`specialties = $${updateValues.length + 1}`);
-      updateValues.push(specialtiesArray);
-    }
-    
-    if (certificationsArray !== null) {
-      updateFields.push(`certifications = $${updateValues.length + 1}`);
-      updateValues.push(certificationsArray);
-    }
-    
-    updateFields.push(`user_id = $${updateValues.length + 1}`);
-    updateValues.push(userId);
-    
-    const queryText = `
+    // Execute update using direct SQL
+    await db.execute(sql`
       UPDATE coach_profiles 
-      SET ${updateFields.slice(0, -1).join(', ')}
-      WHERE ${updateFields[updateFields.length - 1]}
-    `;
-    
-    await db.execute(sql.raw(queryText, updateValues));
+      SET bio = ${bio || null}, 
+          experience_years = ${validExperienceYears}, 
+          hourly_rate = ${validHourlyRate},
+          specialties = ${specialtiesArray},
+          certifications = ${certificationsArray},
+          updated_at = NOW()
+      WHERE user_id = ${userId}
+    `);
 
     // Get updated profile
     const result = await db.execute(sql`
