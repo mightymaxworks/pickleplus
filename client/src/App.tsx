@@ -116,6 +116,7 @@ import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
 import ModernProfilePage from './pages/ModernProfilePage'
 import LandingPageTest from './pages/LandingPageTest'
+import ModernLandingPage from './pages/ModernLandingPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
 import CommunityPage from './pages/CommunityPage'
@@ -211,7 +212,7 @@ export default function App() {
                     
                     <Switch>
                     {/* Public Routes */}
-                  <Route path="/" component={LazyLandingPage} />
+                  <Route path="/" component={ModernLandingPage} />
                   <Route path="/login" component={LazyAuthPage} />
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
@@ -220,6 +221,7 @@ export default function App() {
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
+                  <Route path="/modern-landing" component={ModernLandingPage} />
                   <Route path="/test-login" component={TestLoginPage} />
                   <Route path="/sage-demo" component={SageDemoPage} />
                   <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} />
