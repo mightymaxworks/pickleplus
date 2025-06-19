@@ -244,7 +244,7 @@ export default function App() {
                   />
                   <ProtectedRouteWithLayout 
                     path="/matches" 
-                    component={LazyMatchesPage} 
+                    component={lazyLoad(() => import('./pages/Matches'))} 
                     pageTitle="Your Matches"
                   />
                   <ProtectedRouteWithLayout 
@@ -274,6 +274,20 @@ export default function App() {
                       return <TournamentDetailsPage />;
                     }}
                   </Route>
+                  {/* Communities Page */}
+                  <ProtectedRouteWithLayout 
+                    path="/communities" 
+                    component={lazyLoad(() => import('./pages/Communities'))} 
+                    pageTitle="Communities"
+                  />
+                  
+                  {/* Settings Page */}
+                  <ProtectedRouteWithLayout 
+                    path="/settings" 
+                    component={lazyLoad(() => import('./pages/Settings'))} 
+                    pageTitle="Settings"
+                  />
+                  
                   {/* PKL-278651-COMM-0007 - Enhanced Referral System */}
                   <ProtectedRouteWithLayout 
                     path="/referrals" 
