@@ -45,6 +45,7 @@ import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Import default avatar image
 import defaultAvatarPath from "@assets/Untitled design (51).png";
@@ -69,6 +70,7 @@ export function AppHeader({
   const [, navigate] = useLocation();
   const location = useLocation()[0]; // Current path
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const isExtraSmallScreen = useMediaQuery('(max-width: 380px)');
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -133,11 +135,11 @@ export function AppHeader({
 
   // Default navigation items - removed profile, picklepass, tournaments, onboarding per user request
   const defaultNavItems = [
-    { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
-    { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
+    { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
+    { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
     { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
     { label: 'Referrals', icon: <Share size={18} />, path: '/referrals' },
-    { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
+    { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },
     // Removed Icons Test per user request (2025-04-21)
     ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])
   ];
@@ -301,7 +303,7 @@ export function AppHeader({
                   <LogOut size={18} />
                 </span>
                 <span className="font-medium text-red-600 dark:text-red-400">
-                  Logout
+                  {t('nav.logout')}
                 </span>
               </motion.button>
               
@@ -311,7 +313,7 @@ export function AppHeader({
                   <Search size={18} className="text-gray-500 dark:text-gray-400 mr-2" />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder={t('action.search')}
                     className="bg-transparent border-none outline-none text-gray-600 dark:text-gray-300 w-full"
                   />
                 </div>
