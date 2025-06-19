@@ -191,6 +191,33 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.spendDescription': 'Redeem your Pickle Points for exclusive rewards, merchandise, and tournament entry fees.',
     'dashboard.picklePoints.earnMore': 'Earn More',
     'dashboard.picklePoints.earnDescription': 'Discover new ways to earn Pickle Points through challenges, referrals, and community activities.',
+
+    // Dashboard Tabs
+    'dashboard.tabs.performance': 'Performance',
+    'dashboard.tabs.recentMatches': 'Recent Matches',
+    'dashboard.tabs.achievements': 'Achievements',
+    'dashboard.tabs.community': 'Community',
+
+    // Performance Trends
+    'dashboard.performance.title': 'Performance Trends',
+    'dashboard.performance.overallRating': 'Overall Rating',
+    'dashboard.performance.passportCode': 'Passport Code',
+    'dashboard.performance.notSet': 'Not Set',
+    'dashboard.performance.hide': 'Hide',
+    'dashboard.performance.show': 'Show',
+    'dashboard.performance.recentForm': 'Recent Form',
+    'dashboard.performance.improving': 'Improving',
+    'dashboard.performance.pointsThisMonth': 'Points This Month',
+
+    // Quick Actions
+    'dashboard.quickActions.title': 'Quick Actions',
+    'dashboard.quickActions.recordMatch': 'Record New Match',
+    'dashboard.quickActions.manageCoachProfile': 'Manage Coach Profile',
+    'dashboard.quickActions.becomeCoach': 'Become a Coach',
+    'dashboard.quickActions.findTrainingFacilities': 'Find Training Facilities',
+    'dashboard.quickActions.findCoaches': 'Find Coaches',
+    'dashboard.quickActions.joinTournament': 'Join Tournament',
+    'dashboard.quickActions.findPlayers': 'Find Players',
     
     // Authentication
     'auth.login': 'Login',
@@ -496,6 +523,33 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.spendDescription': '用您的泡菜积分兑换专属奖励、商品和锦标赛报名费。',
     'dashboard.picklePoints.earnMore': '赚取更多',
     'dashboard.picklePoints.earnDescription': '通过挑战、推荐和社区活动发现赚取泡菜积分的新方式。',
+
+    // Dashboard Tabs
+    'dashboard.tabs.performance': '表现',
+    'dashboard.tabs.recentMatches': '近期比赛',
+    'dashboard.tabs.achievements': '成就',
+    'dashboard.tabs.community': '社区',
+
+    // Performance Trends
+    'dashboard.performance.title': '表现趋势',
+    'dashboard.performance.overallRating': '总体评级',
+    'dashboard.performance.passportCode': '护照代码',
+    'dashboard.performance.notSet': '未设置',
+    'dashboard.performance.hide': '隐藏',
+    'dashboard.performance.show': '显示',
+    'dashboard.performance.recentForm': '近期状态',
+    'dashboard.performance.improving': '进步中',
+    'dashboard.performance.pointsThisMonth': '本月积分',
+
+    // Quick Actions
+    'dashboard.quickActions.title': '快捷操作',
+    'dashboard.quickActions.recordMatch': '记录新比赛',
+    'dashboard.quickActions.manageCoachProfile': '管理教练资料',
+    'dashboard.quickActions.becomeCoach': '成为教练',
+    'dashboard.quickActions.findTrainingFacilities': '寻找训练设施',
+    'dashboard.quickActions.findCoaches': '寻找教练',
+    'dashboard.quickActions.joinTournament': '参加锦标赛',
+    'dashboard.quickActions.findPlayers': '寻找球员',
     
     // Authentication
     'auth.login': '登录',

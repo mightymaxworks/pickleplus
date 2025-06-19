@@ -1251,10 +1251,10 @@ export default function PassportDashboard() {
       >
         <Tabs defaultValue="performance" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="matches">Recent Matches</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="community">Community</TabsTrigger>
+            <TabsTrigger value="performance">{t('dashboard.tabs.performance')}</TabsTrigger>
+            <TabsTrigger value="matches">{t('dashboard.tabs.recentMatches')}</TabsTrigger>
+            <TabsTrigger value="achievements">{t('dashboard.tabs.achievements')}</TabsTrigger>
+            <TabsTrigger value="community">{t('dashboard.tabs.community')}</TabsTrigger>
           </TabsList>
           
           {/* Performance Tab */}
@@ -1264,21 +1264,21 @@ export default function PassportDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-blue-500" />
-                    Performance Trends
+                    {t('dashboard.performance.title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Overall Rating</span>
+                      <span className="text-sm text-gray-600">{t('dashboard.performance.overallRating')}</span>
                       <span className="font-semibold">{user.duprRating || '4.2'}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Passport Code</span>
+                      <span className="text-sm text-gray-600">{t('dashboard.performance.passportCode')}</span>
                       <div className="flex items-center gap-2">
                         {showPassportCode ? (
                           <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded border">
-                            {user.passportCode || 'Not Set'}
+                            {user.passportCode || t('dashboard.performance.notSet')}
                           </span>
                         ) : (
                           <span className="font-mono text-gray-400">••••••••</span>
@@ -1287,16 +1287,16 @@ export default function PassportDashboard() {
                           onClick={handleQRReveal}
                           className="text-xs text-orange-600 hover:text-orange-700 underline"
                         >
-                          {showPassportCode ? 'Hide' : 'Show'}
+                          {showPassportCode ? t('dashboard.performance.hide') : t('dashboard.performance.show')}
                         </button>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Recent Form</span>
-                      <Badge className="bg-green-100 text-green-800">Improving</Badge>
+                      <span className="text-sm text-gray-600">{t('dashboard.performance.recentForm')}</span>
+                      <Badge className="bg-green-100 text-green-800">{t('dashboard.performance.improving')}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Points This Month</span>
+                      <span className="text-sm text-gray-600">{t('dashboard.performance.pointsThisMonth')}</span>
                       <span className="font-semibold text-yellow-600">+{Math.floor(picklePoints * 0.3)}</span>
                     </div>
                   </div>
@@ -1307,25 +1307,25 @@ export default function PassportDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-green-500" />
-                    Quick Actions
+                    {t('dashboard.quickActions.title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button onClick={handleRecordMatch} className="w-full justify-start bg-blue-500 hover:bg-blue-600">
                     <ClipboardList className="w-4 h-4 mr-2" />
-                    Record New Match
+                    {t('dashboard.quickActions.recordMatch')}
                   </Button>
                   
                   {/* Role-based coaching action */}
                   {isCoach ? (
                     <Button onClick={handleManageCoachProfile} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
                       <Award className="w-4 h-4 mr-2" />
-                      Manage Coach Profile
+                      {t('dashboard.quickActions.manageCoachProfile')}
                     </Button>
                   ) : (
                     <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
                       <Award className="w-4 h-4 mr-2" />
-                      Become a Coach
+                      {t('dashboard.quickActions.becomeCoach')}
                     </Button>
                   )}
                   
@@ -1333,7 +1333,7 @@ export default function PassportDashboard() {
                   {isCoach && (
                     <Button onClick={handleFindTrainingFacilities} variant="outline" className="w-full justify-start">
                       <MapPin className="w-4 h-4 mr-2" />
-                      Find Training Facilities
+                      {t('dashboard.quickActions.findTrainingFacilities')}
                     </Button>
                   )}
                   
@@ -1342,22 +1342,22 @@ export default function PassportDashboard() {
                     <>
                       <Button onClick={handleFindCoaches} variant="outline" className="w-full justify-start">
                         <Users className="w-4 h-4 mr-2" />
-                        Find Coaches
+                        {t('dashboard.quickActions.findCoaches')}
                       </Button>
                       <Button onClick={handleFindTrainingFacilities} variant="outline" className="w-full justify-start">
                         <MapPin className="w-4 h-4 mr-2" />
-                        Find Training Facilities
+                        {t('dashboard.quickActions.findTrainingFacilities')}
                       </Button>
                     </>
                   )}
                   
                   <Button onClick={handleJoinTournament} variant="outline" className="w-full justify-start">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Join Tournament
+                    {t('dashboard.quickActions.joinTournament')}
                   </Button>
                   <Button onClick={handleFindPlayers} variant="outline" className="w-full justify-start">
                     <Users className="w-4 h-4 mr-2" />
-                    Find Players
+                    {t('dashboard.quickActions.findPlayers')}
                   </Button>
                 </CardContent>
               </Card>
