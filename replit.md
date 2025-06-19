@@ -127,6 +127,16 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
+### June 19, 2025 - Comprehensive Bilingual Language System Implemented
+- **Complete Language Toggle System**: English/Simplified Chinese language switching with persistent localStorage preferences
+- **Comprehensive Translation Infrastructure**: 150+ translation keys covering all major interface elements
+- **LanguageContext Integration**: React Context with automatic browser language detection and fallback
+- **Dashboard Bilingual Support**: Player passport dashboard fully translated with consistent terminology
+- **Translation Coverage**: Navigation, coaching, tournaments, training, profile management, notifications, and system messages
+- **User Preference Persistence**: Language selection remembered across sessions with smooth switching experience
+- **Professional Chinese Translations**: Accurate Simplified Chinese translations for all technical pickleball terminology
+- **Scalable Translation System**: Structured key-based system supporting future language additions
+
 ### June 18, 2025 - Complete User Flow Implementation Achieved
 - **Page Refresh Issue Fixed**: Removed window.location.reload() and implemented proper React Query cache management
 - **Complete Coach Discovery System**: `/api/coaches/find` endpoint fully operational with specialty filtering and search

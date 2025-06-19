@@ -96,6 +96,120 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.alreadyHaveAccount': 'Already have an account?',
     'auth.signUp': 'Sign Up',
     'auth.signIn': 'Sign In',
+    
+    // Profile & Player Info
+    'profile.personalInfo': 'Personal Information',
+    'profile.statistics': 'Statistics',
+    'profile.equipment': 'Equipment',
+    'profile.preferences': 'Preferences',
+    'profile.achievements': 'Achievements',
+    'profile.updatePhoto': 'Update Photo',
+    'profile.height': 'Height',
+    'profile.weight': 'Weight',
+    'profile.dominantHand': 'Dominant Hand',
+    'profile.playingStyle': 'Playing Style',
+    
+    // Dashboard Stats
+    'stats.duprRating': 'DUPR Rating',
+    'stats.rankingPoints': 'Ranking Points',
+    'stats.winRate': 'Win Rate',
+    'stats.matches': 'Matches',
+    'stats.streak': 'Streak',
+    'stats.passportCode': 'Passport Code',
+    'stats.tapToCopy': 'Tap to Copy',
+    'stats.loading': 'Loading...',
+    
+    // Tournament & Competition
+    'tournament.upcoming': 'Upcoming Tournaments',
+    'tournament.results': 'Tournament Results',
+    'tournament.registration': 'Registration',
+    'tournament.bracket': 'Bracket',
+    'tournament.leaderboard': 'Leaderboard',
+    'tournament.format': 'Format',
+    'tournament.division': 'Division',
+    'tournament.date': 'Date',
+    'tournament.location': 'Location',
+    
+    // Training & Facilities
+    'training.centers': 'Training Centers',
+    'training.schedule': 'Class Schedule',
+    'training.bookClass': 'Book Class',
+    'training.history': 'Training History',
+    'training.instructor': 'Instructor',
+    'training.duration': 'Duration',
+    'training.capacity': 'Capacity',
+    'training.available': 'Available',
+    'training.full': 'Full',
+    
+    // Match Recording
+    'match.record': 'Record Match',
+    'match.opponent': 'Opponent',
+    'match.score': 'Score',
+    'match.result': 'Result',
+    'match.win': 'Win',
+    'match.loss': 'Loss',
+    'match.date': 'Date',
+    'match.format': 'Format',
+    'match.singles': 'Singles',
+    'match.doubles': 'Doubles',
+    'match.mixed': 'Mixed Doubles',
+    
+    // Time & Status
+    'time.today': 'Today',
+    'time.yesterday': 'Yesterday',
+    'time.thisWeek': 'This Week',
+    'time.thisMonth': 'This Month',
+    'time.allTime': 'All Time',
+    'status.online': 'Online',
+    'status.offline': 'Offline',
+    'status.active': 'Active',
+    'status.inactive': 'Inactive',
+    'status.available': 'Available',
+    'status.busy': 'Busy',
+    
+    // Equipment & Gear
+    'equipment.paddle': 'Paddle',
+    'equipment.shoes': 'Shoes',
+    'equipment.apparel': 'Apparel',
+    'equipment.accessories': 'Accessories',
+    'equipment.brand': 'Brand',
+    'equipment.model': 'Model',
+    'equipment.primary': 'Primary',
+    'equipment.backup': 'Backup',
+    
+    // Notifications & Messages
+    'notification.success': 'Success',
+    'notification.error': 'Error',
+    'notification.warning': 'Warning',
+    'notification.info': 'Info',
+    'notification.copied': 'Copied',
+    'notification.saved': 'Saved',
+    'notification.updated': 'Updated',
+    'notification.deleted': 'Deleted',
+    
+    // Actions & Buttons
+    'action.view': 'View',
+    'action.edit': 'Edit',
+    'action.delete': 'Delete',
+    'action.add': 'Add',
+    'action.remove': 'Remove',
+    'action.update': 'Update',
+    'action.refresh': 'Refresh',
+    'action.search': 'Search',
+    'action.filter': 'Filter',
+    'action.sort': 'Sort',
+    'action.export': 'Export',
+    'action.import': 'Import',
+    
+    // Settings & Configuration
+    'settings.general': 'General',
+    'settings.privacy': 'Privacy',
+    'settings.notifications': 'Notifications',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.account': 'Account',
+    'settings.security': 'Security',
+    'settings.preferences': 'Preferences'
   },
   'zh-CN': {
     // Navigation & Common
@@ -181,6 +295,120 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.alreadyHaveAccount': '已有账户？',
     'auth.signUp': '注册',
     'auth.signIn': '登录',
+    
+    // Profile & Player Info
+    'profile.personalInfo': '个人信息',
+    'profile.statistics': '统计数据',
+    'profile.equipment': '装备',
+    'profile.preferences': '偏好设置',
+    'profile.achievements': '成就',
+    'profile.updatePhoto': '更新照片',
+    'profile.height': '身高',
+    'profile.weight': '体重',
+    'profile.dominantHand': '惯用手',
+    'profile.playingStyle': '比赛风格',
+    
+    // Dashboard Stats
+    'stats.duprRating': 'DUPR评级',
+    'stats.rankingPoints': '排名积分',
+    'stats.winRate': '胜率',
+    'stats.matches': '比赛',
+    'stats.streak': '连胜',
+    'stats.passportCode': '护照代码',
+    'stats.tapToCopy': '点击复制',
+    'stats.loading': '加载中...',
+    
+    // Tournament & Competition
+    'tournament.upcoming': '即将举行的锦标赛',
+    'tournament.results': '锦标赛结果',
+    'tournament.registration': '报名',
+    'tournament.bracket': '对战表',
+    'tournament.leaderboard': '排行榜',
+    'tournament.format': '比赛形式',
+    'tournament.division': '组别',
+    'tournament.date': '日期',
+    'tournament.location': '地点',
+    
+    // Training & Facilities
+    'training.centers': '训练中心',
+    'training.schedule': '课程安排',
+    'training.bookClass': '预订课程',
+    'training.history': '训练历史',
+    'training.instructor': '教练',
+    'training.duration': '时长',
+    'training.capacity': '容量',
+    'training.available': '可用',
+    'training.full': '已满',
+    
+    // Match Recording
+    'match.record': '记录比赛',
+    'match.opponent': '对手',
+    'match.score': '比分',
+    'match.result': '结果',
+    'match.win': '胜利',
+    'match.loss': '失败',
+    'match.date': '日期',
+    'match.format': '比赛形式',
+    'match.singles': '单打',
+    'match.doubles': '双打',
+    'match.mixed': '混双',
+    
+    // Time & Status
+    'time.today': '今天',
+    'time.yesterday': '昨天',
+    'time.thisWeek': '本周',
+    'time.thisMonth': '本月',
+    'time.allTime': '全部时间',
+    'status.online': '在线',
+    'status.offline': '离线',
+    'status.active': '活跃',
+    'status.inactive': '不活跃',
+    'status.available': '可用',
+    'status.busy': '忙碌',
+    
+    // Equipment & Gear
+    'equipment.paddle': '球拍',
+    'equipment.shoes': '球鞋',
+    'equipment.apparel': '服装',
+    'equipment.accessories': '配件',
+    'equipment.brand': '品牌',
+    'equipment.model': '型号',
+    'equipment.primary': '主要',
+    'equipment.backup': '备用',
+    
+    // Notifications & Messages
+    'notification.success': '成功',
+    'notification.error': '错误',
+    'notification.warning': '警告',
+    'notification.info': '信息',
+    'notification.copied': '已复制',
+    'notification.saved': '已保存',
+    'notification.updated': '已更新',
+    'notification.deleted': '已删除',
+    
+    // Actions & Buttons
+    'action.view': '查看',
+    'action.edit': '编辑',
+    'action.delete': '删除',
+    'action.add': '添加',
+    'action.remove': '移除',
+    'action.update': '更新',
+    'action.refresh': '刷新',
+    'action.search': '搜索',
+    'action.filter': '筛选',
+    'action.sort': '排序',
+    'action.export': '导出',
+    'action.import': '导入',
+    
+    // Settings & Configuration
+    'settings.general': '常规设置',
+    'settings.privacy': '隐私设置',
+    'settings.notifications': '通知设置',
+    'settings.language': '语言设置',
+    'settings.theme': '主题设置',
+    'settings.account': '账户设置',
+    'settings.security': '安全设置',
+    'settings.preferences': '偏好设置'
   }
 };
 
