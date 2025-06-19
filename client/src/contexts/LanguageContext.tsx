@@ -124,6 +124,13 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.form.lastName': 'Last Name',
     'dashboard.form.location': 'Location',
     'dashboard.form.bio': 'Bio',
+    'dashboard.passport.title': 'Player Passport',
+    'dashboard.passport.codeCopied': 'Code Copied',
+    'dashboard.passport.copiedToClipboard': 'copied to clipboard',
+    'dashboard.stats.rankingPoints': 'Ranking Points',
+    'dashboard.stats.streak': 'Streak',
+    'dashboard.stats.passportCode': 'Passport Code',
+    'dashboard.stats.tapToCopy': 'Tap to copy',
     
     // Authentication
     'auth.login': 'Login',
@@ -366,6 +373,13 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.form.lastName': '姓氏',
     'dashboard.form.location': '位置',
     'dashboard.form.bio': '个人简介',
+    'dashboard.passport.title': '球员护照',
+    'dashboard.passport.codeCopied': '代码已复制',
+    'dashboard.passport.copiedToClipboard': '已复制到剪贴板',
+    'dashboard.stats.rankingPoints': '排名积分',
+    'dashboard.stats.streak': '连胜',
+    'dashboard.stats.passportCode': '护照代码',
+    'dashboard.stats.tapToCopy': '点击复制',
     
     // Authentication
     'auth.login': '登录',
