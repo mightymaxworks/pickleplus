@@ -1136,55 +1136,54 @@ export default function PassportDashboard() {
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                        <h3 className="font-semibold text-orange-800 mb-2">Your Digital Pickleball Currency</h3>
+                        <h3 className="font-semibold text-orange-800 mb-2">{t('dashboard.picklePoints.title')}</h3>
                         <p className="text-orange-700 text-sm">
-                          Pickle Points are rewards you earn for being active in the pickleball community. Play matches, 
-                          complete your profile, participate in tournaments, and engage with other players to earn points.
+                          {t('dashboard.picklePoints.description')}
                         </p>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-green-50 rounded-lg">
                           <Trophy className="w-6 h-6 text-green-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-green-800">Win Matches</p>
-                          <p className="text-xs text-green-600">+15-25 pts</p>
+                          <p className="text-xs font-medium text-green-800">{t('dashboard.picklePoints.winMatches')}</p>
+                          <p className="text-xs text-green-600">{t('dashboard.picklePoints.winMatchesPoints')}</p>
                         </div>
                         <div className="text-center p-3 bg-blue-50 rounded-lg">
                           <Users className="w-6 h-6 text-blue-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-blue-800">Profile Updates</p>
-                          <p className="text-xs text-blue-600">+5-10 pts</p>
+                          <p className="text-xs font-medium text-blue-800">{t('dashboard.picklePoints.profileUpdates')}</p>
+                          <p className="text-xs text-blue-600">{t('dashboard.picklePoints.profileUpdatesPoints')}</p>
                         </div>
                         <div className="text-center p-3 bg-purple-50 rounded-lg">
                           <Calendar className="w-6 h-6 text-purple-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-purple-800">Join Tournaments</p>
-                          <p className="text-xs text-purple-600">+20-50 pts</p>
+                          <p className="text-xs font-medium text-purple-800">{t('dashboard.picklePoints.joinTournaments')}</p>
+                          <p className="text-xs text-purple-600">{t('dashboard.picklePoints.joinTournamentsPoints')}</p>
                         </div>
                         <div className="text-center p-3 bg-pink-50 rounded-lg">
                           <Star className="w-6 h-6 text-pink-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-pink-800">Daily Activity</p>
-                          <p className="text-xs text-pink-600">+3-8 pts</p>
+                          <p className="text-xs font-medium text-pink-800">{t('dashboard.picklePoints.dailyActivity')}</p>
+                          <p className="text-xs text-pink-600">{t('dashboard.picklePoints.dailyActivityPoints')}</p>
                         </div>
                       </div>
                       
                       <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
                         <h3 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
                           <Sparkles className="w-4 h-4" />
-                          Redeem for Rewards
+                          {t('dashboard.picklePoints.redeemTitle')}
                         </h3>
                         <p className="text-amber-700 text-sm mb-2">
-                          Use your points for exclusive rewards from our partner merchants:
+                          {t('dashboard.picklePoints.redeemDescription')}
                         </p>
                         <ul className="text-xs text-amber-600 space-y-1">
-                          <li>• Court time discounts</li>
-                          <li>• Equipment and gear</li>
-                          <li>• Tournament entry fees</li>
-                          <li>• Coaching sessions</li>
-                          <li>• Special events access</li>
+                          <li>• {t('dashboard.picklePoints.redeemCourt')}</li>
+                          <li>• {t('dashboard.picklePoints.redeemEquipment')}</li>
+                          <li>• {t('dashboard.picklePoints.redeemTournament')}</li>
+                          <li>• {t('dashboard.picklePoints.redeemCoaching')}</li>
+                          <li>• {t('dashboard.picklePoints.redeemEvents')}</li>
                         </ul>
                       </div>
                       
                       <div className="text-center text-xs text-gray-500">
-                        Points are earned through verified activities and cannot be transferred between accounts.
+                        {t('dashboard.picklePoints.disclaimer')}
                       </div>
                     </div>
                   </DialogContent>
