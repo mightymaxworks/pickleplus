@@ -193,23 +193,23 @@ export default function AuthPage() {
               alt="Pickle+ Logo" 
               className="h-16 mx-auto"
             />
-            <h1 className="text-2xl font-bold mt-4">Welcome to Pickle+</h1>
-            <p className="text-muted-foreground mt-1">Join the fastest growing pickleball community</p>
+            <h1 className="text-2xl font-bold mt-4">{t('auth.welcomeTitle', 'Welcome to Pickle+')}</h1>
+            <p className="text-muted-foreground mt-1">{t('auth.welcomeSubtitle', 'Join the fastest growing pickleball community')}</p>
           </div>
           
           <div className="flex-grow flex flex-col justify-start">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
               <TabsList className="grid grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+                <TabsTrigger value="login">{t('auth.loginTab', 'Login')}</TabsTrigger>
+                <TabsTrigger value="register">{t('auth.registerTab', 'Register')}</TabsTrigger>
               </TabsList>
               
               {/* Login Tab */}
               <TabsContent value="login">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle>Sign in to your account</CardTitle>
-                    <CardDescription>Enter your credentials to access your Pickle+ account.</CardDescription>
+                    <CardTitle>{t('auth.signInTitle', 'Sign in to your account')}</CardTitle>
+                    <CardDescription>{t('auth.signInDescription', 'Enter your credentials to access your Pickle+ account.')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Form {...loginForm}>
