@@ -1191,26 +1191,26 @@ export default function PassportDashboard() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-yellow-600">{picklePoints.toLocaleString()}</p>
-                <p className="text-sm text-yellow-700">Total Points</p>
+                <p className="text-sm text-yellow-700">{t('dashboard.picklePoints.totalPoints')}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Match Wins</p>
+                <p className="text-sm text-yellow-600">{t('dashboard.picklePoints.matchWins')}</p>
                 <p className="text-xl font-bold text-yellow-800">{picklePointsData?.breakdown?.matchWinPoints || 0}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Participation</p>
+                <p className="text-sm text-yellow-600">{t('dashboard.picklePoints.participation')}</p>
                 <p className="text-xl font-bold text-yellow-800">{picklePointsData?.breakdown?.matchParticipationPoints || 0}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">Profile Bonus</p>
+                <p className="text-sm text-yellow-600">{t('dashboard.picklePoints.profileBonus')}</p>
                 <p className="text-xl font-bold text-yellow-800">{picklePointsData?.breakdown?.profileBonus || 0}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-yellow-600">System</p>
-                <p className="text-xs font-bold text-yellow-800">Hybrid</p>
+                <p className="text-sm text-yellow-600">{t('dashboard.picklePoints.system')}</p>
+                <p className="text-xs font-bold text-yellow-800">{t('dashboard.picklePoints.hybrid')}</p>
               </div>
             </div>
 
@@ -1219,24 +1219,24 @@ export default function PassportDashboard() {
                 className="bg-yellow-500 hover:bg-yellow-600 text-white"
                 onClick={() => setComingSoonModal({
                   isOpen: true,
-                  feature: "Spend Points",
-                  description: "Redeem your Pickle Points for exclusive rewards, merchandise, and tournament entry fees."
+                  feature: t('dashboard.picklePoints.spendPoints'),
+                  description: t('dashboard.picklePoints.spendDescription')
                 })}
               >
                 <DollarSign className="w-4 h-4 mr-2" />
-                Spend Points
+                {t('dashboard.picklePoints.spendPoints')}
               </Button>
               <Button 
                 variant="outline" 
                 className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                 onClick={() => setComingSoonModal({
                   isOpen: true,
-                  feature: "Earn More Points",
-                  description: "Discover new ways to earn Pickle Points through challenges, referrals, and community activities."
+                  feature: t('dashboard.picklePoints.earnMore'),
+                  description: t('dashboard.picklePoints.earnDescription')
                 })}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Earn More
+                {t('dashboard.picklePoints.earnMore')}
               </Button>
             </div>
           </CardContent>
