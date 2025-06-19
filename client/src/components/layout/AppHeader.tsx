@@ -137,8 +137,8 @@ export function AppHeader({
   const defaultNavItems = [
     { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
     { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
-    { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
-    { label: 'Referrals', icon: <Share size={18} />, path: '/referrals' },
+    { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
+    { label: t('nav.referrals'), icon: <Share size={18} />, path: '/referrals' },
     { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },
     // Removed Icons Test per user request (2025-04-21)
     ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])

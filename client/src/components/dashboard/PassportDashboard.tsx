@@ -762,10 +762,10 @@ export default function PassportDashboard() {
                 </motion.div>
                 <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-300 px-3 py-1">
                   <Scan className="w-3 h-3 mr-1" />
-                  {showPassportCode ? 'Code Visible' : 'Tap to Reveal Code'}
+                  {showPassportCode ? t('dashboard.qr.codeVisible') : t('dashboard.qr.tapToReveal')}
                 </Badge>
                 <p className="text-xs text-orange-600 mt-1 text-center max-w-32">
-                  {showPassportCode ? 'Share this code with other players' : 'Players scan to initiate matches or view stats'}
+                  {showPassportCode ? t('dashboard.qr.shareCode') : t('dashboard.qr.scanDescription')}
                 </p>
               </div>
             </div>
@@ -787,7 +787,7 @@ export default function PassportDashboard() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold text-orange-800">
-                    Edit Profile Details
+                    {t('dashboard.form.editProfile')}
                   </CardTitle>
                   <Button
                     variant="ghost"
@@ -803,7 +803,7 @@ export default function PassportDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Basic Information */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">Basic Information</h3>
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">{t('dashboard.form.basicInfo')}</h3>
                     
                     <div className="space-y-3">
                       <div>
