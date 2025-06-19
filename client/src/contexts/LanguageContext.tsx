@@ -125,8 +125,6 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.form.location': 'Location',
     'dashboard.form.bio': 'Bio',
     'dashboard.passport.title': 'Player Passport',
-    'dashboard.passport.codeCopied': 'Code Copied',
-    'dashboard.passport.copiedToClipboard': 'copied to clipboard',
     'dashboard.stats.rankingPoints': 'Ranking Points',
     'dashboard.stats.streak': 'Streak',
     'dashboard.stats.passportCode': 'Passport Code',
@@ -161,12 +159,8 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Dashboard Stats
     'stats.duprRating': 'DUPR Rating',
-    'stats.rankingPoints': 'Ranking Points',
     'stats.winRate': 'Win Rate',
     'stats.matches': 'Matches',
-    'stats.streak': 'Streak',
-    'stats.passportCode': 'Passport Code',
-    'stats.tapToCopy': 'Tap to Copy',
     'stats.loading': 'Loading...',
     
     // Tournament & Competition
@@ -374,8 +368,6 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.form.location': '位置',
     'dashboard.form.bio': '个人简介',
     'dashboard.passport.title': '球员护照',
-    'dashboard.passport.codeCopied': '代码已复制',
-    'dashboard.passport.copiedToClipboard': '已复制到剪贴板',
     'dashboard.stats.rankingPoints': '排名积分',
     'dashboard.stats.streak': '连胜',
     'dashboard.stats.passportCode': '护照代码',
@@ -410,12 +402,8 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Dashboard Stats
     'stats.duprRating': 'DUPR评级',
-    'stats.rankingPoints': '排名积分',
     'stats.winRate': '胜率',
     'stats.matches': '比赛',
-    'stats.streak': '连胜',
-    'stats.passportCode': '护照代码',
-    'stats.tapToCopy': '点击复制',
     'stats.loading': '加载中...',
     
     // Tournament & Competition
