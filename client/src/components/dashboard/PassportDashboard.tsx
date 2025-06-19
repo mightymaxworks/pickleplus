@@ -611,8 +611,8 @@ export default function PassportDashboard() {
                       if (user.passportCode) {
                         navigator.clipboard.writeText(user.passportCode);
                         toast({
-                          title: "Passport Code Copied!",
-                          description: `${user.passportCode} copied to clipboard`,
+                          title: t('dashboard.passport.codeCopied'),
+                          description: `${user.passportCode} ${t('dashboard.passport.copiedToClipboard')}`,
                         });
                       }
                     }}
@@ -629,7 +629,7 @@ export default function PassportDashboard() {
                 <div className="mt-3 pt-3 border-t border-orange-200">
                   <h3 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
-                    PCP Global Ranking System
+                    {t('dashboard.rankings.title')}
                   </h3>
                   
                   {isLoadingAllPositions ? (
@@ -677,7 +677,7 @@ export default function PassportDashboard() {
                                     : 'text-orange-600 bg-orange-50 border-orange-300'
                                 }`}
                               >
-                                {isRanked ? 'Ranked' : 'Unranked'}
+                                {isRanked ? t('dashboard.rankings.ranked') : t('dashboard.rankings.unranked')}
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between">
@@ -687,18 +687,18 @@ export default function PassportDashboard() {
                                 </div>
                                 <div className={`text-xs text-${colorScheme}-600`}>
                                   {isRanked 
-                                    ? `Rank #${position.rank}`
-                                    : `${position.matchCount}/${position.requiredMatches} matches`
+                                    ? `${t('dashboard.rankings.rank')} #${position.rank}`
+                                    : `${position.matchCount}/${position.requiredMatches} ${t('dashboard.rankings.matches')}`
                                   }
                                 </div>
                               </div>
                               {!isRanked && position.needsMatches > 0 && (
                                 <div className="text-right">
                                   <div className="text-xs text-orange-600 font-medium">
-                                    Need {position.needsMatches}
+                                    {t('dashboard.rankings.need')} {position.needsMatches}
                                   </div>
                                   <div className="text-xs text-orange-500">
-                                    more
+                                    {t('dashboard.rankings.more')}
                                   </div>
                                 </div>
                               )}
