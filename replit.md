@@ -128,7 +128,7 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 ## Recent Changes
 
 ### June 19, 2025 - Platform CI/CD Validation Complete & Coaching Profile System Cleaned Up
-- **Coaching Profile System Cleanup**: Fixed missing translation key "coaching.pcpProgramme" displaying proper "PCP Coaching Certification Programme" text
+- **Coaching Profile System Cleanup**: Updated coaching section to display "Coaching Bio" instead of "PCP Coaching Certification Programme"
 - **Comprehensive CI/CD Validation**: Complete platform testing achieving 73% readiness across 10 system categories with 31 PASS/2 FAIL/1 WARNING
 - **Core Systems Validated**: Authentication, profile management, match recording, community features, coaching system, ranking points, tournaments, language system
 - **Production-Ready Features**: Match recording and statistics tracking, community interactions, profile editing, coaching discovery and session booking
@@ -159,4 +159,4 @@ Preferred communication style: Simple, everyday language.
 Coach workflow preferences: 
 - Coaches should access training facilities to apply as facility coaches
 - Profile management should use inline editing rather than separate page navigation
-- Always use "PCP Coaching Certification Programme" (no acronyms)
+- Use "Coaching Bio" for coaching profile sections (not "PCP Coaching Certification Programme")

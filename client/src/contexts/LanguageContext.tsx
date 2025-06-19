@@ -415,7 +415,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preferences': 'Preferences',
     
     // Coaching
-    'coaching.pcpProgramme': 'PCP Coaching Certification Programme'
+    'coaching.pcpProgramme': 'Coaching Bio'
   },
   'zh-CN': {
     // Navigation & Common
@@ -820,7 +820,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preferences': '偏好设置',
     
     // Coaching
-    'coaching.pcpProgramme': 'PCP教练认证计划'
+    'coaching.pcpProgramme': '教练简介'
   }
 };
 
