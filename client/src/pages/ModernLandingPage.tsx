@@ -96,9 +96,8 @@ export default function ModernLandingPage() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <img src={pickleLogoPath} alt="Pickle+" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">{t('landing.brand')}</span>
+            <div className="flex items-center">
+              <img src={pickleLogoPath} alt="Pickle+" className="h-10 w-auto" />
             </div>
 
             {/* Desktop Navigation */}
@@ -565,9 +564,8 @@ export default function ModernLandingPage() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <img src={pickleLogoPath} alt="Pickle+" className="h-8 w-8" />
-                <span className="text-xl font-bold">{t('landing.brand')}</span>
+              <div className="flex items-center mb-4">
+                <img src={pickleLogoPath} alt="Pickle+" className="h-10 w-auto" />
               </div>
               <p className="text-gray-400 max-w-sm">
                 {t('landing.footer.description')}
@@ -603,7 +601,7 @@ export default function ModernLandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 {t('landing.brand')}. {t('landing.footer.rights')}</p>
+            <p>&copy; 2025 Pickle+. {t('landing.footer.rights')}</p>
           </div>
         </div>
       </footer>
