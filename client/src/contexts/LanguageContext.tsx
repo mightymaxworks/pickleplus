@@ -412,7 +412,10 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.theme': 'Theme',
     'settings.account': 'Account',
     'settings.security': 'Security',
-    'settings.preferences': 'Preferences'
+    'settings.preferences': 'Preferences',
+    
+    // Coaching
+    'coaching.pcpProgramme': 'PCP Coaching Certification Programme'
   },
   'zh-CN': {
     // Navigation & Common
@@ -814,7 +817,10 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.theme': '主题设置',
     'settings.account': '账户设置',
     'settings.security': '安全设置',
-    'settings.preferences': '偏好设置'
+    'settings.preferences': '偏好设置',
+    
+    // Coaching
+    'coaching.pcpProgramme': 'PCP教练认证计划'
   }
 };
 
