@@ -415,7 +415,36 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preferences': 'Preferences',
     
     // Coaching
-    'coaching.pcpProgramme': 'Coaching Bio'
+    'coaching.pcpProgramme': 'Coaching Bio',
+    
+    // Authentication
+    'auth.backToHome': 'Back to Home',
+    'auth.welcomeTitle': 'Welcome to Pickle+',
+    'auth.welcomeSubtitle': 'Join the fastest growing pickleball community',
+    'auth.login': 'Login',
+    'auth.register': 'Register',
+    'auth.signInTitle': 'Sign in to your account',
+    'auth.signInDescription': 'Enter your credentials to access your Pickle+ account.',
+    'auth.usernameOrEmail': 'Username or Email',
+    'auth.usernamePlaceholder': 'Enter your username or email',
+    'auth.password': 'Password',
+    'auth.passwordPlaceholder': 'Enter your password',
+    'auth.rememberMe': 'Remember me',
+    'auth.loggingIn': 'Logging in...',
+    'auth.createAccountTitle': 'Create your account',
+    'auth.createAccountDescription': 'Join thousands of players and elevate your pickleball journey.',
+    'auth.firstName': 'First Name',
+    'auth.firstNamePlaceholder': 'Enter your first name',
+    'auth.lastName': 'Last Name',
+    'auth.lastNamePlaceholder': 'Enter your last name',
+    'auth.username': 'Username',
+    'auth.usernamePlaceholder': 'Choose a username',
+    'auth.email': 'Email',
+    'auth.emailPlaceholder': 'Enter your email address',
+    'auth.confirmPassword': 'Confirm Password',
+    'auth.confirmPasswordPlaceholder': 'Confirm your password',
+    'auth.createAccount': 'Create Account',
+    'auth.creatingAccount': 'Creating Account...'
   },
   'zh-CN': {
     // Navigation & Common
@@ -820,7 +849,36 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preferences': '偏好设置',
     
     // Coaching
-    'coaching.pcpProgramme': '教练简介'
+    'coaching.pcpProgramme': '教练简介',
+    
+    // Authentication
+    'auth.backToHome': '返回首页',
+    'auth.welcomeTitle': '欢迎来到Pickle+',
+    'auth.welcomeSubtitle': '加入发展最快的匹克球社区',
+    'auth.login': '登录',
+    'auth.register': '注册',
+    'auth.signInTitle': '登录您的账户',
+    'auth.signInDescription': '输入您的凭据以访问您的Pickle+账户。',
+    'auth.usernameOrEmail': '用户名或邮箱',
+    'auth.usernamePlaceholder': '请输入用户名或邮箱',
+    'auth.password': '密码',
+    'auth.passwordPlaceholder': '请输入密码',
+    'auth.rememberMe': '记住我',
+    'auth.loggingIn': '登录中...',
+    'auth.createAccountTitle': '创建您的账户',
+    'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。',
+    'auth.firstName': '名字',
+    'auth.firstNamePlaceholder': '请输入您的名字',
+    'auth.lastName': '姓氏',
+    'auth.lastNamePlaceholder': '请输入您的姓氏',
+    'auth.username': '用户名',
+    'auth.usernamePlaceholder': '选择一个用户名',
+    'auth.email': '邮箱',
+    'auth.emailPlaceholder': '请输入您的邮箱地址',
+    'auth.confirmPassword': '确认密码',
+    'auth.confirmPasswordPlaceholder': '请确认您的密码',
+    'auth.createAccount': '创建账户',
+    'auth.creatingAccount': '创建账户中...'
   }
 };
 

@@ -28,6 +28,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import pickleLogoPath from "../assets/Pickle (2).png";
 import mascotPath from "../assets/Untitled design (51).png";
 import authService from "@/services/authService";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Login form schema
 const loginSchema = z.object({
@@ -63,6 +65,7 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, login, register, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("login");
 
   // Handle redirect using useEffect, with a check for fresh logout and saved redirect URL
@@ -176,11 +179,12 @@ export default function AuthPage() {
       <div className="flex flex-col md:flex-row w-full min-h-screen">
         {/* Left column - Authentication forms */}
         <div className="w-full md:w-1/2 p-4 md:p-8 flex flex-col">
-          <div className="mb-4">
+          <div className="mb-4 flex justify-between items-center">
             <Button variant="ghost" size="sm" className="gap-1" onClick={() => setLocation("/")}>
               <ChevronLeft className="h-4 w-4" />
-              Back to Home
+              {t('auth.backToHome', 'Back to Home')}
             </Button>
+            <LanguageToggle />
           </div>
           
           <div className="text-center mb-6">
