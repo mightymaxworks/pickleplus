@@ -1049,7 +1049,7 @@ export default function PassportDashboard() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Reach (cm)</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.reach')}</label>
                           <input
                             type="number"
                             defaultValue={user.reach || ''}
@@ -1057,7 +1057,7 @@ export default function PassportDashboard() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Year of Birth</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.yearOfBirth')}</label>
                           <input
                             type="number"
                             defaultValue={user.yearOfBirth || ''}
@@ -1067,17 +1067,17 @@ export default function PassportDashboard() {
                       </div>
                       
                       <div>
-                        <label className="text-sm font-medium text-gray-700">Gender</label>
+                        <label className="text-sm font-medium text-gray-700">{t('dashboard.form.gender')}</label>
                         <select
                           defaultValue={user.gender || ''}
                           onChange={(e) => handleFieldChange('gender', e.target.value)}
                           className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         >
-                          <option value="">Select Gender</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                          <option value="prefer_not_to_say">Prefer not to say</option>
+                          <option value="">{t('dashboard.form.selectGender')}</option>
+                          <option value="male">{t('dashboard.form.male')}</option>
+                          <option value="female">{t('dashboard.form.female')}</option>
+                          <option value="other">{t('dashboard.form.other')}</option>
+                          <option value="prefer_not_to_say">{t('dashboard.form.preferNotToSay')}</option>
                         </select>
                       </div>
                     </div>
@@ -1091,14 +1091,14 @@ export default function PassportDashboard() {
                     onClick={() => setIsPassportExpanded(false)}
                     className="text-gray-600 border-gray-300 hover:bg-gray-50"
                   >
-                    Cancel
+                    {t('dashboard.form.cancel')}
                   </Button>
                   <Button
                     className="bg-orange-600 hover:bg-orange-700 text-white"
                     onClick={handleSaveProfile}
                     disabled={updateProfileMutation.isPending}
                   >
-                    {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                    {updateProfileMutation.isPending ? t('dashboard.form.saving') : t('dashboard.form.saveChanges')}
                   </Button>
                 </div>
               </CardContent>
