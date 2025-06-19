@@ -807,7 +807,7 @@ export default function PassportDashboard() {
                     
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-medium text-gray-700">Display Name</label>
+                        <label className="text-sm font-medium text-gray-700">{t('dashboard.form.displayName')}</label>
                         <input
                           type="text"
                           defaultValue={user.displayName || ''}
@@ -818,7 +818,7 @@ export default function PassportDashboard() {
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-sm font-medium text-gray-700">First Name</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.firstName')}</label>
                           <input
                             type="text"
                             defaultValue={user.firstName || ''}
@@ -827,7 +827,7 @@ export default function PassportDashboard() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Last Name</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.lastName')}</label>
                           <input
                             type="text"
                             defaultValue={user.lastName || ''}
@@ -838,7 +838,7 @@ export default function PassportDashboard() {
                       </div>
                       
                       <div>
-                        <label className="text-sm font-medium text-gray-700">Location</label>
+                        <label className="text-sm font-medium text-gray-700">{t('dashboard.form.location')}</label>
                         <input
                           type="text"
                           defaultValue={user.location || ''}
@@ -847,7 +847,7 @@ export default function PassportDashboard() {
                       </div>
                       
                       <div>
-                        <label className="text-sm font-medium text-gray-700">Bio</label>
+                        <label className="text-sm font-medium text-gray-700">{t('dashboard.form.bio')}</label>
                         <textarea
                           defaultValue={user.bio || ''}
                           rows={3}
