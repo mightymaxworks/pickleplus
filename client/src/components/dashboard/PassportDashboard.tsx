@@ -988,12 +988,12 @@ export default function PassportDashboard() {
                   
                   {/* External Ratings */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">External Ratings</h3>
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">{t('dashboard.form.externalRatings')}</h3>
                     
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-sm font-medium text-gray-700">DUPR Rating</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.duprRating')}</label>
                           <input
                             type="number"
                             step="0.01"
@@ -1002,7 +1002,7 @@ export default function PassportDashboard() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">USA Pickleball ID</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.usaPickleballId')}</label>
                           <input
                             type="text"
                             defaultValue={(user as any).usaPickleballId || ''}
@@ -1013,7 +1013,7 @@ export default function PassportDashboard() {
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-sm font-medium text-gray-700">IFP Rating</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.ifpRating')}</label>
                           <input
                             type="number"
                             step="0.01"
@@ -1022,7 +1022,7 @@ export default function PassportDashboard() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">IPTPA Rating</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.iptpaRating')}</label>
                           <input
                             type="number"
                             step="0.01"
@@ -1036,12 +1036,12 @@ export default function PassportDashboard() {
                   
                   {/* Physical Information */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">Physical Information</h3>
+                    <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">{t('dashboard.form.physicalInfo')}</h3>
                     
                     <div className="space-y-3">
                       <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Height (cm)</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.height')}</label>
                           <input
                             type="number"
                             defaultValue={user.height || ''}
