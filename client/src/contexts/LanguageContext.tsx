@@ -82,6 +82,21 @@ const translations: Record<Language, Record<string, string>> = {
     'comingSoon.trainingFacilities': 'Training Facilities',
     'comingSoon.facilitiesDescription': 'Our training facility discovery system is launching soon! You\'ll be able to find nearby training centers, view their amenities, and book courts and classes directly through the platform.',
     
+    // Dashboard QR & Photo
+    'dashboard.qr.codeHidden': 'Code Hidden',
+    'dashboard.qr.codeRevealed': 'Code Revealed',
+    'dashboard.qr.codeHiddenDesc': 'Your passport code is now hidden',
+    'dashboard.qr.yourCode': 'Your passport code',
+    'dashboard.tournaments.title': 'Tournament Registration',
+    'dashboard.tournaments.comingSoon': 'Our tournament discovery and registration system is launching soon! You\'ll be able to browse upcoming tournaments, register with one click, and track your tournament history.',
+    'dashboard.players.title': 'Player Discovery',
+    'dashboard.players.comingSoon': 'The player finder feature is coming soon! Connect with players in your area, find practice partners, and organize friendly matches based on skill level and availability.',
+    'dashboard.training.title': 'Training Facilities',
+    'dashboard.training.comingSoon': 'Our training facility discovery system is launching soon! You\'ll be able to find nearby training centers, view their amenities, and book courts and classes directly through the platform.',
+    'dashboard.photo.updated': 'Profile Photo Updated',
+    'dashboard.photo.uploadedSuccess': 'Your new profile photo has been uploaded successfully.',
+    'dashboard.photo.update': 'Update Photo',
+    
     // Authentication
     'auth.login': 'Login',
     'auth.register': 'Register',

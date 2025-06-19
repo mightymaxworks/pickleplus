@@ -48,8 +48,8 @@ import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useRecentMatches } from '@/hooks/use-recent-matches';
 import { useAllRankingPositions } from '@/hooks/use-all-ranking-positions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
@@ -298,8 +298,8 @@ export default function PassportDashboard() {
     setQrVisible(!qrVisible);
     setShowPassportCode(!showPassportCode);
     toast({
-      title: qrVisible ? "Code Hidden" : "Code Revealed",
-      description: qrVisible ? "Your passport code is now hidden" : `Your passport code: ${user.passportCode}`,
+      title: qrVisible ? t('dashboard.qr.codeHidden') : t('dashboard.qr.codeRevealed'),
+      description: qrVisible ? t('dashboard.qr.codeHiddenDesc') : `${t('dashboard.qr.yourCode')}: ${user.passportCode}`,
     });
   };
 
@@ -311,16 +311,16 @@ export default function PassportDashboard() {
   const handleJoinTournament = () => {
     setComingSoonModal({
       isOpen: true,
-      feature: 'Tournament Registration',
-      description: 'Our tournament discovery and registration system is launching soon! You\'ll be able to browse upcoming tournaments, register with one click, and track your tournament history.'
+      feature: t('dashboard.tournaments.title'),
+      description: t('dashboard.tournaments.comingSoon')
     });
   };
 
   const handleFindPlayers = () => {
     setComingSoonModal({
       isOpen: true,
-      feature: 'Player Discovery',
-      description: 'The player finder feature is coming soon! Connect with players in your area, find practice partners, and organize friendly matches based on skill level and availability.'
+      feature: t('dashboard.players.title'),
+      description: t('dashboard.players.comingSoon')
     });
   };
 
@@ -342,16 +342,16 @@ export default function PassportDashboard() {
   const handleFindTrainingFacilities = () => {
     setComingSoonModal({
       isOpen: true,
-      feature: 'Training Facilities',
-      description: 'Our training facility discovery system is launching soon! You\'ll be able to find nearby training centers, view their amenities, and book courts and classes directly through the platform.'
+      feature: t('dashboard.training.title'),
+      description: t('dashboard.training.comingSoon')
     });
   };
 
   const handlePhotoUploadSuccess = (avatarUrl: string) => {
     setIsPhotoUploadOpen(false);
     toast({
-      title: "Profile Photo Updated",
-      description: "Your new profile photo has been uploaded successfully.",
+      title: t('dashboard.photo.updated'),
+      description: t('dashboard.photo.uploadedSuccess'),
     });
     // Refresh user data to show new avatar
     window.location.reload();
@@ -514,7 +514,7 @@ export default function PassportDashboard() {
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all duration-300 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center text-white">
                         <Camera className="w-6 h-6 mb-1" />
-                        <span className="text-xs font-medium">Update Photo</span>
+                        <span className="text-xs font-medium">{t('dashboard.photo.update')}</span>
                       </div>
                     </div>
                     
