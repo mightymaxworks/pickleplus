@@ -724,17 +724,17 @@ export default function PassportDashboard() {
                     <div className="bg-white/70 rounded-lg p-3 border border-gray-200">
                       <div className="text-center text-gray-600">
                         <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                        <div className="text-sm font-medium">No ranking data available</div>
-                        <div className="text-xs">Play matches to start building your rankings</div>
+                        <div className="text-sm font-medium">{t('dashboard.rankings.noData')}</div>
+                        <div className="text-xs">{t('dashboard.rankings.playMatches')}</div>
                       </div>
                     </div>
                   )}
                   
                   <div className="mt-2 text-xs text-orange-600 flex items-center justify-between">
-                    <span>PCP Global Ranking System v2.0 (Multi-Division)</span>
+                    <span>{t('dashboard.rankings.systemVersion')}</span>
                     {allRankingPositions?.totalCategories && (
                       <span className="text-orange-500 font-medium">
-                        {allRankingPositions.totalCategories} eligible categories
+                        {allRankingPositions.totalCategories} {t('dashboard.rankings.eligibleCategories')}
                       </span>
                     )}
                   </div>
@@ -902,7 +902,7 @@ export default function PassportDashboard() {
                             onChange={(e) => handleFieldChange('paddleBrand', e.target.value)}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           >
-                            <option value="">Select paddle brand</option>
+                            <option value="">{t('dashboard.form.selectPaddleBrand')}</option>
                             {PADDLE_BRAND_OPTIONS.map(option => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
@@ -911,7 +911,7 @@ export default function PassportDashboard() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Paddle Model</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.paddleModel')}</label>
                           <input
                             type="text"
                             defaultValue={user.paddleModel || ''}
