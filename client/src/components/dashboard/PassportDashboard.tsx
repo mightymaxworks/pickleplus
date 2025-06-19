@@ -926,23 +926,23 @@ export default function PassportDashboard() {
                   {/* Coaching Information - Only show for coaches */}
                   {isCoach && (
                     <div className="space-y-4">
-                      <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wide">PCP Coaching Certification Programme</h3>
+                      <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wide">{t('coaching.pcpProgramme')}</h3>
                       
                       <div className="space-y-3">
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Coach Bio</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.coachBio')}</label>
                           <textarea
                             defaultValue={(coachProfile as any)?.bio || ''}
                             onChange={(e) => handleFieldChange('coachBio', e.target.value)}
                             rows={3}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                            placeholder="Describe your coaching philosophy and experience..."
+                            placeholder={t('dashboard.form.coachBioPlaceholder')}
                           />
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Experience Years</label>
+                            <label className="text-sm font-medium text-gray-700">{t('dashboard.form.experienceYears')}</label>
                             <input
                               type="number"
                               defaultValue={(coachProfile as any)?.experienceYears || ''}
@@ -951,7 +951,7 @@ export default function PassportDashboard() {
                             />
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Hourly Rate ($)</label>
+                            <label className="text-sm font-medium text-gray-700">{t('dashboard.form.hourlyRate')}</label>
                             <input
                               type="number"
                               defaultValue={(coachProfile as any)?.hourlyRate || ''}
@@ -962,24 +962,24 @@ export default function PassportDashboard() {
                         </div>
                         
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Specialties</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.specialties')}</label>
                           <textarea
                             defaultValue={(coachProfile as any)?.specialties?.join(', ') || ''}
                             onChange={(e) => handleFieldChange('specialties', e.target.value ? e.target.value.split(', ').filter(s => s.trim()) : [])}
                             rows={2}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                            placeholder="e.g., Beginner Training, Tournament Prep, Technical Analysis"
+                            placeholder={t('dashboard.form.specialtiesPlaceholder')}
                           />
                         </div>
                         
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Certifications</label>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.certifications')}</label>
                           <textarea
                             defaultValue={(coachProfile as any)?.certifications?.join(', ') || ''}
                             onChange={(e) => handleFieldChange('certifications', e.target.value ? e.target.value.split(', ').filter(s => s.trim()) : [])}
                             rows={2}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                            placeholder="e.g., PPR Certified, Level 3 Instructor, USA Pickleball Certified"
+                            placeholder={t('dashboard.form.certificationsPlaceholder')}
                           />
                         </div>
                       </div>
