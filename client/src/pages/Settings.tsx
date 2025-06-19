@@ -63,15 +63,15 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="email-notifications">Email Notifications</Label>
-                <Switch id="email-notifications" />
+                <Switch id="email-notifications" checked={true} onCheckedChange={() => {}} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="match-reminders">Match Reminders</Label>
-                <Switch id="match-reminders" />
+                <Switch id="match-reminders" checked={false} onCheckedChange={() => {}} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="tournament-updates">Tournament Updates</Label>
-                <Switch id="tournament-updates" />
+                <Switch id="tournament-updates" checked={true} onCheckedChange={() => {}} />
               </div>
             </CardContent>
           </Card>
@@ -101,11 +101,11 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="data-sharing">Data Sharing</Label>
-                <Switch id="data-sharing" />
+                <Switch id="data-sharing" checked={false} onCheckedChange={() => {}} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="analytics">Analytics Tracking</Label>
-                <Switch id="analytics" />
+                <Switch id="analytics" checked={true} onCheckedChange={() => {}} />
               </div>
             </CardContent>
           </Card>
@@ -137,11 +137,11 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="dark-mode">Dark Mode</Label>
-                <Switch id="dark-mode" />
+                <Switch id="dark-mode" checked={false} onCheckedChange={() => {}} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="animations">Animations</Label>
-                <Switch id="animations" defaultChecked />
+                <Switch id="animations" checked={true} onCheckedChange={() => {}} />
               </div>
             </CardContent>
           </Card>
