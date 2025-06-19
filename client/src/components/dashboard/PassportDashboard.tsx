@@ -568,7 +568,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">{t('DUPR Rating', 'DUPR评级')}</p>
+                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">{t('stats.duprRating')}</p>
                     <p className="text-3xl font-black text-orange-900">{user.duprRating || '0'}</p>
                   </motion.div>
                   <motion.div 
@@ -576,7 +576,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">{t('Ranking Points', '排名积分')}</p>
+                    <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">{t('stats.rankingPoints')}</p>
                     <p className="text-3xl font-black text-purple-700">{totalRankingPoints}</p>
                   </motion.div>
                   <motion.div 
@@ -584,7 +584,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-green-600 font-bold uppercase tracking-wider">{t('Win Rate', '胜率')}</p>
+                    <p className="text-xs text-green-600 font-bold uppercase tracking-wider">{t('stats.winRate')}</p>
                     <p className="text-3xl font-black text-green-700">{winRate}%</p>
                   </motion.div>
                   <motion.div 
@@ -592,7 +592,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{t('Matches', '比赛')}</p>
+                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{t('stats.matches')}</p>
                     <p className="text-3xl font-black text-blue-700">{matchStats?.totalMatches || 0}</p>
                   </motion.div>
                   <motion.div 
@@ -600,7 +600,7 @@ export default function PassportDashboard() {
                     whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">{t('Streak', '连胜')}</p>
+                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">{t('stats.streak')}</p>
                     <p className="text-3xl font-black text-indigo-700">{currentStreak}</p>
                   </motion.div>
                   <motion.div 
@@ -617,11 +617,11 @@ export default function PassportDashboard() {
                       }
                     }}
                   >
-                    <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">{t('Passport Code', '护照代码')}</p>
+                    <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">{t('stats.passportCode')}</p>
                     <p className="text-2xl font-mono font-black text-orange-800">
                       {user.passportCode || 'LOADING...'}
                     </p>
-                    <p className="text-xs text-orange-600 mt-1">{t('Tap to Copy', '点击复制')}</p>
+                    <p className="text-xs text-orange-600 mt-1">{t('stats.tapToCopy')}</p>
                   </motion.div>
                 </motion.div>
 
