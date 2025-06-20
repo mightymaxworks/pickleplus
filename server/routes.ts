@@ -88,7 +88,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register route groups
   registerAdminRoutes(app);
   setupAdminDashboardRoutes(app); // Added for PKL-278651-ADMIN-0012-PERF
-  registerCommunityRoutes(app);
+  registerCommunityRoutes(app); // Community features enabled
   registerEventRoutes(app);
   registerUserRoutes(app);
   registerUserProfileRoutes(app); // Added for PKL-278651-PROF-0005-UPLOAD - Profile Photo Upload

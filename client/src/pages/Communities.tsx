@@ -97,99 +97,81 @@ export default function Communities() {
   return (
     <StandardLayout>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Modern Header */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight mb-2">Communities</h1>
-              <p className="text-muted-foreground">
-                Connect with players, join groups, and participate in events
-              </p>
-            </div>
-            <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
-              <Plus className="h-5 w-5" />
-              Create Community
-            </Button>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Active Communities</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.totalCommunities}</p>
-                  </div>
-                  <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-700 dark:text-green-300">Total Members</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.totalMembers}</p>
-                  </div>
-                  <Globe className="h-8 w-8 text-green-600 dark:text-green-400" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Events This Week</p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.activeEvents}</p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Your Communities</p>
-                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats.userCommunities}</p>
-                  </div>
-                  <Crown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            {t('communities.title', 'Community Hub')}
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            {t('communities.subtitle', 'Connect with fellow players, join tournaments, and grow your pickleball journey together')}
+          </p>
         </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="discover" className="w-full">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 border-0">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Active Communities</p>
+                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.totalCommunities}</p>
+                </div>
+                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 border-0">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-700 dark:text-green-300">Total Members</p>
+                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.totalMembers}</p>
+                </div>
+                <Globe className="h-8 w-8 text-green-600 dark:text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900 border-0">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Events This Week</p>
+                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.activeEvents}</p>
+                </div>
+                <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900 border-0">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Your Communities</p>
+                  <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats.userCommunities}</p>
+                </div>
+                <Crown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="discover" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="discover" className="flex items-center gap-2">
-              <Compass className="h-4 w-4" />
-              Discover
-            </TabsTrigger>
-            <TabsTrigger value="my-communities" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              My Communities
-            </TabsTrigger>
-            <TabsTrigger value="events" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Events
-            </TabsTrigger>
-            <TabsTrigger value="create" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create
-            </TabsTrigger>
+            <TabsTrigger value="discover">Discover</TabsTrigger>
+            <TabsTrigger value="my-communities">My Communities</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="create">Create</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="discover" className="mt-6">
-            {/* Search and Filters */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <TabsContent value="discover" className="space-y-6">
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search communities..."
                   value={searchQuery}
@@ -197,12 +179,11 @@ export default function Communities() {
                   className="pl-10"
                 />
               </div>
-              
               <div className="flex gap-2">
-                {['all', 'competitive', 'beginner', 'corporate', 'social'].map((category) => (
+                {['all', 'beginner', 'intermediate', 'advanced', 'competitive'].map((category) => (
                   <Button
                     key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
+                    variant={selectedCategory === category ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedCategory(category)}
                     className="capitalize"
@@ -234,75 +215,90 @@ export default function Communities() {
             ) : communities.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {communities.map((community) => (
-                <Card key={community.id} className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-800">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CardTitle className="text-lg">{community.name}</CardTitle>
-                          {community.isFeatured && (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                              <Star className="h-3 w-3 mr-1" />
-                              Featured
-                            </Badge>
-                          )}
-                          {community.isPrivate && (
-                            <Badge variant="outline">Private</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {community.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span>{community.location}</span>
-                        </div>
-                        <Badge variant="outline">{community.skillLevel || 'Open'}</Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span>{community.memberCount || 0}</span>
+                  <Card key={community.id} className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-800">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CardTitle className="text-lg">{community.name}</CardTitle>
+                            {community.isFeatured && (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                <Star className="h-3 w-3 mr-1" />
+                                Featured
+                              </Badge>
+                            )}
+                            {community.isPrivate && (
+                              <Badge variant="outline">Private</Badge>
+                            )}
                           </div>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                            {community.description}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-1">
-                            <Activity className="h-4 w-4 text-green-500" />
-                            <span>Active</span>
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>{community.location}</span>
+                          </div>
+                          <Badge variant="outline">{community.skillLevel || 'Open'}</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <span>{community.memberCount || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Activity className="h-4 w-4 text-green-500" />
+                              <span>Active</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      {community.tags && community.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {community.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
+                        
+                        {community.tags && community.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {community.tags.map((tag) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="flex gap-2">
+                          <Button className="flex-1" size="sm">
+                            Join Community
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
                         </div>
-                      )}
-                      
-                      <div className="flex gap-2">
-                        <Button className="flex-1" size="sm">
-                          Join Community
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Compass className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Communities Found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    {searchQuery ? `No communities match "${searchQuery}"` : "No communities available yet"}
+                  </p>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Community
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="my-communities" className="mt-6">
@@ -341,33 +337,48 @@ export default function Communities() {
             ) : events.length > 0 ? (
               <div className="space-y-4">
                 {events.map((event) => (
-                <Card key={event.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Calendar className="h-6 w-6 text-primary" />
+                  <Card key={event.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Calendar className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">{event.title || event.name}</h3>
+                            <p className="text-sm text-muted-foreground">{event.communityName || 'Community Event'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(event.date || event.startDate).toLocaleDateString()} at {event.time || new Date(event.startDate).toLocaleTimeString()}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-medium">{event.title || event.name}</h3>
-                          <p className="text-sm text-muted-foreground">{event.communityName || 'Community Event'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(event.date || event.startDate).toLocaleDateString()} at {event.time || new Date(event.startDate).toLocaleTimeString()}
-                          </p>
+                        <div className="flex items-center space-x-4">
+                          <div className="text-sm">
+                            <span className="font-medium">{event.attendeeCount || 0}</span>
+                            <span className="text-muted-foreground">/{event.maxAttendees || 'unlimited'} participants</span>
+                          </div>
+                          <Button size="sm">Join Event</Button>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="text-sm">
-                          <span className="font-medium">{event.attendeeCount || 0}</span>
-                          <span className="text-muted-foreground">/{event.maxAttendees || 'unlimited'} participants</span>
-                        </div>
-                        <Button size="sm">Join Event</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Calendar className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Events Scheduled</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Check back later for upcoming community events and tournaments.
+                  </p>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Event
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="create" className="mt-6">
