@@ -241,7 +241,7 @@ export default function AuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.authPassword', 'Password')}</FormLabel>
+                              <FormLabel>{t('auth.password', 'Password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -324,7 +324,7 @@ export default function AuthPage() {
                               name="firstName"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('auth.authFirstName', 'First Name')}</FormLabel>
+                                  <FormLabel>{t('auth.firstName', 'First Name')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -346,7 +346,7 @@ export default function AuthPage() {
                               name="lastName"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('auth.authLastName', 'Last Name')}</FormLabel>
+                                  <FormLabel>{t('auth.lastName', 'Last Name')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -370,7 +370,7 @@ export default function AuthPage() {
                               name="username"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('auth.authUsername', 'Username')}</FormLabel>
+                                  <FormLabel>{t('auth.username', 'Username')}</FormLabel>
                                   <FormControl>
                                     <Input 
                                       placeholder={t('auth.authUsernamePlaceholder', 'Choose a username')}
@@ -388,7 +388,7 @@ export default function AuthPage() {
                               name="email"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('auth.authEmail', 'Email')}</FormLabel>
+                                  <FormLabel>{t('auth.email', 'Email')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -413,7 +413,7 @@ export default function AuthPage() {
                               name="password"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('auth.authPassword', 'Password')}</FormLabel>
+                                  <FormLabel>{t('auth.password', 'Password')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -436,7 +436,7 @@ export default function AuthPage() {
                               name="confirmPassword"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('auth.authConfirmPassword', 'Confirm Password')}</FormLabel>
+                                  <FormLabel>{t('auth.confirmPassword', 'Confirm Password')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
