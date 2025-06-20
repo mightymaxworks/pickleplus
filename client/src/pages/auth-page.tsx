@@ -219,12 +219,12 @@ export default function AuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username or Email</FormLabel>
+                              <FormLabel>{t('auth.usernameOrEmail', 'Username or Email')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                   <Input 
-                                    placeholder="Enter your username or email"
+                                    placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
                                     className="pl-10"
                                     {...field}
                                     disabled={isLoading}
@@ -241,13 +241,13 @@ export default function AuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Password</FormLabel>
+                              <FormLabel>{t('auth.authPassword', 'Password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                   <Input 
                                     type="password" 
-                                    placeholder="Enter your password"
+                                    placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                                     className="pl-10"
                                     {...field}
                                     disabled={isLoading}
@@ -273,7 +273,7 @@ export default function AuthPage() {
                               </FormControl>
                               <div className="space-y-1 leading-none">
                                 <FormLabel className="text-sm font-normal">
-                                  Remember me
+                                  {t('auth.rememberMe', 'Remember me')}
                                 </FormLabel>
                               </div>
                             </FormItem>
@@ -286,7 +286,7 @@ export default function AuthPage() {
                           disabled={isLoading}
                           size="lg"
                         >
-                          {isLoading ? "Logging in..." : "Sign In"}
+                          {isLoading ? t('auth.loggingIn', 'Logging in...') : t('auth.loginTab', 'Login')}
                         </Button>
                       </form>
                     </Form>
@@ -310,8 +310,8 @@ export default function AuthPage() {
               <TabsContent value="register">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle>Create your account</CardTitle>
-                    <CardDescription>Join Pickle+ to track your matches and improve your game.</CardDescription>
+                    <CardTitle>{t('auth.createAccountTitle', 'Create your account')}</CardTitle>
+                    <CardDescription>{t('auth.createAccountDescription', 'Join thousands of players and elevate your pickleball journey.')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Form {...registerForm}>
@@ -324,12 +324,12 @@ export default function AuthPage() {
                               name="firstName"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>First Name</FormLabel>
+                                  <FormLabel>{t('auth.authFirstName', 'First Name')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                       <Input 
-                                        placeholder="First name"
+                                        placeholder={t('auth.firstNamePlaceholder', 'Enter your first name')}
                                         className="pl-10"
                                         {...field}
                                         disabled={isLoading}
@@ -346,12 +346,12 @@ export default function AuthPage() {
                               name="lastName"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Last Name</FormLabel>
+                                  <FormLabel>{t('auth.authLastName', 'Last Name')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                       <Input 
-                                        placeholder="Last name"
+                                        placeholder={t('auth.lastNamePlaceholder', 'Enter your last name')}
                                         className="pl-10"
                                         {...field}
                                         disabled={isLoading}
@@ -370,10 +370,10 @@ export default function AuthPage() {
                               name="username"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Username</FormLabel>
+                                  <FormLabel>{t('auth.authUsername', 'Username')}</FormLabel>
                                   <FormControl>
                                     <Input 
-                                      placeholder="Choose a unique username"
+                                      placeholder={t('auth.authUsernamePlaceholder', 'Choose a username')}
                                       {...field}
                                       disabled={isLoading}
                                     />
