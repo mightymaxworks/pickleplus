@@ -738,6 +738,21 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signUp': '注册',
     'auth.signIn': '登录',
     
+    // Registration form translations
+    'auth.createAccount': '创建账户',
+    'auth.creatingAccount': '正在创建账户...',
+    'auth.authFirstName': '名字',
+    'auth.authLastName': '姓氏',
+    'auth.authUsername': '用户名',
+    'auth.authEmail': '邮箱',
+    'auth.authPassword': '密码',
+    'auth.authConfirmPassword': '确认密码',
+    'auth.firstNamePlaceholder': '输入您的名字',
+    'auth.lastNamePlaceholder': '输入您的姓氏',
+    'auth.authUsernamePlaceholder': '选择用户名',
+    'auth.emailPlaceholder': '输入您的邮箱地址',
+    'auth.confirmPasswordPlaceholder': '确认您的密码',
+    
     // Profile & Player Info
     'profile.personalInfo': '个人信息',
     'profile.statistics': '统计数据',
