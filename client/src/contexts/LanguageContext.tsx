@@ -738,20 +738,12 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signUp': '注册',
     'auth.signIn': '登录',
     
-    // Registration form translations
-    'auth.createAccount': '创建账户',
-    'auth.creatingAccount': '正在创建账户...',
-    'auth.authFirstName': '名字',
-    'auth.authLastName': '姓氏',
-    'auth.authUsername': '用户名',
-    'auth.authEmail': '邮箱',
-    'auth.authPassword': '密码',
-    'auth.authConfirmPassword': '确认密码',
+    // Additional auth translations
     'auth.firstNamePlaceholder': '输入您的名字',
     'auth.lastNamePlaceholder': '输入您的姓氏',
     'auth.authUsernamePlaceholder': '选择用户名',
-    'auth.emailPlaceholder': '输入您的邮箱地址',
-    'auth.confirmPasswordPlaceholder': '确认您的密码',
+    'auth.passwordPlaceholder': '输入您的密码',
+    'auth.loginPlaceholder': '输入用户名或邮箱',
     
     // Profile & Player Info
     'profile.personalInfo': '个人信息',
@@ -876,24 +868,10 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signInDescription': '输入您的凭据以访问您的Pickle+账户。',
     'auth.usernameOrEmail': '用户名或邮箱',
     'auth.usernamePlaceholder': '请输入用户名或邮箱',
-    'auth.authPassword': '密码',
-    'auth.passwordPlaceholder': '请输入密码',
     'auth.rememberMe': '记住我',
     'auth.loggingIn': '登录中...',
     'auth.createAccountTitle': '创建您的账户',
-    'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。',
-    'auth.authFirstName': '名字',
-    'auth.firstNamePlaceholder': '请输入您的名字',
-    'auth.authLastName': '姓氏',
-    'auth.lastNamePlaceholder': '请输入您的姓氏',
-    'auth.authUsername': '用户名',
-    'auth.authUsernamePlaceholder': '选择一个用户名',
-    'auth.authEmail': '邮箱',
-    'auth.emailPlaceholder': '请输入您的邮箱地址',
-    'auth.authConfirmPassword': '确认密码',
-    'auth.confirmPasswordPlaceholder': '请确认您的密码',
-    'auth.createAccount': '创建账户',
-    'auth.creatingAccount': '创建账户中...'
+    'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。'
   }
 };
 

@@ -219,12 +219,12 @@ export default function AuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.usernameOrEmail', 'Username or Email')}</FormLabel>
+                              <FormLabel>{t('auth.username', 'Username or Email')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                   <Input 
-                                    placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
+                                    placeholder={t('auth.loginPlaceholder', 'Enter your username or email')}
                                     className="pl-10"
                                     {...field}
                                     disabled={isLoading}
