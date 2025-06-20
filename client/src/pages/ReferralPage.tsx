@@ -207,7 +207,7 @@ export default function ReferralPage() {
 
         {/* Referrals Tab */}
         <TabsContent value="overview" className="space-y-4">
-          {referrals.length === 0 ? (
+          {!referrals || referrals.length === 0 ? (
             <Alert>
               <AlertTitle>No referrals yet</AlertTitle>
               <AlertDescription>
@@ -223,7 +223,7 @@ export default function ReferralPage() {
                 <div className="col-span-2">Matches</div>
               </div>
               <div className="divide-y">
-                {referrals.map((referral) => (
+                {referrals && referrals.map((referral) => (
                   <div key={referral.id} className="grid grid-cols-12 p-4 items-center">
                     <div className="col-span-5 flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
@@ -262,7 +262,7 @@ export default function ReferralPage() {
 
         {/* Achievements Tab */}
         <TabsContent value="achievements" className="space-y-4">
-          {achievements.length === 0 ? (
+          {!achievements || achievements.length === 0 ? (
             <Alert>
               <AlertTitle>No achievements yet</AlertTitle>
               <AlertDescription>
@@ -271,7 +271,7 @@ export default function ReferralPage() {
             </Alert>
           ) : (
             <div className="space-y-4">
-              {achievements.map((achievement) => (
+              {achievements && achievements.map((achievement) => (
                 <Card key={achievement.id}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
