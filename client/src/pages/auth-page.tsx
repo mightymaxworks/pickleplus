@@ -388,13 +388,13 @@ export default function AuthPage() {
                               name="email"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Email</FormLabel>
+                                  <FormLabel>{t('auth.authEmail', 'Email')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                       <Input 
                                         type="email"
-                                        placeholder="Enter your email address"
+                                        placeholder={t('auth.emailPlaceholder', 'Enter your email address')}
                                         className="pl-10"
                                         {...field}
                                         disabled={isLoading}
@@ -413,13 +413,13 @@ export default function AuthPage() {
                               name="password"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Password</FormLabel>
+                                  <FormLabel>{t('auth.authPassword', 'Password')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                       <Input 
                                         type="password"
-                                        placeholder="Create a password"
+                                        placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                                         className="pl-10"
                                         {...field}
                                         disabled={isLoading}
@@ -436,13 +436,13 @@ export default function AuthPage() {
                               name="confirmPassword"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Confirm Password</FormLabel>
+                                  <FormLabel>{t('auth.authConfirmPassword', 'Confirm Password')}</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                       <Input 
                                         type="password"
-                                        placeholder="Confirm your password"
+                                        placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm your password')}
                                         className="pl-10"
                                         {...field}
                                         disabled={isLoading}
@@ -629,20 +629,20 @@ export default function AuthPage() {
                           disabled={isLoading}
                           size="lg"
                         >
-                          {isLoading ? "Creating Account..." : "Create Account"}
+                          {isLoading ? t('auth.creatingAccount', 'Creating Account...') : t('auth.createAccount', 'Create Account')}
                         </Button>
                       </form>
                     </Form>
                   </CardContent>
                   <CardFooter className="flex flex-col">
                     <div className="text-sm text-center w-full text-muted-foreground">
-                      Already have an account?{" "}
+                      {t('auth.alreadyHaveAccount', 'Already have an account?')}{" "}
                       <Button 
                         variant="link" 
                         className="p-0 h-auto font-semibold" 
                         onClick={() => setActiveTab("login")}
                       >
-                        Sign in
+                        {t('auth.signIn', 'Sign in')}
                       </Button>
                     </div>
                   </CardFooter>
