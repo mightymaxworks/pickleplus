@@ -3,15 +3,42 @@
  * Page with translation support for match management features
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StandardLayout } from '@/components/layout/StandardLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar, Trophy, Clock, Target, Plus } from 'lucide-react';
+import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 export default function Matches() {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+
+  const handleMatchRecorded = () => {
+    setMatchDialogOpen(false);
+    toast({
+      title: "Match Recorded",
+      description: "Your match has been successfully recorded",
+    });
+  };
+
+  const handleRecordMatch = () => {
+    setMatchDialogOpen(true);
+  };
+
+  const handleViewHistory = () => {
+    navigate('/match');
+  };
+
+  const handleViewStats = () => {
+    navigate('/dashboard');
+  };
 
   return (
     <StandardLayout>
@@ -35,7 +62,7 @@ export default function Matches() {
               <p className="text-sm text-muted-foreground mb-4">
                 Record a new match and update your statistics.
               </p>
-              <Button className="w-full">
+              <Button className="w-full" onClick={handleRecordMatch}>
                 {t('match.record')}
               </Button>
             </CardContent>
@@ -52,7 +79,7 @@ export default function Matches() {
               <p className="text-sm text-muted-foreground mb-4">
                 View your complete match history and performance trends.
               </p>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleViewHistory}>
                 {t('action.view')} {t('training.history')}
               </Button>
             </CardContent>
@@ -69,7 +96,7 @@ export default function Matches() {
               <p className="text-sm text-muted-foreground mb-4">
                 Analyze your performance with detailed statistics.
               </p>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleViewStats}>
                 {t('action.view')} {t('profile.statistics')}
               </Button>
             </CardContent>
@@ -93,6 +120,16 @@ export default function Matches() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Match Recording Dialog */}
+        <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Record Match Results</DialogTitle>
+            </DialogHeader>
+            <QuickMatchRecorder onSuccess={handleMatchRecorded} />
+          </DialogContent>
+        </Dialog>
       </div>
     </StandardLayout>
   );
