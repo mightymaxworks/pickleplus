@@ -39,8 +39,13 @@ router.get('/user-profile', isAuthenticated, async (req: Request, res: Response)
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    // Get CourtIQ ratings
-    const courtiqRatings = await storage.getCourtIQRatings(userId);
+    // Get CourtIQ ratings - provide fallback for missing method
+    let courtiqRatings = { technical: 0, tactical: 0, physical: 0, mental: 0 };
+    try {
+      courtiqRatings = await (storage as any).getCourtIQRatings?.(userId) || courtiqRatings;
+    } catch (err) {
+      console.log('[SAGE-API] CourtIQ ratings not available in user-profile:', err);
+    }
     
     // Get profile completion - provide fallback implementation
     let profileCompletion = { percentage: 0 };

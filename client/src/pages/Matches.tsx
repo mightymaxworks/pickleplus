@@ -1,6 +1,6 @@
 /**
  * Matches Page - Match Recording and History Hub
- * Page with translation support for match management features
+ * Modernized design following dashboard style with enhanced UI/UX
  */
 
 import React, { useState } from 'react';
@@ -9,16 +9,65 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, Trophy, Clock, Target, Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Calendar, 
+  Trophy, 
+  Clock, 
+  Target, 
+  Plus,
+  Activity,
+  TrendingUp,
+  Users,
+  Star,
+  ChevronRight
+} from 'lucide-react';
 import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { matchSDK } from '@/lib/sdk/matchSDK';
+import { useAuth } from '@/lib/auth';
 
 export default function Matches() {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+
+  // Fetch recent match stats for preview
+  const { data: matchStats, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/match/stats", user?.id],
+    queryFn: async () => {
+      try {
+        return await matchSDK.getMatchStats();
+      } catch (error) {
+        console.error("Error fetching match stats:", error);
+        return {
+          totalMatches: 0,
+          matchesWon: 0,
+          winRate: 0,
+          currentWinStreak: 0
+        };
+      }
+    },
+    enabled: !!user,
+  });
+
+  // Fetch recent matches for preview
+  const { data: recentMatches, isLoading: matchesLoading } = useQuery({
+    queryKey: ["/api/match/recent", user?.id],
+    queryFn: async () => {
+      try {
+        return await matchSDK.getRecentMatches(undefined, 3);
+      } catch (error) {
+        console.error("Error fetching recent matches:", error);
+        return [];
+      }
+    },
+    enabled: !!user,
+  });
 
   const handleMatchRecorded = () => {
     setMatchDialogOpen(false);
@@ -42,84 +91,197 @@ export default function Matches() {
 
   return (
     <StandardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4">{t('nav.matches')}</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Track your performance and view detailed match analytics
-          </p>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Modern Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">{t('nav.matches')}</h1>
+              <p className="text-muted-foreground mt-2">
+                Record matches, track performance, and analyze your game
+              </p>
+            </div>
+            <Button size="lg" onClick={handleRecordMatch} className="gap-2 bg-primary hover:bg-primary/90">
+              <Plus className="h-5 w-5" />
+              {t('match.record')}
+            </Button>
+          </div>
+
+          {/* Quick Stats Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Matches</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {statsLoading ? "..." : matchStats?.totalMatches || 0}
+                    </p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">Win Rate</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                      {statsLoading ? "..." : `${matchStats?.winRate || 0}%`}
+                    </p>
+                  </div>
+                  <Trophy className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Current Streak</p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                      {statsLoading ? "..." : matchStats?.currentWinStreak || 0}
+                    </p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Matches Won</p>
+                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
+                      {statsLoading ? "..." : matchStats?.matchesWon || 0}
+                    </p>
+                  </div>
+                  <Star className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Plus className="h-5 w-5 mr-2" />
-                {t('match.record')}
+        {/* Main Action Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-800">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Activity className="h-6 w-6 mr-3 text-primary" />
+                  Detailed Match History
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Record a new match and update your statistics.
+              <p className="text-muted-foreground mb-4">
+                View comprehensive match analytics, performance trends, and detailed statistics.
               </p>
-              <Button className="w-full" onClick={handleRecordMatch}>
-                {t('match.record')}
+              <Button variant="outline" onClick={handleViewHistory} className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                View Detailed Match History
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
-                {t('match.date')}
+          <Card className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-800">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Target className="h-6 w-6 mr-3 text-primary" />
+                  Performance Analytics
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                View your complete match history and performance trends.
+              <p className="text-muted-foreground mb-4">
+                Access your complete performance dashboard with rankings and progress tracking.
               </p>
-              <Button variant="outline" onClick={handleViewHistory}>
-                {t('action.view')} {t('training.history')}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Target className="h-5 w-5 mr-2" />
-                {t('stats.winRate')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Analyze your performance with detailed statistics.
-              </p>
-              <Button variant="outline" onClick={handleViewStats}>
-                {t('action.view')} {t('profile.statistics')}
+              <Button variant="outline" onClick={handleViewStats} className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                View Performance Dashboard
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Trophy className="h-5 w-5 mr-2" />
-                Recent {t('nav.matches')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  {t('stats.loading')}
-                </p>
+        {/* Recent Matches Section */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Trophy className="h-6 w-6 mr-3 text-primary" />
+                Recent Matches
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              {recentMatches && recentMatches.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleViewHistory} className="text-primary hover:text-primary/80">
+                  View All
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {matchesLoading ? (
+              <div className="space-y-3">
+                {Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg animate-pulse">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-muted rounded-full" />
+                      <div className="space-y-2">
+                        <div className="w-32 h-4 bg-muted rounded" />
+                        <div className="w-24 h-3 bg-muted rounded" />
+                      </div>
+                    </div>
+                    <div className="w-16 h-6 bg-muted rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : recentMatches && recentMatches.length > 0 ? (
+              <div className="space-y-3">
+                {recentMatches.slice(0, 3).map((match, index) => (
+                  <div key={match.id || index} className="flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {match.formatType === 'singles' ? 'Singles Match' : 'Doubles Match'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(match.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={match.players?.find(p => p.userId === user?.id)?.isWinner ? "default" : "secondary"}>
+                        {match.players?.find(p => p.userId === user?.id)?.isWinner ? "Won" : "Lost"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Trophy className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Matches Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Start your pickleball journey by recording your first match
+                </p>
+                <Button onClick={handleRecordMatch} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Record Your First Match
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Match Recording Dialog */}
         <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
