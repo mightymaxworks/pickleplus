@@ -1,80 +1,391 @@
 /**
- * Communities Page - Player Connection Hub
- * Placeholder page with translation support for community features
+ * Communities Page - Modern Community Hub
+ * Modernized design with active community features and enhanced UX
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StandardLayout } from '@/components/layout/StandardLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, MapPin, Calendar, Trophy } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { 
+  Users, 
+  MapPin, 
+  Calendar, 
+  Trophy,
+  Search,
+  Filter,
+  Plus,
+  Compass,
+  MessageCircle,
+  Activity,
+  Star,
+  ChevronRight,
+  Globe,
+  Crown,
+  Zap
+} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/lib/auth';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function Communities() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Fetch communities from API
+  const { data: communitiesData, isLoading: communitiesLoading } = useQuery({
+    queryKey: ["/api/communities", { search: searchQuery, category: selectedCategory }],
+    queryFn: async () => {
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (selectedCategory !== 'all') params.append('skillLevel', selectedCategory);
+        params.append('limit', '20');
+        
+        const response = await apiRequest("GET", `/api/communities?${params.toString()}`);
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching communities:", error);
+        return [];
+      }
+    },
+  });
+
+  // Fetch community events
+  const { data: eventsData, isLoading: eventsLoading } = useQuery({
+    queryKey: ["/api/communities/events"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("GET", "/api/communities/events?limit=10");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching community events:", error);
+        return [];
+      }
+    },
+  });
+
+  // Fetch community stats
+  const { data: statsData } = useQuery({
+    queryKey: ["/api/communities/stats"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("GET", "/api/communities/stats");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching community stats:", error);
+        return {
+          totalCommunities: 0,
+          totalMembers: 0,
+          activeEvents: 0,
+          userCommunities: 0
+        };
+      }
+    },
+  });
+
+  const communities = communitiesData || [];
+  const events = eventsData || [];
+  const stats = statsData || { totalCommunities: 0, totalMembers: 0, activeEvents: 0, userCommunities: 0 };
 
   return (
     <StandardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4">{t('comingSoon.playerDiscovery')}</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            {t('comingSoon.playerDescription')}
-          </p>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Modern Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight mb-2">Communities</h1>
+              <p className="text-muted-foreground">
+                Connect with players, join groups, and participate in events
+              </p>
+            </div>
+            <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
+              <Plus className="h-5 w-5" />
+              Create Community
+            </Button>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Active Communities</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.totalCommunities}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">Total Members</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.totalMembers}</p>
+                  </div>
+                  <Globe className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Events This Week</p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.activeEvents}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Your Communities</p>
+                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats.userCommunities}</p>
+                  </div>
+                  <Crown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="h-5 w-5 mr-2" />
-                {t('nav.findPlayers')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Connect with players in your area based on skill level and availability.
-              </p>
-              <Button variant="outline" disabled>
-                {t('comingSoon.feature')}
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Main Content */}
+        <Tabs defaultValue="discover" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="discover" className="flex items-center gap-2">
+              <Compass className="h-4 w-4" />
+              Discover
+            </TabsTrigger>
+            <TabsTrigger value="my-communities" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              My Communities
+            </TabsTrigger>
+            <TabsTrigger value="events" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Events
+            </TabsTrigger>
+            <TabsTrigger value="create" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create
+            </TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2" />
-                Local Groups
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Join local pickleball groups and community events.
-              </p>
-              <Button variant="outline" disabled>
-                {t('comingSoon.feature')}
-              </Button>
-            </CardContent>
-          </Card>
+          <TabsContent value="discover" className="mt-6">
+            {/* Search and Filters */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search communities..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                {['all', 'competitive', 'beginner', 'corporate', 'social'].map((category) => (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category)}
+                    className="capitalize"
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Community Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Discover and participate in community-organized events.
-              </p>
-              <Button variant="outline" disabled>
-                {t('comingSoon.feature')}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Communities Grid */}
+            {communitiesLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array(6).fill(0).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader>
+                      <div className="h-6 bg-muted rounded mb-2" />
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded" />
+                        <div className="h-4 bg-muted rounded w-2/3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : communities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {communities.map((community) => (
+                <Card key={community.id} className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-800">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CardTitle className="text-lg">{community.name}</CardTitle>
+                          {community.isFeatured && (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                              <Star className="h-3 w-3 mr-1" />
+                              Featured
+                            </Badge>
+                          )}
+                          {community.isPrivate && (
+                            <Badge variant="outline">Private</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {community.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span>{community.location}</span>
+                        </div>
+                        <Badge variant="outline">{community.skillLevel || 'Open'}</Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span>{community.memberCount || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Activity className="h-4 w-4 text-green-500" />
+                            <span>Active</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {community.tags && community.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {community.tags.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        <Button className="flex-1" size="sm">
+                          Join Community
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="my-communities" className="mt-6">
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Users className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
+                <h3 className="text-lg font-medium mb-2">Your Communities</h3>
+                <p className="text-muted-foreground mb-6">
+                  Join communities to see them here and stay connected with fellow players.
+                </p>
+                <Button>
+                  <Compass className="h-4 w-4 mr-2" />
+                  Discover Communities
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="events" className="mt-6">
+            {eventsLoading ? (
+              <div className="space-y-4">
+                {Array(3).fill(0).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-muted rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <div className="h-4 bg-muted rounded w-1/2" />
+                          <div className="h-3 bg-muted rounded w-1/3" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : events.length > 0 ? (
+              <div className="space-y-4">
+                {events.map((event) => (
+                <Card key={event.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                          <Calendar className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{event.title || event.name}</h3>
+                          <p className="text-sm text-muted-foreground">{event.communityName || 'Community Event'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(event.date || event.startDate).toLocaleDateString()} at {event.time || new Date(event.startDate).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="text-sm">
+                          <span className="font-medium">{event.attendeeCount || 0}</span>
+                          <span className="text-muted-foreground">/{event.maxAttendees || 'unlimited'} participants</span>
+                        </div>
+                        <Button size="sm">Join Event</Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="create" className="mt-6">
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Plus className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
+                <h3 className="text-lg font-medium mb-2">Create Your Community</h3>
+                <p className="text-muted-foreground mb-6">
+                  Start a new community to connect with players who share your interests and skill level.
+                </p>
+                <Button size="lg">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Community
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </StandardLayout>
   );
