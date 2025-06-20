@@ -662,7 +662,7 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.nav.getStarted': '开始使用',
     'landing.hero.badge': '新平台现已可用',
     'landing.hero.title': '通过',
-    'landing.hero.titleHighlight': '智能分析改变您的匹克球游戏',
+    'landing.hero.titleHighlight': '智能分析改变您的匹克球运动项目',
     'landing.hero.description': '加入数千名球员，使用先进的分析、教练工具和社区功能来提升您的匹克球表现。',
     'landing.hero.startFree': '今天免费开始',
     'landing.hero.watchDemo': '观看演示',
