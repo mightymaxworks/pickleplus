@@ -477,8 +477,7 @@ export default function PassportDashboard() {
         className="relative z-10"
       >
         <Card 
-          className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm cursor-pointer group"
-          onClick={() => setIsPassportExpanded(!isPassportExpanded)}
+          className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
         >
           <CardContent className="p-2">
             <div className="flex flex-col lg:flex-row items-center gap-4">
