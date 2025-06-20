@@ -33,7 +33,7 @@ export default function Matches() {
   };
 
   const handleViewHistory = () => {
-    navigate('/match');
+    navigate('/match-history');
   };
 
   const handleViewStats = () => {
