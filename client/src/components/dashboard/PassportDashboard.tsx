@@ -39,7 +39,8 @@ import {
   MapPin,
   Info,
   Upload,
-  X
+  X,
+  Edit
 } from 'lucide-react';
 import PhotoUploadModal from '@/components/PhotoUploadModal';
 import { ComingSoonModal } from '@/components/ui/coming-soon-modal';
