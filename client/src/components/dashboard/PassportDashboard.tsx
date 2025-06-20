@@ -555,6 +555,24 @@ export default function PassportDashboard() {
                   </div>
                 </div>
 
+                {/* Edit Profile Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="flex justify-center lg:justify-start mt-4"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                    onClick={() => setIsPassportExpanded(!isPassportExpanded)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    {t('dashboard.form.editProfile')}
+                  </Button>
+                </motion.div>
+
                 {/* Key Stats Grid */}
                 <motion.div 
                   className="grid grid-cols-2 lg:grid-cols-6 gap-3"
