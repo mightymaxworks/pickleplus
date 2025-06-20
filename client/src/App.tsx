@@ -250,6 +250,11 @@ export default function App() {
                     pageTitle="Your Matches"
                   />
                   <ProtectedRouteWithLayout 
+                    path="/match-history" 
+                    component={lazyLoad(() => import('./pages/MatchHistoryPage'))} 
+                    pageTitle="Match History"
+                  />
+                  <ProtectedRouteWithLayout 
                     path="/tournaments" 
                     component={lazyLoad(() => import('./pages/tournaments/index'))} 
                     pageTitle="Tournaments"

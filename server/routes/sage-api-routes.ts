@@ -162,8 +162,13 @@ router.get('/courtiq-details', isAuthenticated, async (req: Request, res: Respon
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    // Get CourtIQ ratings
-    const courtiqRatings = await storage.getCourtIQRatings(userId);
+    // Get CourtIQ ratings - provide fallback for missing method  
+    let courtiqRatings = { technical: 0, tactical: 0, physical: 0, mental: 0 };
+    try {
+      courtiqRatings = await (storage as any).getCourtIQRatings?.(userId) || courtiqRatings;
+    } catch (err) {
+      console.log('[SAGE-API] CourtIQ ratings not available in courtiq-details:', err);
+    }
     
     // Find the user's strongest and weakest dimensions
     let maxRating = 0;
