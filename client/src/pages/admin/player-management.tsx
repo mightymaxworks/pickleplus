@@ -587,9 +587,11 @@ export default function PlayerManagement() {
                       </Tabs>
                     </DialogContent>
                   </Dialog>
-                </div>
-              </div>
-            ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>
