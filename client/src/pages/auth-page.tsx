@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, Lock, User, Mail, Calendar, MapPin, Star, Trophy, ChevronDown } from "lucide-react";
+import { ChevronLeft, Lock, User, Mail, Calendar, MapPin, Star, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
@@ -27,10 +27,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import pickleLogoPath from "@assets/Pickle (2).png";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import Pickle__13_ from "@assets/Pickle (13).png";
+
 
 // Login form schema
 const loginSchema = z.object({
@@ -89,57 +88,28 @@ const countries = [
 
 // Enhanced Country Selector Component
 const CountrySelector = ({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled?: boolean }) => {
-  const [open, setOpen] = useState(false);
   const { t } = useLanguage();
-  const selectedCountry = countries.find(country => country.name === value);
-
-  const handleSelect = (selectedValue: string) => {
-    try {
-      const countryName = selectedValue;
-      onChange(countryName === value ? "" : countryName);
-      setOpen(false);
-    } catch (error) {
-      console.error('Country selection error:', error);
-    }
-  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 pl-10 relative bg-white/80 backdrop-blur-sm hover:bg-white"
-          disabled={disabled}
-          type="button"
-        >
-          <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-          <span className="text-left flex-1 text-sm">
-            {selectedCountry ? selectedCountry.name : t('auth.countryPlaceholder', 'Select country...')}
-          </span>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-white/95 backdrop-blur-sm border-2 border-orange-200" align="start">
-        <Command>
-          <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} className="border-orange-200" />
-          <CommandEmpty>{t('auth.noCountryFound', 'No country found.')}</CommandEmpty>
-          <CommandGroup className="max-h-64 overflow-auto">
-            {countries.map((country) => (
-              <CommandItem
-                key={country.code}
-                value={country.name}
-                onSelect={handleSelect}
-                className="cursor-pointer hover:bg-orange-50 focus:bg-orange-100"
-              >
-                {country.name}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="relative">
+      <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-gray-400 z-10" />
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <SelectTrigger className="w-full h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 pl-10 bg-white/80 backdrop-blur-sm hover:bg-white">
+          <SelectValue placeholder={t('auth.countryPlaceholder', 'Select country...')} />
+        </SelectTrigger>
+        <SelectContent className="max-h-64 bg-white/95 backdrop-blur-sm border-2 border-orange-200">
+          {countries.map((country) => (
+            <SelectItem 
+              key={country.code} 
+              value={country.name}
+              className="cursor-pointer hover:bg-orange-50 focus:bg-orange-100"
+            >
+              {country.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 
