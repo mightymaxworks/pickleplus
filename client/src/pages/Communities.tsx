@@ -309,7 +309,11 @@ export default function Communities() {
                               Join Community
                             </Button>
                           )}
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.location.href = `/communities/${community.id}`}
+                          >
                             <ChevronRight className="h-4 w-4" />
                           </Button>
                         </div>
