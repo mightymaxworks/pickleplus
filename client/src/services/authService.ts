@@ -27,6 +27,12 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   confirmPassword?: string;
+  firstName?: string;
+  lastName?: string;
+  yearOfBirth?: number;
+  location?: string;
+  playingSince?: string;
+  skillLevel?: string;
 }
 
 // Constants
@@ -72,24 +78,28 @@ export class AuthService {
   async register(credentials: RegisterCredentials): Promise<User> {
     try {
       // Validation
-      if (credentials.password !== credentials.confirmPassword) {
+      if (credentials.confirmPassword && credentials.password !== credentials.confirmPassword) {
         throw new Error('Passwords do not match');
       }
       
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...registerData } = credentials;
       
+      console.log('AuthService: Sending registration data:', registerData);
+      
       const response = await apiRequest('POST', AUTH_ENDPOINTS.REGISTER, registerData);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('AuthService: Registration failed with status:', response.status, errorData);
         throw new Error(errorData.message || 'Registration failed. Please try again.');
       }
       
       const user = await response.json();
+      console.log('AuthService: Registration successful:', user);
       return user;
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('AuthService: Registration error:', error);
       throw error;
     }
   }

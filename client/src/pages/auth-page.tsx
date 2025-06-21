@@ -228,6 +228,7 @@ export default function AuthPage() {
         username: data.username,
         email: data.email,
         password: data.password,
+        confirmPassword: data.confirmPassword,
         yearOfBirth: data.yearOfBirth,
         location: data.location,
         playingSince: data.playingSince,
