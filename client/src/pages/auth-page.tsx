@@ -276,27 +276,34 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-background to-primary/5">
-      {/* Main container with two columns */}
-      <div className="flex flex-col md:flex-row w-full min-h-screen">
-        {/* Left column - Authentication forms */}
-        <div className="w-full md:w-1/2 p-4 md:p-8 flex flex-col">
-          <div className="mb-4 flex justify-between items-center">
-            <Button variant="ghost" size="sm" className="gap-1" onClick={() => setLocation("/")}>
-              <ChevronLeft className="h-4 w-4" />
-              {t('auth.backToHome', 'Back to Home')}
-            </Button>
-            <LanguageToggle />
-          </div>
-          
-          <div className="text-center mb-6">
-            <img 
-              src={pickleLogoPath} 
-              alt="Pickle+ Logo" 
-              className="h-16 mx-auto"
-            />
-            <h1 className="text-2xl font-bold mt-4">{t('auth.welcomeTitle', 'Welcome to Pickle+')}</h1>
-            <p className="text-muted-foreground mt-1">{t('auth.welcomeSubtitle', 'Join the fastest growing pickleball community')}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
+        {/* Left Column - Authentication Forms */}
+        <div className="w-full max-w-md mx-auto lg:mx-0">
+          <div className="mb-8">
+            <div className="flex justify-between items-start mb-8">
+              <Button variant="ghost" size="sm" className="gap-2 text-gray-600 hover:text-gray-900" onClick={() => setLocation("/")}>
+                <ChevronLeft className="h-4 w-4" />
+                {t('auth.backToHome', 'Back to Home')}
+              </Button>
+              <LanguageToggle />
+            </div>
+            
+            <div className="text-center">
+              <div className="mb-6">
+                <img 
+                  src={pickleLogoPath} 
+                  alt="Pickle+ Logo" 
+                  className="h-20 w-auto mx-auto drop-shadow-sm"
+                />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+                {t('auth.welcomeTitle', 'Welcome to Pickle+')}
+              </h1>
+              <p className="text-lg text-gray-600 leading-relaxed">
+                {t('auth.welcomeSubtitle', 'Your pickleball journey starts here')}
+              </p>
+            </div>
           </div>
           
           <div className="flex-grow flex flex-col justify-start">
