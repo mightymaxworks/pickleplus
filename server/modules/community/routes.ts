@@ -53,22 +53,26 @@ router.get('/stats', async (req: Request, res: Response) => {
     const allCommunities = await storage.getCommunities({ limit: 1000 });
     const totalCommunities = allCommunities.length;
     
-    // Calculate total members across all communities
+    // Calculate total members across all communities (excluding default groups)
     let totalMembers = 0;
     let activeEvents = 0;
     let userCommunities = 0;
     
     for (const community of allCommunities) {
-      totalMembers += community.memberCount || 0;
-      activeEvents += community.eventCount || 0;
+      // Only count non-default communities for public stats
+      if (!community.isDefault) {
+        totalMembers += community.memberCount || 0;
+        activeEvents += community.eventCount || 0;
+      }
     }
     
-    // If user is authenticated, get their community count
+    // If user is authenticated, get their community count (excluding default groups)
     const userId = req.user?.id;
     if (userId) {
       try {
         const userMemberships = await storage.getUserCommunities(userId);
-        userCommunities = userMemberships.length;
+        // Filter out default communities from user count
+        userCommunities = userMemberships.filter(community => !community.isDefault).length;
       } catch (error) {
         console.log('[PKL-278651-COMM-0020-DEFGRP] Could not get user communities (user not authenticated)');
       }
