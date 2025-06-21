@@ -15,12 +15,14 @@ import { insertUserSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Info, ArrowRight, AlertCircle, ChevronLeft, Mail, Lock, User, MapPin, Calendar, Award } from "lucide-react";
+import { Info, ArrowRight, AlertCircle, ChevronLeft, Mail, Lock, User, MapPin, Calendar, Award, ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Create schemas for the forms
 const loginSchema = z.object({
@@ -46,6 +48,105 @@ const registerSchema = insertUserSchema.extend({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
+
+// Country list with codes
+const countries = [
+  { name: "Afghanistan", code: "AF" },
+  { name: "Albania", code: "AL" },
+  { name: "Algeria", code: "DZ" },
+  { name: "Argentina", code: "AR" },
+  { name: "Australia", code: "AU" },
+  { name: "Austria", code: "AT" },
+  { name: "Bangladesh", code: "BD" },
+  { name: "Belgium", code: "BE" },
+  { name: "Brazil", code: "BR" },
+  { name: "Canada", code: "CA" },
+  { name: "Chile", code: "CL" },
+  { name: "China", code: "CN" },
+  { name: "Colombia", code: "CO" },
+  { name: "Czech Republic", code: "CZ" },
+  { name: "Denmark", code: "DK" },
+  { name: "Egypt", code: "EG" },
+  { name: "Finland", code: "FI" },
+  { name: "France", code: "FR" },
+  { name: "Germany", code: "DE" },
+  { name: "Greece", code: "GR" },
+  { name: "Hungary", code: "HU" },
+  { name: "India", code: "IN" },
+  { name: "Indonesia", code: "ID" },
+  { name: "Ireland", code: "IE" },
+  { name: "Israel", code: "IL" },
+  { name: "Italy", code: "IT" },
+  { name: "Japan", code: "JP" },
+  { name: "Malaysia", code: "MY" },
+  { name: "Mexico", code: "MX" },
+  { name: "Netherlands", code: "NL" },
+  { name: "New Zealand", code: "NZ" },
+  { name: "Norway", code: "NO" },
+  { name: "Philippines", code: "PH" },
+  { name: "Poland", code: "PL" },
+  { name: "Portugal", code: "PT" },
+  { name: "Romania", code: "RO" },
+  { name: "Russia", code: "RU" },
+  { name: "Singapore", code: "SG" },
+  { name: "South Africa", code: "ZA" },
+  { name: "South Korea", code: "KR" },
+  { name: "Spain", code: "ES" },
+  { name: "Sweden", code: "SE" },
+  { name: "Switzerland", code: "CH" },
+  { name: "Thailand", code: "TH" },
+  { name: "Turkey", code: "TR" },
+  { name: "Ukraine", code: "UA" },
+  { name: "United Kingdom", code: "GB" },
+  { name: "United States", code: "US" },
+  { name: "Vietnam", code: "VN" }
+].sort((a, b) => a.name.localeCompare(b.name));
+
+// Country Selector Component
+const CountrySelector = ({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled?: boolean }) => {
+  const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
+  const selectedCountry = countries.find(country => country.name === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+          disabled={disabled}
+        >
+          <span className="text-left">
+            {selectedCountry ? selectedCountry.name : t('auth.countryPlaceholder', 'Select country...')}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} />
+          <CommandEmpty>{t('auth.noCountryFound', 'No country found.')}</CommandEmpty>
+          <CommandGroup className="max-h-64 overflow-auto">
+            {countries.map((country) => (
+              <CommandItem
+                key={country.code}
+                value={country.name}
+                onSelect={(currentValue) => {
+                  onChange(currentValue === value ? "" : currentValue);
+                  setOpen(false);
+                }}
+              >
+                {country.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 // Animation variants
 const fadeInUp = {
