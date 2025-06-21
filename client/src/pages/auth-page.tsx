@@ -24,7 +24,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import pickleLogoPath from "../assets/Pickle (2).png";
+import pickleLogoPath from "@assets/Pickle (2).png";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -89,9 +89,19 @@ const countries = [
 
 // Enhanced Country Selector Component
 const CountrySelector = ({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled?: boolean }) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const { t } = useLanguage();
   const selectedCountry = countries.find(country => country.name === value);
+
+  const handleSelect = (selectedValue: string) => {
+    try {
+      const countryName = selectedValue;
+      onChange(countryName === value ? "" : countryName);
+      setOpen(false);
+    } catch (error) {
+      console.error('Country selection error:', error);
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -102,15 +112,16 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
           aria-expanded={open}
           className="w-full justify-between h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 pl-10 relative bg-white/80 backdrop-blur-sm hover:bg-white"
           disabled={disabled}
+          type="button"
         >
           <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-          <span className="text-left flex-1">
+          <span className="text-left flex-1 text-sm">
             {selectedCountry ? selectedCountry.name : t('auth.countryPlaceholder', 'Select country...')}
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white/95 backdrop-blur-sm border-2 border-orange-200" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-white/95 backdrop-blur-sm border-2 border-orange-200" align="start">
         <Command>
           <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} className="border-orange-200" />
           <CommandEmpty>{t('auth.noCountryFound', 'No country found.')}</CommandEmpty>
@@ -119,11 +130,7 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
               <CommandItem
                 key={country.code}
                 value={country.name}
-                onSelect={(currentValue) => {
-                  const selectedCountryName = countries.find(c => c.name.toLowerCase() === currentValue.toLowerCase())?.name || currentValue;
-                  onChange(selectedCountryName === value ? "" : selectedCountryName);
-                  setOpen(false);
-                }}
+                onSelect={handleSelect}
                 className="cursor-pointer hover:bg-orange-50 focus:bg-orange-100"
               >
                 {country.name}
@@ -260,7 +267,7 @@ export default function AuthPage() {
                 <div className="mb-6 relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full blur-2xl opacity-20 scale-110"></div>
                   <img 
-                    src={Pickle__13_} 
+                    src={pickleLogoPath} 
                     alt="Pickle+ Logo" 
                     className="relative h-24 w-auto mx-auto drop-shadow-lg"
                   />
