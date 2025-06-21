@@ -26,7 +26,8 @@ import {
   ChevronRight,
   Globe,
   Crown,
-  Zap
+  Zap,
+  Megaphone
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';

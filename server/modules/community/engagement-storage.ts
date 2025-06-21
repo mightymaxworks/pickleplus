@@ -25,7 +25,7 @@ import {
   CommunityLeaderboard,
   InsertCommunityLeaderboard
 } from "@shared/schema/community-engagement";
-import { ServerEventBus, ServerEvents } from "../../core/events";
+import { ServerEventBus } from "../../core/events";
 import { users } from "@shared/schema";
 
 /**

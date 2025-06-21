@@ -1777,6 +1777,7 @@ import { communityEngagementRoutes } from './engagement-routes';
 // Export the router
 export function registerCommunityRoutes(app: any) {
   console.log('[API] Registering community hub routes (PKL-278651-COMM-0006-HUB-API)');
+  console.log('[PKL-278651-COMM-0020-DEFGRP] Registering community routes with default group support');
   
   // Register API routes
   app.use('/api/communities', router);

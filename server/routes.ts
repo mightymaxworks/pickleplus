@@ -8,7 +8,7 @@ import { storage } from "./storage";
 // Use isAuthenticated from auth.ts which has proper passport integration
 import { registerAdminRoutes } from "./routes/admin-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes"; // Added for PKL-278651-ADMIN-0012-PERF
-import { registerCommunityRoutes } from "./routes/community-routes";
+import { registerCommunityRoutes } from "./modules/community/routes";
 import { registerEventRoutes } from "./routes/event-routes";
 import { registerUserRoutes } from "./routes/user-routes";
 import { registerUserProfileRoutes } from "./routes/user-profile-routes"; // PKL-278651-PROF-0005-UPLOAD
