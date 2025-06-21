@@ -2169,6 +2169,15 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
 
   console.log('[API] Critical user flow endpoints registered: /register, /login, /sessions/request');
 
+  // Import and use new standardized ranking routes
+  try {
+    const rankingStandardizationRoutes = await import('./routes/ranking-standardization');
+    app.use(rankingStandardizationRoutes.default);
+    console.log('[RANKING] Standardized ranking routes loaded');
+  } catch (error) {
+    console.error('[RANKING] Failed to load standardized ranking routes:', error);
+  }
+
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
   });
