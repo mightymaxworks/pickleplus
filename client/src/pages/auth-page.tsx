@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, Lock, User, Mail, Calendar, MapPin, Star, Trophy } from "lucide-react";
+import { ChevronLeft, Lock, User, Mail, Calendar, MapPin, Star, Trophy, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
@@ -31,7 +31,6 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { ChevronDown } from "lucide-react";
 
 // Login form schema
 const loginSchema = z.object({
@@ -190,7 +189,7 @@ export default function AuthPage() {
   });
 
   // Form handlers
-  const handleLogin = async (data: LoginFormData) => {
+  const onLoginSubmit = async (data: LoginFormData) => {
     try {
       await login(data.username, data.password, data.rememberMe);
       toast({
@@ -206,7 +205,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleRegister = async (data: RegisterFormData) => {
+  const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
       // Transform data to match API expectations
       const registrationData = {
@@ -298,7 +297,7 @@ export default function AuthPage() {
 
                 <CardContent className="space-y-6 px-6">
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-5">
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
                       <FormField
                         control={loginForm.control}
                         name="username"
@@ -421,7 +420,7 @@ export default function AuthPage() {
 
                 <CardContent className="space-y-6 px-6">
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-5">
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-5">
                       {/* Enhanced Basic Information */}
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
