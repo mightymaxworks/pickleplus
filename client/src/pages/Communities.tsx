@@ -27,7 +27,8 @@ import {
   Globe,
   Crown,
   Zap,
-  Megaphone
+  Megaphone,
+  Check
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
@@ -95,11 +96,15 @@ export default function Communities() {
   });
 
   // Process communities data - handle both array and object responses
-  const communities = Array.isArray(communitiesData) ? communitiesData : (communitiesData?.communities || []);
+  const allCommunities = Array.isArray(communitiesData) ? communitiesData : (communitiesData?.communities || []);
+  // Filter out communities with "test" in the name (case insensitive)
+  const communities = allCommunities.filter(community => 
+    !community.name.toLowerCase().includes('test')
+  );
   const events = eventsData || [];
   const stats = statsData || { totalCommunities: 0, totalMembers: 0, activeEvents: 0, userCommunities: 0 };
   
-  console.log('[Communities Debug] Processed communities:', communities);
+  console.log('[Communities Debug] Processed communities (filtered):', communities);
   console.log('[Communities Debug] Community count:', communities.length);
 
   return (
@@ -294,9 +299,16 @@ export default function Communities() {
                         )}
                         
                         <div className="flex gap-2">
-                          <Button className="flex-1" size="sm">
-                            Join Community
-                          </Button>
+                          {community.isDefault ? (
+                            <Button className="flex-1" size="sm" disabled>
+                              <Check className="h-4 w-4 mr-2" />
+                              Member
+                            </Button>
+                          ) : (
+                            <Button className="flex-1" size="sm">
+                              Join Community
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm">
                             <ChevronRight className="h-4 w-4" />
                           </Button>

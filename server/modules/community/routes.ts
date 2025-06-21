@@ -542,6 +542,13 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
         errors: validationResult.error.errors 
       });
     }
+
+    // Check if community name contains "test" (case insensitive)
+    if (validationResult.data.name?.toLowerCase().includes('test')) {
+      return res.status(400).json({ 
+        message: 'Community names cannot contain the word "test"'
+      });
+    }
     
     // Add createdByUserId to the community data
     const communityData = {
