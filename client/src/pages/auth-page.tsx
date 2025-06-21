@@ -100,7 +100,7 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200 pl-10 relative"
+          className="w-full justify-between h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 pl-10 relative bg-white/80 backdrop-blur-sm hover:bg-white"
           disabled={disabled}
         >
           <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
@@ -110,7 +110,7 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white/95 backdrop-blur-sm border-2 border-orange-200" align="start">
         <Command>
           <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} />
           <CommandEmpty>{t('auth.noCountryFound', 'No country found.')}</CommandEmpty>
@@ -123,7 +123,7 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
                   onChange(currentValue === value ? "" : currentValue);
                   setOpen(false);
                 }}
-                className="cursor-pointer hover:bg-blue-50"
+                className="cursor-pointer hover:bg-orange-50 focus:bg-orange-100"
               >
                 {country.name}
               </CommandItem>
@@ -236,61 +236,75 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
-        {/* Left Column - Authentication Forms */}
-        <div className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="mb-8">
-            <div className="flex justify-between items-start mb-8">
-              <Button variant="ghost" size="sm" className="gap-2 text-gray-600 hover:text-gray-900" onClick={() => setLocation("/")}>
-                <ChevronLeft className="h-4 w-4" />
-                {t('auth.backToHome', 'Back to Home')}
-              </Button>
-              <LanguageToggle />
-            </div>
-            
-            <div className="text-center">
-              <div className="mb-6">
-                <img 
-                  src={pickleLogoPath} 
-                  alt="Pickle+ Logo" 
-                  className="h-20 w-auto mx-auto drop-shadow-sm"
-                />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-amber-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-orange-300/10 to-yellow-300/10 rounded-full blur-3xl animate-ping"></div>
+      </div>
+      
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Column - Authentication Forms */}
+          <div className="w-full max-w-md mx-auto lg:mx-0">
+            <div className="mb-8">
+              <div className="flex justify-between items-start mb-8">
+                <Button variant="ghost" size="sm" className="gap-2 text-gray-600 hover:text-orange-600 transition-colors" onClick={() => setLocation("/")}>
+                  <ChevronLeft className="h-4 w-4" />
+                  {t('auth.backToHome', 'Back to Home')}
+                </Button>
+                <LanguageToggle />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                {t('auth.welcomeTitle', 'Welcome to Pickle+')}
-              </h1>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                {t('auth.welcomeSubtitle', 'Your pickleball journey starts here')}
-              </p>
+              
+              <div className="text-center">
+                <div className="mb-6 relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full blur-2xl opacity-20 scale-110"></div>
+                  <img 
+                    src={pickleLogoPath} 
+                    alt="Pickle+ Logo" 
+                    className="relative h-24 w-auto mx-auto drop-shadow-lg"
+                  />
+                </div>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-4 tracking-tight">
+                  {t('auth.welcomeTitle', 'Welcome to Pickle+')}
+                </h1>
+                <p className="text-xl text-gray-700 leading-relaxed font-medium">
+                  {t('auth.welcomeSubtitle', 'Your pickleball journey starts here')}
+                </p>
+              </div>
             </div>
-          </div>
           
-          {/* Modern Tab-based Authentication */}
-          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100 p-1 rounded-lg">
-                <TabsTrigger 
-                  value="login" 
-                  className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                >
-                  {t('auth.loginTab', 'Login')}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="register" 
-                  className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                >
-                  {t('auth.registerTab', 'Register')}
-                </TabsTrigger>
-              </TabsList>
+            {/* Modern Tab-based Authentication */}
+            <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-lg relative overflow-hidden">
+              {/* Card Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-yellow-50/50"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500"></div>
+              
+              <div className="relative z-10">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-8 bg-gradient-to-r from-orange-100 to-amber-100 p-1.5 rounded-xl border border-orange-200/50">
+                    <TabsTrigger 
+                      value="login" 
+                      className="text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-lg transition-all duration-300 rounded-lg"
+                    >
+                      {t('auth.loginTab', 'Login')}
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="register" 
+                      className="text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-lg transition-all duration-300 rounded-lg"
+                    >
+                      {t('auth.registerTab', 'Register')}
+                    </TabsTrigger>
+                  </TabsList>
               
               {/* Enhanced Login Form */}
               <TabsContent value="login" className="space-y-6">
                 <CardHeader className="space-y-3 pb-6">
-                  <CardTitle className="text-2xl font-bold text-center text-gray-900">
+                  <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                     {t('auth.loginTitle', 'Welcome Back')}
                   </CardTitle>
-                  <CardDescription className="text-center text-gray-600 text-base">
+                  <CardDescription className="text-center text-gray-700 text-lg font-medium">
                     {t('auth.loginDescription', 'Sign in to continue your pickleball journey')}
                   </CardDescription>
                 </CardHeader>
@@ -311,7 +325,7 @@ export default function AuthPage() {
                                 <User className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
                                 <Input
                                   placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
-                                  className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                  className="pl-10 h-14 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 text-base bg-white/80 backdrop-blur-sm"
                                   {...field}
                                   disabled={isLoading}
                                 />
@@ -336,7 +350,7 @@ export default function AuthPage() {
                                 <Input
                                   type="password"
                                   placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
-                                  className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                  className="pl-10 h-14 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 text-base bg-white/80 backdrop-blur-sm"
                                   {...field}
                                   disabled={isLoading}
                                 />
@@ -357,7 +371,7 @@ export default function AuthPage() {
                                 <Checkbox
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
-                                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                  className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600 border-2 border-orange-300"
                                   disabled={isLoading}
                                 />
                               </FormControl>
@@ -369,23 +383,26 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
-                        <Button variant="link" size="sm" className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800">
+                        <Button variant="link" size="sm" className="p-0 h-auto text-sm text-orange-600 hover:text-orange-800 font-semibold">
                           {t('auth.forgotPassword', 'Forgot password?')}
                         </Button>
                       </div>
 
                       <Button 
                         type="submit" 
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl" 
+                        className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-lg" 
                         disabled={isLoading}
                       >
                         {isLoading ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
                             {t('auth.signingIn', 'Signing in...')}
                           </>
                         ) : (
-                          t('auth.signIn', 'Sign In')
+                          <>
+                            <div className="mr-2">🏓</div>
+                            {t('auth.signIn', 'Sign In')}
+                          </>
                         )}
                       </Button>
                     </form>
@@ -398,7 +415,7 @@ export default function AuthPage() {
                     <Button
                       variant="link"
                       size="sm"
-                      className="p-0 h-auto font-semibold text-blue-600 hover:text-blue-800"
+                      className="p-0 h-auto font-bold text-orange-600 hover:text-orange-800 text-base"
                       onClick={() => setActiveTab("register")}
                     >
                       {t('auth.signUp', 'Sign up')}
@@ -410,10 +427,10 @@ export default function AuthPage() {
               {/* Enhanced Registration Form */}
               <TabsContent value="register" className="space-y-6">
                 <CardHeader className="space-y-3 pb-6">
-                  <CardTitle className="text-2xl font-bold text-center text-gray-900">
+                  <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                     {t('auth.registerTitle', 'Join Pickle+')}
                   </CardTitle>
-                  <CardDescription className="text-center text-gray-600 text-base">
+                  <CardDescription className="text-center text-gray-700 text-lg font-medium">
                     {t('auth.registerDescription', 'Create your pickleball passport and start your journey')}
                   </CardDescription>
                 </CardHeader>
@@ -434,7 +451,7 @@ export default function AuthPage() {
                               <FormControl>
                                 <Input
                                   placeholder={t('auth.firstNamePlaceholder', 'First name')}
-                                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                  className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                   {...field}
                                   disabled={isLoading}
                                 />
@@ -455,7 +472,7 @@ export default function AuthPage() {
                               <FormControl>
                                 <Input
                                   placeholder={t('auth.lastNamePlaceholder', 'Last name')}
-                                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                  className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                   {...field}
                                   disabled={isLoading}
                                 />
@@ -479,7 +496,7 @@ export default function AuthPage() {
                                 <User className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
                                 <Input
                                   placeholder={t('auth.usernamePlaceholder', 'Choose a username')}
-                                  className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                  className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                   {...field}
                                   disabled={isLoading}
                                 />
@@ -504,7 +521,7 @@ export default function AuthPage() {
                                 <Input
                                   type="email"
                                   placeholder={t('auth.emailPlaceholder', 'Enter your email')}
-                                  className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                  className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                   {...field}
                                   disabled={isLoading}
                                 />
@@ -531,7 +548,7 @@ export default function AuthPage() {
                                   <Input
                                     type="password"
                                     placeholder={t('auth.passwordPlaceholder', 'Password')}
-                                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                    className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                     {...field}
                                     disabled={isLoading}
                                   />
@@ -556,7 +573,7 @@ export default function AuthPage() {
                                   <Input
                                     type="password"
                                     placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm password')}
-                                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                    className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                     {...field}
                                     disabled={isLoading}
                                   />
@@ -590,7 +607,7 @@ export default function AuthPage() {
                                     <Input
                                       type="number"
                                       placeholder="1990"
-                                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                      className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                       {...field}
                                       onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                                       disabled={isLoading}
@@ -636,7 +653,7 @@ export default function AuthPage() {
                                 <FormControl>
                                   <Input
                                     placeholder="e.g., 2020"
-                                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                    className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                     {...field}
                                     disabled={isLoading}
                                   />
@@ -657,7 +674,7 @@ export default function AuthPage() {
                                 <FormControl>
                                   <Input
                                     placeholder="e.g., 3.5"
-                                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg transition-all duration-200"
+                                    className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                     {...field}
                                     disabled={isLoading}
                                   />
@@ -674,19 +691,19 @@ export default function AuthPage() {
                         control={registerForm.control}
                         name="agreeToTerms"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border border-gray-200 p-4 bg-gray-50/50">
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border-2 border-orange-200 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 backdrop-blur-sm">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
-                                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600 border-2 border-orange-300"
                                 disabled={isLoading}
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
                               <FormLabel className="text-sm font-medium text-gray-700">
                                 {t('auth.agreeToTerms', 'I agree to the')}{' '}
-                                <Button variant="link" size="sm" className="p-0 h-auto text-sm underline text-blue-600 hover:text-blue-800">
+                                <Button variant="link" size="sm" className="p-0 h-auto text-sm underline text-orange-600 hover:text-orange-800 font-semibold">
                                   {t('auth.termsAndConditions', 'Terms and Conditions')}
                                 </Button>
                               </FormLabel>
@@ -698,16 +715,19 @@ export default function AuthPage() {
 
                       <Button 
                         type="submit" 
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl" 
+                        className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-lg" 
                         disabled={isLoading}
                       >
                         {isLoading ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
                             {t('auth.creatingAccount', 'Creating account...')}
                           </>
                         ) : (
-                          t('auth.createAccount', 'Create Account')
+                          <>
+                            <div className="mr-2">🚀</div>
+                            {t('auth.createAccount', 'Create Account')}
+                          </>
                         )}
                       </Button>
                     </form>
@@ -720,7 +740,7 @@ export default function AuthPage() {
                     <Button
                       variant="link"
                       size="sm"
-                      className="p-0 h-auto font-semibold text-blue-600 hover:text-blue-800"
+                      className="p-0 h-auto font-bold text-orange-600 hover:text-orange-800 text-base"
                       onClick={() => setActiveTab("login")}
                     >
                       {t('auth.signIn', 'Sign in')}
@@ -732,41 +752,47 @@ export default function AuthPage() {
           </Card>
         </div>
 
-        {/* Right Column - Enhanced Hero Section */}
-        <div className="hidden lg:flex items-center justify-center p-12">
-          <div className="max-w-lg">
-            <div className="mb-8">
-              <img 
-                src={mascotPath} 
-                alt="Pickle+ Mascot" 
-                className="h-64 w-auto mx-auto drop-shadow-2xl"
-              />
+          {/* Right Column - Enhanced Hero Section */}
+          <div className="hidden lg:flex items-center justify-center p-12">
+            <div className="max-w-lg">
+              <div className="mb-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl scale-110"></div>
+                <img 
+                  src={pickleLogoPath} 
+                  alt="Pickle+ Logo" 
+                  className="relative h-72 w-auto mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="text-center">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-6 leading-tight">
+                  {t('auth.heroTitle', 'Join the Global Pickleball Community')}
+                </h2>
+                <p className="text-xl text-gray-700 mb-10 leading-relaxed font-medium">
+                  {t('auth.heroDescription', 'Connect with players worldwide, track your progress, and elevate your game with Pickle+.')}
+                </p>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                      <Trophy className="h-8 w-8 text-white" />
+                    </div>
+                    <span className="font-semibold text-lg">{t('auth.feature1', 'Track your rankings and achievements')}</span>
+                  </div>
+                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                      <User className="h-8 w-8 text-white" />
+                    </div>
+                    <span className="font-semibold text-lg">{t('auth.feature2', 'Connect with players near you')}</span>
+                  </div>
+                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                      <Calendar className="h-8 w-8 text-white" />
+                    </div>
+                    <span className="font-semibold text-lg">{t('auth.feature3', 'Join tournaments and events')}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
-                {t('auth.heroTitle', 'Join the Global Pickleball Community')}
-              </h2>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                {t('auth.heroDescription', 'Connect with players worldwide, track your progress, and elevate your game with Pickle+.')}
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 text-gray-700 bg-white/60 backdrop-blur-sm rounded-lg p-4 shadow-sm">
-                  <div className="flex-shrink-0">
-                    <Trophy className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <span className="font-medium">{t('auth.feature1', 'Track your rankings and achievements')}</span>
-                </div>
-                <div className="flex items-center gap-4 text-gray-700 bg-white/60 backdrop-blur-sm rounded-lg p-4 shadow-sm">
-                  <div className="flex-shrink-0">
-                    <User className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <span className="font-medium">{t('auth.feature2', 'Connect with players near you')}</span>
-                </div>
-                <div className="flex items-center gap-4 text-gray-700 bg-white/60 backdrop-blur-sm rounded-lg p-4 shadow-sm">
-                  <div className="flex-shrink-0">
-                    <Calendar className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <span className="font-medium">{t('auth.feature3', 'Join tournaments and events')}</span>
+          </div>
                 </div>
               </div>
             </div>
