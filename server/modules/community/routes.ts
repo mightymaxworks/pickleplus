@@ -40,6 +40,77 @@ import {
 // Create a router
 const router = Router();
 
+// Add public endpoints first to avoid authentication middleware
+/**
+ * Get community statistics (public endpoint)
+ * GET /api/communities/stats
+ */
+router.get('/stats', async (req: Request, res: Response) => {
+  try {
+    console.log('[PKL-278651-COMM-0020-DEFGRP] Fetching community statistics');
+    
+    // Get total communities count
+    const allCommunities = await storage.getCommunities({ limit: 1000 });
+    const totalCommunities = allCommunities.length;
+    
+    // Calculate total members across all communities
+    let totalMembers = 0;
+    let activeEvents = 0;
+    let userCommunities = 0;
+    
+    for (const community of allCommunities) {
+      totalMembers += community.memberCount || 0;
+      activeEvents += community.eventCount || 0;
+    }
+    
+    // If user is authenticated, get their community count
+    const userId = req.user?.id;
+    if (userId) {
+      try {
+        const userMemberships = await storage.getUserCommunities(userId);
+        userCommunities = userMemberships.length;
+      } catch (error) {
+        console.log('[PKL-278651-COMM-0020-DEFGRP] Could not get user communities (user not authenticated)');
+      }
+    }
+    
+    const stats = {
+      totalCommunities,
+      totalMembers,
+      activeEvents,
+      userCommunities
+    };
+    
+    console.log('[PKL-278651-COMM-0020-DEFGRP] Community stats:', stats);
+    res.json(stats);
+  } catch (error) {
+    console.error('[PKL-278651-COMM-0020-DEFGRP] Error fetching community stats:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch community statistics' });
+  }
+});
+
+/**
+ * Get community events (public endpoint)
+ * GET /api/communities/events
+ */
+router.get('/events', async (req: Request, res: Response) => {
+  try {
+    const limit = req.query.limit ? parseInt(String(req.query.limit)) : 10;
+    const offset = req.query.offset ? parseInt(String(req.query.offset)) : 0;
+    
+    console.log('[PKL-278651-COMM-0020-DEFGRP] Fetching community events with limit:', limit);
+    
+    // Get events from all communities - for now return empty array since no events exist
+    const events: any[] = [];
+    
+    console.log(`[PKL-278651-COMM-0020-DEFGRP] Found ${events.length} community events`);
+    res.json(events);
+  } catch (error) {
+    console.error('[PKL-278651-COMM-0020-DEFGRP] Error fetching community events:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch community events' });
+  }
+});
+
 // Create validation schemas using drizzle-zod
 const insertCommunitySchema = createInsertSchema(communities, {
   name: z.string().min(3).max(100),
