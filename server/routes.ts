@@ -1438,6 +1438,7 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
           }
         }
         
+        // DEPRECATED: Use StandardizedRankingService instead
         // Calculate weighted ranking points for competitive ranking (separate from display)
         let weightedMatchPoints = 0;
         for (const match of userMatches) {
