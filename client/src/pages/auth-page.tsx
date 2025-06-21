@@ -25,8 +25,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import pickleLogoPath from "../assets/Pickle (2).png";
-import mascotPath from "../assets/Untitled design (51).png";
-import authService from "@/services/authService";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -207,7 +205,6 @@ export default function AuthPage() {
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
-      // Transform data to match API expectations
       const registrationData = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -274,7 +271,7 @@ export default function AuthPage() {
                 </p>
               </div>
             </div>
-          
+            
             {/* Modern Tab-based Authentication */}
             <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-lg relative overflow-hidden">
               {/* Card Background Effects */}
@@ -297,319 +294,207 @@ export default function AuthPage() {
                       {t('auth.registerTab', 'Register')}
                     </TabsTrigger>
                   </TabsList>
-              
-              {/* Enhanced Login Form */}
-              <TabsContent value="login" className="space-y-6">
-                <CardHeader className="space-y-3 pb-6">
-                  <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                    {t('auth.loginTitle', 'Welcome Back')}
-                  </CardTitle>
-                  <CardDescription className="text-center text-gray-700 text-lg font-medium">
-                    {t('auth.loginDescription', 'Sign in to continue your pickleball journey')}
-                  </CardDescription>
-                </CardHeader>
+                  
+                  {/* Enhanced Login Form */}
+                  <TabsContent value="login" className="space-y-6">
+                    <CardHeader className="space-y-3 pb-6">
+                      <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                        {t('auth.loginTitle', 'Welcome Back')}
+                      </CardTitle>
+                      <CardDescription className="text-center text-gray-700 text-lg font-medium">
+                        {t('auth.loginDescription', 'Sign in to continue your pickleball journey')}
+                      </CardDescription>
+                    </CardHeader>
 
-                <CardContent className="space-y-6 px-6">
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                      <FormField
-                        control={loginForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-semibold text-gray-700">
-                              {t('auth.usernameLabel', 'Username or Email')}
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <User className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                <Input
-                                  placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
-                                  className="pl-10 h-14 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 text-base bg-white/80 backdrop-blur-sm"
-                                  {...field}
-                                  disabled={isLoading}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-semibold text-gray-700">
-                              {t('auth.passwordLabel', 'Password')}
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                <Input
-                                  type="password"
-                                  placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
-                                  className="pl-10 h-14 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 text-base bg-white/80 backdrop-blur-sm"
-                                  {...field}
-                                  disabled={isLoading}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex items-center justify-between">
-                        <FormField
-                          control={loginForm.control}
-                          name="rememberMe"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600 border-2 border-orange-300"
-                                  disabled={isLoading}
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel className="text-sm font-medium text-gray-700">
-                                  {t('auth.rememberMe', 'Remember me')}
-                                </FormLabel>
-                              </div>
-                            </FormItem>
-                          )}
-                        />
-                        <Button variant="link" size="sm" className="p-0 h-auto text-sm text-orange-600 hover:text-orange-800 font-semibold">
-                          {t('auth.forgotPassword', 'Forgot password?')}
-                        </Button>
-                      </div>
-
-                      <Button 
-                        type="submit" 
-                        className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-lg" 
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
-                            {t('auth.signingIn', 'Signing in...')}
-                          </>
-                        ) : (
-                          <>
-                            <div className="mr-2">🏓</div>
-                            {t('auth.signIn', 'Sign In')}
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-
-                <CardFooter className="text-center px-6 pb-6">
-                  <div className="text-sm">
-                    <span className="text-gray-600">{t('auth.noAccount', "Don't have an account?")} </span>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 h-auto font-bold text-orange-600 hover:text-orange-800 text-base"
-                      onClick={() => setActiveTab("register")}
-                    >
-                      {t('auth.signUp', 'Sign up')}
-                    </Button>
-                  </div>
-                </CardFooter>
-              </TabsContent>
-
-              {/* Enhanced Registration Form */}
-              <TabsContent value="register" className="space-y-6">
-                <CardHeader className="space-y-3 pb-6">
-                  <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                    {t('auth.registerTitle', 'Join Pickle+')}
-                  </CardTitle>
-                  <CardDescription className="text-center text-gray-700 text-lg font-medium">
-                    {t('auth.registerDescription', 'Create your pickleball passport and start your journey')}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-6 px-6">
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-5">
-                      {/* Enhanced Basic Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-semibold text-gray-700">
-                                {t('auth.firstNameLabel', 'First Name')}
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder={t('auth.firstNamePlaceholder', 'First name')}
-                                  className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                  {...field}
-                                  disabled={isLoading}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={registerForm.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-semibold text-gray-700">
-                                {t('auth.lastNameLabel', 'Last Name')}
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder={t('auth.lastNamePlaceholder', 'Last name')}
-                                  className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                  {...field}
-                                  disabled={isLoading}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-semibold text-gray-700">
-                              {t('auth.usernameLabel', 'Username')}
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <User className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                <Input
-                                  placeholder={t('auth.usernamePlaceholder', 'Choose a username')}
-                                  className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                  {...field}
-                                  disabled={isLoading}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-semibold text-gray-700">
-                              {t('auth.emailLabel', 'Email')}
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Mail className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                <Input
-                                  type="email"
-                                  placeholder={t('auth.emailPlaceholder', 'Enter your email')}
-                                  className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                  {...field}
-                                  disabled={isLoading}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Enhanced Password Fields */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-semibold text-gray-700">
-                                {t('auth.passwordLabel', 'Password')}
-                              </FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                  <Input
-                                    type="password"
-                                    placeholder={t('auth.passwordPlaceholder', 'Password')}
-                                    className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                    {...field}
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={registerForm.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-semibold text-gray-700">
-                                {t('auth.confirmPasswordLabel', 'Confirm Password')}
-                              </FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                  <Input
-                                    type="password"
-                                    placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm password')}
-                                    className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                    {...field}
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Enhanced Optional Information Section */}
-                      <div className="pt-6 border-t border-gray-100">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          {t('auth.optionalInfo', 'Optional Information')}
-                        </h3>
-                        
-                        <div className="grid grid-cols-2 gap-4">
+                    <CardContent className="space-y-6 px-6">
+                      <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
                           <FormField
-                            control={registerForm.control}
-                            name="yearOfBirth"
+                            control={loginForm.control}
+                            name="username"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-sm font-semibold text-gray-700">
-                                  {t('auth.yearOfBirthLabel', 'Year of Birth')}
+                                  {t('auth.usernameLabel', 'Username or Email')}
                                 </FormLabel>
                                 <FormControl>
                                   <div className="relative">
-                                    <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                    <User className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
                                     <Input
-                                      type="number"
-                                      placeholder="1990"
+                                      placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
+                                      className="pl-10 h-14 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 text-base bg-white/80 backdrop-blur-sm"
+                                      {...field}
+                                      disabled={isLoading}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={loginForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-semibold text-gray-700">
+                                  {t('auth.passwordLabel', 'Password')}
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                      type="password"
+                                      placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
+                                      className="pl-10 h-14 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 text-base bg-white/80 backdrop-blur-sm"
+                                      {...field}
+                                      disabled={isLoading}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="flex items-center justify-between">
+                            <FormField
+                              control={loginForm.control}
+                              name="rememberMe"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600 border-2 border-orange-300"
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                      {t('auth.rememberMe', 'Remember me')}
+                                    </FormLabel>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                            <Button variant="link" size="sm" className="p-0 h-auto text-sm text-orange-600 hover:text-orange-800 font-semibold">
+                              {t('auth.forgotPassword', 'Forgot password?')}
+                            </Button>
+                          </div>
+
+                          <Button 
+                            type="submit" 
+                            className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-lg" 
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <>
+                                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                                {t('auth.signingIn', 'Signing in...')}
+                              </>
+                            ) : (
+                              <>
+                                <div className="mr-2">🏓</div>
+                                {t('auth.signIn', 'Sign In')}
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+
+                    <CardFooter className="text-center px-6 pb-6">
+                      <div className="text-sm">
+                        <span className="text-gray-600">{t('auth.noAccount', "Don't have an account?")} </span>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 h-auto font-bold text-orange-600 hover:text-orange-800 text-base"
+                          onClick={() => setActiveTab("register")}
+                        >
+                          {t('auth.signUp', 'Sign up')}
+                        </Button>
+                      </div>
+                    </CardFooter>
+                  </TabsContent>
+
+                  {/* Enhanced Registration Form */}
+                  <TabsContent value="register" className="space-y-6">
+                    <CardHeader className="space-y-3 pb-6">
+                      <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                        {t('auth.registerTitle', 'Join Pickle+')}
+                      </CardTitle>
+                      <CardDescription className="text-center text-gray-700 text-lg font-medium">
+                        {t('auth.registerDescription', 'Create your pickleball passport and start your journey')}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-6 px-6">
+                      <Form {...registerForm}>
+                        <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-5">
+                          {/* Basic Information */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={registerForm.control}
+                              name="firstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-semibold text-gray-700">
+                                    {t('auth.firstNameLabel', 'First Name')}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder={t('auth.firstNamePlaceholder', 'First name')}
+                                      className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                      {...field}
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={registerForm.control}
+                              name="lastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-semibold text-gray-700">
+                                    {t('auth.lastNameLabel', 'Last Name')}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder={t('auth.lastNamePlaceholder', 'Last name')}
+                                      className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                      {...field}
+                                      disabled={isLoading}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <FormField
+                            control={registerForm.control}
+                            name="username"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-semibold text-gray-700">
+                                  {t('auth.usernameLabel', 'Username')}
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <User className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                      placeholder={t('auth.usernamePlaceholder', 'Choose a username')}
                                       className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
                                       {...field}
-                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                                       disabled={isLoading}
                                     />
                                   </div>
@@ -621,174 +506,287 @@ export default function AuthPage() {
 
                           <FormField
                             control={registerForm.control}
-                            name="location"
+                            name="email"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-sm font-semibold text-gray-700">
-                                  {t('auth.location', 'Country (Optional)')}
+                                  {t('auth.emailLabel', 'Email')}
                                 </FormLabel>
                                 <FormControl>
-                                  <CountrySelector 
-                                    value={field.value || ''} 
-                                    onChange={field.onChange}
-                                    disabled={isLoading}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        {/* Enhanced Pickleball Experience */}
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <FormField
-                            control={registerForm.control}
-                            name="playingSince"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-semibold text-gray-700">
-                                  {t('auth.playingSinceLabel', 'Playing Since')}
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="e.g., 2020"
-                                    className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                    {...field}
-                                    disabled={isLoading}
-                                  />
+                                  <div className="relative">
+                                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                      type="email"
+                                      placeholder={t('auth.emailPlaceholder', 'Enter your email')}
+                                      className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                      {...field}
+                                      disabled={isLoading}
+                                    />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
 
-                          <FormField
-                            control={registerForm.control}
-                            name="skillLevel"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-semibold text-gray-700">
-                                  {t('auth.skillLevelLabel', 'Skill Level')}
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="e.g., 3.5"
-                                    className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                                    {...field}
-                                    disabled={isLoading}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
+                          {/* Password Fields */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={registerForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-semibold text-gray-700">
+                                    {t('auth.passwordLabel', 'Password')}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                      <Input
+                                        type="password"
+                                        placeholder={t('auth.passwordPlaceholder', 'Password')}
+                                        className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                        {...field}
+                                        disabled={isLoading}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
-                      {/* Enhanced Terms and Conditions */}
-                      <FormField
-                        control={registerForm.control}
-                        name="agreeToTerms"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border-2 border-orange-200 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 backdrop-blur-sm">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600 border-2 border-orange-300"
-                                disabled={isLoading}
+                            <FormField
+                              control={registerForm.control}
+                              name="confirmPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-sm font-semibold text-gray-700">
+                                    {t('auth.confirmPasswordLabel', 'Confirm Password')}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                      <Input
+                                        type="password"
+                                        placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm password')}
+                                        className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                        {...field}
+                                        disabled={isLoading}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          {/* Optional Information Section */}
+                          <div className="pt-6 border-t border-gray-100">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                              <Star className="h-4 w-4 text-yellow-500" />
+                              {t('auth.optionalInfo', 'Optional Information')}
+                            </h3>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={registerForm.control}
+                                name="yearOfBirth"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-semibold text-gray-700">
+                                      {t('auth.yearOfBirthLabel', 'Year of Birth')}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                        <Input
+                                          type="number"
+                                          placeholder="1990"
+                                          className="pl-10 h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                          {...field}
+                                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                          disabled={isLoading}
+                                        />
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-sm font-medium text-gray-700">
-                                {t('auth.agreeToTerms', 'I agree to the')}{' '}
-                                <Button variant="link" size="sm" className="p-0 h-auto text-sm underline text-orange-600 hover:text-orange-800 font-semibold">
-                                  {t('auth.termsAndConditions', 'Terms and Conditions')}
-                                </Button>
-                              </FormLabel>
-                              <FormMessage />
+
+                              <FormField
+                                control={registerForm.control}
+                                name="location"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-semibold text-gray-700">
+                                      {t('auth.location', 'Country (Optional)')}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <CountrySelector 
+                                        value={field.value || ''} 
+                                        onChange={field.onChange}
+                                        disabled={isLoading}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
                             </div>
-                          </FormItem>
-                        )}
-                      />
 
-                      <Button 
-                        type="submit" 
-                        className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-lg" 
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
-                            {t('auth.creatingAccount', 'Creating account...')}
-                          </>
-                        ) : (
-                          <>
-                            <div className="mr-2">🚀</div>
-                            {t('auth.createAccount', 'Create Account')}
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
+                            {/* Pickleball Experience */}
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                              <FormField
+                                control={registerForm.control}
+                                name="playingSince"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-semibold text-gray-700">
+                                      {t('auth.playingSinceLabel', 'Playing Since')}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="e.g., 2020"
+                                        className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                        {...field}
+                                        disabled={isLoading}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                <CardFooter className="text-center px-6 pb-6">
-                  <div className="text-sm">
-                    <span className="text-gray-600">{t('auth.hasAccount', 'Already have an account?')} </span>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 h-auto font-bold text-orange-600 hover:text-orange-800 text-base"
-                      onClick={() => setActiveTab("login")}
-                    >
-                      {t('auth.signIn', 'Sign in')}
-                    </Button>
-                  </div>
-                </CardFooter>
-              </TabsContent>
+                              <FormField
+                                control={registerForm.control}
+                                name="skillLevel"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-semibold text-gray-700">
+                                      {t('auth.skillLevelLabel', 'Skill Level')}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="e.g., 3.5"
+                                        className="h-13 border-2 border-orange-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                                        {...field}
+                                        disabled={isLoading}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Terms and Conditions */}
+                          <FormField
+                            control={registerForm.control}
+                            name="agreeToTerms"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border-2 border-orange-200 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 backdrop-blur-sm">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600 border-2 border-orange-300"
+                                    disabled={isLoading}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="text-sm font-medium text-gray-700">
+                                    {t('auth.agreeToTerms', 'I agree to the')}{' '}
+                                    <Button variant="link" size="sm" className="p-0 h-auto text-sm underline text-orange-600 hover:text-orange-800 font-semibold">
+                                      {t('auth.termsAndConditions', 'Terms and Conditions')}
+                                    </Button>
+                                  </FormLabel>
+                                  <FormMessage />
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+
+                          <Button 
+                            type="submit" 
+                            className="w-full h-14 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-lg" 
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <>
+                                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                                {t('auth.creatingAccount', 'Creating account...')}
+                              </>
+                            ) : (
+                              <>
+                                <div className="mr-2">🚀</div>
+                                {t('auth.createAccount', 'Create Account')}
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+
+                    <CardFooter className="text-center px-6 pb-6">
+                      <div className="text-sm">
+                        <span className="text-gray-600">{t('auth.hasAccount', 'Already have an account?')} </span>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 h-auto font-bold text-orange-600 hover:text-orange-800 text-base"
+                          onClick={() => setActiveTab("login")}
+                        >
+                          {t('auth.signIn', 'Sign in')}
+                        </Button>
+                      </div>
+                    </CardFooter>
+                  </TabsContent>
                 </Tabs>
               </div>
             </Card>
           </div>
 
-        {/* Right Column - Enhanced Hero Section */}
-        <div className="hidden lg:flex items-center justify-center p-12">
-          <div className="max-w-lg">
-            <div className="mb-8 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl scale-110"></div>
-              <img 
-                src={pickleLogoPath} 
-                alt="Pickle+ Logo" 
-                className="relative h-72 w-auto mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="text-center">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-6 leading-tight">
-                {t('auth.heroTitle', 'Join the Global Pickleball Community')}
-              </h2>
-              <p className="text-xl text-gray-700 mb-10 leading-relaxed font-medium">
-                {t('auth.heroDescription', 'Connect with players worldwide, track your progress, and elevate your game with Pickle+.')}
-              </p>
-              <div className="space-y-6">
-                <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                    <Trophy className="h-8 w-8 text-white" />
+          {/* Right Column - Enhanced Hero Section */}
+          <div className="hidden lg:flex items-center justify-center p-12">
+            <div className="max-w-lg">
+              <div className="mb-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl scale-110"></div>
+                <img 
+                  src={pickleLogoPath} 
+                  alt="Pickle+ Logo" 
+                  className="relative h-72 w-auto mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="text-center">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-6 leading-tight">
+                  {t('auth.heroTitle', 'Join the Global Pickleball Community')}
+                </h2>
+                <p className="text-xl text-gray-700 mb-10 leading-relaxed font-medium">
+                  {t('auth.heroDescription', 'Connect with players worldwide, track your progress, and elevate your game with Pickle+.')}
+                </p>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                      <Trophy className="h-8 w-8 text-white" />
+                    </div>
+                    <span className="font-semibold text-lg">{t('auth.feature1', 'Track your rankings and achievements')}</span>
                   </div>
-                  <span className="font-semibold text-lg">{t('auth.feature1', 'Track your rankings and achievements')}</span>
-                </div>
-                <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                    <User className="h-8 w-8 text-white" />
+                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                      <User className="h-8 w-8 text-white" />
+                    </div>
+                    <span className="font-semibold text-lg">{t('auth.feature2', 'Connect with players near you')}</span>
                   </div>
-                  <span className="font-semibold text-lg">{t('auth.feature2', 'Connect with players near you')}</span>
-                </div>
-                <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                    <Calendar className="h-8 w-8 text-white" />
+                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                      <Calendar className="h-8 w-8 text-white" />
+                    </div>
+                    <span className="font-semibold text-lg">{t('auth.feature3', 'Join tournaments and events')}</span>
                   </div>
-                  <span className="font-semibold text-lg">{t('auth.feature3', 'Join tournaments and events')}</span>
                 </div>
               </div>
             </div>
