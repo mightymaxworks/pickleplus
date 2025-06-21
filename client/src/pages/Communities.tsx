@@ -50,7 +50,10 @@ export default function Communities() {
         params.append('limit', '20');
         
         const response = await apiRequest("GET", `/api/communities?${params.toString()}`);
-        return await response.json();
+        const data = await response.json();
+        console.log('[Communities API] Raw response:', data);
+        // Handle both direct array and wrapped response formats
+        return data.communities || data;
       } catch (error) {
         console.error("Error fetching communities:", error);
         return [];
@@ -91,9 +94,13 @@ export default function Communities() {
     },
   });
 
-  const communities = communitiesData || [];
+  // Process communities data - handle both array and object responses
+  const communities = Array.isArray(communitiesData) ? communitiesData : (communitiesData?.communities || []);
   const events = eventsData || [];
   const stats = statsData || { totalCommunities: 0, totalMembers: 0, activeEvents: 0, userCommunities: 0 };
+  
+  console.log('[Communities Debug] Processed communities:', communities);
+  console.log('[Communities Debug] Community count:', communities.length);
 
   return (
     <StandardLayout>
@@ -222,6 +229,12 @@ export default function Communities() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <CardTitle className="text-lg">{community.name}</CardTitle>
+                            {community.isDefault && (
+                              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                <Megaphone className="h-3 w-3 mr-1" />
+                                Official
+                              </Badge>
+                            )}
                             {community.isFeatured && (
                               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                                 <Star className="h-3 w-3 mr-1" />
