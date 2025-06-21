@@ -314,7 +314,16 @@ export class DatabaseStorage implements IStorage {
 
   // Community operations - delegate to community storage implementation
   async getCommunities(filters?: any): Promise<any[]> {
-    return await communityStorageImplementation.getCommunities.call({ getDb: () => db }, filters);
+    const communities = await communityStorageImplementation.getCommunities.call({ getDb: () => db }, filters);
+    
+    // PKL-278651-COMM-0020-DEFGRP: For default communities, hide member counts for privacy
+    return communities.map(community => ({
+      ...community,
+      // Hide member count for default communities (broadcast/announcement groups)
+      memberCount: community.isDefault ? 0 : community.memberCount,
+      // Add a flag to indicate this is a special group
+      isSpecialGroup: community.isDefault
+    }));
   }
 
   async getRecommendedCommunities(userId: number, limit?: number): Promise<any[]> {

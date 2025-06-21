@@ -218,6 +218,8 @@ export const communityStorageImplementation: CommunityStorage = {
       conditions.push(eq(communities.isPrivate, false));
     }
     
+    // PKL-278651-COMM-0020-DEFGRP: Include default communities but they will be handled specially in UI
+    
     // Location filter
     if (location) {
       conditions.push(eq(communities.location, location));

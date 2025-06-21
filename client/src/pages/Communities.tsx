@@ -250,10 +250,17 @@ export default function Communities() {
                         
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4 text-muted-foreground" />
-                              <span>{community.memberCount || 0}</span>
-                            </div>
+                            {community.isDefault ? (
+                              <div className="flex items-center gap-1">
+                                <Megaphone className="h-4 w-4 text-orange-500" />
+                                <span className="text-orange-600">Announcement Group</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <span>{community.memberCount || 0}</span>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1">
                               <Activity className="h-4 w-4 text-green-500" />
                               <span>Active</span>

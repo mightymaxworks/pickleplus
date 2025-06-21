@@ -53,13 +53,13 @@ router.get('/stats', async (req: Request, res: Response) => {
     const allCommunities = await storage.getCommunities({ limit: 1000 });
     const totalCommunities = allCommunities.length;
     
-    // Calculate total members across all communities (excluding default groups)
+    // Calculate total members across all communities (excluding default groups from count)
     let totalMembers = 0;
     let activeEvents = 0;
     let userCommunities = 0;
     
     for (const community of allCommunities) {
-      // Only count non-default communities for public stats
+      // Only count non-default communities for public stats (default groups are broadcast/announcement)
       if (!community.isDefault) {
         totalMembers += community.memberCount || 0;
         activeEvents += community.eventCount || 0;
