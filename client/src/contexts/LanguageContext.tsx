@@ -191,6 +191,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.spendDescription': 'Redeem your Pickle Points for exclusive rewards, merchandise, and tournament entry fees.',
     'dashboard.picklePoints.earnMore': 'Earn More',
     'dashboard.picklePoints.earnDescription': 'Discover new ways to earn Pickle Points through challenges, referrals, and community activities.',
+    'dashboard.picklePoints.dialogTitle': 'What are Pickle Points?',
 
     // Dashboard Tabs
     'dashboard.tabs.performance': 'Performance',
