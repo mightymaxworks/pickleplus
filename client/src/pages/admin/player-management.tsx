@@ -177,13 +177,17 @@ export default function PlayerManagement() {
     }
   });
 
-  // Filter players based on search and filters
+  // Filter players based on search and filters with null safety
   const filteredPlayers = players.filter((player) => {
-    const matchesSearch = 
-      player.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (player.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${player.firstName || ''} ${player.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!player) return false;
+    
+    const searchTermLower = (searchTerm || '').toLowerCase();
+    const matchesSearch = !searchTermLower || (
+      (player.username || '').toLowerCase().includes(searchTermLower) ||
+      (player.email || '').toLowerCase().includes(searchTermLower) ||
+      (player.displayName || '').toLowerCase().includes(searchTermLower) ||
+      `${player.firstName || ''} ${player.lastName || ''}`.toLowerCase().includes(searchTermLower)
+    );
     
     const matchesStatus = statusFilter === 'all' || player.status === statusFilter;
     const matchesMembership = membershipFilter === 'all' || player.membershipType === membershipFilter;
@@ -370,36 +374,58 @@ export default function PlayerManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredPlayers.map((player) => (
-              <div key={player.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
+            {filteredPlayers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <User className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No players found matching your search criteria.</p>
+                {searchTerm && (
+                  <p className="text-sm mt-2">Try adjusting your search term or filters.</p>
+                )}
+              </div>
+            ) : (
+              filteredPlayers.map((player) => {
+                if (!player || !player.id) return null;
+                
+                return (
+                  <div key={player.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <User className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">
+                            {player.displayName || 
+                             `${player.firstName || ''} ${player.lastName || ''}`.trim() || 
+                             player.username || 'Unknown User'}
+                          </h3>
+                          <Badge className={statusColors[player.status] || 'bg-gray-100 text-gray-800'}>
+                            {player.status || 'unknown'}
+                          </Badge>
+                          <Badge className={membershipColors[player.membershipType] || 'bg-gray-100 text-gray-800'}>
+                            {player.membershipType || 'unknown'}
+                          </Badge>
+                          <Badge className={skillLevelColors[player.skillLevel] || 'bg-gray-100 text-gray-800'}>
+                            {player.skillLevel || 'unknown'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{player.email || 'No email'}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                          <span>DUPR: {player.duprRating || 'Unrated'}</span>
+                          <span>PCP: {player.pcpRating || 'Unrated'}</span>
+                          <span>Matches: {player.totalMatches || 0}</span>
+                          <span>Win Rate: {player.winRate || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username}</h3>
-                      <Badge className={statusColors[player.status]}>{player.status}</Badge>
-                      <Badge className={membershipColors[player.membershipType]}>{player.membershipType}</Badge>
-                      <Badge className={skillLevelColors[player.skillLevel]}>{player.skillLevel}</Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">{player.email}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                      <span>DUPR: {player.duprRating || 'Unrated'}</span>
-                      <span>PCP: {player.pcpRating || 'Unrated'}</span>
-                      <span>Matches: {player.totalMatches}</span>
-                      <span>Win Rate: {player.winRate}%</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedPlayer(player)}>
-                        <Edit className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                    </DialogTrigger>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedPlayer(player)}>
+                            <Edit className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                        </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Player Details - {player.displayName || player.username}</DialogTitle>
