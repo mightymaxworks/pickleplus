@@ -30,6 +30,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 
+import Pickle__13_ from "@assets/Pickle (13).png";
+
 // Login form schema
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Username or email is required" }),
@@ -240,7 +242,6 @@ export default function AuthPage() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-amber-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-orange-300/10 to-yellow-300/10 rounded-full blur-3xl animate-ping"></div>
       </div>
-      
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Authentication Forms */}
@@ -258,7 +259,7 @@ export default function AuthPage() {
                 <div className="mb-6 relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full blur-2xl opacity-20 scale-110"></div>
                   <img 
-                    src={pickleLogoPath} 
+                    src={Pickle__13_} 
                     alt="Pickle+ Logo" 
                     className="relative h-24 w-auto mx-auto drop-shadow-lg"
                   />
