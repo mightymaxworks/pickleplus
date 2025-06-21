@@ -138,10 +138,10 @@ export default function Communities() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-700 dark:text-green-300">Total Members</p>
-                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.totalMembers}</p>
+                  <p className="text-sm font-medium text-green-700 dark:text-green-300">Active Events</p>
+                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.activeEvents}</p>
                 </div>
-                <Globe className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <Activity className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
             </CardContent>
           </Card>
