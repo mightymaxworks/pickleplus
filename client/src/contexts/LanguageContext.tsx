@@ -192,6 +192,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.earnMore': 'Earn More',
     'dashboard.picklePoints.earnDescription': 'Discover new ways to earn Pickle Points through challenges, referrals, and community activities.',
     'dashboard.picklePoints.dialogTitle': 'What are Pickle Points?',
+    'common.close': 'Close',
 
     // Dashboard Tabs
     'dashboard.tabs.performance': 'Performance',
