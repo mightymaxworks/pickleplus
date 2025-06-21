@@ -282,13 +282,14 @@ export default function Communities() {
                           </div>
                         </div>
                         
-                        {community.tags && community.tags.length > 0 && (
+                        {community.tags && (
                           <div className="flex flex-wrap gap-1 mb-3">
-                            {community.tags.map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
+                            {(typeof community.tags === 'string' ? community.tags.split(',') : community.tags)
+                              .map((tag) => (
+                                <Badge key={tag.trim()} variant="secondary" className="text-xs">
+                                  {tag.trim()}
+                                </Badge>
+                              ))}
                           </div>
                         )}
                         

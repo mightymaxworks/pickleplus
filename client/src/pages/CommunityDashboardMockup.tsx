@@ -644,15 +644,16 @@ const CommunityDashboardMockup: React.FC = () => {
                         </div>
                         
                         <div className="flex flex-wrap gap-1 mb-3">
-                          {community.tags.map(tag => (
-                            <Badge 
-                              key={tag} 
-                              variant="outline" 
-                              className="text-xs px-2 py-0 bg-muted/30"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
+                          {(typeof community.tags === 'string' ? community.tags.split(',') : community.tags || [])
+                            .map(tag => (
+                              <Badge 
+                                key={tag.trim()} 
+                                variant="outline" 
+                                className="text-xs px-2 py-0 bg-muted/30"
+                              >
+                                {tag.trim()}
+                              </Badge>
+                            ))}
                         </div>
                         
                         <div className="flex items-center justify-between">
