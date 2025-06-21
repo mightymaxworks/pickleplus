@@ -748,10 +748,10 @@ export default function AuthPage() {
                   </div>
                 </CardFooter>
               </TabsContent>
-            </Tabs>
+                </Tabs>
+              </div>
+            </Card>
           </div>
-        </Card>
-      </div>
 
         {/* Right Column - Enhanced Hero Section */}
         <div className="hidden lg:flex items-center justify-center p-12">
