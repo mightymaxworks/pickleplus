@@ -65,7 +65,8 @@ import {
   ChevronLeft,
   Star,
   Info,
-  Image
+  Image,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, formatDistance } from "date-fns";
