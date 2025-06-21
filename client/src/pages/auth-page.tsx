@@ -749,50 +749,46 @@ export default function AuthPage() {
                 </CardFooter>
               </TabsContent>
             </Tabs>
-          </Card>
-        </div>
-
-          {/* Right Column - Enhanced Hero Section */}
-          <div className="hidden lg:flex items-center justify-center p-12">
-            <div className="max-w-lg">
-              <div className="mb-8 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl scale-110"></div>
-                <img 
-                  src={pickleLogoPath} 
-                  alt="Pickle+ Logo" 
-                  className="relative h-72 w-auto mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="text-center">
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-6 leading-tight">
-                  {t('auth.heroTitle', 'Join the Global Pickleball Community')}
-                </h2>
-                <p className="text-xl text-gray-700 mb-10 leading-relaxed font-medium">
-                  {t('auth.heroDescription', 'Connect with players worldwide, track your progress, and elevate your game with Pickle+.')}
-                </p>
-                <div className="space-y-6">
-                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
-                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                      <Trophy className="h-8 w-8 text-white" />
-                    </div>
-                    <span className="font-semibold text-lg">{t('auth.feature1', 'Track your rankings and achievements')}</span>
-                  </div>
-                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
-                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                      <User className="h-8 w-8 text-white" />
-                    </div>
-                    <span className="font-semibold text-lg">{t('auth.feature2', 'Connect with players near you')}</span>
-                  </div>
-                  <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
-                    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                      <Calendar className="h-8 w-8 text-white" />
-                    </div>
-                    <span className="font-semibold text-lg">{t('auth.feature3', 'Join tournaments and events')}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
+        </Card>
+      </div>
+
+        {/* Right Column - Enhanced Hero Section */}
+        <div className="hidden lg:flex items-center justify-center p-12">
+          <div className="max-w-lg">
+            <div className="mb-8 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl scale-110"></div>
+              <img 
+                src={pickleLogoPath} 
+                alt="Pickle+ Logo" 
+                className="relative h-72 w-auto mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="text-center">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-6 leading-tight">
+                {t('auth.heroTitle', 'Join the Global Pickleball Community')}
+              </h2>
+              <p className="text-xl text-gray-700 mb-10 leading-relaxed font-medium">
+                {t('auth.heroDescription', 'Connect with players worldwide, track your progress, and elevate your game with Pickle+.')}
+              </p>
+              <div className="space-y-6">
+                <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                  <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                    <Trophy className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="font-semibold text-lg">{t('auth.feature1', 'Track your rankings and achievements')}</span>
+                </div>
+                <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                  <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                    <User className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="font-semibold text-lg">{t('auth.feature2', 'Connect with players near you')}</span>
+                </div>
+                <div className="flex items-center gap-6 text-gray-700 bg-gradient-to-r from-white/80 to-orange-50/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-orange-200/50 transform hover:scale-105 transition-all duration-300">
+                  <div className="flex-shrink-0 p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
+                    <Calendar className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="font-semibold text-lg">{t('auth.feature3', 'Join tournaments and events')}</span>
                 </div>
               </div>
             </div>
