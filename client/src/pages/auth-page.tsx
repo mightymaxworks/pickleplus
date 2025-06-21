@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, Lock, User, Mail, Calendar, MapPin, Star, Trophy, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Lock, User, Mail, Calendar, MapPin, Star, Trophy, AlertTriangle, Search, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
@@ -30,6 +30,8 @@ import mascotPath from "../assets/Untitled design (51).png";
 import authService from "@/services/authService";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 
 // Login form schema
 const loginSchema = z.object({
@@ -60,6 +62,106 @@ const registerSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
+
+// Country list with codes
+const countries = [
+  { name: "Afghanistan", code: "AF" },
+  { name: "Albania", code: "AL" },
+  { name: "Algeria", code: "DZ" },
+  { name: "Argentina", code: "AR" },
+  { name: "Australia", code: "AU" },
+  { name: "Austria", code: "AT" },
+  { name: "Bangladesh", code: "BD" },
+  { name: "Belgium", code: "BE" },
+  { name: "Brazil", code: "BR" },
+  { name: "Canada", code: "CA" },
+  { name: "Chile", code: "CL" },
+  { name: "China", code: "CN" },
+  { name: "Colombia", code: "CO" },
+  { name: "Czech Republic", code: "CZ" },
+  { name: "Denmark", code: "DK" },
+  { name: "Egypt", code: "EG" },
+  { name: "Finland", code: "FI" },
+  { name: "France", code: "FR" },
+  { name: "Germany", code: "DE" },
+  { name: "Greece", code: "GR" },
+  { name: "Hungary", code: "HU" },
+  { name: "India", code: "IN" },
+  { name: "Indonesia", code: "ID" },
+  { name: "Ireland", code: "IE" },
+  { name: "Israel", code: "IL" },
+  { name: "Italy", code: "IT" },
+  { name: "Japan", code: "JP" },
+  { name: "Malaysia", code: "MY" },
+  { name: "Mexico", code: "MX" },
+  { name: "Netherlands", code: "NL" },
+  { name: "New Zealand", code: "NZ" },
+  { name: "Norway", code: "NO" },
+  { name: "Philippines", code: "PH" },
+  { name: "Poland", code: "PL" },
+  { name: "Portugal", code: "PT" },
+  { name: "Romania", code: "RO" },
+  { name: "Russia", code: "RU" },
+  { name: "Singapore", code: "SG" },
+  { name: "South Africa", code: "ZA" },
+  { name: "South Korea", code: "KR" },
+  { name: "Spain", code: "ES" },
+  { name: "Sweden", code: "SE" },
+  { name: "Switzerland", code: "CH" },
+  { name: "Thailand", code: "TH" },
+  { name: "Turkey", code: "TR" },
+  { name: "Ukraine", code: "UA" },
+  { name: "United Kingdom", code: "GB" },
+  { name: "United States", code: "US" },
+  { name: "Vietnam", code: "VN" }
+].sort((a, b) => a.name.localeCompare(b.name));
+
+// Country Selector Component
+const CountrySelector = ({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled?: boolean }) => {
+  const [open, setOpen] = React.useState(false);
+  const { t } = useLanguage();
+  const selectedCountry = countries.find(country => country.name === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between pl-10 relative"
+          disabled={disabled}
+        >
+          <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <span className="text-left">
+            {selectedCountry ? selectedCountry.name : t('auth.countryPlaceholder', 'Select country...')}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} />
+          <CommandEmpty>{t('auth.noCountryFound', 'No country found.')}</CommandEmpty>
+          <CommandGroup className="max-h-64 overflow-auto">
+            {countries.map((country) => (
+              <CommandItem
+                key={country.code}
+                value={country.name}
+                onSelect={(currentValue) => {
+                  onChange(currentValue === value ? "" : currentValue);
+                  setOpen(false);
+                }}
+              >
+                {country.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -517,33 +619,13 @@ export default function AuthPage() {
                               name="location"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Country</FormLabel>
+                                  <FormLabel>{t('auth.location', 'Country')}</FormLabel>
                                   <FormControl>
-                                    <div className="relative">
-                                      <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                      <select
-                                        className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        {...field}
-                                        disabled={isLoading}
-                                      >
-                                        <option value="">Select country</option>
-                                        <option value="United States">United States</option>
-                                        <option value="Canada">Canada</option>
-                                        <option value="United Kingdom">United Kingdom</option>
-                                        <option value="Australia">Australia</option>
-                                        <option value="Germany">Germany</option>
-                                        <option value="France">France</option>
-                                        <option value="Spain">Spain</option>
-                                        <option value="Italy">Italy</option>
-                                        <option value="Japan">Japan</option>
-                                        <option value="China">China</option>
-                                        <option value="India">India</option>
-                                        <option value="Brazil">Brazil</option>
-                                        <option value="Mexico">Mexico</option>
-                                        <option value="Argentina">Argentina</option>
-                                        <option value="Other">Other</option>
-                                      </select>
-                                    </div>
+                                    <CountrySelector 
+                                      value={field.value || ''} 
+                                      onChange={field.onChange}
+                                      disabled={isLoading}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
