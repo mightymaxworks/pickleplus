@@ -77,15 +77,26 @@ export class AuthService {
    */
   async register(credentials: RegisterCredentials): Promise<User> {
     try {
-      // Validation
+      console.log('AuthService: Received credentials:', {
+        ...credentials,
+        password: '[REDACTED]',
+        confirmPassword: '[REDACTED]',
+        passwordsMatch: credentials.password === credentials.confirmPassword
+      });
+      
+      // Validation - only check if confirmPassword is provided
       if (credentials.confirmPassword && credentials.password !== credentials.confirmPassword) {
+        console.error('AuthService: Password mismatch detected');
         throw new Error('Passwords do not match');
       }
       
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...registerData } = credentials;
       
-      console.log('AuthService: Sending registration data:', registerData);
+      console.log('AuthService: Sending registration data:', {
+        ...registerData,
+        password: '[REDACTED]'
+      });
       
       const response = await apiRequest('POST', AUTH_ENDPOINTS.REGISTER, registerData);
       

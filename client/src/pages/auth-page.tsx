@@ -54,7 +54,14 @@ const registerSchema = z.object({
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms and conditions"
   }),
-}).refine(data => data.password === data.confirmPassword, {
+}).refine(data => {
+  console.log("Zod validation - Password comparison:", {
+    password: data.password,
+    confirmPassword: data.confirmPassword,
+    match: data.password === data.confirmPassword
+  });
+  return data.password === data.confirmPassword;
+}, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
@@ -176,6 +183,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onSubmit", // Only validate on submit to avoid premature password mismatch errors
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -211,9 +219,19 @@ export default function AuthPage() {
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
       console.log("Form data before submission:", data);
+      console.log("Password comparison:", {
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        match: data.password === data.confirmPassword
+      });
       
-      // Check password match on frontend
-      if (data.password !== data.confirmPassword) {
+      // Additional validation - Zod should catch this, but double-check
+      if (!data.password || !data.confirmPassword || data.password !== data.confirmPassword) {
+        console.error("Password validation failed:", {
+          hasPassword: !!data.password,
+          hasConfirmPassword: !!data.confirmPassword,
+          match: data.password === data.confirmPassword
+        });
         toast({
           title: t('auth.registerError', 'Registration failed'),
           description: t('auth.passwordMismatch', 'Passwords do not match'),
@@ -236,7 +254,8 @@ export default function AuthPage() {
       };
 
       console.log("Registration data being sent:", registrationData);
-      await register(registrationData);
+      const user = await register(registrationData);
+      console.log("Registration successful, user:", user);
       toast({
         title: t('auth.registerSuccess', 'Registration successful'),
         description: t('auth.registerSuccessDescription', 'Welcome to Pickle+! Your account has been created.'),
