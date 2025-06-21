@@ -256,7 +256,7 @@ export default function CommunityDetailPage() {
                       </div>
                       <div>
                         <dt className="text-muted-foreground">Membership</dt>
-                        <dd>{community.isPublic ? 'Public' : 'Private'}</dd>
+                        <dd>{community.isDefault ? 'Announcement Group' : (community.isPublic ? 'Public' : 'Private')}</dd>
                       </div>
                       <div>
                         <dt className="text-muted-foreground">Approval Required</dt>

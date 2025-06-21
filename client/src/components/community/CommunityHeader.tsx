@@ -112,7 +112,7 @@ export function CommunityHeader({
     : 'Unknown';
   
   // Format statistics
-  const memberCountDisplay = community.isDefault ? "Private" : community.memberCount.toLocaleString();
+  const memberCountDisplay = community.isDefault ? "Announcement Group" : community.memberCount.toLocaleString();
   const eventCountDisplay = community.eventCount.toLocaleString(); 
   const postCountDisplay = community.postCount.toLocaleString();
   
@@ -324,7 +324,14 @@ export function CommunityHeader({
               
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
-                {community.isPrivate && (
+                {community.isDefault && (
+                  <Badge variant="outline" className="border-orange-400 text-orange-100 bg-orange-500/20 text-xs py-0 px-1.5 h-5">
+                    <Megaphone className="h-3 w-3 mr-1" />
+                    Official
+                  </Badge>
+                )}
+                
+                {community.isPrivate && !community.isDefault && (
                   <Badge variant="outline" className="border-white/40 text-white text-xs py-0 px-1.5 h-5">
                     <Lock className="h-3 w-3 mr-1" />
                     Private
@@ -364,28 +371,41 @@ export function CommunityHeader({
                   <span className="hidden sm:inline">Manage</span>
                 </Button>
               ) : isMember ? (
-                /* Primary Leave Button for members with confirmation dropdown */
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
-                    >
-                      <LogOut className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Leave</span>
-                      <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Member Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLeave} className="text-red-600 focus:text-red-600">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Leave Community
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                community.isDefault ? (
+                  /* Member Status Button for default communities - not clickable */
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="bg-white/10 border-white/20 text-white h-8 cursor-default"
+                    disabled
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Member</span>
+                  </Button>
+                ) : (
+                  /* Primary Leave Button for members with confirmation dropdown */
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
+                      >
+                        <LogOut className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Leave</span>
+                        <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>Member Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLeave} className="text-red-600 focus:text-red-600">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Leave Community
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )
               ) : (
                 /* Primary Join Button for non-members */
                 <Button 
