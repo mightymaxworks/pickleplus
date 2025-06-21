@@ -104,7 +104,7 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
           disabled={disabled}
         >
           <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-          <span className="text-left">
+          <span className="text-left flex-1">
             {selectedCountry ? selectedCountry.name : t('auth.countryPlaceholder', 'Select country...')}
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -112,7 +112,7 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white/95 backdrop-blur-sm border-2 border-orange-200" align="start">
         <Command>
-          <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} />
+          <CommandInput placeholder={t('auth.searchCountries', 'Search countries...')} className="border-orange-200" />
           <CommandEmpty>{t('auth.noCountryFound', 'No country found.')}</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
             {countries.map((country) => (
@@ -120,7 +120,8 @@ const CountrySelector = ({ value, onChange, disabled }: { value: string; onChang
                 key={country.code}
                 value={country.name}
                 onSelect={(currentValue) => {
-                  onChange(currentValue === value ? "" : currentValue);
+                  const selectedCountryName = countries.find(c => c.name.toLowerCase() === currentValue.toLowerCase())?.name || currentValue;
+                  onChange(selectedCountryName === value ? "" : selectedCountryName);
                   setOpen(false);
                 }}
                 className="cursor-pointer hover:bg-orange-50 focus:bg-orange-100"
@@ -397,10 +398,7 @@ export default function AuthPage() {
                                 {t('auth.signingIn', 'Signing in...')}
                               </>
                             ) : (
-                              <>
-                                <div className="mr-2">🏓</div>
-                                {t('auth.signIn', 'Sign In')}
-                              </>
+                              t('auth.signIn', 'Sign In')
                             )}
                           </Button>
                         </form>
@@ -722,10 +720,7 @@ export default function AuthPage() {
                                 {t('auth.creatingAccount', 'Creating account...')}
                               </>
                             ) : (
-                              <>
-                                <div className="mr-2">🚀</div>
-                                {t('auth.createAccount', 'Create Account')}
-                              </>
+                              t('auth.createAccount', 'Create Account')
                             )}
                           </Button>
                         </form>
