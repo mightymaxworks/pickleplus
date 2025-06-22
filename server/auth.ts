@@ -695,12 +695,21 @@ export function setupAuth(app: Express) {
         username: req.body.username,
         sessionID: req.sessionID,
         hasSession: !!req.session,
-        sessionCookie: req.headers.cookie || 'no-cookie'
+        sessionCookie: req.headers.cookie || 'no-cookie',
+        bodyData: req.body
       });
       
       // If we get here, it's not mightymax or the special handler passed to next()
-      // Validate login data
-      loginSchema.parse(req.body);
+      // Validate login data with better error handling
+      try {
+        loginSchema.parse(req.body);
+      } catch (validationError: any) {
+        console.error('[Login] Validation error:', validationError.errors || validationError);
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: validationError.errors || [{ message: "Invalid login data" }]
+        });
+      }
       
       passport.authenticate("local", (err: any, user: any, info: any) => {
         if (err) {

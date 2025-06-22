@@ -57,17 +57,27 @@ export class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<User> {
     try {
+      console.log('[AuthService] Login attempt with credentials:', { 
+        username: credentials.username, 
+        hasPassword: !!credentials.password,
+        rememberMe: credentials.rememberMe 
+      });
+      
       const response = await apiRequest('POST', AUTH_ENDPOINTS.LOGIN, credentials);
+      
+      console.log('[AuthService] Login response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('[AuthService] Login failed:', errorData);
         throw new Error(errorData.message || 'Login failed. Please check your credentials.');
       }
       
       const user = await response.json();
+      console.log('[AuthService] Login successful:', { username: user.username, id: user.id });
       return user;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('[AuthService] Login error:', error);
       throw error;
     }
   }

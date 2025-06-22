@@ -202,12 +202,20 @@ export default function AuthPage() {
   // Form handlers
   const onLoginSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.username, data.password, data.rememberMe);
+      console.log('[Auth Page] Login attempt with data:', { username: data.username, hasPassword: !!data.password });
+      
+      await login({
+        username: data.username,
+        password: data.password,
+        rememberMe: data.rememberMe
+      });
+      
       toast({
         title: t('auth.loginSuccess', 'Login successful'),
         description: t('auth.loginSuccessDescription', 'Welcome back to Pickle+!'),
       });
     } catch (error: any) {
+      console.error('[Auth Page] Login error:', error);
       toast({
         title: t('auth.loginError', 'Login failed'),
         description: error.message || t('auth.loginErrorDescription', 'Please check your credentials and try again.'),
