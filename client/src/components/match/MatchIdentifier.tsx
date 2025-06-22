@@ -4,7 +4,7 @@
  */
 import { useRef, useState } from 'react';
 import { QRCode } from 'react-qrcode-logo';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeCameraScanConfig } from 'html5-qrcode';
 import { useEffect } from 'react';
 import {
   Card,

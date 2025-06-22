@@ -91,7 +91,7 @@ export default function PremiumTrainingCenterCheckIn() {
   const [selectedCoach, setSelectedCoach] = useState<any | null>(null);
   const [sessionGoals, setSessionGoals] = useState<string[]>([]);
   const [customGoal, setCustomGoal] = useState('');
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -105,13 +105,29 @@ export default function PremiumTrainingCenterCheckIn() {
     };
   }, []);
 
-  // Start QR code scanning
-  const startScanning = () => {
+  // Start QR code scanning with automatic camera selection
+  const startScanning = async () => {
     setIsScanning(true);
     setScannerError(null);
     
-    // Wait for DOM element to be available
-    setTimeout(() => {
+    try {
+      // Get available cameras
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        throw new Error('No cameras found');
+      }
+      
+      // Select back camera if available, otherwise use first camera
+      const backCamera = cameras.find(camera => 
+        camera.label.toLowerCase().includes('back') || 
+        camera.label.toLowerCase().includes('rear') ||
+        camera.label.toLowerCase().includes('environment')
+      );
+      const selectedCamera = backCamera || cameras[0];
+      
+      // Wait for DOM element to be available
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const element = document.getElementById("qr-reader");
       if (!element) {
         setScannerError("Scanner initialization failed");
@@ -119,43 +135,46 @@ export default function PremiumTrainingCenterCheckIn() {
         return;
       }
 
-      try {
-        scannerRef.current = new Html5QrcodeScanner(
-          "qr-reader",
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
-          },
-          false
-        );
+      // Create scanner instance
+      scannerRef.current = new Html5Qrcode("qr-reader");
+      
+      // Configure scanner settings
+      const config: Html5QrcodeCameraScanConfig = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+      };
 
-        scannerRef.current.render(
-          (decodedText) => {
-            // Success callback
-            setQrCode(decodedText);
-            setIsScanning(false);
+      // Start scanning
+      await scannerRef.current.start(
+        selectedCamera.id,
+        config,
+        (decodedText) => {
+          // Success callback
+          setQrCode(decodedText);
+          setIsScanning(false);
+          scannerRef.current?.stop().then(() => {
             scannerRef.current?.clear();
-            toast({
-              title: "QR Code Scanned",
-              description: `Facility code: ${decodedText}`,
-            });
-          },
-          (error) => {
-            // Error callback - only log errors we care about
-            if (error.includes('NotFoundException')) {
-              // QR code not found in frame - this is normal, don't show error
-              return;
-            }
-            console.warn('QR Scanner error:', error);
+          });
+          toast({
+            title: "QR Code Scanned",
+            description: `Facility code: ${decodedText}`,
+          });
+        },
+        (error) => {
+          // Error callback - only log errors we care about
+          if (error.includes('NotFoundException')) {
+            // QR code not found in frame - this is normal, don't show error
+            return;
           }
-        );
-      } catch (error) {
-        console.error('Scanner initialization error:', error);
-        setScannerError("Failed to start camera scanner");
-        setIsScanning(false);
-      }
-    }, 100);
+          console.warn('QR Scanner error:', error);
+        }
+      );
+    } catch (error) {
+      console.error('Scanner initialization error:', error);
+      setScannerError("Failed to start camera scanner");
+      setIsScanning(false);
+    }
   };
 
   // Stop QR code scanning

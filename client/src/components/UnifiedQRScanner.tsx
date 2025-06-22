@@ -1,10 +1,10 @@
 /**
  * Unified QR Scanner Component
  * A single, working QR scanner implementation using html5-qrcode
- * Replaces multiple broken QR scanner components
+ * Automatically selects default camera without user intervention
  */
 import { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeResult } from 'html5-qrcode';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
