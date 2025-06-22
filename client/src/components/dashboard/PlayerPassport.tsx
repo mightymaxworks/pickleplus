@@ -297,7 +297,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
           </div>
           
           {/* Stats section */}
-          <div className="p-3">
+          <div className="p-2 sm:p-3">
             <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Level {userLevel} • {userXp} XP
             </div>
