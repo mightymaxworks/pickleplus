@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
+import passport from "passport";
 import { Server } from "http";
 import * as http from "http";
 import multer from "multer";
