@@ -341,7 +341,21 @@ export default function PlayerDevelopmentHub() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200">
+            <Card 
+              className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200"
+              onClick={() => {
+                // Set to Singapore Elite Academy and navigate to calendar
+                const eliteAcademy = trainingCenters.find(c => c.name === "Singapore Elite Academy");
+                if (eliteAcademy) {
+                  setSelectedFacility(eliteAcademy);
+                  setActiveTab('weekly-calendar');
+                  toast({
+                    title: "Facility Selected",
+                    description: `Viewing classes at ${eliteAcademy.name}`,
+                  });
+                }
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Badge className="bg-blue-100 text-blue-800">Beginner</Badge>
@@ -353,7 +367,26 @@ export default function PlayerDevelopmentHub() {
               </CardContent>
             </Card>
             
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-purple-200">
+            <Card 
+              className="hover:shadow-lg transition-shadow cursor-pointer border-purple-200"
+              onClick={() => {
+                // Set to Singapore Elite Academy and navigate to calendar
+                const eliteAcademy = trainingCenters.find(c => c.name === "Singapore Elite Academy");
+                if (eliteAcademy) {
+                  setSelectedFacility(eliteAcademy);
+                  setActiveTab('weekly-calendar');
+                  toast({
+                    title: "Quick Access",
+                    description: `Viewing Advanced Strategy classes at ${eliteAcademy.name}`,
+                  });
+                  // Scroll to the booking section after a brief delay
+                  setTimeout(() => {
+                    const bookingSection = document.querySelector('[data-booking-section]');
+                    bookingSection?.scrollIntoView({ behavior: 'smooth' });
+                  }, 300);
+                }
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Badge className="bg-purple-100 text-purple-800">Intermediate</Badge>
@@ -365,7 +398,26 @@ export default function PlayerDevelopmentHub() {
               </CardContent>
             </Card>
             
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-green-200">
+            <Card 
+              className="hover:shadow-lg transition-shadow cursor-pointer border-green-200"
+              onClick={() => {
+                // Set to Elite Training Center and navigate to calendar
+                const eliteCenter = trainingCenters.find(c => c.name === "Elite Training Center");
+                if (eliteCenter) {
+                  setSelectedFacility(eliteCenter);
+                  setActiveTab('weekly-calendar');
+                  toast({
+                    title: "Quick Access",
+                    description: `Viewing Fitness & Movement classes at ${eliteCenter.name}`,
+                  });
+                  // Scroll to the booking section after a brief delay
+                  setTimeout(() => {
+                    const bookingSection = document.querySelector('[data-booking-section]');
+                    bookingSection?.scrollIntoView({ behavior: 'smooth' });
+                  }, 300);
+                }
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Badge className="bg-green-100 text-green-800">All Levels</Badge>
@@ -380,7 +432,7 @@ export default function PlayerDevelopmentHub() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8" data-booking-section>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Mobile: Vertical tab indicators */}
             <div className="block sm:hidden mb-6">
