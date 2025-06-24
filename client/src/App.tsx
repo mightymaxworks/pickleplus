@@ -136,6 +136,7 @@ import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK
 import DevModernProfilePage from './pages/DevModernProfilePage' // PKL-278651-PROF-0008-DEV - Development Profile Page
 import TrainingCenterPage from './pages/training-center' // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 import TrainingCenterTabsPage from './pages/training-center-tabs' // PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration
+import MyClassesPage from './pages/MyClassesPage' // My Classes page
 import FontTestPage from './pages/FontTestPage' // Font comparison test page
 
 import { useAuth } from '@/contexts/AuthContext'
@@ -399,6 +400,13 @@ export default function App() {
                     path="/player-development-hub"
                     component={TrainingCenterPage}
                     pageTitle="Player Development Hub"
+                  />
+                  
+                  {/* My Classes Page */}
+                  <ProtectedRouteWithLayout
+                    path="/calendar/my-classes"
+                    component={MyClassesPage}
+                    pageTitle="My Classes"
                   />
                   
                   {/* PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration */}
