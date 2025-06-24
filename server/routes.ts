@@ -72,6 +72,7 @@ import {
 } from "./routes/qr-scan-routes"; // QR Code Scanning with Role Detection
 import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 import trainingCenterAdminRoutes from "./routes/training-center-admin-routes"; // PKL-278651-TRAINING-CENTER-ADMIN-001 - Training Center Admin
+import pcpCertificationRoutes from "./routes/pcp-certification-routes"; // PCP Coaching Certification Programme
 
 /**
  * Register all application routes with the Express app

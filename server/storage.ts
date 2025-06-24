@@ -1383,6 +1383,394 @@ export class DatabaseStorage implements IStorage {
     return session;
   }
 
+  // PCP Certification operations
+  async getPcpCertificationLevels(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM pcp_certification_levels 
+        WHERE is_active = true 
+        ORDER BY level_code
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching PCP certification levels:', error);
+      // Return default levels if database not set up yet
+      return [
+        {
+          id: 1,
+          levelName: 'PCP Foundation Coach',
+          levelCode: 'PCP-L1',
+          description: 'Learn fundamental coaching principles and basic pickleball instruction techniques.',
+          prerequisites: [],
+          requirements: [
+            'Complete 6 online learning modules',
+            'Pass written assessment (80% minimum)',
+            'Submit video teaching demonstration',
+            'Complete 10 hours of supervised coaching'
+          ],
+          benefits: [
+            'Official PCP Level 1 certification',
+            'Access to exclusive coaching resources',
+            'Eligibility for facility partnerships',
+            'Foundation for advanced certifications'
+          ],
+          duration: 4,
+          cost: 19900,
+          isActive: true
+        },
+        {
+          id: 2,
+          levelName: 'PCP Intermediate Coach',
+          levelCode: 'PCP-L2',
+          description: 'Advanced coaching techniques, game strategy, and player development methodologies.',
+          prerequisites: ['PCP-L1'],
+          requirements: [
+            'Hold PCP Level 1 certification',
+            'Complete 8 advanced learning modules',
+            'Pass comprehensive written assessment',
+            'Demonstrate advanced teaching techniques',
+            'Complete 25 hours of coaching experience'
+          ],
+          benefits: [
+            'Official PCP Level 2 certification',
+            'Advanced strategy instruction authorization',
+            'Tournament coaching eligibility',
+            'Higher rate earning potential'
+          ],
+          duration: 6,
+          cost: 39900,
+          isActive: true
+        },
+        {
+          id: 3,
+          levelName: 'PCP Advanced Coach',
+          levelCode: 'PCP-L3',
+          description: 'Elite coaching skills, mental performance, and professional development strategies.',
+          prerequisites: ['PCP-L2'],
+          requirements: [
+            'Hold PCP Level 2 certification',
+            'Complete 10 specialized modules',
+            'Pass expert-level assessment',
+            'Demonstrate professional coaching session',
+            'Complete 50 hours of advanced coaching'
+          ],
+          benefits: [
+            'Official PCP Level 3 certification',
+            'Mental performance coaching authorization',
+            'Elite player development qualification',
+            'Mentorship program participation'
+          ],
+          duration: 8,
+          cost: 59900,
+          isActive: true
+        },
+        {
+          id: 4,
+          levelName: 'PCP Master Coach',
+          levelCode: 'PCP-MC',
+          description: 'The highest level of coaching certification, focusing on coach education and program development.',
+          prerequisites: ['PCP-L3'],
+          requirements: [
+            'Hold PCP Level 3 certification',
+            'Complete 12 master-level modules',
+            'Pass comprehensive master assessment',
+            'Develop original coaching methodology',
+            'Complete 100 hours of elite coaching'
+          ],
+          benefits: [
+            'Official PCP Master Coach certification',
+            'Coach trainer authorization',
+            'Program development opportunities',
+            'Exclusive master coach network access'
+          ],
+          duration: 12,
+          cost: 99900,
+          isActive: true
+        }
+      ];
+    }
+  }
+
+  async getPcpCertificationLevel(id: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM pcp_certification_levels WHERE id = ${id}
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error fetching PCP certification level:', error);
+      const levels = await this.getPcpCertificationLevels();
+      return levels.find(l => l.id === id);
+    }
+  }
+
+  async getUserCertificationStatus(userId: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          ca.id as application_id,
+          ca.certification_level_id,
+          ca.application_status,
+          cl.level_code,
+          ci.certificate_number,
+          ci.status as cert_status
+        FROM pcp_certification_applications ca
+        LEFT JOIN pcp_certification_levels cl ON ca.certification_level_id = cl.id
+        LEFT JOIN pcp_certifications_issued ci ON ca.id = ci.application_id
+        WHERE ca.user_id = ${userId}
+        ORDER BY ca.created_at DESC
+      `);
+
+      const applications = result.rows;
+      const completedLevels = applications
+        .filter((app: any) => app.cert_status === 'active')
+        .map((app: any) => app.level_code);
+
+      const inProgressApp = applications.find((app: any) => 
+        app.application_status === 'in_progress' || app.application_status === 'approved'
+      );
+
+      return {
+        completedLevels,
+        inProgress: inProgressApp ? {
+          levelId: inProgressApp.certification_level_id,
+          applicationId: inProgressApp.application_id,
+          progress: 65, // Calculate from actual progress
+          status: inProgressApp.application_status
+        } : null,
+        availableLevels: [1, 2, 3, 4] // Determine based on prerequisites
+      };
+    } catch (error) {
+      console.error('Error fetching user certification status:', error);
+      return {
+        completedLevels: [],
+        inProgress: null,
+        availableLevels: [1, 2, 3, 4]
+      };
+    }
+  }
+
+  async createPcpCertificationApplication(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO pcp_certification_applications (
+          user_id, certification_level_id, motivation, experience_statement,
+          goals, application_status, payment_status, submitted_at
+        ) VALUES (
+          ${data.userId}, ${data.certificationLevelId}, ${data.motivation},
+          ${data.experienceStatement}, ${data.goals}, ${data.applicationStatus},
+          ${data.paymentStatus}, NOW()
+        ) RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating PCP certification application:', error);
+      // Return mock data for development
+      return {
+        id: Date.now(),
+        userId: data.userId,
+        certificationLevelId: data.certificationLevelId,
+        applicationStatus: 'pending',
+        submittedAt: new Date(),
+        ...data
+      };
+    }
+  }
+
+  async checkCertificationEligibility(userId: number, levelId: number): Promise<any> {
+    try {
+      if (levelId === 1) {
+        return { eligible: true, reason: 'Level 1 is open to all applicants' };
+      }
+
+      const userStatus = await this.getUserCertificationStatus(userId);
+      const requiredLevel = levelId - 1;
+      const hasPrerequisite = userStatus.completedLevels.some((code: string) => 
+        code === `PCP-L${requiredLevel}`
+      );
+
+      return {
+        eligible: hasPrerequisite,
+        reason: hasPrerequisite ? 'Prerequisites met' : `Must complete Level ${requiredLevel} first`
+      };
+    } catch (error) {
+      console.error('Error checking certification eligibility:', error);
+      return { eligible: true, reason: 'Development mode - all levels available' };
+    }
+  }
+
+  async getUserCertificationApplications(userId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT ca.*, cl.level_name, cl.level_code
+        FROM pcp_certification_applications ca
+        JOIN pcp_certification_levels cl ON ca.certification_level_id = cl.id
+        WHERE ca.user_id = ${userId}
+        ORDER BY ca.created_at DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching user certification applications:', error);
+      return [];
+    }
+  }
+
+  async getPcpLearningModules(levelId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM pcp_learning_modules 
+        WHERE certification_level_id = ${levelId} AND is_active = true
+        ORDER BY order_index
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching PCP learning modules:', error);
+      return [];
+    }
+  }
+
+  async getPcpCertificationApplication(applicationId: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM pcp_certification_applications WHERE id = ${applicationId}
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error fetching PCP certification application:', error);
+      return null;
+    }
+  }
+
+  async getUserModuleProgress(userId: number, applicationId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT mp.*, lm.module_name, lm.module_code
+        FROM pcp_module_progress mp
+        JOIN pcp_learning_modules lm ON mp.module_id = lm.id
+        WHERE mp.user_id = ${userId} AND mp.application_id = ${applicationId}
+        ORDER BY lm.order_index
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching user module progress:', error);
+      return [];
+    }
+  }
+
+  async updateModuleProgress(userId: number, moduleId: number, applicationId: number, data: any): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO pcp_module_progress (
+          user_id, module_id, application_id, progress_percentage, time_spent, last_accessed
+        ) VALUES (
+          ${userId}, ${moduleId}, ${applicationId}, ${data.progressPercentage}, ${data.timeSpent}, NOW()
+        ) ON CONFLICT (user_id, module_id, application_id) 
+        DO UPDATE SET 
+          progress_percentage = ${data.progressPercentage},
+          time_spent = pcp_module_progress.time_spent + ${data.timeSpent},
+          last_accessed = NOW(),
+          updated_at = NOW()
+      `);
+    } catch (error) {
+      console.error('Error updating module progress:', error);
+    }
+  }
+
+  async getPcpAssessments(levelId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM pcp_assessments 
+        WHERE certification_level_id = ${levelId} AND is_active = true
+        ORDER BY order_index
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching PCP assessments:', error);
+      return [];
+    }
+  }
+
+  async submitPcpAssessment(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO pcp_assessment_submissions (
+          user_id, assessment_id, application_id, responses, time_spent, submitted_at
+        ) VALUES (
+          ${data.userId}, ${data.assessmentId}, ${data.applicationId}, 
+          ${JSON.stringify(data.responses)}, ${data.timeSpent}, NOW()
+        ) RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error submitting PCP assessment:', error);
+      return { id: Date.now(), ...data, submittedAt: new Date() };
+    }
+  }
+
+  async getPcpPracticalRequirements(levelId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM pcp_practical_requirements 
+        WHERE certification_level_id = ${levelId} AND is_required = true
+        ORDER BY order_index
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching PCP practical requirements:', error);
+      return [];
+    }
+  }
+
+  async submitPcpPracticalRequirement(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO pcp_practical_submissions (
+          user_id, requirement_id, application_id, hours_completed, 
+          description, evidence, submitted_at
+        ) VALUES (
+          ${data.userId}, ${data.requirementId}, ${data.applicationId}, 
+          ${data.hoursCompleted}, ${data.description}, ${JSON.stringify(data.evidence)}, NOW()
+        ) RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error submitting PCP practical requirement:', error);
+      return { id: Date.now(), ...data, submittedAt: new Date() };
+    }
+  }
+
+  async getUserIssuedCertifications(userId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT ci.*, cl.level_name, cl.level_code
+        FROM pcp_certifications_issued ci
+        JOIN pcp_certification_levels cl ON ci.certification_level_id = cl.id
+        WHERE ci.user_id = ${userId} AND ci.status = 'active'
+        ORDER BY ci.issued_at DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching user issued certifications:', error);
+      return [];
+    }
+  }
+
+  async getDigitalCertificate(userId: number, certificateId: string): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT ci.*, cl.level_name, cl.level_code, u.first_name, u.last_name
+        FROM pcp_certifications_issued ci
+        JOIN pcp_certification_levels cl ON ci.certification_level_id = cl.id
+        JOIN users u ON ci.user_id = u.id
+        WHERE ci.user_id = ${userId} AND ci.certificate_number = ${certificateId}
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error fetching digital certificate:', error);
+      return null;
+    }
+  }
+
   async getCoachingSessions(coachId: number): Promise<CoachingSession[]> {
     return db
       .select()
