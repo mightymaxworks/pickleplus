@@ -72,6 +72,15 @@ interface ClassSession {
 export default function TrainingCentersAdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedCenter, setSelectedCenter] = useState<number | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newCenterForm, setNewCenterForm] = useState({
+    name: '',
+    address: '',
+    capacity: '',
+    city: '',
+    phone: '',
+    email: ''
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -97,6 +106,72 @@ export default function TrainingCentersAdminPage() {
   const centers = Array.isArray(centersResponse?.data) ? centersResponse.data : [];
   const coaches = Array.isArray(coachesResponse?.data) ? coachesResponse.data : [];
   const classes = Array.isArray(classesResponse?.data) ? classesResponse.data : [];
+
+  // Create training center mutation
+  const createCenterMutation = useMutation({
+    mutationFn: async (centerData: any) => {
+      const response = await apiRequest('POST', '/api/admin/training-centers/centers', centerData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Training center created successfully",
+      });
+      setIsCreateDialogOpen(false);
+      setNewCenterForm({
+        name: '',
+        address: '',
+        capacity: '',
+        city: '',
+        phone: '',
+        email: ''
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/training-centers/centers'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create training center",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateCenter = () => {
+    if (!newCenterForm.name || !newCenterForm.address || !newCenterForm.capacity) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const centerData = {
+      name: newCenterForm.name,
+      description: `Training center at ${newCenterForm.address}`,
+      address: newCenterForm.address,
+      city: newCenterForm.city || 'Singapore',
+      state: 'Singapore',
+      country: 'Singapore',
+      postalCode: '123456',
+      phone: newCenterForm.phone || '',
+      email: newCenterForm.email || '',
+      website: '',
+      capacity: parseInt(newCenterForm.capacity),
+      qrCode: `TC${Date.now()}`
+    };
+
+    createCenterMutation.mutate(centerData);
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setNewCenterForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const OverviewDashboard = () => (
     <div className="space-y-6">
@@ -194,14 +269,14 @@ export default function TrainingCentersAdminPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Training Centers</h2>
-        <Dialog>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Add Center
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add New Training Center</DialogTitle>
               <DialogDescription>
@@ -210,19 +285,81 @@ export default function TrainingCentersAdminPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div>
-                <Label htmlFor="name">Center Name</Label>
-                <Input id="name" placeholder="Downtown Pickleball Center" />
+                <Label htmlFor="center-name">Center Name *</Label>
+                <Input 
+                  id="center-name" 
+                  placeholder="Downtown Pickleball Center"
+                  value={newCenterForm.name}
+                  onChange={(e) => handleFormChange('name', e.target.value)}
+                />
               </div>
               <div>
-                <Label htmlFor="address">Address</Label>
-                <Textarea id="address" placeholder="123 Main St, City, State" />
+                <Label htmlFor="center-address">Address *</Label>
+                <Textarea 
+                  id="center-address" 
+                  placeholder="123 Main St, City, State"
+                  value={newCenterForm.address}
+                  onChange={(e) => handleFormChange('address', e.target.value)}
+                />
               </div>
-              <div>
-                <Label htmlFor="capacity">Capacity</Label>
-                <Input id="capacity" type="number" placeholder="50" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="center-capacity">Capacity *</Label>
+                  <Input 
+                    id="center-capacity" 
+                    type="number" 
+                    placeholder="50"
+                    value={newCenterForm.capacity}
+                    onChange={(e) => handleFormChange('capacity', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="center-city">City</Label>
+                  <Input 
+                    id="center-city" 
+                    placeholder="Singapore"
+                    value={newCenterForm.city}
+                    onChange={(e) => handleFormChange('city', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="center-phone">Phone</Label>
+                  <Input 
+                    id="center-phone" 
+                    placeholder="+65 6123 4567"
+                    value={newCenterForm.phone}
+                    onChange={(e) => handleFormChange('phone', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="center-email">Email</Label>
+                  <Input 
+                    id="center-email" 
+                    type="email"
+                    placeholder="info@center.com"
+                    value={newCenterForm.email}
+                    onChange={(e) => handleFormChange('email', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-            <Button>Create Center</Button>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsCreateDialogOpen(false)}
+                disabled={createCenterMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateCenter}
+                disabled={createCenterMutation.isPending}
+              >
+                {createCenterMutation.isPending ? 'Creating...' : 'Create Center'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
