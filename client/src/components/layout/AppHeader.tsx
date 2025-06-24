@@ -39,7 +39,8 @@ import {
   Shield,
   Palette,
   Share,
-  LifeBuoy
+  LifeBuoy,
+  Building2
 } from 'lucide-react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -138,6 +139,7 @@ export function AppHeader({
     { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
     { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
     { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
+    { label: 'Development Hub', icon: <Building2 size={18} />, path: '/player-development-hub' },
     { label: t('nav.referrals'), icon: <Share size={18} />, path: '/referrals' },
     { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },
     // Removed Icons Test per user request (2025-04-21)
