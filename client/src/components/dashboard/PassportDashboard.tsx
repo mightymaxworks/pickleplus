@@ -348,6 +348,11 @@ export default function PassportDashboard() {
     });
   };
 
+  const handleViewMyClasses = () => {
+    // Navigate to My Classes page
+    window.location.href = '/my-classes';
+  };
+
   const handlePhotoUploadSuccess = (avatarUrl: string) => {
     setIsPhotoUploadOpen(false);
     toast({
@@ -1383,6 +1388,10 @@ export default function PassportDashboard() {
                   {/* Quick actions for regular players */}
                   {!isCoach && (
                     <>
+                      <Button onClick={handleViewMyClasses} variant="outline" className="w-full justify-start">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        View My Classes
+                      </Button>
                       <Button onClick={handleFindCoaches} variant="outline" className="w-full justify-start">
                         <Users className="w-4 h-4 mr-2" />
                         {t('dashboard.quickActions.findCoaches')}
