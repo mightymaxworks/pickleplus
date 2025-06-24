@@ -331,7 +331,7 @@ export default function PremiumTrainingCenterCheckIn() {
             <Sparkles className="h-6 w-6 text-amber-500" />
           </div>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Connect with certified coaches at Player Development Hub facilities for personalized training
+            Transform your pickleball journey with elite coaching, premium facilities, and cutting-edge training programs
           </p>
         </div>
 

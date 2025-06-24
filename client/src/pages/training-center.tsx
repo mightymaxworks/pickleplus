@@ -297,16 +297,85 @@ export default function PlayerDevelopmentHub() {
     <StandardLayout>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
-          <div className="max-w-7xl mx-auto px-6 text-center">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-48 translate-x-48"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full translate-y-40 -translate-x-40"></div>
+          
+          <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
             <div className="flex items-center justify-center mb-4">
               <Building2 className="w-10 h-10 mr-3" />
               <h1 className="text-4xl font-bold">Player Development Hub</h1>
             </div>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-              Complete training center management with facility selection, detailed scheduling, 
-              class limits, and coach credentials
+            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-6">
+              Elevate your game with world-class facilities, expert coaches, and personalized training programs designed to unlock your full potential
             </p>
+            
+            {/* Stats Row */}
+            <div className="flex justify-center space-x-8 mt-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold">3</div>
+                <div className="text-blue-200 text-sm">Expert Coaches</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">2</div>
+                <div className="text-blue-200 text-sm">Elite Facilities</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">22</div>
+                <div className="text-blue-200 text-sm">Weekly Classes</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">5</div>
+                <div className="text-blue-200 text-sm">Skill Levels</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Access Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 bg-white border-b">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Popular Classes This Week</h2>
+            <p className="text-gray-600">Join our most-loved training sessions</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-blue-100 text-blue-800">Beginner</Badge>
+                  <span className="text-sm text-green-600 font-medium">5 spots left</span>
+                </div>
+                <h3 className="font-semibold text-lg mb-1">Fundamentals Mastery</h3>
+                <p className="text-gray-600 text-sm mb-2">Mike Rodriguez • Tomorrow 9:00 AM</p>
+                <div className="text-blue-600 font-medium">$45/session</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-purple-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-purple-100 text-purple-800">Intermediate</Badge>
+                  <span className="text-sm text-orange-600 font-medium">2 spots left</span>
+                </div>
+                <h3 className="font-semibold text-lg mb-1">Advanced Strategy</h3>
+                <p className="text-gray-600 text-sm mb-2">Sarah Chen • Today 11:00 AM</p>
+                <div className="text-purple-600 font-medium">$65/session</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-green-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-green-100 text-green-800">All Levels</Badge>
+                  <span className="text-sm text-green-600 font-medium">3 spots left</span>
+                </div>
+                <h3 className="font-semibold text-lg mb-1">Fitness & Movement</h3>
+                <p className="text-gray-600 text-sm mb-2">Emma Thompson • Today 6:00 PM</p>
+                <div className="text-green-600 font-medium">$55/session</div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -549,9 +618,9 @@ export default function PlayerDevelopmentHub() {
                                 );
                               }
 
-                              return selectedDayClasses.map((classItem: ClassDetails) => (
+                              return selectedDayClasses.map((classItem: ClassDetails, index: number) => (
                                 <Card 
-                                  key={`mobile-${classItem.id}-${selectedDateKey}`}
+                                  key={`mobile-${classItem.id}-${selectedDateKey}-${index}`}
                                   className="cursor-pointer hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
                                   onClick={() => handleClassSelection(classItem)}
                                 >
@@ -608,9 +677,9 @@ export default function PlayerDevelopmentHub() {
                                       No classes
                                     </div>
                                   ) : (
-                                    dayClasses.map((classItem: ClassDetails) => (
+                                    dayClasses.map((classItem: ClassDetails, index: number) => (
                                       <Card 
-                                        key={`desktop-${classItem.id}-${dateKey}`}
+                                        key={`desktop-${classItem.id}-${dateKey}-${index}`}
                                         className="cursor-pointer hover:shadow-md transition-shadow p-2"
                                         onClick={() => handleClassSelection(classItem)}
                                       >
