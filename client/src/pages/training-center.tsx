@@ -343,15 +343,33 @@ export default function PlayerDevelopmentHub() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card 
               className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("Fundamentals Mastery card clicked");
+                console.log("Training centers available:", trainingCenters);
+                
                 // Set to Singapore Elite Academy and navigate to calendar
-                const eliteAcademy = trainingCenters.find(c => c.name === "Singapore Elite Academy");
+                const eliteAcademy = trainingCenters?.find(c => c.name === "Singapore Elite Academy");
+                console.log("Found academy:", eliteAcademy);
+                
                 if (eliteAcademy) {
                   setSelectedFacility(eliteAcademy);
                   setActiveTab('weekly-calendar');
                   toast({
-                    title: "Facility Selected",
-                    description: `Viewing classes at ${eliteAcademy.name}`,
+                    title: "Quick Access",
+                    description: `Viewing Fundamentals Mastery classes at ${eliteAcademy.name}`,
+                  });
+                  // Scroll to the booking section after a brief delay
+                  setTimeout(() => {
+                    const bookingSection = document.querySelector('[data-booking-section]');
+                    bookingSection?.scrollIntoView({ behavior: 'smooth' });
+                  }, 300);
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Training center not found. Please try again.",
+                    variant: "destructive"
                   });
                 }
               }}
@@ -370,8 +388,11 @@ export default function PlayerDevelopmentHub() {
             <Card 
               className="hover:shadow-lg transition-shadow cursor-pointer border-purple-200"
               onClick={() => {
+                console.log("Advanced Strategy card clicked");
+                
                 // Set to Singapore Elite Academy and navigate to calendar
-                const eliteAcademy = trainingCenters.find(c => c.name === "Singapore Elite Academy");
+                const eliteAcademy = trainingCenters?.find(c => c.name === "Singapore Elite Academy");
+                
                 if (eliteAcademy) {
                   setSelectedFacility(eliteAcademy);
                   setActiveTab('weekly-calendar');
@@ -384,6 +405,12 @@ export default function PlayerDevelopmentHub() {
                     const bookingSection = document.querySelector('[data-booking-section]');
                     bookingSection?.scrollIntoView({ behavior: 'smooth' });
                   }, 300);
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Training center not found. Please try again.",
+                    variant: "destructive"
+                  });
                 }
               }}
             >
@@ -401,8 +428,11 @@ export default function PlayerDevelopmentHub() {
             <Card 
               className="hover:shadow-lg transition-shadow cursor-pointer border-green-200"
               onClick={() => {
+                console.log("Fitness & Movement card clicked");
+                
                 // Set to Elite Training Center and navigate to calendar
-                const eliteCenter = trainingCenters.find(c => c.name === "Elite Training Center");
+                const eliteCenter = trainingCenters?.find(c => c.name === "Elite Training Center");
+                
                 if (eliteCenter) {
                   setSelectedFacility(eliteCenter);
                   setActiveTab('weekly-calendar');
@@ -415,6 +445,12 @@ export default function PlayerDevelopmentHub() {
                     const bookingSection = document.querySelector('[data-booking-section]');
                     bookingSection?.scrollIntoView({ behavior: 'smooth' });
                   }, 300);
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Training center not found. Please try again.",
+                    variant: "destructive"
+                  });
                 }
               }}
             >
