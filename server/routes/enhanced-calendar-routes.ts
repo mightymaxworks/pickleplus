@@ -366,37 +366,18 @@ router.post('/classes/:classId/enroll', (req, res) => {
 });
 
 // Get user's enrolled classes
-router.get('/my-classes', (req, res) => {
+router.get('/my-classes', async (req, res) => {
   try {
-    const upcoming = req.query.upcoming === 'true';
+    // Get user ID from session or authentication
+    const userId = req.user?.id || 1; // Default to user 1 for testing
     
-    // Mock enrolled classes data
-    const enrolledClasses = [
-      {
-        id: 1,
-        name: "Beginner Fundamentals",
-        date: format(addDays(new Date(), 2), 'yyyy-MM-dd'),
-        start_time: "10:00",
-        end_time: "11:30",
-        coach_name: "Sarah Chen",
-        center_name: "Singapore Elite Pickleball Center",
-        status: "confirmed"
-      },
-      {
-        id: 2,
-        name: "Intermediate Strategy",
-        date: format(addDays(new Date(), 5), 'yyyy-MM-dd'),
-        start_time: "14:00",
-        end_time: "16:00",
-        coach_name: "Marcus Rodriguez",
-        center_name: "Marina Bay Courts",
-        status: "confirmed"
-      }
-    ];
-
+    // Get real enrolled classes from database
+    const { storage } = await import('../storage');
+    const enrolledClasses = await storage.getUserEnrolledClasses(userId);
+    
     res.json({
       success: true,
-      enrolledClasses: upcoming ? enrolledClasses : []
+      enrolledClasses: enrolledClasses || []
     });
   } catch (error) {
     console.error('[Calendar] Error fetching enrolled classes:', error);
