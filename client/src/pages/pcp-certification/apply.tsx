@@ -178,7 +178,10 @@ export default function PCPCertificationApplicationPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">{level.duration} weeks duration</span>
+              <span className="text-sm">
+                {level.duration <= 7 ? `${level.duration} day${level.duration > 1 ? 's' : ''}` : 
+                 level.duration === 180 ? '6 months' : `${level.duration} days`} duration
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-gray-500" />

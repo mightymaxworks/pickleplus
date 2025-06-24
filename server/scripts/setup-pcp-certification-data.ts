@@ -9,26 +9,26 @@ async function setupPcpCertificationData() {
   console.log('Setting up PCP Certification Programme data...');
 
   try {
-    // Level 1: Foundation Coach
+    // Level 1: 2-day intensive course
     const level1 = await storage.createPcpCertificationLevel({
-      levelName: 'PCP Foundation Coach',
+      levelName: 'PCP Level 1 Certification',
       levelCode: 'PCP-L1',
-      description: 'Learn fundamental coaching principles and basic pickleball instruction techniques.',
+      description: 'Essential coaching fundamentals in an intensive 2-day program covering basic instruction techniques and safety protocols.',
       prerequisites: [],
       requirements: [
-        'Complete 6 online learning modules',
-        'Pass written assessment (80% minimum)',
-        'Submit video teaching demonstration',
-        'Complete 10 hours of supervised coaching'
+        'Attend full 2-day intensive course',
+        'Pass written certification exam',
+        'Demonstrate basic teaching skills',
+        'Complete safety and liability training'
       ],
       benefits: [
         'Official PCP Level 1 certification',
-        'Access to exclusive coaching resources',
-        'Eligibility for facility partnerships',
-        'Foundation for advanced certifications'
+        'Foundation coaching authorization',
+        'Access to Level 1 coaching resources',
+        'Eligibility for facility partnerships'
       ],
-      duration: 4,
-      cost: 19900, // $199
+      duration: 2, // 2 days
+      cost: 69900, // $699
       isActive: true
     });
 

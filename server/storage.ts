@@ -1398,93 +1398,118 @@ export class DatabaseStorage implements IStorage {
       return [
         {
           id: 1,
-          levelName: 'PCP Foundation Coach',
+          levelName: 'PCP Level 1 Certification',
           levelCode: 'PCP-L1',
-          description: 'Learn fundamental coaching principles and basic pickleball instruction techniques.',
+          description: 'Essential coaching fundamentals in an intensive 2-day program covering basic instruction techniques and safety protocols.',
           prerequisites: [],
           requirements: [
-            'Complete 6 online learning modules',
-            'Pass written assessment (80% minimum)',
-            'Submit video teaching demonstration',
-            'Complete 10 hours of supervised coaching'
+            'Attend full 2-day intensive course',
+            'Pass written certification exam',
+            'Demonstrate basic teaching skills',
+            'Complete safety and liability training'
           ],
           benefits: [
             'Official PCP Level 1 certification',
-            'Access to exclusive coaching resources',
-            'Eligibility for facility partnerships',
-            'Foundation for advanced certifications'
+            'Foundation coaching authorization',
+            'Access to Level 1 coaching resources',
+            'Eligibility for facility partnerships'
           ],
-          duration: 4,
-          cost: 19900,
+          duration: 2, // 2 days
+          cost: 69900, // $699
           isActive: true
         },
         {
           id: 2,
-          levelName: 'PCP Intermediate Coach',
+          levelName: 'PCP Level 2 Certification',
           levelCode: 'PCP-L2',
-          description: 'Advanced coaching techniques, game strategy, and player development methodologies.',
+          description: 'Advanced coaching techniques and strategy development in a comprehensive 3-day intensive program.',
           prerequisites: ['PCP-L1'],
           requirements: [
             'Hold PCP Level 1 certification',
-            'Complete 8 advanced learning modules',
-            'Pass comprehensive written assessment',
-            'Demonstrate advanced teaching techniques',
-            'Complete 25 hours of coaching experience'
+            'Attend full 3-day intensive course',
+            'Pass advanced written assessment',
+            'Demonstrate intermediate teaching methods',
+            'Complete game strategy evaluation'
           ],
           benefits: [
             'Official PCP Level 2 certification',
             'Advanced strategy instruction authorization',
             'Tournament coaching eligibility',
-            'Higher rate earning potential'
+            'Enhanced earning potential'
           ],
-          duration: 6,
-          cost: 39900,
+          duration: 3, // 3 days
+          cost: 84900, // $849
           isActive: true
         },
         {
           id: 3,
-          levelName: 'PCP Advanced Coach',
+          levelName: 'PCP Level 3 Certification',
           levelCode: 'PCP-L3',
-          description: 'Elite coaching skills, mental performance, and professional development strategies.',
+          description: 'Elite coaching mastery through intensive 4-day program focusing on advanced player development and performance optimization.',
           prerequisites: ['PCP-L2'],
           requirements: [
             'Hold PCP Level 2 certification',
-            'Complete 10 specialized modules',
-            'Pass expert-level assessment',
-            'Demonstrate professional coaching session',
-            'Complete 50 hours of advanced coaching'
+            'Attend full 4-day intensive course',
+            'Pass expert-level certification exam',
+            'Demonstrate advanced coaching methodologies',
+            'Complete performance analysis practicum'
           ],
           benefits: [
             'Official PCP Level 3 certification',
-            'Mental performance coaching authorization',
-            'Elite player development qualification',
-            'Mentorship program participation'
+            'Elite player development authorization',
+            'Mental performance coaching qualification',
+            'Advanced tournament coaching rights'
           ],
-          duration: 8,
-          cost: 59900,
+          duration: 4, // 4 days
+          cost: 104900, // $1049
           isActive: true
         },
         {
           id: 4,
-          levelName: 'PCP Master Coach',
-          levelCode: 'PCP-MC',
-          description: 'The highest level of coaching certification, focusing on coach education and program development.',
+          levelName: 'PCP Level 4 Certification',
+          levelCode: 'PCP-L4',
+          description: 'Professional coaching excellence through intensive 1-week immersive program covering advanced methodologies and leadership.',
           prerequisites: ['PCP-L3'],
           requirements: [
             'Hold PCP Level 3 certification',
-            'Complete 12 master-level modules',
-            'Pass comprehensive master assessment',
-            'Develop original coaching methodology',
-            'Complete 100 hours of elite coaching'
+            'Complete full week intensive program',
+            'Pass comprehensive professional assessment',
+            'Demonstrate coaching leadership skills',
+            'Complete advanced practicum requirements'
           ],
           benefits: [
-            'Official PCP Master Coach certification',
-            'Coach trainer authorization',
-            'Program development opportunities',
-            'Exclusive master coach network access'
+            'Official PCP Level 4 certification',
+            'Professional coaching designation',
+            'Coach development authorization',
+            'Elite program leadership qualification'
           ],
-          duration: 12,
-          cost: 99900,
+          duration: 7, // 1 week (7 days)
+          cost: 144900, // $1449
+          isActive: true
+        },
+        {
+          id: 5,
+          levelName: 'PCP Level 5 Master Certification',
+          levelCode: 'PCP-L5',
+          description: 'The pinnacle of coaching certification through an extensive 6-month mentorship and mastery program for elite coach development.',
+          prerequisites: ['PCP-L4'],
+          requirements: [
+            'Hold PCP Level 4 certification',
+            'Complete 6-month mentorship program',
+            'Pass master-level comprehensive evaluation',
+            'Develop original coaching methodology',
+            'Complete elite coaching practicum',
+            'Mentor junior coaches successfully'
+          ],
+          benefits: [
+            'Official PCP Level 5 Master certification',
+            'Master coach trainer authorization',
+            'Program development and curriculum design rights',
+            'Exclusive master coach network membership',
+            'Lifetime certification recognition'
+          ],
+          duration: 180, // 6 months (approximately 180 days)
+          cost: 249900, // $2499
           isActive: true
         }
       ];
@@ -1538,14 +1563,14 @@ export class DatabaseStorage implements IStorage {
           progress: 65, // Calculate from actual progress
           status: inProgressApp.application_status
         } : null,
-        availableLevels: [1, 2, 3, 4] // Determine based on prerequisites
+        availableLevels: [1, 2, 3, 4, 5] // Determine based on prerequisites
       };
     } catch (error) {
       console.error('Error fetching user certification status:', error);
       return {
         completedLevels: [],
         inProgress: null,
-        availableLevels: [1, 2, 3, 4]
+        availableLevels: [1, 2, 3, 4, 5]
       };
     }
   }
