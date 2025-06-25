@@ -26,7 +26,7 @@ export function MobileNavigation() {
     { icon: <Home size={20} />, label: 'Home', path: '/dashboard' },
     { icon: <Calendar size={20} />, label: 'Matches', path: '/matches' },
     { icon: <Users size={20} />, label: 'Communities', path: '/communities' },
-    { icon: <Award size={20} />, label: 'Mastery', path: '/mastery-paths' },
+    { icon: <Award size={20} />, label: 'Coaching', path: '/pcp-certification' },
   ];
 
   // Mobile navigation bar removed as per user request
