@@ -127,6 +127,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // PCP Coaching Ecosystem Routes - Sprint 1
   app.use('/api/pcp', pcpRoutes);
   
+  // PCP Certification Routes - Direct registration
+  const { registerPcpCertificationRoutes } = require('./routes/simple-pcp-certification-routes');
+  registerPcpCertificationRoutes(app);
+  
   // Mount security routes
   app.use('/api/security', securityRoutes);
   
