@@ -518,6 +518,18 @@ export default function App() {
                     pageTitle="Become a Coach"
                   />
                   
+                  {/* PCP Coaching Certification Programme */}
+                  <ProtectedRouteWithLayout 
+                    path="/pcp-certification"
+                    component={lazyLoad(() => import('./pages/pcp-certification/index'))}
+                    pageTitle="PCP Certification"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/pcp-certification/apply/:levelId"
+                    component={lazyLoad(() => import('./pages/pcp-certification/apply'))}
+                    pageTitle="Apply for PCP Certification"
+                  />
+                  
                   {/* Player-Coach Connection Pages */}
                   <ProtectedRouteWithLayout 
                     path="/find-coaches"
