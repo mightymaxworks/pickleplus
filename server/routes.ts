@@ -48,6 +48,7 @@ import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE
 import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-FEEDBACK - Enhanced Feedback System
 import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIAL - Social Sharing Features
 import sageConciergeRoutes from "./routes/sage-concierge-routes"; // PKL-278651-SAGE-0013-CONCIERGE - SAGE Concierge
+import mockPcpLearningRoutes from "./routes/mock-pcp-learning-routes"; // PCP Learning Management System
 import sageExtendedKnowledgeRoutes from "./routes/sage-extended-knowledge-routes"; // PKL-278651-SAGE-0016-EXTENDED-KB - SAGE Extended Knowledge Base
 import sageDashboardRoutes from "./routes/sage-dashboard-routes"; // PKL-278651-COACH-0022-API - SAGE Dashboard Integration
 import pcpRoutes from "./routes/pcp-routes"; // PCP Coaching Ecosystem - Sprint 1
