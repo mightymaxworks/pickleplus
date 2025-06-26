@@ -331,6 +331,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
 
   console.log('[PCP-CERT] Routes registered successfully');
+
+  // Register Admin PCP Learning Management routes
+  const adminPCPLearningRoutes = await import('./routes/admin-pcp-learning-routes.js');
+  app.use('/api/admin/pcp-learning', adminPCPLearningRoutes.default);
+  console.log('[API] Admin PCP Learning Management routes registered');
   
   // Mount security routes
   app.use('/api/security', securityRoutes);
