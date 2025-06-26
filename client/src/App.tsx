@@ -302,6 +302,18 @@ export default function App() {
                     component={ReferralPage} 
                     pageTitle="Referral Program"
                   />
+                  
+                  {/* PCP Learning Management System Routes */}
+                  <ProtectedRouteWithLayout 
+                    path="/pcp-learning" 
+                    component={lazyLoad(() => import('./pages/pcp-learning-dashboard'))} 
+                    pageTitle="PCP Learning Dashboard"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/pcp-assessment/:id" 
+                    component={lazyLoad(() => import('./pages/pcp-assessment'))} 
+                    pageTitle="PCP Assessment"
+                  />
                   <Route path="/admin/tournaments">
                     {(params) => {
                       const TournamentAdminDashboardRedesigned = lazyLoad(() => import('./components/admin/tournaments/TournamentAdminDashboardRedesigned'));

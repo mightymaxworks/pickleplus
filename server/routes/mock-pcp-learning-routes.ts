@@ -412,7 +412,57 @@ router.post('/assessment/:assessmentId/submit', isAuthenticated, async (req, res
   }
 });
 
-// GET /api/pcp-learning/dashboard/:userId - Get learning dashboard
+// GET /api/pcp-learning/dashboard - Get learning dashboard for current user
+router.get('/dashboard', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    // Mock application data
+    const mockApplication = {
+      id: 1,
+      certificationLevelId: 1,
+      applicationStatus: 'approved'
+    };
+
+    // Get module progress
+    const modules = mockLearningModules.filter(m => m.certificationLevelId === 1);
+    const moduleProgress = modules.map(module => {
+      const progressKey = `${userId}-${module.id}`;
+      const progress = mockProgressData.get(progressKey);
+      return { module, progress };
+    });
+
+    // Get assessment progress
+    const assessments = mockAssessments.filter(a => a.certificationLevelId === 1);
+    const assessmentProgress = assessments.map(assessment => {
+      const submissionKey = `${userId}-assessment-${assessment.id}`;
+      const submissions = mockProgressData.get(submissionKey) || [];
+      const bestSubmission = submissions.reduce((best, current) => 
+        !best || current.score > best.score ? current : best, null
+      );
+      return { assessment, bestSubmission, totalAttempts: submissions.length };
+    });
+
+    const overallProgress = calculateOverallProgress(moduleProgress, assessmentProgress);
+
+    const dashboardData = {
+      application: mockApplication,
+      moduleProgress,
+      assessmentProgress,
+      overallProgress
+    };
+
+    res.json({
+      success: true,
+      data: dashboardData
+    });
+  } catch (error) {
+    console.error('[PCP-LEARNING] Error fetching dashboard:', error);
+    res.status(500).json({ error: 'Failed to fetch learning dashboard' });
+  }
+});
+
+// GET /api/pcp-learning/dashboard/:userId - Get learning dashboard for specific user (admin)
 router.get('/dashboard/:userId', isAuthenticated, async (req, res) => {
   try {
     const { userId: targetUserId } = req.params;
