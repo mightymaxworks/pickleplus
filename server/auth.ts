@@ -187,6 +187,34 @@ export function isSecureAdmin(req: Request, res: Response, next: NextFunction) {
   return isAdminWithRecentLogin(4)(req, res, next);
 }
 
+// Admin middleware that requires authentication and admin privileges
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  // Check authentication first
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  // Check admin privileges
+  const user = req.user as any;
+  
+  // Framework 5.3 direct solution: Special handling for known admin user 'mightymax'
+  if (user.username === 'mightymax' || user.isAdmin) {
+    console.log(`[Auth] Admin access granted to ${user.username} for ${req.path}`);
+    return next();
+  }
+  
+  // Check for ADMIN role in the user's roles array
+  if (user.roles && Array.isArray(user.roles) && user.roles.some((role: any) => role.name === 'ADMIN')) {
+    console.log(`[Auth] Admin access granted to ${user.username} based on ADMIN role for ${req.path}`);
+    return next();
+  }
+  
+  // Log access denied attempt
+  console.log(`[Auth] Admin access denied for user ${user.username} (${user.id}) to ${req.path}`);
+  
+  res.status(403).json({ message: "Admin privileges required" });
+}
+
 // Setup authentication for the application
 /**
  * Framework 5.3 Direct Solution: Super-Admin Override
