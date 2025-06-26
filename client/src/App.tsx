@@ -604,6 +604,13 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  <Route path="/admin/pcp-learning">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        {lazyLoad(() => import('./pages/admin-pcp-learning'))()}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   <Route path="/admin/reporting">
                     {(params) => (
                       <AdminProtectedRoute>
