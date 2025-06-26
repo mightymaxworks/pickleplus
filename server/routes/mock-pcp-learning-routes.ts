@@ -518,4 +518,9 @@ function calculateOverallProgress(moduleProgress: any[], assessmentProgress: any
   };
 }
 
+// Register PCP Learning routes function
+export function registerPCPLearningRoutes(app: any) {
+  app.use('/api/pcp-learning', router);
+}
+
 export default router;

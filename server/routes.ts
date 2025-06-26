@@ -1895,6 +1895,11 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // PCP Learning Management System Routes
+  // Import and register PCP learning routes
+  const { registerPCPLearningRoutes } = await import('./routes/mock-pcp-learning-routes.js');
+  registerPCPLearningRoutes(app);
+
   // QR Code Scanning Routes with Role Detection
   app.post("/api/qr/scan", isAuthenticated, processQRScan);
   app.get("/api/qr/permissions", isAuthenticated, getUserScanPermissions);
