@@ -41,6 +41,46 @@ const coachApplicationSchema = z.object({
   })).default([])
 });
 
+// POST /api/coach/apply - Submit a new coach application (alias for /applications)
+router.post('/apply', async (req, res) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const validatedData = coachApplicationSchema.parse(req.body);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User ID not found' });
+    }
+
+    const application = await storage.createCoachApplication({
+      userId,
+      ...validatedData
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Coach application submitted successfully',
+      applicationId: application.id
+    });
+  } catch (error) {
+    console.error('Coach application error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.errors
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit application'
+    });
+  }
+});
+
 // POST /api/coach/applications - Submit a new coach application
 router.post('/applications', async (req, res) => {
   try {
