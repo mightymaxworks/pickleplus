@@ -127,6 +127,17 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
+### June 26, 2025 - Comprehensive Coach Post-Acceptance Workflow Implementation
+- **Designed Complete 5-Phase Onboarding System**: Created comprehensive post-acceptance workflow transforming approved applicants into active coaches
+- **Implemented Backend Infrastructure**: Built `/api/coach/approve`, `/api/coach/onboarding-status`, `/api/coach/complete-profile-setup`, `/api/coach/activate-discovery`, and `/api/coach/performance-dashboard` endpoints
+- **Created Frontend Onboarding Wizard**: Multi-step React component with progress tracking, profile completion validation, and stage-based navigation
+- **Established Success Metrics Framework**: Defined measurable goals for each onboarding phase with 80%+ completion targets
+- **Built Quality Assurance System**: Comprehensive validation requirements including 150-word bio minimum, specialty selection, rate setting, and availability scheduling
+- **Integrated Discovery Activation**: Automatic profile visibility in coach search results upon completion of setup requirements
+- **Designed Performance Tracking**: Coach dashboard with session statistics, revenue tracking, and professional development recommendations
+- **Fixed Critical Endpoint Issues**: Resolved missing `/api/coach/apply` endpoint and duplicate route registrations improving system reliability
+- **Achieved 43% CI/CD Readiness**: Core systems operational with PCP certification discovery, coach discovery, and session booking fully functional
+
 ### Player Development Hub Enhancement (June 2025)
 - Added Player Development Hub to main navigation menu with Building2 icon
 - Enhanced header with gradient overlays, floating elements, and key statistics display

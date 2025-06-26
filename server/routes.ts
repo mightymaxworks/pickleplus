@@ -38,6 +38,7 @@ import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (
 import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTIQ-0002-ASSESS
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachManagementRoutes from "./routes/coach-routes"; // PKL-278651-COACH-001 - Coach Management System
+import coachPostAcceptanceRoutes from "./routes/coach-post-acceptance-routes"; // PKL-278651-COACH-POST-ACCEPTANCE-001 - Post-Acceptance Workflow
 import coachingApiRoutes from "./routes/coaching-api-simple"; // Player-Coach Connection System
 import adminCoachRoutes from "./routes/admin-coach-routes"; // PKL-278651-COACH-ADMIN-001 - Admin Coach Management
 import adminPlayerRoutes from "./routes/admin-player-routes"; // PKL-278651-PLAYER-ADMIN-001 - Admin Player Management
@@ -615,6 +616,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount Coach Management routes - PKL-278651-COACH-001
   app.use('/api/coach', coachManagementRoutes);
+  
+  // Mount Coach Post-Acceptance Workflow routes - PKL-278651-COACH-POST-ACCEPTANCE-001
+  app.use('/api/coach', coachPostAcceptanceRoutes);
   
   // Mount Player-Coach Connection routes
 
