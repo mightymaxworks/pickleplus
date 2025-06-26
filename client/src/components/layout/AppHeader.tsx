@@ -139,6 +139,7 @@ export function AppHeader({
     { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
     { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
     { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
+    { label: 'PCP Certification', icon: <Award size={18} />, path: '/pcp-certification' },
     { label: 'Development Hub', icon: <Building2 size={18} />, path: '/player-development-hub' },
     { label: t('nav.referrals'), icon: <Share size={18} />, path: '/referrals' },
     { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },

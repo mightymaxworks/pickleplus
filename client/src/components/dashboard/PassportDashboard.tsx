@@ -326,6 +326,11 @@ export default function PassportDashboard() {
   };
 
   const handleBecomeCoach = () => {
+    // Navigate to coach application form
+    window.location.href = '/coach/apply';
+  }
+
+  const handlePCPCertification = () => {
     // Navigate to PCP certification page
     window.location.href = '/pcp-certification';
   }
@@ -1352,14 +1357,23 @@ export default function PassportDashboard() {
                           </div>
                         </div>
                         
-                        <Button 
-                          onClick={handleBecomeCoach}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        >
-                          <Award className="w-4 h-4 mr-2" />
-                          Explore Certification Programme
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={handlePCPCertification}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
+                          >
+                            <Award className="w-4 h-4 mr-2" />
+                            PCP Certification
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                          <Button 
+                            onClick={handleBecomeCoach}
+                            variant="outline"
+                            className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                          >
+                            Apply as Coach
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -1431,10 +1445,16 @@ export default function PassportDashboard() {
                       {t('dashboard.quickActions.manageCoachProfile')}
                     </Button>
                   ) : (
-                    <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
-                      <Award className="w-4 h-4 mr-2" />
-                      PCP Certification Programme
-                    </Button>
+                    <div className="space-y-2">
+                      <Button onClick={handlePCPCertification} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
+                        <Award className="w-4 h-4 mr-2" />
+                        PCP Certification Programme
+                      </Button>
+                      <Button onClick={handleBecomeCoach} variant="outline" className="w-full justify-start border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                        <Users className="w-4 h-4 mr-2" />
+                        Apply as Training Center Coach
+                      </Button>
+                    </div>
                   )}
                   
                   {/* Quick actions for coaches */}
