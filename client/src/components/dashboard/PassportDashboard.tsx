@@ -326,8 +326,8 @@ export default function PassportDashboard() {
   };
 
   const handleBecomeCoach = () => {
-    // Navigate to coach application form
-    window.location.href = '/coach/apply';
+    // Navigate to PCP certification page
+    window.location.href = '/pcp-certification';
   }
 
   const handleManageCoachProfile = () => {
@@ -1307,6 +1307,66 @@ export default function PassportDashboard() {
           
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-4 mt-6">
+            {/* PCP Certification Discovery Section - Only for non-coaches */}
+            {!isCoach && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 mb-6">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="bg-emerald-100 p-2 rounded-lg">
+                            <Award className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-emerald-900">Become a Certified Coach</h3>
+                            <p className="text-emerald-700 text-sm">Join the PCP Coaching Certification Programme</p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="text-center">
+                            <div className="bg-emerald-100 p-2 rounded-lg w-fit mx-auto mb-1">
+                              <Star className="w-4 h-4 text-emerald-600" />
+                            </div>
+                            <p className="text-xs font-medium text-emerald-800">5 Certification Levels</p>
+                            <p className="text-xs text-emerald-600">Foundation to Master</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="bg-green-100 p-2 rounded-lg w-fit mx-auto mb-1">
+                              <DollarSign className="w-4 h-4 text-green-600" />
+                            </div>
+                            <p className="text-xs font-medium text-emerald-800">Higher Earnings</p>
+                            <p className="text-xs text-emerald-600">30-50% increase</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="bg-blue-100 p-2 rounded-lg w-fit mx-auto mb-1">
+                              <Users className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <p className="text-xs font-medium text-emerald-800">Elite Network</p>
+                            <p className="text-xs text-emerald-600">Professional coaches</p>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          onClick={handleBecomeCoach}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          <Award className="w-4 h-4 mr-2" />
+                          Explore Certification Programme
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+            
             <div className="grid md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
@@ -1373,7 +1433,7 @@ export default function PassportDashboard() {
                   ) : (
                     <Button onClick={handleBecomeCoach} className="w-full justify-start bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
                       <Award className="w-4 h-4 mr-2" />
-                      {t('dashboard.quickActions.becomeCoach')}
+                      PCP Certification Programme
                     </Button>
                   )}
                   
