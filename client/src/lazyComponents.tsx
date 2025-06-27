@@ -15,11 +15,11 @@ export const LazyAboutUsPage = lazyLoad(() => import('./pages/AboutUs'));
 export const LazyFeatureShowcasePage = lazyLoad(() => import('./pages/FeatureShowcase'));
 
 // Profile related pages
-export const LazyProfilePage = lazyLoad(() => import('./pages/StreamlinedProfilePage'));
+export const LazyProfilePage = lazyLoad(() => import('./pages/Profile'));
 export const LazyProfileEditPage = lazyLoad(() => import('./pages/ProfileEdit'));
 
 // Match related pages
-export const LazyMatchesPage = lazyLoad(() => import('./pages/modernized-match-page'));
+export const LazyMatchesPage = lazyLoad(() => import('./pages/Matches'));
 export const LazyRecordMatchPage = lazyLoad(() => import('./pages/record-match-page'));
 
 // Tournament related pages

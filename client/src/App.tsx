@@ -68,7 +68,7 @@ import {
   LazyUsersPage, // PKL-278651-ADMIN-0015-USER
   LazyNotFoundPage,
   LazyDashboardPage,
-  LazyModernDashboardPage, // PKL-278651-DASH-0010-REDESIGN - New Ranking-Focused Dashboard
+
   LazyCourtIQDetailedAnalysisPage, // PKL-278651-COURTIQ-0005-DETAIL
   LazyPassportPage, // PKL-278651-CONN-0008-UX-MOD2
   preloadProfilePages,
@@ -113,10 +113,8 @@ import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
 import PlayerSearchTestPage from './pages/PlayerSearchTestPage'
 import MatchRewardDemo from './pages/match-reward-demo'
-import EnhancedProfile from './pages/EnhancedProfile'
-import EnhancedProfilePage from './pages/EnhancedProfilePage'
-import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
-import ModernProfilePage from './pages/ModernProfilePage'
+
+
 import LandingPageTest from './pages/LandingPageTest'
 import ModernLandingPage from './pages/ModernLandingPage'
 import QRTestPage from './pages/dev/QRTestPage'
@@ -135,7 +133,7 @@ import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
 import PointsDemo from './pages/points-demo' // PKL-278651-POINTS-0001-DEMO - Pickle+ Points Demo
 import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
 import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo
-import DevModernProfilePage from './pages/DevModernProfilePage' // PKL-278651-PROF-0008-DEV - Development Profile Page
+ // PKL-278651-PROF-0008-DEV - Development Profile Page
 import TrainingCenterPage from './pages/training-center' // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 import TrainingCenterTabsPage from './pages/training-center-tabs' // PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration
 import MyClassesPage from './pages/MyClassesPage' // My Classes page
@@ -470,49 +468,18 @@ export default function App() {
                       requiredRole={UserRole.ADMIN} 
                     />}
                   </Route>
-                  {/* Redirect from /profile to /profile/modern */}
-                  <Route path="/profile">
-                    {() => {
-                      // Directly render the ModernProfilePage component instead of redirecting
-                      return <ModernProfilePage />;
-                    }}
-                  </Route>
-                  {/* Redirect from /profile/enhanced to /profile/modern */}
-                  <Route path="/profile/enhanced">
-                    {() => {
-                      // Directly render the ModernProfilePage component instead of redirecting
-                      return <ModernProfilePage />;
-                    }}
-                  </Route>
-                  {/* Redirect from /profile/contextual to /profile/modern */}
-                  <Route path="/profile/contextual">
-                    {() => {
-                      // Directly render the ModernProfilePage component instead of redirecting
-                      return <ModernProfilePage />;
-                    }}
-                  </Route>
+                  {/* Main profile route using consolidated Profile component */}
+                  <ProtectedRouteWithLayout
+                    path="/profile"
+                    component={LazyProfilePage}
+                    pageTitle="Profile"
+                  />
                   {/* Keep the edit profile route as it's still needed for editing */}
                   <ProtectedRouteWithLayout
                     path="/profile/edit"
                     component={LazyProfileEditPage}
                     pageTitle="Edit Profile"
                   />
-                  {/* Redirect from /profile/streamlined to /profile/modern */}
-                  <Route path="/profile/streamlined">
-                    {() => {
-                      // Directly render the ModernProfilePage component instead of redirecting
-                      return <ModernProfilePage />;
-                    }}
-                  </Route>
-                  <ProtectedRouteWithLayout
-                    path="/profile/modern"
-                    component={ModernProfilePage}
-                    pageTitle="Modern Profile"
-                  />
-                  {/* PKL-278651-PROF-0008-DEV - Development profile page that bypasses authentication */}
-                  <Route path="/profile/dev">
-                    {() => <DevModernProfilePage />}
-                  </Route>
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"
@@ -642,7 +609,7 @@ export default function App() {
                     )}
                   </Route>
                   <Route path="/admin/users">
-                    {(params) => (
+                    {() => (
                       <AdminProtectedRoute>
                         <LazyUsersPage />
                       </AdminProtectedRoute>
