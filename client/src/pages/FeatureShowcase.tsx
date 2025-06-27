@@ -24,6 +24,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface UserJourney {
   icon: React.ReactNode;
@@ -32,13 +33,14 @@ interface UserJourney {
   steps: string[];
   cta: string;
   path: string;
+  status: 'available' | 'coming-soon';
 }
 
 export default function FeatureShowcase() {
   const { language } = useLanguage();
   const [, navigate] = useLocation();
 
-  // Real user journeys available in the current app
+  // User journeys with availability status
   const userJourneys: UserJourney[] = [
     {
       icon: <BarChart3 className="w-8 h-8" />,
@@ -50,31 +52,8 @@ export default function FeatureShowcase() {
         language === 'zh-CN' ? '追踪技能进步' : 'Track skill progression'
       ],
       cta: language === 'zh-CN' ? '查看我的数据' : 'View My Stats',
-      path: '/profile'
-    },
-    {
-      icon: <BookOpen className="w-8 h-8" />,
-      title: language === 'zh-CN' ? '记录成长历程' : 'Journal Your Journey',
-      description: language === 'zh-CN' ? '用PickleJourney记录训练心得和情绪变化' : 'Use PickleJourney to record training insights and emotional changes',
-      steps: [
-        language === 'zh-CN' ? '创建日志条目' : 'Create journal entries',
-        language === 'zh-CN' ? '记录情绪和能量' : 'Track mood and energy',
-        language === 'zh-CN' ? '获得AI分析' : 'Get AI insights'
-      ],
-      cta: language === 'zh-CN' ? '开始记录' : 'Start Journaling',
-      path: '/picklejourney'
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: language === 'zh-CN' ? '连接球友' : 'Connect with Players',
-      description: language === 'zh-CN' ? '在社区中找到球友和参与讨论' : 'Find players and join discussions in the community',
-      steps: [
-        language === 'zh-CN' ? '浏览社区' : 'Browse communities',
-        language === 'zh-CN' ? '发布内容' : 'Create posts',
-        language === 'zh-CN' ? '参与讨论' : 'Join discussions'
-      ],
-      cta: language === 'zh-CN' ? '探索社区' : 'Explore Community',
-      path: '/communities'
+      path: '/profile',
+      status: 'available'
     },
     {
       icon: <UserCheck className="w-8 h-8" />,
@@ -86,7 +65,34 @@ export default function FeatureShowcase() {
         language === 'zh-CN' ? '接受学员预订' : 'Accept student bookings'
       ],
       cta: language === 'zh-CN' ? '申请教练' : 'Apply as Coach',
-      path: '/profile'
+      path: '/profile',
+      status: 'available'
+    },
+    {
+      icon: <BookOpen className="w-8 h-8" />,
+      title: language === 'zh-CN' ? '记录成长历程' : 'Journal Your Journey',
+      description: language === 'zh-CN' ? '用PickleJourney记录训练心得和情绪变化' : 'Use PickleJourney to record training insights and emotional changes',
+      steps: [
+        language === 'zh-CN' ? '创建日志条目' : 'Create journal entries',
+        language === 'zh-CN' ? '记录情绪和能量' : 'Track mood and energy',
+        language === 'zh-CN' ? '获得AI分析' : 'Get AI insights'
+      ],
+      cta: language === 'zh-CN' ? '即将推出' : 'Coming Soon',
+      path: '#',
+      status: 'coming-soon'
+    },
+    {
+      icon: <Users className="w-8 h-8" />,
+      title: language === 'zh-CN' ? '连接球友' : 'Connect with Players',
+      description: language === 'zh-CN' ? '在社区中找到球友和参与讨论' : 'Find players and join discussions in the community',
+      steps: [
+        language === 'zh-CN' ? '浏览社区' : 'Browse communities',
+        language === 'zh-CN' ? '发布内容' : 'Create posts',
+        language === 'zh-CN' ? '参与讨论' : 'Join discussions'
+      ],
+      cta: language === 'zh-CN' ? '即将推出' : 'Coming Soon',
+      path: '#',
+      status: 'coming-soon'
     },
     {
       icon: <Trophy className="w-8 h-8" />,
@@ -97,8 +103,9 @@ export default function FeatureShowcase() {
         language === 'zh-CN' ? '报名参加' : 'Register to participate',
         language === 'zh-CN' ? '查看比赛结果' : 'View match results'
       ],
-      cta: language === 'zh-CN' ? '查看比赛' : 'View Tournaments',
-      path: '/tournaments'
+      cta: language === 'zh-CN' ? '即将推出' : 'Coming Soon',
+      path: '#',
+      status: 'coming-soon'
     }
   ];
 
@@ -117,10 +124,30 @@ export default function FeatureShowcase() {
             </h1>
             <p className="text-xl text-white/90 max-w-3xl mx-auto">
               {language === 'zh-CN' 
-                ? '发现您在Pickle+平台上可以实际体验的功能和旅程' 
-                : 'Discover what you can actually do on the Pickle+ platform'}
+                ? '探索Pickle+平台上现有功能和即将推出的新特性' 
+                : 'Explore current features and upcoming capabilities on the Pickle+ platform'}
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Status Legend */}
+      <section className="py-8 bg-white/50">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex flex-wrap justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-500 to-blue-600"></div>
+              <span className="font-medium">
+                {language === 'zh-CN' ? '现已推出' : 'Available Now'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+              <span className="font-medium">
+                {language === 'zh-CN' ? '即将推出' : 'Coming Soon'}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -135,19 +162,49 @@ export default function FeatureShowcase() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-0 bg-white/80 backdrop-blur-sm">
+                <Card className={`h-full hover:shadow-lg transition-shadow duration-300 border-0 backdrop-blur-sm ${
+                  journey.status === 'available' ? 'bg-white/80' : 'bg-gray-50/80'
+                }`}>
                   <CardHeader className="text-center pb-4">
-                    <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-orange-500 to-blue-600 rounded-xl text-white">
-                      {journey.icon}
+                    <div className="relative">
+                      <div className={`mx-auto mb-4 p-3 rounded-xl text-white ${
+                        journey.status === 'available' 
+                          ? 'bg-gradient-to-r from-orange-500 to-blue-600' 
+                          : 'bg-gradient-to-r from-gray-400 to-gray-500'
+                      }`}>
+                        {journey.icon}
+                      </div>
+                      {journey.status === 'coming-soon' && (
+                        <Badge 
+                          variant="secondary" 
+                          className="absolute -top-2 -right-2 bg-orange-100 text-orange-700 border-orange-200"
+                        >
+                          {language === 'zh-CN' ? '即将推出' : 'Coming Soon'}
+                        </Badge>
+                      )}
                     </div>
-                    <CardTitle className="text-xl mb-2">{journey.title}</CardTitle>
-                    <p className="text-gray-600 text-sm">{journey.description}</p>
+                    <CardTitle className={`text-xl mb-2 ${
+                      journey.status === 'coming-soon' ? 'text-gray-600' : ''
+                    }`}>
+                      {journey.title}
+                    </CardTitle>
+                    <p className={`text-sm ${
+                      journey.status === 'coming-soon' ? 'text-gray-500' : 'text-gray-600'
+                    }`}>
+                      {journey.description}
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 mb-6">
                       {journey.steps.map((step, stepIndex) => (
-                        <div key={stepIndex} className="flex items-center text-sm text-gray-700">
-                          <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold mr-3">
+                        <div key={stepIndex} className={`flex items-center text-sm ${
+                          journey.status === 'coming-soon' ? 'text-gray-500' : 'text-gray-700'
+                        }`}>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 ${
+                            journey.status === 'available' 
+                              ? 'bg-orange-100 text-orange-600' 
+                              : 'bg-gray-200 text-gray-500'
+                          }`}>
                             {stepIndex + 1}
                           </div>
                           {step}
@@ -155,11 +212,16 @@ export default function FeatureShowcase() {
                       ))}
                     </div>
                     <Button
-                      onClick={() => navigate(journey.path)}
-                      className="w-full bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700"
+                      onClick={() => journey.status === 'available' ? navigate(journey.path) : null}
+                      disabled={journey.status === 'coming-soon'}
+                      className={`w-full ${
+                        journey.status === 'available'
+                          ? 'bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
                     >
                       {journey.cta}
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      {journey.status === 'available' && <ArrowRight className="w-4 h-4 ml-2" />}
                     </Button>
                   </CardContent>
                 </Card>

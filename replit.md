@@ -127,15 +127,15 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
-### June 27, 2025 - Language-Aware Logo System & Simplified Feature Showcase
+### June 27, 2025 - Language-Aware Logo System & Accurate Feature Status Display
 - **Language-Aware Logo Component**: Intelligent logo switching between English and Mandarin versions based on language context
 - **Header Integration**: Updated AppHeader to use LanguageAwareLogo with automatic language detection across all landing pages
-- **Simplified Feature Showcase**: Streamlined /features page focusing only on actual user journeys available in current app
-- **Real User Journey Focus**: 5 core journeys - Track Progress, Journal Journey, Connect Players, Become Coach, Join Tournaments
-- **Deprecated Feature Removal**: Cleaned up showcase to remove features not actually implemented or in use
-- **TypeScript Error Resolution**: Fixed all remaining language type errors and logo import issues
-- **Clean User Experience**: Simple card-based layout with numbered steps showing what users can actually do
-- **Bilingual Content Support**: Full English/Chinese translation support with proper zh-CN language handling
+- **Accurate Feature Status Display**: Updated /features page to clearly distinguish between available and coming-soon features
+- **Available Features**: Track Progress and Become a Coach are fully operational with working navigation
+- **Coming Soon Features**: Journal Journey, Connect Players, and Join Tournaments marked with "Coming Soon" badges
+- **Visual Status Indicators**: Gray styling and disabled buttons for unavailable features, color legend for clarity
+- **User Experience Clarity**: Prevents confusion by accurately representing current app capabilities vs future plans
+- **Bilingual Content Support**: Full English/Chinese translation support including "Coming Soon" terminology
 
 ### June 27, 2025 - Mobile Navigation Restoration Complete
 - **Restored Mobile Bottom Tab Navigation**: Fixed critical UX gap affecting 60%+ of mobile users
