@@ -34,6 +34,7 @@ import {
   LazyLandingPage,
   LazyAuthPage,
   LazyAboutUsPage,
+  LazyFeatureShowcasePage,
   LazyProfilePage,
   LazyProfileEditPage,
   LazyMatchesPage, 
@@ -220,6 +221,7 @@ export default function App() {
                   {/* DISABLED: Onboarding system disabled for all new users */}
                   {/* Onboarding routes completely removed - system disabled */}
                   <Route path="/about" component={LazyAboutUsPage} />
+                  <Route path="/features" component={LazyFeatureShowcasePage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/modern-landing" component={ModernLandingPage} />

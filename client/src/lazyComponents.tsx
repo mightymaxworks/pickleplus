@@ -12,6 +12,7 @@ import { lazyLoad } from '@/utils/lazyLoad';
 export const LazyLandingPage = lazyLoad(() => import('./pages/EnhancedPassportLandingPage'));
 export const LazyAuthPage = lazyLoad(() => import('./pages/auth-page'));
 export const LazyAboutUsPage = lazyLoad(() => import('./pages/AboutUs'));
+export const LazyFeatureShowcasePage = lazyLoad(() => import('./pages/FeatureShowcase'));
 
 // Profile related pages
 export const LazyProfilePage = lazyLoad(() => import('./pages/StreamlinedProfilePage'));

@@ -32,7 +32,7 @@ export function LanguageAwareLogo({
   const { language } = useLanguage();
 
   // Use Mandarin logo when language is Chinese, English logo otherwise
-  if (language === 'zh') {
+  if (language === 'zh-CN') {
     return (
       <img
         src={mandarinLogoPath}

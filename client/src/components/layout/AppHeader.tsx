@@ -42,7 +42,7 @@ import {
   LifeBuoy,
   Building2
 } from 'lucide-react';
-import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
+import { LanguageAwareLogo } from '@/components/icons/LanguageAwareLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -167,16 +167,12 @@ export function AppHeader({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <div 
-            className="cursor-pointer"
+          <LanguageAwareLogo 
+            height={isExtraSmallScreen ? "24px" : "32px"}
+            width="auto"
+            preserveAspectRatio={true}
             onClick={() => navigate("/dashboard")}
-          >
-            <PicklePlusNewLogo 
-              height={isExtraSmallScreen ? "24px" : "32px"}
-              width="auto"
-              preserveAspectRatio={true}
-            />
-          </div>
+          />
         </motion.div>
         
         {/* Right side actions */}
