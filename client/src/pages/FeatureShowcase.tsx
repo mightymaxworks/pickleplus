@@ -119,6 +119,17 @@ export default function FeatureShowcase() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center text-white"
           >
+            {/* Navigation Back to Dashboard */}
+            <div className="flex justify-center mb-6">
+              <Button
+                onClick={() => navigate('/dashboard')}
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+              >
+                ← {language === 'zh-CN' ? '返回仪表板' : 'Back to Dashboard'}
+              </Button>
+            </div>
+            
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               {language === 'zh-CN' ? '用户旅程' : 'User Journeys'}
             </h1>
@@ -250,19 +261,19 @@ export default function FeatureShowcase() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/dashboard')}
                 className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-4"
               >
-                {language === 'zh-CN' ? '立即注册' : 'Sign Up Now'}
+                <Play className="w-5 h-5 mr-2" />
+                {language === 'zh-CN' ? '返回仪表板' : 'Go to Dashboard'}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/auth')}
                 className="border-white text-white hover:bg-white/10 px-8 py-4"
               >
-                <Play className="w-5 h-5 mr-2" />
-                {language === 'zh-CN' ? '查看演示' : 'View Demo'}
+                {language === 'zh-CN' ? '立即注册' : 'Sign Up Now'}
               </Button>
             </div>
           </motion.div>

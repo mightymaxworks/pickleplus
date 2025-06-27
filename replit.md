@@ -137,6 +137,7 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **Enhanced Navigation Flow**: Improved user journey discovery with breadcrumb navigation and feature integration points
 - **Mobile Feature Access**: Floating action buttons and mobile-optimized feature discovery for better mobile UX
 - **Bilingual UX Support**: Complete English/Chinese translation for all new UX enhancement components
+- **Navigation Back to Dashboard**: Added multiple clear paths from /features page back to dashboard (top button, bottom CTA, header navigation)
 
 ### June 27, 2025 - Mobile Navigation Restoration Complete
 - **Restored Mobile Bottom Tab Navigation**: Fixed critical UX gap affecting 60%+ of mobile users
