@@ -43,6 +43,7 @@ import coachingApiRoutes from "./routes/coaching-api-simple"; // Player-Coach Co
 import adminCoachRoutes from "./routes/admin-coach-routes"; // PKL-278651-COACH-ADMIN-001 - Admin Coach Management
 import adminPlayerRoutes from "./routes/admin-player-routes"; // PKL-278651-PLAYER-ADMIN-001 - Admin Player Management
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
+import notificationsRoutes from "./routes/notifications"; // Notifications system
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
 import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-FEEDBACK - Enhanced Feedback System
@@ -2464,6 +2465,10 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
       res.status(500).json({ error: 'Upload failed', details: error.message });
     }
   });
+
+  // PKL-278651-NOTIF-0001 - Notifications System
+  app.use('/api/notifications', notificationsRoutes);
+  console.log('[API] Notifications system routes registered');
 
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
