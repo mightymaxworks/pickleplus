@@ -64,9 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = await Promise.race([
           authService.getCurrentUser(),
           timeoutPromise
-        ]) as User | null;
+        ]);
         
-        setUser(currentUser);
+        setUser(currentUser as User | null);
         setError(null);
       } catch (err) {
         // Don't treat auth failures as errors on initial load
