@@ -222,7 +222,7 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
         exit={{ opacity: 0 }}
       >
         <motion.div
-          className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full mx-4 my-4 md:my-8 shadow-2xl min-h-fit max-h-none md:max-h-[90vh] flex flex-col"
+          className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full mx-4 my-4 md:my-8 shadow-2xl mobile-modal-container flex flex-col max-h-[95vh] md:max-h-[90vh]"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
@@ -275,17 +275,17 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
               transition={{ duration: 0.3 }}
             >
               {/* Step Header */}
-              <div className="flex items-start gap-4 mb-6">
-                <div className={`w-12 h-12 rounded-full ${currentStepData.color} flex items-center justify-center text-white`}>
+              <div className="flex items-start gap-3 mb-4">
+                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full ${currentStepData.color} flex items-center justify-center text-white flex-shrink-0`}>
                   {currentStepData.icon}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-semibold">{currentStepData.title}</h3>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="text-lg md:text-xl font-semibold">{currentStepData.title}</h3>
                     <Badge variant={
                       currentStepData.priority === 'essential' ? 'destructive' :
                       currentStepData.priority === 'recommended' ? 'default' : 'secondary'
-                    }>
+                    } className="text-xs">
                       {currentStepData.priority === 'essential' ? 
                         (language === 'zh-CN' ? '必需' : 'Essential') :
                       currentStepData.priority === 'recommended' ?
@@ -294,14 +294,14 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
                       }
                     </Badge>
                     {currentStepData.isCompleted() && (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                     )}
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-3">
+                  <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-2">
                     {currentStepData.description}
                   </p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Heart className="w-4 h-4 text-red-500" />
+                  <div className="flex items-center gap-2 text-xs md:text-sm">
+                    <Heart className="w-3 h-3 md:w-4 md:h-4 text-red-500" />
                     <span className="text-green-600 dark:text-green-400 font-medium">
                       {currentStepData.benefit}
                     </span>
@@ -310,53 +310,56 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
               </div>
 
               {/* Detailed Description */}
-              <Card className="mb-6">
-                <CardContent className="p-4">
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              <Card className="mb-4">
+                <CardContent className="p-3 md:p-4">
+                  <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                     {currentStepData.detailedDescription}
                   </p>
                 </CardContent>
               </Card>
 
               {/* Action Button */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <Button
                   onClick={() => handleStepAction(currentStepData)}
-                  className={`w-full ${currentStepData.color.replace('bg-', 'bg-')} hover:opacity-90`}
-                  size="lg"
+                  className={`w-full text-sm md:text-base ${currentStepData.color.replace('bg-', 'bg-')} hover:opacity-90`}
+                  size="default"
                   disabled={currentStepData.isCompleted()}
                 >
                   {currentStepData.isCompleted() ? (
                     <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
+                      <CheckCircle className="w-3 h-3 md:w-4 md:h-4 mr-2" />
                       {language === 'zh-CN' ? '已完成' : 'Completed'}
                     </>
                   ) : (
                     <>
                       {currentStepData.action}
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-2" />
                     </>
                   )}
                 </Button>
               </div>
 
               {/* Step Navigator */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <Button
                   variant="outline"
                   onClick={handlePrevious}
                   disabled={currentStep === 0}
+                  size="sm"
+                  className="text-xs md:text-sm"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {language === 'zh-CN' ? '上一步' : 'Previous'}
+                  <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">{language === 'zh-CN' ? '上一步' : 'Previous'}</span>
+                  <span className="sm:hidden">{language === 'zh-CN' ? '上' : 'Prev'}</span>
                 </Button>
 
-                <div className="flex gap-2">
+                <div className="flex gap-1 md:gap-2">
                   {steps.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentStep(index)}
-                      className={`w-3 h-3 rounded-full transition-colors ${
+                      className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-colors ${
                         index === currentStep
                           ? 'bg-blue-500'
                           : index < currentStep
@@ -368,13 +371,23 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
                 </div>
 
                 {currentStep === steps.length - 1 ? (
-                  <Button onClick={handleCompleteOnboarding}>
-                    {language === 'zh-CN' ? '完成设置' : 'Finish Setup'}
+                  <Button 
+                    onClick={handleCompleteOnboarding}
+                    size="sm"
+                    className="text-xs md:text-sm"
+                  >
+                    <span className="hidden sm:inline">{language === 'zh-CN' ? '完成设置' : 'Finish Setup'}</span>
+                    <span className="sm:hidden">{language === 'zh-CN' ? '完成' : 'Finish'}</span>
                   </Button>
                 ) : (
-                  <Button onClick={handleNext}>
-                    {language === 'zh-CN' ? '下一步' : 'Next'}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button 
+                    onClick={handleNext}
+                    size="sm"
+                    className="text-xs md:text-sm"
+                  >
+                    <span className="hidden sm:inline">{language === 'zh-CN' ? '下一步' : 'Next'}</span>
+                    <span className="sm:hidden">{language === 'zh-CN' ? '下' : 'Next'}</span>
+                    <ArrowRight className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2" />
                   </Button>
                 )}
               </div>

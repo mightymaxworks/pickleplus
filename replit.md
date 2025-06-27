@@ -149,13 +149,16 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **Bilingual UX Support**: Complete English/Chinese translation for all new UX enhancement components
 - **Navigation Back to Dashboard**: Added multiple clear paths from /features page back to dashboard (top button, bottom CTA, header navigation)
 
-### June 27, 2025 - Mobile Navigation Restoration Complete
+### June 27, 2025 - Mobile Navigation & Onboarding Modal Optimization Complete
 - **Restored Mobile Bottom Tab Navigation**: Fixed critical UX gap affecting 60%+ of mobile users
 - **5-Tab Navigation Structure**: Home, Matches, Community, Coaching, Profile with thumb-friendly 44px+ touch targets
 - **Smart Mobile Detection**: Component only renders on mobile viewports (768px and below) using useMediaQuery
 - **Safe Area Support**: Proper handling of device notches and bottom safe areas with CSS env() variables
 - **Smooth Animations**: Framer Motion animations with active state indicators and tap feedback
 - **Layout Integration**: StandardLayout properly manages content spacing (20px bottom padding on mobile)
+- **Mobile Onboarding Modal Optimization**: Fixed scrolling and viewport issues on mobile devices
+- **Responsive Modal Layout**: 95vh height constraint, compact navigation, touch-friendly scrolling with momentum support
+- **Mobile-First Design**: Smaller fonts, reduced spacing, and shortened button text for optimal mobile experience
 - **99% CI/CD Readiness**: Comprehensive validation with 19 PASS/1 WARNING/0 FAIL across all critical areas
 - **Route Integrity**: All 5 navigation targets have valid page components and proper routing
 - **Performance Optimized**: Lightweight component (3.6KB) with efficient animation patterns
