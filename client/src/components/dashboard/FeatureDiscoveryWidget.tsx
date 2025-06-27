@@ -48,19 +48,19 @@ export function FeatureDiscoveryWidget() {
       icon: <BookOpen className="w-5 h-5" />,
       title: language === 'zh-CN' ? '记录历程' : 'Journal Journey',
       status: 'coming-soon',
-      path: '#'
+      path: '/features'
     },
     {
       icon: <Users className="w-5 h-5" />,
       title: language === 'zh-CN' ? '连接球友' : 'Connect Players',
       status: 'coming-soon',
-      path: '#'
+      path: '/features'
     },
     {
       icon: <Trophy className="w-5 h-5" />,
       title: language === 'zh-CN' ? '参加比赛' : 'Join Tournaments',
       status: 'coming-soon',
-      path: '#'
+      path: '/features'
     }
   ];
 

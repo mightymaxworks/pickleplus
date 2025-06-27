@@ -127,15 +127,16 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
-### June 27, 2025 - Language-Aware Logo System & Accurate Feature Status Display
-- **Language-Aware Logo Component**: Intelligent logo switching between English and Mandarin versions based on language context
-- **Header Integration**: Updated AppHeader to use LanguageAwareLogo with automatic language detection across all landing pages
-- **Accurate Feature Status Display**: Updated /features page to clearly distinguish between available and coming-soon features
-- **Available Features**: Track Progress and Become a Coach are fully operational with working navigation
-- **Coming Soon Features**: Journal Journey, Connect Players, and Join Tournaments marked with "Coming Soon" badges
-- **Visual Status Indicators**: Gray styling and disabled buttons for unavailable features, color legend for clarity
-- **User Experience Clarity**: Prevents confusion by accurately representing current app capabilities vs future plans
-- **Bilingual Content Support**: Full English/Chinese translation support including "Coming Soon" terminology
+### June 27, 2025 - Comprehensive UX Enhancement & Feature Discovery Integration
+- **Feature Navigation Integration**: Added "Features" as primary navigation item in header menu for better discoverability
+- **Smart Feature Discovery System**: Context-aware feature guides that appear based on user's current page and behavior patterns
+- **Progressive Discovery Components**: Intelligent tooltips and suggestions that guide users to relevant features
+- **Dashboard Feature Widget**: Integrated FeatureDiscoveryWidget into main dashboard showing available vs coming-soon features
+- **Accurate Feature Status Display**: Clear visual distinction between operational features (Track Progress, Become Coach) and coming-soon features
+- **Contextual Onboarding**: SmartFeatureGuide provides contextual feature introduction based on user location and activity
+- **Enhanced Navigation Flow**: Improved user journey discovery with breadcrumb navigation and feature integration points
+- **Mobile Feature Access**: Floating action buttons and mobile-optimized feature discovery for better mobile UX
+- **Bilingual UX Support**: Complete English/Chinese translation for all new UX enhancement components
 
 ### June 27, 2025 - Mobile Navigation Restoration Complete
 - **Restored Mobile Bottom Tab Navigation**: Fixed critical UX gap affecting 60%+ of mobile users

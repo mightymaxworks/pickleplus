@@ -23,6 +23,7 @@ import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-COR
 import RoleProtectedDemoPage from './pages/RoleProtectedDemoPage' // PKL-278651-AUTH-0008-ROLES
 import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
 import { LanguageProvider } from '@/contexts/LanguageContext' // Language internationalization
+import { SmartFeatureGuide } from '@/components/onboarding/SmartFeatureGuide' // Smart feature discovery
 
 
 // Import module initializations
@@ -205,6 +206,11 @@ export default function App() {
                           {/* Match Recording Button - Only shown when user is authenticated */}
                           <AuthenticationWrapper>
                             <QuickMatchFAB />
+                          </AuthenticationWrapper>
+                          
+                          {/* Smart Feature Discovery Guide - Context-aware feature onboarding */}
+                          <AuthenticationWrapper>
+                            <SmartFeatureGuide />
                           </AuthenticationWrapper>
                     
                     {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
