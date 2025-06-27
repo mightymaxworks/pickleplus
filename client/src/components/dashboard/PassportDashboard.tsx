@@ -54,6 +54,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
+import { OnboardingProgressIndicator } from '@/components/onboarding/OnboardingProgressIndicator';
 
 export default function PassportDashboard() {
   const { user } = useAuth();

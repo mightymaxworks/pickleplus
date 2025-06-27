@@ -11,14 +11,37 @@
  * @lastModified 2025-06-03
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import PassportDashboard from '@/components/dashboard/PassportDashboard';
 import { StandardLayout } from '@/components/layout/StandardLayout';
+import { WelcomeOnboarding } from '@/components/onboarding/WelcomeOnboarding';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
+  };
+
+  const handleShowOnboarding = () => {
+    setShowOnboarding(true);
+  };
+
   return (
     <StandardLayout>
-      <PassportDashboard />
+      <PassportDashboard onShowOnboarding={handleShowOnboarding} />
+      {showOnboarding && (
+        <WelcomeOnboarding 
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+        />
+      )}
     </StandardLayout>
   );
 }
