@@ -179,7 +179,7 @@ import { communityStorageImplementation, type CommunityStorage } from './storage
 
 import { generateUniquePassportCode } from './utils/passport-generator';
 import { db } from "./db";
-import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql } from "drizzle-orm";
+import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql, ilike, like } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -1108,11 +1108,11 @@ export class DatabaseStorage implements IStorage {
         .from(tournaments)
         .where(
           or(
-            sql`LOWER(${tournaments.name}) LIKE ${searchPattern}`,
-            sql`LOWER(${tournaments.description}) LIKE ${searchPattern}`,
-            sql`LOWER(${tournaments.location}) LIKE ${searchPattern}`,
-            sql`LOWER(${tournaments.format}) LIKE ${searchPattern}`,
-            sql`LOWER(${tournaments.skill_level}) LIKE ${searchPattern}`
+            sql`LOWER(${tournaments.name}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(${tournaments.description}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(${tournaments.location}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(${tournaments.format}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(${tournaments.skillLevelReq}) LIKE LOWER(${searchPattern})`
           )
         )
         .orderBy(desc(tournaments.startDate))
