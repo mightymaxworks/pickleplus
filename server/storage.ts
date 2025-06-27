@@ -1024,8 +1024,8 @@ export class DatabaseStorage implements IStorage {
           u.location,
           COALESCE(AVG(cr.rating), 0) as rating
         FROM coach_profiles cp
-        JOIN users u ON cp.userId = u.id
-        LEFT JOIN coach_reviews cr ON cp.id = cr.coachId
+        JOIN users u ON cp.user_id = u.id
+        LEFT JOIN coach_reviews cr ON cp.id = cr.coach_id
         WHERE cp.isActive = true
         AND (
           LOWER(u.firstName) LIKE ${searchPattern}
@@ -1061,7 +1061,7 @@ export class DatabaseStorage implements IStorage {
             sql`LOWER(${matches.location}) LIKE ${searchPattern}`
           )
         )
-        .orderBy(desc(matches.date))
+        .orderBy(desc(matches.matchDate))
         .limit(20);
       
       return matchResults;
@@ -1077,9 +1077,9 @@ export class DatabaseStorage implements IStorage {
       const communityResults = await db.execute(sql`
         SELECT 
           c.*,
-          COUNT(cm.userId) as memberCount
+          COUNT(cm.user_id) as memberCount
         FROM communities c
-        LEFT JOIN community_members cm ON c.id = cm.communityId
+        LEFT JOIN community_members cm ON c.id = cm.community_id
         WHERE c.isActive = true
         AND (
           LOWER(c.name) LIKE ${searchPattern}
