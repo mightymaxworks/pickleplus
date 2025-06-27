@@ -56,7 +56,11 @@ import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 import { OnboardingProgressIndicator } from '@/components/onboarding/OnboardingProgressIndicator';
 
-export default function PassportDashboard() {
+interface PassportDashboardProps {
+  onShowOnboarding?: () => void;
+}
+
+export default function PassportDashboard({ onShowOnboarding }: PassportDashboardProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [qrVisible, setQrVisible] = useState(false);
@@ -402,6 +406,9 @@ export default function PassportDashboard() {
         }}></div>
       </div>
       <div className="relative max-w-6xl mx-auto px-4 space-y-1 z-10 mt-[40px] mb-[40px]">
+      {/* Onboarding Progress Indicator for new users */}
+      <OnboardingProgressIndicator onShowFullOnboarding={onShowOnboarding} />
+      
       {/* Enhanced Futuristic Background Animations */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {/* Large floating geometric shapes - much more visible */}
