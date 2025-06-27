@@ -48,7 +48,16 @@ export function NotificationBell() {
       setOpen(newOpen);
     }}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative"
+          onClick={(e) => {
+            console.log('[NotificationBell] Button clicked directly');
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
@@ -66,14 +75,10 @@ export function NotificationBell() {
         side="bottom"
         sideOffset={8}
       >
-        {open && (
-          <>
-            <div style={{ padding: '8px', background: '#f0f0f0', fontSize: '12px' }}>
-              DEBUG: Popover is open, NotificationCenter should render
-            </div>
-            <NotificationCenter />
-          </>
-        )}
+        <div style={{ padding: '8px', background: '#f0f0f0', fontSize: '12px' }}>
+          DEBUG: Popover is open, NotificationCenter should render
+        </div>
+        <NotificationCenter />
       </PopoverContent>
     </Popover>
   );
