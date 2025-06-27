@@ -85,9 +85,9 @@ async function searchPlayers(query: string, filters: any): Promise<SearchResult[
         title: user.displayName || user.username || 'Unknown Player',
         subtitle: `@${user.username}`,
         description: user.bio || 'Pickle+ player',
-        avatar: user.avatarUrl,
-        rating: user.skillLevel,
-        location: user.location,
+        avatar: user.avatarUrl || undefined,
+        rating: user.skillLevel && !isNaN(Number(user.skillLevel)) ? Number(user.skillLevel) : undefined,
+        location: user.location || undefined,
         tags: [
           user.skillLevel ? `${user.skillLevel} skill` : '',
           user.preferredPosition || '',

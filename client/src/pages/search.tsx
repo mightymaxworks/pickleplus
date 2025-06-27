@@ -83,8 +83,8 @@ export default function SearchPage() {
 
   // Filter results by active tab
   const filteredResults = useMemo(() => {
-    if (activeTab === 'all') return searchResults;
-    return searchResults.filter((result: SearchResult) => result.type === activeTab);
+    if (activeTab === 'all') return searchResults || [];
+    return (searchResults || []).filter((result: SearchResult) => result.type === activeTab);
   }, [searchResults, activeTab]);
 
   // Group results by type for the "all" tab
