@@ -479,17 +479,7 @@ import {
   type InsertContentFilterSettings
 } from './schema/moderation';
 
-// Import notifications schema (PKL-278651-COMM-0028-NOTIF - Community Notifications)
-import {
-  userNotifications,
-  notificationPreferences,
-  insertUserNotificationSchema,
-  insertNotificationPreferenceSchema,
-  type UserNotification,
-  type InsertUserNotification,
-  type NotificationPreference,
-  type InsertNotificationPreference
-} from './schema/notifications';
+// Notifications schema removed - causing startup issues
 
 // Import S.A.G.E. coaching schema (PKL-278651-COACH-0001-CORE - Skills Assessment & Growth Engine)
 import {

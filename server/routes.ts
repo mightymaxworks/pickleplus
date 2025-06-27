@@ -43,7 +43,6 @@ import coachingApiRoutes from "./routes/coaching-api-simple"; // Player-Coach Co
 import adminCoachRoutes from "./routes/admin-coach-routes"; // PKL-278651-COACH-ADMIN-001 - Admin Coach Management
 import adminPlayerRoutes from "./routes/admin-player-routes"; // PKL-278651-PLAYER-ADMIN-001 - Admin Player Management
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
-import notificationsRoutes from "./routes/notifications"; // Notification system
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
 import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-FEEDBACK - Enhanced Feedback System
