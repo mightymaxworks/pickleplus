@@ -310,6 +310,11 @@ router.get('/', async (req, res) => {
       );
     }
     
+    // For empty queries, return empty results immediately
+    if (!query || query.trim().length === 0) {
+      return res.json([]);
+    }
+    
     // Execute all searches in parallel with timeout protection
     const searchResults = await Promise.all(searchPromises);
     allResults = searchResults.flat();
