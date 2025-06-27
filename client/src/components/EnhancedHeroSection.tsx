@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronDown, Trophy, LayoutDashboard } from "lucide-react";
-import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
+import { LanguageAwareLogo } from "@/components/icons/LanguageAwareLogo";
 import { ParticleBackground } from "./animations/ParticleBackground";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -126,7 +126,7 @@ export function EnhancedHeroSection() {
                 <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-4 pb-6 px-5 text-white">
                   <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center">
                     <div className="font-bold text-xl mb-2 sm:mb-0">Player Passport</div>
-                    <PicklePlusLogo className="h-8 w-auto" />
+                    <LanguageAwareLogo className="h-8 w-auto" />
                   </div>
                   
                   {/* CourtIQ badge */}
@@ -154,7 +154,7 @@ export function EnhancedHeroSection() {
                           <span className="w-1.5 h-1.5 bg-white rounded-full mr-1"></span>
                           {user?.skillLevel || "3.5 Intermediate+"}
                         </div>
-                        <div className="sm:ml-2 text-xs">Passport: {user?.passportId || "XP39R45"}</div>
+                        <div className="sm:ml-2 text-xs">Passport: {user?.passportCode || "XP39R45"}</div>
                       </div>
                     </div>
                   </div>

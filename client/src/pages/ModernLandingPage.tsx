@@ -16,7 +16,7 @@ import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import pickleLogoPath from "@assets/Pickle (2).png";
+import { LanguageAwareLogo } from "@/components/icons/LanguageAwareLogo";
 import { 
   ArrowRight, 
   Trophy, 
@@ -97,7 +97,10 @@ export default function ModernLandingPage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <img src={pickleLogoPath} alt="Pickle+" className="h-10 w-auto" />
+              <LanguageAwareLogo 
+                className="h-10 w-auto cursor-pointer" 
+                onClick={() => navigate("/")}
+              />
             </div>
 
             {/* Desktop Navigation */}
@@ -565,7 +568,7 @@ export default function ModernLandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <img src={pickleLogoPath} alt="Pickle+" className="h-10 w-auto" />
+                <LanguageAwareLogo className="h-10 w-auto" />
               </div>
               <p className="text-gray-400 max-w-sm">
                 {t('landing.footer.description')}
