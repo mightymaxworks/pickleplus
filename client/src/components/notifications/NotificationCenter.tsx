@@ -79,7 +79,7 @@ export function NotificationCenter() {
   const { data: notificationData, isLoading } = useQuery<NotificationResponse>({
     queryKey: ['/api/notifications', { includeRead }],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/notifications?limit=20&includeRead=${includeRead}`);
+      const response = await apiRequest('GET', `/api/notifications?limit=10&includeRead=${includeRead}`);
       return response.json();
     },
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -155,122 +155,122 @@ export function NotificationCenter() {
   const unreadCount = notificationData?.meta?.unreadCount || 0;
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Bell className="h-5 w-5" />
-            <CardTitle>Notifications</CardTitle>
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                {unreadCount}
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIncludeRead(!includeRead)}
-            >
-              {includeRead ? 'Hide Read' : 'Show All'}
-            </Button>
-            {unreadCount > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => markAllAsReadMutation.mutate()}
-                disabled={markAllAsReadMutation.isPending}
-              >
-                <CheckCheck className="h-4 w-4 mr-1" />
-                Mark All Read
-              </Button>
-            )}
-          </div>
+    <div className="w-full">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4" />
+          <span className="font-semibold text-sm">Notifications</span>
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="text-xs h-5">
+              {unreadCount}
+            </Badge>
+          )}
         </div>
-      </CardHeader>
+        {unreadCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => markAllAsReadMutation.mutate()}
+            disabled={markAllAsReadMutation.isPending}
+            className="h-7 px-2 text-xs"
+          >
+            <CheckCheck className="h-3 w-3 mr-1" />
+            Mark All Read
+          </Button>
+        )}
+      </div>
       
-      <CardContent className="p-0">
+      {/* Content */}
+      <div className="max-h-[320px] overflow-y-auto">
         {isLoading ? (
-          <div className="p-6 text-center text-muted-foreground">
+          <div className="p-4 text-center text-muted-foreground text-sm">
             Loading notifications...
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-6 text-center text-muted-foreground">
-            <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No notifications yet</p>
-            <p className="text-sm">You're all caught up!</p>
+            <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No notifications yet</p>
+            <p className="text-xs">You're all caught up!</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-1">
-              {notifications.map((notification, index) => (
-                <div key={notification.id}>
-                  <div
-                    className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
-                      !notification.isRead ? 'bg-blue-50/50' : ''
-                    }`}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className={`text-sm font-medium ${
-                            !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
-                          }`}>
-                            {notification.title}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {formatTimeAgo(notification.createdAt)}
-                            </span>
-                            {!notification.isRead && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {notification.message}
-                        </p>
-                        
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {notification.type}
-                          </Badge>
-                          
-                          {!notification.isRead && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-2 text-xs"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                markAsReadMutation.mutate(notification.id);
-                              }}
-                              disabled={markAsReadMutation.isPending}
-                            >
-                              <Check className="h-3 w-3 mr-1" />
-                              Mark Read
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+          <div className="divide-y">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                  !notification.isRead ? 'bg-blue-50/50 border-l-2 border-blue-500' : ''
+                }`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getNotificationIcon(notification.type)}
                   </div>
                   
-                  {index < notifications.length - 1 && <Separator />}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <p className={`text-sm font-medium leading-tight ${
+                        !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
+                      }`}>
+                        {notification.title}
+                      </p>
+                      <div className="flex items-center gap-1 ml-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatTimeAgo(notification.createdAt)}
+                        </span>
+                        {!notification.isRead && (
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {notification.message}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <Badge variant="outline" className="text-xs h-4 px-1.5 capitalize">
+                        {notification.type}
+                      </Badge>
+                      
+                      {!notification.isRead && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 px-2 text-xs opacity-70 hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsReadMutation.mutate(notification.id);
+                          }}
+                          disabled={markAsReadMutation.isPending}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
+              </div>
+            ))}
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      
+      {/* Footer */}
+      {notifications.length > 0 && (
+        <div className="p-3 border-t bg-muted/30">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full h-7 text-xs"
+            onClick={() => setIncludeRead(!includeRead)}
+          >
+            {includeRead ? 'Hide Read' : 'Show All'} ({notifications.length})
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
 
