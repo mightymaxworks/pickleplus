@@ -1,5 +1,5 @@
 import React from 'react';
-import pickleLogoPath from '/src/assets/pickle-plus-logo.png';
+import pickleLogoPath from '../../assets/pickle-plus-logo.png';
 
 interface PicklePlusNewLogoProps {
   className?: string;
