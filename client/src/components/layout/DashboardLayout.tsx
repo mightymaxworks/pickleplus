@@ -9,7 +9,7 @@ import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { SimpleNotificationBell } from '@/components/notifications/SimpleNotificationBell';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -132,7 +132,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Right side actions */}
           <div className="flex items-center justify-end gap-1 sm:gap-3">
             {/* Notification Bell */}
-            <NotificationBell />
+            <SimpleNotificationBell />
             
             {/* User Profile - Now toggles the menu */}
             <motion.div 
