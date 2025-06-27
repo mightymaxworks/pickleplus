@@ -127,15 +127,15 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
-### June 27, 2025 - Language-Aware Logo System & Feature Showcase Implementation
+### June 27, 2025 - Language-Aware Logo System & Simplified Feature Showcase
 - **Language-Aware Logo Component**: Intelligent logo switching between English and Mandarin versions based on language context
-- **Header Integration**: Updated AppHeader to use LanguageAwareLogo with automatic language detection
-- **Feature Showcase Page**: Comprehensive platform capabilities overview organized by user type (Players, Coaches, Training Centers)
-- **Bilingual Content Support**: Full English/Chinese translation support with proper zh-CN language type handling
-- **Routing Integration**: Added /features route to app navigation for easy feature discovery
-- **TypeScript Compliance**: Fixed all language type errors to match Language context ('zh-CN' vs 'zh')
-- **Asset Integration**: Mandarin logo properly imported from attached assets with responsive scaling
-- **User Experience Enhancement**: Clear feature categorization with status indicators (live, beta, coming-soon)
+- **Header Integration**: Updated AppHeader to use LanguageAwareLogo with automatic language detection across all landing pages
+- **Simplified Feature Showcase**: Streamlined /features page focusing only on actual user journeys available in current app
+- **Real User Journey Focus**: 5 core journeys - Track Progress, Journal Journey, Connect Players, Become Coach, Join Tournaments
+- **Deprecated Feature Removal**: Cleaned up showcase to remove features not actually implemented or in use
+- **TypeScript Error Resolution**: Fixed all remaining language type errors and logo import issues
+- **Clean User Experience**: Simple card-based layout with numbered steps showing what users can actually do
+- **Bilingual Content Support**: Full English/Chinese translation support with proper zh-CN language handling
 
 ### June 27, 2025 - Mobile Navigation Restoration Complete
 - **Restored Mobile Bottom Tab Navigation**: Fixed critical UX gap affecting 60%+ of mobile users
