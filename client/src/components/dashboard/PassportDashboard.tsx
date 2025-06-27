@@ -413,7 +413,14 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
       {/* Test Onboarding Button - For Development/Testing */}
       <div className="mb-4">
         <Button 
-          onClick={onShowOnboarding}
+          onClick={() => {
+            console.log('Onboarding button clicked', { onShowOnboarding });
+            if (onShowOnboarding) {
+              onShowOnboarding();
+            } else {
+              console.error('onShowOnboarding function not provided');
+            }
+          }}
           variant="outline"
           size="sm"
           className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
