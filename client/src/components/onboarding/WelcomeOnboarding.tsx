@@ -53,14 +53,22 @@ interface WelcomeOnboardingProps {
   onComplete?: () => void;
   onSkip?: () => void;
   forceShow?: boolean;
+  isOnboardingVisible?: boolean;
+  setIsOnboardingVisible?: (visible: boolean) => void;
 }
 
-export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: WelcomeOnboardingProps) {
+export function WelcomeOnboarding({ 
+  onComplete, 
+  onSkip, 
+  forceShow = false,
+  isOnboardingVisible = true,
+  setIsOnboardingVisible 
+}: WelcomeOnboardingProps) {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { t, language } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(isOnboardingVisible);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
   // Define onboarding steps with dynamic completion checks
@@ -213,6 +221,7 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
       localStorage.setItem(`onboarding-dismissed-${user.id}`, 'true');
     }
     setIsVisible(false);
+    setIsOnboardingVisible?.(false);
     onSkip?.();
   };
 
@@ -221,6 +230,7 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
       localStorage.setItem(`onboarding-completed-${user.id}`, new Date().toISOString());
     }
     setIsVisible(false);
+    setIsOnboardingVisible?.(false);
     onComplete?.();
   };
 
