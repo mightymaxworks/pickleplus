@@ -48,6 +48,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SimpleNotificationBell } from '@/components/notifications/SimpleNotificationBell';
 
 // Import default avatar image
 import defaultAvatarPath from "@assets/Untitled design (51).png";
@@ -180,28 +181,7 @@ export function AppHeader({
         <div className="flex items-center justify-end gap-1 sm:gap-3">
           {/* Notification Bell */}
           {!hideNotifications && (
-            <motion.button 
-              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                // Handle notification click - toggle notifications dropdown or navigate to notifications page
-                navigate('/notifications');
-              }}
-              aria-label="View notifications"
-            >
-              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
-              {notificationCount > 0 && (
-                <motion.div 
-                  className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#FF5722] flex items-center justify-center text-white text-[10px] font-medium"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', damping: 10 }}
-                >
-                  {notificationCount}
-                </motion.div>
-              )}
-            </motion.button>
+            <SimpleNotificationBell />
           )}
           
           {/* User Profile - Now toggles the menu */}
