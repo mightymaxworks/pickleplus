@@ -81,7 +81,6 @@ export const LazyUsersPage = lazyLoad(() => import('./pages/admin/UsersPage')); 
 // Miscellaneous pages
 export const LazyNotFoundPage = lazyLoad(() => import('./pages/not-found'));
 export const LazyDashboardPage = lazyLoad(() => import('./pages/Dashboard'));
-export const LazyModernDashboardPage = lazyLoad(() => import('./pages/ModernDashboard'));
 
 // CourtIQ detailed analysis page (PKL-278651-COURTIQ-0005-DETAIL)
 export const LazyCourtIQDetailedAnalysisPage = lazyLoad(() => import('./pages/CourtIQDetailedAnalysisPage'));
