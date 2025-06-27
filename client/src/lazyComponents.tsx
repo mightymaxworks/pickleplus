@@ -77,6 +77,7 @@ export const LazyBouncePage = lazyLoad(() => import('./pages/admin/BouncePage'))
 export const LazyBounceFindingsPage = lazyLoad(() => import('./pages/admin/BounceFindingsPage')); // PKL-278651-BOUNCE-0006-ADMIN
 export const LazyUserDetailsPage = lazyLoad(() => import('./pages/admin/UserDetailsPage')); // PKL-278651-ADMIN-0015-USER
 export const LazyUsersPage = lazyLoad(() => import('./pages/admin/UsersPage')); // PKL-278651-ADMIN-0015-USER
+export const LazyPCPLearningPage = lazyLoad(() => import('./pages/admin-pcp-learning').then(module => ({ default: module.default })));
 
 // Miscellaneous pages
 export const LazyNotFoundPage = lazyLoad(() => import('./pages/not-found'));
