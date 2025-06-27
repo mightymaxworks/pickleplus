@@ -113,7 +113,7 @@ async function searchCoaches(query: string, filters: any): Promise<SearchResult[
       const nameRelevance = calculateRelevance(query, `${coach.firstName || ''} ${coach.lastName || ''}`.trim());
       const bioRelevance = calculateRelevance(query, coach.bio || '');
       const specialtyRelevance = Math.max(
-        ...(coach.specialties || []).map(specialty => calculateRelevance(query, specialty))
+        ...(coach.specialties || []).map((specialty: string) => calculateRelevance(query, specialty))
       );
       
       return {
@@ -143,7 +143,7 @@ async function searchMatches(query: string, filters: any): Promise<SearchResult[
     const matches = await storage.searchMatches(query);
     
     return matches.map(match => {
-      const playerNames = match.players?.map(p => p.name || '').join(' vs ') || '';
+      const playerNames = match.players?.map((p: any) => p.name || '').join(' vs ') || '';
       const nameRelevance = calculateRelevance(query, playerNames);
       const typeRelevance = calculateRelevance(query, match.formatType || '');
       
