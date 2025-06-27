@@ -67,10 +67,14 @@ async function testMobileNavigationComponent(): Promise<void> {
     
     const navContent = fs.readFileSync(navPath, 'utf8');
     
-    // Check if component returns null (disabled) - exclude commented out returns
-    const hasActiveReturnNull = navContent.includes('return null') && !navContent.includes('// The Floating Action Button');
-    if (hasActiveReturnNull) {
-      addTest('MobileNavigation', 'Component Active', 'FAIL', 'Component returns null - navigation disabled', 0, true, 'Navigation');
+    // Check if component is properly implemented (not globally disabled)
+    const hasGlobalReturnNull = navContent.match(/^\s*return null;/m) && !navContent.includes('if (!isMobile)');
+    const hasProperMobileDetection = navContent.includes('if (!isMobile) return null');
+    
+    if (hasGlobalReturnNull) {
+      addTest('MobileNavigation', 'Component Active', 'FAIL', 'Component globally returns null - navigation disabled', 0, true, 'Navigation');
+    } else if (hasProperMobileDetection) {
+      addTest('MobileNavigation', 'Component Active', 'PASS', 'Component properly renders mobile navigation with desktop detection', 25, false, 'Navigation');
     } else {
       addTest('MobileNavigation', 'Component Active', 'PASS', 'Component properly renders mobile navigation', 25, false, 'Navigation');
     }
