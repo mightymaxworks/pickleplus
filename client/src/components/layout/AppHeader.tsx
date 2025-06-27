@@ -40,7 +40,8 @@ import {
   Palette,
   Share,
   LifeBuoy,
-  Building2
+  Building2,
+  Compass
 } from 'lucide-react';
 import { LanguageAwareLogo } from '@/components/icons/LanguageAwareLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -134,16 +135,16 @@ export function AppHeader({
     }
   };
 
-  // Default navigation items - removed profile, picklepass, tournaments, onboarding per user request
+  // Default navigation items - reorganized for better UX
   const defaultNavItems = [
     { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
+    { label: 'Features', icon: <Compass size={18} />, path: '/features' },
     { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
     { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
     { label: 'PCP Certification', icon: <Award size={18} />, path: '/pcp-certification' },
     { label: 'Development Hub', icon: <Building2 size={18} />, path: '/player-development-hub' },
     { label: t('nav.referrals'), icon: <Share size={18} />, path: '/referrals' },
     { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },
-    // Removed Icons Test per user request (2025-04-21)
     ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])
   ];
 
