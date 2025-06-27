@@ -239,7 +239,17 @@ async function searchTournaments(query: string, filters: any): Promise<SearchRes
  */
 router.get('/', async (req, res) => {
   try {
-    const validation = searchQuerySchema.safeParse(req.query);
+    // Transform query parameters manually to handle string conversion
+    const transformedQuery = {
+      q: req.query.q || '',
+      type: req.query.type || 'all',
+      location: req.query.location || 'all',
+      skillLevel: req.query.skillLevel || 'all',
+      dateRange: req.query.dateRange || 'all',
+      limit: parseInt(String(req.query.limit || '20'), 10)
+    };
+    
+    const validation = searchQuerySchema.safeParse(transformedQuery);
     
     if (!validation.success) {
       return res.status(400).json({
@@ -252,31 +262,57 @@ router.get('/', async (req, res) => {
     
     let allResults: SearchResult[] = [];
     
-    // Search across different categories based on type filter
+    // Search across different categories with timeout protection
+    const searchPromises = [];
+    
     if (type === 'all' || type === 'player') {
-      const playerResults = await searchPlayers(query, { location, skillLevel, dateRange });
-      allResults = allResults.concat(playerResults);
+      searchPromises.push(
+        Promise.race([
+          searchPlayers(query, { location, skillLevel, dateRange }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Player search timeout')), 3000))
+        ]).catch(() => [])
+      );
     }
     
     if (type === 'all' || type === 'coach') {
-      const coachResults = await searchCoaches(query, { location, skillLevel, dateRange });
-      allResults = allResults.concat(coachResults);
+      searchPromises.push(
+        Promise.race([
+          searchCoaches(query, { location, skillLevel, dateRange }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Coach search timeout')), 3000))
+        ]).catch(() => [])
+      );
     }
     
     if (type === 'all' || type === 'match') {
-      const matchResults = await searchMatches(query, { location, skillLevel, dateRange });
-      allResults = allResults.concat(matchResults);
+      searchPromises.push(
+        Promise.race([
+          searchMatches(query, { location, skillLevel, dateRange }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Match search timeout')), 3000))
+        ]).catch(() => [])
+      );
     }
     
     if (type === 'all' || type === 'community') {
-      const communityResults = await searchCommunities(query, { location, skillLevel, dateRange });
-      allResults = allResults.concat(communityResults);
+      searchPromises.push(
+        Promise.race([
+          searchCommunities(query, { location, skillLevel, dateRange }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Community search timeout')), 3000))
+        ]).catch(() => [])
+      );
     }
     
     if (type === 'all' || type === 'tournament') {
-      const tournamentResults = await searchTournaments(query, { location, skillLevel, dateRange });
-      allResults = allResults.concat(tournamentResults);
+      searchPromises.push(
+        Promise.race([
+          searchTournaments(query, { location, skillLevel, dateRange }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Tournament search timeout')), 3000))
+        ]).catch(() => [])
+      );
     }
+    
+    // Execute all searches in parallel with timeout protection
+    const searchResults = await Promise.all(searchPromises);
+    allResults = searchResults.flat();
     
     // Sort by relevance score and limit results
     const sortedResults = allResults
