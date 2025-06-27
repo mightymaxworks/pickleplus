@@ -598,6 +598,25 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  // Notification system methods
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    // For now, return a simple count - this will be replaced with actual database query
+    return 0;
+  }
+
+  async getUserNotifications(userId: number, limit: number = 20, offset: number = 0): Promise<any[]> {
+    // For now, return empty array - this will be replaced with actual database query
+    return [];
+  }
+
+  async markNotificationAsRead(notificationId: number, userId: number): Promise<void> {
+    // For now, do nothing - this will be replaced with actual database update
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    // For now, do nothing - this will be replaced with actual database update
+  }
+
   // Password reset operations - implemented as memory store for now
   private passwordResetTokens = new Map<string, { email: string; expiresAt: Date }>();
 
