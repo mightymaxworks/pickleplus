@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Menu, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PlayerPassport from '@/components/passport/PlayerPassport';
@@ -10,9 +10,10 @@ import CourtIQStats from '@/components/rankings/CourtIQStats';
 import AchievementsShowcase from '@/components/achievement/AchievementsShowcase';
 import UpcomingTournaments from '@/components/tournament/UpcomingTournaments';
 import SageRecommendationsWidget from '@/components/sage/SageRecommendationsWidget';
-import MobileNavigation from '@/components/layout/MobileNavigation';
+import { MobileNavigation } from '@/components/layout/MobileNavigation';
 import DesktopSidebar from '@/components/layout/DesktopSidebar';
 import UserDropdownMenu from '@/components/layout/UserDropdownMenu';
+import { FeatureDiscoveryWidget } from '@/components/dashboard/FeatureDiscoveryWidget';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -96,6 +97,11 @@ export default function DashboardPage() {
 
           {/* Dashboard Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {/* Feature Discovery Widget - New UX Enhancement */}
+            <div className="col-span-1 md:col-span-2 lg:col-span-1">
+              <FeatureDiscoveryWidget />
+            </div>
+
             {/* XP Progress */}
             <div className="col-span-1">
               <XPProgressCard userId={user.id} />
