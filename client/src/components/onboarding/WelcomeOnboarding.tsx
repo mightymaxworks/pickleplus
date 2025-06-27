@@ -66,7 +66,7 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
   // Define onboarding steps with dynamic completion checks
   const steps: OnboardingStep[] = [
     {
-      id: 'profile_basics',
+      id: 'profile-setup',
       title: language === 'zh-CN' ? '完善个人资料' : 'Complete Your Profile',
       description: language === 'zh-CN' ? '添加您的基本信息和照片' : 'Add your basic information and photo',
       detailedDescription: language === 'zh-CN' 
@@ -81,62 +81,77 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
       priority: 'essential'
     },
     {
-      id: 'skill_rating',
-      title: language === 'zh-CN' ? '设置技能等级' : 'Set Your Skill Rating',
-      description: language === 'zh-CN' ? '选择您的匹克球技能等级' : 'Choose your pickleball skill level',
+      id: 'pcp-rating',
+      title: language === 'zh-CN' ? '设置PCP等级' : 'Set Your PCP Rating',
+      description: language === 'zh-CN' ? '获得官方PCP技能评级' : 'Get your official PCP skill rating',
       detailedDescription: language === 'zh-CN'
-        ? '准确的技能等级有助于匹配合适的对手和训练机会。我们支持多种评级系统，包括DUPR、PPA和传统的2.0-5.0评级。'
-        : 'Accurate skill ratings help match you with appropriate opponents and training opportunities. We support multiple rating systems including DUPR, PPA, and traditional 2.0-5.0 ratings.',
-      action: language === 'zh-CN' ? '设置等级' : 'Set Rating',
-      path: '/profile',
+        ? 'PCP（Player Coaching Passport）评级是我们的官方技能评估系统。通过综合评估技术、战术、体能和心理四个维度来确定您的技能水平。'
+        : 'PCP (Player Coaching Passport) rating is our official skill assessment system. It evaluates your skill level through comprehensive assessment of technical, tactical, physical, and mental dimensions.',
+      action: language === 'zh-CN' ? '获得PCP评级' : 'Get PCP Rating',
+      path: '/pcp-rating',
       icon: <Award className="w-5 h-5" />,
       color: 'bg-purple-500',
-      benefit: language === 'zh-CN' ? '找到合适的对手' : 'Find suitable opponents',
+      benefit: language === 'zh-CN' ? '获得专业认证' : 'Get professional certification',
       isCompleted: () => !!(user?.skillLevel || user?.duprRating),
       priority: 'essential'
     },
     {
-      id: 'first_match',
-      title: language === 'zh-CN' ? '记录首场比赛' : 'Record Your First Match',
-      description: language === 'zh-CN' ? '开始追踪您的比赛表现' : 'Start tracking your match performance',
+      id: 'coach-application',
+      title: language === 'zh-CN' ? '申请成为教练' : 'Apply to Become a Coach',
+      description: language === 'zh-CN' ? '分享您的专业知识，教授其他球员' : 'Share your expertise and teach other players',
       detailedDescription: language === 'zh-CN'
-        ? '记录比赛帮助您追踪进步并建立竞技历史。您可以记录与朋友的友谊赛，正式比赛，或训练对抗。'
-        : 'Recording matches helps you track improvement and build competitive history. You can log friendly games with friends, official matches, or training sessions.',
-      action: language === 'zh-CN' ? '记录比赛' : 'Record Match',
-      path: '/matches',
-      icon: <Trophy className="w-5 h-5" />,
-      color: 'bg-green-500',
-      benefit: language === 'zh-CN' ? '追踪进步' : 'Track your improvement',
-      isCompleted: () => false, // We'll check this via API later
-      priority: 'recommended'
-    },
-    {
-      id: 'explore_coaching',
-      title: language === 'zh-CN' ? '探索教练服务' : 'Explore Coaching',
-      description: language === 'zh-CN' ? '发现专业教练和训练机会' : 'Discover professional coaches and training opportunities',
-      detailedDescription: language === 'zh-CN'
-        ? '我们的认证教练可以帮助您提高技能。浏览教练档案，查看专业资质，并预约适合您水平的训练课程。'
-        : 'Our certified coaches can help improve your skills. Browse coach profiles, view their credentials, and book training sessions suited to your level.',
-      action: language === 'zh-CN' ? '查看教练' : 'Find Coaches',
-      path: '/find-coaches',
+        ? '如果您有丰富的匹克球经验，可以申请成为认证教练。通过我们的5步申请流程，您可以开始教授学员并赚取收入。'
+        : 'If you have extensive pickleball experience, you can apply to become a certified coach. Through our 5-step application process, you can start teaching students and earn income.',
+      action: language === 'zh-CN' ? '申请教练' : 'Apply as Coach',
+      path: '/coach-application',
       icon: <Building2 className="w-5 h-5" />,
       color: 'bg-orange-500',
-      benefit: language === 'zh-CN' ? '专业指导' : 'Professional guidance',
+      benefit: language === 'zh-CN' ? '获得额外收入' : 'Earn additional income',
       isCompleted: () => false,
       priority: 'recommended'
     },
     {
-      id: 'join_community',
+      id: 'drills-exploration',
+      title: language === 'zh-CN' ? '探索训练课程' : 'Explore Training Drills',
+      description: language === 'zh-CN' ? '发现提高技能的训练方法' : 'Discover training methods to improve skills',
+      detailedDescription: language === 'zh-CN'
+        ? '我们的训练库包含数百个专业设计的练习，涵盖各个技能水平。从基础技术到高级战术，找到适合您的训练计划。'
+        : 'Our drill library contains hundreds of professionally designed exercises covering all skill levels. From basic techniques to advanced tactics, find training programs that suit you.',
+      action: language === 'zh-CN' ? '浏览训练' : 'Browse Drills',
+      path: '/drills',
+      icon: <Target className="w-5 h-5" />,
+      color: 'bg-green-500',
+      benefit: language === 'zh-CN' ? '系统化提升' : 'Systematic improvement',
+      isCompleted: () => false,
+      priority: 'recommended'
+    },
+    {
+      id: 'community-joining',
       title: language === 'zh-CN' ? '加入社区' : 'Join a Community',
       description: language === 'zh-CN' ? '与当地球员建立联系' : 'Connect with local players',
       detailedDescription: language === 'zh-CN'
-        ? '社区是结识新球友，参加群组活动和本地比赛的最佳方式。加入基于位置或兴趣的社区。'
-        : 'Communities are the best way to meet new players, join group activities, and participate in local tournaments. Join location-based or interest-based communities.',
+        ? '社区是结识新球友，参加群组活动和本地比赛的最佳方式。加入基于位置或兴趣的社区，扩大您的匹克球社交圈。'
+        : 'Communities are the best way to meet new players, join group activities, and participate in local tournaments. Join location-based or interest-based communities to expand your pickleball network.',
       action: language === 'zh-CN' ? '浏览社区' : 'Browse Communities',
       path: '/communities',
       icon: <Users className="w-5 h-5" />,
       color: 'bg-indigo-500',
       benefit: language === 'zh-CN' ? '扩大社交圈' : 'Expand your network',
+      isCompleted: () => false,
+      priority: 'recommended'
+    },
+    {
+      id: 'pcp-certification',
+      title: language === 'zh-CN' ? 'PCP认证计划' : 'PCP Certification Program',
+      description: language === 'zh-CN' ? '获得专业教练认证' : 'Get professional coaching certification',
+      detailedDescription: language === 'zh-CN'
+        ? 'PCP认证计划是业界领先的教练培训项目。通过5个级别的在线学习和实践评估，获得国际认可的教练资格证书。'
+        : 'The PCP Certification Program is the industry-leading coach training program. Through 5 levels of online learning and practical assessment, earn internationally recognized coaching credentials.',
+      action: language === 'zh-CN' ? '开始认证' : 'Start Certification',
+      path: '/pcp-certification',
+      icon: <Sparkles className="w-5 h-5" />,
+      color: 'bg-pink-500',
+      benefit: language === 'zh-CN' ? '专业资质认证' : 'Professional credential',
       isCompleted: () => false,
       priority: 'optional'
     }
