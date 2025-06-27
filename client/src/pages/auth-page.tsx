@@ -425,7 +425,12 @@ export default function AuthPage() {
                                 </FormItem>
                               )}
                             />
-                            <Button variant="link" size="sm" className="p-0 h-auto text-sm text-orange-600 hover:text-orange-800 font-semibold">
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              className="p-0 h-auto text-sm text-orange-600 hover:text-orange-800 font-semibold"
+                              onClick={() => setLocation("/forgot-password")}
+                            >
                               {t('auth.forgotPassword', 'Forgot password?')}
                             </Button>
                           </div>

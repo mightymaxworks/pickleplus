@@ -223,6 +223,8 @@ export default function App() {
                   <Route path="/login" component={LazyAuthPage} />
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
+                  <Route path="/forgot-password" component={lazyLoad(() => import('./pages/ForgotPasswordPage'))} />
+                  <Route path="/reset-password" component={lazyLoad(() => import('./pages/ResetPasswordPage'))} />
                   {/* DISABLED: Onboarding system disabled for all new users */}
                   {/* Onboarding routes completely removed - system disabled */}
                   <Route path="/about" component={LazyAboutUsPage} />
