@@ -197,7 +197,13 @@ export interface IStorage extends CommunityStorage {
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
   updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
   updateUserPassword(id: number, hashedPassword: string): Promise<void>;
-  searchPlayers(query: string): Promise<User[]>;
+  searchUsers(query: string): Promise<User[]>;
+  
+  // Search operations
+  searchCoaches(query: string): Promise<any[]>;
+  searchMatches(query: string): Promise<any[]>;
+  searchCommunities(query: string): Promise<any[]>;
+  searchTournaments(query: string): Promise<any[]>;
   
   // Password reset operations
   createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
@@ -982,6 +988,141 @@ export class DatabaseStorage implements IStorage {
       recentSessions,
       skillProgression: []
     };
+  }
+
+  // Search operations implementation
+  async searchUsers(query: string): Promise<User[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    const searchResults = await db.select()
+      .from(users)
+      .where(
+        or(
+          sql`LOWER(${users.username}) LIKE ${searchPattern}`,
+          sql`LOWER(${users.firstName}) LIKE ${searchPattern}`,
+          sql`LOWER(${users.lastName}) LIKE ${searchPattern}`,
+          sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchPattern}`,
+          sql`LOWER(${users.displayName}) LIKE ${searchPattern}`,
+          sql`LOWER(${users.bio}) LIKE ${searchPattern}`,
+          sql`LOWER(${users.location}) LIKE ${searchPattern}`
+        )
+      )
+      .limit(20);
+    
+    return searchResults;
+  }
+
+  async searchCoaches(query: string): Promise<any[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    try {
+      const coachResults = await db.execute(sql`
+        SELECT DISTINCT 
+          cp.*,
+          u.firstName,
+          u.lastName,
+          u.displayName,
+          u.avatarUrl as profileImageUrl,
+          u.location,
+          COALESCE(AVG(cr.rating), 0) as rating
+        FROM coach_profiles cp
+        JOIN users u ON cp.userId = u.id
+        LEFT JOIN coach_reviews cr ON cp.id = cr.coachId
+        WHERE cp.isActive = true
+        AND (
+          LOWER(u.firstName) LIKE ${searchPattern}
+          OR LOWER(u.lastName) LIKE ${searchPattern}
+          OR LOWER(u.displayName) LIKE ${searchPattern}
+          OR LOWER(cp.bio) LIKE ${searchPattern}
+          OR LOWER(u.location) LIKE ${searchPattern}
+          OR EXISTS (
+            SELECT 1 FROM unnest(cp.specializations) as spec 
+            WHERE LOWER(spec) LIKE ${searchPattern}
+          )
+        )
+        GROUP BY cp.id, u.firstName, u.lastName, u.displayName, u.avatarUrl, u.location
+        LIMIT 20
+      `);
+      return coachResults;
+    } catch (error) {
+      console.error('Coach search error:', error);
+      return [];
+    }
+  }
+
+  async searchMatches(query: string): Promise<any[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    try {
+      const matchResults = await db.select()
+        .from(matches)
+        .where(
+          or(
+            sql`LOWER(${matches.formatType}) LIKE ${searchPattern}`,
+            sql`LOWER(${matches.matchType}) LIKE ${searchPattern}`,
+            sql`LOWER(${matches.eventTier}) LIKE ${searchPattern}`,
+            sql`LOWER(${matches.location}) LIKE ${searchPattern}`
+          )
+        )
+        .orderBy(desc(matches.date))
+        .limit(20);
+      
+      return matchResults;
+    } catch (error) {
+      console.error('Match search error:', error);
+      return [];
+    }
+  }
+
+  async searchCommunities(query: string): Promise<any[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    try {
+      const communityResults = await db.execute(sql`
+        SELECT 
+          c.*,
+          COUNT(cm.userId) as memberCount
+        FROM communities c
+        LEFT JOIN community_members cm ON c.id = cm.communityId
+        WHERE c.isActive = true
+        AND (
+          LOWER(c.name) LIKE ${searchPattern}
+          OR LOWER(c.description) LIKE ${searchPattern}
+          OR LOWER(c.location) LIKE ${searchPattern}
+          OR EXISTS (
+            SELECT 1 FROM unnest(c.tags) as tag 
+            WHERE LOWER(tag) LIKE ${searchPattern}
+          )
+        )
+        GROUP BY c.id
+        ORDER BY memberCount DESC
+        LIMIT 20
+      `);
+      return communityResults;
+    } catch (error) {
+      console.error('Community search error:', error);
+      return [];
+    }
+  }
+
+  async searchTournaments(query: string): Promise<any[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    try {
+      const tournamentResults = await db.select()
+        .from(tournaments)
+        .where(
+          or(
+            sql`LOWER(${tournaments.name}) LIKE ${searchPattern}`,
+            sql`LOWER(${tournaments.description}) LIKE ${searchPattern}`,
+            sql`LOWER(${tournaments.location}) LIKE ${searchPattern}`,
+            sql`LOWER(${tournaments.format}) LIKE ${searchPattern}`,
+            sql`LOWER(${tournaments.skill_level}) LIKE ${searchPattern}`
+          )
+        )
+        .orderBy(desc(tournaments.startDate))
+        .limit(20);
+      
+      return tournamentResults;
+    } catch (error) {
+      console.error('Tournament search error:', error);
+      return [];
+    }
   }
 
   // Calendar operations
