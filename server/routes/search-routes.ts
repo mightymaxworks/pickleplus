@@ -16,14 +16,18 @@ import { storage } from '../storage';
 
 const router = Router();
 
-// Search query validation schema
+// Search query validation schema with proper URL parameter handling
 const searchQuerySchema = z.object({
-  q: z.string().min(1).max(100),
+  q: z.string().min(0).max(100).optional().default(''),
   type: z.enum(['all', 'player', 'coach', 'match', 'community', 'tournament']).optional().default('all'),
   location: z.enum(['all', 'local', 'state', 'national']).optional().default('all'),
   skillLevel: z.enum(['all', 'beginner', 'intermediate', 'advanced']).optional().default('all'),
   dateRange: z.enum(['all', 'week', 'month', 'year']).optional().default('all'),
-  limit: z.number().min(1).max(50).optional().default(20)
+  limit: z.preprocess((val) => {
+    if (typeof val === 'string') return parseInt(val, 10);
+    if (typeof val === 'number') return val;
+    return 20;
+  }, z.number().min(1).max(50)).optional().default(20)
 });
 
 interface SearchResult {
