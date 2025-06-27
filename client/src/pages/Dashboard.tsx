@@ -22,17 +22,14 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const handleOnboardingComplete = () => {
-    console.log('Onboarding completed');
     setShowOnboarding(false);
   };
 
   const handleOnboardingSkip = () => {
-    console.log('Onboarding skipped');
     setShowOnboarding(false);
   };
 
   const handleShowOnboarding = () => {
-    console.log('Show onboarding triggered');
     setShowOnboarding(true);
   };
 
@@ -43,8 +40,10 @@ export default function Dashboard() {
         <WelcomeOnboarding 
           onComplete={handleOnboardingComplete}
           onSkip={handleOnboardingSkip}
+          forceShow={true}
         />
       )}
+
     </StandardLayout>
   );
 }

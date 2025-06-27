@@ -52,9 +52,10 @@ interface OnboardingStep {
 interface WelcomeOnboardingProps {
   onComplete?: () => void;
   onSkip?: () => void;
+  forceShow?: boolean;
 }
 
-export function WelcomeOnboarding({ onComplete, onSkip }: WelcomeOnboardingProps) {
+export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: WelcomeOnboardingProps) {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { t, language } = useLanguage();
@@ -162,7 +163,7 @@ export function WelcomeOnboarding({ onComplete, onSkip }: WelcomeOnboardingProps
     const essentialSteps = steps.filter(s => s.priority === 'essential');
     const essentialCompleted = essentialSteps.every(step => step.isCompleted());
     
-    if (!isNewUser || onboardingDismissed || essentialCompleted) {
+    if (!forceShow && (!isNewUser || onboardingDismissed || essentialCompleted)) {
       setIsVisible(false);
     }
   }, [user, steps]);
