@@ -76,11 +76,14 @@ export function NotificationCenter() {
   const [includeRead, setIncludeRead] = useState(false);
 
   // Fetch notifications
-  const { data: notificationData, isLoading } = useQuery<NotificationResponse>({
-    queryKey: ['/api/notifications', { includeRead }],
+  const { data: notificationData, isLoading, error } = useQuery<NotificationResponse>({
+    queryKey: [`/api/notifications?limit=10&includeRead=${includeRead}`],
     queryFn: async () => {
+      console.log(`[NotificationCenter] Fetching notifications with includeRead=${includeRead}`);
       const response = await apiRequest('GET', `/api/notifications?limit=10&includeRead=${includeRead}`);
-      return response.json();
+      const data = await response.json();
+      console.log('[NotificationCenter] Response data:', data);
+      return data;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -154,6 +157,14 @@ export function NotificationCenter() {
   const notifications = notificationData?.data || [];
   const unreadCount = notificationData?.meta?.unreadCount || 0;
 
+  console.log('[NotificationCenter] Render state:', {
+    isLoading,
+    error,
+    notificationData,
+    notifications: notifications.length,
+    unreadCount
+  });
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -186,6 +197,11 @@ export function NotificationCenter() {
         {isLoading ? (
           <div className="p-4 text-center text-muted-foreground text-sm">
             Loading notifications...
+          </div>
+        ) : error ? (
+          <div className="p-6 text-center text-red-500">
+            <p className="text-sm">Error loading notifications</p>
+            <p className="text-xs">{error.message}</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-6 text-center text-muted-foreground">
