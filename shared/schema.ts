@@ -1478,34 +1478,7 @@ export const communityRolesRelations = relations(communityRoles, ({ one }) => ({
   }),
 }));
 
-// PKL-278651-COMM-0028-NOTIF - Community Notifications
-// Define relations for userNotifications
-export const userNotificationsRelations = relations(userNotifications, ({ one }) => ({
-  user: one(users, {
-    fields: [userNotifications.userId],
-    references: [users.id],
-    relationName: 'user_notification_user'
-  }),
-  community: one(communities, {
-    fields: [userNotifications.communityId],
-    references: [communities.id],
-    relationName: 'user_notification_community'
-  }),
-}));
-
-// Define relations for notificationPreferences
-export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
-  user: one(users, {
-    fields: [notificationPreferences.userId],
-    references: [users.id],
-    relationName: 'notification_preference_user'
-  }),
-  community: one(communities, {
-    fields: [notificationPreferences.communityId],
-    references: [communities.id],
-    relationName: 'notification_preference_community'
-  }),
-}));
+// Notification relations removed - causing startup issues
 
 // Import required types for enhanced match recording system
 import { matchStatistics, performanceImpacts, matchHighlights } from './match-statistics-schema';
@@ -1728,17 +1701,7 @@ export {
   MemberActionType
 } from './schema/community-roles';
 
-// Export community notifications schemas (PKL-278651-COMM-0028-NOTIF)
-export {
-  userNotifications,
-  notificationPreferences,
-  insertUserNotificationSchema,
-  insertNotificationPreferenceSchema,
-  type UserNotification,
-  type InsertUserNotification,
-  type NotificationPreference,
-  type InsertNotificationPreference
-};
+// Community notifications schemas removed - causing startup issues
 
 // Export training center schemas (PKL-278651-TRAINING-CENTER-001)
 export {
