@@ -43,44 +43,45 @@ export function NotificationBell() {
   });
 
   return (
-    <Popover open={open} onOpenChange={(newOpen) => {
-      console.log('[NotificationBell] Popover state changing:', { from: open, to: newOpen });
-      setOpen(newOpen);
-    }}>
-      <PopoverTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="relative"
-          onClick={(e) => {
-            console.log('[NotificationBell] Button clicked directly');
-            e.preventDefault();
-            e.stopPropagation();
-          }}
+    <div className="relative z-50">
+      <Popover open={open} onOpenChange={(newOpen) => {
+        console.log('[NotificationBell] Popover state changing:', { from: open, to: newOpen });
+        setOpen(newOpen);
+      }}>
+        <PopoverTrigger asChild>
+          <div
+            className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 cursor-pointer"
+            onClick={(e) => {
+              console.log('[NotificationBell] Div clicked directly - preventing navigation');
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            {unreadCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center min-w-[20px]"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </div>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-96 p-0 z-50" 
+          align="end"
+          side="bottom"
+          sideOffset={8}
         >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-96 p-0" 
-        align="end"
-        side="bottom"
-        sideOffset={8}
-      >
-        <div style={{ padding: '8px', background: '#f0f0f0', fontSize: '12px' }}>
-          DEBUG: Popover is open, NotificationCenter should render
-        </div>
-        <NotificationCenter />
-      </PopoverContent>
-    </Popover>
+          <div style={{ padding: '8px', background: '#f0f0f0', fontSize: '12px' }}>
+            DEBUG: Popover is open, NotificationCenter should render
+          </div>
+          <NotificationCenter />
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
