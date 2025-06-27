@@ -127,6 +127,16 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
+### June 27, 2025 - Language-Aware Logo System & Feature Showcase Implementation
+- **Language-Aware Logo Component**: Intelligent logo switching between English and Mandarin versions based on language context
+- **Header Integration**: Updated AppHeader to use LanguageAwareLogo with automatic language detection
+- **Feature Showcase Page**: Comprehensive platform capabilities overview organized by user type (Players, Coaches, Training Centers)
+- **Bilingual Content Support**: Full English/Chinese translation support with proper zh-CN language type handling
+- **Routing Integration**: Added /features route to app navigation for easy feature discovery
+- **TypeScript Compliance**: Fixed all language type errors to match Language context ('zh-CN' vs 'zh')
+- **Asset Integration**: Mandarin logo properly imported from attached assets with responsive scaling
+- **User Experience Enhancement**: Clear feature categorization with status indicators (live, beta, coming-soon)
+
 ### June 27, 2025 - Mobile Navigation Restoration Complete
 - **Restored Mobile Bottom Tab Navigation**: Fixed critical UX gap affecting 60%+ of mobile users
 - **5-Tab Navigation Structure**: Home, Matches, Community, Coaching, Profile with thumb-friendly 44px+ touch targets

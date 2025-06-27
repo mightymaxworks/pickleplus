@@ -70,177 +70,177 @@ export default function FeatureShowcase() {
   // Feature definitions by user type
   const userTypes: Record<string, UserTypeFeatures> = {
     players: {
-      title: language === 'zh' ? '球员功能' : 'Player Features',
-      description: language === 'zh' ? '提升您的匹克球技能和比赛体验' : 'Elevate your pickleball skills and match experience',
+      title: language === 'zh-CN' ? '球员功能' : 'Player Features',
+      description: language === 'zh-CN' ? '提升您的匹克球技能和比赛体验' : 'Elevate your pickleball skills and match experience',
       color: 'from-blue-500 to-cyan-500',
       features: [
         {
           icon: <BarChart3 className="w-6 h-6" />,
-          title: language === 'zh' ? 'PCP 4维度评级系统' : 'PCP 4-Dimensional Rating System',
-          description: language === 'zh' ? '获得技术、战术、体能、心理四个维度的专业评估' : 'Get professional assessment across Technical, Tactical, Physical, and Mental dimensions',
+          title: language === 'zh-CN' ? 'PCP 4维度评级系统' : 'PCP 4-Dimensional Rating System',
+          description: language === 'zh-CN' ? '获得技术、战术、体能、心理四个维度的专业评估' : 'Get professional assessment across Technical, Tactical, Physical, and Mental dimensions',
           benefits: [
-            language === 'zh' ? '详细技能分析' : 'Detailed skill analysis',
-            language === 'zh' ? '个性化改进建议' : 'Personalized improvement recommendations',
-            language === 'zh' ? '进步追踪' : 'Progress tracking'
+            language === 'zh-CN' ? '详细技能分析' : 'Detailed skill analysis',
+            language === 'zh-CN' ? '个性化改进建议' : 'Personalized improvement recommendations',
+            language === 'zh-CN' ? '进步追踪' : 'Progress tracking'
           ],
-          cta: language === 'zh' ? '查看我的评级' : 'View My Rating',
+          cta: language === 'zh-CN' ? '查看我的评级' : 'View My Rating',
           path: '/profile',
           status: 'live'
         },
         {
           icon: <BookOpen className="w-6 h-6" />,
-          title: language === 'zh' ? 'PickleJourney™ 成长日志' : 'PickleJourney™ Growth Journal',
-          description: language === 'zh' ? '记录训练心得，追踪情绪和能量水平变化' : 'Record training insights and track emotional and energy level changes',
+          title: language === 'zh-CN' ? 'PickleJourney™ 成长日志' : 'PickleJourney™ Growth Journal',
+          description: language === 'zh-CN' ? '记录训练心得，追踪情绪和能量水平变化' : 'Record training insights and track emotional and energy level changes',
           benefits: [
-            language === 'zh' ? 'AI情感分析' : 'AI sentiment analysis',
-            language === 'zh' ? '多角色日志' : 'Multi-role journaling',
-            language === 'zh' ? '成就解锁' : 'Achievement unlocks'
+            language === 'zh-CN' ? 'AI情感分析' : 'AI sentiment analysis',
+            language === 'zh-CN' ? '多角色日志' : 'Multi-role journaling',
+            language === 'zh-CN' ? '成就解锁' : 'Achievement unlocks'
           ],
-          cta: language === 'zh' ? '开始记录' : 'Start Journaling',
+          cta: language === 'zh-CN' ? '开始记录' : 'Start Journaling',
           path: '/picklejourney',
           status: 'live'
         },
         {
           icon: <Trophy className="w-6 h-6" />,
-          title: language === 'zh' ? '比赛记录与统计' : 'Match Recording & Statistics',
-          description: language === 'zh' ? '详细记录比赛数据，分析表现趋势' : 'Detailed match data recording and performance trend analysis',
+          title: language === 'zh-CN' ? '比赛记录与统计' : 'Match Recording & Statistics',
+          description: language === 'zh-CN' ? '详细记录比赛数据，分析表现趋势' : 'Detailed match data recording and performance trend analysis',
           benefits: [
-            language === 'zh' ? '实时比分追踪' : 'Real-time score tracking',
-            language === 'zh' ? '详细统计分析' : 'Detailed statistical analysis',
-            language === 'zh' ? '排名积分系统' : 'Ranking points system'
+            language === 'zh-CN' ? '实时比分追踪' : 'Real-time score tracking',
+            language === 'zh-CN' ? '详细统计分析' : 'Detailed statistical analysis',
+            language === 'zh-CN' ? '排名积分系统' : 'Ranking points system'
           ],
-          cta: language === 'zh' ? '记录比赛' : 'Record Match',
+          cta: language === 'zh-CN' ? '记录比赛' : 'Record Match',
           path: '/matches',
           status: 'live'
         },
         {
           icon: <Building2 className="w-6 h-6" />,
-          title: language === 'zh' ? '训练中心预订' : 'Training Center Booking',
-          description: language === 'zh' ? '预订专业训练课程，参与团体训练' : 'Book professional training sessions and join group classes',
+          title: language === 'zh-CN' ? '训练中心预订' : 'Training Center Booking',
+          description: language === 'zh-CN' ? '预订专业训练课程，参与团体训练' : 'Book professional training sessions and join group classes',
           benefits: [
-            language === 'zh' ? '专业教练指导' : 'Professional coach guidance',
-            language === 'zh' ? '设施预订' : 'Facility booking',
-            language === 'zh' ? '课程管理' : 'Class management'
+            language === 'zh-CN' ? '专业教练指导' : 'Professional coach guidance',
+            language === 'zh-CN' ? '设施预订' : 'Facility booking',
+            language === 'zh-CN' ? '课程管理' : 'Class management'
           ],
-          cta: language === 'zh' ? '查看课程' : 'Browse Classes',
+          cta: language === 'zh-CN' ? '查看课程' : 'Browse Classes',
           path: '/player-development-hub',
           status: 'live'
         }
       ]
     },
     coaches: {
-      title: language === 'zh' ? '教练功能' : 'Coach Features',
-      description: language === 'zh' ? '管理学员，提升教学效果' : 'Manage students and enhance teaching effectiveness',
+      title: language === 'zh-CN' ? '教练功能' : 'Coach Features',
+      description: language === 'zh-CN' ? '管理学员，提升教学效果' : 'Manage students and enhance teaching effectiveness',
       color: 'from-green-500 to-emerald-500',
       features: [
         {
           icon: <GraduationCap className="w-6 h-6" />,
-          title: language === 'zh' ? 'PCP 认证计划' : 'PCP Certification Programme',
-          description: language === 'zh' ? '获得5级专业认证，提升教练资质' : 'Earn 5-level professional certification and enhance coaching credentials',
+          title: language === 'zh-CN' ? 'PCP 认证计划' : 'PCP Certification Programme',
+          description: language === 'zh-CN' ? '获得5级专业认证，提升教练资质' : 'Earn 5-level professional certification and enhance coaching credentials',
           benefits: [
-            language === 'zh' ? '在线学习模块' : 'Online learning modules',
-            language === 'zh' ? '实践评估' : 'Practical assessments',
-            language === 'zh' ? '专业认证' : 'Professional certification'
+            language === 'zh-CN' ? '在线学习模块' : 'Online learning modules',
+            language === 'zh-CN' ? '实践评估' : 'Practical assessments',
+            language === 'zh-CN' ? '专业认证' : 'Professional certification'
           ],
-          cta: language === 'zh' ? '开始认证' : 'Start Certification',
+          cta: language === 'zh-CN' ? '开始认证' : 'Start Certification',
           path: '/pcp-certification',
           status: 'live'
         },
         {
           icon: <UserCheck className="w-6 h-6" />,
-          title: language === 'zh' ? '教练申请系统' : 'Coach Application System',
-          description: language === 'zh' ? '5步申请流程，展示专业资质' : '5-step application process to showcase professional qualifications',
+          title: language === 'zh-CN' ? '教练申请系统' : 'Coach Application System',
+          description: language === 'zh-CN' ? '5步申请流程，展示专业资质' : '5-step application process to showcase professional qualifications',
           benefits: [
-            language === 'zh' ? '资质验证' : 'Credential verification',
-            language === 'zh' ? '费率设置' : 'Rate setting',
-            language === 'zh' ? '专业档案' : 'Professional profile'
+            language === 'zh-CN' ? '资质验证' : 'Credential verification',
+            language === 'zh-CN' ? '费率设置' : 'Rate setting',
+            language === 'zh-CN' ? '专业档案' : 'Professional profile'
           ],
-          cta: language === 'zh' ? '申请成为教练' : 'Apply as Coach',
+          cta: language === 'zh-CN' ? '申请成为教练' : 'Apply as Coach',
           path: '/coach-application',
           status: 'live'
         },
         {
           icon: <Calendar className="w-6 h-6" />,
-          title: language === 'zh' ? '课程管理' : 'Class Management',
-          description: language === 'zh' ? '创建课程，管理学员，追踪进度' : 'Create classes, manage students, track progress',
+          title: language === 'zh-CN' ? '课程管理' : 'Class Management',
+          description: language === 'zh-CN' ? '创建课程，管理学员，追踪进度' : 'Create classes, manage students, track progress',
           benefits: [
-            language === 'zh' ? '课程创建' : 'Class creation',
-            language === 'zh' ? '学员管理' : 'Student management',
-            language === 'zh' ? '进度追踪' : 'Progress tracking'
+            language === 'zh-CN' ? '课程创建' : 'Class creation',
+            language === 'zh-CN' ? '学员管理' : 'Student management',
+            language === 'zh-CN' ? '进度追踪' : 'Progress tracking'
           ],
-          cta: language === 'zh' ? '管理课程' : 'Manage Classes',
+          cta: language === 'zh-CN' ? '管理课程' : 'Manage Classes',
           path: '/coach-dashboard',
           status: 'beta'
         },
         {
           icon: <Target className="w-6 h-6" />,
-          title: language === 'zh' ? '学员评估工具' : 'Student Assessment Tools',
-          description: language === 'zh' ? '使用PCP系统评估学员技能水平' : 'Use PCP system to assess student skill levels',
+          title: language === 'zh-CN' ? '学员评估工具' : 'Student Assessment Tools',
+          description: language === 'zh-CN' ? '使用PCP系统评估学员技能水平' : 'Use PCP system to assess student skill levels',
           benefits: [
-            language === 'zh' ? '4维度评估' : '4-dimensional assessment',
-            language === 'zh' ? '个性化建议' : 'Personalized recommendations',
-            language === 'zh' ? '进步报告' : 'Progress reports'
+            language === 'zh-CN' ? '4维度评估' : '4-dimensional assessment',
+            language === 'zh-CN' ? '个性化建议' : 'Personalized recommendations',
+            language === 'zh-CN' ? '进步报告' : 'Progress reports'
           ],
-          cta: language === 'zh' ? '评估学员' : 'Assess Students',
+          cta: language === 'zh-CN' ? '评估学员' : 'Assess Students',
           path: '/coach-tools',
           status: 'beta'
         }
       ]
     },
     community: {
-      title: language === 'zh' ? '社区功能' : 'Community Features',
-      description: language === 'zh' ? '连接球友，参与社区活动' : 'Connect with players and participate in community activities',
+      title: language === 'zh-CN' ? '社区功能' : 'Community Features',
+      description: language === 'zh-CN' ? '连接球友，参与社区活动' : 'Connect with players and participate in community activities',
       color: 'from-purple-500 to-pink-500',
       features: [
         {
           icon: <Users className="w-6 h-6" />,
-          title: language === 'zh' ? '球友社区' : 'Player Communities',
-          description: language === 'zh' ? '加入本地社区，寻找训练伙伴' : 'Join local communities and find training partners',
+          title: language === 'zh-CN' ? '球友社区' : 'Player Communities',
+          description: language === 'zh-CN' ? '加入本地社区，寻找训练伙伴' : 'Join local communities and find training partners',
           benefits: [
-            language === 'zh' ? '社区发现' : 'Community discovery',
-            language === 'zh' ? '活动参与' : 'Event participation',
-            language === 'zh' ? '球友连接' : 'Player connections'
+            language === 'zh-CN' ? '社区发现' : 'Community discovery',
+            language === 'zh-CN' ? '活动参与' : 'Event participation',
+            language === 'zh-CN' ? '球友连接' : 'Player connections'
           ],
-          cta: language === 'zh' ? '探索社区' : 'Explore Communities',
+          cta: language === 'zh-CN' ? '探索社区' : 'Explore Communities',
           path: '/communities',
           status: 'live'
         },
         {
           icon: <Trophy className="w-6 h-6" />,
-          title: language === 'zh' ? '锦标赛系统' : 'Tournament System',
-          description: language === 'zh' ? '参加比赛，争夺排名积分' : 'Participate in tournaments and compete for ranking points',
+          title: language === 'zh-CN' ? '锦标赛系统' : 'Tournament System',
+          description: language === 'zh-CN' ? '参加比赛，争夺排名积分' : 'Participate in tournaments and compete for ranking points',
           benefits: [
-            language === 'zh' ? '比赛报名' : 'Tournament registration',
-            language === 'zh' ? '对阵安排' : 'Bracket management',
-            language === 'zh' ? '积分奖励' : 'Points rewards'
+            language === 'zh-CN' ? '比赛报名' : 'Tournament registration',
+            language === 'zh-CN' ? '对阵安排' : 'Bracket management',
+            language === 'zh-CN' ? '积分奖励' : 'Points rewards'
           ],
-          cta: language === 'zh' ? '查看比赛' : 'View Tournaments',
+          cta: language === 'zh-CN' ? '查看比赛' : 'View Tournaments',
           path: '/tournaments',
           status: 'beta'
         },
         {
           icon: <MessageCircle className="w-6 h-6" />,
-          title: language === 'zh' ? '社交互动' : 'Social Interactions',
-          description: language === 'zh' ? '分享动态，互动交流' : 'Share updates and interact with others',
+          title: language === 'zh-CN' ? '社交互动' : 'Social Interactions',
+          description: language === 'zh-CN' ? '分享动态，互动交流' : 'Share updates and interact with others',
           benefits: [
-            language === 'zh' ? '动态分享' : 'Status sharing',
-            language === 'zh' ? '评论互动' : 'Comment interactions',
-            language === 'zh' ? '成就展示' : 'Achievement showcase'
+            language === 'zh-CN' ? '动态分享' : 'Status sharing',
+            language === 'zh-CN' ? '评论互动' : 'Comment interactions',
+            language === 'zh-CN' ? '成就展示' : 'Achievement showcase'
           ],
-          cta: language === 'zh' ? '开始互动' : 'Start Interacting',
+          cta: language === 'zh-CN' ? '开始互动' : 'Start Interacting',
           path: '/social',
           status: 'coming-soon'
         },
         {
           icon: <Star className="w-6 h-6" />,
-          title: language === 'zh' ? '排行榜系统' : 'Leaderboard System',
-          description: language === 'zh' ? '查看全球排名，追踪进步' : 'View global rankings and track progress',
+          title: language === 'zh-CN' ? '排行榜系统' : 'Leaderboard System',
+          description: language === 'zh-CN' ? '查看全球排名，追踪进步' : 'View global rankings and track progress',
           benefits: [
-            language === 'zh' ? '全球排名' : 'Global rankings',
-            language === 'zh' ? '地区排行' : 'Regional leaderboards',
-            language === 'zh' ? '成就对比' : 'Achievement comparison'
+            language === 'zh-CN' ? '全球排名' : 'Global rankings',
+            language === 'zh-CN' ? '地区排行' : 'Regional leaderboards',
+            language === 'zh-CN' ? '成就对比' : 'Achievement comparison'
           ],
-          cta: language === 'zh' ? '查看排行榜' : 'View Leaderboards',
+          cta: language === 'zh-CN' ? '查看排行榜' : 'View Leaderboards',
           path: '/leaderboards',
           status: 'coming-soon'
         }
@@ -250,9 +250,9 @@ export default function FeatureShowcase() {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      live: { label: language === 'zh' ? '已上线' : 'Live', variant: 'default' as const },
-      beta: { label: language === 'zh' ? '测试版' : 'Beta', variant: 'secondary' as const },
-      'coming-soon': { label: language === 'zh' ? '即将推出' : 'Coming Soon', variant: 'outline' as const }
+      live: { label: language === 'zh-CN' ? '已上线' : 'Live', variant: 'default' as const },
+      beta: { label: language === 'zh-CN' ? '测试版' : 'Beta', variant: 'secondary' as const },
+      'coming-soon': { label: language === 'zh-CN' ? '即将推出' : 'Coming Soon', variant: 'outline' as const }
     };
     
     return badges[status as keyof typeof badges] || badges.live;
@@ -271,10 +271,10 @@ export default function FeatureShowcase() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent mb-6">
-              {language === 'zh' ? '发现 Pickle+ 的无限可能' : 'Discover What\'s Possible with Pickle+'}
+              {language === 'zh-CN' ? '发现 Pickle+ 的无限可能' : 'Discover What\'s Possible with Pickle+'}
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-              {language === 'zh' 
+              {language === 'zh-CN' 
                 ? '从初学者到专业选手，从个人训练到团队协作，Pickle+ 为每一位匹克球爱好者提供完整的成长生态系统'
                 : 'From beginner to pro, from individual training to team collaboration, Pickle+ provides a complete growth ecosystem for every pickleball enthusiast'
               }
@@ -286,14 +286,14 @@ export default function FeatureShowcase() {
                 onClick={() => navigate('/dashboard')}
               >
                 <Play className="w-5 h-5 mr-2" />
-                {language === 'zh' ? '开始体验' : 'Start Exploring'}
+                {language === 'zh-CN' ? '开始体验' : 'Start Exploring'}
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate('/auth')}
               >
-                {language === 'zh' ? '免费注册' : 'Sign Up Free'}
+                {language === 'zh-CN' ? '免费注册' : 'Sign Up Free'}
               </Button>
             </div>
           </motion.div>
@@ -306,15 +306,15 @@ export default function FeatureShowcase() {
           <TabsList className="grid w-full grid-cols-3 mb-12">
             <TabsTrigger value="players" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
-              {language === 'zh' ? '球员' : 'Players'}
+              {language === 'zh-CN' ? '球员' : 'Players'}
             </TabsTrigger>
             <TabsTrigger value="coaches" className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4" />
-              {language === 'zh' ? '教练' : 'Coaches'}
+              {language === 'zh-CN' ? '教练' : 'Coaches'}
             </TabsTrigger>
             <TabsTrigger value="community" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              {language === 'zh' ? '社区' : 'Community'}
+              {language === 'zh-CN' ? '社区' : 'Community'}
             </TabsTrigger>
           </TabsList>
 
@@ -386,19 +386,19 @@ export default function FeatureShowcase() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              {language === 'zh' ? 'Pickle+ 生态系统' : 'The Pickle+ Ecosystem'}
+              {language === 'zh-CN' ? 'Pickle+ 生态系统' : 'The Pickle+ Ecosystem'}
             </h2>
             <p className="text-gray-600 dark:text-gray-300">
-              {language === 'zh' ? '全球球员的成长数据' : 'Growth metrics from players worldwide'}
+              {language === 'zh-CN' ? '全球球员的成长数据' : 'Growth metrics from players worldwide'}
             </p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { number: '10,000+', label: language === 'zh' ? '活跃用户' : 'Active Users' },
-              { number: '50,000+', label: language === 'zh' ? '比赛记录' : 'Matches Recorded' },
-              { number: '200+', label: language === 'zh' ? '认证教练' : 'Certified Coaches' },
-              { number: '15+', label: language === 'zh' ? '训练中心' : 'Training Centers' }
+              { number: '10,000+', label: language === 'zh-CN' ? '活跃用户' : 'Active Users' },
+              { number: '50,000+', label: language === 'zh-CN' ? '比赛记录' : 'Matches Recorded' },
+              { number: '200+', label: language === 'zh-CN' ? '认证教练' : 'Certified Coaches' },
+              { number: '15+', label: language === 'zh-CN' ? '训练中心' : 'Training Centers' }
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -424,10 +424,10 @@ export default function FeatureShowcase() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl font-bold mb-4">
-              {language === 'zh' ? '准备好开始您的匹克球之旅了吗？' : 'Ready to Start Your Pickleball Journey?'}
+              {language === 'zh-CN' ? '准备好开始您的匹克球之旅了吗？' : 'Ready to Start Your Pickleball Journey?'}
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-              {language === 'zh' 
+              {language === 'zh-CN' 
                 ? '加入 Pickle+ 社区，解锁您的运动潜能'
                 : 'Join the Pickle+ community and unlock your athletic potential'
               }
@@ -439,14 +439,14 @@ export default function FeatureShowcase() {
                 onClick={() => navigate('/auth')}
               >
                 <Smartphone className="w-5 h-5 mr-2" />
-                {language === 'zh' ? '立即开始' : 'Get Started Now'}
+                {language === 'zh-CN' ? '立即开始' : 'Get Started Now'}
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate('/contact')}
               >
-                {language === 'zh' ? '联系我们' : 'Contact Us'}
+                {language === 'zh-CN' ? '联系我们' : 'Contact Us'}
               </Button>
             </div>
           </motion.div>
