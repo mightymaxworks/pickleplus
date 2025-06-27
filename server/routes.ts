@@ -114,6 +114,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
   registerUserSearchRoutes(app); // PKL-278651-SRCH-0001-UNIFD - Player search routes
+  app.use('/api/search', searchRoutes); // PKL-278651-SEARCH-0001-GLOBAL - Global search functionality
   registerTestXpRoutes(app); // PKL-278651-TEST-XP - Temporary XP Award Test
   registerXpCalculationTestRoutes(app); // PKL-278651-XP-0001-FIX - XP Level Calculation Test
   registerMasteryPathsRoutes(app); // PKL-278651-RATE-0004-MADV - CourtIQ Mastery Paths

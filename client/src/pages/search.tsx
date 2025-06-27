@@ -75,7 +75,7 @@ export default function SearchPage() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Search API call
-  const { data: searchResults = [], isLoading, error } = useQuery({
+  const { data: searchResults = [], isLoading, error } = useQuery<SearchResult[]>({
     queryKey: ['/api/search', debouncedSearchQuery, filters, activeTab],
     enabled: debouncedSearchQuery.length > 0,
     staleTime: 30000, // Cache results for 30 seconds
