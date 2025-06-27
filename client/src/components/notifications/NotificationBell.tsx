@@ -35,9 +35,18 @@ export function NotificationBell() {
   });
 
   const unreadCount = countData?.unreadCount || 0;
+  
+  console.log('[NotificationBell] Render state:', { 
+    open, 
+    unreadCount, 
+    countData 
+  });
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(newOpen) => {
+      console.log('[NotificationBell] Popover state changing:', { from: open, to: newOpen });
+      setOpen(newOpen);
+    }}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -57,7 +66,14 @@ export function NotificationBell() {
         side="bottom"
         sideOffset={8}
       >
-        <NotificationCenter />
+        {open && (
+          <>
+            <div style={{ padding: '8px', background: '#f0f0f0', fontSize: '12px' }}>
+              DEBUG: Popover is open, NotificationCenter should render
+            </div>
+            <NotificationCenter />
+          </>
+        )}
       </PopoverContent>
     </Popover>
   );
