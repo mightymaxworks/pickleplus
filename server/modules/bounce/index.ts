@@ -38,15 +38,8 @@ export async function initializeBounceModule(app: express.Express): Promise<void
     registerBounceXpRoutes(app);
     registerBounceAdminRoutes(app);
     
-    // Setup default achievements with timeout
-    try {
-      await Promise.race([
-        setupBounceAchievements(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Achievement setup timeout')), 5000))
-      ]);
-    } catch (error) {
-      console.log('[Bounce] Achievement setup failed, continuing:', error.message);
-    }
+    // Setup default achievements
+    await setupBounceAchievements();
     
     // Publish module initialized event
     const eventBus = getEventBus();

@@ -179,22 +179,6 @@ export function AppHeader({
           </div>
         </motion.div>
         
-        {/* Search Bar - Center */}
-        {!hideSearch && (
-          <div className="flex-1 max-w-md mx-4">
-            <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search players, coaches, matches..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent transition-all duration-200"
-                onClick={() => navigate('/search')}
-                readOnly
-              />
-            </div>
-          </div>
-        )}
-
         {/* Right side actions */}
         <div className="flex items-center justify-end gap-1 sm:gap-3">
           {/* Notification Bell */}

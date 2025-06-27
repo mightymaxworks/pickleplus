@@ -55,24 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function loadUser() {
       try {
         setIsLoading(true);
-        
-        // Add timeout protection to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth check timeout')), 5000)
-        );
-        
-        const currentUser = await Promise.race([
-          authService.getCurrentUser(),
-          timeoutPromise
-        ]);
-        
-        setUser(currentUser as User | null);
+        const currentUser = await authService.getCurrentUser();
+        setUser(currentUser);
         setError(null);
       } catch (err) {
-        // Don't treat auth failures as errors on initial load
-        console.log('Auth check completed - user not authenticated');
-        setUser(null);
-        setError(null);
+        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+        console.error('Error loading user:', err);
       } finally {
         setIsLoading(false);
       }

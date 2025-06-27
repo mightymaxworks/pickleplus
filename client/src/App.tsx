@@ -122,7 +122,6 @@ import EventTestPage from './pages/events/EventTestPage'
 import CommunityPage from './pages/CommunityPage'
 import SettingsPage from './pages/SettingsPage'
 import SearchTestPage from './pages/SearchTest'
-import SearchPage from './pages/search' // PKL-278651-SEARCH-0001-GLOBAL
 import Register from './pages/Register'
 import TestCommunityPage from './pages/TestCommunityPage' // PKL-278651-COMM-0001-UIMOCK
 import CommunityDashboardMockup from './pages/CommunityDashboardMockup' // PKL-278651-COMM-0002-DASH-MOCK
@@ -295,13 +294,6 @@ export default function App() {
                     path="/settings" 
                     component={lazyLoad(() => import('./pages/Settings'))} 
                     pageTitle="Settings"
-                  />
-                  
-                  {/* Global Search Page */}
-                  <ProtectedRouteWithLayout 
-                    path="/search" 
-                    component={() => <SearchPage />} 
-                    pageTitle="Search"
                   />
                   
                   {/* PKL-278651-COMM-0007 - Enhanced Referral System */}
