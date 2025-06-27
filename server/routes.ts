@@ -5,6 +5,7 @@ import * as http from "http";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
 // Use isAuthenticated from auth.ts which has proper passport integration
 import { registerAdminRoutes } from "./routes/admin-routes";
@@ -2463,6 +2464,82 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
       });
     } catch (error) {
       res.status(500).json({ error: 'Upload failed', details: error.message });
+    }
+  });
+
+  // Password Reset Functionality
+  app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists for security
+        return res.json({ message: 'If the email exists, a reset link has been sent' });
+      }
+
+      // Generate reset token (simplified for now)
+      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const resetExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Store reset token (in production, this would be in database)
+      await storage.updateUser(user.id, {
+        passwordResetToken: resetToken,
+        passwordResetExpiry: resetExpiry
+      });
+
+      console.log(`[Auth] Password reset requested for ${email}, token: ${resetToken}`);
+      
+      res.json({ 
+        message: 'If the email exists, a reset link has been sent',
+        // In development, include the token for testing
+        ...(process.env.NODE_ENV === 'development' && { resetToken })
+      });
+    } catch (error) {
+      console.error('[Auth] Password reset error:', error);
+      res.status(500).json({ error: 'Failed to process password reset request' });
+    }
+  });
+
+  app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: 'Token and new password are required' });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters' });
+      }
+
+      // Find user by reset token
+      const user = await storage.getUserByResetToken(token);
+      if (!user || !user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
+        return res.status(400).json({ error: 'Invalid or expired reset token' });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcryptjs.hash(newPassword, 12);
+
+      // Update user password and clear reset token
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpiry: null
+      });
+
+      console.log(`[Auth] Password reset completed for user ${user.id}`);
+      
+      res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('[Auth] Password reset completion error:', error);
+      res.status(500).json({ error: 'Failed to reset password' });
     }
   });
 
