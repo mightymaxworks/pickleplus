@@ -9,6 +9,7 @@ import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -20,26 +21,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
   const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
   const isSmallScreen = useMediaQuery('(max-width: 640px)');
-  
-  // Query server for notification count
-  const { data: serverNotificationCount } = useQuery({
-    queryKey: ['/api/notifications/unread-count'],
-    queryFn: async () => {
-      console.log('[DashboardLayout] Fetching notification count from server');
-      const response = await apiRequest('GET', '/api/notifications/unread-count');
-      const data = await response.json();
-      console.log('[DashboardLayout] Server notification count:', data);
-      return data.count || 0;
-    },
-    enabled: !!user,
-    refetchInterval: 5000, // Refetch every 5 seconds
-    onSuccess: (count) => {
-      setNotificationCount(count);
-    }
-  });
   
   // Handle logout
   const handleLogout = async () => {
@@ -149,28 +132,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Right side actions */}
           <div className="flex items-center justify-end gap-1 sm:gap-3">
             {/* Notification Bell */}
-            <motion.button 
-              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                // Handle notification click - toggle notifications dropdown or navigate to notifications page
-                navigate('/notifications');
-              }}
-              aria-label="View notifications"
-            >
-              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
-              {notificationCount > 0 && (
-                <motion.div 
-                  className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#FF5722] flex items-center justify-center text-white text-[10px] font-medium"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', damping: 10 }}
-                >
-                  {notificationCount}
-                </motion.div>
-              )}
-            </motion.button>
+            <NotificationBell />
             
             {/* User Profile - Now toggles the menu */}
             <motion.div 
