@@ -21,6 +21,27 @@
   .safe-area-pt {
     padding-top: env(safe-area-inset-top);
   }
+  
+  /* Mobile modal optimization */
+  .mobile-modal-container {
+    /* Enable momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent elastic bouncing while still allowing scroll */
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent zoom on mobile inputs */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+    
+    /* Fix viewport height issues on mobile */
+    .mobile-full-height {
+      height: 100vh;
+      height: 100dvh; /* Dynamic viewport height for better mobile support */
+    }
+  }
 }
 
 /* Animation keyframes for Community UI components */

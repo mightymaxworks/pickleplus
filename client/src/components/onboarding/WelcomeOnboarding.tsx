@@ -216,20 +216,20 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start md:items-center justify-center overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         <motion.div
-          className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full mx-4 my-4 md:my-8 shadow-2xl min-h-fit max-h-none md:max-h-[90vh] flex flex-col"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
         >
           {/* Header */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700 relative">
+          <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 relative flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -266,7 +266,7 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
           </div>
 
           {/* Current Step Content */}
-          <div className="p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <motion.div
               key={currentStep}
               initial={{ opacity: 0, x: 20 }}
@@ -382,7 +382,7 @@ export function WelcomeOnboarding({ onComplete, onSkip, forceShow = false }: Wel
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <div className="flex-shrink-0 p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
                 {language === 'zh-CN' ? 
