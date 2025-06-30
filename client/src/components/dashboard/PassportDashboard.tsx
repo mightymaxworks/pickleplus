@@ -56,6 +56,8 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { PassportDetailModal } from '@/components/profile/PassportDetailModal';
 import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 import { OnboardingProgressIndicator } from '@/components/onboarding/OnboardingProgressIndicator';
+import ProgressExplanationTooltip from '@/components/progress/ProgressExplanationTooltip';
+import NextStepsGuidance from '@/components/progress/NextStepsGuidance';
 
 interface PassportDashboardProps {
   onShowOnboarding?: () => void;
@@ -1252,7 +1254,14 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                 </Dialog>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-yellow-600">{picklePoints.toLocaleString()}</p>
+                <div className="flex items-center justify-end gap-2">
+                  <p className="text-3xl font-bold text-yellow-600">{picklePoints.toLocaleString()}</p>
+                  <ProgressExplanationTooltip
+                    rating={picklePoints}
+                    ratingType="pickle_points"
+                    currentLevel={picklePoints >= 600 ? "Veteran Player" : picklePoints >= 300 ? "Experienced Player" : picklePoints >= 100 ? "Active Player" : "Newcomer"}
+                  />
+                </div>
                 <p className="text-sm text-yellow-700">{t('dashboard.picklePoints.totalPoints')}</p>
               </div>
             </div>
