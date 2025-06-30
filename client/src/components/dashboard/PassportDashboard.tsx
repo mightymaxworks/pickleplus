@@ -61,6 +61,9 @@ import NextStepsGuidance from '@/components/progress/NextStepsGuidance';
 import PeerComparisonWidget from '@/components/progress/PeerComparisonWidget';
 import AchievementTracker from '@/components/progress/AchievementTracker';
 import ProgressTrendChart from '@/components/progress/ProgressTrendChart';
+import BadgeShowcase from '@/components/gamification/BadgeShowcase';
+import ProgressCelebration from '@/components/gamification/ProgressCelebration';
+import SocialSharingWidget from '@/components/gamification/SocialSharingWidget';
 
 interface PassportDashboardProps {
   onShowOnboarding?: () => void;
