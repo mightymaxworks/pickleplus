@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc } from 'lucide-react';
+import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc, BarChart3, PieChart, Activity } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -412,58 +412,374 @@ export default function MatchHistoryPage() {
         </div>
       </div>
 
-      {/* Statistics Overview */}
+      {/* Sprint 3: Performance Analytics Dashboard */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalMatches}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.wins}W - {stats.losses}L
-              </p>
-            </CardContent>
-          </Card>
+        <div className="space-y-6">
+          {/* Core Statistics Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalMatches}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.wins}W - {stats.losses}L
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.round(stats.winRate * 100)}%</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.currentStreak} {stats.streakType} streak
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{Math.round(stats.winRate * 100)}%</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.currentStreak} {stats.streakType} streak
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Singles</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.formatBreakdown.singles.played}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.formatBreakdown.singles.won} wins
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Singles</CardTitle>
+                <User className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.formatBreakdown.singles.played}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.formatBreakdown.singles.won} wins ({Math.round((stats.formatBreakdown.singles.won / (stats.formatBreakdown.singles.played || 1)) * 100)}%)
+                </p>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Doubles</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.formatBreakdown.doubles.played}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.formatBreakdown.doubles.won} wins ({Math.round((stats.formatBreakdown.doubles.won / (stats.formatBreakdown.doubles.played || 1)) * 100)}%)
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Advanced Performance Analytics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Performance Trends */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Recent Performance</CardTitle>
+                <CardDescription>Your performance over the last 30 days</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium">Last 10 Games</p>
+                    <p className="text-xs text-muted-foreground">Win/Loss Record</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">
+                      {stats.recentPerformance.last10Games.wins}-{stats.recentPerformance.last10Games.losses}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {Math.round((stats.recentPerformance.last10Games.wins / (stats.recentPerformance.last10Games.wins + stats.recentPerformance.last10Games.losses || 1)) * 100)}% win rate
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium">Last 30 Days</p>
+                    <p className="text-xs text-muted-foreground">Match Activity</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">{stats.recentPerformance.last30Days.matches}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {Math.round(stats.recentPerformance.last30Days.winRate * 100)}% win rate
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium">Current Streak</p>
+                    <p className="text-xs text-muted-foreground">Active streak type</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={cn("text-lg font-bold", stats.streakType === 'win' ? 'text-green-600' : 'text-red-600')}>
+                      {stats.currentStreak} {stats.streakType}{stats.currentStreak !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {stats.streakType} streak
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Division Performance Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Division Performance</CardTitle>
+                <CardDescription>Win rates across different divisions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(stats.divisionBreakdown).map(([division, data]) => {
+                    const winRate = Math.round((data.won / (data.played || 1)) * 100);
+                    return (
+                      <div key={division} className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">{division}</p>
+                          <p className="text-xs text-muted-foreground">{data.played} matches played</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold">{winRate}%</p>
+                          <p className="text-xs text-muted-foreground">{data.won}W - {data.played - data.won}L</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* XP and Points Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total XP Earned</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalXpEarned.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  {Math.round(stats.totalXpEarned / (stats.totalMatches || 1))} avg per match
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ranking Points</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalPointsEarned.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  {Math.round(stats.totalPointsEarned / (stats.totalMatches || 1))} avg per match
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg Match Duration</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{Math.round(stats.averageMatchDuration)}min</div>
+                <p className="text-xs text-muted-foreground">
+                  {Math.round(stats.averageMatchDuration * stats.totalMatches)} total minutes
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Performance Trends Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Win Rate Trend Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Performance Trend
+                </CardTitle>
+                <CardDescription>Win rate analysis over recent matches</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Monthly Performance Indicators */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="p-2 bg-green-50 rounded">
+                      <div className="text-lg font-bold text-green-600">{Math.round(stats.recentPerformance.last30Days.winRate * 100)}%</div>
+                      <div className="text-xs text-muted-foreground">Last 30 Days</div>
+                    </div>
+                    <div className="p-2 bg-blue-50 rounded">
+                      <div className="text-lg font-bold text-blue-600">{Math.round(stats.winRate * 100)}%</div>
+                      <div className="text-xs text-muted-foreground">Overall</div>
+                    </div>
+                    <div className="p-2 bg-purple-50 rounded">
+                      <div className="text-lg font-bold text-purple-600">
+                        {Math.round((stats.recentPerformance.last10Games.wins / (stats.recentPerformance.last10Games.wins + stats.recentPerformance.last10Games.losses || 1)) * 100)}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">Last 10 Games</div>
+                    </div>
+                  </div>
+
+                  {/* Visual Performance Indicator */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Recent Form</span>
+                      <span className={cn("font-medium", 
+                        stats.recentPerformance.last30Days.winRate > stats.winRate ? "text-green-600" : "text-red-600"
+                      )}>
+                        {stats.recentPerformance.last30Days.winRate > stats.winRate ? "Improving" : "Declining"}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full" 
+                        style={{ width: `${Math.round(stats.recentPerformance.last30Days.winRate * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Match Type Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Match Distribution
+                </CardTitle>
+                <CardDescription>Breakdown of match types and formats</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Format Distribution */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Singles vs Doubles</span>
+                      <span className="text-muted-foreground">Format Preference</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2 bg-blue-50 rounded text-center">
+                        <div className="text-lg font-bold text-blue-600">{stats.formatBreakdown.singles.played}</div>
+                        <div className="text-xs text-muted-foreground">Singles</div>
+                      </div>
+                      <div className="p-2 bg-green-50 rounded text-center">
+                        <div className="text-lg font-bold text-green-600">{stats.formatBreakdown.doubles.played}</div>
+                        <div className="text-xs text-muted-foreground">Doubles</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Activity Level Indicator */}
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Activity Level</span>
+                      <span className="text-muted-foreground">Recent Engagement</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">
+                          {stats.recentPerformance.last30Days.matches > 10 ? "High Activity" : 
+                           stats.recentPerformance.last30Days.matches > 5 ? "Moderate Activity" : "Low Activity"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {stats.recentPerformance.last30Days.matches} matches this month
+                        </div>
+                      </div>
+                      <div className={cn("px-2 py-1 rounded text-xs", 
+                        stats.recentPerformance.last30Days.matches > 10 ? "bg-green-100 text-green-700" :
+                        stats.recentPerformance.last30Days.matches > 5 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                      )}>
+                        {stats.recentPerformance.last30Days.matches > 10 ? "Active" : 
+                         stats.recentPerformance.last30Days.matches > 5 ? "Regular" : "Casual"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Performance Insights and Recommendations */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Doubles</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <CardHeader>
+              <CardTitle className="text-lg">Performance Insights</CardTitle>
+              <CardDescription>AI-powered analysis of your game patterns and recommendations</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.formatBreakdown.doubles.played}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.formatBreakdown.doubles.won} wins
-              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Strengths Analysis */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-green-600">Strengths</h4>
+                  <div className="space-y-2">
+                    {stats.formatBreakdown.singles.won / (stats.formatBreakdown.singles.played || 1) > stats.formatBreakdown.doubles.won / (stats.formatBreakdown.doubles.played || 1) ? (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded">
+                        <User className="h-4 w-4 text-green-600" />
+                        <span className="text-sm">Stronger in singles play</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded">
+                        <Users className="h-4 w-4 text-green-600" />
+                        <span className="text-sm">Better teamwork in doubles</span>
+                      </div>
+                    )}
+                    
+                    {stats.currentStreak > 3 && stats.streakType === 'win' && (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <span className="text-sm">Excellent momentum ({stats.currentStreak} win streak)</span>
+                      </div>
+                    )}
+                    
+                    {stats.recentPerformance.last30Days.winRate > 0.6 && (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded">
+                        <Trophy className="h-4 w-4 text-green-600" />
+                        <span className="text-sm">Strong recent performance</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Areas for Improvement */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-orange-600">Growth Opportunities</h4>
+                  <div className="space-y-2">
+                    {stats.formatBreakdown.singles.won / (stats.formatBreakdown.singles.played || 1) < 0.5 && stats.formatBreakdown.singles.played > 0 && (
+                      <div className="flex items-center gap-2 p-2 bg-orange-50 rounded">
+                        <User className="h-4 w-4 text-orange-600" />
+                        <span className="text-sm">Focus on singles strategy</span>
+                      </div>
+                    )}
+                    
+                    {stats.formatBreakdown.doubles.won / (stats.formatBreakdown.doubles.played || 1) < 0.5 && stats.formatBreakdown.doubles.played > 0 && (
+                      <div className="flex items-center gap-2 p-2 bg-orange-50 rounded">
+                        <Users className="h-4 w-4 text-orange-600" />
+                        <span className="text-sm">Improve doubles coordination</span>
+                      </div>
+                    )}
+                    
+                    {stats.recentPerformance.last30Days.matches < 5 && (
+                      <div className="flex items-center gap-2 p-2 bg-orange-50 rounded">
+                        <Activity className="h-4 w-4 text-orange-600" />
+                        <span className="text-sm">Increase match frequency</span>
+                      </div>
+                    )}
+                    
+                    {stats.recentPerformance.last30Days.winRate < stats.winRate - 0.1 && (
+                      <div className="flex items-center gap-2 p-2 bg-orange-50 rounded">
+                        <TrendingUp className="h-4 w-4 text-orange-600" />
+                        <span className="text-sm">Recent form needs attention</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
