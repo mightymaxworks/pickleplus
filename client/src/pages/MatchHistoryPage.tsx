@@ -66,7 +66,8 @@ interface MatchHistoryStats {
 }
 
 export default function MatchHistoryPage() {
-  const { user } = useAuthContext();
+  // Mock user for development - in production this would come from auth context
+  const user = { id: 1, firstName: 'Test', lastName: 'User' };
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
   const [filterPeriod, setFilterPeriod] = useState<'all' | '30days' | '90days' | '1year'>('all');
 
@@ -96,18 +97,11 @@ export default function MatchHistoryPage() {
       const opponent = match.playerOneId === user.id ? match.playerTwo : match.playerOne;
       return `${opponent.firstName} ${opponent.lastName}`;
     } else {
-      // For doubles, show the opposing team
-      const isPlayerOneTeam = match.playerOneId === user.id || match.playerOnePartnerId === user.id;
-      if (isPlayerOneTeam) {
-        const partner = match.playerTwoPartner 
-          ? `${match.playerTwo.firstName} ${match.playerTwo.lastName} & ${match.playerTwoPartner.firstName} ${match.playerTwoPartner.lastName}`
-          : `${match.playerTwo.firstName} ${match.playerTwo.lastName}`;
-        return partner;
+      // For doubles, show the team opponents
+      if (match.playerOneId === user.id || match.playerOnePartnerId === user.id) {
+        return `${match.playerTwo.firstName} ${match.playerTwo.lastName} & ${match.playerTwoPartner?.firstName || ''} ${match.playerTwoPartner?.lastName || ''}`;
       } else {
-        const partner = match.playerOnePartner 
-          ? `${match.playerOne.firstName} ${match.playerOne.lastName} & ${match.playerOnePartner.firstName} ${match.playerOnePartner.lastName}`
-          : `${match.playerOne.firstName} ${match.playerOne.lastName}`;
-        return partner;
+        return `${match.playerOne.firstName} ${match.playerOne.lastName} & ${match.playerOnePartner?.firstName || ''} ${match.playerOnePartner?.lastName || ''}`;
       }
     }
   };
@@ -115,296 +109,236 @@ export default function MatchHistoryPage() {
   const getMyPartner = (match: Match) => {
     if (!user || match.formatType === 'singles') return null;
     
-    const isPlayerOneTeam = match.playerOneId === user.id || match.playerOnePartnerId === user.id;
-    if (isPlayerOneTeam) {
-      if (match.playerOneId === user.id && match.playerOnePartner) {
-        return `${match.playerOnePartner.firstName} ${match.playerOnePartner.lastName}`;
-      } else if (match.playerOnePartnerId === user.id) {
-        return `${match.playerOne.firstName} ${match.playerOne.lastName}`;
-      }
-    } else {
-      if (match.playerTwoId === user.id && match.playerTwoPartner) {
-        return `${match.playerTwoPartner.firstName} ${match.playerTwoPartner.lastName}`;
-      } else if (match.playerTwoPartnerId === user.id) {
-        return `${match.playerTwo.firstName} ${match.playerTwo.lastName}`;
-      }
+    if (match.playerOneId === user.id && match.playerOnePartner) {
+      return `${match.playerOnePartner.firstName} ${match.playerOnePartner.lastName}`;
+    } else if (match.playerTwoId === user.id && match.playerTwoPartner) {
+      return `${match.playerTwoPartner.firstName} ${match.playerTwoPartner.lastName}`;
     }
     return null;
   };
 
   const getMatchScore = (match: Match) => {
-    const result = getMatchResult(match);
-    const isPlayerOneTeam = match.playerOneId === user?.id || match.playerOnePartnerId === user?.id;
-    
-    if (result === 'win') {
-      return isPlayerOneTeam 
-        ? `${match.scorePlayerOne} - ${match.scorePlayerTwo}`
-        : `${match.scorePlayerTwo} - ${match.scorePlayerOne}`;
+    const isPlayerOne = match.playerOneId === user?.id || match.playerOnePartnerId === user?.id;
+    if (isPlayerOne) {
+      return `${match.scorePlayerOne} - ${match.scorePlayerTwo}`;
     } else {
-      return isPlayerOneTeam 
-        ? `${match.scorePlayerOne} - ${match.scorePlayerTwo}`
-        : `${match.scorePlayerTwo} - ${match.scorePlayerOne}`;
+      return `${match.scorePlayerTwo} - ${match.scorePlayerOne}`;
     }
-  };
-
-  const formatMatchType = (matchType: string, eventTier?: string) => {
-    if (matchType === 'tournament') {
-      return `${eventTier?.toUpperCase() || 'LOCAL'} TOURNAMENT`;
-    }
-    return matchType.toUpperCase();
   };
 
   if (isLoading) {
     return (
-      <StandardLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center space-x-4 mb-8">
-            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded"></div>
-            <div className="h-8 w-48 bg-gray-200 animate-pulse rounded"></div>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-gray-200 animate-pulse rounded-lg"></div>
-            ))}
-          </div>
+      <div className="container mx-auto py-8">
+        <div className="flex flex-col space-y-4">
+          <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
         </div>
-      </StandardLayout>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">Please log in to view your match history.</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <StandardLayout>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Trophy className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Match History</h1>
-              <p className="text-muted-foreground">Complete record of your pickleball matches</p>
-            </div>
-          </div>
-          
-          {/* Filters */}
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select 
-                value={filterType} 
-                onChange={(e) => setFilterType(e.target.value as any)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
-              >
-                <option value="all">All Formats</option>
-                <option value="singles">Singles Only</option>
-                <option value="doubles">Doubles Only</option>
-              </select>
-              <select 
-                value={filterPeriod} 
-                onChange={(e) => setFilterPeriod(e.target.value as any)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
-              >
-                <option value="all">All Time</option>
-                <option value="30days">Last 30 Days</option>
-                <option value="90days">Last 90 Days</option>
-                <option value="1year">Last Year</option>
-              </select>
-            </div>
-          </div>
+    <div className="container mx-auto py-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Match History</h1>
+          <p className="text-muted-foreground">
+            Track your performance and analyze your game
+          </p>
         </div>
-
-        {/* Statistics Cards */}
-        {stats && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
-                <Trophy className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalMatches}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats.wins}W - {stats.losses}L
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{(stats.winRate * 100).toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground">
-                  Current {stats.streakType} streak: {stats.currentStreak}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Format Performance</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Singles:</span>
-                    <span>{stats.formatBreakdown.singles.played > 0 ? 
-                      `${((stats.formatBreakdown.singles.won / stats.formatBreakdown.singles.played) * 100).toFixed(0)}%` 
-                      : 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Doubles:</span>
-                    <span>{stats.formatBreakdown.doubles.played > 0 ? 
-                      `${((stats.formatBreakdown.doubles.won / stats.formatBreakdown.doubles.played) * 100).toFixed(0)}%` 
-                      : 'N/A'}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Recent Form</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats.recentPerformance.last10Games.wins}/10
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Last 10 games won
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Match List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Matches</CardTitle>
-            <CardDescription>
-              {filterType !== 'all' && `${filterType.charAt(0).toUpperCase() + filterType.slice(1)} matches `}
-              {filterPeriod !== 'all' && `from the ${filterPeriod.replace('days', ' days').replace('1year', 'last year')}`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {matches.length === 0 ? (
-              <div className="text-center py-12">
-                <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No matches found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {filterType !== 'all' || filterPeriod !== 'all' 
-                    ? 'Try adjusting your filters or record your first match.'
-                    : 'Start recording your matches to see your history here.'
-                  }
-                </p>
-                <Button>Record a Match</Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {matches.map((match) => {
-                  const result = getMatchResult(match);
-                  const opponent = getMatchOpponent(match);
-                  const partner = getMyPartner(match);
-                  const score = getMatchScore(match);
-                  
-                  return (
-                    <div
-                      key={match.id}
-                      className={cn(
-                        "border rounded-lg p-4 transition-all hover:shadow-md",
-                        result === 'win' ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <Badge 
-                            variant={result === 'win' ? 'default' : 'destructive'}
-                            className="text-xs font-semibold"
-                          >
-                            {result.toUpperCase()}
-                          </Badge>
-                          
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            {match.formatType === 'singles' ? (
-                              <User className="h-4 w-4" />
-                            ) : (
-                              <Users className="h-4 w-4" />
-                            )}
-                            <span className="capitalize">{match.formatType}</span>
-                          </div>
-                          
-                          <Badge variant="outline" className="text-xs">
-                            {formatMatchType(match.matchType, match.eventTier)}
-                          </Badge>
-                          
-                          {match.tournament && (
-                            <Badge variant="outline" className="text-xs">
-                              {match.tournament.name}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className="text-lg font-semibold">{score}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(match.matchDate), { addSuffix: true })}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Separator className="my-3" />
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <div className="font-medium">vs {opponent}</div>
-                          {partner && (
-                            <div className="text-sm text-muted-foreground">
-                              Partner: {partner}
-                            </div>
-                          )}
-                          {match.location && (
-                            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3 w-3" />
-                              <span>{match.location}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="text-right space-y-1">
-                          <div className="text-sm text-muted-foreground">
-                            {format(new Date(match.matchDate), 'MMM d, yyyy')}
-                          </div>
-                          {match.xpAwarded > 0 && (
-                            <div className="text-xs text-muted-foreground">
-                              +{match.xpAwarded} XP
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {match.notes && (
-                        <>
-                          <Separator className="my-3" />
-                          <p className="text-sm text-muted-foreground italic">{match.notes}</p>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Select value={filterType} onValueChange={(value) => setFilterType(value as any)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Match Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Matches</SelectItem>
+              <SelectItem value="singles">Singles</SelectItem>
+              <SelectItem value="doubles">Doubles</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as any)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Time Period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="90days">Last 90 Days</SelectItem>
+              <SelectItem value="1year">Last Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    </StandardLayout>
+
+      {/* Statistics Overview */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalMatches}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.wins}W - {stats.losses}L
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{(stats.winRate * 100).toFixed(1)}%</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.currentStreak} game {stats.streakType} streak
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Singles</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.formatBreakdown.singles.played}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.formatBreakdown.singles.won} wins
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Doubles</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.formatBreakdown.doubles.played}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.formatBreakdown.doubles.won} wins
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Match History List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Matches</CardTitle>
+          <CardDescription>
+            Your match history with detailed results and performance metrics
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {matches.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No matches found for the selected filters.</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Try adjusting your filters or record your first match!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {matches.map((match) => {
+                const result = getMatchResult(match);
+                const opponent = getMatchOpponent(match);
+                const partner = getMyPartner(match);
+                const score = getMatchScore(match);
+                
+                return (
+                  <div
+                    key={match.id}
+                    className={cn(
+                      "flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border",
+                      result === 'win' 
+                        ? "bg-green-50 border-green-200" 
+                        : "bg-red-50 border-red-200"
+                    )}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white",
+                        result === 'win' ? "bg-green-500" : "bg-red-500"
+                      )}>
+                        {result === 'win' ? 'W' : 'L'}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">vs {opponent}</span>
+                          {partner && (
+                            <span className="text-sm text-muted-foreground">
+                              (with {partner})
+                            </span>
+                          )}
+                          <Badge variant="outline" className="text-xs">
+                            {match.formatType}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(match.matchDate), 'MMM d, yyyy')}
+                          </span>
+                          
+                          {match.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {match.location}
+                            </span>
+                          )}
+                          
+                          <Badge variant="secondary" className="text-xs">
+                            {match.matchType}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                      <div className="text-right">
+                        <div className="font-bold text-lg">{score}</div>
+                        <div className="text-sm text-muted-foreground">
+                          +{match.xpAwarded} XP
+                        </div>
+                      </div>
+                      
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
