@@ -205,6 +205,16 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.completion.updating': 'Updating...',
     'profile.completion.updateProfile': 'Update Profile',
 
+    // Navigation Items
+    'nav.features': 'Features',
+    'nav.pcpCertification': 'PCP Certification',
+    'nav.developmentHub': 'Development Hub',
+    'nav.adminPanel': 'Admin Panel',
+    'nav.home': 'Home',
+    'nav.community': 'Community',
+    'nav.coaching': 'Coaching',
+    'nav.profile': 'Profile',
+
     // Dashboard Tabs
     'dashboard.tabs.performance': 'Performance',
     'dashboard.tabs.recentMatches': 'Recent Matches',
@@ -951,7 +961,17 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.completion.lastNamePlaceholder': '请输入您的姓氏',
     'profile.completion.skipForNow': '暂时跳过',
     'profile.completion.updating': '更新中...',
-    'profile.completion.updateProfile': '更新资料'
+    'profile.completion.updateProfile': '更新资料',
+
+    // Navigation Items
+    'nav.features': '功能',
+    'nav.pcpCertification': 'PCP认证',
+    'nav.developmentHub': '发展中心',
+    'nav.adminPanel': '管理面板',
+    'nav.home': '首页',
+    'nav.community': '社区',
+    'nav.coaching': '教练',
+    'nav.profile': '个人资料'
   }
 };
 

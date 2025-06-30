@@ -139,14 +139,14 @@ export function AppHeader({
   // Default navigation items - reorganized for better UX
   const defaultNavItems = [
     { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
-    { label: 'Features', icon: <Compass size={18} />, path: '/features' },
+    { label: t('nav.features'), icon: <Compass size={18} />, path: '/features' },
     { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
     { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
-    { label: 'PCP Certification', icon: <Award size={18} />, path: '/pcp-certification' },
-    { label: 'Development Hub', icon: <Building2 size={18} />, path: '/player-development-hub' },
+    { label: t('nav.pcpCertification'), icon: <Award size={18} />, path: '/pcp-certification' },
+    { label: t('nav.developmentHub'), icon: <Building2 size={18} />, path: '/player-development-hub' },
     { label: t('nav.referrals'), icon: <Share size={18} />, path: '/referrals' },
     { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },
-    ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])
+    ...(user?.isAdmin ? [{ label: t('nav.adminPanel'), icon: <Shield size={18} />, path: '/admin' }] : [])
   ];
 
   // Use custom nav items if provided, otherwise use default
