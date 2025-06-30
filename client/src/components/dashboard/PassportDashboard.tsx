@@ -1327,10 +1327,14 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <Tabs defaultValue="performance" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="performance">{t('dashboard.tabs.performance')}</TabsTrigger>
             <TabsTrigger value="matches">{t('dashboard.tabs.recentMatches')}</TabsTrigger>
             <TabsTrigger value="achievements">{t('dashboard.tabs.achievements')}</TabsTrigger>
+            <TabsTrigger value="social" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Social
+            </TabsTrigger>
             <TabsTrigger value="community">{t('dashboard.tabs.community')}</TabsTrigger>
           </TabsList>
           
@@ -1664,6 +1668,44 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Social Tab - Sprint 3 Gamification Features */}
+          <TabsContent value="social" className="space-y-4 mt-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Badge Showcase */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-amber-500" />
+                    Achievement Badges
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BadgeShowcase
+                    userLevel={user.skillLevel || "Intermediate"}
+                    currentRating={user.duprRating || 4.2}
+                    ratingType="dupr"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Social Sharing Widget */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-500" />
+                    Social Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SocialSharingWidget
+                    userRating={user.duprRating || 4.2}
+                    userBadgeCount={5}
+                  />
                 </CardContent>
               </Card>
             </div>
