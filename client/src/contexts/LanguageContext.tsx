@@ -34,6 +34,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.next': 'Next',
     'common.submit': 'Submit',
     'common.close': 'Close',
+    'common.tryAgain': 'Please try again',
     
     // Dashboard
     'dashboard.welcome': 'Welcome back',
@@ -517,6 +518,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.next': '下一步',
     'common.submit': '提交',
     'common.close': '关闭',
+    'common.tryAgain': '请重试',
     
     // Dashboard
     'dashboard.welcome': '欢迎回来',

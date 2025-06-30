@@ -94,8 +94,8 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to Record Match",
-        description: error.message || "Please try again",
+        title: t('match.form.failedToRecord'),
+        description: error.message || t('common.tryAgain'),
         variant: "destructive"
       });
     }
@@ -104,8 +104,8 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
   const onSubmit = (data: CasualMatchFormData) => {
     if (!selectedOpponent) {
       toast({
-        title: "No Opponent Selected",
-        description: "Please select an opponent to record the match",
+        title: t('match.form.noOpponentSelected'),
+        description: t('match.form.selectOpponent'),
         variant: "destructive"
       });
       return;
@@ -140,10 +140,10 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-orange-600" />
-          Record Casual Match
+          {t('match.form.recordCasualMatch')}
         </CardTitle>
         <CardDescription>
-          Record matches with the hybrid ranking system. Tournament points count 100%, casual matches 50%.
+          {t('match.form.recordCasualDescription')}
         </CardDescription>
       </CardHeader>
       
@@ -153,7 +153,7 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
             
             {/* Opponent Selection */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Opponent</label>
+              <label className="text-sm font-medium">{t('match.form.opponent')}</label>
               <PlayerSearchInput
                 onPlayerSelected={(player) => {
                   if (player) {
@@ -161,13 +161,13 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
                     form.setValue('opponentId', player.id);
                   }
                 }}
-                placeholder="Search for your opponent..."
+                placeholder={t('match.form.searchOpponent')}
               />
               {selectedOpponent && (
                 <div className="flex items-center gap-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
                   <CheckCircle className="h-4 w-4 text-orange-600" />
                   <span className="text-sm text-orange-800">
-                    Playing against: <strong>{selectedOpponent.name}</strong>
+                    {t('match.form.playingAgainst')}: <strong>{selectedOpponent.name}</strong>
                   </span>
                 </div>
               )}
@@ -179,16 +179,16 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
               name="matchType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Match Type</FormLabel>
+                  <FormLabel>{t('match.form.matchType')}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select match type" />
+                        <SelectValue placeholder={t('match.form.selectResult')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="casual">Casual Match</SelectItem>
-                      <SelectItem value="league">League Match</SelectItem>
+                      <SelectItem value="casual">{t('match.form.casual')}</SelectItem>
+                      <SelectItem value="league">{t('match.form.league')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
