@@ -2592,23 +2592,41 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
         const playerNames: Record<number, any> = {};
         
         // Handle player one
-        const playerOneFirstName = match.playerOne?.firstName || 'Player';
-        const playerOneLastName = match.playerOne?.lastName || `#${match.playerOneId}`;
+        let playerOneDisplayName: string;
+        if (match.playerOne?.firstName && match.playerOne?.lastName) {
+          playerOneDisplayName = `${match.playerOne.firstName} ${match.playerOne.lastName}`;
+        } else if (match.playerOne?.username) {
+          playerOneDisplayName = match.playerOne.username;
+        } else {
+          playerOneDisplayName = `Player ${match.playerOneId}`;
+        }
+        
         playerNames[match.playerOneId] = {
-          displayName: `${playerOneFirstName} ${playerOneLastName}`,
-          username: `player${match.playerOneId}`,
-          avatarInitials: `${playerOneFirstName[0]}${playerOneLastName[0]}`.toUpperCase(),
+          displayName: playerOneDisplayName,
+          username: match.playerOne?.username || `player${match.playerOneId}`,
+          avatarInitials: match.playerOne?.firstName && match.playerOne?.lastName
+            ? `${match.playerOne.firstName[0]}${match.playerOne.lastName[0]}`.toUpperCase()
+            : match.playerOne?.username ? match.playerOne.username[0].toUpperCase() : 'P',
           firstName: match.playerOne?.firstName,
           lastName: match.playerOne?.lastName
         };
         
         // Handle player two
-        const playerTwoFirstName = match.playerTwo?.firstName || 'Player';
-        const playerTwoLastName = match.playerTwo?.lastName || `#${match.playerTwoId}`;
+        let playerTwoDisplayName: string;
+        if (match.playerTwo?.firstName && match.playerTwo?.lastName) {
+          playerTwoDisplayName = `${match.playerTwo.firstName} ${match.playerTwo.lastName}`;
+        } else if (match.playerTwo?.username) {
+          playerTwoDisplayName = match.playerTwo.username;
+        } else {
+          playerTwoDisplayName = `Player ${match.playerTwoId}`;
+        }
+        
         playerNames[match.playerTwoId] = {
-          displayName: `${playerTwoFirstName} ${playerTwoLastName}`,
-          username: `player${match.playerTwoId}`,
-          avatarInitials: `${playerTwoFirstName[0]}${playerTwoLastName[0]}`.toUpperCase(),
+          displayName: playerTwoDisplayName,
+          username: match.playerTwo?.username || `player${match.playerTwoId}`,
+          avatarInitials: match.playerTwo?.firstName && match.playerTwo?.lastName
+            ? `${match.playerTwo.firstName[0]}${match.playerTwo.lastName[0]}`.toUpperCase()
+            : match.playerTwo?.username ? match.playerTwo.username[0].toUpperCase() : 'P',
           firstName: match.playerTwo?.firstName,
           lastName: match.playerTwo?.lastName
         };

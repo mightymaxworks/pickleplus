@@ -2650,14 +2650,19 @@ export class DatabaseStorage implements IStorage {
           m.*,
           p1.first_name as player_one_first_name,
           p1.last_name as player_one_last_name,
+          p1.username as player_one_username,
           p2.first_name as player_two_first_name,
           p2.last_name as player_two_last_name,
+          p2.username as player_two_username,
           p1p.first_name as player_one_partner_first_name,
           p1p.last_name as player_one_partner_last_name,
+          p1p.username as player_one_partner_username,
           p2p.first_name as player_two_partner_first_name,
           p2p.last_name as player_two_partner_last_name,
+          p2p.username as player_two_partner_username,
           w.first_name as winner_first_name,
           w.last_name as winner_last_name,
+          w.username as winner_username,
           t.name as tournament_name
         FROM matches m
         LEFT JOIN users p1 ON m.player_one_id = p1.id
@@ -2701,27 +2706,32 @@ export class DatabaseStorage implements IStorage {
         playerOne: {
           id: row.player_one_id,
           firstName: row.player_one_first_name,
-          lastName: row.player_one_last_name
+          lastName: row.player_one_last_name,
+          username: row.player_one_username
         },
         playerTwo: {
           id: row.player_two_id,
           firstName: row.player_two_first_name,
-          lastName: row.player_two_last_name
+          lastName: row.player_two_last_name,
+          username: row.player_two_username
         },
         playerOnePartner: row.player_one_partner_id ? {
           id: row.player_one_partner_id,
           firstName: row.player_one_partner_first_name,
-          lastName: row.player_one_partner_last_name
+          lastName: row.player_one_partner_last_name,
+          username: row.player_one_partner_username
         } : undefined,
         playerTwoPartner: row.player_two_partner_id ? {
           id: row.player_two_partner_id,
           firstName: row.player_two_partner_first_name,
-          lastName: row.player_two_partner_last_name
+          lastName: row.player_two_partner_last_name,
+          username: row.player_two_partner_username
         } : undefined,
         winner: {
           id: row.winner_id,
           firstName: row.winner_first_name,
-          lastName: row.winner_last_name
+          lastName: row.winner_last_name,
+          username: row.winner_username
         },
         tournament: row.tournament_id ? {
           id: row.tournament_id,
