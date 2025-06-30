@@ -381,21 +381,22 @@ export default function MatchHistoryPage() {
       singlesWinRate: singlesMatches.length > 0 ? singlesMatches.filter(m => getMatchResult(m) === 'win').length / singlesMatches.length : 0,
       doublesWinRate: doublesMatches.length > 0 ? doublesMatches.filter(m => getMatchResult(m) === 'win').length / doublesMatches.length : 0,
       opponentStats,
-      bestOpponent: Object.entries(opponentStats).reduce((best, [name, stats]: [string, any]) => 
-        stats.played >= 3 && stats.winRate > (best?.winRate || 0) ? { name, ...stats } : best, null),
-      challengingOpponent: Object.entries(opponentStats).reduce((worst, [name, stats]: [string, any]) => 
-        stats.played >= 3 && stats.winRate < (worst?.winRate || 1) ? { name, ...stats } : worst, null)
+      bestOpponent: Object.entries(opponentStats).length > 0 ? Object.entries(opponentStats).reduce((best: any, [name, stats]: [string, any]) => {
+        if (stats.played >= 3 && stats.winRate > (best?.winRate || 0)) {
+          return { name, winRate: stats.winRate, played: stats.played, won: stats.won };
+        }
+        return best;
+      }, null) : null,
+      challengingOpponent: Object.entries(opponentStats).length > 0 ? Object.entries(opponentStats).reduce((worst: any, [name, stats]: [string, any]) => {
+        if (stats.played >= 3 && stats.winRate < (worst?.winRate || 1)) {
+          return { name, winRate: stats.winRate, played: stats.played, won: stats.won };
+        }
+        return worst;
+      }, null) : null
     };
   };
 
-  const clearFilters = () => {
-    setSearchQuery('');
-    setFilterType('all');
-    setFilterPeriod('all');
-    setFilterResult('all');
-    setFilterMatchType('all');
-    setFilterDivision('all');
-  };
+
 
   const aiInsights = generateAIInsights();
   const advancedStats = calculateAdvancedStats(getSelectedMatchData());
@@ -1091,6 +1092,240 @@ export default function MatchHistoryPage() {
         </div>
       )}
 
+      {/* Sprint 5: Advanced Analytics Dashboard */}
+      {showAdvancedAnalytics && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <LineChart className="h-5 w-5" />
+              Advanced Match Analytics
+            </CardTitle>
+            <CardDescription>Deep dive into your performance patterns and opponent analysis</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Opponent Analysis */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-lg">Opponent Analysis</h4>
+                
+                {stats && advancedStats && (
+                  <div className="space-y-3">
+                    {/* Best Matchup */}
+                    {advancedStats.bestOpponent && (
+                      <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-green-800">Best Matchup</span>
+                          <Badge variant="secondary" className="bg-green-100 text-green-700">
+                            {Math.round(advancedStats.bestOpponent.winRate * 100)}% win rate
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-green-700">
+                          vs {advancedStats.bestOpponent.name} ({advancedStats.bestOpponent.won}-{advancedStats.bestOpponent.played - advancedStats.bestOpponent.won})
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Challenging Opponent */}
+                    {advancedStats.challengingOpponent && (
+                      <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-orange-800">Growth Opportunity</span>
+                          <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                            {Math.round(advancedStats.challengingOpponent.winRate * 100)}% win rate
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-orange-700">
+                          vs {advancedStats.challengingOpponent.name} ({advancedStats.challengingOpponent.won}-{advancedStats.challengingOpponent.played - advancedStats.challengingOpponent.won})
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Format Performance Comparison */}
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h5 className="font-medium text-blue-800 mb-3">Format Performance</h5>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {Math.round(advancedStats.singlesWinRate * 100)}%
+                          </div>
+                          <div className="text-xs text-blue-700">Singles Win Rate</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {Math.round(advancedStats.doublesWinRate * 100)}%
+                          </div>
+                          <div className="text-xs text-blue-700">Doubles Win Rate</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Performance Trends */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-lg">Performance Trends</h4>
+                
+                <div className="space-y-3">
+                  {/* Win Rate Evolution */}
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">Overall Win Rate</span>
+                      <Badge variant="outline">
+                        {stats ? Math.round(stats.winRate * 100) : 0}%
+                      </Badge>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 transition-all duration-500"
+                        style={{ width: `${stats ? stats.winRate * 100 : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Recent Performance */}
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">Last 10 Games</span>
+                      <Badge variant="outline">
+                        {stats ? stats.recentPerformance.last10Games.wins : 0}-{stats ? stats.recentPerformance.last10Games.losses : 0}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-1">
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const totalRecent = stats ? stats.recentPerformance.last10Games.wins + stats.recentPerformance.last10Games.losses : 0;
+                        const isWin = i < (stats ? stats.recentPerformance.last10Games.wins : 0);
+                        const hasData = i < totalRecent;
+                        
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              "h-3 w-3 rounded-full",
+                              hasData
+                                ? isWin 
+                                  ? "bg-green-500" 
+                                  : "bg-red-500"
+                                : "bg-gray-200"
+                            )}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  {/* Activity Level */}
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">Monthly Activity</span>
+                      <Badge variant="outline">
+                        {stats ? stats.recentPerformance.last30Days.matches : 0} matches
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {stats && stats.recentPerformance.last30Days.matches > 10 ? "High Activity" : 
+                         stats && stats.recentPerformance.last30Days.matches > 5 ? "Moderate Activity" : "Building Momentum"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Sprint 5: Match Comparison Dashboard */}
+      {comparisonMode && selectedMatches.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Match Comparison Analysis
+              <Badge variant="secondary" className="ml-2">
+                {selectedMatches.length} matches selected
+              </Badge>
+            </CardTitle>
+            <CardDescription>
+              Compare performance across selected matches to identify patterns and improvements
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {advancedStats && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Comparison Overview */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Selection Overview</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Total Matches</span>
+                      <span className="font-medium">{advancedStats.totalMatches}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Win Rate</span>
+                      <span className="font-medium">{Math.round(advancedStats.winRate * 100)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Singles</span>
+                      <span className="font-medium">{Math.round(advancedStats.singlesWinRate * 100)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Doubles</span>
+                      <span className="font-medium">{Math.round(advancedStats.doublesWinRate * 100)}%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Top Insights */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Key Insights</h4>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <div className="text-sm font-medium text-blue-800">Format Strength</div>
+                      <div className="text-xs text-blue-600">
+                        {advancedStats.singlesWinRate > advancedStats.doublesWinRate ? 'Singles specialist' : 'Doubles focused'}
+                      </div>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <div className="text-sm font-medium text-green-800">Performance Level</div>
+                      <div className="text-xs text-green-600">
+                        {advancedStats.winRate > 0.6 ? 'Strong performance' : 'Growing consistency'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Actions */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Actions</h4>
+                  <div className="space-y-2">
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Analysis
+                    </Button>
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Insights
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => setSelectedMatches([])}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear Selection
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Match History List */}
       <Card>
         <CardHeader>
@@ -1187,10 +1422,37 @@ export default function MatchHistoryPage() {
                               </div>
                             </div>
                             
-                            {/* Sprint 4: Mobile Action Button */}
-                            <div className="sm:hidden">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <Activity className="h-4 w-4" />
+                            {/* Sprint 5: Enhanced Action Buttons */}
+                            <div className="flex items-center gap-2">
+                              {comparisonMode && (
+                                <Button
+                                  variant={selectedMatches.includes(match.id) ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => toggleMatchSelection(match.id)}
+                                  className="h-8 px-3"
+                                >
+                                  {selectedMatches.includes(match.id) ? (
+                                    <MessageCircle className="h-3 w-3" />
+                                  ) : (
+                                    <Bookmark className="h-3 w-3" />
+                                  )}
+                                </Button>
+                              )}
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 sm:hidden"
+                                onClick={() => {
+                                  setSelectedMatchId(match.id);
+                                  setShowMatchDetails(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hidden sm:flex">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
