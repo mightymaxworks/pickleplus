@@ -92,7 +92,7 @@ interface CommunityEvent {
     role: string;
   };
   rewards?: {
-    xp: number;
+    picklePoints: number;
     points: number;
     specialRewards: string[];
   };
@@ -141,7 +141,7 @@ export default function CommunityChallengePlatform({
           participantCount: 156,
           requirements: ['Play 1 match per day', 'No missed days allowed'],
           rewards: {
-            xp: 500,
+            picklePoints: 500,
             points: 150,
             badges: ['Consistency Master'],
             specialReward: 'Weekly Champion Badge'
@@ -174,7 +174,7 @@ export default function CommunityChallengePlatform({
           maxParticipants: 100,
           requirements: ['Competitive matches only', 'Verified aces count'],
           rewards: {
-            xp: 1000,
+            picklePoints: 1000,
             points: 300,
             badges: ['Ace Specialist', 'Serve Master'],
             specialReward: 'Golden Paddle Award'
@@ -214,7 +214,7 @@ export default function CommunityChallengePlatform({
           teamSize: 4,
           requirements: ['Team of 4 players', 'All team members must be verified'],
           rewards: {
-            xp: 2000,
+            picklePoints: 2000,
             points: 500,
             badges: ['Team Champion', 'Spring Winner'],
             specialReward: 'Team Trophy + Individual Medals'
@@ -249,7 +249,7 @@ export default function CommunityChallengePlatform({
             role: 'Community Manager'
           },
           rewards: {
-            xp: 200,
+            picklePoints: 200,
             points: 50,
             specialRewards: ['Social Butterfly Badge', 'Community Spirit']
           },
@@ -274,7 +274,7 @@ export default function CommunityChallengePlatform({
           },
           requirements: ['Intermediate level or above', 'Own equipment required'],
           rewards: {
-            xp: 400,
+            picklePoints: 400,
             points: 100,
             specialRewards: ['Skills Master Certificate', 'Advanced Techniques Badge']
           },
@@ -446,7 +446,7 @@ export default function CommunityChallengePlatform({
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-500" />
-                        {challenge.rewards.xp} XP
+                        {challenge.rewards.picklePoints} Pickle Points
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
