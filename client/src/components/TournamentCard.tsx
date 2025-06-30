@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import type { Tournament, TournamentRegistration } from "@/types";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -12,6 +13,7 @@ interface TournamentCardProps {
 
 export function TournamentCard({ tournament, registration, onRegister }: TournamentCardProps) {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   
   const formatDate = (date: string | Date) => {
     return format(new Date(date), 'MMM d, yyyy');
@@ -42,30 +44,30 @@ export function TournamentCard({ tournament, registration, onRegister }: Tournam
         {registration ? (
           <div className="flex justify-between mb-3">
             <div>
-              <span className="text-sm font-medium">Registration Status</span>
+              <span className="text-sm font-medium">{t('tournament.registrationStatus')}</span>
               <div className="flex items-center text-[#4CAF50]">
                 <span className="material-icons text-sm mr-1">
                   {registration.checkedIn ? "check_circle" : "pending"}
                 </span>
                 <span className="text-sm">
-                  {registration.checkedIn ? "Checked In" : "Confirmed"}
+                  {registration.checkedIn ? t('tournament.checkedIn') : t('tournament.confirmed')}
                 </span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-sm font-medium">Division</span>
-              <p className="text-sm">{registration.division || "Not specified"}</p>
+              <span className="text-sm font-medium">{t('tournament.division')}</span>
+              <p className="text-sm">{registration.division || t('tournament.notSpecified')}</p>
             </div>
           </div>
         ) : (
-          <p className="text-sm mb-3">{tournament.description || "Join this exciting tournament!"}</p>
+          <p className="text-sm mb-3">{tournament.description || t('tournament.joinExciting')}</p>
         )}
         
         <Button 
           className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
           onClick={registration ? () => setLocation(`/tournaments/${tournament.id}`) : onRegister}
         >
-          {registration ? "View Details" : "Register Now"}
+          {registration ? t('tournament.viewDetails') : t('tournament.registerNow')}
         </Button>
       </div>
     </Card>

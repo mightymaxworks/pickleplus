@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UpcomingTournamentsProps {
   userId: number;
@@ -13,6 +14,7 @@ interface UpcomingTournamentsProps {
 export default function UpcomingTournaments({ userId }: UpcomingTournamentsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   
   // Query upcoming tournaments
   const { data: tournaments, isLoading } = useQuery({
@@ -38,7 +40,7 @@ export default function UpcomingTournaments({ userId }: UpcomingTournamentsProps
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-bold flex items-center">
           <Calendar className="mr-2 h-5 w-5 text-yellow-600" />
-          Upcoming Events
+          {t('tournament.upcoming')}
         </CardTitle>
         <Button 
           variant="ghost" 
