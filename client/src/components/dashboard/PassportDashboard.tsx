@@ -58,6 +58,9 @@ import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 import { OnboardingProgressIndicator } from '@/components/onboarding/OnboardingProgressIndicator';
 import ProgressExplanationTooltip from '@/components/progress/ProgressExplanationTooltip';
 import NextStepsGuidance from '@/components/progress/NextStepsGuidance';
+import PeerComparisonWidget from '@/components/progress/PeerComparisonWidget';
+import AchievementTracker from '@/components/progress/AchievementTracker';
+import ProgressTrendChart from '@/components/progress/ProgressTrendChart';
 
 interface PassportDashboardProps {
   onShowOnboarding?: () => void;
@@ -1512,14 +1515,39 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                 </CardContent>
               </Card>
               
-              {/* Next Steps Guidance Section */}
-              <NextStepsGuidance
-                currentRating={user.pcpRating || 2.5}
-                ratingType="pcp"
-                userLevel={user.skillLevel || "Intermediate"}
-                completedActions={[]}
-                className="mt-6"
-              />
+              {/* Progress Visualization Section - Sprint 2 */}
+              <div className="mt-6 space-y-6">
+                {/* Next Steps Guidance */}
+                <NextStepsGuidance
+                  currentRating={user.pcpRating || 2.5}
+                  ratingType="pcp"
+                  userLevel={user.skillLevel || "Intermediate"}
+                  completedActions={[]}
+                />
+                
+                {/* Progress Trend Chart */}
+                <ProgressTrendChart
+                  currentRating={user.pcpRating || 2.5}
+                  ratingType="pcp"
+                  userLevel={user.skillLevel || "Intermediate"}
+                  timeRange="30d"
+                />
+                
+                {/* Two-column layout for comparison and achievements */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <PeerComparisonWidget
+                    currentRating={user.pcpRating || 2.5}
+                    ratingType="pcp"
+                    userLevel={user.skillLevel || "Intermediate"}
+                  />
+                  
+                  <AchievementTracker
+                    currentRating={user.pcpRating || 2.5}
+                    ratingType="pcp"
+                    userLevel={user.skillLevel || "Intermediate"}
+                  />
+                </div>
+              </div>
             </div>
           </TabsContent>
 
