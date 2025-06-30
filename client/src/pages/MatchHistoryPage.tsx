@@ -434,9 +434,9 @@ export default function MatchHistoryPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{(stats.winRate * 100).toFixed(1)}%</div>
+              <div className="text-2xl font-bold">{Math.round(stats.winRate * 100)}%</div>
               <p className="text-xs text-muted-foreground">
-                {stats.currentStreak} game {stats.streakType} streak
+                {stats.currentStreak} {stats.streakType} streak
               </p>
             </CardContent>
           </Card>
@@ -553,13 +553,9 @@ export default function MatchHistoryPage() {
                       <div className="text-right">
                         <div className="font-bold text-lg">{score}</div>
                         <div className="text-sm text-muted-foreground">
-                          +{match.xpAwarded} XP
+                          +{match.pointsAwarded} pts
                         </div>
                       </div>
-                      
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
                     </div>
                   </div>
                 );
