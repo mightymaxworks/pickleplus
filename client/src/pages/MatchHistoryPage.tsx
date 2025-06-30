@@ -37,12 +37,24 @@ interface Match {
   xpAwarded: number;
   pointsAwarded: number;
   createdAt: string;
-  // Relations
-  playerOne: { id: number; firstName: string; lastName: string; };
-  playerTwo: { id: number; firstName: string; lastName: string; };
+  // Enhanced player data from API
+  playerNames?: Record<number, {
+    displayName: string;
+    username: string;
+    avatarInitials: string;
+    firstName?: string;
+    lastName?: string;
+  }>;
+  playerOneName?: string;
+  playerTwoName?: string;
+  playerOnePartnerName?: string;
+  playerTwoPartnerName?: string;
+  // Relations (legacy)
+  playerOne?: { id: number; firstName: string; lastName: string; };
+  playerTwo?: { id: number; firstName: string; lastName: string; };
   playerOnePartner?: { id: number; firstName: string; lastName: string; };
   playerTwoPartner?: { id: number; firstName: string; lastName: string; };
-  winner: { id: number; firstName: string; lastName: string; };
+  winner?: { id: number; firstName: string; lastName: string; };
   tournament?: { id: number; name: string; };
 }
 
@@ -112,29 +124,37 @@ export default function MatchHistoryPage() {
   const getMatchOpponent = (match: Match) => {
     if (!user) return 'Unknown';
     
-    const formatPlayerName = (player: any) => {
-      if (!player) return 'Unknown Player';
-      const firstName = player.firstName || 'Player';
-      const lastName = player.lastName || `#${player.id}`;
-      return `${firstName} ${lastName}`;
+    // Use enhanced player data from API response if available
+    const getPlayerName = (playerId: number) => {
+      if (match.playerNames && match.playerNames[playerId]) {
+        return match.playerNames[playerId].displayName;
+      }
+      // Fallback to direct name fields from API
+      if (match.playerOneName && match.playerOneId === playerId) return match.playerOneName;
+      if (match.playerTwoName && match.playerTwoId === playerId) return match.playerTwoName;
+      if (match.playerOnePartnerName && match.playerOnePartnerId === playerId) return match.playerOnePartnerName;
+      if (match.playerTwoPartnerName && match.playerTwoPartnerId === playerId) return match.playerTwoPartnerName;
+      
+      // Final fallback
+      return `Player ${playerId}`;
     };
     
     if (match.formatType === 'singles') {
       // Singles format: A vs B
-      const opponent = match.playerOneId === user.id ? match.playerTwo : match.playerOne;
-      return formatPlayerName(opponent);
+      const opponentId = match.playerOneId === user.id ? match.playerTwoId : match.playerOneId;
+      return getPlayerName(opponentId);
     } else {
       // Doubles format: A/B vs C/D
       if (match.playerOneId === user.id || match.playerOnePartnerId === user.id) {
         // User is on team 1, show team 2
-        const playerTwo = formatPlayerName(match.playerTwo);
-        const playerTwoPartner = formatPlayerName(match.playerTwoPartner);
-        return `${playerTwo}/${playerTwoPartner}`;
+        const playerTwo = getPlayerName(match.playerTwoId);
+        const playerTwoPartner = match.playerTwoPartnerId ? getPlayerName(match.playerTwoPartnerId) : null;
+        return playerTwoPartner ? `${playerTwo}/${playerTwoPartner}` : playerTwo;
       } else {
         // User is on team 2, show team 1  
-        const playerOne = formatPlayerName(match.playerOne);
-        const playerOnePartner = formatPlayerName(match.playerOnePartner);
-        return `${playerOne}/${playerOnePartner}`;
+        const playerOne = getPlayerName(match.playerOneId);
+        const playerOnePartner = match.playerOnePartnerId ? getPlayerName(match.playerOnePartnerId) : null;
+        return playerOnePartner ? `${playerOne}/${playerOnePartner}` : playerOne;
       }
     }
   };
@@ -142,17 +162,23 @@ export default function MatchHistoryPage() {
   const getMyPartner = (match: Match) => {
     if (!user || match.formatType === 'singles') return null;
     
-    const formatPlayerName = (player: any) => {
-      if (!player) return null;
-      const firstName = player.firstName || 'Player';
-      const lastName = player.lastName || `#${player.id}`;
-      return `${firstName} ${lastName}`;
+    // Use enhanced player data from API response if available
+    const getPlayerName = (playerId: number) => {
+      if (match.playerNames && match.playerNames[playerId]) {
+        return match.playerNames[playerId].displayName;
+      }
+      // Fallback to direct name fields from API
+      if (match.playerOnePartnerName && match.playerOnePartnerId === playerId) return match.playerOnePartnerName;
+      if (match.playerTwoPartnerName && match.playerTwoPartnerId === playerId) return match.playerTwoPartnerName;
+      
+      // Final fallback
+      return `Player ${playerId}`;
     };
     
-    if (match.playerOneId === user.id && match.playerOnePartner) {
-      return formatPlayerName(match.playerOnePartner);
-    } else if (match.playerTwoId === user.id && match.playerTwoPartner) {
-      return formatPlayerName(match.playerTwoPartner);
+    if (match.playerOneId === user.id && match.playerOnePartnerId) {
+      return getPlayerName(match.playerOnePartnerId);
+    } else if (match.playerTwoId === user.id && match.playerTwoPartnerId) {
+      return getPlayerName(match.playerTwoPartnerId);
     }
     return null;
   };

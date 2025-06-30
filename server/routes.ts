@@ -2590,61 +2590,66 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
 
       console.log(`[API][MatchHistory] Getting match history for user ${userId}, filter: ${filterType}, period: ${filterPeriod}`);
 
-      // Get matches from storage
+      // Get matches from storage (already includes player data)
       const matches = await storage.getUserMatchHistory(userId, filterType, filterPeriod);
 
-      // Collect all unique player IDs from matches
-      const playerIds = new Set<number>();
-      matches.forEach(match => {
-        if (match.playerOneId) playerIds.add(match.playerOneId);
-        if (match.playerTwoId) playerIds.add(match.playerTwoId);
-        if (match.playerOnePartnerId) playerIds.add(match.playerOnePartnerId);
-        if (match.playerTwoPartnerId) playerIds.add(match.playerTwoPartnerId);
-      });
-
-      // Fetch user data for all players
-      const playerData: Record<number, any> = {};
-      for (const playerId of playerIds) {
-        try {
-          const user = await storage.getUser(playerId);
-          if (user) {
-            playerData[playerId] = {
-              displayName: `${user.firstName || 'Player'} ${user.lastName || playerId}`,
-              username: user.username || `player${playerId}`,
-              avatarInitials: `${(user.firstName || 'P')[0]}${(user.lastName || playerId.toString())[0]}`.toUpperCase(),
-              firstName: user.firstName,
-              lastName: user.lastName
-            };
-          } else {
-            // Use actual names if available from match data
-            playerData[playerId] = {
-              displayName: `Player ${playerId}`,
-              username: `player${playerId}`,
-              avatarInitials: `P${playerId}`
-            };
-          }
-        } catch (error) {
-          console.error(`Error fetching user data for player ${playerId}:`, error);
-          playerData[playerId] = {
-            displayName: `Player ${playerId}`,
-            username: `player${playerId}`,
-            avatarInitials: `P${playerId}`
+      // Create enhanced player data structure from existing storage data
+      const enhancedMatches = matches.map(match => {
+        // Build playerNames object from existing player data
+        const playerNames: Record<number, any> = {};
+        
+        if (match.playerOne) {
+          playerNames[match.playerOneId] = {
+            displayName: `${match.playerOne.firstName || 'Player'} ${match.playerOne.lastName || match.playerOneId}`,
+            username: `player${match.playerOneId}`,
+            avatarInitials: `${(match.playerOne.firstName || 'P')[0]}${(match.playerOne.lastName || match.playerOneId.toString())[0]}`.toUpperCase(),
+            firstName: match.playerOne.firstName,
+            lastName: match.playerOne.lastName
           };
         }
-      }
+        
+        if (match.playerTwo) {
+          playerNames[match.playerTwoId] = {
+            displayName: `${match.playerTwo.firstName || 'Player'} ${match.playerTwo.lastName || match.playerTwoId}`,
+            username: `player${match.playerTwoId}`,
+            avatarInitials: `${(match.playerTwo.firstName || 'P')[0]}${(match.playerTwo.lastName || match.playerTwoId.toString())[0]}`.toUpperCase(),
+            firstName: match.playerTwo.firstName,
+            lastName: match.playerTwo.lastName
+          };
+        }
+        
+        if (match.playerOnePartner) {
+          playerNames[match.playerOnePartnerId] = {
+            displayName: `${match.playerOnePartner.firstName || 'Player'} ${match.playerOnePartner.lastName || match.playerOnePartnerId}`,
+            username: `player${match.playerOnePartnerId}`,
+            avatarInitials: `${(match.playerOnePartner.firstName || 'P')[0]}${(match.playerOnePartner.lastName || match.playerOnePartnerId.toString())[0]}`.toUpperCase(),
+            firstName: match.playerOnePartner.firstName,
+            lastName: match.playerOnePartner.lastName
+          };
+        }
+        
+        if (match.playerTwoPartner) {
+          playerNames[match.playerTwoPartnerId] = {
+            displayName: `${match.playerTwoPartner.firstName || 'Player'} ${match.playerTwoPartner.lastName || match.playerTwoPartnerId}`,
+            username: `player${match.playerTwoPartnerId}`,
+            avatarInitials: `${(match.playerTwoPartner.firstName || 'P')[0]}${(match.playerTwoPartner.lastName || match.playerTwoPartnerId.toString())[0]}`.toUpperCase(),
+            firstName: match.playerTwoPartner.firstName,
+            lastName: match.playerTwoPartner.lastName
+          };
+        }
 
-      // Enhance matches with player data
-      const enhancedMatches = matches.map(match => ({
-        ...match,
-        playerNames: playerData,
-        // Add direct name fields for easier access
-        playerOneName: playerData[match.playerOneId]?.displayName || `Player ${match.playerOneId}`,
-        playerTwoName: playerData[match.playerTwoId]?.displayName || `Player ${match.playerTwoId}`,
-        playerOnePartnerName: match.playerOnePartnerId ? 
-          (playerData[match.playerOnePartnerId]?.displayName || `Player ${match.playerOnePartnerId}`) : null,
-        playerTwoPartnerName: match.playerTwoPartnerId ? 
-          (playerData[match.playerTwoPartnerId]?.displayName || `Player ${match.playerTwoPartnerId}`) : null
-      }));
+        return {
+          ...match,
+          playerNames,
+          // Add direct name fields for easier access
+          playerOneName: playerNames[match.playerOneId]?.displayName || `Player ${match.playerOneId}`,
+          playerTwoName: playerNames[match.playerTwoId]?.displayName || `Player ${match.playerTwoId}`,
+          playerOnePartnerName: match.playerOnePartnerId ? 
+            (playerNames[match.playerOnePartnerId]?.displayName || `Player ${match.playerOnePartnerId}`) : null,
+          playerTwoPartnerName: match.playerTwoPartnerId ? 
+            (playerNames[match.playerTwoPartnerId]?.displayName || `Player ${match.playerTwoPartnerId}`) : null
+        };
+      });
 
       console.log(`[API][MatchHistory] Returning ${enhancedMatches.length} matches with player data`);
       res.json(enhancedMatches);
