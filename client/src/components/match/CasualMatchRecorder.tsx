@@ -28,6 +28,7 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { PlayerSearchInput } from '@/components/match/PlayerSearchInput';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const casualMatchSchema = z.object({
   opponentId: z.number().min(1, 'Please select an opponent'),
@@ -52,6 +53,7 @@ interface CasualMatchRecorderProps {
 export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorded }: CasualMatchRecorderProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<{ id: number; name: string } | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const form = useForm<CasualMatchFormData>({
@@ -73,8 +75,8 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
     },
     onSuccess: (data) => {
       toast({
-        title: "Match Recorded Successfully",
-        description: `Earned ${data.pointsEarned} ranking points and ${data.xpAwarded} XP`,
+        title: t('match.form.recordedSuccessfully'),
+        description: t('match.form.earnedPoints', { points: data.pointsEarned, xp: data.xpAwarded }),
       });
       
       // Invalidate relevant queries

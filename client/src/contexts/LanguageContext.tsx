@@ -233,6 +233,13 @@ const translations: Record<Language, Record<string, string>> = {
     'match.form.selectTournamentTier': 'Select tournament tier',
     'match.form.club': 'Club',
     'match.form.regional': 'Regional',
+    'match.form.recordedSuccessfully': 'Match Recorded Successfully',
+    'match.form.earnedPoints': 'Earned {{points}} ranking points and {{xp}} XP',
+    'match.form.failedToRecord': 'Failed to Record Match',
+    'match.form.noOpponentSelected': 'No Opponent Selected',
+    'match.form.selectOpponent': 'Please select an opponent to record the match',
+    'match.form.recordCasualMatch': 'Record Casual Match',
+    'match.form.recordCasualDescription': 'Record matches with the hybrid ranking system. Tournament points count 100%, casual matches 50%.',
 
     // Dashboard Tabs
     'dashboard.tabs.performance': 'Performance',
@@ -578,6 +585,13 @@ const translations: Record<Language, Record<string, string>> = {
     'match.form.selectTournamentTier': '选择锦标赛等级',
     'match.form.club': '俱乐部',
     'match.form.regional': '地区',
+    'match.form.recordedSuccessfully': '比赛记录成功',
+    'match.form.earnedPoints': '获得{{points}}排名积分和{{xp}}经验值',
+    'match.form.failedToRecord': '记录比赛失败',
+    'match.form.noOpponentSelected': '未选择对手',
+    'match.form.selectOpponent': '请选择对手以记录比赛',
+    'match.form.recordCasualMatch': '记录休闲比赛',
+    'match.form.recordCasualDescription': '使用混合排名系统记录比赛。锦标赛积分计100%，休闲比赛计50%。',
     
     // Dashboard QR & Photo
     'dashboard.qr.codeHidden': '代码已隐藏',
