@@ -103,15 +103,29 @@ export default function MatchHistoryPage() {
   const getMatchOpponent = (match: Match) => {
     if (!user) return 'Unknown';
     
+    const formatPlayerName = (player: any) => {
+      if (!player) return 'Unknown Player';
+      const firstName = player.firstName || 'Player';
+      const lastName = player.lastName || `#${player.id}`;
+      return `${firstName} ${lastName}`;
+    };
+    
     if (match.formatType === 'singles') {
+      // Singles format: A vs B
       const opponent = match.playerOneId === user.id ? match.playerTwo : match.playerOne;
-      return `${opponent.firstName} ${opponent.lastName}`;
+      return formatPlayerName(opponent);
     } else {
-      // For doubles, show the team opponents
+      // Doubles format: A/B vs C/D
       if (match.playerOneId === user.id || match.playerOnePartnerId === user.id) {
-        return `${match.playerTwo.firstName} ${match.playerTwo.lastName} & ${match.playerTwoPartner?.firstName || ''} ${match.playerTwoPartner?.lastName || ''}`;
+        // User is on team 1, show team 2
+        const playerTwo = formatPlayerName(match.playerTwo);
+        const playerTwoPartner = formatPlayerName(match.playerTwoPartner);
+        return `${playerTwo}/${playerTwoPartner}`;
       } else {
-        return `${match.playerOne.firstName} ${match.playerOne.lastName} & ${match.playerOnePartner?.firstName || ''} ${match.playerOnePartner?.lastName || ''}`;
+        // User is on team 2, show team 1  
+        const playerOne = formatPlayerName(match.playerOne);
+        const playerOnePartner = formatPlayerName(match.playerOnePartner);
+        return `${playerOne}/${playerOnePartner}`;
       }
     }
   };
@@ -119,10 +133,17 @@ export default function MatchHistoryPage() {
   const getMyPartner = (match: Match) => {
     if (!user || match.formatType === 'singles') return null;
     
+    const formatPlayerName = (player: any) => {
+      if (!player) return null;
+      const firstName = player.firstName || 'Player';
+      const lastName = player.lastName || `#${player.id}`;
+      return `${firstName} ${lastName}`;
+    };
+    
     if (match.playerOneId === user.id && match.playerOnePartner) {
-      return `${match.playerOnePartner.firstName} ${match.playerOnePartner.lastName}`;
+      return formatPlayerName(match.playerOnePartner);
     } else if (match.playerTwoId === user.id && match.playerTwoPartner) {
-      return `${match.playerTwoPartner.firstName} ${match.playerTwoPartner.lastName}`;
+      return formatPlayerName(match.playerTwoPartner);
     }
     return null;
   };
@@ -834,7 +855,9 @@ export default function MatchHistoryPage() {
                       
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">vs {opponent}</span>
+                          <span className="font-medium">
+                            {match.formatType === 'singles' ? `vs ${opponent}` : `vs ${opponent}`}
+                          </span>
                           {partner && (
                             <span className="text-sm text-muted-foreground">
                               (with {partner})
