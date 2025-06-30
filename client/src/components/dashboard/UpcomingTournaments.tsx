@@ -154,7 +154,7 @@ function TournamentCard({ tournament, isExpanded }: TournamentCardProps) {
           <div className="grid grid-cols-2 gap-2 text-xs mb-3">
             <div className="flex items-center">
               <Users size={12} className="text-gray-500 mr-1" />
-              <span>{tournament.currentParticipants}/{tournament.maxParticipants || '∞'} Players</span>
+              <span>{tournament.currentParticipants}/{tournament.maxParticipants || '∞'} {t('tournament.players', 'Players')}</span>
             </div>
             
             <div className="flex items-center">
@@ -166,17 +166,17 @@ function TournamentCard({ tournament, isExpanded }: TournamentCardProps) {
           {tournament.checkedIn ? (
             <div className="bg-green-50 text-green-700 border border-green-200 rounded px-2 py-1 text-xs flex items-center">
               <CheckCircle2 size={12} className="mr-1" />
-              Checked In
+{t('tournament.checkedIn', 'Checked In')}
             </div>
           ) : daysRemaining <= 1 ? (
             <div className="bg-yellow-50 text-yellow-700 border border-yellow-200 rounded px-2 py-1 text-xs flex items-center">
               <AlertTriangle size={12} className="mr-1" />
-              Check-in Required Soon
+{t('tournament.checkInRequired', 'Check-in Required Soon')}
             </div>
           ) : (
             <div className="bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1 text-xs flex items-center">
               <Calendar size={12} className="mr-1" />
-              Registration Complete
+{t('tournament.registrationComplete', 'Registration Complete')}
             </div>
           )}
         </div>

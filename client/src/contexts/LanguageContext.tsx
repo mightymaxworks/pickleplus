@@ -396,6 +396,12 @@ const translations: Record<Language, Record<string, string>> = {
     'tournament.division': 'Division',
     'tournament.date': 'Date',
     'tournament.location': 'Location',
+    'tournament.today': 'Today!',
+    'tournament.daysRemaining': '{count} days remaining',
+    'tournament.players': 'Players',
+    'tournament.checkedIn': 'Checked In',
+    'tournament.checkInRequired': 'Check-in Required Soon',
+    'tournament.registrationComplete': 'Registration Complete',
     
     // Training & Facilities
     'training.centers': 'Training Centers',
@@ -977,6 +983,12 @@ const translations: Record<Language, Record<string, string>> = {
     'tournament.division': '组别',
     'tournament.date': '日期',
     'tournament.location': '地点',
+    'tournament.today': '今天！',
+    'tournament.daysRemaining': '还剩{count}天',
+    'tournament.players': '球员',
+    'tournament.checkedIn': '已签到',
+    'tournament.checkInRequired': '即将需要签到',
+    'tournament.registrationComplete': '报名完成',
     
     // Training & Facilities
     'training.centers': '训练中心',
