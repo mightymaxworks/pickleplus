@@ -495,8 +495,8 @@ export default function MatchHistoryPage() {
 
             {/* Basic Filters Row - Mobile Responsive */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:flex lg:flex-wrap gap-3">
-            <Select value={filterType} onValueChange={(value) => setFilterType(value as any)}>
-              <SelectTrigger className="w-[140px]">
+              <Select value={filterType} onValueChange={(value) => setFilterType(value as any)}>
+                <SelectTrigger className="w-full lg:w-[140px] h-12 md:h-10">
                 <SelectValue placeholder="Format" />
               </SelectTrigger>
               <SelectContent>
@@ -615,14 +615,15 @@ export default function MatchHistoryPage() {
               </div>
             </Card>
           )}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Sprint 3: Performance Analytics Dashboard */}
+      {/* Sprint 3: Performance Analytics Dashboard - Mobile Optimized */}
       {stats && (
         <div className="space-y-6">
-          {/* Core Statistics Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Core Statistics Overview - Mobile Responsive Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
@@ -1024,60 +1025,76 @@ export default function MatchHistoryPage() {
                   <div
                     key={match.id}
                     className={cn(
-                      "flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border",
+                      "flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-6 rounded-lg border transition-all duration-200 hover:shadow-md",
                       result === 'win' 
-                        ? "bg-green-50 border-green-200" 
-                        : "bg-red-50 border-red-200"
+                        ? "bg-green-50 border-green-200 hover:bg-green-100" 
+                        : "bg-red-50 border-red-200 hover:bg-red-100"
                     )}
                   >
-                    <div className="flex items-center space-x-4">
+                    {/* Mobile-First Layout */}
+                    <div className="flex items-start space-x-3 md:space-x-4 w-full">
                       <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white",
+                        "w-10 h-10 md:w-8 md:h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0",
                         result === 'win' ? "bg-green-500" : "bg-red-500"
                       )}>
                         {result === 'win' ? 'W' : 'L'}
                       </div>
                       
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">
-                            {match.formatType === 'singles' ? `vs ${opponent}` : `vs ${opponent}`}
-                          </span>
-                          {partner && (
-                            <span className="text-sm text-muted-foreground">
-                              (with {partner})
-                            </span>
-                          )}
-                          <Badge variant="outline" className="text-xs">
-                            {match.formatType}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(match.matchDate), 'MMM d, yyyy')}
-                          </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+                              <span className="font-medium text-base md:text-sm truncate">
+                                vs {opponent}
+                              </span>
+                              {partner && (
+                                <span className="text-sm text-muted-foreground">
+                                  (with {partner})
+                                </span>
+                              )}
+                              <div className="flex gap-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {match.formatType}
+                                </Badge>
+                                <Badge variant="secondary" className="text-xs">
+                                  {match.matchType}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            {/* Mobile-Optimized Metadata */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span className="hidden sm:inline">{format(new Date(match.matchDate), 'MMM d, yyyy')}</span>
+                                <span className="sm:hidden">{format(new Date(match.matchDate), 'MMM d')}</span>
+                              </span>
+                              
+                              {match.location && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{match.location}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
                           
-                          {match.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {match.location}
-                            </span>
-                          )}
-                          
-                          <Badge variant="secondary" className="text-xs">
-                            {match.matchType}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 mt-4 sm:mt-0">
-                      <div className="text-right">
-                        <div className="font-bold text-lg">{score}</div>
-                        <div className="text-sm text-muted-foreground">
-                          +{match.pointsAwarded} pts
+                          {/* Score Display - Mobile Enhanced */}
+                          <div className="flex items-center justify-between sm:justify-end gap-4 mt-2 sm:mt-0">
+                            <div className="text-right">
+                              <div className="font-bold text-xl md:text-lg">{score}</div>
+                              <div className="text-xs text-muted-foreground">
+                                +{match.pointsAwarded} pts
+                              </div>
+                            </div>
+                            
+                            {/* Sprint 4: Mobile Action Button */}
+                            <div className="sm:hidden">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Activity className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
