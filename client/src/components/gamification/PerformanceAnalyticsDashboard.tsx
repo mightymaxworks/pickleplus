@@ -76,12 +76,14 @@ interface PerformanceAnalyticsDashboardProps {
   userId: number;
   onSetGoal?: () => void;
   onViewRecommendations?: (skill: string) => void;
+  onClose?: () => void;
 }
 
 export default function PerformanceAnalyticsDashboard({
   userId,
   onSetGoal,
-  onViewRecommendations
+  onViewRecommendations,
+  onClose
 }: PerformanceAnalyticsDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'skills' | 'goals' | 'comparison'>('overview');
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);

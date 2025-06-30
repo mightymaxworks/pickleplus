@@ -55,6 +55,7 @@ interface AdvancedAchievementTrackerProps {
   userId: number;
   onAchievementClick?: (achievement: AchievementProgress) => void;
   onViewHistory?: () => void;
+  onClose?: () => void;
 }
 
 export default function AdvancedAchievementTracker({

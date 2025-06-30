@@ -84,6 +84,12 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
   const [comingSoonModal, setComingSoonModal] = useState({ isOpen: false, feature: '', description: '' });
   const [profileFormData, setProfileFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  // Sprint 4 component visibility states
+  const [showNotifications, setShowNotifications] = useState(true);
+  const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState(true);
+  const [showAdvancedAchievements, setShowAdvancedAchievements] = useState(true);
+  const [showCommunityChallenge, setShowCommunityChallenge] = useState(true);
+  const [showEnhancedSocial, setShowEnhancedSocial] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -1682,57 +1688,68 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
           <TabsContent value="social" className="space-y-6 mt-6">
             {/* Top Row - Performance Analytics and Real-time Notifications */}
             <div className="grid lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
-                <PerformanceAnalyticsDashboard
-                  userId={user?.id}
-                  onSetGoal={() => setComingSoonModal({ isOpen: true, feature: 'Goal Setting', description: 'Advanced goal tracking with AI-powered recommendations' })}
-                  onViewRecommendations={(skill) => setComingSoonModal({ isOpen: true, feature: `${skill} Training`, description: 'Personalized skill improvement plans' })}
-                />
-              </div>
-              <div>
-                <RealTimeNotifications
-                  userId={user?.id}
-                  isVisible={true}
-                  onClose={() => {}}
-                  onNotificationAction={(notification) => {
-                    toast({
-                      title: "Action Completed",
-                      description: `Handled ${notification.type} notification`,
-                    });
-                  }}
-                />
-              </div>
+              {showPerformanceAnalytics && (
+                <div className="lg:col-span-2">
+                  <PerformanceAnalyticsDashboard
+                    userId={user?.id}
+                    onSetGoal={() => setComingSoonModal({ isOpen: true, feature: 'Goal Setting', description: 'Advanced goal tracking with AI-powered recommendations' })}
+                    onViewRecommendations={(skill) => setComingSoonModal({ isOpen: true, feature: `${skill} Training`, description: 'Personalized skill improvement plans' })}
+                    onClose={() => setShowPerformanceAnalytics(false)}
+                  />
+                </div>
+              )}
+              {showNotifications && (
+                <div className={showPerformanceAnalytics ? "" : "lg:col-span-3"}>
+                  <RealTimeNotifications
+                    userId={user?.id}
+                    isVisible={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                    onNotificationAction={(notification) => {
+                      toast({
+                        title: "Action Completed",
+                        description: `Handled ${notification.type} notification`,
+                      });
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Middle Row - Advanced Achievement Tracking and Community Challenges */}
             <div className="grid lg:grid-cols-2 gap-4">
-              <AdvancedAchievementTracker
-                userId={user?.id}
-                onAchievementClick={(achievement) => {
-                  toast({
-                    title: "Achievement Details",
-                    description: `Viewing ${achievement.name} achievement`,
-                  });
-                }}
-                onViewHistory={() => setComingSoonModal({ isOpen: true, feature: 'Achievement History', description: 'Complete timeline of your achievements and progress' })}
-              />
+              {showAdvancedAchievements && (
+                <AdvancedAchievementTracker
+                  userId={user?.id}
+                  onAchievementClick={(achievement) => {
+                    toast({
+                      title: "Achievement Details",
+                      description: `Viewing ${achievement.name} achievement`,
+                    });
+                  }}
+                  onViewHistory={() => setComingSoonModal({ isOpen: true, feature: 'Achievement History', description: 'Complete timeline of your achievements and progress' })}
+                  onClose={() => setShowAdvancedAchievements(false)}
+                />
+              )}
               
-              <CommunityChallengePlatform
-                userId={user?.id}
-                onJoinChallenge={(challengeId) => {
-                  toast({
-                    title: "Challenge Joined",
-                    description: "Successfully joined the community challenge!",
-                  });
-                }}
-                onCreateChallenge={() => setComingSoonModal({ isOpen: true, feature: 'Challenge Creator', description: 'Create custom challenges for the community' })}
-                onJoinEvent={(eventId) => {
-                  toast({
-                    title: "Event Registration",
-                    description: "Successfully registered for the community event!",
-                  });
-                }}
-              />
+              {showCommunityChallenge && (
+                <CommunityChallengePlatform
+                  userId={user?.id}
+                  onJoinChallenge={(challengeId) => {
+                    toast({
+                      title: "Challenge Joined",
+                      description: "Successfully joined the community challenge!",
+                    });
+                  }}
+                  onCreateChallenge={() => setComingSoonModal({ isOpen: true, feature: 'Challenge Creator', description: 'Create custom challenges for the community' })}
+                  onJoinEvent={(eventId) => {
+                    toast({
+                      title: "Event Registration",
+                      description: "Successfully registered for the community event!",
+                    });
+                  }}
+                  onClose={() => setShowCommunityChallenge(false)}
+                />
+              )}
             </div>
 
             {/* Bottom Row - Enhanced Social Hub and Original Sprint 3 Components */}
