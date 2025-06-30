@@ -869,6 +869,40 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
 
   // Basic user info endpoint
+  // Check if user profile needs completion
+  app.get('/api/user/profile-completion-status', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const needsCompletion = !user.firstName || !user.lastName;
+      const missingFields = [];
+      
+      if (!user.firstName) missingFields.push('firstName');
+      if (!user.lastName) missingFields.push('lastName');
+
+      res.json({
+        needsCompletion,
+        missingFields,
+        currentProfile: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
+          email: user.email
+        }
+      });
+    } catch (error) {
+      console.error('[API][ProfileCompletion] Error checking profile completion status:', error);
+      res.status(500).json({ error: 'Failed to check profile completion status' });
+    }
+  });
+
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {
     const user = await storage.getUser(req.user!.id);
     res.json(user);

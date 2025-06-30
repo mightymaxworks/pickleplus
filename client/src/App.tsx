@@ -24,6 +24,7 @@ import RoleProtectedDemoPage from './pages/RoleProtectedDemoPage' // PKL-278651-
 import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
 import { LanguageProvider } from '@/contexts/LanguageContext' // Language internationalization
 import { SmartFeatureGuide } from '@/components/onboarding/SmartFeatureGuide' // Smart feature discovery
+import { ProfileCompletionWrapper } from '@/components/profile/ProfileCompletionWrapper' // Profile completion system
 
 
 // Import module initializations
