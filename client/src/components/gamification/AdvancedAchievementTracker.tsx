@@ -30,8 +30,8 @@ interface AchievementProgress {
   dependency?: string[];
   estimatedTimeToComplete: number; // in days
   difficultyLevel: 1 | 2 | 3 | 4 | 5;
-  rewardXP: number;
   rewardPoints: number;
+  rewardPicklePoints: number;
   unlockConditions: string[];
   completedDate?: Date;
   streakRequired?: number;
@@ -45,8 +45,8 @@ interface AchievementChain {
   achievements: AchievementProgress[];
   totalProgress: number;
   chainReward: {
-    xp: number;
     points: number;
+    picklePoints: number;
     specialBadge?: string;
   };
 }
@@ -83,8 +83,8 @@ export default function AdvancedAchievementTracker({
         targetProgress: 100,
         isCompleted: false,
         difficultyLevel: 3,
-        rewardXP: 500,
-        rewardPoints: 100,
+        rewardPoints: 500,
+        rewardPicklePoints: 100,
         estimatedTimeToComplete: 12,
         unlockConditions: ['Complete basic serving drill'],
         streakRequired: 5,
@@ -100,8 +100,8 @@ export default function AdvancedAchievementTracker({
         targetProgress: 20,
         isCompleted: false,
         difficultyLevel: 2,
-        rewardXP: 300,
-        rewardPoints: 75,
+        rewardPoints: 300,
+        rewardPicklePoints: 75,
         estimatedTimeToComplete: 8,
         unlockConditions: ['Join community'],
       },
@@ -115,8 +115,8 @@ export default function AdvancedAchievementTracker({
         targetProgress: 7,
         isCompleted: false,
         difficultyLevel: 2,
-        rewardXP: 200,
-        rewardPoints: 50,
+        rewardPoints: 200,
+        rewardPicklePoints: 50,
         estimatedTimeToComplete: 3,
         unlockConditions: [],
         streakRequired: 7,
@@ -132,8 +132,8 @@ export default function AdvancedAchievementTracker({
         achievements: mockAchievements.filter(a => a.name.includes('Serve')),
         totalProgress: 45,
         chainReward: {
-          xp: 1000,
-          points: 250,
+          points: 1000,
+          picklePoints: 250,
           specialBadge: 'Ace Specialist'
         }
       }
@@ -302,8 +302,8 @@ export default function AdvancedAchievementTracker({
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-2">
-                          <span>+{achievement.rewardXP} XP</span>
                           <span>+{achievement.rewardPoints} Points</span>
+                          <span>+{achievement.rewardPicklePoints} Pickle Points</span>
                         </div>
                         {achievement.unlockConditions.length > 0 && (
                           <Badge variant="secondary" className="text-xs">
