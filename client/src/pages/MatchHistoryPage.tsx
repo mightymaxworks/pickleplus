@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc, BarChart3, PieChart, Activity, Target, Zap, Award, Smartphone } from 'lucide-react';
+import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc, BarChart3, PieChart, Activity, Target, Zap, Award, Smartphone, LineChart, MoreHorizontal, Eye, Download, Share2, MessageCircle, ThumbsUp, Bookmark } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -83,6 +83,13 @@ export default function MatchHistoryPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [selectedInsightCategory, setSelectedInsightCategory] = useState<'performance' | 'patterns' | 'recommendations'>('performance');
+  
+  // Sprint 5: Advanced Analysis State
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
+  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [selectedMatches, setSelectedMatches] = useState<number[]>([]);
+  const [showMatchDetails, setShowMatchDetails] = useState(false);
 
   // Fetch match history
   const { data: rawMatches = [], isLoading: matchesLoading } = useQuery<Match[]>({
@@ -330,7 +337,68 @@ export default function MatchHistoryPage() {
     return insights;
   };
 
+  // Sprint 5: Advanced Analysis Functions
+  const toggleMatchSelection = (matchId: number) => {
+    setSelectedMatches(prev => 
+      prev.includes(matchId) 
+        ? prev.filter(id => id !== matchId)
+        : [...prev, matchId]
+    );
+  };
+
+  const getSelectedMatchData = () => {
+    return filteredAndSortedMatches.filter(match => selectedMatches.includes(match.id));
+  };
+
+  const calculateAdvancedStats = (matches: Match[]) => {
+    if (matches.length === 0) return null;
+    
+    const totalMatches = matches.length;
+    const wins = matches.filter(match => getMatchResult(match) === 'win').length;
+    const winRate = wins / totalMatches;
+    
+    // Performance by opponent analysis
+    const opponentStats = matches.reduce((acc, match) => {
+      const opponent = getMatchOpponent(match);
+      const result = getMatchResult(match);
+      if (!acc[opponent]) {
+        acc[opponent] = { played: 0, won: 0, lost: 0, winRate: 0 };
+      }
+      acc[opponent].played++;
+      if (result === 'win') acc[opponent].won++;
+      else acc[opponent].lost++;
+      acc[opponent].winRate = acc[opponent].won / acc[opponent].played;
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Format distribution
+    const singlesMatches = matches.filter(m => m.formatType === 'singles');
+    const doublesMatches = matches.filter(m => m.formatType === 'doubles');
+    
+    return {
+      totalMatches,
+      winRate,
+      singlesWinRate: singlesMatches.length > 0 ? singlesMatches.filter(m => getMatchResult(m) === 'win').length / singlesMatches.length : 0,
+      doublesWinRate: doublesMatches.length > 0 ? doublesMatches.filter(m => getMatchResult(m) === 'win').length / doublesMatches.length : 0,
+      opponentStats,
+      bestOpponent: Object.entries(opponentStats).reduce((best, [name, stats]: [string, any]) => 
+        stats.played >= 3 && stats.winRate > (best?.winRate || 0) ? { name, ...stats } : best, null),
+      challengingOpponent: Object.entries(opponentStats).reduce((worst, [name, stats]: [string, any]) => 
+        stats.played >= 3 && stats.winRate < (worst?.winRate || 1) ? { name, ...stats } : worst, null)
+    };
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setFilterType('all');
+    setFilterPeriod('all');
+    setFilterResult('all');
+    setFilterMatchType('all');
+    setFilterDivision('all');
+  };
+
   const aiInsights = generateAIInsights();
+  const advancedStats = calculateAdvancedStats(getSelectedMatchData());
   const isLoading = matchesLoading || statsLoading;
 
   if (isLoading) {
@@ -367,7 +435,7 @@ export default function MatchHistoryPage() {
           </p>
         </div>
         
-        {/* Sprint 4: AI Insights Toggle - Mobile Optimized */}
+        {/* Sprint 4: AI Insights Toggle - Mobile Optimized + Sprint 5: Advanced Analytics */}
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant={showInsights ? "default" : "outline"}
@@ -378,6 +446,37 @@ export default function MatchHistoryPage() {
             <span className="hidden sm:inline">AI Insights</span>
             <span className="sm:hidden">Insights</span>
           </Button>
+          
+          {/* Sprint 5: Advanced Analytics Button */}
+          <Button 
+            variant={showAdvancedAnalytics ? "default" : "outline"}
+            onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
+            className="flex items-center gap-2"
+          >
+            <LineChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Advanced Analytics</span>
+            <span className="sm:hidden">Analytics</span>
+          </Button>
+          
+          {/* Sprint 5: Compare Matches Button */}
+          <Button 
+            variant={comparisonMode ? "default" : "outline"}
+            onClick={() => {
+              setComparisonMode(!comparisonMode);
+              if (!comparisonMode) setSelectedMatches([]);
+            }}
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Compare</span>
+            <span className="sm:hidden">Compare</span>
+            {selectedMatches.length > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {selectedMatches.length}
+              </Badge>
+            )}
+          </Button>
+          
           <Button
             variant="outline"
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
