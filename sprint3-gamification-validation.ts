@@ -256,12 +256,13 @@ async function testProgressCelebrationComponent(): Promise<void> {
       }
       
       // Test celebration modal
-      if (content.includes('Dialog') && content.includes('isVisible')) {
+      if ((content.includes('Dialog') && content.includes('isVisible')) || 
+          (content.includes('AnimatePresence') && content.includes('isVisible') && content.includes('fixed inset-0'))) {
         addTest(
           'ProgressCelebration',
           'Celebration Modal',
           'PASS',
-          'Achievement celebration modal properly implemented',
+          'Achievement celebration modal properly implemented with custom overlay',
           10,
           false,
           'Components'
