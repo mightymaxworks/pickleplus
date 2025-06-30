@@ -1678,41 +1678,122 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
             </div>
           </TabsContent>
 
-          {/* Social Tab - Sprint 3 Gamification Features */}
-          <TabsContent value="social" className="space-y-4 mt-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Badge Showcase */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-500" />
-                    Achievement Badges
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <BadgeShowcase
-                    userLevel={user.skillLevel || "Intermediate"}
-                    currentRating={user.duprRating || 4.2}
-                    ratingType="dupr"
-                  />
-                </CardContent>
-              </Card>
+          {/* Social Tab - Sprint 4 Advanced Gamification Features */}
+          <TabsContent value="social" className="space-y-6 mt-6">
+            {/* Top Row - Performance Analytics and Real-time Notifications */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <PerformanceAnalyticsDashboard
+                  userId={user?.id}
+                  onSetGoal={() => setComingSoonModal({ isOpen: true, feature: 'Goal Setting', description: 'Advanced goal tracking with AI-powered recommendations' })}
+                  onViewRecommendations={(skill) => setComingSoonModal({ isOpen: true, feature: `${skill} Training`, description: 'Personalized skill improvement plans' })}
+                />
+              </div>
+              <div>
+                <RealTimeNotifications
+                  userId={user?.id}
+                  isVisible={true}
+                  onClose={() => {}}
+                  onNotificationAction={(notification) => {
+                    toast({
+                      title: "Action Completed",
+                      description: `Handled ${notification.type} notification`,
+                    });
+                  }}
+                />
+              </div>
+            </div>
 
-              {/* Social Sharing Widget */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-blue-500" />
-                    Social Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SocialSharingWidget
-                    userRating={user.duprRating || 4.2}
-                    userBadgeCount={5}
-                  />
-                </CardContent>
-              </Card>
+            {/* Middle Row - Advanced Achievement Tracking and Community Challenges */}
+            <div className="grid lg:grid-cols-2 gap-4">
+              <AdvancedAchievementTracker
+                userId={user?.id}
+                onAchievementClick={(achievement) => {
+                  toast({
+                    title: "Achievement Details",
+                    description: `Viewing ${achievement.name} achievement`,
+                  });
+                }}
+                onViewHistory={() => setComingSoonModal({ isOpen: true, feature: 'Achievement History', description: 'Complete timeline of your achievements and progress' })}
+              />
+              
+              <CommunityChallengePlatform
+                userId={user?.id}
+                onJoinChallenge={(challengeId) => {
+                  toast({
+                    title: "Challenge Joined",
+                    description: "Successfully joined the community challenge!",
+                  });
+                }}
+                onCreateChallenge={() => setComingSoonModal({ isOpen: true, feature: 'Challenge Creator', description: 'Create custom challenges for the community' })}
+                onJoinEvent={(eventId) => {
+                  toast({
+                    title: "Event Registration",
+                    description: "Successfully registered for the community event!",
+                  });
+                }}
+              />
+            </div>
+
+            {/* Bottom Row - Enhanced Social Hub and Original Sprint 3 Components */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <EnhancedSocialHub
+                  userId={user?.id}
+                  onSendFriendRequest={(userId) => {
+                    toast({
+                      title: "Friend Request Sent",
+                      description: "Your friend request has been sent!",
+                    });
+                  }}
+                  onAcceptMentorship={(requestId) => {
+                    toast({
+                      title: "Mentorship Accepted",
+                      description: "You've accepted the mentorship request!",
+                    });
+                  }}
+                  onShareAchievement={(achievementId) => {
+                    toast({
+                      title: "Achievement Shared",
+                      description: "Your achievement has been shared with friends!",
+                    });
+                  }}
+                />
+              </div>
+              
+              {/* Sprint 3 Components - Badge Showcase & Social Widget */}
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="w-5 h-5 text-amber-500" />
+                      Achievement Badges
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <BadgeShowcase
+                      userLevel={user.skillLevel || "Intermediate"}
+                      currentRating={user.duprRating || 4.2}
+                      ratingType="dupr"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-blue-500" />
+                      Social Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SocialSharingWidget
+                      userRating={user.duprRating || 4.2}
+                      userBadgeCount={5}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
