@@ -295,6 +295,10 @@ export interface IStorage extends CommunityStorage {
   awardPlayerBadge(badgeData: any): Promise<any>;
   getSessionSummary(sessionId: number): Promise<any>;
   getPlayerTrainingProgress(playerId: number): Promise<any>;
+  
+  // Match History operations - Sprint 1: Foundation
+  getUserMatchHistory(userId: number, filterType: string, filterPeriod: string): Promise<any[]>;
+  getUserMatchStatistics(userId: number, filterPeriod: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2611,6 +2615,262 @@ export class DatabaseStorage implements IStorage {
         intermediate_players: 0,
         advanced_players: 0,
         pro_players: 0
+      };
+    }
+  }
+
+  // Match History operations - Sprint 1: Foundation
+  async getUserMatchHistory(userId: number, filterType: string, filterPeriod: string): Promise<any[]> {
+    try {
+      console.log(`[Storage][MatchHistory] Getting match history for user ${userId}, filter: ${filterType}, period: ${filterPeriod}`);
+      
+      let whereConditions = [];
+      let periodFilter = '';
+      
+      // Build filter conditions
+      whereConditions.push(`(m.player_one_id = ${userId} OR m.player_two_id = ${userId} OR m.player_one_partner_id = ${userId} OR m.player_two_partner_id = ${userId})`);
+      
+      if (filterType === 'singles') {
+        whereConditions.push(`m.format_type = 'singles'`);
+      } else if (filterType === 'doubles') {
+        whereConditions.push(`m.format_type = 'doubles'`);
+      }
+      
+      // Add period filter
+      if (filterPeriod === '30days') {
+        periodFilter = `AND m.match_date >= NOW() - INTERVAL '30 days'`;
+      } else if (filterPeriod === '90days') {
+        periodFilter = `AND m.match_date >= NOW() - INTERVAL '90 days'`;
+      } else if (filterPeriod === '1year') {
+        periodFilter = `AND m.match_date >= NOW() - INTERVAL '1 year'`;
+      }
+      
+      const result = await db.execute(sql`
+        SELECT 
+          m.*,
+          p1.first_name as player_one_first_name,
+          p1.last_name as player_one_last_name,
+          p2.first_name as player_two_first_name,
+          p2.last_name as player_two_last_name,
+          p1p.first_name as player_one_partner_first_name,
+          p1p.last_name as player_one_partner_last_name,
+          p2p.first_name as player_two_partner_first_name,
+          p2p.last_name as player_two_partner_last_name,
+          w.first_name as winner_first_name,
+          w.last_name as winner_last_name,
+          t.name as tournament_name
+        FROM matches m
+        LEFT JOIN users p1 ON m.player_one_id = p1.id
+        LEFT JOIN users p2 ON m.player_two_id = p2.id
+        LEFT JOIN users p1p ON m.player_one_partner_id = p1p.id
+        LEFT JOIN users p2p ON m.player_two_partner_id = p2p.id
+        LEFT JOIN users w ON m.winner_id = w.id
+        LEFT JOIN tournaments t ON m.tournament_id = t.id
+        WHERE ${sql.raw(whereConditions.join(' AND '))} ${sql.raw(periodFilter)}
+        ORDER BY m.match_date DESC, m.created_at DESC
+        LIMIT 50
+      `);
+
+      // Transform the results to match the expected format
+      const matches = result.rows.map((row: any) => ({
+        id: row.id,
+        matchDate: row.match_date,
+        playerOneId: row.player_one_id,
+        playerTwoId: row.player_two_id,
+        playerOnePartnerId: row.player_one_partner_id,
+        playerTwoPartnerId: row.player_two_partner_id,
+        winnerId: row.winner_id,
+        scorePlayerOne: row.score_player_one,
+        scorePlayerTwo: row.score_player_two,
+        gameScores: row.game_scores,
+        formatType: row.format_type,
+        scoringSystem: row.scoring_system,
+        pointsToWin: row.points_to_win,
+        division: row.division,
+        matchType: row.match_type,
+        eventTier: row.event_tier,
+        location: row.location,
+        tournamentId: row.tournament_id,
+        isRated: row.is_rated,
+        isVerified: row.is_verified,
+        validationStatus: row.validation_status,
+        notes: row.notes,
+        xpAwarded: row.xp_awarded,
+        pointsAwarded: row.points_awarded,
+        createdAt: row.created_at,
+        playerOne: {
+          id: row.player_one_id,
+          firstName: row.player_one_first_name,
+          lastName: row.player_one_last_name
+        },
+        playerTwo: {
+          id: row.player_two_id,
+          firstName: row.player_two_first_name,
+          lastName: row.player_two_last_name
+        },
+        playerOnePartner: row.player_one_partner_id ? {
+          id: row.player_one_partner_id,
+          firstName: row.player_one_partner_first_name,
+          lastName: row.player_one_partner_last_name
+        } : undefined,
+        playerTwoPartner: row.player_two_partner_id ? {
+          id: row.player_two_partner_id,
+          firstName: row.player_two_partner_first_name,
+          lastName: row.player_two_partner_last_name
+        } : undefined,
+        winner: {
+          id: row.winner_id,
+          firstName: row.winner_first_name,
+          lastName: row.winner_last_name
+        },
+        tournament: row.tournament_id ? {
+          id: row.tournament_id,
+          name: row.tournament_name
+        } : undefined
+      }));
+
+      console.log(`[Storage][MatchHistory] Found ${matches.length} matches for user ${userId}`);
+      return matches;
+    } catch (error) {
+      console.error('[Storage][MatchHistory] Error fetching match history:', error);
+      return [];
+    }
+  }
+
+  async getUserMatchStatistics(userId: number, filterPeriod: string): Promise<any> {
+    try {
+      console.log(`[Storage][MatchStats] Getting match statistics for user ${userId}, period: ${filterPeriod}`);
+      
+      let periodFilter = '';
+      if (filterPeriod === '30days') {
+        periodFilter = `AND m.match_date >= NOW() - INTERVAL '30 days'`;
+      } else if (filterPeriod === '90days') {
+        periodFilter = `AND m.match_date >= NOW() - INTERVAL '90 days'`;
+      } else if (filterPeriod === '1year') {
+        periodFilter = `AND m.match_date >= NOW() - INTERVAL '1 year'`;
+      }
+      
+      // Get basic statistics
+      const statsResult = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_matches,
+          COUNT(CASE WHEN m.winner_id = ${userId} THEN 1 END) as wins,
+          COUNT(CASE WHEN m.winner_id != ${userId} THEN 1 END) as losses,
+          SUM(m.xp_awarded) as total_xp_earned,
+          SUM(m.points_awarded) as total_points_earned,
+          COUNT(CASE WHEN m.format_type = 'singles' THEN 1 END) as singles_played,
+          COUNT(CASE WHEN m.format_type = 'singles' AND m.winner_id = ${userId} THEN 1 END) as singles_won,
+          COUNT(CASE WHEN m.format_type = 'doubles' THEN 1 END) as doubles_played,
+          COUNT(CASE WHEN m.format_type = 'doubles' AND m.winner_id = ${userId} THEN 1 END) as doubles_won
+        FROM matches m
+        WHERE (m.player_one_id = ${userId} OR m.player_two_id = ${userId} OR m.player_one_partner_id = ${userId} OR m.player_two_partner_id = ${userId})
+        ${sql.raw(periodFilter)}
+      `);
+
+      const basicStats = statsResult.rows[0];
+      const totalMatches = parseInt(basicStats.total_matches);
+      const wins = parseInt(basicStats.wins);
+      const losses = parseInt(basicStats.losses);
+      const winRate = totalMatches > 0 ? wins / totalMatches : 0;
+
+      // Get recent performance (last 10 games)
+      const recentResult = await db.execute(sql`
+        SELECT 
+          COUNT(CASE WHEN m.winner_id = ${userId} THEN 1 END) as recent_wins,
+          COUNT(*) as recent_total
+        FROM (
+          SELECT m.winner_id
+          FROM matches m
+          WHERE (m.player_one_id = ${userId} OR m.player_two_id = ${userId} OR m.player_one_partner_id = ${userId} OR m.player_two_partner_id = ${userId})
+          ORDER BY m.match_date DESC, m.created_at DESC
+          LIMIT 10
+        ) m
+      `);
+
+      const recentStats = recentResult.rows[0];
+
+      // Calculate current streak
+      const streakResult = await db.execute(sql`
+        SELECT m.winner_id
+        FROM matches m
+        WHERE (m.player_one_id = ${userId} OR m.player_two_id = ${userId} OR m.player_one_partner_id = ${userId} OR m.player_two_partner_id = ${userId})
+        ORDER BY m.match_date DESC, m.created_at DESC
+        LIMIT 20
+      `);
+
+      let currentStreak = 0;
+      let streakType: 'win' | 'loss' = 'win';
+      
+      if (streakResult.rows.length > 0) {
+        const firstResult = streakResult.rows[0].winner_id === userId;
+        streakType = firstResult ? 'win' : 'loss';
+        
+        for (const row of streakResult.rows) {
+          const isWin = row.winner_id === userId;
+          if ((streakType === 'win' && isWin) || (streakType === 'loss' && !isWin)) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+
+      const stats = {
+        totalMatches,
+        wins,
+        losses,
+        winRate,
+        currentStreak,
+        streakType,
+        totalXpEarned: parseInt(basicStats.total_xp_earned) || 0,
+        totalPointsEarned: parseInt(basicStats.total_points_earned) || 0,
+        averageMatchDuration: 45, // Placeholder - would need duration tracking
+        formatBreakdown: {
+          singles: {
+            played: parseInt(basicStats.singles_played) || 0,
+            won: parseInt(basicStats.singles_won) || 0
+          },
+          doubles: {
+            played: parseInt(basicStats.doubles_played) || 0,
+            won: parseInt(basicStats.doubles_won) || 0
+          }
+        },
+        divisionBreakdown: {}, // Could be expanded to include division stats
+        recentPerformance: {
+          last10Games: {
+            wins: parseInt(recentStats.recent_wins) || 0,
+            losses: (parseInt(recentStats.recent_total) || 0) - (parseInt(recentStats.recent_wins) || 0)
+          },
+          last30Days: {
+            matches: totalMatches, // For the current filter period
+            winRate
+          }
+        }
+      };
+
+      console.log(`[Storage][MatchStats] Calculated statistics for user ${userId}:`, stats);
+      return stats;
+    } catch (error) {
+      console.error('[Storage][MatchStats] Error calculating match statistics:', error);
+      return {
+        totalMatches: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        currentStreak: 0,
+        streakType: 'win',
+        totalXpEarned: 0,
+        totalPointsEarned: 0,
+        averageMatchDuration: 0,
+        formatBreakdown: {
+          singles: { played: 0, won: 0 },
+          doubles: { played: 0, won: 0 }
+        },
+        divisionBreakdown: {},
+        recentPerformance: {
+          last10Games: { wins: 0, losses: 0 },
+          last30Days: { matches: 0, winRate: 0 }
+        }
       };
     }
   }

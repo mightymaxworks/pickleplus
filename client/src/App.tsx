@@ -38,7 +38,8 @@ import {
   LazyFeatureShowcasePage,
   LazyProfilePage,
   LazyProfileEditPage,
-  LazyMatchesPage, 
+  LazyMatchesPage,
+  LazyMatchHistoryPage, // Sprint 1: Foundation - Match History & Statistics Interface
   LazyRecordMatchPage,
   LazyTournamentDiscoveryPage,
   LazyTournamentManagementPage,

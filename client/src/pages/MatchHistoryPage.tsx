@@ -4,11 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { StandardLayout } from '@/components/StandardLayout';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
 
 interface Match {
   id: number;
@@ -67,7 +66,7 @@ interface MatchHistoryStats {
 }
 
 export default function MatchHistoryPage() {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
   const [filterPeriod, setFilterPeriod] = useState<'all' | '30days' | '90days' | '1year'>('all');
 

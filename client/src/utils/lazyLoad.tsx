@@ -82,3 +82,30 @@ export function lazyLoad<T extends React.ComponentType<any>>(
 export function preloadComponent(component: { preload: () => Promise<any> }) {
   return component.preload();
 }
+
+// Lazy-loaded page components
+export const LazyLandingPage = lazyLoad(() => import('../pages/LandingPage'));
+export const LazyAuthPage = lazyLoad(() => import('../pages/auth-page'));
+export const LazyAboutUsPage = lazyLoad(() => import('../pages/AboutUsPage'));
+export const LazyFeatureShowcasePage = lazyLoad(() => import('../pages/FeatureShowcasePage'));
+export const LazyProfilePage = lazyLoad(() => import('../pages/ProfilePage'));
+export const LazyProfileEditPage = lazyLoad(() => import('../pages/ProfileEditPage'));
+export const LazyMatchesPage = lazyLoad(() => import('../pages/MatchesPage'));
+export const LazyMatchHistoryPage = lazyLoad(() => import('../pages/MatchHistoryPage')); // Sprint 1: Foundation
+export const LazyRecordMatchPage = lazyLoad(() => import('../pages/RecordMatchPage'));
+export const LazyTournamentDiscoveryPage = lazyLoad(() => import('../pages/TournamentDiscoveryPage'));
+export const LazyTournamentManagementPage = lazyLoad(() => import('../pages/TournamentManagementPage'));
+export const LazyTournamentDetailsPage = lazyLoad(() => import('../pages/TournamentDetailsPage'));
+export const LazyBracketDetailsPage = lazyLoad(() => import('../pages/BracketDetailsPage'));
+export const LazyLeaderboardPage = lazyLoad(() => import('../pages/LeaderboardPage'));
+export const LazyMasteryPathsPage = lazyLoad(() => import('../pages/MasteryPathsPage'));
+export const LazyEventDiscoveryPage = lazyLoad(() => import('../pages/EventDiscoveryPage'));
+export const LazyEventDetailsPage = lazyLoad(() => import('../pages/EventDetailsPage'));
+export const LazyPlayerDevelopmentHubPage = lazyLoad(() => import('../pages/PlayerDevelopmentHubPage'));
+export const LazyTrainingCenterPage = lazyLoad(() => import('../pages/TrainingCenterPage'));
+export const LazyDashboardPage = lazyLoad(() => import('../pages/DashboardPage'));
+export const LazyFeaturesPage = lazyLoad(() => import('../pages/FeaturesPage'));
+export const LazyForgotPasswordPage = lazyLoad(() => import('../pages/ForgotPasswordPage'));
+export const LazyResetPasswordPage = lazyLoad(() => import('../pages/ResetPasswordPage'));
+export const LazyTestPage = lazyLoad(() => import('../pages/TestPage'));
+export const LazyNotFoundPage = lazyLoad(() => import('../pages/NotFoundPage'));
