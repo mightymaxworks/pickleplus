@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter } from 'lucide-react';
+import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -68,11 +70,20 @@ interface MatchHistoryStats {
 export default function MatchHistoryPage() {
   // Mock user for development - in production this would come from auth context
   const user = { id: 1, firstName: 'Test', lastName: 'User' };
+  
+  // Sprint 2: Enhanced Search & Filtering State
+  const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
   const [filterPeriod, setFilterPeriod] = useState<'all' | '30days' | '90days' | '1year'>('all');
+  const [filterResult, setFilterResult] = useState<'all' | 'wins' | 'losses'>('all');
+  const [filterMatchType, setFilterMatchType] = useState<'all' | 'casual' | 'league' | 'tournament'>('all');
+  const [filterDivision, setFilterDivision] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'opponent' | 'score' | 'points'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Fetch match history
-  const { data: matches = [], isLoading: matchesLoading } = useQuery<Match[]>({
+  const { data: rawMatches = [], isLoading: matchesLoading } = useQuery<Match[]>({
     queryKey: ['/api/matches/history', user?.id, filterType, filterPeriod],
     enabled: !!user?.id,
   });
@@ -83,8 +94,7 @@ export default function MatchHistoryPage() {
     enabled: !!user?.id,
   });
 
-  const isLoading = matchesLoading || statsLoading;
-
+  // Helper functions for match data processing
   const getMatchResult = (match: Match) => {
     if (!user) return 'unknown';
     return match.winnerId === user.id ? 'win' : 'loss';
@@ -126,6 +136,100 @@ export default function MatchHistoryPage() {
     }
   };
 
+  // Sprint 2: Advanced filtering and searching logic
+  const filteredAndSortedMatches = useMemo(() => {
+    let filtered = [...rawMatches];
+
+    // Text search across opponents, locations, tournaments
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(match => {
+        const opponent = getMatchOpponent(match).toLowerCase();
+        const location = (match.location || '').toLowerCase();
+        const tournament = (match.tournament?.name || '').toLowerCase();
+        const division = match.division.toLowerCase();
+        
+        return opponent.includes(query) || 
+               location.includes(query) || 
+               tournament.includes(query) ||
+               division.includes(query);
+      });
+    }
+
+    // Filter by result (wins/losses)
+    if (filterResult !== 'all' && user) {
+      filtered = filtered.filter(match => {
+        const isWin = match.winnerId === user.id;
+        return filterResult === 'wins' ? isWin : !isWin;
+      });
+    }
+
+    // Filter by match type
+    if (filterMatchType !== 'all') {
+      filtered = filtered.filter(match => match.matchType === filterMatchType);
+    }
+
+    // Filter by division
+    if (filterDivision !== 'all') {
+      filtered = filtered.filter(match => match.division === filterDivision);
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (sortBy) {
+        case 'date':
+          aValue = new Date(a.matchDate);
+          bValue = new Date(b.matchDate);
+          break;
+        case 'opponent':
+          aValue = getMatchOpponent(a);
+          bValue = getMatchOpponent(b);
+          break;
+        case 'score':
+          aValue = parseInt(a.scorePlayerOne) + parseInt(a.scorePlayerTwo);
+          bValue = parseInt(b.scorePlayerOne) + parseInt(b.scorePlayerTwo);
+          break;
+        case 'points':
+          aValue = a.pointsAwarded;
+          bValue = b.pointsAwarded;
+          break;
+        default:
+          aValue = new Date(a.matchDate);
+          bValue = new Date(b.matchDate);
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+
+    return filtered;
+  }, [rawMatches, searchQuery, filterResult, filterMatchType, filterDivision, sortBy, sortOrder, user]);
+
+  // Get unique divisions for filter dropdown
+  const availableDivisions = useMemo(() => {
+    const divisions = Array.from(new Set(rawMatches.map(match => match.division)));
+    return divisions.filter(Boolean).sort();
+  }, [rawMatches]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery('');
+    setFilterType('all');
+    setFilterPeriod('all');
+    setFilterResult('all');
+    setFilterMatchType('all');
+    setFilterDivision('all');
+    setSortBy('date');
+    setSortOrder('desc');
+  };
+
+  const isLoading = matchesLoading || statsLoading;
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
@@ -160,30 +264,151 @@ export default function MatchHistoryPage() {
           </p>
         </div>
         
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Select value={filterType} onValueChange={(value) => setFilterType(value as any)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Match Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Matches</SelectItem>
-              <SelectItem value="singles">Singles</SelectItem>
-              <SelectItem value="doubles">Doubles</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as any)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Time Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="90days">Last 90 Days</SelectItem>
-              <SelectItem value="1year">Last Year</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Sprint 2: Enhanced Search & Filters */}
+        <div className="flex flex-col gap-4">
+          {/* Search Bar */}
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search opponents, locations, tournaments..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
+          {/* Basic Filters Row */}
+          <div className="flex flex-wrap gap-3">
+            <Select value={filterType} onValueChange={(value) => setFilterType(value as any)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Formats</SelectItem>
+                <SelectItem value="singles">Singles</SelectItem>
+                <SelectItem value="doubles">Doubles</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as any)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="30days">Last 30 Days</SelectItem>
+                <SelectItem value="90days">Last 90 Days</SelectItem>
+                <SelectItem value="1year">Last Year</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterResult} onValueChange={(value) => setFilterResult(value as any)}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Result" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Results</SelectItem>
+                <SelectItem value="wins">Wins Only</SelectItem>
+                <SelectItem value="losses">Losses Only</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Sort Controls */}
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="opponent">Opponent</SelectItem>
+                <SelectItem value="score">Score</SelectItem>
+                <SelectItem value="points">Points</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-2"
+            >
+              {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+            </Button>
+
+            {/* Advanced Filters Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="gap-1"
+            >
+              <Filter className="h-3 w-3" />
+              Advanced
+              {showAdvancedFilters ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </Button>
+
+            {/* Clear Filters */}
+            {(searchQuery || filterType !== 'all' || filterPeriod !== 'all' || filterResult !== 'all' || filterMatchType !== 'all' || filterDivision !== 'all') && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+                <X className="h-3 w-3" />
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {/* Advanced Filters Panel */}
+          {showAdvancedFilters && (
+            <Card className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="match-type">Match Type</Label>
+                  <Select value={filterMatchType} onValueChange={(value) => setFilterMatchType(value as any)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                      <SelectItem value="league">League</SelectItem>
+                      <SelectItem value="tournament">Tournament</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="division">Division</Label>
+                  <Select value={filterDivision} onValueChange={setFilterDivision}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Divisions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Divisions</SelectItem>
+                      {availableDivisions.map(division => (
+                        <SelectItem key={division} value={division}>{division}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Results Found</Label>
+                  <div className="text-sm text-muted-foreground pt-2">
+                    {filteredAndSortedMatches.length} of {rawMatches.length} matches
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -253,17 +478,21 @@ export default function MatchHistoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {matches.length === 0 ? (
+          {filteredAndSortedMatches.length === 0 ? (
             <div className="text-center py-8">
               <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No matches found for the selected filters.</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Try adjusting your filters or record your first match!
+              <p className="text-muted-foreground">
+                {rawMatches.length === 0 ? 'No matches found.' : 'No matches match your current filters.'}
               </p>
+              {rawMatches.length > 0 && (
+                <Button variant="outline" onClick={clearFilters} className="mt-2">
+                  Clear Filters
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
-              {matches.map((match) => {
+              {filteredAndSortedMatches.map((match) => {
                 const result = getMatchResult(match);
                 const opponent = getMatchOpponent(match);
                 const partner = getMyPartner(match);
