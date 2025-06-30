@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc, BarChart3, PieChart, Activity } from 'lucide-react';
+import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter, Search, X, ChevronDown, ChevronUp, SortAsc, SortDesc, BarChart3, PieChart, Activity, Target, Zap, Award, Smartphone } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -81,6 +81,8 @@ export default function MatchHistoryPage() {
   const [sortBy, setSortBy] = useState<'date' | 'opponent' | 'score' | 'points'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+  const [selectedInsightCategory, setSelectedInsightCategory] = useState<'performance' | 'patterns' | 'recommendations'>('performance');
 
   // Fetch match history
   const { data: rawMatches = [], isLoading: matchesLoading } = useQuery<Match[]>({
@@ -249,6 +251,86 @@ export default function MatchHistoryPage() {
     setSortOrder('desc');
   };
 
+  // Sprint 4: AI-Powered Insights and Pattern Analysis
+  const generateAIInsights = () => {
+    if (!filteredAndSortedMatches.length || !stats) return null;
+
+    const insights = {
+      performance: [
+        {
+          icon: TrendingUp,
+          title: "Performance Trend",
+          value: stats.currentStreak > 3 ? "Strong Momentum" : "Building Form",
+          description: `${stats.currentStreak} ${stats.streakType} streak`,
+          color: stats.streakType === 'win' ? 'text-green-600' : 'text-orange-600'
+        },
+        {
+          icon: Target,
+          title: "Win Rate Analysis",
+          value: `${Math.round((stats.wins / stats.totalMatches) * 100)}%`,
+          description: stats.wins > stats.losses ? "Above average performance" : "Room for improvement",
+          color: stats.wins > stats.losses ? 'text-green-600' : 'text-blue-600'
+        },
+        {
+          icon: Award,
+          title: "Points Efficiency",
+          value: `${Math.round(stats.totalPointsEarned / stats.totalMatches)} pts/match`,
+          description: "Average ranking points per match",
+          color: 'text-purple-600'
+        }
+      ],
+      patterns: [
+        {
+          title: "Format Preference",
+          insight: stats.formatBreakdown.singles.played > stats.formatBreakdown.doubles.played 
+            ? "Singles specialist - stronger individual performance"
+            : "Doubles advantage - excels in team coordination",
+          recommendation: "Focus on your stronger format for tournaments"
+        },
+        {
+          title: "Match Timing",
+          insight: "Recent performance shows consistency",
+          recommendation: "Current form suggests tournament readiness"
+        },
+        {
+          title: "Competition Level",
+          insight: filteredAndSortedMatches.filter(m => m.matchType === 'tournament').length > 0
+            ? "Tournament experience building steadily"
+            : "Ready to step up to competitive play",
+          recommendation: "Consider entering local tournaments to test skills"
+        }
+      ],
+      recommendations: [
+        {
+          icon: Zap,
+          title: "Next Challenge",
+          action: "Enter a local tournament",
+          benefit: "Test skills against competitive field",
+          priority: "high"
+        },
+        {
+          icon: Users,
+          title: "Training Focus",
+          action: stats.formatBreakdown.doubles.played < stats.formatBreakdown.singles.played 
+            ? "Practice doubles strategy and communication" 
+            : "Improve singles court coverage and shot selection",
+          benefit: "Become a more complete player",
+          priority: "medium"
+        },
+        {
+          icon: Trophy,
+          title: "Skill Development",
+          action: "Work on pressure situation management",
+          benefit: "Maintain performance in critical moments",
+          priority: "high"
+        }
+      ]
+    };
+
+    return insights;
+  };
+
+  const aiInsights = generateAIInsights();
   const isLoading = matchesLoading || statsLoading;
 
   if (isLoading) {
@@ -279,37 +361,140 @@ export default function MatchHistoryPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Match History</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Match History</h1>
           <p className="text-muted-foreground">
             Track your performance and analyze your game
           </p>
         </div>
         
-        {/* Sprint 2: Enhanced Search & Filters */}
-        <div className="flex flex-col gap-4">
-          {/* Search Bar */}
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search opponents, locations, tournaments..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10"
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+        {/* Sprint 4: AI Insights Toggle - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant={showInsights ? "default" : "outline"}
+            onClick={() => setShowInsights(!showInsights)}
+            className="flex items-center gap-2"
+          >
+            <Activity className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Insights</span>
+            <span className="sm:hidden">Insights</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="flex items-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Advanced Filters</span>
+            <span className="sm:hidden">Filters</span>
+          </Button>
+        </div>
+      </div>
 
-          {/* Basic Filters Row */}
-          <div className="flex flex-wrap gap-3">
+      {/* Sprint 4: AI Insights Panel - Mobile Optimized */}
+      {showInsights && aiInsights && (
+        <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-transparent">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
+                AI Performance Insights
+              </CardTitle>
+              <div className="flex gap-1">
+                {(['performance', 'patterns', 'recommendations'] as const).map((category) => (
+                  <Button
+                    key={category}
+                    variant={selectedInsightCategory === category ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setSelectedInsightCategory(category)}
+                    className="capitalize text-xs px-2 py-1"
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedInsightCategory === 'performance' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {aiInsights.performance.map((insight, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-white border">
+                    <insight.icon className={cn("h-8 w-8", insight.color)} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm truncate">{insight.title}</h4>
+                      <p className="text-lg font-bold">{insight.value}</p>
+                      <p className="text-xs text-muted-foreground">{insight.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {selectedInsightCategory === 'patterns' && (
+              <div className="space-y-4">
+                {aiInsights.patterns.map((pattern, index) => (
+                  <div key={index} className="p-4 rounded-lg bg-white border">
+                    <h4 className="font-medium text-sm mb-2">{pattern.title}</h4>
+                    <p className="text-sm text-muted-foreground mb-2">{pattern.insight}</p>
+                    <p className="text-sm font-medium text-blue-600">{pattern.recommendation}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {selectedInsightCategory === 'recommendations' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {aiInsights.recommendations.map((rec, index) => (
+                  <div key={index} className="p-4 rounded-lg bg-white border">
+                    <div className="flex items-start gap-3 mb-3">
+                      <rec.icon className="h-6 w-6 text-blue-600 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{rec.title}</h4>
+                        <Badge 
+                          variant={rec.priority === 'high' ? 'destructive' : 'secondary'}
+                          className="text-xs mt-1"
+                        >
+                          {rec.priority} priority
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium mb-2">{rec.action}</p>
+                    <p className="text-xs text-muted-foreground">{rec.benefit}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Sprint 2: Enhanced Search & Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            {/* Search Bar - Mobile Optimized */}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search opponents, locations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10 h-12 md:h-10"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Basic Filters Row - Mobile Responsive */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:flex lg:flex-wrap gap-3">
             <Select value={filterType} onValueChange={(value) => setFilterType(value as any)}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Format" />
