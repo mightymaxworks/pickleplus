@@ -16,10 +16,12 @@ import { motion } from 'framer-motion';
 import { Home, Calendar, Users, Award, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function MobileNavigation() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Don't render on desktop
@@ -28,31 +30,31 @@ export function MobileNavigation() {
   const navItems = [
     { 
       icon: <Home size={20} />, 
-      label: 'Home', 
+      label: t('nav.home'), 
       path: '/dashboard',
       id: 'home'
     },
     { 
       icon: <Calendar size={20} />, 
-      label: 'Matches', 
+      label: t('nav.matches'), 
       path: '/matches',
       id: 'matches'
     },
     { 
       icon: <Users size={20} />, 
-      label: 'Community', 
+      label: t('nav.community'), 
       path: '/communities',
       id: 'community'
     },
     { 
       icon: <Award size={20} />, 
-      label: 'Coaching', 
+      label: t('nav.coaching'), 
       path: '/pcp-certification',
       id: 'coaching'
     },
     { 
       icon: <User size={20} />, 
-      label: 'Profile', 
+      label: t('nav.profile'), 
       path: '/profile',
       id: 'profile'
     }

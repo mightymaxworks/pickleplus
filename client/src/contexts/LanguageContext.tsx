@@ -215,6 +215,25 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.coaching': 'Coaching',
     'nav.profile': 'Profile',
 
+    // Match Recording Forms
+    'match.form.matchResult': 'Match Result',
+    'match.form.selectResult': 'Select result',
+    'match.form.win': 'Win',
+    'match.form.loss': 'Loss',
+    'match.form.scoreOptional': 'Score (Optional)',
+    'match.form.scorePlaceholder': 'e.g., 11-9, 11-7 or 11-5, 8-11, 11-3',
+    'match.form.tournament': 'Tournament',
+    'match.form.selectTournament': 'Select tournament',
+    'match.form.matchType': 'Match Type',
+    'match.form.casual': 'Casual',
+    'match.form.league': 'League',
+    'match.form.tournamentType': 'Tournament',
+    'match.form.exhibition': 'Exhibition',
+    'match.form.tournamentTier': 'Tournament Tier',
+    'match.form.selectTournamentTier': 'Select tournament tier',
+    'match.form.club': 'Club',
+    'match.form.regional': 'Regional',
+
     // Dashboard Tabs
     'dashboard.tabs.performance': 'Performance',
     'dashboard.tabs.recentMatches': 'Recent Matches',
@@ -540,6 +559,25 @@ const translations: Record<Language, Record<string, string>> = {
     'comingSoon.playerDescription': '球员查找功能即将推出！与您所在地区的球员联系，寻找练习伙伴，并根据技能水平和可用性组织友谊赛。',
     'comingSoon.trainingFacilities': '训练设施',
     'comingSoon.facilitiesDescription': '我们的训练设施发现系统即将推出！您将能够找到附近的训练中心，查看其设施，并直接通过平台预订球场和课程。',
+
+    // Match Recording Forms
+    'match.form.matchResult': '比赛结果',
+    'match.form.selectResult': '选择结果',
+    'match.form.win': '胜利',
+    'match.form.loss': '失败',
+    'match.form.scoreOptional': '比分（可选）',
+    'match.form.scorePlaceholder': '例如：11-9, 11-7 或 11-5, 8-11, 11-3',
+    'match.form.tournament': '锦标赛',
+    'match.form.selectTournament': '选择锦标赛',
+    'match.form.matchType': '比赛类型',
+    'match.form.casual': '休闲',
+    'match.form.league': '联赛',
+    'match.form.tournamentType': '锦标赛',
+    'match.form.exhibition': '表演赛',
+    'match.form.tournamentTier': '锦标赛等级',
+    'match.form.selectTournamentTier': '选择锦标赛等级',
+    'match.form.club': '俱乐部',
+    'match.form.regional': '地区',
     
     // Dashboard QR & Photo
     'dashboard.qr.codeHidden': '代码已隐藏',
