@@ -127,15 +127,15 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
-### June 30, 2025 - Match Recording Forms Translation Category Complete
-- **Completed CasualMatchRecorder Translation**: Successfully implemented comprehensive bilingual support for all match recording form elements
-- **Added 22 Match Form Translation Keys**: Complete coverage including format options (men's/women's singles/doubles, mixed doubles), division selections (pro, open/19+), notes field, score input, and all form validation messages
-- **Updated CasualMatchRecorder Component**: Replaced all hardcoded English strings with t() function calls including form labels, placeholders, select options, and validation messages
-- **Enhanced Chinese Translation Support**: Added proper Chinese terminology for match formats (男子单打, 女子双打, 混合双打), divisions (职业组, 公开组/19+), and match types
-- **Comprehensive Form Internationalization**: All form fields, dropdowns, placeholders, and error states now display properly in both English and Chinese
-- **Translation Infrastructure Strengthened**: Systematic component-by-component approach continues to demonstrate high effectiveness
-- **Match Recording Category Complete**: 3 of 10 translation categories finished (ProfileCompletionModal, Navigation items, Match recording forms)
-- **Remaining Categories**: Tournament system, Coaching interfaces, Community features, PCP assessment, Error messages, Training centers, Onboarding system (7 remaining)
+### June 30, 2025 - Tournament System Translation Category Complete  
+- **Completed Tournament System Translation**: Successfully implemented comprehensive bilingual support for all tournament-related components and status messages
+- **Added 6 Tournament Status Translation Keys**: Complete coverage including tournament.today, tournament.daysRemaining, tournament.players, tournament.checkedIn, tournament.checkInRequired, tournament.registrationComplete
+- **Updated UpcomingTournaments Component**: Replaced all hardcoded English strings with t() function calls for tournament status indicators and time-sensitive messaging
+- **Enhanced Chinese Tournament Terminology**: Added proper Chinese translations for tournament statuses (今天！, 还剩{count}天, 球员, 已签到, 即将需要签到, 报名完成)
+- **Comprehensive Tournament Internationalization**: All tournament cards, status badges, and time-based alerts now display properly in both English and Chinese
+- **Translation Infrastructure Strengthened**: Systematic component-by-component approach continues to demonstrate high effectiveness across complex components
+- **Tournament System Category Complete**: 4 of 10 translation categories finished (ProfileCompletionModal, Navigation items, Match recording forms, Tournament system)
+- **Remaining Categories**: Coaching interfaces, Community features, PCP assessment, Error messages, Training centers, Onboarding system (6 remaining)
 
 ### June 27, 2025 - Complete Onboarding System Implementation & CI/CD Validation Achieved
 - **Built Progressive 6-Step Onboarding System**: Complete profile setup → PCP rating → coach application → drills exploration → community joining → PCP certification
