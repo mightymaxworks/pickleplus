@@ -35,7 +35,7 @@ interface Friend {
   commonInterests: string[];
   stats: {
     level: number;
-    totalXP: number;
+    totalPicklePoints: number;
     achievements: number;
     winRate: number;
   };
@@ -129,7 +129,7 @@ export default function EnhancedSocialHub({
           commonInterests: ['Competitive Play', 'Strategy'],
           stats: {
             level: 15,
-            totalXP: 12450,
+            totalPicklePoints: 12450,
             achievements: 28,
             winRate: 73
           },
@@ -153,7 +153,7 @@ export default function EnhancedSocialHub({
           commonInterests: ['Social Play', 'Training'],
           stats: {
             level: 12,
-            totalXP: 8900,
+            totalPicklePoints: 8900,
             achievements: 19,
             winRate: 68
           },
@@ -168,7 +168,7 @@ export default function EnhancedSocialHub({
           commonInterests: ['Beginner Friendly'],
           stats: {
             level: 8,
-            totalXP: 4200,
+            totalPicklePoints: 4200,
             achievements: 12,
             winRate: 55
           },
@@ -449,7 +449,7 @@ export default function EnhancedSocialHub({
                         )}
                       </h4>
                       <div className="text-sm text-muted-foreground">
-                        Level {friend.stats.level} • {friend.stats.totalXP.toLocaleString()} XP
+                        Level {friend.stats.level} • {friend.stats.totalPicklePoints.toLocaleString()} Pickle Points
                       </div>
                       {!friend.isOnline && friend.lastSeen && (
                         <div className="text-xs text-muted-foreground">

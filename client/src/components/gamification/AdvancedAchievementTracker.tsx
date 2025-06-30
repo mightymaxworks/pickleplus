@@ -411,8 +411,8 @@ export default function AdvancedAchievementTracker({
                     <span className="font-semibold">{achievements.filter(a => !a.isCompleted).length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Total XP Earned</span>
-                    <span className="font-semibold text-primary">2,450 XP</span>
+                    <span className="text-sm">Total Pickle Points Earned</span>
+                    <span className="font-semibold text-primary">2,450 Points</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Current Streak</span>

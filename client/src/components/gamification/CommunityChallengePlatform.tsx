@@ -39,7 +39,7 @@ interface Challenge {
   maxParticipants?: number;
   requirements: string[];
   rewards: {
-    xp: number;
+    picklePoints: number;
     points: number;
     badges?: string[];
     specialReward?: string;

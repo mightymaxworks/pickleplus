@@ -98,15 +98,15 @@ export default function PerformanceAnalyticsDashboard({
       // Mock data for demonstration
       const mockMetrics: PerformanceMetric[] = [
         {
-          id: 'xp_earned',
-          name: 'XP Earned',
+          id: 'pickle_points_earned',
+          name: 'Pickle Points Earned',
           category: 'engagement',
           currentValue: 2450,
           previousValue: 2100,
-          unit: 'XP',
+          unit: 'Points',
           trend: 'up',
           trendPercentage: 16.7,
-          description: 'Total experience points gained through activities'
+          description: 'Total Pickle Points gained through activities'
         },
         {
           id: 'win_rate',
