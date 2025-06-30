@@ -43,8 +43,8 @@ export function ProfileCompletionModal({
     
     if (!firstName.trim() || !lastName.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please provide both first and last name",
+        title: t('profile.completion.missingInfo'),
+        description: t('profile.completion.provideBothNames'),
         variant: "destructive"
       });
       return;
@@ -70,8 +70,8 @@ export function ProfileCompletionModal({
       }
 
       toast({
-        title: "Profile Updated",
-        description: "Your name has been added to your profile successfully!"
+        title: t('profile.completion.profileUpdated'),
+        description: t('profile.completion.nameAddedSuccess')
       });
 
       onComplete();
@@ -79,8 +79,8 @@ export function ProfileCompletionModal({
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Update Failed",
-        description: "There was an error updating your profile. Please try again.",
+        title: t('profile.completion.updateFailed'),
+        description: t('profile.completion.updateError'),
         variant: "destructive"
       });
     } finally {
@@ -94,7 +94,7 @@ export function ProfileCompletionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Complete Your Profile
+            {t('profile.completion.title')}
           </DialogTitle>
           <Button
             variant="ghost"
@@ -108,19 +108,18 @@ export function ProfileCompletionModal({
 
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Help other players recognize you by adding your first and last name. 
-            Currently showing as "{currentProfile.username}" in match history.
+            {t('profile.completion.description', `Help other players recognize you by adding your first and last name. Currently showing as "${currentProfile.username}" in match history.`)}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {missingFields.includes('firstName') && (
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{t('profile.completion.firstName')}</Label>
                 <Input
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Enter your first name"
+                  placeholder={t('profile.completion.firstNamePlaceholder')}
                   required
                 />
               </div>
@@ -128,12 +127,12 @@ export function ProfileCompletionModal({
 
             {missingFields.includes('lastName') && (
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{t('profile.completion.lastName')}</Label>
                 <Input
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Enter your last name"
+                  placeholder={t('profile.completion.lastNamePlaceholder')}
                   required
                 />
               </div>
@@ -147,14 +146,14 @@ export function ProfileCompletionModal({
                 onClick={onClose}
                 disabled={isSubmitting}
               >
-                Skip for Now
+{t('profile.completion.skipForNow')}
               </Button>
               <Button
                 type="submit"
                 className="flex-1"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Updating...' : 'Update Profile'}
+{isSubmitting ? t('profile.completion.updating') : t('profile.completion.updateProfile')}
               </Button>
             </div>
           </form>
