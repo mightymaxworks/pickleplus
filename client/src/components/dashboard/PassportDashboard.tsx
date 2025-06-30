@@ -67,7 +67,7 @@ import SocialSharingWidget from '@/components/gamification/SocialSharingWidget';
 import AdvancedAchievementTracker from '@/components/gamification/AdvancedAchievementTracker';
 import RealTimeNotifications from '@/components/gamification/RealTimeNotifications';
 import CommunityChallengePlatform from '@/components/gamification/CommunityChallengePlatform';
-import EnhancedSocialHub from '@/components/gamification/EnhancedSocialHub';
+import { EnhancedSocialHub } from '@/components/gamification/EnhancedSocialHub';
 import PerformanceAnalyticsDashboard from '@/components/gamification/PerformanceAnalyticsDashboard';
 
 interface PassportDashboardProps {
