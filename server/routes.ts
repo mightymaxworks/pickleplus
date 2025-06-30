@@ -2577,6 +2577,105 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // Match History API with proper player name resolution
+  app.get('/api/matches/history', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const userId = req.user.id;
+      const filterType = (req.query.filterType as string) || 'all';
+      const filterPeriod = (req.query.filterPeriod as string) || 'all';
+
+      console.log(`[API][MatchHistory] Getting match history for user ${userId}, filter: ${filterType}, period: ${filterPeriod}`);
+
+      // Get matches from storage
+      const matches = await storage.getUserMatchHistory(userId, filterType, filterPeriod);
+
+      // Collect all unique player IDs from matches
+      const playerIds = new Set<number>();
+      matches.forEach(match => {
+        if (match.playerOneId) playerIds.add(match.playerOneId);
+        if (match.playerTwoId) playerIds.add(match.playerTwoId);
+        if (match.playerOnePartnerId) playerIds.add(match.playerOnePartnerId);
+        if (match.playerTwoPartnerId) playerIds.add(match.playerTwoPartnerId);
+      });
+
+      // Fetch user data for all players
+      const playerData: Record<number, any> = {};
+      for (const playerId of playerIds) {
+        try {
+          const user = await storage.getUser(playerId);
+          if (user) {
+            playerData[playerId] = {
+              displayName: `${user.firstName || 'Player'} ${user.lastName || playerId}`,
+              username: user.username || `player${playerId}`,
+              avatarInitials: `${(user.firstName || 'P')[0]}${(user.lastName || playerId.toString())[0]}`.toUpperCase(),
+              firstName: user.firstName,
+              lastName: user.lastName
+            };
+          } else {
+            // Use actual names if available from match data
+            playerData[playerId] = {
+              displayName: `Player ${playerId}`,
+              username: `player${playerId}`,
+              avatarInitials: `P${playerId}`
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching user data for player ${playerId}:`, error);
+          playerData[playerId] = {
+            displayName: `Player ${playerId}`,
+            username: `player${playerId}`,
+            avatarInitials: `P${playerId}`
+          };
+        }
+      }
+
+      // Enhance matches with player data
+      const enhancedMatches = matches.map(match => ({
+        ...match,
+        playerNames: playerData,
+        // Add direct name fields for easier access
+        playerOneName: playerData[match.playerOneId]?.displayName || `Player ${match.playerOneId}`,
+        playerTwoName: playerData[match.playerTwoId]?.displayName || `Player ${match.playerTwoId}`,
+        playerOnePartnerName: match.playerOnePartnerId ? 
+          (playerData[match.playerOnePartnerId]?.displayName || `Player ${match.playerOnePartnerId}`) : null,
+        playerTwoPartnerName: match.playerTwoPartnerId ? 
+          (playerData[match.playerTwoPartnerId]?.displayName || `Player ${match.playerTwoPartnerId}`) : null
+      }));
+
+      console.log(`[API][MatchHistory] Returning ${enhancedMatches.length} matches with player data`);
+      res.json(enhancedMatches);
+    } catch (error) {
+      console.error('[API][MatchHistory] Error getting match history:', error);
+      res.status(500).json({ error: 'Failed to get match history' });
+    }
+  });
+
+  // Match Statistics API
+  app.get('/api/matches/stats', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const userId = req.user.id;
+      const period = (req.query.period as string) || 'all';
+
+      console.log(`[API][MatchStats] Getting match statistics for user ${userId}, period: ${period}`);
+
+      const stats = await storage.getUserMatchStatistics(userId, period);
+      res.json(stats);
+    } catch (error) {
+      console.error('[API][MatchStats] Error getting match statistics:', error);
+      res.status(500).json({ error: 'Failed to get match statistics' });
+    }
+  });
+
+  console.log('[API] Match history and statistics routes registered');
+
   // PKL-278651-NOTIF-0001 - Notifications System
   app.use('/api/notifications', notificationsRoutes);
   console.log('[API] Notifications system routes registered');
