@@ -56,7 +56,7 @@ export default function UpcomingTournaments({ userId }: UpcomingTournamentsProps
         {isLoading ? (
           <div className="text-center py-6">
             <div className="animate-spin h-5 w-5 border-2 border-yellow-600 border-t-transparent rounded-full mx-auto"></div>
-            <div className="text-sm text-gray-500 mt-2">Loading tournaments...</div>
+            <div className="text-sm text-gray-500 mt-2">{t('common.loading')}</div>
           </div>
         ) : tournaments && tournaments.length > 0 ? (
           <div className="space-y-4">
@@ -71,20 +71,20 @@ export default function UpcomingTournaments({ userId }: UpcomingTournamentsProps
                 onClick={navigateToTournaments}
                 className="w-full text-sm"
               >
-                View All Tournaments
+{t('tournament.viewAllTournaments', 'View All Tournaments')}
               </Button>
             </div>
           </div>
         ) : (
           <div className="text-center py-6">
             <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-            <h3 className="text-base font-medium text-gray-700">No Upcoming Events</h3>
-            <p className="text-sm text-gray-500 mt-1 mb-4">Register for tournaments to see them here</p>
+            <h3 className="text-base font-medium text-gray-700">{t('tournament.noUpcomingEvents', 'No Upcoming Events')}</h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4">{t('tournament.registerToSeeHere', 'Register for tournaments to see them here')}</p>
             <Button 
               onClick={navigateToTournaments}
               className="bg-yellow-600 hover:bg-yellow-700"
             >
-              Browse Tournaments
+{t('tournament.browseTournaments', 'Browse Tournaments')}
             </Button>
           </div>
         )}
@@ -127,11 +127,11 @@ function TournamentCard({ tournament, isExpanded }: TournamentCardProps) {
           {daysRemaining <= 0 ? (
             <div className="text-xs font-medium text-red-600 flex items-center">
               <Timer size={12} className="mr-1" />
-              Today!
+{t('tournament.today', 'Today!')}
             </div>
           ) : (
             <div className="text-xs font-medium text-gray-600">
-              {daysRemaining} days remaining
+{t('tournament.daysRemaining', '{count} days remaining', { count: daysRemaining })}
             </div>
           )}
         </div>
