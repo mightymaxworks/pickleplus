@@ -1,272 +1,410 @@
-/**
- * Enhanced Match History Page
- * Dedicated page for comprehensive match history and analytics
- */
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { StandardLayout } from '@/components/layout/StandardLayout';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/lib/auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, 
-  Trophy, 
-  TrendingUp, 
-  Filter,
-  RefreshCw,
-  BarChart3,
-  Users,
-  Target
-} from 'lucide-react';
-import { matchSDK } from '@/lib/sdk/matchSDK';
-import { MatchHistory } from '@/components/match/MatchHistory';
-import { MatchTrends } from '@/components/match/MatchTrends';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { StandardLayout } from '@/components/StandardLayout';
+import { Calendar, Trophy, User, Users, MapPin, Clock, TrendingUp, Filter } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+
+interface Match {
+  id: number;
+  matchDate: string;
+  playerOneId: number;
+  playerTwoId: number;
+  playerOnePartnerId?: number;
+  playerTwoPartnerId?: number;
+  winnerId: number;
+  scorePlayerOne: string;
+  scorePlayerTwo: string;
+  gameScores?: any[];
+  formatType: 'singles' | 'doubles';
+  scoringSystem: 'traditional' | 'rally';
+  pointsToWin: number;
+  division: string;
+  matchType: 'casual' | 'league' | 'tournament';
+  eventTier: 'local' | 'regional' | 'national' | 'international';
+  location?: string;
+  tournamentId?: number;
+  isRated: boolean;
+  isVerified: boolean;
+  validationStatus: 'pending' | 'validated' | 'disputed' | 'rejected';
+  notes?: string;
+  xpAwarded: number;
+  pointsAwarded: number;
+  createdAt: string;
+  // Relations
+  playerOne: { id: number; firstName: string; lastName: string; };
+  playerTwo: { id: number; firstName: string; lastName: string; };
+  playerOnePartner?: { id: number; firstName: string; lastName: string; };
+  playerTwoPartner?: { id: number; firstName: string; lastName: string; };
+  winner: { id: number; firstName: string; lastName: string; };
+  tournament?: { id: number; name: string; };
+}
+
+interface MatchHistoryStats {
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  currentStreak: number;
+  streakType: 'win' | 'loss';
+  totalXpEarned: number;
+  totalPointsEarned: number;
+  averageMatchDuration: number;
+  formatBreakdown: {
+    singles: { played: number; won: number; };
+    doubles: { played: number; won: number; };
+  };
+  divisionBreakdown: Record<string, { played: number; won: number; }>;
+  recentPerformance: {
+    last10Games: { wins: number; losses: number; };
+    last30Days: { matches: number; winRate: number; };
+  };
+}
 
 export default function MatchHistoryPage() {
-  const { t } = useLanguage();
   const { user } = useAuth();
-  
-  // Fetch match stats
-  const { data: matchStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ["/api/match/stats", user?.id],
-    queryFn: async () => {
-      try {
-        return await matchSDK.getMatchStats();
-      } catch (error) {
-        console.error("Error fetching match stats:", error);
-        return {
-          totalMatches: 0,
-          matchesWon: 0,
-          winRate: 0,
-          matchesLost: 0,
-          singlesMatches: 0,
-          doublesMatches: 0,
-          currentWinStreak: 0,
-          bestWinStreak: 0
-        };
-      }
-    },
-    enabled: !!user,
+  const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
+  const [filterPeriod, setFilterPeriod] = useState<'all' | '30days' | '90days' | '1year'>('all');
+
+  // Fetch match history
+  const { data: matches = [], isLoading: matchesLoading } = useQuery<Match[]>({
+    queryKey: ['/api/matches/history', user?.id, filterType, filterPeriod],
+    enabled: !!user?.id,
   });
 
-  // Fetch recent matches
-  const { data: recentMatches, isLoading: matchesLoading, refetch: refetchMatches } = useQuery({
-    queryKey: ["/api/match/recent", user?.id],
-    queryFn: async () => {
-      try {
-        return await matchSDK.getRecentMatches(undefined, 20);
-      } catch (error) {
-        console.error("Error fetching recent matches:", error);
-        return [];
-      }
-    },
-    enabled: !!user,
+  // Fetch match statistics
+  const { data: stats, isLoading: statsLoading } = useQuery<MatchHistoryStats>({
+    queryKey: ['/api/matches/stats', user?.id, filterPeriod],
+    enabled: !!user?.id,
   });
 
-  const handleRefreshAll = () => {
-    refetchStats();
-    refetchMatches();
+  const isLoading = matchesLoading || statsLoading;
+
+  const getMatchResult = (match: Match) => {
+    if (!user) return 'unknown';
+    return match.winnerId === user.id ? 'win' : 'loss';
   };
+
+  const getMatchOpponent = (match: Match) => {
+    if (!user) return 'Unknown';
+    
+    if (match.formatType === 'singles') {
+      const opponent = match.playerOneId === user.id ? match.playerTwo : match.playerOne;
+      return `${opponent.firstName} ${opponent.lastName}`;
+    } else {
+      // For doubles, show the opposing team
+      const isPlayerOneTeam = match.playerOneId === user.id || match.playerOnePartnerId === user.id;
+      if (isPlayerOneTeam) {
+        const partner = match.playerTwoPartner 
+          ? `${match.playerTwo.firstName} ${match.playerTwo.lastName} & ${match.playerTwoPartner.firstName} ${match.playerTwoPartner.lastName}`
+          : `${match.playerTwo.firstName} ${match.playerTwo.lastName}`;
+        return partner;
+      } else {
+        const partner = match.playerOnePartner 
+          ? `${match.playerOne.firstName} ${match.playerOne.lastName} & ${match.playerOnePartner.firstName} ${match.playerOnePartner.lastName}`
+          : `${match.playerOne.firstName} ${match.playerOne.lastName}`;
+        return partner;
+      }
+    }
+  };
+
+  const getMyPartner = (match: Match) => {
+    if (!user || match.formatType === 'singles') return null;
+    
+    const isPlayerOneTeam = match.playerOneId === user.id || match.playerOnePartnerId === user.id;
+    if (isPlayerOneTeam) {
+      if (match.playerOneId === user.id && match.playerOnePartner) {
+        return `${match.playerOnePartner.firstName} ${match.playerOnePartner.lastName}`;
+      } else if (match.playerOnePartnerId === user.id) {
+        return `${match.playerOne.firstName} ${match.playerOne.lastName}`;
+      }
+    } else {
+      if (match.playerTwoId === user.id && match.playerTwoPartner) {
+        return `${match.playerTwoPartner.firstName} ${match.playerTwoPartner.lastName}`;
+      } else if (match.playerTwoPartnerId === user.id) {
+        return `${match.playerTwo.firstName} ${match.playerTwo.lastName}`;
+      }
+    }
+    return null;
+  };
+
+  const getMatchScore = (match: Match) => {
+    const result = getMatchResult(match);
+    const isPlayerOneTeam = match.playerOneId === user?.id || match.playerOnePartnerId === user?.id;
+    
+    if (result === 'win') {
+      return isPlayerOneTeam 
+        ? `${match.scorePlayerOne} - ${match.scorePlayerTwo}`
+        : `${match.scorePlayerTwo} - ${match.scorePlayerOne}`;
+    } else {
+      return isPlayerOneTeam 
+        ? `${match.scorePlayerOne} - ${match.scorePlayerTwo}`
+        : `${match.scorePlayerTwo} - ${match.scorePlayerOne}`;
+    }
+  };
+
+  const formatMatchType = (matchType: string, eventTier?: string) => {
+    if (matchType === 'tournament') {
+      return `${eventTier?.toUpperCase() || 'LOCAL'} TOURNAMENT`;
+    }
+    return matchType.toUpperCase();
+  };
+
+  if (isLoading) {
+    return (
+      <StandardLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center space-x-4 mb-8">
+            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-8 w-48 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-gray-200 animate-pulse rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </StandardLayout>
+    );
+  }
 
   return (
     <StandardLayout>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">{t('nav.matches')} {t('training.history')}</h1>
-            <p className="text-muted-foreground">
-              Comprehensive match analytics and performance tracking
-            </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <Trophy className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Match History</h1>
+              <p className="text-muted-foreground">Complete record of your pickleball matches</p>
+            </div>
           </div>
           
-          <Button onClick={handleRefreshAll} variant="outline" className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Refresh Data
-          </Button>
+          {/* Filters */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <select 
+                value={filterType} 
+                onChange={(e) => setFilterType(e.target.value as any)}
+                className="border border-gray-300 rounded px-3 py-1 text-sm"
+              >
+                <option value="all">All Formats</option>
+                <option value="singles">Singles Only</option>
+                <option value="doubles">Doubles Only</option>
+              </select>
+              <select 
+                value={filterPeriod} 
+                onChange={(e) => setFilterPeriod(e.target.value as any)}
+                className="border border-gray-300 rounded px-3 py-1 text-sm"
+              >
+                <option value="all">All Time</option>
+                <option value="30days">Last 30 Days</option>
+                <option value="90days">Last 90 Days</option>
+                <option value="1year">Last Year</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />
-                Total Matches
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold">{matchStats?.totalMatches || 0}</div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Statistics Cards */}
+        {stats && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalMatches}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.wins}W - {stats.losses}L
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <Trophy className="h-4 w-4 mr-2" />
-                Win Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold">{matchStats?.winRate || 0}%</div>
-              )}
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{(stats.winRate * 100).toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground">
+                  Current {stats.streakType} streak: {stats.currentStreak}
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Current Streak
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold">{matchStats?.currentWinStreak || 0}</div>
-              )}
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Format Performance</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>Singles:</span>
+                    <span>{stats.formatBreakdown.singles.played > 0 ? 
+                      `${((stats.formatBreakdown.singles.won / stats.formatBreakdown.singles.played) * 100).toFixed(0)}%` 
+                      : 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Doubles:</span>
+                    <span>{stats.formatBreakdown.doubles.played > 0 ? 
+                      `${((stats.formatBreakdown.doubles.won / stats.formatBreakdown.doubles.played) * 100).toFixed(0)}%` 
+                      : 'N/A'}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                <Target className="h-4 w-4 mr-2" />
-                Best Streak
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold">{matchStats?.bestWinStreak || 0}</div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Recent Form</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats.recentPerformance.last10Games.wins}/10
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Last 10 games won
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-        {/* Content Tabs */}
-        <Tabs defaultValue="history" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Match History
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="trends" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Trends
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="history" className="mt-6">
-            {matchesLoading ? (
-              <div className="space-y-4">
-                {Array(5).fill(0).map((_, i) => (
-                  <Card key={i}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
-                        <Skeleton className="h-6 w-32" />
-                        <Skeleton className="h-6 w-16" />
-                      </div>
-                      <div className="mt-2 flex gap-2">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+        {/* Match List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Matches</CardTitle>
+            <CardDescription>
+              {filterType !== 'all' && `${filterType.charAt(0).toUpperCase() + filterType.slice(1)} matches `}
+              {filterPeriod !== 'all' && `from the ${filterPeriod.replace('days', ' days').replace('1year', 'last year')}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {matches.length === 0 ? (
+              <div className="text-center py-12">
+                <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No matches found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {filterType !== 'all' || filterPeriod !== 'all' 
+                    ? 'Try adjusting your filters or record your first match.'
+                    : 'Start recording your matches to see your history here.'
+                  }
+                </p>
+                <Button>Record a Match</Button>
               </div>
             ) : (
-              <MatchHistory 
-                matches={recentMatches} 
-                userId={user?.id}
-                showFilters={true}
-                showTrends={false}
-                onMatchesRefresh={refetchMatches}
-                className="mt-0"
-              />
+              <div className="space-y-4">
+                {matches.map((match) => {
+                  const result = getMatchResult(match);
+                  const opponent = getMatchOpponent(match);
+                  const partner = getMyPartner(match);
+                  const score = getMatchScore(match);
+                  
+                  return (
+                    <div
+                      key={match.id}
+                      className={cn(
+                        "border rounded-lg p-4 transition-all hover:shadow-md",
+                        result === 'win' ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <Badge 
+                            variant={result === 'win' ? 'default' : 'destructive'}
+                            className="text-xs font-semibold"
+                          >
+                            {result.toUpperCase()}
+                          </Badge>
+                          
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            {match.formatType === 'singles' ? (
+                              <User className="h-4 w-4" />
+                            ) : (
+                              <Users className="h-4 w-4" />
+                            )}
+                            <span className="capitalize">{match.formatType}</span>
+                          </div>
+                          
+                          <Badge variant="outline" className="text-xs">
+                            {formatMatchType(match.matchType, match.eventTier)}
+                          </Badge>
+                          
+                          {match.tournament && (
+                            <Badge variant="outline" className="text-xs">
+                              {match.tournament.name}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="text-lg font-semibold">{score}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(match.matchDate), { addSuffix: true })}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Separator className="my-3" />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="font-medium">vs {opponent}</div>
+                          {partner && (
+                            <div className="text-sm text-muted-foreground">
+                              Partner: {partner}
+                            </div>
+                          )}
+                          {match.location && (
+                            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              <span>{match.location}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-right space-y-1">
+                          <div className="text-sm text-muted-foreground">
+                            {format(new Date(match.matchDate), 'MMM d, yyyy')}
+                          </div>
+                          {match.xpAwarded > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{match.xpAwarded} XP
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {match.notes && (
+                        <>
+                          <Separator className="my-3" />
+                          <p className="text-sm text-muted-foreground italic">{match.notes}</p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="analytics" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Format Performance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Singles Matches</span>
-                      <Badge variant="outline">{matchStats?.singlesMatches || 0}</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Doubles Matches</span>
-                      <Badge variant="outline">{matchStats?.doublesMatches || 0}</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5" />
-                    Performance Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Matches Won</span>
-                      <Badge variant="secondary">{matchStats?.matchesWon || 0}</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Matches Lost</span>
-                      <Badge variant="outline">{matchStats?.matchesLost || 0}</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="trends" className="mt-6">
-            {recentMatches && recentMatches.length > 0 ? (
-              <MatchTrends matches={recentMatches} />
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Trend Data Available</h3>
-                  <p className="text-muted-foreground">
-                    Record more matches to see your performance trends and analytics.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </StandardLayout>
   );

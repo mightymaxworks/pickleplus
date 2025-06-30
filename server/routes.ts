@@ -490,6 +490,40 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
 
   console.log('[API] Critical user flow endpoints registered: /register, /login, /sessions/request');
   
+  // Match History API Endpoints - Sprint 1: Foundation
+  app.get('/api/matches/history', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const filterType = req.query.filterType as string || 'all';
+      const filterPeriod = req.query.filterPeriod as string || 'all';
+      
+      console.log(`[API][MatchHistory] Getting match history for user ${userId}, filter: ${filterType}, period: ${filterPeriod}`);
+      
+      const matches = await storage.getUserMatchHistory(userId, filterType, filterPeriod);
+      
+      res.json(matches);
+    } catch (error) {
+      console.error('[API][MatchHistory] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch match history' });
+    }
+  });
+
+  app.get('/api/matches/stats', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const filterPeriod = req.query.filterPeriod as string || 'all';
+      
+      console.log(`[API][MatchStats] Getting match statistics for user ${userId}, period: ${filterPeriod}`);
+      
+      const stats = await storage.getUserMatchStatistics(userId, filterPeriod);
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('[API][MatchStats] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch match statistics' });
+    }
+  });
+
   // Match statistics endpoint for dashboard - must be before match assessment routes
   app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
