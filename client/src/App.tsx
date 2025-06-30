@@ -213,6 +213,13 @@ export default function App() {
                           <AuthenticationWrapper>
                             <SmartFeatureGuide />
                           </AuthenticationWrapper>
+                          
+                          {/* Profile Completion System - Helps users complete missing first/last names */}
+                          <AuthenticationWrapper>
+                            <ProfileCompletionWrapper>
+                              <></>
+                            </ProfileCompletionWrapper>
+                          </AuthenticationWrapper>
                     
                     {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
                     {/* Removed to focus on launch priorities */}

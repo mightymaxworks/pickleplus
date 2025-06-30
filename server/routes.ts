@@ -2737,6 +2737,87 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   });
   
   // Create an HTTP server but don't start listening yet, as this will be handled in index.ts
+  // Profile completion status check
+  app.get('/api/user/profile-completion-status', async (req: Request, res: Response) => {
+    try {
+      // Get current user from session or auth context
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const missingFields = [];
+      if (!user.firstName || user.firstName.trim() === '') {
+        missingFields.push('firstName');
+      }
+      if (!user.lastName || user.lastName.trim() === '') {
+        missingFields.push('lastName');
+      }
+
+      const needsCompletion = missingFields.length > 0;
+
+      res.json({
+        needsCompletion,
+        missingFields,
+        currentProfile: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
+          email: user.email
+        }
+      });
+    } catch (error) {
+      console.error('[API][Profile Completion Check] Error:', error);
+      res.status(500).json({ error: 'Failed to check profile completion status' });
+    }
+  });
+
+  // Profile update endpoint
+  app.patch('/api/profile/update', async (req: Request, res: Response) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const { firstName, lastName } = req.body;
+      
+      if (!firstName || !lastName) {
+        return res.status(400).json({ error: 'First name and last name are required' });
+      }
+
+      const updatedUser = await storage.updateUser(userId, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim()
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      console.log(`[API][Profile Update] User ${userId} updated profile with names: ${firstName} ${lastName}`);
+
+      res.json({
+        success: true,
+        user: {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName
+        }
+      });
+    } catch (error) {
+      console.error('[API][Profile Update] Error:', error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  });
+
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
   const server = http.createServer(app);
   console.log(`Server created on port ${PORT}`);
