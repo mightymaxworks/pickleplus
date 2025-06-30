@@ -2593,30 +2593,35 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
       // Get matches from storage (already includes player data)
       const matches = await storage.getUserMatchHistory(userId, filterType, filterPeriod);
 
+      console.log(`[API][MatchHistory] Processing ${matches.length} matches for enhancement`);
+      console.log(`[API][MatchHistory] Sample match data:`, JSON.stringify(matches[0], null, 2));
+
       // Create enhanced player data structure from existing storage data
       const enhancedMatches = matches.map(match => {
         // Build playerNames object from existing player data
         const playerNames: Record<number, any> = {};
         
-        if (match.playerOne) {
-          playerNames[match.playerOneId] = {
-            displayName: `${match.playerOne.firstName || 'Player'} ${match.playerOne.lastName || match.playerOneId}`,
-            username: `player${match.playerOneId}`,
-            avatarInitials: `${(match.playerOne.firstName || 'P')[0]}${(match.playerOne.lastName || match.playerOneId.toString())[0]}`.toUpperCase(),
-            firstName: match.playerOne.firstName,
-            lastName: match.playerOne.lastName
-          };
-        }
+        // Handle player one
+        const playerOneFirstName = match.playerOne?.firstName || 'Player';
+        const playerOneLastName = match.playerOne?.lastName || `${match.playerOneId}`;
+        playerNames[match.playerOneId] = {
+          displayName: `${playerOneFirstName} ${playerOneLastName}`,
+          username: `player${match.playerOneId}`,
+          avatarInitials: `${playerOneFirstName[0]}${playerOneLastName[0]}`.toUpperCase(),
+          firstName: match.playerOne?.firstName,
+          lastName: match.playerOne?.lastName
+        };
         
-        if (match.playerTwo) {
-          playerNames[match.playerTwoId] = {
-            displayName: `${match.playerTwo.firstName || 'Player'} ${match.playerTwo.lastName || match.playerTwoId}`,
-            username: `player${match.playerTwoId}`,
-            avatarInitials: `${(match.playerTwo.firstName || 'P')[0]}${(match.playerTwo.lastName || match.playerTwoId.toString())[0]}`.toUpperCase(),
-            firstName: match.playerTwo.firstName,
-            lastName: match.playerTwo.lastName
-          };
-        }
+        // Handle player two
+        const playerTwoFirstName = match.playerTwo?.firstName || 'Player';
+        const playerTwoLastName = match.playerTwo?.lastName || `${match.playerTwoId}`;
+        playerNames[match.playerTwoId] = {
+          displayName: `${playerTwoFirstName} ${playerTwoLastName}`,
+          username: `player${match.playerTwoId}`,
+          avatarInitials: `${playerTwoFirstName[0]}${playerTwoLastName[0]}`.toUpperCase(),
+          firstName: match.playerTwo?.firstName,
+          lastName: match.playerTwo?.lastName
+        };
         
         if (match.playerOnePartner) {
           playerNames[match.playerOnePartnerId] = {
