@@ -410,19 +410,6 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
       {/* Onboarding Progress Indicator for new users */}
       <OnboardingProgressIndicator onShowFullOnboarding={onShowOnboarding} />
       
-      {/* Test Onboarding Button - For Development/Testing */}
-      <div className="mb-4">
-        <Button 
-          onClick={onShowOnboarding}
-          variant="outline"
-          size="sm"
-          className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-        >
-          <BookOpen className="w-4 h-4 mr-2" />
-          Test Onboarding Experience
-        </Button>
-      </div>
-      
       {/* Enhanced Futuristic Background Animations */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {/* Large floating geometric shapes - much more visible */}
