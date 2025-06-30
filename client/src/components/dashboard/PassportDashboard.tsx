@@ -1537,7 +1537,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
               <div className="mt-6 space-y-6">
                 {/* Next Steps Guidance */}
                 <NextStepsGuidance
-                  currentRating={user.pcpRating || 2.5}
+                  currentRating={user.pcpTechnicalRating || 2.5}
                   ratingType="pcp"
                   userLevel={user.skillLevel || "Intermediate"}
                   completedActions={[]}
@@ -1545,7 +1545,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                 
                 {/* Progress Trend Chart */}
                 <ProgressTrendChart
-                  currentRating={user.pcpRating || 2.5}
+                  currentRating={user.pcpTechnicalRating || 2.5}
                   ratingType="pcp"
                   userLevel={user.skillLevel || "Intermediate"}
                   timeRange="30d"
@@ -1554,13 +1554,13 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                 {/* Two-column layout for comparison and achievements */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <PeerComparisonWidget
-                    currentRating={user.pcpRating || 2.5}
+                    currentRating={user.pcpTechnicalRating || 2.5}
                     ratingType="pcp"
                     userLevel={user.skillLevel || "Intermediate"}
                   />
                   
                   <AchievementTracker
-                    currentRating={user.pcpRating || 2.5}
+                    currentRating={user.pcpTechnicalRating || 2.5}
                     ratingType="pcp"
                     userLevel={user.skillLevel || "Intermediate"}
                   />
@@ -1790,7 +1790,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   <CardContent>
                     <BadgeShowcase
                       userLevel={user.skillLevel || "Intermediate"}
-                      currentRating={user.duprRating || 4.2}
+                      currentRating={Number(user.duprRating) || 4.2}
                       ratingType="dupr"
                     />
                   </CardContent>
@@ -1805,7 +1805,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   </CardHeader>
                   <CardContent>
                     <SocialSharingWidget
-                      userRating={user.duprRating || 4.2}
+                      userRating={Number(user.duprRating) || 4.2}
                       userBadgeCount={5}
                     />
                   </CardContent>
