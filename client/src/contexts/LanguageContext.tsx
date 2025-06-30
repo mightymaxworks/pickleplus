@@ -200,6 +200,22 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.tabs.achievements': 'Achievements',
     'dashboard.tabs.community': 'Community',
 
+    // Profile Completion Modal
+    'profile.completion.title': 'Complete Your Profile',
+    'profile.completion.description': 'Help other players recognize you by adding your first and last name. Currently showing as "{username}" in match history.',
+    'profile.completion.firstNameLabel': 'First Name',
+    'profile.completion.lastNameLabel': 'Last Name',
+    'profile.completion.firstNamePlaceholder': 'Enter your first name',
+    'profile.completion.lastNamePlaceholder': 'Enter your last name',
+    'profile.completion.skipForNow': 'Skip for Now',
+    'profile.completion.updateProfile': 'Update Profile',
+    'profile.completion.missingInfo': 'Missing Information',
+    'profile.completion.provideBothNames': 'Please provide both first and last name',
+    'profile.completion.profileUpdated': 'Profile Updated',
+    'profile.completion.nameAddedSuccess': 'Your name has been added to your profile successfully!',
+    'profile.completion.updateFailed': 'Update Failed',
+    'profile.completion.updateError': 'There was an error updating your profile. Please try again.',
+
     // Performance Trends
     'dashboard.performance.title': 'Performance Trends',
     'dashboard.performance.overallRating': 'Overall Rating',
@@ -633,6 +649,22 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.tabs.recentMatches': '近期比赛',
     'dashboard.tabs.achievements': '成就',
     'dashboard.tabs.community': '社区',
+
+    // Profile Completion Modal
+    'profile.completion.title': '完善您的资料',
+    'profile.completion.description': '通过添加您的姓名帮助其他球员认识您。目前在比赛历史中显示为"{username}"。',
+    'profile.completion.firstNameLabel': '名字',
+    'profile.completion.lastNameLabel': '姓氏',
+    'profile.completion.firstNamePlaceholder': '输入您的名字',
+    'profile.completion.lastNamePlaceholder': '输入您的姓氏',
+    'profile.completion.skipForNow': '暂时跳过',
+    'profile.completion.updateProfile': '更新资料',
+    'profile.completion.missingInfo': '缺少信息',
+    'profile.completion.provideBothNames': '请提供姓名',
+    'profile.completion.profileUpdated': '资料已更新',
+    'profile.completion.nameAddedSuccess': '您的姓名已成功添加到资料中！',
+    'profile.completion.updateFailed': '更新失败',
+    'profile.completion.updateError': '更新资料时出错，请重试。',
 
     // Performance Trends
     'dashboard.performance.title': '表现趋势',

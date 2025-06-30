@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { X, User } from 'lucide-react';
 
 interface ProfileCompletionModalProps {
@@ -30,6 +31,7 @@ export function ProfileCompletionModal({
   const [lastName, setLastName] = useState(currentProfile.lastName || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     setFirstName(currentProfile.firstName || '');
