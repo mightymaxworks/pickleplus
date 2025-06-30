@@ -61,7 +61,8 @@ interface AdvancedAchievementTrackerProps {
 export default function AdvancedAchievementTracker({
   userId,
   onAchievementClick,
-  onViewHistory
+  onViewHistory,
+  onClose
 }: AdvancedAchievementTrackerProps) {
   const [activeTab, setActiveTab] = useState<'progress' | 'chains' | 'analytics'>('progress');
   const [achievements, setAchievements] = useState<AchievementProgress[]>([]);

@@ -105,13 +105,15 @@ interface CommunityChallengePlatformProps {
   onJoinChallenge?: (challengeId: string) => void;
   onCreateChallenge?: () => void;
   onJoinEvent?: (eventId: string) => void;
+  onClose?: () => void;
 }
 
 export default function CommunityChallengePlatform({
   userId,
   onJoinChallenge,
   onCreateChallenge,
-  onJoinEvent
+  onJoinEvent,
+  onClose
 }: CommunityChallengePlatformProps) {
   const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'events' | 'leaderboard'>('active');
   const [challenges, setChallenges] = useState<Challenge[]>([]);
