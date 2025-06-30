@@ -14,7 +14,7 @@ interface Achievement {
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   icon: React.ReactNode;
   rarity: number;
-  earnedXP: number;
+  earnedPicklePoints: number;
   earnedPoints: number;
 }
 
@@ -25,6 +25,10 @@ interface ProgressCelebrationProps {
   onShare?: (achievement: Achievement) => void;
   onViewBadges?: () => void;
 }
+
+const randomInRange = (min: number, max: number) => {
+  return Math.random() * (max - min) + min;
+};
 
 export default function ProgressCelebration({
   achievement,
@@ -42,11 +46,7 @@ export default function ProgressCelebration({
       const animationEnd = Date.now() + duration;
       const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-      function randomInRange(min: number, max: number) {
-        return Math.random() * (max - min) + min;
-      }
-
-      const interval = setInterval(function() {
+      const interval = setInterval(() => {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
@@ -242,7 +242,7 @@ export default function ProgressCelebration({
                       <div className="flex justify-center gap-4 text-sm">
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500" />
-                          <span>+{achievement.earnedXP} XP</span>
+                          <span>+{achievement.earnedPicklePoints} Pickle Points</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Trophy className="w-4 h-4 text-blue-500" />

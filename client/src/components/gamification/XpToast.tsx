@@ -1,26 +1,26 @@
 /**
- * PKL-278651-PROF-0024-COMP - XP Toast Component
+ * PKL-278651-PROF-0024-COMP - Pickle Points Toast Component
  * 
- * Animated toast notification for displaying XP rewards.
+ * Animated toast notification for displaying Pickle Points rewards.
  * 
  * @framework Framework5.3
  * @version 1.0.0
- * @lastUpdated 2025-04-27
+ * @lastUpdated 2025-06-30
  */
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Zap } from 'lucide-react';
 
-interface XpToastProps {
+interface PicklePointsToastProps {
   amount: number;
   message?: string;
 }
 
-export default function XpToast({ amount, message }: XpToastProps) {
+export default function PicklePointsToast({ amount, message }: PicklePointsToastProps) {
   const [particles, setParticles] = useState<{ x: number, y: number, scale: number, opacity: number }[]>([]);
   
-  // Generate particles for the XP award animation
+  // Generate particles for the Pickle Points award animation
   useEffect(() => {
     const newParticles = Array.from({ length: Math.min(10, amount / 5) }, () => ({
       x: Math.random() * 40 - 20,
@@ -72,7 +72,7 @@ export default function XpToast({ amount, message }: XpToastProps) {
           transition={{ delay: 0.1, duration: 0.3 }}
         >
           <Zap className="h-4 w-4 text-yellow-500" />
-          <span className="text-yellow-500">+{amount} XP</span>
+          <span className="text-yellow-500">+{amount} Pickle Points</span>
         </motion.div>
         
         {message && (
