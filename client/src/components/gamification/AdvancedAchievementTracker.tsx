@@ -373,12 +373,12 @@ export default function AdvancedAchievementTracker({
                     <h5 className="font-semibold text-sm mb-2">Chain Completion Reward</h5>
                     <div className="flex items-center gap-4 text-sm">
                       <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-500" />
-                        +{chain.chainReward.xp} XP
-                      </span>
-                      <span className="flex items-center gap-1">
                         <Trophy className="w-4 h-4 text-blue-500" />
                         +{chain.chainReward.points} Points
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-500" />
+                        +{chain.chainReward.picklePoints} Pickle Points
                       </span>
                       {chain.chainReward.specialBadge && (
                         <Badge variant="outline" className="bg-purple-50 text-purple-700">

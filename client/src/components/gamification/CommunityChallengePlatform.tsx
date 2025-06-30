@@ -382,7 +382,7 @@ export default function CommunityChallengePlatform({
                     key={level}
                     variant={selectedDifficulty === level ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedDifficulty(level)}
+                    onClick={() => setSelectedDifficulty(level as number | "all")}
                   >
                     {level === 'all' ? 'All' : getDifficultyStars(level as number)}
                   </Button>
@@ -466,7 +466,7 @@ export default function CommunityChallengePlatform({
                       size="sm"
                       variant={challenge.isJoined ? "outline" : "default"}
                       onClick={() => onJoinChallenge?.(challenge.id)}
-                      disabled={challenge.maxParticipants && challenge.participantCount >= challenge.maxParticipants}
+                      disabled={Boolean(challenge.maxParticipants && challenge.participantCount >= challenge.maxParticipants)}
                     >
                       {challenge.isJoined ? 'Joined' : 'Join Challenge'}
                     </Button>
@@ -575,7 +575,7 @@ export default function CommunityChallengePlatform({
                       size="sm"
                       variant={event.isRegistered ? "outline" : "default"}
                       onClick={() => onJoinEvent?.(event.id)}
-                      disabled={event.maxParticipants && event.participantCount >= event.maxParticipants}
+                      disabled={Boolean(event.maxParticipants && event.participantCount >= event.maxParticipants)}
                     >
                       {event.isRegistered ? 'Registered' : 'Register'}
                     </Button>
