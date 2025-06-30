@@ -1511,6 +1511,15 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   </Button>
                 </CardContent>
               </Card>
+              
+              {/* Next Steps Guidance Section */}
+              <NextStepsGuidance
+                currentRating={user.pcpRating || 2.5}
+                ratingType="pcp"
+                userLevel={user.skillLevel || "Intermediate"}
+                completedActions={[]}
+                className="mt-6"
+              />
             </div>
           </TabsContent>
 
