@@ -2593,7 +2593,7 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
         
         // Handle player one
         const playerOneFirstName = match.playerOne?.firstName || 'Player';
-        const playerOneLastName = match.playerOne?.lastName || `${match.playerOneId}`;
+        const playerOneLastName = match.playerOne?.lastName || `#${match.playerOneId}`;
         playerNames[match.playerOneId] = {
           displayName: `${playerOneFirstName} ${playerOneLastName}`,
           username: `player${match.playerOneId}`,
@@ -2604,7 +2604,7 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
         
         // Handle player two
         const playerTwoFirstName = match.playerTwo?.firstName || 'Player';
-        const playerTwoLastName = match.playerTwo?.lastName || `${match.playerTwoId}`;
+        const playerTwoLastName = match.playerTwo?.lastName || `#${match.playerTwoId}`;
         playerNames[match.playerTwoId] = {
           displayName: `${playerTwoFirstName} ${playerTwoLastName}`,
           username: `player${match.playerTwoId}`,
