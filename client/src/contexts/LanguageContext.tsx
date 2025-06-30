@@ -194,27 +194,22 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.dialogTitle': 'What are Pickle Points?',
     'common.close': 'Close',
 
+    // Profile Completion Modal
+    'profile.completion.title': 'Complete Your Profile',
+    'profile.completion.description': 'Help other players recognize you by adding your first and last name. Currently showing as "{username}" in match history.',
+    'profile.completion.firstName': 'First Name',
+    'profile.completion.lastName': 'Last Name',
+    'profile.completion.firstNamePlaceholder': 'Enter your first name',
+    'profile.completion.lastNamePlaceholder': 'Enter your last name',
+    'profile.completion.skipForNow': 'Skip for Now',
+    'profile.completion.updating': 'Updating...',
+    'profile.completion.updateProfile': 'Update Profile',
+
     // Dashboard Tabs
     'dashboard.tabs.performance': 'Performance',
     'dashboard.tabs.recentMatches': 'Recent Matches',
     'dashboard.tabs.achievements': 'Achievements',
     'dashboard.tabs.community': 'Community',
-
-    // Profile Completion Modal
-    'profile.completion.title': 'Complete Your Profile',
-    'profile.completion.description': 'Help other players recognize you by adding your first and last name. Currently showing as "{username}" in match history.',
-    'profile.completion.firstNameLabel': 'First Name',
-    'profile.completion.lastNameLabel': 'Last Name',
-    'profile.completion.firstNamePlaceholder': 'Enter your first name',
-    'profile.completion.lastNamePlaceholder': 'Enter your last name',
-    'profile.completion.skipForNow': 'Skip for Now',
-    'profile.completion.updateProfile': 'Update Profile',
-    'profile.completion.missingInfo': 'Missing Information',
-    'profile.completion.provideBothNames': 'Please provide both first and last name',
-    'profile.completion.profileUpdated': 'Profile Updated',
-    'profile.completion.nameAddedSuccess': 'Your name has been added to your profile successfully!',
-    'profile.completion.updateFailed': 'Update Failed',
-    'profile.completion.updateError': 'There was an error updating your profile. Please try again.',
 
     // Performance Trends
     'dashboard.performance.title': 'Performance Trends',
@@ -945,7 +940,18 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.rememberMe': '记住我',
     'auth.loggingIn': '登录中...',
     'auth.createAccountTitle': '创建您的账户',
-    'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。'
+    'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。',
+
+    // Profile Completion Modal
+    'profile.completion.title': '完善您的个人资料',
+    'profile.completion.description': '请添加您的姓名，帮助其他球员认识您。目前在比赛记录中显示为"{username}"。',
+    'profile.completion.firstName': '名字',
+    'profile.completion.lastName': '姓氏',
+    'profile.completion.firstNamePlaceholder': '请输入您的名字',
+    'profile.completion.lastNamePlaceholder': '请输入您的姓氏',
+    'profile.completion.skipForNow': '暂时跳过',
+    'profile.completion.updating': '更新中...',
+    'profile.completion.updateProfile': '更新资料'
   }
 };
 
