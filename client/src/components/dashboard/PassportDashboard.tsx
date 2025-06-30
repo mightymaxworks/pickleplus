@@ -1537,7 +1537,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
               <div className="mt-6 space-y-6">
                 {/* Next Steps Guidance */}
                 <NextStepsGuidance
-                  currentRating={user.pcpTechnicalRating || 2.5}
+                  currentRating={Number(user.duprRating) || 2.5}
                   ratingType="pcp"
                   userLevel={user.skillLevel || "Intermediate"}
                   completedActions={[]}
@@ -1545,7 +1545,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                 
                 {/* Progress Trend Chart */}
                 <ProgressTrendChart
-                  currentRating={user.pcpTechnicalRating || 2.5}
+                  currentRating={Number(user.duprRating) || 2.5}
                   ratingType="pcp"
                   userLevel={user.skillLevel || "Intermediate"}
                   timeRange="30d"
@@ -1554,13 +1554,13 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                 {/* Two-column layout for comparison and achievements */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <PeerComparisonWidget
-                    currentRating={user.pcpTechnicalRating || 2.5}
+                    currentRating={Number(user.duprRating) || 2.5}
                     ratingType="pcp"
                     userLevel={user.skillLevel || "Intermediate"}
                   />
                   
                   <AchievementTracker
-                    currentRating={user.pcpTechnicalRating || 2.5}
+                    currentRating={Number(user.duprRating) || 2.5}
                     ratingType="pcp"
                     userLevel={user.skillLevel || "Intermediate"}
                   />
