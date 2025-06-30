@@ -212,19 +212,19 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
                 name="format"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Format</FormLabel>
+                    <FormLabel>{t('match.form.format')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select format" />
+                          <SelectValue placeholder={t('match.form.selectFormat')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="mens_singles">Men's Singles</SelectItem>
-                        <SelectItem value="womens_singles">Women's Singles</SelectItem>
-                        <SelectItem value="mens_doubles">Men's Doubles</SelectItem>
-                        <SelectItem value="womens_doubles">Women's Doubles</SelectItem>
-                        <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+                        <SelectItem value="mens_singles">{t('match.form.mensSingles')}</SelectItem>
+                        <SelectItem value="womens_singles">{t('match.form.womensSingles')}</SelectItem>
+                        <SelectItem value="mens_doubles">{t('match.form.mensDoubles')}</SelectItem>
+                        <SelectItem value="womens_doubles">{t('match.form.womensDoubles')}</SelectItem>
+                        <SelectItem value="mixed_doubles">{t('match.form.mixedDoubles')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -237,16 +237,16 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
                 name="division"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Division</FormLabel>
+                    <FormLabel>{t('match.form.division')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select division" />
+                          <SelectValue placeholder={t('match.form.selectDivision')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="pro">Pro</SelectItem>
-                        <SelectItem value="open">Open/19+</SelectItem>
+                        <SelectItem value="pro">{t('match.form.pro')}</SelectItem>
+                        <SelectItem value="open">{t('match.form.open')}</SelectItem>
                         <SelectItem value="35+">35+</SelectItem>
                         <SelectItem value="50+">50+</SelectItem>
                         <SelectItem value="60+">60+</SelectItem>
@@ -264,16 +264,16 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
               name="isWin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Match Result</FormLabel>
+                  <FormLabel>{t('match.form.matchResult')}</FormLabel>
                   <Select onValueChange={(value) => field.onChange(value === 'true')} defaultValue={field.value.toString()}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select result" />
+                        <SelectValue placeholder={t('match.form.selectResult')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="true">Win</SelectItem>
-                      <SelectItem value="false">Loss</SelectItem>
+                      <SelectItem value="true">{t('match.form.win')}</SelectItem>
+                      <SelectItem value="false">{t('match.form.loss')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -287,10 +287,10 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
               name="score"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Score (Optional)</FormLabel>
+                  <FormLabel>{t('match.form.score')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., 11-9, 11-7 or 11-5, 8-11, 11-3"
+                      placeholder={t('match.form.scorePlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -305,10 +305,10 @@ export function CasualMatchRecorder({ onSuccess, prefilledPlayer, onMatchRecorde
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormLabel>{t('match.form.notes')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Add any notes about the match..."
+                      placeholder={t('match.form.notesPlaceholder')}
                       className="resize-none"
                       {...field}
                     />
