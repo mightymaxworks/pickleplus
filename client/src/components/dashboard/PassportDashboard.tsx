@@ -85,7 +85,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
   const [profileFormData, setProfileFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   // Sprint 4 component visibility states
-  const [showNotifications, setShowNotifications] = useState(true);
+  // Notifications are now unified with the bell notification system
   const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState(true);
   const [showAdvancedAchievements, setShowAdvancedAchievements] = useState(true);
   const [showCommunityChallenge, setShowCommunityChallenge] = useState(true);
@@ -1686,30 +1686,15 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
 
           {/* Social Tab - Sprint 4 Advanced Gamification Features */}
           <TabsContent value="social" className="space-y-6 mt-6">
-            {/* Top Row - Performance Analytics and Real-time Notifications */}
-            <div className="grid lg:grid-cols-3 gap-4">
+            {/* Top Row - Performance Analytics (Notifications now unified with bell) */}
+            <div className="grid lg:grid-cols-1 gap-4">
               {showPerformanceAnalytics && (
-                <div className="lg:col-span-2">
+                <div className="w-full">
                   <PerformanceAnalyticsDashboard
                     userId={user?.id}
                     onSetGoal={() => setComingSoonModal({ isOpen: true, feature: 'Goal Setting', description: 'Advanced goal tracking with AI-powered recommendations' })}
                     onViewRecommendations={(skill) => setComingSoonModal({ isOpen: true, feature: `${skill} Training`, description: 'Personalized skill improvement plans' })}
                     onClose={() => setShowPerformanceAnalytics(false)}
-                  />
-                </div>
-              )}
-              {showNotifications && (
-                <div className={showPerformanceAnalytics ? "" : "lg:col-span-3"}>
-                  <RealTimeNotifications
-                    userId={user?.id}
-                    isVisible={showNotifications}
-                    onClose={() => setShowNotifications(false)}
-                    onNotificationAction={(notification) => {
-                      toast({
-                        title: "Action Completed",
-                        description: `Handled ${notification.type} notification`,
-                      });
-                    }}
                   />
                 </div>
               )}

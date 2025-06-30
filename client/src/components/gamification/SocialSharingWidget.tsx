@@ -134,7 +134,7 @@ export default function SocialSharingWidget({
       currentValue: 5,
       timeLimit: '2 days left',
       participants: 23,
-      reward: '+100 XP, Week Warrior Badge'
+      reward: '+100 Pickle Points, Week Warrior Badge'
     },
     {
       id: '2',
@@ -144,7 +144,7 @@ export default function SocialSharingWidget({
       currentValue: 0.3,
       timeLimit: '1 week left',
       participants: 156,
-      reward: '+200 XP, Climber Badge'
+      reward: '+200 Pickle Points, Climber Badge'
     }
   ];
 
