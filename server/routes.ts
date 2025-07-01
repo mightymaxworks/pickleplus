@@ -48,6 +48,7 @@ import notificationsRoutes from "./routes/notifications"; // Notifications syste
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
 import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-FEEDBACK - Enhanced Feedback System
+import achievementRoutes from "./routes/achievement-routes"; // Mobile-optimized achievement tracking with peer verification
 import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIAL - Social Sharing Features
 import sageConciergeRoutes from "./routes/sage-concierge-routes"; // PKL-278651-SAGE-0013-CONCIERGE - SAGE Concierge
 import mockPcpLearningRoutes from "./routes/mock-pcp-learning-routes"; // PCP Learning Management System
@@ -783,6 +784,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount Feedback routes - PKL-278651-SAGE-0010-FEEDBACK
   app.use('/api/feedback', feedbackRoutes);
+  
+  // Mount Achievement Tracking routes - Mobile-optimized with peer verification
+  app.use('/api', achievementRoutes);
   
   // Mount Social Sharing routes - PKL-278651-SAGE-0011-SOCIAL
   app.use('/api/social', socialRoutes);
