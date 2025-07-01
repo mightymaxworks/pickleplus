@@ -485,7 +485,7 @@ export default function CommunityChallengePlatform({
                   key={challenge.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-muted/30"
+                  className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow bg-muted/30"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -527,13 +527,13 @@ export default function CommunityChallengePlatform({
           </TabsContent>
 
           <TabsContent value="events" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               {events.map((event) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
