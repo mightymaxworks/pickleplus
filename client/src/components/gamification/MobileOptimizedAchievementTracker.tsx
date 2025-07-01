@@ -230,27 +230,27 @@ export default function MobileOptimizedAchievementTracker({
 
   return (
     <>
-      <Card className="w-full overflow-hidden">
-        <CardHeader className="pb-3 px-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Trophy className="h-5 w-5" />
-            Achievement Tracker
+      <Card className="w-full max-w-full overflow-hidden">
+        <CardHeader className="pb-3 px-2 sm:px-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Trophy className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <span className="truncate">Achievement Tracker</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 px-3 w-full">
+        <CardContent className="space-y-4 px-2 sm:px-4 w-full max-w-full overflow-hidden">
           {/* Mobile-optimized category tabs */}
           <div className="w-full overflow-hidden">
-            <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide -mx-1">
               {categories.map((category) => (
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.id ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(category.id)}
-                  className="flex items-center gap-1 whitespace-nowrap text-xs min-w-fit px-2 flex-shrink-0"
+                  className="flex items-center gap-0.5 whitespace-nowrap text-xs px-1.5 py-1 h-7 flex-shrink-0 min-w-0"
                 >
                   {category.icon}
-                  <span className="hidden xs:inline">{category.name}</span>
+                  <span className="hidden sm:inline text-xs">{category.name}</span>
                 </Button>
               ))}
             </div>
@@ -264,7 +264,7 @@ export default function MobileOptimizedAchievementTracker({
                   key={achievement.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border rounded-lg p-3 space-y-3 w-full overflow-hidden"
+                  className="border rounded-lg p-2 sm:p-3 space-y-2 sm:space-y-3 w-full max-w-full overflow-hidden"
                 >
                   {/* Header section */}
                   <div className="space-y-2">

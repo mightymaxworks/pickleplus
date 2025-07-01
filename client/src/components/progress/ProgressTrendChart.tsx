@@ -152,6 +152,13 @@ export default function ProgressTrendChart({
                 domain={['dataMin - 0.1', 'dataMax + 0.1']}
                 stroke="#666"
                 fontSize={12}
+                label={{ 
+                  value: ratingType === 'pickle_points' ? 'Pickle Points' : 
+                         ratingType === 'dupr' ? 'DUPR Rating' : 'PCP Rating', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: '#666' }
+                }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -171,6 +178,21 @@ export default function ProgressTrendChart({
               />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* Graph interpretation guide */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">📊 How to Read This Graph</h4>
+          <div className="text-xs text-blue-700 space-y-1">
+            <p><strong>Y-Axis (Vertical):</strong> {
+              ratingType === 'pickle_points' ? 'Your total Pickle Points earned from achievements and matches' :
+              ratingType === 'dupr' ? 'Your DUPR skill rating (2.0-8.0+ scale based on match results)' :
+              'Your PCP skill rating based on match performance and assessments'
+            }</p>
+            <p><strong>X-Axis (Horizontal):</strong> Time period showing your progress over the last {timeRange}</p>
+            <p><strong>Trend Line:</strong> Upward slope = improvement, downward = decline, flat = consistent performance</p>
+            <p><strong>Colored Areas:</strong> Show the range of your progress with milestones marked by celebration icons</p>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
