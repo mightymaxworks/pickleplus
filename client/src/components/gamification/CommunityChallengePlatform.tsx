@@ -161,174 +161,67 @@ export default function CommunityChallengePlatform({
     loadData();
   }, []);
 
-  // Since we removed mock data, let me add some sample challenges for demonstration
-  useEffect(() => {
-    const addSampleData = async () => {
-      if (challenges.length === 0 && !isLoading) {
-        // Create sample challenges for demonstration
-        const sampleChallenges: Challenge[] = [
-        {
-          id: 'weekly_consistency',
-          name: 'Weekly Consistency Champion',
-          description: 'Play at least one match every day for 7 consecutive days',
-          type: 'individual',
-          category: 'consistency',
-          difficulty: 2,
-          duration: 7,
-          startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-          isActive: true,
-          participantCount: 156,
-          requirements: ['Play 1 match per day', 'No missed days allowed'],
-          rewards: {
-            picklePoints: 500,
-            points: 150,
-            badges: ['Consistency Master'],
-            specialReward: 'Weekly Champion Badge'
-          },
-          progress: {
-            current: 4,
-            target: 7,
-            percentage: 57
-          },
-          createdBy: {
-            id: 'system',
-            name: 'Pickle+ System',
-            role: 'system'
-          },
-          isJoined: true,
-          tags: ['weekly', 'consistency', 'daily']
+  // Handle joining a challenge
+  const handleJoinChallenge = async (challengeId: string) => {
+    try {
+      const response = await fetch(`/api/community/challenges/${challengeId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          id: 'serve_ace_challenge',
-          name: 'Ace Serve Mastery',
-          description: 'Hit 25 aces in competitive matches this month',
-          type: 'individual',
-          category: 'technical',
-          difficulty: 4,
-          duration: 30,
-          startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-          isActive: true,
-          participantCount: 89,
-          maxParticipants: 100,
-          requirements: ['Competitive matches only', 'Verified aces count'],
-          rewards: {
-            picklePoints: 1000,
-            points: 300,
-            badges: ['Ace Specialist', 'Serve Master'],
-            specialReward: 'Golden Paddle Award'
-          },
-          progress: {
-            current: 12,
-            target: 25,
-            percentage: 48
-          },
-          leaderboard: [
-            { userId: '1', name: 'Sarah Chen', avatar: '/uploads/profiles/avatar-2.jpg', progress: 23, rank: 1, score: 2300, joinedDate: new Date(), teamId: undefined, teamName: undefined },
-            { userId: '2', name: 'Mike Rodriguez', progress: 19, rank: 2, score: 1900, joinedDate: new Date(), teamId: undefined, teamName: undefined },
-            { userId: '3', name: 'Alex Johnson', progress: 15, rank: 3, score: 1500, joinedDate: new Date(), teamId: undefined, teamName: undefined }
-          ],
-          createdBy: {
-            id: 'coach_1',
-            name: 'Coach Maria',
-            avatar: '/uploads/profiles/coach-1.jpg',
-            role: 'coach'
-          },
-          isJoined: true,
-          tags: ['technical', 'serving', 'competitive']
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update local state to reflect joined status
+        setChallenges(prev => prev.map(challenge => 
+          challenge.id === challengeId 
+            ? { ...challenge, isJoined: true, participantCount: challenge.participantCount + 1 }
+            : challenge
+        ));
+        
+        // Call the optional callback
+        onJoinChallenge?.(challengeId);
+      } else {
+        console.error('Failed to join challenge:', data.message);
+      }
+    } catch (error) {
+      console.error('Error joining challenge:', error);
+    }
+  };
+
+  // Handle joining an event
+  const handleJoinEvent = async (eventId: string) => {
+    try {
+      const response = await fetch(`/api/community/events/${eventId}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          id: 'team_tournament',
-          name: 'Spring Team Championship',
-          description: 'Form a team of 4 players and compete in the seasonal tournament',
-          type: 'team',
-          category: 'special',
-          difficulty: 5,
-          duration: 14,
-          startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
-          isActive: false,
-          participantCount: 28,
-          maxParticipants: 64,
-          teamSize: 4,
-          requirements: ['Team of 4 players', 'All team members must be verified'],
-          rewards: {
-            picklePoints: 2000,
-            points: 500,
-            badges: ['Team Champion', 'Spring Winner'],
-            specialReward: 'Team Trophy + Individual Medals'
-          },
-          createdBy: {
-            id: 'admin_1',
-            name: 'Tournament Director',
-            role: 'admin'
-          },
-          facilities: ['Elite Courts', 'Champions Arena'],
-          isJoined: false,
-          tags: ['team', 'tournament', 'spring', 'championship']
-        }
-      ];
+        credentials: 'include'
+      });
 
-      const mockEvents: CommunityEvent[] = [
-        {
-          id: 'social_mixer',
-          name: 'Monthly Social Mixer',
-          description: 'Meet fellow players, enjoy refreshments, and participate in fun mini-games',
-          type: 'social',
-          startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
-          location: 'Community Center Court',
-          isVirtual: false,
-          participantCount: 45,
-          maxParticipants: 60,
-          isRegistered: false,
-          organizer: {
-            name: 'Community Team',
-            avatar: '/uploads/profiles/community.jpg',
-            role: 'Community Manager'
-          },
-          rewards: {
-            picklePoints: 200,
-            points: 50,
-            specialRewards: ['Social Butterfly Badge', 'Community Spirit']
-          },
-          tags: ['social', 'networking', 'fun']
-        },
-        {
-          id: 'skills_clinic',
-          name: 'Advanced Skills Clinic',
-          description: 'Master advanced techniques with professional coaches',
-          type: 'training',
-          startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-          endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000),
-          location: 'Training Center Alpha',
-          isVirtual: false,
-          participantCount: 12,
-          maxParticipants: 16,
-          isRegistered: true,
-          organizer: {
-            name: 'Coach Elena',
-            avatar: '/uploads/profiles/coach-elena.jpg',
-            role: 'Head Coach'
-          },
-          requirements: ['Intermediate level or above', 'Own equipment required'],
-          rewards: {
-            picklePoints: 400,
-            points: 100,
-            specialRewards: ['Skills Master Certificate', 'Advanced Techniques Badge']
-          },
-          tags: ['training', 'skills', 'advanced', 'coaching']
-        }
-      ];
-
-      setChallenges(mockChallenges);
-      setEvents(mockEvents);
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, []);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update local state to reflect registered status
+        setEvents(prev => prev.map(event => 
+          event.id === eventId 
+            ? { ...event, isRegistered: true, participantCount: event.participantCount + 1 }
+            : event
+        ));
+        
+        // Call the optional callback
+        onJoinEvent?.(eventId);
+      } else {
+        console.error('Failed to register for event:', data.message);
+      }
+    } catch (error) {
+      console.error('Error registering for event:', error);
+    }
+  };
 
   const getDifficultyStars = (difficulty: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -506,7 +399,7 @@ export default function CommunityChallengePlatform({
                     <Button
                       size="sm"
                       variant={challenge.isJoined ? "outline" : "default"}
-                      onClick={() => onJoinChallenge?.(challenge.id)}
+                      onClick={() => handleJoinChallenge(challenge.id)}
                       disabled={Boolean(challenge.maxParticipants && challenge.participantCount >= challenge.maxParticipants)}
                       className="text-xs px-3 py-1.5 h-auto w-full sm:w-auto"
                     >
@@ -616,7 +509,7 @@ export default function CommunityChallengePlatform({
                     <Button
                       size="sm"
                       variant={event.isRegistered ? "outline" : "default"}
-                      onClick={() => onJoinEvent?.(event.id)}
+                      onClick={() => handleJoinEvent(event.id)}
                       disabled={Boolean(event.maxParticipants && event.participantCount >= event.maxParticipants)}
                     >
                       {event.isRegistered ? 'Registered' : 'Register'}

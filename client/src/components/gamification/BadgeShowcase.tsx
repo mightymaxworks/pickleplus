@@ -54,7 +54,7 @@ export default function BadgeShowcase({
       {
         id: 'rating_climber',
         name: 'Rating Climber',
-        description: 'Reach 3.5 PCP rating',
+        description: 'Reach 1000 PCP ranking points',
         category: 'technical',
         tier: 'silver',
         icon: <Target className="w-4 h-4" />,
