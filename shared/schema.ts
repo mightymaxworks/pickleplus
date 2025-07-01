@@ -1734,3 +1734,117 @@ export {
   ChallengeCategory,
   SkillLevel
 };
+
+// Community Challenges Schema (PKL-278651-GAMIF-CHAL-001)
+export const communityChallenges = pgTable("community_challenges", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  type: varchar("type", { length: 20 }).notNull().default("individual"), // individual, team, community
+  category: varchar("category", { length: 20 }).notNull().default("technical"), // technical, tactical, social, consistency, special
+  difficulty: integer("difficulty").notNull().default(1), // 1-5 stars
+  duration: integer("duration").notNull(), // in days
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isActive: boolean("is_active").default(true),
+  maxParticipants: integer("max_participants"),
+  requirements: jsonb("requirements").default([]), // Array of requirement strings
+  picklePointsReward: integer("pickle_points_reward").default(0),
+  pointsReward: integer("points_reward").default(0),
+  badges: jsonb("badges").default([]), // Array of badge names
+  specialReward: text("special_reward"),
+  createdById: integer("created_by_id").references(() => users.id),
+  facilities: jsonb("facilities").default([]), // Array of facility IDs
+  teamSize: integer("team_size"),
+  tags: jsonb("tags").default([]), // Array of tag strings
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const challengeParticipants = pgTable("challenge_participants", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").references(() => communityChallenges.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  progress: integer("progress").default(0),
+  score: integer("score").default(0),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  teamId: integer("team_id")
+});
+
+export const communityEvents = pgTable("community_events", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  type: varchar("type", { length: 20 }).notNull().default("social"), // tournament, social, training, special
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  location: varchar("location", { length: 255 }).notNull(),
+  isVirtual: boolean("is_virtual").default(false),
+  maxParticipants: integer("max_participants"),
+  organizerId: integer("organizer_id").references(() => users.id),
+  organizerName: varchar("organizer_name", { length: 100 }),
+  organizerAvatar: text("organizer_avatar"),
+  organizerRole: varchar("organizer_role", { length: 50 }),
+  picklePointsReward: integer("pickle_points_reward").default(0),
+  pointsReward: integer("points_reward").default(0),
+  specialRewards: jsonb("special_rewards").default([]), // Array of special reward strings
+  requirements: jsonb("requirements").default([]), // Array of requirement strings
+  tags: jsonb("tags").default([]), // Array of tag strings
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const eventParticipants = pgTable("event_participants", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => communityEvents.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  registeredAt: timestamp("registered_at").defaultNow()
+});
+
+// Community challenges relations
+export const communityChallengesRelations = relations(communityChallenges, ({ one, many }) => ({
+  creator: one(users, { fields: [communityChallenges.createdById], references: [users.id] }),
+  participants: many(challengeParticipants)
+}));
+
+export const challengeParticipantsRelations = relations(challengeParticipants, ({ one }) => ({
+  challenge: one(communityChallenges, { fields: [challengeParticipants.challengeId], references: [communityChallenges.id] }),
+  user: one(users, { fields: [challengeParticipants.userId], references: [users.id] })
+}));
+
+export const communityEventsRelations = relations(communityEvents, ({ one, many }) => ({
+  organizer: one(users, { fields: [communityEvents.organizerId], references: [users.id] }),
+  participants: many(eventParticipants)
+}));
+
+export const eventParticipantsRelations = relations(eventParticipants, ({ one }) => ({
+  event: one(communityEvents, { fields: [eventParticipants.eventId], references: [communityEvents.id] }),
+  user: one(users, { fields: [eventParticipants.userId], references: [users.id] })
+}));
+
+// Community challenges schemas
+export const insertCommunityChallengeSchema = createInsertSchema(communityChallenges)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertChallengeParticipantSchema = createInsertSchema(challengeParticipants)
+  .omit({ id: true, joinedAt: true });
+
+export const insertCommunityEventSchema = createInsertSchema(communityEvents)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
+  .omit({ id: true, registeredAt: true });
+
+// Community challenges types
+export type CommunityChallenge = typeof communityChallenges.$inferSelect;
+export type InsertCommunityChallenge = z.infer<typeof insertCommunityChallengeSchema>;
+
+export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
+export type InsertChallengeParticipant = z.infer<typeof insertChallengeParticipantSchema>;
+
+export type CommunityEvent = typeof communityEvents.$inferSelect;
+export type InsertCommunityEvent = z.infer<typeof insertCommunityEventSchema>;
+
+export type EventParticipant = typeof eventParticipants.$inferSelect;
+export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;

@@ -350,7 +350,7 @@ export default function CommunityChallengePlatform({
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
