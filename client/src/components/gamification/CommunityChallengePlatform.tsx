@@ -125,8 +125,48 @@ export default function CommunityChallengePlatform({
   // Load challenges and events
   useEffect(() => {
     const loadData = async () => {
-      // Mock data for demonstration
-      const mockChallenges: Challenge[] = [
+      try {
+        // Fetch real challenges from API
+        const challengesResponse = await fetch('/api/community/challenges?status=active');
+        const challengesData = await challengesResponse.json();
+        
+        if (challengesData.success) {
+          setChallenges(challengesData.challenges || []);
+        } else {
+          console.error('Failed to fetch challenges:', challengesData.message);
+          setChallenges([]);
+        }
+
+        // Fetch real events from API
+        const eventsResponse = await fetch('/api/community/events?status=upcoming');
+        const eventsData = await eventsResponse.json();
+        
+        if (eventsData.success) {
+          setEvents(eventsData.events || []);
+        } else {
+          console.error('Failed to fetch events:', eventsData.message);
+          setEvents([]);
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading community data:', error);
+        // Fall back to empty arrays instead of mock data
+        setChallenges([]);
+        setEvents([]);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Since we removed mock data, let me add some sample challenges for demonstration
+  useEffect(() => {
+    const addSampleData = async () => {
+      if (challenges.length === 0 && !isLoading) {
+        // Create sample challenges for demonstration
+        const sampleChallenges: Challenge[] = [
         {
           id: 'weekly_consistency',
           name: 'Weekly Consistency Champion',

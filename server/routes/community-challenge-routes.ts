@@ -414,10 +414,10 @@ router.post('/admin/challenges', async (req, res) => {
 // Admin: Create a new event
 router.post('/admin/events', async (req, res) => {
   try {
-    const eventData = insertCommunityEventSchema.parse(req.body);
+    const eventData = insertChallengeEventSchema.parse(req.body);
     
     const newEvent = await db
-      .insert(communityEvents)
+      .insert(challengeEvents)
       .values(eventData)
       .returning();
 
