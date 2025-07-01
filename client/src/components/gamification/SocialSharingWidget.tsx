@@ -149,7 +149,7 @@ export default function SocialSharingWidget({
   ];
 
   const handleShare = async (platform: 'twitter' | 'facebook' | 'instagram' | 'copy') => {
-    const shareText = `Just reached ${userRating} PCP rating and unlocked ${userBadgeCount} badges in Pickle+! 🏆 Join me on my pickleball journey.`;
+    const shareText = `Just reached ${userRating} PCP ranking points and unlocked ${userBadgeCount} badges in Pickle+! 🏆 Join me on my pickleball journey.`;
     const shareUrl = window.location.origin;
 
     switch (platform) {
