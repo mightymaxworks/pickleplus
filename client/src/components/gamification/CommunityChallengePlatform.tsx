@@ -363,26 +363,27 @@ export default function CommunityChallengePlatform({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 px-2 sm:px-6">
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 h-auto">
+            <TabsTrigger value="active" className="text-xs sm:text-sm px-1 sm:px-3">Active</TabsTrigger>
+            <TabsTrigger value="upcoming" className="text-xs sm:text-sm px-1 sm:px-3">Upcoming</TabsTrigger>
+            <TabsTrigger value="events" className="text-xs sm:text-sm px-1 sm:px-3">Events</TabsTrigger>
+            <TabsTrigger value="leaderboard" className="text-xs sm:text-sm px-1 sm:px-3">Board</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-4">
             {/* Filters */}
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Difficulty:</span>
+            <div className="flex flex-wrap gap-1 sm:gap-2 overflow-x-auto">
+              <div className="flex items-center gap-1 sm:gap-2 min-w-fit">
+                <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Difficulty:</span>
                 {['all', 1, 2, 3, 4, 5].map((level) => (
                   <Button
                     key={level}
                     variant={selectedDifficulty === level ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedDifficulty(level as number | "all")}
+                    className="text-xs px-2 py-1 h-7 flex-shrink-0"
                   >
                     {level === 'all' ? 'All' : getDifficultyStars(level as number)}
                   </Button>
@@ -391,38 +392,38 @@ export default function CommunityChallengePlatform({
             </div>
 
             {/* Active Challenges */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               {filteredChallenges.map((challenge) => (
                 <motion.div
                   key={challenge.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white flex-shrink-0">
                         {getCategoryIcon(challenge.category)}
                       </div>
-                      <div>
-                        <h4 className="font-semibold flex items-center gap-2">
-                          {challenge.name}
-                          <Badge variant={challenge.type === 'team' ? 'default' : 'secondary'}>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm sm:text-base">
+                          <span className="truncate block">{challenge.name}</span>
+                          <Badge variant={challenge.type === 'team' ? 'default' : 'secondary'} className="mt-1 text-xs">
                             {challenge.type}
                           </Badge>
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                           {challenge.description}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-sm">
-                      <div className="flex items-center gap-1 mb-1">
+                    <div className="flex items-center justify-between sm:flex-col sm:text-right text-xs sm:text-sm flex-shrink-0">
+                      <div className="flex items-center gap-1">
                         {getDifficultyStars(challenge.difficulty)}
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Timer className="w-3 h-3" />
-                        {formatTimeRemaining(challenge.endDate)}
+                        <span className="text-xs">{formatTimeRemaining(challenge.endDate)}</span>
                       </div>
                     </div>
                   </div>
@@ -437,29 +438,29 @@ export default function CommunityChallengePlatform({
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-sm mb-3">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm mb-3 gap-2">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <span className="flex items-center gap-1 whitespace-nowrap">
                         <Users className="w-3 h-3" />
                         {challenge.participantCount}
                         {challenge.maxParticipants && `/${challenge.maxParticipants}`}
                       </span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 whitespace-nowrap">
                         <Star className="w-3 h-3 text-yellow-500" />
-                        {challenge.rewards.picklePoints} Pickle Points
+                        {challenge.rewards.picklePoints} Pts
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {challenge.tags.slice(0, 2).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
+                        <Badge key={tag} variant="outline" className="text-xs px-1 py-0">
                           {tag}
                         </Badge>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="text-xs text-muted-foreground truncate">
                       by {challenge.createdBy?.name}
                     </div>
                     <Button
@@ -467,6 +468,7 @@ export default function CommunityChallengePlatform({
                       variant={challenge.isJoined ? "outline" : "default"}
                       onClick={() => onJoinChallenge?.(challenge.id)}
                       disabled={Boolean(challenge.maxParticipants && challenge.participantCount >= challenge.maxParticipants)}
+                      className="text-xs px-3 py-1.5 h-auto w-full sm:w-auto"
                     >
                       {challenge.isJoined ? 'Joined' : 'Join Challenge'}
                     </Button>
@@ -477,7 +479,7 @@ export default function CommunityChallengePlatform({
           </TabsContent>
 
           <TabsContent value="upcoming" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               {challenges.filter(c => !c.isActive).map((challenge) => (
                 <motion.div
                   key={challenge.id}
