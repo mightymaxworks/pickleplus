@@ -60,7 +60,7 @@ import ProgressExplanationTooltip from '@/components/progress/ProgressExplanatio
 import NextStepsGuidance from '@/components/progress/NextStepsGuidance';
 import PeerComparisonWidget from '@/components/progress/PeerComparisonWidget';
 import AchievementTracker from '@/components/progress/AchievementTracker';
-import ProgressTrendChart from '@/components/progress/ProgressTrendChart';
+
 import BadgeShowcase from '@/components/gamification/BadgeShowcase';
 import ProgressCelebration from '@/components/gamification/ProgressCelebration';
 import SocialSharingWidget from '@/components/gamification/SocialSharingWidget';
@@ -1541,14 +1541,6 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   ratingType="pcp"
                   userLevel={user.skillLevel || "Intermediate"}
                   completedActions={[]}
-                />
-                
-                {/* Progress Trend Chart */}
-                <ProgressTrendChart
-                  currentRating={Number(user.duprRating) || 2.5}
-                  ratingType="pcp"
-                  userLevel={user.skillLevel || "Intermediate"}
-                  timeRange="30d"
                 />
                 
                 {/* Two-column layout for comparison and achievements */}
