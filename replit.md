@@ -53,11 +53,11 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **Rate Setting**: Individual and group lesson pricing management
 - **Achievement Showcase**: Professional accomplishments and testimonials
 
-### 5. PCP Rating System
-- **4-Dimensional Assessment**: Technical (40%), Tactical (25%), Physical (20%), Mental (15%)
-- **Skill Tracking**: Comprehensive player evaluation across 20+ metrics
-- **Progress Visualization**: Rating history and improvement tracking
-- **Coach Dashboard**: Player management and assessment tools
+### 5. PCP Ranking System
+- **Points-Based Ranking**: PCP ranking points earned through matches and achievements
+- **Performance Tracking**: Match results and tournament participation
+- **Progress Visualization**: Ranking history and point accumulation tracking
+- **Coach Dashboard**: Player management and performance analysis tools
 
 ## Data Flow
 

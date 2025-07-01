@@ -64,7 +64,7 @@ import ProgressTrendChart from '@/components/progress/ProgressTrendChart';
 import BadgeShowcase from '@/components/gamification/BadgeShowcase';
 import ProgressCelebration from '@/components/gamification/ProgressCelebration';
 import SocialSharingWidget from '@/components/gamification/SocialSharingWidget';
-import AdvancedAchievementTracker from '@/components/gamification/AdvancedAchievementTracker';
+import MobileOptimizedAchievementTracker from '@/components/gamification/MobileOptimizedAchievementTracker';
 import RealTimeNotifications from '@/components/gamification/RealTimeNotifications';
 import CommunityChallengePlatform from '@/components/gamification/CommunityChallengePlatform';
 import { EnhancedSocialHub } from '@/components/gamification/EnhancedSocialHub';
@@ -1703,16 +1703,14 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
             {/* Middle Row - Advanced Achievement Tracking and Community Challenges */}
             <div className="grid lg:grid-cols-2 gap-4">
               {showAdvancedAchievements && (
-                <AdvancedAchievementTracker
+                <MobileOptimizedAchievementTracker
                   userId={user?.id}
-                  onAchievementClick={(achievement) => {
+                  onAchievementUnlocked={(achievement: any) => {
                     toast({
-                      title: "Achievement Details",
-                      description: `Viewing ${achievement.name} achievement`,
+                      title: "🏆 Achievement Unlocked!",
+                      description: `Congratulations! You've earned "${achievement.name}" - ${achievement.rewardPicklePoints} Pickle Points!`,
                     });
                   }}
-                  onViewHistory={() => setComingSoonModal({ isOpen: true, feature: 'Achievement History', description: 'Complete timeline of your achievements and progress' })}
-                  onClose={() => setShowAdvancedAchievements(false)}
                 />
               )}
               
