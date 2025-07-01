@@ -230,7 +230,7 @@ export default function MobileOptimizedAchievementTracker({
 
   return (
     <>
-      <Card className="w-full max-w-full overflow-hidden">
+      <Card className="w-full max-w-full overflow-hidden achievement-mobile-container">
         <CardHeader className="pb-3 px-2 sm:px-4">
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Trophy className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
