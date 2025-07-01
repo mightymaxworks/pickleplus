@@ -137,9 +137,9 @@ export default function MobileOptimizedAchievementTracker({
   const getTrackingMethodButton = (achievement: Achievement) => {
     if (achievement.isCompleted) {
       return (
-        <Badge variant="secondary" className="text-green-600 bg-green-50">
+        <Badge variant="secondary" className="text-green-600 bg-green-50 text-xs flex-shrink-0">
           <CheckCircle className="h-3 w-3 mr-1" />
-          Completed
+          Done
         </Badge>
       );
     }
@@ -151,10 +151,10 @@ export default function MobileOptimizedAchievementTracker({
             size="sm" 
             variant="outline"
             onClick={() => handleSelfReport(achievement.id)}
-            className="text-xs"
+            className="text-xs px-2 py-1 h-7 flex-shrink-0"
           >
             <CheckCircle className="h-3 w-3 mr-1" />
-            Mark Complete
+            <span className="hidden xs:inline">Mark </span>Complete
           </Button>
         );
       
@@ -170,10 +170,10 @@ export default function MobileOptimizedAchievementTracker({
               setSelectedAchievement(achievement);
               setShowPeerRequestDialog(true);
             }}
-            className="text-xs"
+            className="text-xs px-2 py-1 h-7 flex-shrink-0"
           >
             <UserCheck className="h-3 w-3 mr-1" />
-            Request Peer ({verificationCount}/{requiredCount})
+            <span className="hidden xs:inline">Peer </span>({verificationCount}/{requiredCount})
           </Button>
         );
       
@@ -182,17 +182,17 @@ export default function MobileOptimizedAchievementTracker({
           <Button 
             size="sm" 
             variant="outline"
-            className="text-xs"
+            className="text-xs px-2 py-1 h-7 flex-shrink-0"
           >
             <Camera className="h-3 w-3 mr-1" />
-            Upload Video
+            <span className="hidden xs:inline">Upload </span>Video
           </Button>
         );
       
       default:
         return (
-          <Badge variant="outline" className="text-xs">
-            Auto-tracked
+          <Badge variant="outline" className="text-xs flex-shrink-0">
+            Auto
           </Badge>
         );
     }
@@ -230,28 +230,30 @@ export default function MobileOptimizedAchievementTracker({
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="pb-3 px-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Trophy className="h-5 w-5" />
             Achievement Tracker
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-3 w-full">
           {/* Mobile-optimized category tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.id)}
-                className="flex items-center gap-1 whitespace-nowrap text-xs"
-              >
-                {category.icon}
-                {category.name}
-              </Button>
-            ))}
+          <div className="w-full overflow-hidden">
+            <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category.id)}
+                  className="flex items-center gap-1 whitespace-nowrap text-xs min-w-fit px-2 flex-shrink-0"
+                >
+                  {category.icon}
+                  <span className="hidden xs:inline">{category.name}</span>
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* Achievement list - mobile optimized */}
@@ -262,41 +264,48 @@ export default function MobileOptimizedAchievementTracker({
                   key={achievement.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border rounded-lg p-3 space-y-2"
+                  className="border rounded-lg p-3 space-y-3 w-full overflow-hidden"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                  {/* Header section */}
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-shrink-0 mt-0.5">
                         {getCategoryIcon(achievement.category)}
-                        <h4 className="font-medium text-sm truncate">
-                          {achievement.name}
-                        </h4>
-                        <Badge className={`text-xs ${getTierColor(achievement.tier)}`}>
-                          {achievement.tier}
-                        </Badge>
                       </div>
-                      <p className="text-xs text-gray-600 line-clamp-2">
-                        {achievement.description}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-sm truncate flex-1">
+                            {achievement.name}
+                          </h4>
+                          <Badge className={`text-xs flex-shrink-0 ${getTierColor(achievement.tier)}`}>
+                            {achievement.tier}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-2">
+                          {achievement.description}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Progress section */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">
-                        Progress: {achievement.currentProgress}/{achievement.targetProgress}
+                    <div className="flex items-center justify-between text-xs gap-2">
+                      <span className="text-gray-500 flex-shrink-0">
+                        {achievement.currentProgress}/{achievement.targetProgress}
                       </span>
-                      <span className="text-amber-600 font-medium">
-                        +{achievement.rewardPicklePoints} Pickle Points
+                      <span className="text-amber-600 font-medium flex-shrink-0">
+                        +{achievement.rewardPicklePoints} Points
                       </span>
                     </div>
                     <Progress 
                       value={(achievement.currentProgress / achievement.targetProgress) * 100} 
-                      className="h-2"
+                      className="h-2 w-full"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  {/* Action section */}
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs text-gray-500">
                       Est. {achievement.estimatedTimeToComplete} days
                     </span>
