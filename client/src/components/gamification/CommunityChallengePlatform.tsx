@@ -158,7 +158,11 @@ export default function CommunityChallengePlatform({
       }
     };
 
-    loadData();
+    // Properly handle the promise to avoid unhandled rejection
+    loadData().catch(error => {
+      console.error('Unhandled error in loadData:', error);
+      setIsLoading(false);
+    });
   }, []);
 
   // Handle joining a challenge
@@ -399,7 +403,9 @@ export default function CommunityChallengePlatform({
                     <Button
                       size="sm"
                       variant={challenge.isJoined ? "outline" : "default"}
-                      onClick={() => handleJoinChallenge(challenge.id)}
+                      onClick={() => handleJoinChallenge(challenge.id).catch(error => 
+                        console.error('Error in challenge join handler:', error)
+                      )}
                       disabled={Boolean(challenge.maxParticipants && challenge.participantCount >= challenge.maxParticipants)}
                       className="text-xs px-3 py-1.5 h-auto w-full sm:w-auto"
                     >
@@ -509,7 +515,9 @@ export default function CommunityChallengePlatform({
                     <Button
                       size="sm"
                       variant={event.isRegistered ? "outline" : "default"}
-                      onClick={() => handleJoinEvent(event.id)}
+                      onClick={() => handleJoinEvent(event.id).catch(error => 
+                        console.error('Error in event join handler:', error)
+                      )}
                       disabled={Boolean(event.maxParticipants && event.participantCount >= event.maxParticipants)}
                     >
                       {event.isRegistered ? 'Registered' : 'Register'}
