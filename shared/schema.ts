@@ -1772,7 +1772,7 @@ export const challengeParticipants = pgTable("challenge_participants", {
   teamId: integer("team_id")
 });
 
-export const communityEvents = pgTable("community_events", {
+export const challengeEvents = pgTable("challenge_events", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description").notNull(),
@@ -1795,9 +1795,9 @@ export const communityEvents = pgTable("community_events", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-export const eventParticipants = pgTable("event_participants", {
+export const challengeEventParticipants = pgTable("challenge_event_participants", {
   id: serial("id").primaryKey(),
-  eventId: integer("event_id").references(() => communityEvents.id).notNull(),
+  eventId: integer("event_id").references(() => challengeEvents.id).notNull(),
   userId: integer("user_id").references(() => users.id).notNull(),
   registeredAt: timestamp("registered_at").defaultNow()
 });
@@ -1813,14 +1813,14 @@ export const challengeParticipantsRelations = relations(challengeParticipants, (
   user: one(users, { fields: [challengeParticipants.userId], references: [users.id] })
 }));
 
-export const communityEventsRelations = relations(communityEvents, ({ one, many }) => ({
-  organizer: one(users, { fields: [communityEvents.organizerId], references: [users.id] }),
-  participants: many(eventParticipants)
+export const challengeEventsRelations = relations(challengeEvents, ({ one, many }) => ({
+  organizer: one(users, { fields: [challengeEvents.organizerId], references: [users.id] }),
+  participants: many(challengeEventParticipants)
 }));
 
-export const eventParticipantsRelations = relations(eventParticipants, ({ one }) => ({
-  event: one(communityEvents, { fields: [eventParticipants.eventId], references: [communityEvents.id] }),
-  user: one(users, { fields: [eventParticipants.userId], references: [users.id] })
+export const challengeEventParticipantsRelations = relations(challengeEventParticipants, ({ one }) => ({
+  event: one(challengeEvents, { fields: [challengeEventParticipants.eventId], references: [challengeEvents.id] }),
+  user: one(users, { fields: [challengeEventParticipants.userId], references: [users.id] })
 }));
 
 // Community challenges schemas
@@ -1830,10 +1830,10 @@ export const insertCommunityChallengeSchema = createInsertSchema(communityChalle
 export const insertChallengeParticipantSchema = createInsertSchema(challengeParticipants)
   .omit({ id: true, joinedAt: true });
 
-export const insertCommunityEventSchema = createInsertSchema(communityEvents)
+export const insertChallengeEventSchema = createInsertSchema(challengeEvents)
   .omit({ id: true, createdAt: true, updatedAt: true });
 
-export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
+export const insertChallengeEventParticipantSchema = createInsertSchema(challengeEventParticipants)
   .omit({ id: true, registeredAt: true });
 
 // Community challenges types
@@ -1843,8 +1843,8 @@ export type InsertCommunityChallenge = z.infer<typeof insertCommunityChallengeSc
 export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
 export type InsertChallengeParticipant = z.infer<typeof insertChallengeParticipantSchema>;
 
-export type CommunityEvent = typeof communityEvents.$inferSelect;
-export type InsertCommunityEvent = z.infer<typeof insertCommunityEventSchema>;
+export type ChallengeEvent = typeof challengeEvents.$inferSelect;
+export type InsertChallengeEvent = z.infer<typeof insertChallengeEventSchema>;
 
-export type EventParticipant = typeof eventParticipants.$inferSelect;
-export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;
+export type ChallengeEventParticipant = typeof challengeEventParticipants.$inferSelect;
+export type InsertChallengeEventParticipant = z.infer<typeof insertChallengeEventParticipantSchema>;
