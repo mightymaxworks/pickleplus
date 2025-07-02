@@ -68,6 +68,14 @@ export default function AssessmentGoalIntegration() {
   });
 
   const latestAssessment: AssessmentData | null = assessments[0] || null;
+  
+  // Debug log to see actual data structure
+  useEffect(() => {
+    if (assessments.length > 0) {
+      console.log("AssessmentGoalIntegration - Full assessment data:", assessments[0]);
+      console.log("AssessmentGoalIntegration - Available keys:", Object.keys(assessments[0]));
+    }
+  }, [assessments]);
 
   // Generate goal recommendations based on assessment scores
   useEffect(() => {
