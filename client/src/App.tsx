@@ -498,6 +498,14 @@ export default function App() {
                     component={lazyLoad(() => import('./pages/goals-page'))}
                     pageTitle="My Goals"
                   />
+                  
+                  {/* PKL-278651-COACH-GOALS-PHASE2-UI - Coach Goal Management */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/goals"
+                    component={lazyLoad(() => import('./pages/coach-goals-page'))}
+                    pageTitle="Coach Goal Management"
+                  />
+                  
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"
