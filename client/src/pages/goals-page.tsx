@@ -89,7 +89,7 @@ export default function GoalsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-[58px] mb-[58px]">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -106,7 +106,6 @@ export default function GoalsPage() {
           Create Goal
         </Button>
       </div>
-
       {/* Quick Stats */}
       {goals.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -167,7 +166,6 @@ export default function GoalsPage() {
           </Card>
         </div>
       )}
-
       {/* Goals List */}
       {goals.length === 0 ? (
         <Card className="text-center py-12">
