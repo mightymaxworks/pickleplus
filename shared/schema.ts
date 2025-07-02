@@ -455,6 +455,36 @@ import {
   type InsertTournamentSeriesEvent
 } from './schema/tournament-system';
 
+// Import goal-setting system schema (PKL-278651-COACH-GOALS-001 - Goal Setting Foundation)
+import {
+  playerGoals,
+  goalMilestones,
+  goalJournalEntries,
+  goalProgressSnapshots,
+  playerGoalsRelations,
+  goalMilestonesRelations,
+  goalJournalEntriesRelations,
+  goalProgressSnapshotsRelations,
+  insertPlayerGoalSchema,
+  insertGoalMilestoneSchema,
+  insertGoalJournalEntrySchema,
+  insertGoalProgressSnapshotSchema,
+  GoalCategories,
+  GoalStatus,
+  GoalPriority,
+  type PlayerGoal,
+  type InsertPlayerGoal,
+  type GoalMilestone,
+  type InsertGoalMilestone,
+  type GoalJournalEntry,
+  type InsertGoalJournalEntry,
+  type GoalProgressSnapshot,
+  type InsertGoalProgressSnapshot,
+  type GoalCategory,
+  type GoalStatusType,
+  type GoalPriorityType
+} from './schema/goals';
+
 // Import moderation schema (PKL-278651-COMM-0029-MOD - Enhanced Community Moderation Tools)
 import {
   contentReports,
@@ -1848,3 +1878,33 @@ export type InsertChallengeEvent = z.infer<typeof insertChallengeEventSchema>;
 
 export type ChallengeEventParticipant = typeof challengeEventParticipants.$inferSelect;
 export type InsertChallengeEventParticipant = z.infer<typeof insertChallengeEventParticipantSchema>;
+
+// Re-export Goal-Setting System components
+export {
+  playerGoals,
+  goalMilestones,
+  goalJournalEntries,
+  goalProgressSnapshots,
+  playerGoalsRelations,
+  goalMilestonesRelations,
+  goalJournalEntriesRelations,
+  goalProgressSnapshotsRelations,
+  insertPlayerGoalSchema,
+  insertGoalMilestoneSchema,
+  insertGoalJournalEntrySchema,
+  insertGoalProgressSnapshotSchema,
+  GoalCategories,
+  GoalStatus,
+  GoalPriority,
+  type PlayerGoal,
+  type InsertPlayerGoal,
+  type GoalMilestone,
+  type InsertGoalMilestone,
+  type GoalJournalEntry,
+  type InsertGoalJournalEntry,
+  type GoalProgressSnapshot,
+  type InsertGoalProgressSnapshot,
+  type GoalCategory,
+  type GoalStatusType,
+  type GoalPriorityType
+};
