@@ -345,7 +345,7 @@ import {
 } from './schema/tournament-brackets';
 
 // Import tournament relations for parent-child relationships (PKL-278651-TOURN-0015-MULTI)
-import { tournamentRelations } from './schema/tournament-relations';
+// Note: Tournament relations are defined locally in this file
 
 // Import enhanced tournament system schema (PKL-278651-TOURN-0015-MULTI - Multi-Event Tournament System)
 import * as enhancedTournamentSystem from './schema/enhanced-tournament-system';
@@ -461,10 +461,6 @@ import {
   goalMilestones,
   goalJournalEntries,
   goalProgressSnapshots,
-  playerGoalsRelations,
-  goalMilestonesRelations,
-  goalJournalEntriesRelations,
-  goalProgressSnapshotsRelations,
   insertPlayerGoalSchema,
   insertGoalMilestoneSchema,
   insertGoalJournalEntrySchema,
@@ -1144,11 +1140,47 @@ export const userRelations = relations(users, ({ many }) => ({
   playerTwoMatches: many(matches, { relationName: "playerTwo" }),
   playerOnePartnerMatches: many(matches, { relationName: "playerOnePartner" }),
   playerTwoPartnerMatches: many(matches, { relationName: "playerTwoPartner" }),
-  wonMatches: many(matches, { relationName: "winner" })
+  wonMatches: many(matches, { relationName: "winner" }),
+  // Goal-setting system relations
+  playerGoals: many(playerGoals, { relationName: "player" }),
+  coachingGoals: many(playerGoals, { relationName: "coach" })
 }));
 
-// Tournament relations
-export const tournamentRelations = relations(tournaments, ({ many }) => ({
+// Goal-setting system relations
+export const playerGoalsRelations = relations(playerGoals, ({ one, many }) => ({
+  user: one(users, { fields: [playerGoals.userId], references: [users.id], relationName: "player" }),
+  coach: one(users, { fields: [playerGoals.coachId], references: [users.id], relationName: "coach" }),
+  parentGoal: one(playerGoals, { fields: [playerGoals.parentGoalId], references: [playerGoals.id] }),
+  subGoals: many(playerGoals),
+  milestones: many(goalMilestones),
+  journalEntries: many(goalJournalEntries),
+  progressSnapshots: many(goalProgressSnapshots)
+}));
+
+export const goalMilestonesRelations = relations(goalMilestones, ({ one }) => ({
+  goal: one(playerGoals, { fields: [goalMilestones.goalId], references: [playerGoals.id] })
+}));
+
+export const goalJournalEntriesRelations = relations(goalJournalEntries, ({ one }) => ({
+  goal: one(playerGoals, { fields: [goalJournalEntries.goalId], references: [playerGoals.id] })
+}));
+
+export const goalProgressSnapshotsRelations = relations(goalProgressSnapshots, ({ one }) => ({
+  goal: one(playerGoals, { fields: [goalProgressSnapshots.goalId], references: [playerGoals.id] })
+}));
+
+// Tournament relations with parent-child relationships
+export const tournamentRelations = relations(tournaments, ({ one, many }) => ({
+  // Self-relation for parent-child relationship
+  parentTournament: one(tournaments, {
+    fields: [tournaments.parentTournamentId],
+    references: [tournaments.id],
+    relationName: "parent_tournament"
+  }),
+  childTournaments: many(tournaments, {
+    relationName: "parent_tournament"
+  }),
+  // Standard tournament relations
   registrations: many(tournamentRegistrations),
   matches: many(matches),
   rankingTransactions: many(rankingTransactions)
@@ -1885,10 +1917,6 @@ export {
   goalMilestones,
   goalJournalEntries,
   goalProgressSnapshots,
-  playerGoalsRelations,
-  goalMilestonesRelations,
-  goalJournalEntriesRelations,
-  goalProgressSnapshotsRelations,
   insertPlayerGoalSchema,
   insertGoalMilestoneSchema,
   insertGoalJournalEntrySchema,
