@@ -331,7 +331,7 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
 
                   {/* Weak Areas */}
                   <div>
-                    <h3 className="font-medium mb-4">Identified Weak Areas (< 6.0)</h3>
+                    <h3 className="font-medium mb-4">Identified Weak Areas (&lt; 6.0)</h3>
                     <div className="space-y-3">
                       {analysis.analysis.weakAreas.map((area: WeakArea, index: number) => (
                         <Card key={area.skill}>
