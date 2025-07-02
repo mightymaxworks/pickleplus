@@ -492,6 +492,12 @@ export default function App() {
                     component={LazyProfileEditPage}
                     pageTitle="Edit Profile"
                   />
+                  {/* PKL-278651-COACH-GOALS-001 - Goal-Setting Foundation */}
+                  <ProtectedRouteWithLayout
+                    path="/goals"
+                    component={lazyLoad(() => import('./pages/goals-page'))}
+                    pageTitle="My Goals"
+                  />
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"

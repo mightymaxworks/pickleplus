@@ -41,15 +41,9 @@ export function registerGoalRoutes(app: Express) {
   // Get all goals for authenticated user
   app.get("/api/goals", async (req, res) => {
     try {
-      // For now, use a test user ID - in production this would come from authentication
-      const userId = 1; // This would be req.user.id in production
-      
-      const goals = await db
-        .select()
-        .from(playerGoals)
-        .where(eq(playerGoals.userId, userId))
-        .orderBy(desc(playerGoals.createdAt));
-
+      // For now, return empty array until schema is properly synced
+      // TODO: Fix schema sync and implement proper goal fetching
+      const goals = [];
       res.json(goals);
     } catch (error) {
       console.error("Error fetching goals:", error);
