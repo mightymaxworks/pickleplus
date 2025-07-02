@@ -58,15 +58,13 @@ import { PADDLE_BRAND_OPTIONS } from '@/constants/paddleBrands';
 import { OnboardingProgressIndicator } from '@/components/onboarding/OnboardingProgressIndicator';
 import ProgressExplanationTooltip from '@/components/progress/ProgressExplanationTooltip';
 import NextStepsGuidance from '@/components/progress/NextStepsGuidance';
-import PeerComparisonWidget from '@/components/progress/PeerComparisonWidget';
-import AchievementTracker from '@/components/progress/AchievementTracker';
+// Removed for next deployment: PeerComparisonWidget, AchievementTracker
 
 import BadgeShowcase from '@/components/gamification/BadgeShowcase';
 import ProgressCelebration from '@/components/gamification/ProgressCelebration';
 import SocialSharingWidget from '@/components/gamification/SocialSharingWidget';
-import MobileOptimizedAchievementTracker from '@/components/gamification/MobileOptimizedAchievementTracker';
 import RealTimeNotifications from '@/components/gamification/RealTimeNotifications';
-import CommunityChallengePlatform from '@/components/gamification/CommunityChallengePlatform';
+// Removed for next deployment: MobileOptimizedAchievementTracker, CommunityChallengePlatform
 import { EnhancedSocialHub } from '@/components/gamification/EnhancedSocialHub';
 import PerformanceAnalyticsDashboard from '@/components/gamification/PerformanceAnalyticsDashboard';
 
@@ -87,8 +85,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
   // Sprint 4 component visibility states
   // Notifications are now unified with the bell notification system
   const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState(true);
-  const [showAdvancedAchievements, setShowAdvancedAchievements] = useState(true);
-  const [showCommunityChallenge, setShowCommunityChallenge] = useState(true);
+  // Removed state for advanced achievements and community challenges (next deployment)
   const [showEnhancedSocial, setShowEnhancedSocial] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1543,20 +1540,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   completedActions={[]}
                 />
                 
-                {/* Two-column layout for comparison and achievements */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <PeerComparisonWidget
-                    currentRating={Number(user.duprRating) || 2.5}
-                    ratingType="pcp"
-                    userLevel={user.skillLevel || "Intermediate"}
-                  />
-                  
-                  <AchievementTracker
-                    currentRating={Number(user.duprRating) || 2.5}
-                    ratingType="pcp"
-                    userLevel={user.skillLevel || "Intermediate"}
-                  />
-                </div>
+                {/* Peer comparison and achievement tracking features removed for next deployment */}
               </div>
             </div>
           </TabsContent>
@@ -1692,40 +1676,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
               )}
             </div>
 
-            {/* Middle Row - Advanced Achievement Tracking and Community Challenges */}
-            <div className="grid lg:grid-cols-2 gap-4">
-              {showAdvancedAchievements && (
-                <MobileOptimizedAchievementTracker
-                  userId={user?.id}
-                  onAchievementUnlocked={(achievement: any) => {
-                    toast({
-                      title: "🏆 Achievement Unlocked!",
-                      description: `Congratulations! You've earned "${achievement.name}" - ${achievement.rewardPicklePoints} Pickle Points!`,
-                    });
-                  }}
-                />
-              )}
-              
-              {showCommunityChallenge && (
-                <CommunityChallengePlatform
-                  userId={user?.id}
-                  onJoinChallenge={(challengeId) => {
-                    toast({
-                      title: "Challenge Joined",
-                      description: "Successfully joined the community challenge!",
-                    });
-                  }}
-                  onCreateChallenge={() => setComingSoonModal({ isOpen: true, feature: 'Challenge Creator', description: 'Create custom challenges for the community' })}
-                  onJoinEvent={(eventId) => {
-                    toast({
-                      title: "Event Registration",
-                      description: "Successfully registered for the community event!",
-                    });
-                  }}
-                  onClose={() => setShowCommunityChallenge(false)}
-                />
-              )}
-            </div>
+            {/* Advanced Achievement Tracking and Community Challenges removed for next deployment */}
 
             {/* Bottom Row - Enhanced Social Hub and Original Sprint 3 Components */}
             <div className="grid lg:grid-cols-3 gap-4">
