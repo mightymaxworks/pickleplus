@@ -320,8 +320,8 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                             {getDimensionalIcon(dimension)}
                             <span className="text-sm font-medium capitalize">{dimension}</span>
                           </div>
-                          <div className="text-2xl font-bold">{rating.toFixed(1)}</div>
-                          <Progress value={rating * 10} className="h-2 mt-1" />
+                          <div className="text-2xl font-bold">{(rating as number).toFixed(1)}</div>
+                          <Progress value={(rating as number) * 10} className="h-2 mt-1" />
                         </div>
                       ))}
                     </div>
@@ -333,7 +333,7 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                   <div>
                     <h3 className="font-medium mb-4">Identified Weak Areas (< 6.0)</h3>
                     <div className="space-y-3">
-                      {analysis.analysis.weakAreas.map((area, index) => (
+                      {analysis.analysis.weakAreas.map((area: WeakArea, index: number) => (
                         <Card key={area.skill}>
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
@@ -411,7 +411,7 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                 <div className="space-y-6">
                   {/* Goal Suggestions */}
                   <div className="space-y-4">
-                    {suggestions.suggestions.map((suggestion, index) => (
+                    {suggestions.suggestions.map((suggestion: GoalSuggestion, index: number) => (
                       <Card 
                         key={suggestion.targetSkill}
                         className={`cursor-pointer transition-colors hover:bg-muted/50 ${
@@ -464,7 +464,7 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                           <div className="border-t pt-3">
                             <h5 className="text-sm font-medium mb-2">Progressive Milestones:</h5>
                             <div className="space-y-1">
-                              {suggestion.milestones.map((milestone, mIndex) => (
+                              {suggestion.milestones.map((milestone: any, mIndex: number) => (
                                 <div key={mIndex} className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <div className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-medium">
                                     {mIndex + 1}
