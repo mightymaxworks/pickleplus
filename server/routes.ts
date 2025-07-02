@@ -7,6 +7,8 @@ import path from "path";
 import fs from "fs";
 import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 // Use isAuthenticated from auth.ts which has proper passport integration
 import { registerAdminRoutes } from "./routes/admin-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes"; // Added for PKL-278651-ADMIN-0012-PERF
@@ -2748,6 +2750,107 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   });
 
   console.log('[API] Match history and statistics routes registered');
+
+  // PKL-278651-SPRINT3-ASSESSMENT-ANALYSIS - Assessment Analysis Routes
+  const { AssessmentAnalysisService } = await import('./services/AssessmentAnalysisService.js');
+  
+  // Get weak areas from PCP assessment
+  app.get('/api/pcp/assessment/:id/weak-areas', async (req: Request, res: Response) => {
+    try {
+      const assessmentId = parseInt(req.params.id);
+      if (isNaN(assessmentId)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      // Fetch assessment from database
+      const assessment = await db.execute(sql`
+        SELECT * FROM pcp_skill_assessments 
+        WHERE id = ${assessmentId}
+      `);
+
+      if (assessment.rows.length === 0) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      const assessmentData = assessment.rows[0];
+      const analysis = AssessmentAnalysisService.analyzeAssessment(assessmentData);
+
+      res.json({
+        success: true,
+        analysis: {
+          assessmentId: analysis.assessmentId,
+          playerId: analysis.playerId,
+          overallRating: analysis.overallRating,
+          dimensionalRatings: analysis.dimensionalRatings,
+          weakAreas: analysis.weakAreas,
+          improvementPotential: analysis.improvementPotential,
+          recommendedFocus: analysis.recommendedFocus
+        }
+      });
+    } catch (error) {
+      console.error('[API][Assessment Analysis] Error analyzing assessment:', error);
+      res.status(500).json({ error: 'Failed to analyze assessment' });
+    }
+  });
+
+  // Get goal suggestions based on assessment analysis
+  app.get('/api/coach/goals/suggestions-from-assessment/:assessmentId', async (req: Request, res: Response) => {
+    try {
+      const assessmentId = parseInt(req.params.assessmentId);
+      if (isNaN(assessmentId)) {
+        return res.status(400).json({ error: 'Invalid assessment ID' });
+      }
+
+      // Fetch assessment from database
+      const assessment = await db.execute(sql`
+        SELECT * FROM pcp_skill_assessments 
+        WHERE id = ${assessmentId}
+      `);
+
+      if (assessment.rows.length === 0) {
+        return res.status(404).json({ error: 'Assessment not found' });
+      }
+
+      const assessmentData = assessment.rows[0];
+      const analysis = AssessmentAnalysisService.analyzeAssessment(assessmentData);
+
+      // Convert weak areas to goal suggestions
+      const goalSuggestions = analysis.weakAreas.slice(0, 3).map((weakArea, index) => ({
+        title: weakArea.suggestedGoal,
+        description: weakArea.suggestedDescription,
+        category: weakArea.category,
+        priority: weakArea.priority,
+        sourceAssessmentId: assessmentId,
+        targetSkill: weakArea.skill,
+        currentRating: weakArea.currentRating,
+        targetRating: weakArea.currentRating + weakArea.targetImprovement,
+        milestones: weakArea.milestoneTemplate.map(milestone => ({
+          title: milestone.title,
+          description: milestone.description,
+          targetRating: milestone.targetRating,
+          orderIndex: milestone.orderIndex,
+          requiresCoachValidation: true,
+          dueDate: new Date(Date.now() + (milestone.orderIndex + 1) * 14 * 24 * 60 * 60 * 1000) // 2 weeks per milestone
+        }))
+      }));
+
+      res.json({
+        success: true,
+        suggestions: goalSuggestions,
+        assessmentSummary: {
+          overallRating: analysis.overallRating,
+          dimensionalRatings: analysis.dimensionalRatings,
+          recommendedFocus: analysis.recommendedFocus,
+          improvementPotential: analysis.improvementPotential
+        }
+      });
+    } catch (error) {
+      console.error('[API][Goal Suggestions] Error generating suggestions:', error);
+      res.status(500).json({ error: 'Failed to generate goal suggestions' });
+    }
+  });
+
+  console.log('[API] PCP Assessment Analysis routes registered');
 
   // PKL-278651-NOTIF-0001 - Notifications System
   app.use('/api/notifications', notificationsRoutes);

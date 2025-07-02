@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CoachGoalAssignmentForm from "@/components/coach/CoachGoalAssignmentForm";
+import AssessmentGoalIntegration from "@/components/coach/AssessmentGoalIntegration";
 
 interface CoachGoal {
   id: number;
