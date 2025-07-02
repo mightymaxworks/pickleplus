@@ -79,9 +79,7 @@ export function registerGoalRoutes(app: Express) {
         isPublic: req.body.isPublic || false,
         shareWithCommunity: req.body.shareWithCommunity || false,
         motivationNote: req.body.motivationNote || null,
-        successCriteria: req.body.successCriteria || null,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        successCriteria: req.body.successCriteria || null
       };
 
       const [newGoal] = await db.insert(playerGoals).values(goalData).returning();
