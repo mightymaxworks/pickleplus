@@ -95,6 +95,8 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
   const queryClient = useQueryClient();
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | null>(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState<GoalSuggestion[]>([]);
+  const [showGoalCreationForm, setShowGoalCreationForm] = useState(false);
+  const [selectedGoalData, setSelectedGoalData] = useState<any>(null);
 
   // Mock recent PCP assessments (in real implementation, this would fetch from /api/pcp/assessments)
   const recentAssessments = [
@@ -199,6 +201,39 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
       return;
     }
     createGoalsMutation.mutate(selectedSuggestions);
+  };
+
+  const openGoalCreationForm = (suggestion: GoalSuggestion) => {
+    const assessmentData = {
+      assessmentId: selectedAssessmentId!,
+      playerId,
+      suggestedGoal: {
+        title: suggestion.title,
+        description: suggestion.description,
+        category: suggestion.category,
+        priority: suggestion.priority,
+        targetSkill: suggestion.targetSkill,
+        currentRating: suggestion.currentRating,
+        targetRating: suggestion.targetRating,
+      },
+      suggestedMilestones: suggestion.milestones.map(m => ({
+        title: m.title,
+        description: m.description,
+        targetRating: m.targetRating,
+      }))
+    };
+    setSelectedGoalData(assessmentData);
+    setShowGoalCreationForm(true);
+  };
+
+  const handleGoalCreationSuccess = () => {
+    setShowGoalCreationForm(false);
+    setSelectedGoalData(null);
+    queryClient.invalidateQueries({ queryKey: ['/api/coach/goals'] });
+    toast({
+      title: "Goal Created Successfully",
+      description: "Assessment-driven goal with milestones has been assigned",
+    });
   };
 
   const getDimensionalIcon = (dimension: string) => {
@@ -413,14 +448,7 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                   {/* Goal Suggestions */}
                   <div className="space-y-4">
                     {suggestions.suggestions.map((suggestion: GoalSuggestion, index: number) => (
-                      <Card 
-                        key={suggestion.targetSkill}
-                        className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                          selectedSuggestions.find(s => s.targetSkill === suggestion.targetSkill) 
-                            ? 'border-primary bg-primary/10' : ''
-                        }`}
-                        onClick={() => toggleSuggestionSelection(suggestion)}
-                      >
+                      <Card key={suggestion.targetSkill} className="transition-colors hover:bg-muted/50">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
@@ -453,11 +481,17 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                               </div>
                             </div>
                             <div className="ml-4">
-                              {selectedSuggestions.find(s => s.targetSkill === suggestion.targetSkill) ? (
-                                <CheckCircle className="h-5 w-5 text-green-600" />
-                              ) : (
-                                <Plus className="h-5 w-5 text-muted-foreground" />
-                              )}
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openGoalCreationForm(suggestion);
+                                }}
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Create Goal
+                              </Button>
                             </div>
                           </div>
 
@@ -481,40 +515,16 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                     ))}
                   </div>
 
-                  {/* Create Goals Action */}
-                  {selectedSuggestions.length > 0 && (
-                    <Card className="bg-green-50 border-green-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium text-green-900">
-                              Ready to Create {selectedSuggestions.length} Assessment-Driven Goals
-                            </h4>
-                            <p className="text-sm text-green-700">
-                              Goals will be automatically assigned with progressive milestones and coach validation requirements
-                            </p>
-                          </div>
-                          <Button 
-                            onClick={createSelectedGoals}
-                            disabled={createGoalsMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            {createGoalsMutation.isPending ? (
-                              <>
-                                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                                Creating...
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create Goals
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="h-4 w-4 text-blue-600" />
+                      <h4 className="font-medium text-blue-900">Sprint 3 Phase 3.2 Complete</h4>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      Each goal suggestion now includes a "Create Goal" button that opens the enhanced form 
+                      with pre-populated assessment data and intelligent milestone suggestions.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
@@ -525,6 +535,18 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Goal Creation Form Modal */}
+      {showGoalCreationForm && selectedGoalData && (
+        <CoachGoalAssignmentForm
+          onSuccess={handleGoalCreationSuccess}
+          onCancel={() => {
+            setShowGoalCreationForm(false);
+            setSelectedGoalData(null);
+          }}
+          assessmentData={selectedGoalData}
+        />
+      )}
     </div>
   );
 }
