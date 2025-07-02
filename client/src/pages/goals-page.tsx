@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import EnhancedGoalCreationForm from "@/components/goals/EnhancedGoalCreationForm";
 import AssessmentGoalIntegration from "@/components/goals/AssessmentGoalIntegration";
+import GoalDetailView from "@/components/goals/GoalDetailView";
 
 interface Goal {
   id: number;

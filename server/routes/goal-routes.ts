@@ -395,4 +395,225 @@ export function registerGoalRoutes(app: Express) {
       });
     }
   });
+
+  // Update goal progress (PUT method for GoalDetailView)
+  app.put("/api/goals/:goalId/progress", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const userId = 1; // This would be req.user.id in production
+      const { progressPercentage, progressNotes } = req.body;
+
+      if (isNaN(goalId)) {
+        return res.status(400).json({ error: "Invalid goal ID" });
+      }
+
+      if (progressPercentage < 0 || progressPercentage > 100) {
+        return res.status(400).json({ error: "Progress percentage must be between 0 and 100" });
+      }
+
+      // Check if goal exists and belongs to user
+      const [existingGoal] = await db
+        .select()
+        .from(playerGoals)
+        .where(and(
+          eq(playerGoals.id, goalId),
+          eq(playerGoals.userId, userId)
+        ));
+
+      if (!existingGoal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+
+      // Update goal progress
+      const [updatedGoal] = await db
+        .update(playerGoals)
+        .set({
+          progressPercentage,
+          progressNotes,
+          updatedAt: new Date()
+        })
+        .where(eq(playerGoals.id, goalId))
+        .returning();
+
+      // Create progress snapshot
+      await db.insert(goalProgressSnapshots).values({
+        goalId,
+        progressPercentage,
+        snapshotReason: 'manual_update',
+        snapshotDate: new Date(),
+        notes: progressNotes || null
+      });
+
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error("Error updating goal progress:", error);
+      res.status(500).json({ 
+        error: "Failed to update progress",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Complete a goal
+  app.put("/api/goals/:goalId/complete", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const userId = 1; // This would be req.user.id in production
+
+      if (isNaN(goalId)) {
+        return res.status(400).json({ error: "Invalid goal ID" });
+      }
+
+      // Check if goal exists and belongs to user
+      const [existingGoal] = await db
+        .select()
+        .from(playerGoals)
+        .where(and(
+          eq(playerGoals.id, goalId),
+          eq(playerGoals.userId, userId)
+        ));
+
+      if (!existingGoal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+
+      // Mark goal as completed
+      const [completedGoal] = await db
+        .update(playerGoals)
+        .set({
+          status: 'completed',
+          progressPercentage: 100,
+          completedDate: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(playerGoals.id, goalId))
+        .returning();
+
+      // Create completion snapshot
+      await db.insert(goalProgressSnapshots).values({
+        goalId,
+        progressPercentage: 100,
+        snapshotReason: 'goal_completed',
+        snapshotDate: new Date(),
+        notes: 'Goal marked as completed'
+      });
+
+      res.json(completedGoal);
+    } catch (error) {
+      console.error("Error completing goal:", error);
+      res.status(500).json({ 
+        error: "Failed to complete goal",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Add milestone to goal
+  app.post("/api/goals/:goalId/milestones", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const userId = 1; // This would be req.user.id in production
+      const { title, description } = req.body;
+
+      if (isNaN(goalId)) {
+        return res.status(400).json({ error: "Invalid goal ID" });
+      }
+
+      if (!title || title.trim().length === 0) {
+        return res.status(400).json({ error: "Milestone title is required" });
+      }
+
+      // Check if goal exists and belongs to user
+      const [existingGoal] = await db
+        .select()
+        .from(playerGoals)
+        .where(and(
+          eq(playerGoals.id, goalId),
+          eq(playerGoals.userId, userId)
+        ));
+
+      if (!existingGoal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+
+      // Create milestone
+      const [newMilestone] = await db
+        .insert(goalMilestones)
+        .values({
+          goalId,
+          title: title.trim(),
+          description: description?.trim() || null,
+          completed: false,
+          createdDate: new Date()
+        })
+        .returning();
+
+      res.status(201).json(newMilestone);
+    } catch (error) {
+      console.error("Error adding milestone:", error);
+      res.status(500).json({ 
+        error: "Failed to add milestone",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Toggle milestone completion
+  app.put("/api/goals/:goalId/milestones/:milestoneId/toggle", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const milestoneId = parseInt(req.params.milestoneId);
+      const userId = 1; // This would be req.user.id in production
+
+      if (isNaN(goalId) || isNaN(milestoneId)) {
+        return res.status(400).json({ error: "Invalid goal or milestone ID" });
+      }
+
+      // Check if goal exists and belongs to user
+      const [existingGoal] = await db
+        .select()
+        .from(playerGoals)
+        .where(and(
+          eq(playerGoals.id, goalId),
+          eq(playerGoals.userId, userId)
+        ));
+
+      if (!existingGoal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+
+      // Get current milestone
+      const [existingMilestone] = await db
+        .select()
+        .from(goalMilestones)
+        .where(and(
+          eq(goalMilestones.id, milestoneId),
+          eq(goalMilestones.goalId, goalId)
+        ));
+
+      if (!existingMilestone) {
+        return res.status(404).json({ error: "Milestone not found" });
+      }
+
+      // Toggle completion status
+      const now = new Date();
+      const [updatedMilestone] = await db
+        .update(goalMilestones)
+        .set({
+          completed: !existingMilestone.completed,
+          completedDate: !existingMilestone.completed ? now : null,
+          updatedAt: now
+        })
+        .where(eq(goalMilestones.id, milestoneId))
+        .returning();
+
+      res.json(updatedMilestone);
+    } catch (error) {
+      console.error("Error toggling milestone:", error);
+      res.status(500).json({ 
+        error: "Failed to toggle milestone",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 }
