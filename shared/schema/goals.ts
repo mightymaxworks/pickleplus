@@ -59,14 +59,29 @@ export const playerGoals = pgTable("player_goals", {
   priority: varchar("priority", { length: 20 }).default("medium").notNull(), // low, medium, high, critical
   
   // Timeline tracking
-  targetDate: date("target_date"),
+  targetDate: varchar("target_date"),
   createdDate: timestamp("created_date").defaultNow().notNull(),
   completedDate: timestamp("completed_date"),
-  lastReviewDate: timestamp("last_review_date"),
+  lastActivityDate: timestamp("last_activity_date"),
   
   // Progress tracking
   status: varchar("status", { length: 20 }).default("active").notNull(), // active, completed, paused, abandoned
   progressPercentage: integer("progress_percentage").default(0).notNull(),
+  difficultyLevel: integer("difficulty_level"),
+  estimatedDurationDays: integer("estimated_duration_days"),
+  milestoneCount: integer("milestone_count"),
+  
+  // Visibility and sharing
+  isPublic: boolean("is_public").default(false),
+  shareWithCommunity: boolean("share_with_community").default(false),
+  
+  // Advanced features
+  assessmentLinked: boolean("assessment_linked").default(false),
+  rewardsEnabled: boolean("rewards_enabled").default(false),
+  journalIntegration: boolean("journal_integration").default(false),
+  
+  // Tags system
+  tags: varchar("tags").array(),
   
   // Assessment integration
   relatedDimension: varchar("related_dimension", { length: 10 }), // TECH, TACT, PHYS, MENT for assessment correlation

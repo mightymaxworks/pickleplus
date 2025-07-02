@@ -41,9 +41,15 @@ export function registerGoalRoutes(app: Express) {
   // Get all goals for authenticated user
   app.get("/api/goals", async (req, res) => {
     try {
-      // For now, return empty array until schema is properly synced
-      // TODO: Fix schema sync and implement proper goal fetching
-      const goals = [];
+      // TODO: Get actual user ID from session when authentication is fixed
+      const userId = 1; // Using test user for now
+      
+      const goals = await db
+        .select()
+        .from(playerGoals)
+        .where(eq(playerGoals.userId, userId))
+        .orderBy(desc(playerGoals.createdAt));
+
       res.json(goals);
     } catch (error) {
       console.error("Error fetching goals:", error);
@@ -57,10 +63,11 @@ export function registerGoalRoutes(app: Express) {
   // Create a new goal
   app.post("/api/goals", async (req, res) => {
     try {
-      // For now, simulate goal creation until database is properly synced
-      const goalData = {
-        id: Math.floor(Math.random() * 10000),
-        userId: 1, // Test user ID
+      // TODO: Get actual user ID from session when authentication is fixed
+      const userId = 1; // Using test user for now
+      
+      const goalData: InsertPlayerGoal = {
+        userId,
         title: req.body.title,
         description: req.body.description,
         category: req.body.category,
@@ -77,12 +84,11 @@ export function registerGoalRoutes(app: Express) {
         updatedAt: new Date()
       };
 
-      // TODO: Insert into database when schema is fixed
-      // const [newGoal] = await db.insert(playerGoals).values(goalData).returning();
+      const [newGoal] = await db.insert(playerGoals).values(goalData).returning();
 
       res.status(201).json({
         success: true,
-        goal: goalData,
+        goal: newGoal,
         message: "Goal created successfully"
       });
     } catch (error) {
