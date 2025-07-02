@@ -67,9 +67,10 @@ export default function EnhancedGoalCreationForm({ onSuccess, recommendationId }
   const [showRecommendations, setShowRecommendations] = useState(true);
 
   // Fetch assessment data for recommendations
-  const { data: assessments } = useQuery({
+  const { data: assessments, isLoading: assessmentsLoading, error: assessmentsError } = useQuery({
     queryKey: ['/api/pcp/assessments'],
-    select: (data) => data || []
+    select: (data) => data || [],
+    retry: false
   });
 
   const form = useForm<EnhancedGoalFormData>({
@@ -89,9 +90,11 @@ export default function EnhancedGoalCreationForm({ onSuccess, recommendationId }
 
   // Generate assessment-based recommendations
   const generateRecommendations = (): AssessmentRecommendation[] => {
-    if (!assessments || assessments.length === 0) return [];
+    if (!assessments || !Array.isArray(assessments) || assessments.length === 0) return [];
 
     const latestAssessment = assessments[0]; // Most recent assessment
+    if (!latestAssessment || typeof latestAssessment !== 'object') return [];
+    
     const recommendations: AssessmentRecommendation[] = [];
 
     // Technical Skills (lowest scores first)

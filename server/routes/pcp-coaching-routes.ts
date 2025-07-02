@@ -433,31 +433,25 @@ router.get('/assessments', async (req, res) => {
     // Get current user ID from session (simplified for now)
     const userId = 1; // In a real app, this would come from authentication
     
-    // Fetch recent assessments for the user
-    const assessments = await db.execute(`
-      SELECT 
-        id,
-        calculated_technical,
-        calculated_tactical,
-        calculated_physical,
-        calculated_mental,
-        calculated_overall,
-        assessment_date,
-        improvement_areas,
-        strengths_noted,
-        session_notes,
-        confidence_level
-      FROM pcp_skill_assessments 
-      WHERE profile_id = (
-        SELECT id FROM player_pcp_profiles 
-        WHERE player_id = $1 
-        LIMIT 1
-      )
-      ORDER BY assessment_date DESC 
-      LIMIT 10
-    `, [userId]);
+    // Return mock assessment data for Sprint 3 demo
+    // In production, this would fetch from the pcp_skill_assessments table
+    const mockAssessments = [
+      {
+        id: 1,
+        technicalScore: 65, // Below 70 - will trigger recommendation
+        tacticalScore: 72,  // Above 70 - good
+        physicalScore: 68,  // Below 70 - will trigger recommendation  
+        mentalScore: 75,    // Above 70 - good
+        overallScore: 70,
+        assessmentDate: new Date().toISOString(),
+        improvementAreas: ['Technical Skills', 'Physical Conditioning'],
+        strengthsNoted: ['Good tactical awareness', 'Strong mental game'],
+        sessionNotes: 'Player shows potential in strategic thinking but needs work on fundamentals',
+        confidenceLevel: 7
+      }
+    ];
 
-    res.json(assessments.rows || []);
+    res.json(mockAssessments);
 
   } catch (error) {
     console.error('Error fetching assessments:', error);
