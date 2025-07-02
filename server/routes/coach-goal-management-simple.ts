@@ -48,9 +48,9 @@ router.get('/my-players', async (req, res) => {
     
     // Check if user is a coach
     const coachResult = await db.execute(sql`
-      SELECT id, user_id, professional_bio, specializations 
+      SELECT id, user_id, bio, specialties 
       FROM coach_profiles 
-      WHERE user_id = ${userId} AND is_active = true
+      WHERE user_id = ${userId}
       LIMIT 1
     `);
     
@@ -115,7 +115,7 @@ router.post('/assign', async (req, res) => {
     
     // Verify coach status
     const coachResult = await db.execute(sql`
-      SELECT id FROM coach_profiles WHERE user_id = ${userId} AND is_active = true LIMIT 1
+      SELECT id FROM coach_profiles WHERE user_id = ${userId} LIMIT 1
     `);
     
     if (coachResult.rows.length === 0) {
@@ -333,7 +333,7 @@ router.get('/dashboard', async (req, res) => {
     // Verify coach status and get profile
     const coachResult = await db.execute(sql`
       SELECT * FROM coach_profiles 
-      WHERE user_id = ${userId} AND is_active = true
+      WHERE user_id = ${userId}
       LIMIT 1
     `);
     
@@ -424,9 +424,9 @@ router.get('/dashboard', async (req, res) => {
       },
       coachProfile: {
         id: coachProfile.id,
-        bio: coachProfile.professional_bio,
-        specializations: coachProfile.specializations,
-        experienceYears: coachProfile.years_experience
+        bio: coachProfile.bio,
+        specializations: coachProfile.specialties,
+        experienceYears: coachProfile.experience_years
       }
     });
   } catch (error) {
