@@ -9,13 +9,15 @@
  * @lastModified 2025-07-02
  */
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Target, Plus, Calendar, TrendingUp } from "lucide-react";
+import { Target, Plus, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
+import { GoalCreationForm } from "@/components/goals/GoalCreationForm";
 
 interface Goal {
   id: number;
@@ -30,6 +32,8 @@ interface Goal {
 }
 
 export default function GoalsPage() {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  
   const { data: goals = [], isLoading, error } = useQuery({
     queryKey: ["/api/goals"],
     queryFn: async () => {
@@ -42,6 +46,14 @@ export default function GoalsPage() {
       }
     }
   });
+
+  const handleCreateSuccess = () => {
+    setShowCreateForm(false);
+  };
+
+  const handleCreateCancel = () => {
+    setShowCreateForm(false);
+  };
 
   if (isLoading) {
     return (
@@ -101,7 +113,10 @@ export default function GoalsPage() {
           </p>
         </div>
         
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setShowCreateForm(true)}
+        >
           <Plus className="w-4 h-4" />
           Create Goal
         </Button>
@@ -175,7 +190,10 @@ export default function GoalsPage() {
             <p className="text-muted-foreground mb-4">
               Set your first goal to start tracking your pickleball journey
             </p>
-            <Button className="flex items-center gap-2">
+            <Button 
+              className="flex items-center gap-2"
+              onClick={() => setShowCreateForm(true)}
+            >
               <Plus className="w-4 h-4" />
               Create Your First Goal
             </Button>
