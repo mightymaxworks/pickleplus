@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
-import { GoalCreationForm } from "@/components/goals/GoalCreationForm";
+import EnhancedGoalCreationForm from "@/components/goals/EnhancedGoalCreationForm";
 import AssessmentGoalIntegration from "@/components/goals/AssessmentGoalIntegration";
 
 interface Goal {
@@ -126,9 +126,8 @@ export default function GoalsPage() {
           </Button>
         </div>
 
-        <GoalCreationForm 
+        <EnhancedGoalCreationForm 
           onSuccess={handleCreateSuccess}
-          onCancel={handleCreateCancel}
         />
       </div>
     );
