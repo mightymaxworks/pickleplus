@@ -76,25 +76,25 @@ export default function AssessmentGoalIntegration() {
     const dimensionScores = [
       { 
         dimension: 'technical' as const, 
-        score: latestAssessment.calculated_technical, 
+        score: latestAssessment.calculated_technical || latestAssessment.technicalScore || 0, 
         icon: Target,
         color: 'bg-blue-500'
       },
       { 
         dimension: 'tactical' as const, 
-        score: latestAssessment.calculated_tactical, 
+        score: latestAssessment.calculated_tactical || latestAssessment.tacticalScore || 0, 
         icon: Brain,
         color: 'bg-purple-500'
       },
       { 
         dimension: 'physical' as const, 
-        score: latestAssessment.calculated_physical, 
+        score: latestAssessment.calculated_physical || latestAssessment.physicalScore || 0, 
         icon: Zap,
         color: 'bg-green-500'
       },
       { 
         dimension: 'mental' as const, 
-        score: latestAssessment.calculated_mental, 
+        score: latestAssessment.calculated_mental || latestAssessment.mentalScore || 0, 
         icon: Heart,
         color: 'bg-red-500'
       }
@@ -279,10 +279,10 @@ export default function AssessmentGoalIntegration() {
               </div>
               <p className="text-sm font-medium">Technical</p>
               <p className="text-2xl font-bold text-blue-600">
-                {latestAssessment.calculated_technical.toFixed(1)}
+                {(latestAssessment.calculated_technical || latestAssessment.technicalScore || 0).toFixed(1)}
               </p>
               <Progress 
-                value={latestAssessment.calculated_technical * 10} 
+                value={(latestAssessment.calculated_technical || latestAssessment.technicalScore || 0) * 10} 
                 className="mt-2 h-2"
               />
             </div>
@@ -293,10 +293,10 @@ export default function AssessmentGoalIntegration() {
               </div>
               <p className="text-sm font-medium">Tactical</p>
               <p className="text-2xl font-bold text-purple-600">
-                {latestAssessment.calculated_tactical.toFixed(1)}
+                {(latestAssessment.calculated_tactical || latestAssessment.tacticalScore || 0).toFixed(1)}
               </p>
               <Progress 
-                value={latestAssessment.calculated_tactical * 10} 
+                value={(latestAssessment.calculated_tactical || latestAssessment.tacticalScore || 0) * 10} 
                 className="mt-2 h-2"
               />
             </div>
@@ -307,10 +307,10 @@ export default function AssessmentGoalIntegration() {
               </div>
               <p className="text-sm font-medium">Physical</p>
               <p className="text-2xl font-bold text-green-600">
-                {latestAssessment.calculated_physical.toFixed(1)}
+                {(latestAssessment.calculated_physical || latestAssessment.physicalScore || 0).toFixed(1)}
               </p>
               <Progress 
-                value={latestAssessment.calculated_physical * 10} 
+                value={(latestAssessment.calculated_physical || latestAssessment.physicalScore || 0) * 10} 
                 className="mt-2 h-2"
               />
             </div>
@@ -321,10 +321,10 @@ export default function AssessmentGoalIntegration() {
               </div>
               <p className="text-sm font-medium">Mental</p>
               <p className="text-2xl font-bold text-red-600">
-                {latestAssessment.calculated_mental.toFixed(1)}
+                {(latestAssessment.calculated_mental || latestAssessment.mentalScore || 0).toFixed(1)}
               </p>
               <Progress 
-                value={latestAssessment.calculated_mental * 10} 
+                value={(latestAssessment.calculated_mental || latestAssessment.mentalScore || 0) * 10} 
                 className="mt-2 h-2"
               />
             </div>
@@ -332,7 +332,7 @@ export default function AssessmentGoalIntegration() {
           
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <p className="text-xl font-bold text-center">
-              Overall PCP Rating: <span className="text-blue-600">{latestAssessment.calculated_overall.toFixed(1)}/10</span>
+              Overall PCP Rating: <span className="text-blue-600">{(latestAssessment.calculated_overall || latestAssessment.overallScore || 0).toFixed(1)}/10</span>
             </p>
           </div>
         </CardContent>
