@@ -49,7 +49,7 @@ import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-2
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
 import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-FEEDBACK - Enhanced Feedback System
 import { registerSimplifiedGoalRoutes } from "./routes/goal-routes-simplified"; // PKL-278651-PHASE1-GOALS - Simplified Goal System
-import coachGoalManagementRoutes from "./routes/coach-goal-management"; // PKL-278651-PHASE2-GOALS - Coach Goal Management
+import coachGoalManagementRoutes from "./routes/coach-goal-management-simple"; // PKL-278651-PHASE2-GOALS - Coach Goal Management
 import achievementRoutes from "./routes/achievement-routes"; // Mobile-optimized achievement tracking with peer verification
 import communityChallengeRoutes from "./routes/community-challenge-routes"; // Community challenges and events API
 import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIAL - Social Sharing Features
@@ -368,6 +368,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount goal-setting routes for coach-player ecosystem
   registerSimplifiedGoalRoutes(app);
+  
+  // Mount Phase 2 coach goal management routes
+  app.use('/api/coach/goals', coachGoalManagementRoutes);
 
   // Mount PCP Coaching Ecosystem API routes - Sprint 2: Assessment-Goal Integration
   app.use('/api/pcp', pcpCoachingRoutes);
