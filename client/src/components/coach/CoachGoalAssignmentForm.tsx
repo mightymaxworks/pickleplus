@@ -1,377 +1,303 @@
 /**
- * PKL-278651-COACH-GOALS-PHASE2-FORM - Coach Goal Assignment Form
+ * PKL-278651-COACH-GOAL-ASSIGNMENT-FORM - Coach Goal Assignment Form Component
  * 
- * Frontend form component for coaches to assign goals to players with milestones.
- * Integrates with Phase 2 coach goal management backend endpoints.
+ * Modal form for coaches to assign goals to players with milestone creation.
  * 
  * @framework Framework5.3
- * @version 2.0.0
+ * @version 1.0.0
  * @lastModified 2025-07-02
  */
 
 import { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { Plus, Trash2, X, Target, Users } from "lucide-react";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { apiRequest } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import { X, Plus, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const milestoneSchema = z.object({
-  title: z.string().min(1, "Milestone title is required"),
-  description: z.string().optional(),
-  orderIndex: z.number().min(0)
-});
-
-const goalAssignmentSchema = z.object({
-  playerUserId: z.number().min(1, "Please select a player"),
-  title: z.string().min(1, "Goal title is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  category: z.enum(["technical", "competitive", "social", "fitness", "mental"]),
-  priority: z.enum(["low", "medium", "high"]),
-  targetDate: z.string().optional(),
-  milestones: z.array(milestoneSchema).optional()
-});
-
-type GoalAssignmentForm = z.infer<typeof goalAssignmentSchema>;
+import { apiRequest } from "@/lib/queryClient";
 
 interface CoachGoalAssignmentFormProps {
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export default function CoachGoalAssignmentForm({ 
-  onSuccess, 
-  onCancel 
-}: CoachGoalAssignmentFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+interface Milestone {
+  title: string;
+  description: string;
+  orderIndex: number;
+  dueDate: string;
+  requiresCoachValidation: boolean;
+}
+
+export default function CoachGoalAssignmentForm({ onSuccess, onCancel }: CoachGoalAssignmentFormProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const form = useForm<GoalAssignmentForm>({
-    resolver: zodResolver(goalAssignmentSchema),
-    defaultValues: {
-      playerUserId: 0,
-      title: "",
-      description: "",
-      category: "technical",
-      priority: "medium",
-      targetDate: "",
-      milestones: []
+  const [formData, setFormData] = useState({
+    playerId: '',
+    title: '',
+    description: '',
+    category: '',
+    priority: 'medium',
+    targetDate: '',
+  });
+
+  const [milestones, setMilestones] = useState<Milestone[]>([
+    {
+      title: '',
+      description: '',
+      orderIndex: 1,
+      dueDate: '',
+      requiresCoachValidation: true,
     }
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "milestones"
-  });
+  ]);
 
   const assignGoalMutation = useMutation({
-    mutationFn: async (data: GoalAssignmentForm) => {
-      const response = await apiRequest("POST", "/api/coach/goals/assign", data);
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/coach/goals/assign', data);
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Goal Assigned Successfully",
-        description: "The goal has been assigned to the player with milestones."
+        description: "The goal has been assigned to the player with all milestones.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach/goals/my-players'] });
       onSuccess();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Assignment Failed",
-        description: "Failed to assign goal. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to assign goal to player.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
-  const onSubmit = async (data: GoalAssignmentForm) => {
-    setIsSubmitting(true);
-    try {
-      // Since we're using mock data, let's assign to user ID 1
-      const assignmentData = {
-        ...data,
-        playerUserId: 1, // Mock player ID
-        milestones: data.milestones?.map((milestone, index) => ({
-          ...milestone,
-          orderIndex: index
-        })) || []
-      };
-      
-      await assignGoalMutation.mutateAsync(assignmentData);
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.playerId || !formData.title || !formData.category) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
     }
-  };
 
-  const addMilestone = () => {
-    append({
-      title: "",
-      description: "",
-      orderIndex: fields.length
+    const validMilestones = milestones.filter(m => m.title.trim() !== '');
+    
+    assignGoalMutation.mutate({
+      ...formData,
+      playerId: parseInt(formData.playerId),
+      milestones: validMilestones.map((milestone, index) => ({
+        ...milestone,
+        orderIndex: index + 1,
+        dueDate: milestone.dueDate || null,
+      })),
     });
   };
 
+  const addMilestone = () => {
+    setMilestones([...milestones, {
+      title: '',
+      description: '',
+      orderIndex: milestones.length + 1,
+      dueDate: '',
+      requiresCoachValidation: true,
+    }]);
+  };
+
   const removeMilestone = (index: number) => {
-    remove(index);
+    setMilestones(milestones.filter((_, i) => i !== index));
+  };
+
+  const updateMilestone = (index: number, field: keyof Milestone, value: any) => {
+    const updated = [...milestones];
+    updated[index] = { ...updated[index], [field]: value };
+    setMilestones(updated);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5" />
-            Assign Goal to Player
-          </CardTitle>
+          <CardTitle>Assign Goal to Player</CardTitle>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             <X className="w-4 h-4" />
           </Button>
         </CardHeader>
         
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Player Selection */}
-              <div className="space-y-2">
-                <Label>Player</Label>
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    Mighty Max (mightymax) - Demo Player
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Goal will be assigned to your demo player for testing
-                </p>
-              </div>
-
-              {/* Goal Title */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Goal Title</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., Improve Forehand Consistency"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Goal Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Detailed description of what the player should achieve..."
-                        rows={3}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Category and Priority */}
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="technical">Technical</SelectItem>
-                          <SelectItem value="competitive">Competitive</SelectItem>
-                          <SelectItem value="social">Social</SelectItem>
-                          <SelectItem value="fitness">Fitness</SelectItem>
-                          <SelectItem value="mental">Mental</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Goal Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Player ID *</label>
+                <Input
+                  type="number"
+                  value={formData.playerId}
+                  onChange={(e) => setFormData({...formData, playerId: e.target.value})}
+                  placeholder="Enter player ID"
+                  required
                 />
               </div>
+              
+              <div>
+                <label className="text-sm font-medium">Category *</label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({...formData, category: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="competitive">Competitive</SelectItem>
+                    <SelectItem value="social">Social</SelectItem>
+                    <SelectItem value="fitness">Fitness</SelectItem>
+                    <SelectItem value="mental">Mental</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-              {/* Target Date */}
-              <FormField
-                control={form.control}
-                name="targetDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Target Date (Optional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div>
+              <label className="text-sm font-medium">Goal Title *</label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                placeholder="Enter goal title"
+                required
               />
+            </div>
 
-              {/* Milestones */}
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Describe the goal and its objectives"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Priority</label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value) => setFormData({...formData, priority: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Target Date</label>
+                <Input
+                  type="date"
+                  value={formData.targetDate}
+                  onChange={(e) => setFormData({...formData, targetDate: e.target.value})}
+                />
+              </div>
+            </div>
+
+            {/* Milestones */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Milestones</h3>
+                <Button type="button" variant="outline" size="sm" onClick={addMilestone}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Milestone
+                </Button>
+              </div>
+
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Milestones</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={addMilestone}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Milestone
-                  </Button>
-                </div>
-
-                {fields.length === 0 && (
-                  <div className="text-center p-6 border-2 border-dashed border-muted rounded-lg">
-                    <p className="text-muted-foreground text-sm">
-                      No milestones added yet. Milestones help break down the goal into smaller, achievable steps.
-                    </p>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={addMilestone}
-                      className="mt-2"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add First Milestone
-                    </Button>
-                  </div>
-                )}
-
-                {fields.map((field, index) => (
-                  <Card key={field.id} className="border-muted">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="text-sm font-medium">Milestone {index + 1}</h4>
+                {milestones.map((milestone, index) => (
+                  <Card key={index} className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge variant="outline">Milestone {index + 1}</Badge>
+                      {milestones.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => removeMilestone(index)}
-                          className="text-destructive hover:text-destructive"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </Button>
-                      </div>
+                      )}
+                    </div>
 
-                      <div className="space-y-3">
-                        <FormField
-                          control={form.control}
-                          name={`milestones.${index}.title`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Title</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="e.g., Master Basic Forehand Form"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <div className="grid grid-cols-1 gap-3">
+                      <Input
+                        value={milestone.title}
+                        onChange={(e) => updateMilestone(index, 'title', e.target.value)}
+                        placeholder="Milestone title"
+                      />
+                      
+                      <Textarea
+                        value={milestone.description}
+                        onChange={(e) => updateMilestone(index, 'description', e.target.value)}
+                        placeholder="Milestone description"
+                        rows={2}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input
+                          type="date"
+                          value={milestone.dueDate}
+                          onChange={(e) => updateMilestone(index, 'dueDate', e.target.value)}
+                          placeholder="Due date"
                         />
-
-                        <FormField
-                          control={form.control}
-                          name={`milestones.${index}.description`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description (Optional)</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Detailed milestone description..."
-                                  rows={2}
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        
+                        <Select
+                          value={milestone.requiresCoachValidation.toString()}
+                          onValueChange={(value) => updateMilestone(index, 'requiresCoachValidation', value === 'true')}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="true">Requires Coach Approval</SelectItem>
+                            <SelectItem value="false">Self-Validated</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </CardContent>
+                    </div>
                   </Card>
                 ))}
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="min-w-32"
-                >
-                  {isSubmitting ? "Assigning..." : "Assign Goal"}
-                </Button>
-              </div>
-            </form>
-          </Form>
+            {/* Actions */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                disabled={assignGoalMutation.isPending}
+                className="flex-1"
+              >
+                {assignGoalMutation.isPending ? "Assigning..." : "Assign Goal"}
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
