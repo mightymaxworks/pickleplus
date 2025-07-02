@@ -32,6 +32,7 @@ import {
   Clock,
   Award
 } from 'lucide-react';
+import CoachGoalAssignmentForm from './CoachGoalAssignmentForm';
 
 interface WeakArea {
   skill: string;

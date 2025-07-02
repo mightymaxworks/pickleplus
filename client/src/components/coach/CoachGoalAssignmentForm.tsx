@@ -23,6 +23,24 @@ import { apiRequest } from "@/lib/queryClient";
 interface CoachGoalAssignmentFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  assessmentData?: {
+    assessmentId: number;
+    playerId: number;
+    suggestedGoal: {
+      title: string;
+      description: string;
+      category: string;
+      priority: string;
+      targetSkill?: string;
+      currentRating?: number;
+      targetRating?: number;
+    };
+    suggestedMilestones: Array<{
+      title: string;
+      description: string;
+      targetRating?: number;
+    }>;
+  };
 }
 
 interface Milestone {
@@ -33,28 +51,36 @@ interface Milestone {
   requiresCoachValidation: boolean;
 }
 
-export default function CoachGoalAssignmentForm({ onSuccess, onCancel }: CoachGoalAssignmentFormProps) {
+export default function CoachGoalAssignmentForm({ onSuccess, onCancel, assessmentData }: CoachGoalAssignmentFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    playerId: '',
-    title: '',
-    description: '',
-    category: '',
-    priority: 'medium',
+    playerId: assessmentData?.playerId?.toString() || '',
+    title: assessmentData?.suggestedGoal?.title || '',
+    description: assessmentData?.suggestedGoal?.description || '',
+    category: assessmentData?.suggestedGoal?.category || '',
+    priority: assessmentData?.suggestedGoal?.priority || 'medium',
     targetDate: '',
   });
 
-  const [milestones, setMilestones] = useState<Milestone[]>([
-    {
-      title: '',
-      description: '',
-      orderIndex: 1,
+  const [milestones, setMilestones] = useState<Milestone[]>(
+    assessmentData?.suggestedMilestones?.map((milestone, index) => ({
+      title: milestone.title,
+      description: milestone.description,
+      orderIndex: index + 1,
       dueDate: '',
       requiresCoachValidation: true,
-    }
-  ]);
+    })) || [
+      {
+        title: '',
+        description: '',
+        orderIndex: 1,
+        dueDate: '',
+        requiresCoachValidation: true,
+      }
+    ]
+  );
 
   const assignGoalMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -92,7 +118,7 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel }: CoachGo
 
     const validMilestones = milestones.filter(m => m.title.trim() !== '');
     
-    assignGoalMutation.mutate({
+    const goalData = {
       ...formData,
       playerId: parseInt(formData.playerId),
       milestones: validMilestones.map((milestone, index) => ({
@@ -100,7 +126,16 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel }: CoachGo
         orderIndex: index + 1,
         dueDate: milestone.dueDate || null,
       })),
-    });
+      // Assessment integration metadata
+      ...(assessmentData && {
+        sourceAssessmentId: assessmentData.assessmentId,
+        targetSkill: assessmentData.suggestedGoal.targetSkill,
+        currentRating: assessmentData.suggestedGoal.currentRating,
+        targetRating: assessmentData.suggestedGoal.targetRating,
+      }),
+    };
+
+    assignGoalMutation.mutate(goalData);
   };
 
   const addMilestone = () => {
@@ -134,6 +169,30 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel }: CoachGo
         </CardHeader>
         
         <CardContent>
+          {/* Assessment Context Banner */}
+          {assessmentData && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                  Assessment-Driven Goal
+                </Badge>
+              </div>
+              <p className="text-sm text-blue-700">
+                This goal is generated from PCP assessment data for improved player development targeting specific weak areas.
+              </p>
+              {assessmentData.suggestedGoal.targetSkill && (
+                <div className="mt-2 text-xs text-blue-600">
+                  <span className="font-medium">Target Skill:</span> {assessmentData.suggestedGoal.targetSkill}
+                  {assessmentData.suggestedGoal.currentRating && assessmentData.suggestedGoal.targetRating && (
+                    <span className="ml-2">
+                      ({assessmentData.suggestedGoal.currentRating} → {assessmentData.suggestedGoal.targetRating})
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Goal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
