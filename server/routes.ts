@@ -79,6 +79,7 @@ import {
 import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 import trainingCenterAdminRoutes from "./routes/training-center-admin-routes"; // PKL-278651-TRAINING-CENTER-ADMIN-001 - Training Center Admin
 import pcpCertificationRoutes from "./routes/pcp-certification-routes"; // PCP Coaching Certification Programme
+import pcpCoachingRoutes from "./routes/pcp-coaching-routes.js"; // PCP Coaching Ecosystem API Routes
 
 /**
  * Register all application routes with the Express app
@@ -366,6 +367,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount goal-setting routes for coach-player ecosystem
   registerGoalRoutes(app);
+
+  // Mount PCP Coaching Ecosystem API routes - Sprint 2: Assessment-Goal Integration
+  app.use('/api/pcp', pcpCoachingRoutes);
+  console.log('[API] PCP Coaching Ecosystem routes registered at /api/pcp');
 
   // CRITICAL MISSING ENDPOINTS - Complete User Flow Implementation
   
