@@ -156,8 +156,8 @@ router.post('/assign', async (req, res) => {
         const milestone = validatedData.milestones[i];
         const milestoneResult = await db.execute(sql`
           INSERT INTO goal_milestones (
-            goal_id, title, description, order_index, due_date, 
-            requires_coach_validation, created_at, updated_at
+            goal_id, title, description, order_index, target_date, 
+            coach_approval_required, created_at, updated_at
           ) VALUES (
             ${newGoal.id}, ${milestone.title}, ${milestone.description || null},
             ${milestone.orderIndex || i}, ${milestone.dueDate || null},
