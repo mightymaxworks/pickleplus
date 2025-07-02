@@ -172,7 +172,7 @@ export default function CoachGoalsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-[54px] mb-[54px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -186,7 +186,6 @@ export default function CoachGoalsPage() {
           Assign Goal
         </Button>
       </div>
-
       {/* Dashboard Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
@@ -237,7 +236,6 @@ export default function CoachGoalsPage() {
           </CardContent>
         </Card>
       </div>
-
       {/* Filters and Search */}
       <Card className="mb-6">
         <CardContent className="p-6">
@@ -280,7 +278,6 @@ export default function CoachGoalsPage() {
           </div>
         </CardContent>
       </Card>
-
       {/* Goals List */}
       <div className="space-y-4">
         {filteredGoals.length === 0 ? (
@@ -367,7 +364,6 @@ export default function CoachGoalsPage() {
           ))
         )}
       </div>
-
       {/* Goal Assignment Form Modal */}
       {showAssignForm && (
         <CoachGoalAssignmentForm
