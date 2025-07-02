@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { GoalCreationForm } from "@/components/goals/GoalCreationForm";
+import AssessmentGoalIntegration from "@/components/goals/AssessmentGoalIntegration";
 
 interface Goal {
   id: number;

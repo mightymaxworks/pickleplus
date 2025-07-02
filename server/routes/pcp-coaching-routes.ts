@@ -427,4 +427,45 @@ router.post('/drill-performance', async (req, res) => {
   }
 });
 
+// GET /api/pcp/assessments - Get recent PCP assessments for current user
+router.get('/assessments', async (req, res) => {
+  try {
+    // Get current user ID from session (simplified for now)
+    const userId = 1; // In a real app, this would come from authentication
+    
+    // Fetch recent assessments for the user
+    const assessments = await db.execute(`
+      SELECT 
+        id,
+        calculated_technical,
+        calculated_tactical,
+        calculated_physical,
+        calculated_mental,
+        calculated_overall,
+        assessment_date,
+        improvement_areas,
+        strengths_noted,
+        session_notes,
+        confidence_level
+      FROM pcp_skill_assessments 
+      WHERE profile_id = (
+        SELECT id FROM player_pcp_profiles 
+        WHERE player_id = $1 
+        LIMIT 1
+      )
+      ORDER BY assessment_date DESC 
+      LIMIT 10
+    `, [userId]);
+
+    res.json(assessments.rows || []);
+
+  } catch (error) {
+    console.error('Error fetching assessments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch assessments'
+    });
+  }
+});
+
 export default router;
