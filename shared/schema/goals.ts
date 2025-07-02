@@ -83,15 +83,10 @@ export const playerGoals = pgTable("player_goals", {
   // Tags system
   tags: varchar("tags").array(),
   
-  // Assessment integration
-  relatedDimension: varchar("related_dimension", { length: 10 }), // TECH, TACT, PHYS, MENT for assessment correlation
-  baselineAssessmentScore: integer("baseline_assessment_score"), // Initial assessment score for this goal area
-  targetAssessmentScore: integer("target_assessment_score"), // Target score for completion
-  currentAssessmentScore: integer("current_assessment_score"), // Most recent score
+  // Assessment integration - columns removed for now as they don't exist in database yet
   
   // Coach collaboration
   coachId: integer("coach_id"), // References users.id where isCoach = true
-  coachNotes: text("coach_notes"), // Coach input on goal progress
   isCoachApproved: boolean("is_coach_approved").default(false),
   coachLastReviewDate: timestamp("coach_last_review_date"),
   
