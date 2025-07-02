@@ -100,6 +100,39 @@ export default function GoalsPage() {
     );
   }
 
+  // Show form modal when creating a goal
+  if (showCreateForm) {
+    return (
+      <div className="container mx-auto px-4 py-8 mt-[58px] mb-[58px]">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Target className="w-8 h-8 text-primary" />
+              Create New Goal
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Set a new goal to advance your pickleball journey
+            </p>
+          </div>
+          
+          <Button 
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setShowCreateForm(false)}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Goals
+          </Button>
+        </div>
+
+        <GoalCreationForm 
+          onSuccess={handleCreateSuccess}
+          onCancel={handleCreateCancel}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 mt-[58px] mb-[58px]">
       <div className="flex items-center justify-between mb-6">
