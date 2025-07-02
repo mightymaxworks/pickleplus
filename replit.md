@@ -127,6 +127,15 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
+### July 2, 2025 - Advanced Gamification Features Hidden for Next Deployment
+- **Removed Peer Comparison Features**: Hidden PeerComparisonWidget from dashboard for next deployment version
+- **Removed Achievement Progress Tracking**: Hidden AchievementTracker and MobileOptimizedAchievementTracker components 
+- **Removed Community Challenges**: Hidden CommunityChallengePlatform and related functionality
+- **Updated Achievements Tab**: Replaced detailed achievement tracking with "Coming Soon" message
+- **Fixed Runtime Errors**: Resolved unhandled promise rejections from async button handlers in gamification components
+- **Deployment Readiness**: Core platform features remain operational while advanced gamification features are reserved for future release
+- **User Experience**: Achievement system gracefully indicates features are coming soon rather than showing incomplete functionality
+
 ### July 1, 2025 - Dashboard Component Cleanup & ProgressTrendChart Removal
 - **Removed ProgressTrendChart Component**: Eliminated progress trend chart from dashboard for future implementation
 - **Cleaned Up Dashboard Layout**: Removed component import and usage from PassportDashboard.tsx

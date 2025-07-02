@@ -1593,71 +1593,14 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
 
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="space-y-4 mt-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-500" />
-                    Recent Achievements
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
-                      <Trophy className="w-8 h-8 text-amber-500" />
-                      <div>
-                        <p className="font-medium">First Victory</p>
-                        <p className="text-sm text-gray-600">Won your first match</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                      <Star className="w-8 h-8 text-blue-500" />
-                      <div>
-                        <p className="font-medium">Point Collector</p>
-                        <p className="text-sm text-gray-600">Earned 1000+ Pickle Points</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Medal className="w-5 h-5 text-purple-500" />
-                    Progress Towards Next
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Win Streak Master</span>
-                        <span>{currentStreak}/5</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${(currentStreak / 5) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Point Millionaire</span>
-                        <span>{picklePoints}/10000</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${(picklePoints / 10000) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardContent className="text-center py-12">
+                <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Achievement System Coming Soon</h3>
+                <p className="text-gray-500 mb-6">Advanced achievement tracking, peer comparison, and progress analytics will be available in a future update.</p>
+                <p className="text-sm text-gray-400">Focus on improving your game - we'll track your achievements when this feature launches!</p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Social Tab - Sprint 4 Advanced Gamification Features */}
