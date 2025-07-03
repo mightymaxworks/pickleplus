@@ -377,8 +377,10 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                             {getDimensionalIcon(dimension)}
                             <span className="text-sm font-medium capitalize">{dimension}</span>
                           </div>
-                          <div className="text-2xl font-bold">{(rating as number).toFixed(1)}</div>
-                          <Progress value={(rating as number) * 10} className="h-2 mt-1" />
+                          <div className="text-2xl font-bold">
+                            {typeof rating === 'number' ? rating.toFixed(1) : 'N/A'}
+                          </div>
+                          <Progress value={typeof rating === 'number' ? rating * 10 : 0} className="h-2 mt-1" />
                         </div>
                       ))}
                     </div>
@@ -408,15 +410,17 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                               <div className="text-right">
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg font-bold text-red-500">
-                                    {area.currentRating.toFixed(1)}
+                                    {typeof area.currentRating === 'number' ? area.currentRating.toFixed(1) : 'N/A'}
                                   </span>
                                   <ArrowRight className="h-4 w-4" />
                                   <span className="text-lg font-bold text-green-500">
-                                    {(area.currentRating + area.targetImprovement).toFixed(1)}
+                                    {typeof area.currentRating === 'number' && typeof area.targetImprovement === 'number' 
+                                      ? (area.currentRating + area.targetImprovement).toFixed(1) 
+                                      : 'N/A'}
                                   </span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  +{area.targetImprovement.toFixed(1)} improvement target
+                                  +{typeof area.targetImprovement === 'number' ? area.targetImprovement.toFixed(1) : 'N/A'} improvement target
                                 </div>
                               </div>
                             </div>
