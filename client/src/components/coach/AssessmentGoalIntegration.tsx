@@ -531,7 +531,9 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                                     {mIndex + 1}
                                   </div>
                                   <span>{milestone.title}</span>
-                                  <span className="ml-auto">Target: {milestone.targetRating.toFixed(1)}</span>
+                                  <span className="ml-auto">
+                                    Target: {typeof milestone.targetRating === 'number' ? milestone.targetRating.toFixed(1) : 'N/A'}
+                                  </span>
                                 </div>
                               ))}
                             </div>
