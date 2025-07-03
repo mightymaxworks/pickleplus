@@ -272,10 +272,30 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
       </Card>
 
       <Tabs defaultValue="assessments" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="assessments">Recent Assessments</TabsTrigger>
-          <TabsTrigger value="analysis" disabled={!selectedAssessmentId}>Analysis & Weak Areas</TabsTrigger>
-          <TabsTrigger value="goals" disabled={!suggestions?.success}>Goal Suggestions</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 h-12 md:h-10">
+          <TabsTrigger value="assessments" className="flex items-center gap-2 text-xs md:text-sm px-2 py-2">
+            <CheckCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">Recent Assessments</span>
+            <span className="sm:hidden">Assessments</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="analysis" 
+            disabled={!selectedAssessmentId}
+            className="flex items-center gap-2 text-xs md:text-sm px-2 py-2"
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span className="hidden sm:inline">Analysis & Weak Areas</span>
+            <span className="sm:hidden">Analysis</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="goals" 
+            disabled={!suggestions?.success}
+            className="flex items-center gap-2 text-xs md:text-sm px-2 py-2"
+          >
+            <Award className="h-4 w-4" />
+            <span className="hidden sm:inline">Goal Suggestions</span>
+            <span className="sm:hidden">Goals</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Step 1: Assessment Selection */}
@@ -294,29 +314,30 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
               {recentAssessments.map(assessment => (
                 <Card 
                   key={assessment.id} 
-                  className={`cursor-pointer transition-colors hover:bg-muted/50 ${
+                  className={`cursor-pointer transition-colors hover:bg-muted/50 touch-manipulation ${
                     selectedAssessmentId === assessment.id ? 'border-primary bg-primary/10' : ''
                   }`}
                   onClick={() => handleAssessmentSelect(assessment.id)}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">{assessment.playerName} - {assessment.type} Assessment</h4>
-                        <p className="text-sm text-muted-foreground">{assessment.date}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm md:text-base truncate">{assessment.playerName} - {assessment.type} Assessment</h4>
+                        <p className="text-xs md:text-sm text-muted-foreground">{assessment.date}</p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                         <div className="text-right">
-                          <div className="text-lg font-bold">{assessment.overallRating}/10</div>
+                          <div className="text-base md:text-lg font-bold">{assessment.overallRating}/10</div>
                           <div className="text-xs text-muted-foreground">Overall PCP</div>
                         </div>
                         {assessment.hasWeakAreas && (
-                          <Badge variant="outline" className="text-orange-600 border-orange-200">
+                          <Badge variant="outline" className="text-orange-600 border-orange-200 text-xs px-2 py-1">
                             <AlertTriangle className="h-3 w-3 mr-1" />
-                            Improvement Areas
+                            <span className="hidden sm:inline">Improvement Areas</span>
+                            <span className="sm:hidden">Areas</span>
                           </Badge>
                         )}
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       </div>
                     </div>
                   </CardContent>
@@ -449,8 +470,8 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                   <div className="space-y-4">
                     {suggestions.suggestions.map((suggestion: GoalSuggestion, index: number) => (
                       <Card key={suggestion.targetSkill} className="transition-colors hover:bg-muted/50">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
+                        <CardContent className="p-3 md:p-4">
+                          <div className="flex items-start justify-between mb-3 gap-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h4 className="font-medium">{suggestion.title}</h4>
@@ -467,12 +488,12 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                               <div className="flex items-center gap-4 text-sm">
                                 <div className="flex items-center gap-1">
                                   <Target className="h-3 w-3" />
-                                  Current: {suggestion.currentRating.toFixed(1)}
+                                  Current: {typeof suggestion.currentRating === 'number' ? suggestion.currentRating.toFixed(1) : 'N/A'}
                                 </div>
                                 <ArrowRight className="h-3 w-3" />
                                 <div className="flex items-center gap-1">
                                   <CheckCircle className="h-3 w-3 text-green-600" />
-                                  Target: {suggestion.targetRating.toFixed(1)}
+                                  Target: {typeof suggestion.targetRating === 'number' ? suggestion.targetRating.toFixed(1) : 'N/A'}
                                 </div>
                                 <div className="flex items-center gap-1 ml-auto">
                                   <Clock className="h-3 w-3" />
@@ -480,17 +501,18 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                                 </div>
                               </div>
                             </div>
-                            <div className="ml-4">
+                            <div className="ml-2 flex-shrink-0">
                               <Button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openGoalCreationForm(suggestion);
                                 }}
                                 size="sm"
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 h-10 px-3 text-xs md:text-sm min-w-[100px] touch-manipulation"
                               >
-                                <Plus className="h-4 w-4 mr-1" />
-                                Create Goal
+                                <Plus className="h-4 w-4 md:mr-1" />
+                                <span className="hidden md:inline ml-1">Create Goal</span>
+                                <span className="md:hidden sr-only">Create</span>
                               </Button>
                             </div>
                           </div>
