@@ -204,26 +204,35 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
   };
 
   const openGoalCreationForm = (suggestion: GoalSuggestion) => {
-    const assessmentData = {
-      assessmentId: selectedAssessmentId!,
-      playerId,
-      suggestedGoal: {
-        title: suggestion.title,
-        description: suggestion.description,
-        category: suggestion.category,
-        priority: suggestion.priority,
-        targetSkill: suggestion.targetSkill,
-        currentRating: suggestion.currentRating,
-        targetRating: suggestion.targetRating,
-      },
-      suggestedMilestones: suggestion.milestones.map(m => ({
-        title: m.title,
-        description: m.description,
-        targetRating: m.targetRating,
-      }))
-    };
-    setSelectedGoalData(assessmentData);
-    setShowGoalCreationForm(true);
+    try {
+      const assessmentData = {
+        assessmentId: selectedAssessmentId!,
+        playerId,
+        suggestedGoal: {
+          title: suggestion.title,
+          description: suggestion.description,
+          category: suggestion.category,
+          priority: suggestion.priority,
+          targetSkill: suggestion.targetSkill,
+          currentRating: typeof suggestion.currentRating === 'string' ? parseFloat(suggestion.currentRating) : suggestion.currentRating,
+          targetRating: typeof suggestion.targetRating === 'string' ? parseFloat(suggestion.targetRating) : suggestion.targetRating,
+        },
+        suggestedMilestones: suggestion.milestones.map(m => ({
+          title: m.title,
+          description: m.description,
+          targetRating: typeof m.targetRating === 'string' ? parseFloat(m.targetRating) : m.targetRating,
+        }))
+      };
+      setSelectedGoalData(assessmentData);
+      setShowGoalCreationForm(true);
+    } catch (error) {
+      console.error('Error opening goal creation form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open goal creation form. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGoalCreationSuccess = () => {
@@ -492,12 +501,18 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                               <div className="flex items-center gap-4 text-sm">
                                 <div className="flex items-center gap-1">
                                   <Target className="h-3 w-3" />
-                                  Current: {typeof suggestion.currentRating === 'number' ? suggestion.currentRating.toFixed(1) : 'N/A'}
+                                  Current: {(() => {
+                                    const rating = typeof suggestion.currentRating === 'string' ? parseFloat(suggestion.currentRating) : suggestion.currentRating;
+                                    return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
+                                  })()}
                                 </div>
                                 <ArrowRight className="h-3 w-3" />
                                 <div className="flex items-center gap-1">
                                   <CheckCircle className="h-3 w-3 text-green-600" />
-                                  Target: {typeof suggestion.targetRating === 'number' ? suggestion.targetRating.toFixed(1) : 'N/A'}
+                                  Target: {(() => {
+                                    const rating = typeof suggestion.targetRating === 'string' ? parseFloat(suggestion.targetRating) : suggestion.targetRating;
+                                    return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
+                                  })()}
                                 </div>
                                 <div className="flex items-center gap-1 ml-auto">
                                   <Clock className="h-3 w-3" />
@@ -532,7 +547,10 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                                   </div>
                                   <span>{milestone.title}</span>
                                   <span className="ml-auto">
-                                    Target: {typeof milestone.targetRating === 'number' ? milestone.targetRating.toFixed(1) : 'N/A'}
+                                    Target: {(() => {
+                                      const rating = typeof milestone.targetRating === 'string' ? parseFloat(milestone.targetRating) : milestone.targetRating;
+                                      return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
+                                    })()}
                                   </span>
                                 </div>
                               ))}
