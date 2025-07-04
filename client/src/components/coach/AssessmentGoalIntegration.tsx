@@ -10,6 +10,46 @@
  */
 
 import React, { useState } from 'react';
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Assessment Goal Integration Error:', error, errorInfo);
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+          <h3 className="text-red-800 font-medium">Assessment Analysis Error</h3>
+          <p className="text-red-600 text-sm mt-2">
+            There was an error displaying the assessment analysis. Please try refreshing the page.
+          </p>
+          <details className="mt-2 text-xs text-red-500">
+            <summary>Error Details</summary>
+            <pre>{this.state.error && this.state.error.toString()}</pre>
+            <pre>{this.state.errorInfo.componentStack}</pre>
+          </details>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +130,7 @@ interface AssessmentGoalIntegrationProps {
   showDemo?: boolean;
 }
 
-export default function AssessmentGoalIntegration({ playerId = 1, showDemo = true }: AssessmentGoalIntegrationProps) {
+function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: AssessmentGoalIntegrationProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | null>(null);
@@ -380,28 +420,45 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                   <div>
                     <h3 className="font-medium mb-4">4-Dimensional Performance</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(analysis.analysis.dimensionalRatings || {}).map(([dimension, rating]) => (
-                        <div key={dimension} className="text-center">
-                          <div className="flex items-center justify-center gap-1 mb-2">
-                            {getDimensionalIcon(dimension)}
-                            <span className="text-sm font-medium capitalize">{dimension}</span>
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {(() => {
-                              try {
-                                if (rating !== null && rating !== undefined && typeof rating === 'number') {
-                                  return rating.toFixed(1);
+                      {Object.entries(analysis.analysis.dimensionalRatings || {}).map(([dimension, rating]: [string, any]) => {
+                        // Additional safety check
+                        console.log('Processing rating for dimension:', dimension, 'rating:', rating, 'type:', typeof rating);
+                        return (
+                          <div key={dimension} className="text-center">
+                            <div className="flex items-center justify-center gap-1 mb-2">
+                              {getDimensionalIcon(dimension)}
+                              <span className="text-sm font-medium capitalize">{dimension}</span>
+                            </div>
+                            <div className="text-2xl font-bold">
+                              {(() => {
+                                try {
+                                  // Handle string numbers too
+                                  if (rating === null || rating === undefined) {
+                                    return 'N/A';
+                                  }
+                                  const numRating = typeof rating === 'string' ? parseFloat(rating) : Number(rating);
+                                  if (isNaN(numRating)) {
+                                    return 'N/A';
+                                  }
+                                  return numRating.toFixed(1);
+                                } catch (e) {
+                                  console.error('Error formatting rating:', rating, 'type:', typeof rating, e);
+                                  return 'N/A';
                                 }
-                                return 'N/A';
+                              })()}
+                            </div>
+                            <Progress value={(() => {
+                              try {
+                                if (rating === null || rating === undefined) return 0;
+                                const numRating = typeof rating === 'string' ? parseFloat(rating) : Number(rating);
+                                return isNaN(numRating) ? 0 : numRating * 10;
                               } catch (e) {
-                                console.error('Error formatting rating:', rating, e);
-                                return 'N/A';
+                                return 0;
                               }
-                            })()}
+                            })()} className="h-2 mt-1" />
                           </div>
-                          <Progress value={rating !== null && typeof rating === 'number' ? rating * 10 : 0} className="h-2 mt-1" />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -623,5 +680,14 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
         />
       )}
     </div>
+  );
+}
+
+// Export wrapped with error boundary
+export default function AssessmentGoalIntegration(props: AssessmentGoalIntegrationProps) {
+  return (
+    <ErrorBoundary>
+      <AssessmentGoalIntegrationInner {...props} />
+    </ErrorBoundary>
   );
 }
