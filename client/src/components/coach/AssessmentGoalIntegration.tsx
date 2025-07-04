@@ -387,9 +387,9 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                             <span className="text-sm font-medium capitalize">{dimension}</span>
                           </div>
                           <div className="text-2xl font-bold">
-                            {typeof rating === 'number' ? rating.toFixed(1) : 'N/A'}
+                            {rating !== null && typeof rating === 'number' ? rating.toFixed(1) : 'N/A'}
                           </div>
-                          <Progress value={typeof rating === 'number' ? rating * 10 : 0} className="h-2 mt-1" />
+                          <Progress value={rating !== null && typeof rating === 'number' ? rating * 10 : 0} className="h-2 mt-1" />
                         </div>
                       ))}
                     </div>
@@ -419,17 +419,25 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                               <div className="text-right">
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg font-bold text-red-500">
-                                    {typeof area.currentRating === 'number' ? area.currentRating.toFixed(1) : 'N/A'}
+                                    {(() => {
+                                      const rating = typeof area.currentRating === 'string' ? parseFloat(area.currentRating) : area.currentRating;
+                                      return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
+                                    })()}
                                   </span>
                                   <ArrowRight className="h-4 w-4" />
                                   <span className="text-lg font-bold text-green-500">
-                                    {typeof area.currentRating === 'number' && typeof area.targetImprovement === 'number' 
-                                      ? (area.currentRating + area.targetImprovement).toFixed(1) 
-                                      : 'N/A'}
+                                    {(() => {
+                                      const current = typeof area.currentRating === 'string' ? parseFloat(area.currentRating) : area.currentRating;
+                                      const target = typeof area.targetImprovement === 'string' ? parseFloat(area.targetImprovement) : area.targetImprovement;
+                                      return !isNaN(current) && !isNaN(target) ? (current + target).toFixed(1) : 'N/A';
+                                    })()}
                                   </span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  +{typeof area.targetImprovement === 'number' ? area.targetImprovement.toFixed(1) : 'N/A'} improvement target
+                                  +{(() => {
+                                    const improvement = typeof area.targetImprovement === 'string' ? parseFloat(area.targetImprovement) : area.targetImprovement;
+                                    return !isNaN(improvement) ? improvement.toFixed(1) : 'N/A';
+                                  })()} improvement target
                                 </div>
                               </div>
                             </div>
@@ -445,7 +453,10 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                       <h4 className="font-medium text-blue-900 mb-2">Recommended Focus</h4>
                       <p className="text-blue-800">{analysis.analysis.recommendedFocus}</p>
                       <div className="mt-2 text-sm text-blue-700">
-                        Improvement Potential: +{analysis.analysis.improvementPotential.toFixed(1)} points average
+                        Improvement Potential: +{(() => {
+                          const potential = analysis.analysis.improvementPotential;
+                          return typeof potential === 'number' ? potential.toFixed(1) : '0.0';
+                        })()} points average
                       </div>
                     </CardContent>
                   </Card>
