@@ -139,6 +139,8 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
   const [selectedSuggestions, setSelectedSuggestions] = useState<GoalSuggestion[]>([]);
   const [showGoalCreationForm, setShowGoalCreationForm] = useState(false);
   const [selectedGoalData, setSelectedGoalData] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeTab, setActiveTab] = useState("assessments");
 
   // Mock recent PCP assessments (in real implementation, this would fetch from /api/pcp/assessments)
   const recentAssessments = [
@@ -170,6 +172,19 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
     },
     enabled: !!selectedAssessmentId
   });
+
+  // React to successful analysis completion
+  React.useEffect(() => {
+    if (analysis?.success && selectedAssessmentId) {
+      toast({
+        title: "Analysis Complete",
+        description: `Found ${analysis.analysis?.weakAreas?.length || 0} areas for improvement with specific recommendations`,
+        duration: 3000,
+      });
+      // Auto-switch to analysis tab
+      setTimeout(() => setActiveTab("analysis"), 1000);
+    }
+  }, [analysis, selectedAssessmentId, toast]);
 
   // Fetch goal suggestions
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
@@ -218,8 +233,18 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
   });
 
   const handleAssessmentSelect = (assessmentId: number) => {
+    setIsAnalyzing(true);
     setSelectedAssessmentId(assessmentId);
     setSelectedSuggestions([]);
+    
+    // Show immediate feedback
+    toast({
+      title: "Analyzing Assessment",
+      description: "Processing PCP data and generating weak area analysis...",
+    });
+    
+    // Reset analyzing state after a delay (the useQuery will handle the actual loading)
+    setTimeout(() => setIsAnalyzing(false), 2000);
   };
 
   const toggleSuggestionSelection = (suggestion: GoalSuggestion) => {
@@ -322,7 +347,7 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="assessments" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 h-12 md:h-10">
           <TabsTrigger value="assessments" className="flex items-center gap-2 text-xs md:text-sm px-2 py-2">
             <CheckCircle className="h-4 w-4" />
@@ -334,9 +359,17 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
             disabled={!selectedAssessmentId}
             className="flex items-center gap-2 text-xs md:text-sm px-2 py-2"
           >
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Analysis & Weak Areas</span>
-            <span className="sm:hidden">Analysis</span>
+            {(analysis?.isLoading || isAnalyzing) ? (
+              <div className="h-4 w-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
+            ) : (
+              <TrendingUp className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {(analysis?.isLoading || isAnalyzing) ? 'Analyzing...' : 'Analysis & Weak Areas'}
+            </span>
+            <span className="sm:hidden">
+              {(analysis?.isLoading || isAnalyzing) ? 'Analyzing' : 'Analysis'}
+            </span>
           </TabsTrigger>
           <TabsTrigger 
             value="goals" 
@@ -365,9 +398,9 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
               {recentAssessments.map(assessment => (
                 <Card 
                   key={assessment.id} 
-                  className={`cursor-pointer transition-colors hover:bg-muted/50 touch-manipulation ${
-                    selectedAssessmentId === assessment.id ? 'border-primary bg-primary/10' : ''
-                  }`}
+                  className={`cursor-pointer transition-all duration-200 hover:bg-muted/50 touch-manipulation ${
+                    selectedAssessmentId === assessment.id ? 'border-primary bg-primary/10 shadow-md' : ''
+                  } ${isAnalyzing && selectedAssessmentId === assessment.id ? 'animate-pulse border-blue-400' : ''}`}
                   onClick={() => handleAssessmentSelect(assessment.id)}
                 >
                   <CardContent className="p-4">
