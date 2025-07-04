@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Plus, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import PlayerSearchInput from "./PlayerSearchInput";
 
 interface CoachGoalAssignmentFormProps {
   onSuccess: () => void;
@@ -64,6 +65,8 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel, assessmen
     targetDate: '',
   });
 
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+
   const [milestones, setMilestones] = useState<Milestone[]>(
     assessmentData?.suggestedMilestones?.map((milestone, index) => ({
       title: milestone.title,
@@ -107,10 +110,10 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel, assessmen
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.playerId || !formData.title || !formData.category) {
+    if (!selectedPlayer || !formData.title || !formData.category) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields.",
+        description: "Please select a player and fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -120,7 +123,8 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel, assessmen
     
     const goalData = {
       ...formData,
-      playerId: parseInt(formData.playerId),
+      playerUserId: selectedPlayer.id,
+      playerId: selectedPlayer.id, // Keep for backward compatibility
       milestones: validMilestones.map((milestone, index) => ({
         ...milestone,
         orderIndex: index + 1,
@@ -197,13 +201,16 @@ export default function CoachGoalAssignmentForm({ onSuccess, onCancel, assessmen
             {/* Basic Goal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Player ID *</label>
-                <Input
-                  type="number"
-                  value={formData.playerId}
-                  onChange={(e) => setFormData({...formData, playerId: e.target.value})}
-                  placeholder="Enter player ID"
-                  required
+                <label className="text-sm font-medium">Select Player *</label>
+                <PlayerSearchInput
+                  coachId={1} // Mock coach ID - replace with actual authenticated coach ID
+                  selectedPlayerId={selectedPlayer?.id || null}
+                  onPlayerSelect={(player) => {
+                    setSelectedPlayer(player);
+                    setFormData({...formData, playerId: player?.id?.toString() || ''});
+                  }}
+                  placeholder="Search and select a player..."
+                  className="w-full"
                 />
               </div>
               

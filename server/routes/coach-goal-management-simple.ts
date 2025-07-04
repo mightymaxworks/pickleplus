@@ -39,10 +39,125 @@ const updateGoalStatusSchema = z.object({
 });
 
 /**
+ * GET /api/coach/my-players  
+ * Get all players who have established relationships with this coach
+ * Based on session bookings and facility class enrollments (organic relationships only)
+ */
+router.get('/my-players', async (req, res) => {
+  try {
+    const userId = 1; // Mock authenticated coach
+    
+    // Check if user is a coach
+    const coachResult = await db.execute(sql`
+      SELECT id, user_id, bio, specialties 
+      FROM coach_profiles 
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `);
+    
+    if (coachResult.rows.length === 0) {
+      return res.status(403).json({ error: "User is not a registered coach" });
+    }
+
+    // Get players who have booked sessions with this coach
+    const sessionPlayersResult = await db.execute(sql`
+      SELECT DISTINCT
+        u.id, u.username, u.first_name, u.last_name, u.display_name, u.avatar_url,
+        'session' as relationship_type,
+        COUNT(cs.id) as total_sessions,
+        MAX(cs.check_in_time) as last_session
+      FROM users u
+      JOIN coaching_sessions cs ON u.id = cs.player_id
+      WHERE cs.coach_id = ${userId}
+      GROUP BY u.id, u.username, u.first_name, u.last_name, u.display_name, u.avatar_url
+    `);
+
+    // Get players enrolled in this coach's facility classes
+    const facilityPlayersResult = await db.execute(sql`
+      SELECT DISTINCT
+        u.id, u.username, u.first_name, u.last_name, u.display_name, u.avatar_url,
+        'facility' as relationship_type,
+        COUNT(ci.id) as total_classes,
+        array_agg(DISTINCT CONCAT('Class ', ci.id)) as current_classes
+      FROM users u
+      JOIN class_enrollments ce ON u.id = ce.player_id
+      JOIN class_instances ci ON ce.class_instance_id = ci.id
+      WHERE ci.coach_id = ${userId}
+      GROUP BY u.id, u.username, u.first_name, u.last_name, u.display_name, u.avatar_url
+    `);
+
+    // Combine and format players
+    const sessionPlayers = (sessionPlayersResult.rows || []).map((row: any) => ({
+      id: row.id,
+      username: row.username,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+      relationshipType: 'session',
+      relationshipDetails: {
+        totalSessions: parseInt(row.total_sessions) || 0,
+        lastSession: row.last_session,
+        facilities: [],
+        currentClasses: []
+      }
+    }));
+
+    const facilityPlayers = (facilityPlayersResult.rows || []).map((row: any) => ({
+      id: row.id,
+      username: row.username,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+      relationshipType: 'facility',
+      relationshipDetails: {
+        totalSessions: 0,
+        facilities: [],
+        currentClasses: Array.isArray(row.current_classes) ? row.current_classes : [row.current_classes].filter(Boolean)
+      }
+    }));
+
+    // Merge players and mark those who have both relationships
+    const allPlayersMap = new Map();
+    
+    sessionPlayers.forEach(player => {
+      allPlayersMap.set(player.id, player);
+    });
+
+    facilityPlayers.forEach(player => {
+      if (allPlayersMap.has(player.id)) {
+        const existing = allPlayersMap.get(player.id);
+        existing.relationshipType = 'both';
+        existing.relationshipDetails.currentClasses = player.relationshipDetails.currentClasses;
+      } else {
+        allPlayersMap.set(player.id, player);
+      }
+    });
+
+    const players = Array.from(allPlayersMap.values());
+
+    res.json({
+      success: true,
+      players,
+      summary: {
+        totalPlayers: players.length,
+        sessionPlayers: sessionPlayers.length,
+        facilityPlayers: facilityPlayers.length,
+        bothRelationships: players.filter(p => p.relationshipType === 'both').length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching coach players:', error);
+    res.status(500).json({ error: "Failed to fetch coach players" });
+  }
+});
+
+/**
  * GET /api/coach/goals/my-players
  * Get all goals for players coached by the current coach
  */
-router.get('/my-players', async (req, res) => {
+router.get('/goals/my-players', async (req, res) => {
   try {
     const userId = 1; // Mock authenticated coach
     
