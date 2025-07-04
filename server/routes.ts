@@ -2982,6 +2982,186 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // Sprint 4 Phase 4.1: Bulk Goal Assignment API
+  app.post('/api/coach/goals/bulk-assign', async (req, res) => {
+    try {
+      const { goalTemplate, playerIds, saveAsTemplate, templateName } = req.body;
+
+      if (!goalTemplate || !playerIds || !Array.isArray(playerIds) || playerIds.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Goal template and player IDs are required' 
+        });
+      }
+
+      // Enhanced Sprint 4 bulk assignment logic
+      const coachId = 1; // Test coach ID
+      const assignmentResults = [];
+      let templateId = null;
+
+      // Save as template if requested
+      if (saveAsTemplate && templateName) {
+        // For now, we'll simulate template saving
+        templateId = Math.floor(Math.random() * 1000) + 100;
+        console.log(`[SPRINT4] Template "${templateName}" saved with ID: ${templateId}`);
+      }
+
+      // Create goals for each selected player
+      for (const playerId of playerIds) {
+        try {
+          // Create the main goal
+          const goalData = {
+            ...goalTemplate,
+            playerId,
+            coachId,
+            templateId,
+            createdAt: new Date(),
+            status: 'active'
+          };
+
+          // Simulate goal creation (in real implementation, this would use database)
+          const goalId = Math.floor(Math.random() * 10000) + 1000;
+          
+          // Create milestones for this goal
+          const milestoneResults = [];
+          if (goalTemplate.milestones && Array.isArray(goalTemplate.milestones)) {
+            for (const milestone of goalTemplate.milestones) {
+              const milestoneData = {
+                ...milestone,
+                goalId,
+                playerId,
+                coachId,
+                status: 'pending',
+                createdAt: new Date()
+              };
+              
+              const milestoneId = Math.floor(Math.random() * 10000) + 2000;
+              milestoneResults.push({ id: milestoneId, ...milestoneData });
+            }
+          }
+
+          assignmentResults.push({
+            playerId,
+            goalId,
+            goal: goalData,
+            milestones: milestoneResults,
+            success: true
+          });
+
+          console.log(`[SPRINT4] Goal "${goalTemplate.title}" assigned to player ${playerId} with ${milestoneResults.length} milestones`);
+
+        } catch (playerError) {
+          console.error(`Failed to assign goal to player ${playerId}:`, playerError);
+          assignmentResults.push({
+            playerId,
+            success: false,
+            error: `Failed to assign goal to player ${playerId}`
+          });
+        }
+      }
+
+      const successCount = assignmentResults.filter(r => r.success).length;
+      const failureCount = assignmentResults.length - successCount;
+
+      res.json({
+        success: true,
+        message: `Bulk assignment completed: ${successCount} successful, ${failureCount} failed`,
+        results: {
+          templateId,
+          templateName: saveAsTemplate ? templateName : null,
+          totalAssignments: playerIds.length,
+          successfulAssignments: successCount,
+          failedAssignments: failureCount,
+          assignments: assignmentResults
+        }
+      });
+
+    } catch (error) {
+      console.error('Error in bulk goal assignment:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to assign goals' 
+      });
+    }
+  });
+
+  // Sprint 4 Phase 4.2: Get Coach Players for Bulk Assignment
+  app.get('/api/coach/players', async (req, res) => {
+    try {
+      // Enhanced Sprint 4 test data for player selection
+      const coachPlayers = [
+        {
+          id: 1,
+          username: 'mightymax',
+          firstName: 'Max',
+          lastName: 'Johnson',
+          email: 'max@example.com',
+          profileImageUrl: '/uploads/profiles/avatar-1-1748944092712.jpg',
+          level: 3.5,
+          lastActive: '2025-07-04T01:30:00Z',
+          goals: { active: 2, completed: 8 }
+        },
+        {
+          id: 2,
+          username: 'tennis_ace',
+          firstName: 'Sarah',
+          lastName: 'Williams',
+          email: 'sarah@example.com',
+          profileImageUrl: null,
+          level: 4.0,
+          lastActive: '2025-07-03T22:15:00Z',
+          goals: { active: 1, completed: 12 }
+        },
+        {
+          id: 3,
+          username: 'pickle_pro',
+          firstName: 'Mike',
+          lastName: 'Chen',
+          email: 'mike@example.com',
+          profileImageUrl: null,
+          level: 3.8,
+          lastActive: '2025-07-04T00:45:00Z',
+          goals: { active: 3, completed: 6 }
+        },
+        {
+          id: 4,
+          username: 'court_queen',
+          firstName: 'Emma',
+          lastName: 'Davis',
+          email: 'emma@example.com',
+          profileImageUrl: null,
+          level: 3.2,
+          lastActive: '2025-07-03T19:30:00Z',
+          goals: { active: 1, completed: 4 }
+        },
+        {
+          id: 5,
+          username: 'paddle_master',
+          firstName: 'James',
+          lastName: 'Rodriguez',
+          email: 'james@example.com',
+          profileImageUrl: null,
+          level: 4.2,
+          lastActive: '2025-07-04T01:00:00Z',
+          goals: { active: 2, completed: 15 }
+        }
+      ];
+
+      res.json({
+        success: true,
+        players: coachPlayers,
+        totalPlayers: coachPlayers.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching coach players:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch players' 
+      });
+    }
+  });
+
   console.log('[API] PCP Assessment Analysis routes registered');
 
   // PKL-278651-NOTIF-0001 - Notifications System
@@ -3071,6 +3251,186 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     } catch (error) {
       console.error('[API][Profile Update] Error:', error);
       res.status(500).json({ error: 'Failed to update profile' });
+    }
+  });
+
+  // Sprint 4 Phase 4.1: Bulk Goal Assignment API
+  app.post('/api/coach/goals/bulk-assign', async (req, res) => {
+    try {
+      const { goalTemplate, playerIds, saveAsTemplate, templateName } = req.body;
+
+      if (!goalTemplate || !playerIds || !Array.isArray(playerIds) || playerIds.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Goal template and player IDs are required' 
+        });
+      }
+
+      // Enhanced Sprint 4 bulk assignment logic
+      const coachId = 1; // Test coach ID
+      const assignmentResults = [];
+      let templateId = null;
+
+      // Save as template if requested
+      if (saveAsTemplate && templateName) {
+        // For now, we'll simulate template saving
+        templateId = Math.floor(Math.random() * 1000) + 100;
+        console.log(`[SPRINT4] Template "${templateName}" saved with ID: ${templateId}`);
+      }
+
+      // Create goals for each selected player
+      for (const playerId of playerIds) {
+        try {
+          // Create the main goal
+          const goalData = {
+            ...goalTemplate,
+            playerId,
+            coachId,
+            templateId,
+            createdAt: new Date(),
+            status: 'active'
+          };
+
+          // Simulate goal creation (in real implementation, this would use database)
+          const goalId = Math.floor(Math.random() * 10000) + 1000;
+          
+          // Create milestones for this goal
+          const milestoneResults = [];
+          if (goalTemplate.milestones && Array.isArray(goalTemplate.milestones)) {
+            for (const milestone of goalTemplate.milestones) {
+              const milestoneData = {
+                ...milestone,
+                goalId,
+                playerId,
+                coachId,
+                status: 'pending',
+                createdAt: new Date()
+              };
+              
+              const milestoneId = Math.floor(Math.random() * 10000) + 2000;
+              milestoneResults.push({ id: milestoneId, ...milestoneData });
+            }
+          }
+
+          assignmentResults.push({
+            playerId,
+            goalId,
+            goal: goalData,
+            milestones: milestoneResults,
+            success: true
+          });
+
+          console.log(`[SPRINT4] Goal "${goalTemplate.title}" assigned to player ${playerId} with ${milestoneResults.length} milestones`);
+
+        } catch (playerError) {
+          console.error(`Failed to assign goal to player ${playerId}:`, playerError);
+          assignmentResults.push({
+            playerId,
+            success: false,
+            error: `Failed to assign goal to player ${playerId}`
+          });
+        }
+      }
+
+      const successCount = assignmentResults.filter(r => r.success).length;
+      const failureCount = assignmentResults.length - successCount;
+
+      res.json({
+        success: true,
+        message: `Bulk assignment completed: ${successCount} successful, ${failureCount} failed`,
+        results: {
+          templateId,
+          templateName: saveAsTemplate ? templateName : null,
+          totalAssignments: playerIds.length,
+          successfulAssignments: successCount,
+          failedAssignments: failureCount,
+          assignments: assignmentResults
+        }
+      });
+
+    } catch (error) {
+      console.error('Error in bulk goal assignment:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to assign goals' 
+      });
+    }
+  });
+
+  // Sprint 4 Phase 4.2: Get Coach Players for Bulk Assignment
+  app.get('/api/coach/players', async (req, res) => {
+    try {
+      // Enhanced Sprint 4 test data for player selection
+      const coachPlayers = [
+        {
+          id: 1,
+          username: 'mightymax',
+          firstName: 'Max',
+          lastName: 'Johnson',
+          email: 'max@example.com',
+          profileImageUrl: '/uploads/profiles/avatar-1-1748944092712.jpg',
+          level: 3.5,
+          lastActive: '2025-07-04T01:30:00Z',
+          goals: { active: 2, completed: 8 }
+        },
+        {
+          id: 2,
+          username: 'tennis_ace',
+          firstName: 'Sarah',
+          lastName: 'Williams',
+          email: 'sarah@example.com',
+          profileImageUrl: null,
+          level: 4.0,
+          lastActive: '2025-07-03T22:15:00Z',
+          goals: { active: 1, completed: 12 }
+        },
+        {
+          id: 3,
+          username: 'pickle_pro',
+          firstName: 'Mike',
+          lastName: 'Chen',
+          email: 'mike@example.com',
+          profileImageUrl: null,
+          level: 3.8,
+          lastActive: '2025-07-04T00:45:00Z',
+          goals: { active: 3, completed: 6 }
+        },
+        {
+          id: 4,
+          username: 'court_queen',
+          firstName: 'Emma',
+          lastName: 'Davis',
+          email: 'emma@example.com',
+          profileImageUrl: null,
+          level: 3.2,
+          lastActive: '2025-07-03T19:30:00Z',
+          goals: { active: 1, completed: 4 }
+        },
+        {
+          id: 5,
+          username: 'paddle_master',
+          firstName: 'James',
+          lastName: 'Rodriguez',
+          email: 'james@example.com',
+          profileImageUrl: null,
+          level: 4.2,
+          lastActive: '2025-07-04T01:00:00Z',
+          goals: { active: 2, completed: 15 }
+        }
+      ];
+
+      res.json({
+        success: true,
+        players: coachPlayers,
+        totalPlayers: coachPlayers.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching coach players:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch players' 
+      });
     }
   });
 
