@@ -23,7 +23,9 @@ class ErrorBoundary extends React.Component<any, any> {
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error('Assessment Goal Integration Error:', error, errorInfo);
+    console.error('Assessment Goal Integration Error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
     this.setState({
       error: error,
       errorInfo: errorInfo
@@ -41,7 +43,7 @@ class ErrorBoundary extends React.Component<any, any> {
           <details className="mt-2 text-xs text-red-500">
             <summary>Error Details</summary>
             <pre>{this.state.error && this.state.error.toString()}</pre>
-            <pre>{this.state.errorInfo.componentStack}</pre>
+            <pre>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
           </details>
         </div>
       );
