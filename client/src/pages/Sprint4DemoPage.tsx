@@ -20,7 +20,7 @@ import Sprint4AssessmentGoalIntegration from '@/components/coach/Sprint4Assessme
 export default function Sprint4DemoPage() {
   return (
     <StandardLayout>
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <div className="max-w-7xl mx-auto p-6 space-y-6 mt-[55px] mb-[55px]">
         {/* Hero Section */}
         <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
           <CardHeader>
