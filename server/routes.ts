@@ -3434,6 +3434,363 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // ==============================================================================
+  // SESSION MANAGEMENT SYSTEM - PKL-278651-SESSION-MGMT
+  // Complete session management workflow for coach-player interactions
+  // ==============================================================================
+
+  /**
+   * POST /api/sessions/request
+   * Player requests a session with a coach
+   */
+  app.post('/api/sessions/request', async (req, res) => {
+    try {
+      const { coachId, requestType, preferredSchedule, message } = req.body;
+      const playerId = 1; // Mock player ID for development
+
+      // Validate required fields
+      if (!coachId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Coach ID is required'
+        });
+      }
+
+      // Create session request
+      const requestId = Math.floor(Math.random() * 10000) + 5000;
+      const sessionRequest = {
+        id: requestId,
+        playerId,
+        coachId: Number(coachId),
+        requestType: requestType || 'individual',
+        preferredSchedule: preferredSchedule || [],
+        message: message || '',
+        requestStatus: 'pending',
+        createdAt: new Date().toISOString()
+      };
+
+      console.log(`[SESSION-MGMT] Session request created: Player ${playerId} → Coach ${coachId}`);
+
+      res.json({
+        success: true,
+        message: 'Session request sent successfully',
+        request: sessionRequest
+      });
+
+    } catch (error) {
+      console.error('Error creating session request:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create session request',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /api/sessions/requests/pending
+   * Get pending session requests for a coach
+   */
+  app.get('/api/sessions/requests/pending', async (req, res) => {
+    try {
+      const coachId = 1; // Mock coach ID for development
+
+      // Mock pending session requests with realistic data
+      const pendingRequests = [
+        {
+          id: 5001,
+          playerId: 2,
+          coachId,
+          requestType: 'individual',
+          preferredSchedule: [
+            { day: 'Monday', time: '10:00 AM' },
+            { day: 'Wednesday', time: '2:00 PM' }
+          ],
+          message: 'Looking to improve my backhand technique and court positioning. Available weekday mornings.',
+          requestStatus: 'pending',
+          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          playerName: 'Sarah Chen',
+          playerUsername: 'sarahc',
+          playerLevel: 3.5
+        },
+        {
+          id: 5002,
+          playerId: 3,
+          coachId,
+          requestType: 'assessment',
+          preferredSchedule: [
+            { day: 'Saturday', time: '9:00 AM' },
+            { day: 'Sunday', time: '11:00 AM' }
+          ],
+          message: 'New to pickleball, need initial skill assessment and beginner guidance.',
+          requestStatus: 'pending',
+          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          playerName: 'Mike Rodriguez',
+          playerUsername: 'mikerod',
+          playerLevel: 2.0
+        },
+        {
+          id: 5003,
+          playerId: 4,
+          coachId,
+          requestType: 'tournament_prep',
+          preferredSchedule: [
+            { day: 'Tuesday', time: '6:00 PM' },
+            { day: 'Thursday', time: '6:00 PM' }
+          ],
+          message: 'Preparing for upcoming 4.0+ tournament. Need strategy and mental game coaching.',
+          requestStatus: 'pending',
+          createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+          playerName: 'Alex Johnson',
+          playerUsername: 'alexj',
+          playerLevel: 4.0
+        }
+      ];
+
+      res.json({
+        success: true,
+        requests: pendingRequests,
+        totalPending: pendingRequests.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching pending session requests:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch pending requests',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * POST /api/sessions/requests/:requestId/respond
+   * Coach responds to a session request (accept/decline)
+   */
+  app.post('/api/sessions/requests/:requestId/respond', async (req, res) => {
+    try {
+      const { requestId } = req.params;
+      const { action, responseMessage, sessionDetails } = req.body;
+
+      if (!['accept', 'decline'].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Action must be either "accept" or "decline"'
+        });
+      }
+
+      const response = {
+        requestId: Number(requestId),
+        action,
+        responseMessage: responseMessage || '',
+        respondedAt: new Date().toISOString()
+      };
+
+      if (action === 'accept' && sessionDetails) {
+        // Create coaching session when request is accepted
+        const sessionId = Math.floor(Math.random() * 10000) + 7000;
+        const session = {
+          id: sessionId,
+          coachId: 1,
+          studentId: sessionDetails.playerId,
+          sessionType: sessionDetails.sessionType || 'individual',
+          sessionStatus: 'scheduled',
+          scheduledAt: sessionDetails.scheduledAt,
+          durationMinutes: sessionDetails.durationMinutes || 60,
+          locationType: sessionDetails.locationType || 'court',
+          locationDetails: sessionDetails.locationDetails || '',
+          priceAmount: sessionDetails.priceAmount || '50.00',
+          currency: 'USD',
+          paymentStatus: 'pending',
+          createdAt: new Date().toISOString()
+        };
+
+        console.log(`[SESSION-MGMT] Session scheduled: ${sessionId} for ${sessionDetails.scheduledAt}`);
+
+        response.session = session;
+      }
+
+      console.log(`[SESSION-MGMT] Request ${requestId} ${action}ed by coach`);
+
+      res.json({
+        success: true,
+        message: `Session request ${action}ed successfully`,
+        response
+      });
+
+    } catch (error) {
+      console.error('Error responding to session request:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to respond to session request',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /api/sessions/upcoming
+   * Get upcoming sessions for coach or player
+   */
+  app.get('/api/sessions/upcoming', async (req, res) => {
+    try {
+      const userId = 1; // Mock user ID for development
+      const { role } = req.query; // 'coach' or 'player'
+
+      // Mock upcoming sessions with realistic data
+      const upcomingSessions = [
+        {
+          id: 7001,
+          coachId: 1,
+          studentId: 2,
+          sessionType: 'individual',
+          sessionStatus: 'confirmed',
+          scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          durationMinutes: 60,
+          locationType: 'court',
+          locationDetails: 'Central Park Pickleball Courts - Court 3',
+          priceAmount: '60.00',
+          currency: 'USD',
+          paymentStatus: 'paid',
+          coachName: 'Coach Max',
+          coachUsername: 'mightymax',
+          studentName: 'Sarah Chen',
+          studentUsername: 'sarahc',
+          studentLevel: 3.5
+        },
+        {
+          id: 7002,
+          coachId: 1,
+          studentId: 3,
+          sessionType: 'assessment',
+          sessionStatus: 'scheduled',
+          scheduledAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          durationMinutes: 90,
+          locationType: 'court',
+          locationDetails: 'Downtown Recreation Center - Court 1',
+          priceAmount: '75.00',
+          currency: 'USD',
+          paymentStatus: 'pending',
+          coachName: 'Coach Max',
+          coachUsername: 'mightymax',
+          studentName: 'Mike Rodriguez',
+          studentUsername: 'mikerod',
+          studentLevel: 2.0
+        }
+      ];
+
+      res.json({
+        success: true,
+        sessions: upcomingSessions,
+        totalUpcoming: upcomingSessions.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching upcoming sessions:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch upcoming sessions',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * POST /api/sessions/:sessionId/complete
+   * Complete a session and add notes/feedback
+   */
+  app.post('/api/sessions/:sessionId/complete', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { sessionNotes, feedbackForStudent, sessionSummary, studentProgress } = req.body;
+
+      const completedSession = {
+        id: Number(sessionId),
+        sessionStatus: 'completed',
+        sessionNotes: sessionNotes || '',
+        feedbackForStudent: feedbackForStudent || '',
+        sessionSummary: sessionSummary || '',
+        studentProgress: studentProgress || {},
+        completedAt: new Date().toISOString()
+      };
+
+      console.log(`[SESSION-MGMT] Session ${sessionId} completed with feedback`);
+
+      res.json({
+        success: true,
+        message: 'Session completed successfully',
+        session: completedSession
+      });
+
+    } catch (error) {
+      console.error('Error completing session:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to complete session',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /api/sessions/history
+   * Get session history for coach or player
+   */
+  app.get('/api/sessions/history', async (req, res) => {
+    try {
+      const userId = 1; // Mock user ID for development
+      const { role, limit = 10 } = req.query;
+
+      // Mock session history with realistic data
+      const sessionHistory = [
+        {
+          id: 6001,
+          coachId: 1,
+          studentId: 2,
+          sessionType: 'individual',
+          sessionStatus: 'completed',
+          scheduledAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          durationMinutes: 60,
+          priceAmount: '60.00',
+          sessionNotes: 'Worked on backhand consistency and footwork. Significant improvement in shot placement.',
+          feedbackForStudent: 'Great progress today! Continue practicing the cross-court backhand drill we covered.',
+          coachName: 'Coach Max',
+          studentName: 'Sarah Chen',
+          studentLevel: 3.5
+        },
+        {
+          id: 6002,
+          coachId: 1,
+          studentId: 4,
+          sessionType: 'tournament_prep',
+          sessionStatus: 'completed',
+          scheduledAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+          durationMinutes: 90,
+          priceAmount: '80.00',
+          sessionNotes: 'Tournament strategy session. Covered doubles positioning and shot selection under pressure.',
+          feedbackForStudent: 'Excellent mental preparation. Ready for tournament play. Focus on communication with partner.',
+          coachName: 'Coach Max',
+          studentName: 'Alex Johnson',
+          studentLevel: 4.0
+        }
+      ];
+
+      res.json({
+        success: true,
+        sessions: sessionHistory.slice(0, Number(limit)),
+        totalSessions: sessionHistory.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching session history:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch session history',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
   const server = http.createServer(app);
   console.log(`Server created on port ${PORT}`);
