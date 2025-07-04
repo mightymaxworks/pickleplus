@@ -611,89 +611,227 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
                 </div>
               ) : suggestions?.success ? (
                 <div className="space-y-6">
+                  {/* Assessment-Based Insights Summary */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium flex items-center gap-2 mb-3">
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
+                          Assessment Overview
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Overall PCP Rating:</span>
+                            <span className="font-medium">{suggestions.assessmentSummary?.overallRating?.toFixed(1) || 'N/A'}/10</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Improvement Potential:</span>
+                            <span className="font-medium text-green-600">+{suggestions.assessmentSummary?.improvementPotential?.toFixed(1) || 'N/A'} points</span>
+                          </div>
+                          <div className="mt-2 p-2 bg-white/50 rounded text-xs">
+                            <strong>Recommended Focus:</strong> {suggestions.assessmentSummary?.recommendedFocus || 'Continue balanced development'}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium flex items-center gap-2 mb-3">
+                          <Target className="h-4 w-4 text-green-600" />
+                          Smart Suggestions
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Available Goals:</span>
+                            <span className="font-medium">{suggestions.suggestions?.length || 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>High Priority:</span>
+                            <span className="font-medium text-red-600">
+                              {suggestions.suggestions?.filter((s: GoalSuggestion) => s.priority === 'high').length || 0}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Selected for Creation:</span>
+                            <span className="font-medium text-blue-600">{selectedSuggestions.length}</span>
+                          </div>
+                          {selectedSuggestions.length > 0 && (
+                            <Button 
+                              onClick={createSelectedGoals}
+                              disabled={createGoalsMutation.isPending}
+                              className="w-full mt-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                              size="sm"
+                            >
+                              {createGoalsMutation.isPending ? (
+                                <div className="h-3 w-3 animate-spin border-2 border-white border-t-transparent rounded-full mr-2" />
+                              ) : (
+                                <Plus className="h-3 w-3 mr-2" />
+                              )}
+                              Create {selectedSuggestions.length} Goal{selectedSuggestions.length !== 1 ? 's' : ''}
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
                   {/* Goal Suggestions */}
                   <div className="space-y-4">
-                    {suggestions.suggestions.map((suggestion: GoalSuggestion, index: number) => (
-                      <Card key={suggestion.targetSkill} className="transition-colors hover:bg-muted/50">
-                        <CardContent className="p-3 md:p-4">
-                          <div className="flex items-start justify-between mb-3 gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-medium">{suggestion.title}</h4>
-                                <Badge variant={getPriorityColor(suggestion.priority)}>
-                                  {suggestion.priority}
-                                </Badge>
-                                <Badge variant="outline" className="capitalize">
-                                  {suggestion.category}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-3">
-                                {suggestion.description}
-                              </p>
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <Target className="h-3 w-3" />
-                                  Current: {(() => {
-                                    const rating = typeof suggestion.currentRating === 'string' ? parseFloat(suggestion.currentRating) : suggestion.currentRating;
-                                    return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
-                                  })()}
-                                </div>
-                                <ArrowRight className="h-3 w-3" />
-                                <div className="flex items-center gap-1">
-                                  <CheckCircle className="h-3 w-3 text-green-600" />
-                                  Target: {(() => {
-                                    const rating = typeof suggestion.targetRating === 'string' ? parseFloat(suggestion.targetRating) : suggestion.targetRating;
-                                    return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
-                                  })()}
-                                </div>
-                                <div className="flex items-center gap-1 ml-auto">
-                                  <Clock className="h-3 w-3" />
-                                  {suggestion.milestones.length} milestones
-                                </div>
-                              </div>
-                            </div>
-                            <div className="ml-2 flex-shrink-0">
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openGoalCreationForm(suggestion);
-                                }}
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 h-10 px-3 text-xs md:text-sm min-w-[100px] touch-manipulation"
-                              >
-                                <Plus className="h-4 w-4 md:mr-1" />
-                                <span className="hidden md:inline ml-1">Create Goal</span>
-                                <span className="md:hidden sr-only">Create</span>
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Milestones Preview */}
-                          <div className="border-t pt-3">
-                            <h5 className="text-sm font-medium mb-2">Progressive Milestones:</h5>
-                            <div className="space-y-1">
-                              {suggestion.milestones.map((milestone: any, mIndex: number) => (
-                                <div key={mIndex} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <div className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-medium">
-                                    {mIndex + 1}
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Assessment-Driven Goal Recommendations ({suggestions.suggestions?.length || 0})
+                    </h4>
+                    <div className="space-y-4">
+                      {suggestions.suggestions.map((suggestion: GoalSuggestion, index: number) => {
+                        const isSelected = selectedSuggestions.some(s => s.targetSkill === suggestion.targetSkill);
+                        
+                        return (
+                          <Card 
+                            key={suggestion.targetSkill} 
+                            className={`transition-all duration-200 hover:shadow-md cursor-pointer ${
+                              isSelected ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary/20' : 'hover:border-primary/30'
+                            }`}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 mt-1">
+                                  <div className={`p-2 rounded-lg ${
+                                    suggestion.category === 'technical' ? 'bg-blue-100 text-blue-600' :
+                                    suggestion.category === 'tactical' ? 'bg-purple-100 text-purple-600' :
+                                    suggestion.category === 'physical' ? 'bg-green-100 text-green-600' :
+                                    'bg-orange-100 text-orange-600'
+                                  }`}>
+                                    {getDimensionalIcon(suggestion.category)}
                                   </div>
-                                  <span>{milestone.title}</span>
-                                  <span className="ml-auto">
-                                    Target: {(() => {
-                                      if (milestone.targetRating === null || milestone.targetRating === undefined) {
-                                        return 'N/A';
-                                      }
-                                      const rating = typeof milestone.targetRating === 'string' ? parseFloat(milestone.targetRating) : milestone.targetRating;
-                                      return !isNaN(rating) && rating !== null ? rating.toFixed(1) : 'N/A';
-                                    })()}
-                                  </span>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2 mb-2">
+                                    <h4 className="font-medium text-sm md:text-base leading-tight">{suggestion.title}</h4>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <Badge variant={getPriorityColor(suggestion.priority)} className="text-xs px-2 py-1 capitalize">
+                                        {suggestion.priority} Priority
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs px-2 py-1 capitalize">
+                                        {suggestion.category}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  
+                                  <p className="text-xs md:text-sm text-muted-foreground mb-3 leading-relaxed">
+                                    {suggestion.description}
+                                  </p>
+                                  
+                                  {/* Rating Improvement Visualization */}
+                                  <div className="mb-3 p-3 bg-muted/30 rounded-lg">
+                                    <div className="flex items-center justify-between text-xs mb-2">
+                                      <span className="text-muted-foreground">Current Performance</span>
+                                      <span className="text-muted-foreground">Target Performance</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex-1 bg-gray-200 rounded-full h-2.5">
+                                        <div 
+                                          className="bg-red-400 h-2.5 rounded-full transition-all duration-300"
+                                          style={{ width: `${(suggestion.currentRating / 10) * 100}%` }}
+                                        />
+                                      </div>
+                                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                      <div className="flex-1 bg-gray-200 rounded-full h-2.5">
+                                        <div 
+                                          className="bg-green-500 h-2.5 rounded-full transition-all duration-300"
+                                          style={{ width: `${(suggestion.targetRating / 10) * 100}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs mt-2">
+                                      <span className="font-medium">{suggestion.currentRating}/10</span>
+                                      <span className="font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                                        +{(suggestion.targetRating - suggestion.currentRating).toFixed(1)} improvement
+                                      </span>
+                                      <span className="font-medium">{suggestion.targetRating}/10</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Milestone Preview */}
+                                  <div className="mb-4">
+                                    <h5 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      Progressive Milestone Roadmap ({suggestion.milestones?.length || 0} steps)
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {(suggestion.milestones || []).slice(0, 3).map((milestone: any, idx: number) => (
+                                        <div key={idx} className="flex items-center gap-2 text-xs">
+                                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium ${
+                                            idx === 0 ? 'bg-blue-500' : idx === 1 ? 'bg-purple-500' : 'bg-green-500'
+                                          }`}>
+                                            {idx + 1}
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="font-medium">{milestone.title}</div>
+                                            <div className="text-muted-foreground">
+                                              Target: {(() => {
+                                                if (milestone.targetRating === null || milestone.targetRating === undefined) {
+                                                  return 'N/A';
+                                                }
+                                                const rating = typeof milestone.targetRating === 'string' ? parseFloat(milestone.targetRating) : milestone.targetRating;
+                                                return !isNaN(rating) && rating !== null ? rating.toFixed(1) : 'N/A';
+                                              })()}/10 • {milestone.description}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                      {(suggestion.milestones?.length || 0) > 3 && (
+                                        <div className="text-xs text-muted-foreground pl-8">
+                                          +{(suggestion.milestones?.length || 0) - 3} additional milestones...
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Action Buttons */}
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant={isSelected ? "default" : "outline"}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleSuggestionSelection(suggestion);
+                                      }}
+                                      className="text-xs px-3 py-1.5 h-auto"
+                                    >
+                                      {isSelected ? (
+                                        <>
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Selected
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Select Goal
+                                        </>
+                                      )}
+                                    </Button>
+                                    
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openGoalCreationForm(suggestion);
+                                      }}
+                                      className="text-xs px-3 py-1.5 h-auto text-muted-foreground hover:text-foreground"
+                                    >
+                                      <Target className="h-3 w-3 mr-1" />
+                                      Customize
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
