@@ -380,14 +380,24 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                   <div>
                     <h3 className="font-medium mb-4">4-Dimensional Performance</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(analysis.analysis.dimensionalRatings).map(([dimension, rating]) => (
+                      {Object.entries(analysis.analysis.dimensionalRatings || {}).map(([dimension, rating]) => (
                         <div key={dimension} className="text-center">
                           <div className="flex items-center justify-center gap-1 mb-2">
                             {getDimensionalIcon(dimension)}
                             <span className="text-sm font-medium capitalize">{dimension}</span>
                           </div>
                           <div className="text-2xl font-bold">
-                            {rating !== null && typeof rating === 'number' ? rating.toFixed(1) : 'N/A'}
+                            {(() => {
+                              try {
+                                if (rating !== null && rating !== undefined && typeof rating === 'number') {
+                                  return rating.toFixed(1);
+                                }
+                                return 'N/A';
+                              } catch (e) {
+                                console.error('Error formatting rating:', rating, e);
+                                return 'N/A';
+                              }
+                            })()}
                           </div>
                           <Progress value={rating !== null && typeof rating === 'number' ? rating * 10 : 0} className="h-2 mt-1" />
                         </div>
@@ -401,7 +411,7 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                   <div>
                     <h3 className="font-medium mb-4">Identified Weak Areas (&lt; 6.0)</h3>
                     <div className="space-y-3">
-                      {analysis.analysis.weakAreas.map((area: WeakArea, index: number) => (
+                      {(analysis.analysis.weakAreas || []).map((area: WeakArea, index: number) => (
                         <Card key={area.skill}>
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
@@ -454,8 +464,16 @@ export default function AssessmentGoalIntegration({ playerId = 1, showDemo = tru
                       <p className="text-blue-800">{analysis.analysis.recommendedFocus}</p>
                       <div className="mt-2 text-sm text-blue-700">
                         Improvement Potential: +{(() => {
-                          const potential = analysis.analysis.improvementPotential;
-                          return typeof potential === 'number' ? potential.toFixed(1) : '0.0';
+                          try {
+                            const potential = analysis.analysis.improvementPotential;
+                            if (potential !== null && potential !== undefined && typeof potential === 'number') {
+                              return potential.toFixed(1);
+                            }
+                            return '0.0';
+                          } catch (e) {
+                            console.error('Error formatting improvement potential:', analysis.analysis.improvementPotential, e);
+                            return '0.0';
+                          }
                         })()} points average
                       </div>
                     </CardContent>
