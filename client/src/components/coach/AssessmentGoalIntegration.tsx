@@ -636,8 +636,11 @@ function AssessmentGoalIntegrationInner({ playerId = 1, showDemo = true }: Asses
                                   <span>{milestone.title}</span>
                                   <span className="ml-auto">
                                     Target: {(() => {
+                                      if (milestone.targetRating === null || milestone.targetRating === undefined) {
+                                        return 'N/A';
+                                      }
                                       const rating = typeof milestone.targetRating === 'string' ? parseFloat(milestone.targetRating) : milestone.targetRating;
-                                      return !isNaN(rating) ? rating.toFixed(1) : 'N/A';
+                                      return !isNaN(rating) && rating !== null ? rating.toFixed(1) : 'N/A';
                                     })()}
                                   </span>
                                 </div>
