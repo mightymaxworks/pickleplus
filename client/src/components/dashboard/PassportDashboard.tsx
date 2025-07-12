@@ -41,7 +41,9 @@ import {
   Upload,
   X,
   Edit,
-  BookOpen
+  BookOpen,
+  Search,
+  Eye
 } from 'lucide-react';
 import PhotoUploadModal from '@/components/PhotoUploadModal';
 import { ComingSoonModal } from '@/components/ui/coming-soon-modal';

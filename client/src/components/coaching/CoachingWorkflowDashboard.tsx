@@ -28,7 +28,7 @@ import {
   Bell,
   Zap
 } from 'lucide-react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 interface CoachingWorkflowDashboardProps {
   userRole: 'player' | 'coach' | 'both';
@@ -36,7 +36,7 @@ interface CoachingWorkflowDashboardProps {
 }
 
 export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflowDashboardProps) {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [currentView, setCurrentView] = useState<'player' | 'coach'>(
     userRole === 'both' ? 'player' : userRole
   );
@@ -99,7 +99,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
             <Button 
               size="lg" 
               className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => navigate('/coaches')}
+              onClick={() => setLocation('/coaches')}
             >
               <Search className="h-5 w-5 mr-2" />
               Find Your Coach
@@ -110,7 +110,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
             <Button 
               size="lg" 
               className="w-full bg-green-600 hover:bg-green-700"
-              onClick={() => navigate('/sessions/upcoming')}
+              onClick={() => setLocation('/sessions/upcoming')}
             >
               <Calendar className="h-5 w-5 mr-2" />
               Join Upcoming Session
@@ -121,7 +121,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
             <Button 
               size="lg" 
               className="w-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => navigate('/feedback/latest')}
+              onClick={() => setLocation('/feedback/latest')}
             >
               <Eye className="h-5 w-5 mr-2" />
               View Your Assessment Results
@@ -155,7 +155,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
               variant="ghost" 
               size="sm" 
               className="mt-2 text-xs"
-              onClick={() => navigate('/feedback')}
+              onClick={() => setLocation('/feedback')}
             >
               View All
             </Button>
@@ -172,7 +172,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
           <Button 
             variant="outline" 
             className="w-full justify-start"
-            onClick={() => navigate('/coaches')}
+            onClick={() => setLocation('/coaches')}
           >
             <Search className="h-4 w-4 mr-2" />
             Browse All Coaches
@@ -180,7 +180,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
           <Button 
             variant="outline" 
             className="w-full justify-start"
-            onClick={() => navigate('/sessions/request')}
+            onClick={() => setLocation('/sessions/request')}
           >
             <Calendar className="h-4 w-4 mr-2" />
             Request New Session
@@ -188,7 +188,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
           <Button 
             variant="outline" 
             className="w-full justify-start"
-            onClick={() => navigate('/progress')}
+            onClick={() => setLocation('/progress')}
           >
             <TrendingUp className="h-4 w-4 mr-2" />
             View My Progress
@@ -225,7 +225,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
             <Button 
               size="lg" 
               className="w-full bg-green-600 hover:bg-green-700"
-              onClick={() => navigate('/coach/requests')}
+              onClick={() => setLocation('/coach/requests')}
             >
               <MessageSquare className="h-5 w-5 mr-2" />
               Review Student Requests ({status.coach.pendingRequests})
@@ -236,7 +236,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
             <Button 
               size="lg" 
               className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => navigate('/coach/assessment-tool')}
+              onClick={() => setLocation('/coach/assessment-tool')}
             >
               <Zap className="h-5 w-5 mr-2" />
               Start Assessment Tool
@@ -255,7 +255,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
               variant="ghost" 
               size="sm" 
               className="mt-2 text-xs"
-              onClick={() => navigate('/coach/students')}
+              onClick={() => setLocation('/coach/students')}
             >
               Manage
             </Button>
@@ -270,7 +270,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
               variant="ghost" 
               size="sm" 
               className="mt-2 text-xs"
-              onClick={() => navigate('/coach/sessions/today')}
+              onClick={() => setLocation('/coach/sessions/today')}
             >
               View Schedule
             </Button>
@@ -287,7 +287,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
           <Button 
             variant="outline" 
             className="w-full justify-start"
-            onClick={() => navigate('/coach/assessment-tool')}
+            onClick={() => setLocation('/coach/assessment-tool')}
           >
             <Zap className="h-4 w-4 mr-2" />
             PCP Assessment Tool
@@ -295,7 +295,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
           <Button 
             variant="outline" 
             className="w-full justify-start"
-            onClick={() => navigate('/coach/students')}
+            onClick={() => setLocation('/coach/students')}
           >
             <Users className="h-4 w-4 mr-2" />
             My Students
@@ -303,7 +303,7 @@ export function CoachingWorkflowDashboard({ userRole, userId }: CoachingWorkflow
           <Button 
             variant="outline" 
             className="w-full justify-start"
-            onClick={() => navigate('/coach/schedule')}
+            onClick={() => setLocation('/coach/schedule')}
           >
             <Calendar className="h-4 w-4 mr-2" />
             My Schedule

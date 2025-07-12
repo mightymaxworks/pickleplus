@@ -25,7 +25,7 @@ import {
   Users,
   Clock
 } from 'lucide-react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 interface MobileCoachingEntryProps {
   userRole: 'player' | 'coach' | 'both';
@@ -40,7 +40,7 @@ export function MobileCoachingEntry({
   nextAction,
   currentStep = 'none'
 }: MobileCoachingEntryProps) {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   // Determine primary action based on user role and current step
   const getPrimaryAction = () => {
@@ -143,7 +143,7 @@ export function MobileCoachingEntry({
         <Button 
           size="lg" 
           className={`w-full ${primaryAction.color} text-white font-medium py-3`}
-          onClick={() => navigate(primaryAction.path)}
+          onClick={() => setLocation(primaryAction.path)}
         >
           <IconComponent className="h-5 w-5 mr-2" />
           {primaryAction.text}
@@ -183,7 +183,7 @@ export function MobileCoachingEntry({
           variant="outline" 
           size="sm" 
           className="w-full mt-3 text-sm"
-          onClick={() => navigate('/complete-flow-demo')}
+          onClick={() => setLocation('/complete-flow-demo')}
         >
           View Complete Workflow Demo
         </Button>
