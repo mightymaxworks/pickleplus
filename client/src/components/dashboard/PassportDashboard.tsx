@@ -67,6 +67,7 @@ import RealTimeNotifications from '@/components/gamification/RealTimeNotificatio
 // Removed for next deployment: MobileOptimizedAchievementTracker, CommunityChallengePlatform
 import { EnhancedSocialHub } from '@/components/gamification/EnhancedSocialHub';
 import PerformanceAnalyticsDashboard from '@/components/gamification/PerformanceAnalyticsDashboard';
+import { MobileCoachingEntry } from '@/components/coaching/MobileCoachingEntry';
 
 interface PassportDashboardProps {
   onShowOnboarding?: () => void;
@@ -1334,8 +1335,12 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <Tabs defaultValue="performance" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="coaching" className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="coaching" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Coaching
+            </TabsTrigger>
             <TabsTrigger value="performance">{t('dashboard.tabs.performance')}</TabsTrigger>
             <TabsTrigger value="matches">{t('dashboard.tabs.recentMatches')}</TabsTrigger>
             <TabsTrigger value="achievements">{t('dashboard.tabs.achievements')}</TabsTrigger>
@@ -1345,6 +1350,104 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
             </TabsTrigger>
             <TabsTrigger value="community">{t('dashboard.tabs.community')}</TabsTrigger>
           </TabsList>
+          
+          {/* Coaching Tab - Primary Entry Point */}
+          <TabsContent value="coaching" className="space-y-4 mt-6">
+            <MobileCoachingEntry 
+              userRole={isCoach ? 'coach' : 'player'}
+              urgentCount={isCoach ? 2 : 1}
+              nextAction={isCoach ? 'Review 2 new session requests from students' : 'Join your session with Coach Max tomorrow at 3:00 PM'}
+              currentStep={isCoach ? 'pending_requests' : 'session_scheduled'}
+            />
+            
+            {/* Coaching Statistics */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {isCoach ? '12' : '3'}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {isCoach ? 'Total Sessions' : 'Completed Sessions'}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-green-600">
+                    {isCoach ? '4.8' : '3.3'}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {isCoach ? 'Coach Rating' : 'PCP Score'}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Quick Actions Grid */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isCoach ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => window.location.href = '/coach/students'}
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Manage My Students
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => window.location.href = '/coach/assessment-tool'}
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      PCP Assessment Tool
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => window.location.href = '/coach/schedule'}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      My Schedule & Availability
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => window.location.href = '/coaches'}
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Browse All Coaches
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => window.location.href = '/sessions/upcoming'}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      My Sessions
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => window.location.href = '/feedback'}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View My Progress
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
           
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-4 mt-6">
