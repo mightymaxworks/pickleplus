@@ -408,6 +408,16 @@ export default function App() {
                     component={lazyLoad(() => import('./pages/coach/pcp-enhanced-assessment'))}
                     pageTitle="PCP Player Assessment"
                   />
+                  <ProtectedRouteWithLayout
+                    path="/coach/students"
+                    component={lazyLoad(() => import('./pages/coach/students'))}
+                    pageTitle="My Students"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/coach/assessment-tool"
+                    component={lazyLoad(() => import('./pages/coach/assessment-tool'))}
+                    pageTitle="PCP Assessment Tool"
+                  />
                   
                   {/* Player-Coach Connection System */}
                   <ProtectedRouteWithLayout

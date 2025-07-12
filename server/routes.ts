@@ -505,6 +505,87 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
 
+  // Coach Students API - for coach dashboard
+  app.get('/api/coach/students', async (req: Request, res: Response) => {
+    try {
+      // Mock data for coach students - would be real data in production
+      const students = [
+        {
+          id: 1,
+          name: 'Sarah Johnson',
+          level: '3.5',
+          avatar: '/uploads/profiles/avatar-1-1748944092712.jpg',
+          sessionsCompleted: 8,
+          upcomingSessions: 2,
+          lastSession: '2025-07-10',
+          nextSession: '2025-07-14T15:00:00.000Z',
+          progress: 78,
+          goals: 3,
+          status: 'active',
+          improvements: ['Serve consistency', 'Net play positioning']
+        },
+        {
+          id: 2,
+          name: 'Mike Chen',
+          level: '4.0',
+          avatar: null,
+          sessionsCompleted: 12,
+          upcomingSessions: 1,
+          lastSession: '2025-07-11',
+          nextSession: '2025-07-15T10:00:00.000Z',
+          progress: 85,
+          goals: 2,
+          status: 'active',
+          improvements: ['Backhand power', 'Court positioning']
+        },
+        {
+          id: 3,
+          name: 'Emma Wilson',
+          level: '3.0',
+          avatar: null,
+          sessionsCompleted: 4,
+          upcomingSessions: 1,
+          nextSession: '2025-07-16T14:00:00.000Z',
+          lastSession: '2025-07-09',
+          progress: 45,
+          goals: 4,
+          status: 'new',
+          improvements: ['Basic stroke mechanics', 'Game understanding']
+        }
+      ];
+
+      res.json(students);
+    } catch (error) {
+      console.error('[API][CoachStudents] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch students' });
+    }
+  });
+
+  // Coach Assessment Save API
+  app.post('/api/coach/assessments', async (req: Request, res: Response) => {
+    try {
+      const { studentId, assessment } = req.body;
+      
+      console.log(`[API][Assessment] Saving assessment for student ${studentId}`);
+      
+      // In production, this would save to database
+      const savedAssessment = {
+        id: Date.now(),
+        studentId,
+        ...assessment,
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json({
+        success: true,
+        assessment: savedAssessment
+      });
+    } catch (error) {
+      console.error('[API][Assessment] Error:', error);
+      res.status(500).json({ error: 'Failed to save assessment' });
+    }
+  });
+
   console.log('[API] Critical user flow endpoints registered: /register, /login, /sessions/request');
   
   // Match History API Endpoints - Removed duplicate, using enhanced version below
