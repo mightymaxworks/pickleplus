@@ -564,6 +564,62 @@ export default function CompleteFlowDemoPage() {
                   </p>
                 </div>
 
+                {/* PCP Assessment Tool Integration */}
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    🏓 PCP 4-Dimensional Assessment Tool Used
+                  </h4>
+                  <p className="text-blue-700 text-sm mb-3">
+                    Coach Max used the integrated PCP assessment tool during the session to evaluate Sarah's performance across all four dimensions:
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                      <div className="text-lg font-bold text-blue-600">3.2/5.0</div>
+                      <div className="text-xs text-blue-700">Technical (40%)</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                      <div className="text-lg font-bold text-purple-600">3.5/5.0</div>
+                      <div className="text-xs text-purple-700">Tactical (25%)</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                      <div className="text-lg font-bold text-orange-600">3.0/5.0</div>
+                      <div className="text-xs text-orange-700">Physical (20%)</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                      <div className="text-lg font-bold text-green-600">3.8/5.0</div>
+                      <div className="text-xs text-green-700">Mental (15%)</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <div className="text-sm text-blue-700">
+                      <strong>Overall PCP Rating:</strong> <span className="font-bold">3.3/5.0</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assessment Tool Workflow */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <h5 className="font-semibold mb-3">📋 Assessment Tool Workflow</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span>Coach accessed the PCP assessment tool during session</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span>Real-time evaluation across 4 dimensions with weighted scoring</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span>Automatic calculation of overall PCP rating and recommendations</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>Detailed feedback generated and saved to student's profile</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <h4 className="font-semibold mb-3">Coach's Session Notes</h4>
@@ -678,10 +734,42 @@ export default function CompleteFlowDemoPage() {
                   </TabsList>
                   
                   <TabsContent value="feedback" className="space-y-4">
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <h5 className="font-semibold mb-3 flex items-center gap-2 text-blue-800">
+                        🏓 Your PCP Assessment Results
+                      </h5>
+                      <p className="text-blue-700 text-sm mb-3">
+                        Your coach used the PCP 4-dimensional assessment tool to evaluate your skills. Here are your detailed results:
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                          <div className="text-lg font-bold text-blue-600">3.2/5.0</div>
+                          <div className="text-xs text-blue-700">Technical (40%)</div>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                          <div className="text-lg font-bold text-purple-600">3.5/5.0</div>
+                          <div className="text-xs text-purple-700">Tactical (25%)</div>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                          <div className="text-lg font-bold text-orange-600">3.0/5.0</div>
+                          <div className="text-xs text-orange-700">Physical (20%)</div>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-blue-200 text-center">
+                          <div className="text-lg font-bold text-green-600">3.8/5.0</div>
+                          <div className="text-xs text-green-700">Mental (15%)</div>
+                        </div>
+                      </div>
+                      <div className="text-center bg-white p-3 rounded border border-blue-200">
+                        <div className="text-sm text-blue-700">
+                          <strong>Your Overall PCP Rating:</strong> <span className="text-lg font-bold">3.3/5.0</span>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="bg-white p-4 rounded-lg border">
                       <h5 className="font-semibold mb-3 flex items-center gap-2">
                         <MessageSquare className="h-4 w-4 text-blue-600" />
-                        Your Assessment Results
+                        Coach's Detailed Feedback
                       </h5>
                       <div className="text-sm whitespace-pre-wrap bg-gray-50 p-3 rounded">
                         {mockCompletedSession.feedbackForStudent}
@@ -770,8 +858,32 @@ export default function CompleteFlowDemoPage() {
                   </TabsContent>
                 </Tabs>
 
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h5 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+                    🔄 Assessment Tool Integration Flow
+                  </h5>
+                  <div className="space-y-2 text-sm text-purple-700">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span>Coach uses PCP assessment tool during session</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span>Assessment data automatically saved to student profile</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>Student can access their assessment results anytime</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span>Progress tracking and development recommendations generated</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border">
-                  <h4 className="font-semibold text-center mb-4">🎉 Complete Coach-Student Ecosystem</h4>
+                  <h4 className="font-semibold text-center mb-4">🎉 Complete Coach-Student Ecosystem with PCP Assessment Integration</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div className="flex flex-col items-center">
                       <div className="p-3 bg-green-100 rounded-full mb-2">
