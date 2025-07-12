@@ -245,6 +245,7 @@ export default function App() {
                   <Route path="/sage-demo" component={SageDemoPage} />
                   <Route path="/sprint4-demo" component={lazyLoad(() => import('./pages/Sprint4DemoPage'))} />
                   <Route path="/session-management-demo" component={lazyLoad(() => import('./pages/SessionManagementDemoPage'))} />
+                  <Route path="/complete-flow-demo" component={lazyLoad(() => import('./pages/CompleteFlowDemoPage'))} />
                   <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} />
                   
                   {/* QR Code Scanning Pages */}
