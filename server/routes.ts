@@ -3607,6 +3607,105 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // Admin: Search users for group card creation
+  app.get('/api/admin/users/search', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsers(query);
+      res.json(users);
+    } catch (error) {
+      console.error('[ChargeCard] Error searching users:', error);
+      res.status(500).json({ error: 'Failed to search users' });
+    }
+  });
+
+  // Admin: Create group card with direct user allocation
+  app.post('/api/admin/charge-cards/create-group', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { groupName, users } = req.body;
+      
+      if (!groupName || !users || users.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Group name and users are required'
+        });
+      }
+      
+      // Validate user data
+      for (const user of users) {
+        if (!user.userId || !user.amount || user.amount <= 0) {
+          return res.status(400).json({
+            success: false,
+            error: 'All users must have valid user ID and positive amount'
+          });
+        }
+      }
+      
+      // Create group card purchase record
+      const groupPurchase = await storage.createChargeCardPurchase({
+        purchaseType: 'group_card_admin',
+        organizerId: req.user?.id || 1,
+        paymentDetails: JSON.stringify({
+          groupName,
+          adminCreated: true,
+          createdBy: req.user?.id || 1,
+          users: users.map(u => ({
+            userId: u.userId,
+            amount: u.amount / 100, // Convert back to dollars for storage
+            username: u.username,
+            firstName: u.firstName,
+            lastName: u.lastName
+          }))
+        }),
+        isGroupPurchase: true,
+        totalAmount: users.reduce((sum: number, u: any) => sum + u.amount, 0) / 100, // Convert to dollars
+        status: 'completed' // Admin-created group cards are automatically completed
+      });
+      
+      // Allocate credits to each user
+      const allocations = [];
+      for (const user of users) {
+        const allocation = await storage.createChargeCardAllocation({
+          purchaseId: groupPurchase.id,
+          userId: user.userId,
+          amount: user.amount, // Already in cents
+          allocatedBy: req.user?.id || 1,
+          notes: `Admin-created group card: ${groupName}`
+        });
+        
+        // Add credits to user balance
+        await storage.addChargeCardCredits(
+          user.userId,
+          user.amount, // Already in cents
+          `Group card allocation: ${groupName}`,
+          groupPurchase.id
+        );
+        
+        allocations.push(allocation);
+      }
+      
+      res.json({
+        success: true,
+        message: `Group card "${groupName}" created successfully`,
+        groupPurchase,
+        allocations,
+        totalUsers: users.length,
+        totalAmount: users.reduce((sum: number, u: any) => sum + u.amount, 0) / 100
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error creating group card:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to create group card' 
+      });
+    }
+  });
+
   console.log('[API] Charge Card system routes registered');
 
   // PKL-278651-NOTIF-0001 - Notifications System

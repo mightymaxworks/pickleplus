@@ -39,6 +39,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ChargeCardPurchase {
   id: number;
@@ -327,6 +328,7 @@ const ChargeCardAdminDashboard: React.FC = () => {
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
           <TabsTrigger value="pending">Pending Payments</TabsTrigger>
+          <TabsTrigger value="create-group">Create Group Card</TabsTrigger>
           <TabsTrigger value="balances">User Balances</TabsTrigger>
           <TabsTrigger value="transactions">Transaction History</TabsTrigger>
         </TabsList>
@@ -416,6 +418,11 @@ const ChargeCardAdminDashboard: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Create Group Card Tab */}
+        <TabsContent value="create-group" className="space-y-4">
+          <GroupCardCreationInterface />
         </TabsContent>
 
         {/* User Balances Tab */}
@@ -655,6 +662,244 @@ const ChargeCardAdminDashboard: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+  );
+};
+
+// Group Card Creation Interface Component
+const GroupCardCreationInterface: React.FC = () => {
+  const [groupName, setGroupName] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [userAmounts, setUserAmounts] = useState<{[key: number]: string}>({});
+  const [isCreating, setIsCreating] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Query for user search
+  const { data: searchResults = [], isLoading: searchLoading } = useQuery({
+    queryKey: ['admin-users-search', searchTerm],
+    queryFn: async () => {
+      if (!searchTerm || searchTerm.length < 2) return [];
+      const response = await apiRequest('GET', `/api/admin/users/search?q=${encodeURIComponent(searchTerm)}`);
+      return response.json();
+    },
+    enabled: searchTerm.length >= 2
+  });
+
+  const handleUserSelect = (user: any) => {
+    if (!selectedUsers.find(u => u.id === user.id)) {
+      setSelectedUsers([...selectedUsers, user]);
+      setUserAmounts({...userAmounts, [user.id]: '0'});
+    }
+  };
+
+  const handleRemoveUser = (userId: number) => {
+    setSelectedUsers(selectedUsers.filter(u => u.id !== userId));
+    const newAmounts = {...userAmounts};
+    delete newAmounts[userId];
+    setUserAmounts(newAmounts);
+  };
+
+  const handleAmountChange = (userId: number, amount: string) => {
+    setUserAmounts({...userAmounts, [userId]: amount});
+  };
+
+  const handleCreateGroupCard = async () => {
+    if (!groupName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a group name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (selectedUsers.length === 0) {
+      toast({
+        title: "Error", 
+        description: "Please add at least one user to the group",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate all amounts
+    const invalidAmounts = selectedUsers.filter(user => 
+      !userAmounts[user.id] || parseFloat(userAmounts[user.id]) <= 0
+    );
+    
+    if (invalidAmounts.length > 0) {
+      toast({
+        title: "Error",
+        description: "Please enter valid amounts for all users",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const groupData = {
+        groupName,
+        users: selectedUsers.map(user => ({
+          userId: user.id,
+          amount: parseFloat(userAmounts[user.id]) * 100, // Convert to cents
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName
+        }))
+      };
+
+      const response = await apiRequest('POST', '/api/admin/charge-cards/create-group', groupData);
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Group card "${groupName}" created successfully with ${selectedUsers.length} users`,
+        });
+        
+        // Reset form
+        setGroupName('');
+        setSelectedUsers([]);
+        setUserAmounts({});
+        setSearchTerm('');
+        
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ['admin-charge-cards'] });
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to create group card",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create group card",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const totalAmount = selectedUsers.reduce((sum, user) => {
+    const amount = parseFloat(userAmounts[user.id] || '0');
+    return sum + amount;
+  }, 0);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Create Group Charge Card</CardTitle>
+        <CardDescription>
+          Create a group charge card and allocate credits to multiple users at once
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Group Name */}
+        <div>
+          <Label htmlFor="groupName">Group Name</Label>
+          <Input
+            id="groupName"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="Enter group name (e.g., 'Weekly Training Group')"
+          />
+        </div>
+
+        {/* User Search */}
+        <div>
+          <Label htmlFor="userSearch">Search Users</Label>
+          <Input
+            id="userSearch"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search users by name or username..."
+          />
+          
+          {searchLoading && (
+            <div className="mt-2 text-sm text-muted-foreground">Searching...</div>
+          )}
+          
+          {searchResults.length > 0 && (
+            <div className="mt-2 max-h-40 overflow-y-auto border rounded-md">
+              {searchResults.map((user: any) => (
+                <div
+                  key={user.id}
+                  className="p-2 hover:bg-muted cursor-pointer flex items-center justify-between"
+                  onClick={() => handleUserSelect(user)}
+                >
+                  <div>
+                    <p className="font-medium">{user.firstName} {user.lastName}</p>
+                    <p className="text-sm text-muted-foreground">@{user.username}</p>
+                  </div>
+                  <Button size="sm" variant="ghost">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Selected Users */}
+        {selectedUsers.length > 0 && (
+          <div>
+            <Label>Selected Users ({selectedUsers.length})</Label>
+            <div className="space-y-3 mt-2">
+              {selectedUsers.map((user) => (
+                <div key={user.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium">{user.firstName} {user.lastName}</p>
+                    <p className="text-sm text-muted-foreground">@{user.username}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor={`amount-${user.id}`} className="text-sm">$</Label>
+                    <Input
+                      id={`amount-${user.id}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={userAmounts[user.id] || ''}
+                      onChange={(e) => handleAmountChange(user.id, e.target.value)}
+                      placeholder="0.00"
+                      className="w-24"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRemoveUser(user.id)}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Total Amount */}
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Amount:</span>
+                <span className="text-lg font-bold">${totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Button */}
+        <Button
+          onClick={handleCreateGroupCard}
+          disabled={isCreating || selectedUsers.length === 0 || !groupName.trim()}
+          className="w-full"
+        >
+          {isCreating ? 'Creating Group Card...' : `Create Group Card (${selectedUsers.length} users)`}
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -623,6 +623,25 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  async searchUsers(query: string): Promise<User[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    
+    const results = await db.select()
+      .from(users)
+      .where(
+        or(
+          sql`LOWER(${users.username}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.firstName}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.lastName}) LIKE ${searchTerm}`,
+          sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchTerm}`
+        )
+      )
+      .limit(15)
+      .orderBy(users.firstName, users.lastName);
+    
+    return results;
+  }
+
 
 
   // Password reset operations - implemented as memory store for now
