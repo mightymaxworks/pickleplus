@@ -46,5 +46,4 @@ export const ChargeCardAdminNavItem: React.FC = () => {
   return null;
 };
 
-// Auto-execute when this module is imported
-registerChargeCardAdminNav();
+// Note: Registration is handled by the component registration service
