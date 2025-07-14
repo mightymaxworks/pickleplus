@@ -3172,6 +3172,20 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  async createChargeCardAllocation(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO charge_card_allocations (purchase_id, user_id, allocated_amount)
+        VALUES (${data.purchaseId}, ${data.userId}, ${data.amount})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error creating allocation:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
