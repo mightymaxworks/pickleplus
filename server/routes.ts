@@ -3314,6 +3314,245 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
 
   console.log('[API] PCP Assessment Analysis routes registered');
 
+  // ===== CHARGE CARD SYSTEM ROUTES - ADMIN-CONTROLLED MANUAL ALLOCATION =====
+  
+  // Admin access check middleware
+  const checkChargeCardAccess = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      const userEmail = req.user?.email;
+      
+      if (!userId) {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Authentication required' 
+        });
+      }
+      
+      // Check if user has admin access or is the specific membership administrator
+      const hasAccess = await storage.hasChargeCardAccess(userId);
+      const isMembershipAdmin = userEmail === 'hannahesthertanshuen@gmail.com';
+      
+      if (!hasAccess && !isMembershipAdmin) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Access denied. Charge card management requires admin privileges.' 
+        });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('[ChargeCard] Access check error:', error);
+      res.status(500).json({ success: false, error: 'Access verification failed' });
+    }
+  };
+
+  // Submit offline payment for processing (anyone can submit)
+  app.post('/api/charge-cards/purchase', async (req: Request, res: Response) => {
+    try {
+      const { purchaseType, paymentDetails, isGroupPurchase } = req.body;
+      const userId = req.user?.id || 1; // Default to test user
+      
+      // Create purchase request
+      const purchase = await storage.createChargeCardPurchase({
+        purchaseType,
+        organizerId: userId,
+        paymentDetails: JSON.stringify(paymentDetails),
+        isGroupPurchase: Boolean(isGroupPurchase)
+      });
+      
+      res.json({
+        success: true,
+        message: 'Payment submission received. Admin will process and allocate credits.',
+        purchase: {
+          id: purchase.id,
+          status: purchase.status,
+          submittedAt: purchase.created_at
+        }
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error creating purchase:', error);
+      res.status(500).json({ success: false, error: 'Failed to submit payment' });
+    }
+  });
+
+  // Get all pending purchases (admin only)
+  app.get('/api/charge-cards/purchases', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { status } = req.query;
+      const purchases = await storage.getChargeCardPurchases(status as string);
+      
+      res.json({
+        success: true,
+        purchases
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching purchases:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch purchases' });
+    }
+  });
+
+  // Process payment and allocate credits manually (admin only)
+  app.post('/api/charge-cards/purchases/:id/process', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { totalAmount, allocations } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (!allocations || !Array.isArray(allocations)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Allocations array required' 
+        });
+      }
+      
+      // Process the purchase
+      await storage.processChargeCardPurchase(parseInt(id), adminId, totalAmount);
+      
+      // Create allocations and distribute credits
+      const allocationResults = await storage.createChargeCardAllocations(parseInt(id), allocations);
+      
+      res.json({
+        success: true,
+        message: `Payment processed and credits allocated to ${allocations.length} users`,
+        allocations: allocationResults
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error processing purchase:', error);
+      res.status(500).json({ success: false, error: 'Failed to process payment' });
+    }
+  });
+
+  // Get user charge card balance
+  app.get('/api/charge-cards/balance', async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id || 1; // Default to test user
+      const balance = await storage.getUserChargeCardBalance(userId);
+      
+      res.json({
+        success: true,
+        balance: balance || { 
+          userId,
+          balance: 0,
+          last_updated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching balance:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch balance' });
+    }
+  });
+
+  // Get user transaction history
+  app.get('/api/charge-cards/transactions', async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id || 1; // Default to test user
+      const transactions = await storage.getChargeCardTransactions(userId);
+      
+      res.json({
+        success: true,
+        transactions
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching transactions:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch transactions' });
+    }
+  });
+
+  // Add credits manually (admin only)
+  app.post('/api/charge-cards/add-credits', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { userId, amount, description } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (!userId || !amount || amount <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Valid userId and positive amount required' 
+        });
+      }
+      
+      await storage.addChargeCardCredits(
+        userId,
+        Math.round(amount * 100), // Convert to cents
+        description || 'Manual admin credit allocation',
+        adminId
+      );
+      
+      res.json({
+        success: true,
+        message: `Added $${amount} to user ${userId}'s charge card balance`
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error adding credits:', error);
+      res.status(500).json({ success: false, error: 'Failed to add credits' });
+    }
+  });
+
+  // Enable charge card access for user (admin only)
+  app.post('/api/charge-cards/enable-access', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (!userId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'userId required' 
+        });
+      }
+      
+      await storage.enableChargeCardAccess(userId, adminId);
+      
+      res.json({
+        success: true,
+        message: `Charge card access enabled for user ${userId}`
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error enabling access:', error);
+      res.status(500).json({ success: false, error: 'Failed to enable access' });
+    }
+  });
+
+  // Deduct credits (for lesson payments)
+  app.post('/api/charge-cards/deduct', async (req: Request, res: Response) => {
+    try {
+      const { amount, description, referenceId } = req.body;
+      const userId = req.user?.id || 1; // Default to test user
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Valid positive amount required'
+        });
+      }
+      
+      const success = await storage.deductChargeCardCredits(
+        userId,
+        Math.round(amount * 100), // Convert to cents
+        description || 'Lesson payment',
+        referenceId
+      );
+      
+      if (!success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient funds'
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Payment processed successfully'
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error deducting credits:', error);
+      res.status(500).json({ success: false, error: 'Failed to process payment' });
+    }
+  });
+
+  console.log('[API] Charge Card system routes registered');
+
   // PKL-278651-NOTIF-0001 - Notifications System
   app.use('/api/notifications', notificationsRoutes);
   console.log('[API] Notifications system routes registered');
@@ -3940,6 +4179,193 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
       });
     }
   });
+
+  console.log('[API] Session Management routes registered');
+
+  // Create an HTTP server but don't start listening yet, as this will be handled in index.ts
+  // Profile completion status check
+  app.get('/api/user/profile-completion-status', async (req: Request, res: Response) => {
+    try {
+      const { status } = req.query;
+      const purchases = await storage.getChargeCardPurchases(status as string);
+      
+      res.json({
+        success: true,
+        purchases
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching purchases:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch purchases' });
+    }
+  });
+
+  // Process payment and allocate credits manually (admin only)
+  app.post('/api/charge-cards/purchases/:id/process', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { totalAmount, allocations } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (!allocations || !Array.isArray(allocations)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Allocations array required' 
+        });
+      }
+      
+      // Process the purchase
+      await storage.processChargeCardPurchase(parseInt(id), adminId, totalAmount);
+      
+      // Create allocations and distribute credits
+      const allocationResults = await storage.createChargeCardAllocations(parseInt(id), allocations);
+      
+      res.json({
+        success: true,
+        message: `Payment processed and credits allocated to ${allocations.length} users`,
+        allocations: allocationResults
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error processing purchase:', error);
+      res.status(500).json({ success: false, error: 'Failed to process payment' });
+    }
+  });
+
+  // Get user charge card balance
+  app.get('/api/charge-cards/balance', async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id || 1;
+      const balance = await storage.getUserChargeCardBalance(userId);
+      
+      res.json({
+        success: true,
+        balance: {
+          currentBalance: balance.current_balance,
+          totalCredits: balance.total_credits,
+          totalSpent: balance.total_spent,
+          lastUpdated: balance.last_updated
+        }
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching balance:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch balance' });
+    }
+  });
+
+  // Get user transaction history
+  app.get('/api/charge-cards/transactions', async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id || 1;
+      const transactions = await storage.getChargeCardTransactions(userId);
+      
+      res.json({
+        success: true,
+        transactions: transactions.map(t => ({
+          id: t.id,
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          date: t.created_at,
+          referenceType: t.reference_type
+        }))
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching transactions:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch transactions' });
+    }
+  });
+
+  // Manual credit allocation by admin (admin only)
+  app.post('/api/charge-cards/allocate-credits', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { userId, amount, description } = req.body;
+      
+      if (!userId || !amount || amount <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Valid user ID and positive amount required' 
+        });
+      }
+      
+      await storage.addChargeCardCredits(
+        userId, 
+        Math.round(amount * 100), // Convert to cents
+        description || 'Manual credit allocation',
+        null
+      );
+      
+      res.json({
+        success: true,
+        message: `Credits allocated successfully to user ${userId}`
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error allocating credits:', error);
+      res.status(500).json({ success: false, error: 'Failed to allocate credits' });
+    }
+  });
+
+  // Enable charge card access for a user (admin only)
+  app.post('/api/charge-cards/enable-access', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (!userId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'User ID required' 
+        });
+      }
+      
+      await storage.enableChargeCardAccess(userId, adminId);
+      
+      res.json({
+        success: true,
+        message: `Charge card access enabled for user ${userId}`
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error enabling access:', error);
+      res.status(500).json({ success: false, error: 'Failed to enable access' });
+    }
+  });
+
+  // Deduct credits for lesson payment
+  app.post('/api/charge-cards/deduct', async (req: Request, res: Response) => {
+    try {
+      const { amount, description, referenceId } = req.body;
+      const userId = req.user?.id || 1;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Valid amount required' 
+        });
+      }
+      
+      const success = await storage.deductChargeCardCredits(
+        userId,
+        Math.round(amount * 100), // Convert to cents
+        description || 'Lesson payment',
+        referenceId
+      );
+      
+      if (!success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient funds'
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Payment processed successfully'
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error deducting credits:', error);
+      res.status(500).json({ success: false, error: 'Failed to process payment' });
+    }
+  });
+
+  console.log('[API] Charge Card system routes registered');
 
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
   const server = http.createServer(app);

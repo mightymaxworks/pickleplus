@@ -117,6 +117,116 @@ import {
 
 // XP system schema imports temporarily removed for deployment fix
 
+// Charge card system schema (PKL-278651-CHARGE-CARD - Charge Card Payment System)
+export const chargeCardPurchases = pgTable('charge_card_purchases', {
+  id: serial('id').primaryKey(),
+  purchaseType: varchar('purchase_type', { length: 20 }).notNull(), // 'individual' or 'group'
+  organizerId: integer('organizer_id').references(() => users.id).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'), // 'pending', 'processed', 'cancelled'
+  paymentDetails: text('payment_details'), // offline payment info
+  totalAmount: integer('total_amount'), // admin-entered total amount in cents
+  isGroupPurchase: boolean('is_group_purchase').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  processedAt: timestamp('processed_at'),
+  processedBy: integer('processed_by').references(() => users.id),
+});
+
+export const chargeCardAllocations = pgTable('charge_card_allocations', {
+  id: serial('id').primaryKey(),
+  purchaseId: integer('purchase_id').references(() => chargeCardPurchases.id).notNull(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  allocatedAmount: integer('allocated_amount').notNull(), // admin-allocated amount in cents
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const chargeCardBalances = pgTable('charge_card_balances', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  currentBalance: integer('current_balance').notNull().default(0), // in cents
+  totalCredits: integer('total_credits').notNull().default(0), // lifetime credits in cents
+  totalSpent: integer('total_spent').notNull().default(0), // lifetime spent in cents
+  lastUpdated: timestamp('last_updated').defaultNow(),
+});
+
+export const chargeCardTransactions = pgTable('charge_card_transactions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  type: varchar('type', { length: 20 }).notNull(), // 'credit' or 'debit'
+  amount: integer('amount').notNull(), // in cents
+  description: text('description'),
+  referenceId: integer('reference_id'), // purchase_id for credits, lesson_id for debits
+  referenceType: varchar('reference_type', { length: 50 }), // 'charge_card_purchase', 'lesson_payment', etc.
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Add feature flags for access control
+export const userFeatureFlags = pgTable('user_feature_flags', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  featureName: varchar('feature_name', { length: 100 }).notNull(), // 'charge_cards'
+  isEnabled: boolean('is_enabled').notNull().default(false),
+  enabledBy: integer('enabled_by').references(() => users.id),
+  enabledAt: timestamp('enabled_at').defaultNow(),
+});
+
+// Relations for charge card system
+export const chargeCardPurchasesRelations = relations(chargeCardPurchases, ({ one, many }) => ({
+  organizer: one(users, {
+    fields: [chargeCardPurchases.organizerId],
+    references: [users.id],
+  }),
+  processor: one(users, {
+    fields: [chargeCardPurchases.processedBy],
+    references: [users.id],
+  }),
+  allocations: many(chargeCardAllocations),
+}));
+
+export const chargeCardAllocationsRelations = relations(chargeCardAllocations, ({ one }) => ({
+  purchase: one(chargeCardPurchases, {
+    fields: [chargeCardAllocations.purchaseId],
+    references: [chargeCardPurchases.id],
+  }),
+  user: one(users, {
+    fields: [chargeCardAllocations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const chargeCardBalancesRelations = relations(chargeCardBalances, ({ one }) => ({
+  user: one(users, {
+    fields: [chargeCardBalances.userId],
+    references: [users.id],
+  }),
+}));
+
+export const chargeCardTransactionsRelations = relations(chargeCardTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [chargeCardTransactions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Zod schemas for charge card system
+export const insertChargeCardPurchaseSchema = createInsertSchema(chargeCardPurchases);
+export const insertChargeCardAllocationSchema = createInsertSchema(chargeCardAllocations);
+export const insertChargeCardBalanceSchema = createInsertSchema(chargeCardBalances);
+export const insertChargeCardTransactionSchema = createInsertSchema(chargeCardTransactions);
+export const insertUserFeatureFlagSchema = createInsertSchema(userFeatureFlags);
+
+// Types for charge card system
+export type ChargeCardPurchase = typeof chargeCardPurchases.$inferSelect;
+export type InsertChargeCardPurchase = z.infer<typeof insertChargeCardPurchaseSchema>;
+export type ChargeCardAllocation = typeof chargeCardAllocations.$inferSelect;
+export type InsertChargeCardAllocation = z.infer<typeof insertChargeCardAllocationSchema>;
+export type ChargeCardBalance = typeof chargeCardBalances.$inferSelect;
+export type InsertChargeCardBalance = z.infer<typeof insertChargeCardBalanceSchema>;
+export type ChargeCardTransaction = typeof chargeCardTransactions.$inferSelect;
+export type InsertChargeCardTransaction = z.infer<typeof insertChargeCardTransactionSchema>;
+export type UserFeatureFlag = typeof userFeatureFlags.$inferSelect;
+export type InsertUserFeatureFlag = z.infer<typeof insertUserFeatureFlagSchema>;
+
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {
   apiDeveloperAccounts,

@@ -4,7 +4,8 @@ import {
   matches, type Match, type InsertMatch,
   tournaments,
   type XpTransaction, type InsertXpTransaction,
-  activities, type InsertActivity
+  activities, type InsertActivity,
+  chargeCardPurchases, chargeCardAllocations, chargeCardBalances, chargeCardTransactions, userFeatureFlags
 } from "@shared/schema";
 
 // Define coach types directly since they're not exported from schema yet
@@ -299,6 +300,19 @@ export interface IStorage extends CommunityStorage {
   // Match History operations - Sprint 1: Foundation
   getUserMatchHistory(userId: number, filterType: string, filterPeriod: string): Promise<any[]>;
   getUserMatchStatistics(userId: number, filterPeriod: string): Promise<any>;
+  
+  // Charge Card operations - Admin-controlled charge card system
+  createChargeCardPurchase(data: any): Promise<any>;
+  getChargeCardPurchases(status?: string): Promise<any[]>;
+  getChargeCardPurchase(id: number): Promise<any>;
+  processChargeCardPurchase(id: number, processedBy: number, totalAmount: number): Promise<any>;
+  createChargeCardAllocations(purchaseId: number, allocations: Array<{userId: number, amount: number}>): Promise<any[]>;
+  getUserChargeCardBalance(userId: number): Promise<any>;
+  addChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<void>;
+  deductChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<boolean>;
+  getChargeCardTransactions(userId: number): Promise<any[]>;
+  hasChargeCardAccess(userId: number): Promise<boolean>;
+  enableChargeCardAccess(userId: number, enabledBy: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2882,6 +2896,219 @@ export class DatabaseStorage implements IStorage {
           last30Days: { matches: 0, winRate: 0 }
         }
       };
+    }
+  }
+
+  // Charge Card operations implementation
+  async createChargeCardPurchase(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO charge_card_purchases (purchase_type, organizer_id, payment_details, is_group_purchase)
+        VALUES (${data.purchaseType}, ${data.organizerId}, ${data.paymentDetails}, ${data.isGroupPurchase})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error creating purchase:', error);
+      throw error;
+    }
+  }
+
+  async getChargeCardPurchases(status?: string): Promise<any[]> {
+    try {
+      const statusFilter = status ? sql`WHERE status = ${status}` : sql``;
+      const result = await db.execute(sql`
+        SELECT cp.*, u.username as organizer_username, u.first_name, u.last_name
+        FROM charge_card_purchases cp
+        JOIN users u ON cp.organizer_id = u.id
+        ${statusFilter}
+        ORDER BY cp.created_at DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching purchases:', error);
+      return [];
+    }
+  }
+
+  async getChargeCardPurchase(id: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT cp.*, u.username as organizer_username, u.first_name, u.last_name
+        FROM charge_card_purchases cp
+        JOIN users u ON cp.organizer_id = u.id
+        WHERE cp.id = ${id}
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching purchase:', error);
+      return null;
+    }
+  }
+
+  async processChargeCardPurchase(id: number, processedBy: number, totalAmount: number): Promise<any> {
+    try {
+      const [purchase] = await db.execute(sql`
+        UPDATE charge_card_purchases 
+        SET status = 'processed', total_amount = ${totalAmount}, processed_by = ${processedBy}, processed_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      return purchase;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error processing purchase:', error);
+      throw error;
+    }
+  }
+
+  async createChargeCardAllocations(purchaseId: number, allocations: Array<{userId: number, amount: number}>): Promise<any[]> {
+    try {
+      const results = [];
+      for (const allocation of allocations) {
+        const [result] = await db.execute(sql`
+          INSERT INTO charge_card_allocations (purchase_id, user_id, allocated_amount)
+          VALUES (${purchaseId}, ${allocation.userId}, ${allocation.amount})
+          RETURNING *
+        `);
+        results.push(result);
+        
+        // Add credits to user balance
+        await this.addChargeCardCredits(allocation.userId, allocation.amount, `Charge card allocation from purchase #${purchaseId}`, purchaseId);
+      }
+      return results;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error creating allocations:', error);
+      throw error;
+    }
+  }
+
+  async getUserChargeCardBalance(userId: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM charge_card_balances WHERE user_id = ${userId}
+      `);
+      
+      if (result.rows.length === 0) {
+        // Create initial balance record
+        const newBalanceResult = await db.execute(sql`
+          INSERT INTO charge_card_balances (user_id, current_balance, total_credits, total_spent)
+          VALUES (${userId}, 0, 0, 0)
+          RETURNING *
+        `);
+        return newBalanceResult.rows[0];
+      }
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error getting balance:', error);
+      return { current_balance: 0, total_credits: 0, total_spent: 0 };
+    }
+  }
+
+  async addChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<void> {
+    try {
+      // Add transaction record
+      await db.execute(sql`
+        INSERT INTO charge_card_transactions (user_id, type, amount, description, reference_id, reference_type)
+        VALUES (${userId}, 'credit', ${amount}, ${description}, ${referenceId}, 'charge_card_purchase')
+      `);
+
+      // Update balance
+      await db.execute(sql`
+        INSERT INTO charge_card_balances (user_id, current_balance, total_credits, total_spent, last_updated)
+        VALUES (${userId}, ${amount}, ${amount}, 0, NOW())
+        ON CONFLICT (user_id) DO UPDATE SET
+          current_balance = charge_card_balances.current_balance + ${amount},
+          total_credits = charge_card_balances.total_credits + ${amount},
+          last_updated = NOW()
+      `);
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error adding credits:', error);
+      throw error;
+    }
+  }
+
+  async deductChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<boolean> {
+    try {
+      const balance = await this.getUserChargeCardBalance(userId);
+      
+      if (balance.current_balance < amount) {
+        return false; // Insufficient funds
+      }
+
+      // Add transaction record
+      await db.execute(sql`
+        INSERT INTO charge_card_transactions (user_id, type, amount, description, reference_id, reference_type)
+        VALUES (${userId}, 'debit', ${amount}, ${description}, ${referenceId}, 'lesson_payment')
+      `);
+
+      // Update balance
+      await db.execute(sql`
+        UPDATE charge_card_balances 
+        SET current_balance = current_balance - ${amount},
+            total_spent = total_spent + ${amount},
+            last_updated = NOW()
+        WHERE user_id = ${userId}
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error deducting credits:', error);
+      return false;
+    }
+  }
+
+  async getChargeCardTransactions(userId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM charge_card_transactions 
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching transactions:', error);
+      return [];
+    }
+  }
+
+  async hasChargeCardAccess(userId: number): Promise<boolean> {
+    try {
+      // Check if user has charge card access feature flag
+      const result = await db.execute(sql`
+        SELECT * FROM user_feature_flags 
+        WHERE user_id = ${userId} AND feature_name = 'charge_cards' AND is_enabled = true
+      `);
+      
+      if (result.rows.length > 0) {
+        return true;
+      }
+
+      // Check if user is the membership administrator
+      const userResult = await db.execute(sql`
+        SELECT * FROM users WHERE id = ${userId} AND email = 'hannahesthertanshuen@gmail.com'
+      `);
+      
+      return userResult.rows.length > 0;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error checking access:', error);
+      return false;
+    }
+  }
+
+  async enableChargeCardAccess(userId: number, enabledBy: number): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO user_feature_flags (user_id, feature_name, is_enabled, enabled_by)
+        VALUES (${userId}, 'charge_cards', true, ${enabledBy})
+        ON CONFLICT (user_id, feature_name) DO UPDATE SET
+          is_enabled = true,
+          enabled_by = ${enabledBy},
+          enabled_at = NOW()
+      `);
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error enabling access:', error);
+      throw error;
     }
   }
 }
