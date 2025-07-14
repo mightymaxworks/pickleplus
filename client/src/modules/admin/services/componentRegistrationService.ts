@@ -127,8 +127,17 @@ export function registerSystemToolsComponents() {
  * PKL-278651-CHARGE-CARD-ADMIN
  */
 export function registerChargeCardComponents() {
-  // Just importing the module is enough since it auto-registers
-  console.log('[Admin] Charge card components registered');
+  try {
+    // Import and register the charge card navigation item
+    import('../components/charge-cards/ChargeCardAdminNavItem').then(({ registerChargeCardAdminNav }) => {
+      registerChargeCardAdminNav();
+      console.log('[Admin] Charge card components registered successfully');
+    }).catch(error => {
+      console.error('[Admin] Error registering charge card components:', error);
+    });
+  } catch (error) {
+    console.error('[Admin] Error registering charge card components:', error);
+  }
 }
 
 /**
