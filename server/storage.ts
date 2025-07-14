@@ -311,6 +311,8 @@ export interface IStorage extends CommunityStorage {
   addChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<void>;
   deductChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<boolean>;
   getChargeCardTransactions(userId: number): Promise<any[]>;
+  getAllChargeCardBalances(): Promise<any[]>;
+  getAllChargeCardTransactions(): Promise<any[]>;
   hasChargeCardAccess(userId: number): Promise<boolean>;
   enableChargeCardAccess(userId: number, enabledBy: number): Promise<void>;
 }
@@ -3072,24 +3074,57 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getAllChargeCardBalances(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT ccb.*, u.username, u.first_name, u.last_name
+        FROM charge_card_balances ccb
+        JOIN users u ON ccb.user_id = u.id
+        ORDER BY ccb.current_balance DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching all balances:', error);
+      return [];
+    }
+  }
+
+  async getAllChargeCardTransactions(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT cct.*, u.username, u.first_name, u.last_name
+        FROM charge_card_transactions cct
+        JOIN users u ON cct.user_id = u.id
+        ORDER BY cct.created_at DESC
+        LIMIT 100
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching all transactions:', error);
+      return [];
+    }
+  }
+
   async hasChargeCardAccess(userId: number): Promise<boolean> {
     try {
-      // Check if user has charge card access feature flag
-      const result = await db.execute(sql`
-        SELECT * FROM user_feature_flags 
-        WHERE user_id = ${userId} AND feature_name = 'charge_cards' AND is_enabled = true
-      `);
+      // For admin development, check if user is the membership administrator
+      const userResult = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
       
-      if (result.rows.length > 0) {
-        return true;
+      if (userResult.length > 0) {
+        const user = userResult[0];
+        // Allow access for membership administrator
+        if (user.email === 'hannahesthertanshuen@gmail.com') {
+          return true;
+        }
+        // Allow access for admin role or in development mode
+        if (user.role === 'admin' || process.env.NODE_ENV === 'development') {
+          return true;
+        }
       }
-
-      // Check if user is the membership administrator
-      const userResult = await db.execute(sql`
-        SELECT * FROM users WHERE id = ${userId} AND email = 'hannahesthertanshuen@gmail.com'
-      `);
       
-      return userResult.rows.length > 0;
+      return false;
     } catch (error) {
       console.error('[Storage][ChargeCard] Error checking access:', error);
       return false;
@@ -3098,14 +3133,21 @@ export class DatabaseStorage implements IStorage {
 
   async enableChargeCardAccess(userId: number, enabledBy: number): Promise<void> {
     try {
-      await db.execute(sql`
-        INSERT INTO user_feature_flags (user_id, feature_name, is_enabled, enabled_by)
-        VALUES (${userId}, 'charge_cards', true, ${enabledBy})
-        ON CONFLICT (user_id, feature_name) DO UPDATE SET
-          is_enabled = true,
-          enabled_by = ${enabledBy},
-          enabled_at = NOW()
-      `);
+      await db.insert(userFeatureFlags)
+        .values({
+          userId,
+          featureName: 'charge_cards',
+          isEnabled: true,
+          enabledBy
+        })
+        .onConflictDoUpdate({
+          target: [userFeatureFlags.userId, userFeatureFlags.featureName],
+          set: {
+            isEnabled: true,
+            enabledBy,
+            enabledAt: new Date()
+          }
+        });
     } catch (error) {
       console.error('[Storage][ChargeCard] Error enabling access:', error);
       throw error;

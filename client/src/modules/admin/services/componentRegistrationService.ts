@@ -21,6 +21,7 @@ import BounceAdminNavItem from '../components/bounce/BounceAdminNavItem';
 import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-0016-SYS-TOOLS
 import AdminCoachNavItem from '../components/coach/AdminCoachNavItem'; // PKL-278651-COACH-ADMIN-001
 import TrainingCenterAdminNavItem from '../components/training-center/TrainingCenterAdminNavItem'; // PKL-278651-TRAINING-CENTER-ADMIN-001
+import { ChargeCardAdminNavItem } from '../components/charge-cards/ChargeCardAdminNavItem'; // PKL-278651-CHARGE-CARD-ADMIN
 // Import settings module to register its components
 import '../components/settings';
 
@@ -122,6 +123,15 @@ export function registerSystemToolsComponents() {
 }
 
 /**
+ * Register charge card management components
+ * PKL-278651-CHARGE-CARD-ADMIN
+ */
+export function registerChargeCardComponents() {
+  // Just importing the module is enough since it auto-registers
+  console.log('[Admin] Charge card components registered');
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -138,6 +148,7 @@ export function registerAllAdminComponents() {
   registerCoachComponents(); // Added Coach Management
   registerTrainingCenterComponents(); // Added Training Center Management
   registerSystemToolsComponents(); // Added System Tools
+  registerChargeCardComponents(); // Added Charge Card Management
   
   console.log('[Admin] Admin components registered');
 }

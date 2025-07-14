@@ -3347,6 +3347,62 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   };
 
+  // Admin: Get pending purchases
+  app.get('/api/admin/charge-cards/pending', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const pendingPurchases = await storage.getChargeCardPurchases('pending');
+      res.json({
+        success: true,
+        purchases: pendingPurchases
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching pending purchases:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch pending purchases' });
+    }
+  });
+
+  // Admin: Get all purchases
+  app.get('/api/admin/charge-cards/purchases', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const purchases = await storage.getChargeCardPurchases();
+      res.json({
+        success: true,
+        purchases
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching purchases:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch purchases' });
+    }
+  });
+
+  // Admin: Get user balances
+  app.get('/api/admin/charge-cards/balances', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const balances = await storage.getAllChargeCardBalances();
+      res.json({
+        success: true,
+        balances
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching balances:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch balances' });
+    }
+  });
+
+  // Admin: Get all transactions
+  app.get('/api/admin/charge-cards/transactions', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const transactions = await storage.getAllChargeCardTransactions();
+      res.json({
+        success: true,
+        transactions
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching transactions:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch transactions' });
+    }
+  });
+
   // Submit offline payment for processing (anyone can submit)
   app.post('/api/charge-cards/purchase', async (req: Request, res: Response) => {
     try {

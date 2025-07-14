@@ -684,6 +684,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* PKL-278651-CHARGE-CARD-ADMIN - Charge Card Management */}
+                  <Route path="/admin/charge-cards">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./pages/admin/charge-cards')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   {/* PKL-278651-BOUNCE-0001-CORE: Bounce Testing System Route */}
                   <Route path="/admin/bounce">
                     {(params) => (
