@@ -3028,10 +3028,15 @@ export class DatabaseStorage implements IStorage {
 
   async addChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<void> {
     try {
+      // Get current balance
+      const currentBalance = await this.getUserChargeCardBalance(userId);
+      const balanceBefore = currentBalance.current_balance || 0;
+      const balanceAfter = balanceBefore + amount;
+
       // Add transaction record
       await db.execute(sql`
-        INSERT INTO charge_card_transactions (user_id, type, amount, description, reference_id, reference_type)
-        VALUES (${userId}, 'credit', ${amount}, ${description}, ${referenceId}, 'charge_card_purchase')
+        INSERT INTO charge_card_transactions (user_id, type, amount, description, reference_id, reference_type, transaction_type, balance_before, balance_after)
+        VALUES (${userId}, 'credit', ${amount}, ${description}, ${referenceId}, 'charge_card_purchase', 'manual_allocation', ${balanceBefore}, ${balanceAfter})
       `);
 
       // Update balance
@@ -3052,15 +3057,18 @@ export class DatabaseStorage implements IStorage {
   async deductChargeCardCredits(userId: number, amount: number, description: string, referenceId?: number): Promise<boolean> {
     try {
       const balance = await this.getUserChargeCardBalance(userId);
+      const balanceBefore = balance.current_balance || 0;
       
-      if (balance.current_balance < amount) {
+      if (balanceBefore < amount) {
         return false; // Insufficient funds
       }
 
+      const balanceAfter = balanceBefore - amount;
+
       // Add transaction record
       await db.execute(sql`
-        INSERT INTO charge_card_transactions (user_id, type, amount, description, reference_id, reference_type)
-        VALUES (${userId}, 'debit', ${amount}, ${description}, ${referenceId}, 'lesson_payment')
+        INSERT INTO charge_card_transactions (user_id, type, amount, description, reference_id, reference_type, transaction_type, balance_before, balance_after)
+        VALUES (${userId}, 'debit', ${amount}, ${description}, ${referenceId}, 'lesson_payment', 'service_payment', ${balanceBefore}, ${balanceAfter})
       `);
 
       // Update balance
