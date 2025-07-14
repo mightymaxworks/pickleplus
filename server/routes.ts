@@ -586,6 +586,75 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
 
+  // Create Test Player Account - for easy testing
+  app.post('/api/create-test-player', async (req: Request, res: Response) => {
+    try {
+      const testPlayerData = {
+        username: 'testplayer',
+        email: 'testplayer@pickleplus.com',
+        password: 'password123',
+        firstName: 'Alex',
+        lastName: 'Player',
+        displayName: 'Alex Player',
+        avatarInitials: 'AP',
+        passportCode: Math.random().toString(36).substring(2, 10).toUpperCase(),
+        duprRating: '3.5',
+        isEmailVerified: true,
+        xp: 0,
+        level: 1,
+        picklePoints: 115,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Check if test player already exists
+      const existingPlayer = await storage.getUserByUsername('testplayer');
+      if (existingPlayer) {
+        return res.json({
+          success: true,
+          message: 'Test player already exists',
+          user: {
+            id: existingPlayer.id,
+            username: existingPlayer.username,
+            email: existingPlayer.email,
+            firstName: existingPlayer.firstName,
+            lastName: existingPlayer.lastName,
+            passportCode: existingPlayer.passportCode
+          },
+          loginCredentials: {
+            username: 'testplayer',
+            password: 'password123'
+          }
+        });
+      }
+
+      // Create test player
+      const testPlayer = await storage.createUser(testPlayerData);
+      
+      console.log(`[API][TestPlayer] Test player created: ${testPlayer.username} (${testPlayer.passportCode})`);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Test player account created successfully',
+        user: {
+          id: testPlayer.id,
+          username: testPlayer.username,
+          email: testPlayer.email,
+          firstName: testPlayer.firstName,
+          lastName: testPlayer.lastName,
+          passportCode: testPlayer.passportCode
+        },
+        loginCredentials: {
+          username: 'testplayer',
+          password: 'password123'
+        }
+      });
+    } catch (error) {
+      console.error('[API][TestPlayer] Error:', error);
+      res.status(500).json({ error: 'Failed to create test player' });
+    }
+  });
+
   console.log('[API] Critical user flow endpoints registered: /register, /login, /sessions/request');
   
   // Match History API Endpoints - Removed duplicate, using enhanced version below
