@@ -2987,7 +2987,7 @@ export class DatabaseStorage implements IStorage {
       const results = [];
       for (const allocation of allocations) {
         const [result] = await db.execute(sql`
-          INSERT INTO charge_card_allocations (purchase_id, user_id, allocated_amount)
+          INSERT INTO charge_card_allocations (purchase_id, user_id, allocation_amount)
           VALUES (${purchaseId}, ${allocation.userId}, ${allocation.amount})
           RETURNING *
         `);
@@ -3176,7 +3176,7 @@ export class DatabaseStorage implements IStorage {
   async createChargeCardAllocation(data: any): Promise<any> {
     try {
       const result = await db.execute(sql`
-        INSERT INTO charge_card_allocations (purchase_id, user_id, allocated_amount)
+        INSERT INTO charge_card_allocations (purchase_id, user_id, allocation_amount)
         VALUES (${data.purchaseId}, ${data.userId}, ${data.amount})
         RETURNING *
       `);

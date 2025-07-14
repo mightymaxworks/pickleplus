@@ -665,12 +665,25 @@ const ChargeCardAdminDashboard: React.FC = () => {
   );
 };
 
+// Currency conversion rates (in relation to USD)
+const CURRENCY_RATES = {
+  USD: { rate: 1, symbol: '$', name: 'US Dollar' },
+  EUR: { rate: 0.85, symbol: '€', name: 'Euro' },
+  GBP: { rate: 0.73, symbol: '£', name: 'British Pound' },
+  CAD: { rate: 1.35, symbol: 'C$', name: 'Canadian Dollar' },
+  AUD: { rate: 1.45, symbol: 'A$', name: 'Australian Dollar' },
+  JPY: { rate: 110, symbol: '¥', name: 'Japanese Yen' },
+  CNY: { rate: 7.2, symbol: '¥', name: 'Chinese Yuan' },
+  SGD: { rate: 1.34, symbol: 'S$', name: 'Singapore Dollar' },
+};
+
 // Group Card Creation Interface Component
 const GroupCardCreationInterface: React.FC = () => {
   const [groupName, setGroupName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [userAmounts, setUserAmounts] = useState<{[key: number]: string}>({});
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -702,6 +715,11 @@ const GroupCardCreationInterface: React.FC = () => {
 
   const handleAmountChange = (userId: number, amount: string) => {
     setUserAmounts({...userAmounts, [userId]: amount});
+  };
+
+  const convertToUSD = (amount: number, fromCurrency: string): number => {
+    const rate = CURRENCY_RATES[fromCurrency as keyof typeof CURRENCY_RATES]?.rate || 1;
+    return amount / rate;
   };
 
   const handleCreateGroupCard = async () => {
@@ -741,13 +759,17 @@ const GroupCardCreationInterface: React.FC = () => {
     try {
       const groupData = {
         groupName,
-        users: selectedUsers.map(user => ({
-          userId: user.id,
-          amount: parseFloat(userAmounts[user.id]) * 100, // Convert to cents
-          username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName
-        }))
+        users: selectedUsers.map(user => {
+          const originalAmount = parseFloat(userAmounts[user.id]);
+          const usdAmount = convertToUSD(originalAmount, selectedCurrency);
+          return {
+            userId: user.id,
+            amount: Math.round(usdAmount * 100), // Convert to cents in USD
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName
+          };
+        })
       };
 
       const response = await apiRequest('POST', '/api/admin/charge-cards/create-group', groupData);
@@ -790,6 +812,9 @@ const GroupCardCreationInterface: React.FC = () => {
     return sum + amount;
   }, 0);
 
+  const totalUSDAmount = convertToUSD(totalAmount, selectedCurrency);
+  const currencySymbol = CURRENCY_RATES[selectedCurrency as keyof typeof CURRENCY_RATES]?.symbol || '$';
+
   return (
     <Card>
       <CardHeader>
@@ -808,6 +833,26 @@ const GroupCardCreationInterface: React.FC = () => {
             onChange={(e) => setGroupName(e.target.value)}
             placeholder="Enter group name (e.g., 'Weekly Training Group')"
           />
+        </div>
+
+        {/* Currency Selection */}
+        <div>
+          <Label htmlFor="currency">Currency</Label>
+          <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(CURRENCY_RATES).map(([code, details]) => (
+                <SelectItem key={code} value={code}>
+                  {details.symbol} {details.name} ({code})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground mt-1">
+            All amounts will be converted to USD for storage. Current rate: 1 {selectedCurrency} = ${(1 / CURRENCY_RATES[selectedCurrency as keyof typeof CURRENCY_RATES]?.rate || 1).toFixed(4)} USD
+          </p>
         </div>
 
         {/* User Search */}
@@ -857,16 +902,18 @@ const GroupCardCreationInterface: React.FC = () => {
                     <p className="text-sm text-muted-foreground">@{user.username}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Label htmlFor={`amount-${user.id}`} className="text-sm">$</Label>
+                    <Label htmlFor={`amount-${user.id}`} className="text-sm">
+                      {CURRENCY_RATES[selectedCurrency as keyof typeof CURRENCY_RATES]?.symbol || '$'}
+                    </Label>
                     <Input
                       id={`amount-${user.id}`}
                       type="number"
                       min="0"
-                      step="0.01"
+                      step={selectedCurrency === 'JPY' ? '1' : '0.01'}
                       value={userAmounts[user.id] || ''}
                       onChange={(e) => handleAmountChange(user.id, e.target.value)}
-                      placeholder="0.00"
-                      className="w-24"
+                      placeholder={selectedCurrency === 'JPY' ? '100' : '0.00'}
+                      className="w-28"
                     />
                     <Button
                       size="sm"
@@ -882,10 +929,16 @@ const GroupCardCreationInterface: React.FC = () => {
             
             {/* Total Amount */}
             <div className="mt-4 p-3 bg-muted rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total Amount:</span>
-                <span className="text-lg font-bold">${totalAmount.toFixed(2)}</span>
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium">Total Amount ({selectedCurrency}):</span>
+                <span className="text-lg font-bold">{currencySymbol}{totalAmount.toFixed(selectedCurrency === 'JPY' ? 0 : 2)}</span>
               </div>
+              {selectedCurrency !== 'USD' && (
+                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <span>Equivalent in USD:</span>
+                  <span>${totalUSDAmount.toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
