@@ -103,6 +103,17 @@ const ChargeCardAdminDashboard: React.FC = () => {
     type: 'add' as 'add' | 'deduct',
     reason: ''
   });
+  
+  // Group management states
+  const [selectedGroupCard, setSelectedGroupCard] = useState<any>(null);
+  const [groupManagementDialog, setGroupManagementDialog] = useState(false);
+  const [groupAdjustment, setGroupAdjustment] = useState({
+    totalAmount: '',
+    type: 'add' as 'add' | 'deduct',
+    reason: '',
+    distributionMethod: 'equal' as 'equal' | 'proportional'
+  });
+  const [bulkMemberAdjustments, setBulkMemberAdjustments] = useState<Array<{userId: number, amount: string, type: 'add' | 'deduct'}>>([]);
 
   // Fetch pending purchases
   const { data: pendingPurchases = [], isLoading: loadingPending } = useQuery({
@@ -247,6 +258,96 @@ const ChargeCardAdminDashboard: React.FC = () => {
       return data.history || [];
     },
     enabled: !!selectedUser?.id
+  });
+
+  // Get processed group purchases for group management
+  const { data: processedGroupPurchases = [] } = useQuery({
+    queryKey: ['/api/admin/charge-cards/processed-groups'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/charge-cards/purchases?status=processed&group_only=true');
+      const data = await response.json();
+      return data.purchases || [];
+    }
+  });
+
+  // Get group card members
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: ['/api/admin/charge-cards/group', selectedGroupCard?.id, 'members'],
+    queryFn: async () => {
+      if (!selectedGroupCard?.id) return [];
+      const response = await apiRequest('GET', `/api/admin/charge-cards/group/${selectedGroupCard.id}/members`);
+      const data = await response.json();
+      return data.members || [];
+    },
+    enabled: !!selectedGroupCard?.id
+  });
+
+  // Group balance adjustment mutations
+  const adjustGroupBalanceMutation = useMutation({
+    mutationFn: async ({ purchaseId, totalAmount, type, reason, distributionMethod }: { 
+      purchaseId: number; 
+      totalAmount: number; 
+      type: 'add' | 'deduct'; 
+      reason: string; 
+      distributionMethod: 'equal' | 'proportional' 
+    }) => {
+      const response = await apiRequest('POST', `/api/admin/charge-cards/group/${purchaseId}/adjust-balance`, {
+        totalAmount,
+        type,
+        reason,
+        distributionMethod
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Group Balance Adjusted",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/balances'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/group', selectedGroupCard?.id, 'members'] });
+      setGroupManagementDialog(false);
+      setGroupAdjustment({ totalAmount: '', type: 'add', reason: '', distributionMethod: 'equal' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Group Balance Adjustment Failed",
+        description: error.message || "Failed to adjust group balance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkAdjustMembersMutation = useMutation({
+    mutationFn: async ({ purchaseId, adjustments, reason }: { 
+      purchaseId: number; 
+      adjustments: Array<{userId: number, amount: number, type: 'add' | 'deduct'}>; 
+      reason: string; 
+    }) => {
+      const response = await apiRequest('POST', `/api/admin/charge-cards/group/${purchaseId}/bulk-adjust`, {
+        adjustments,
+        reason
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Bulk Adjustments Applied",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/balances'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/group', selectedGroupCard?.id, 'members'] });
+      setBulkMemberAdjustments([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk Adjustment Failed",
+        description: error.message || "Failed to apply bulk adjustments",
+        variant: "destructive",
+      });
+    },
   });
 
   const formatCurrency = (cents: number) => {
@@ -413,6 +514,7 @@ const ChargeCardAdminDashboard: React.FC = () => {
           <TabsTrigger value="create-group">Create Group Card</TabsTrigger>
           <TabsTrigger value="balances">User Balances</TabsTrigger>
           <TabsTrigger value="balance-management">Balance Management</TabsTrigger>
+          <TabsTrigger value="group-management">Group Management</TabsTrigger>
           <TabsTrigger value="transactions">Transaction History</TabsTrigger>
         </TabsList>
 
@@ -663,6 +765,64 @@ const ChargeCardAdminDashboard: React.FC = () => {
               {userSearchQuery.length >= 2 && userSearchResults.length === 0 && (
                 <div className="text-center py-4 text-muted-foreground">
                   No users found matching "{userSearchQuery}"
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Group Management Tab */}
+        <TabsContent value="group-management" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Group Card Management</CardTitle>
+              <CardDescription>
+                Manage processed group cards and adjust member balances in bulk
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {processedGroupPurchases.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <h3 className="mt-2 text-sm font-semibold">No processed group cards</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Group purchases will appear here after processing.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {processedGroupPurchases.map((purchase: any) => (
+                    <div key={purchase.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Users className="w-5 h-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">
+                              Group Card #{purchase.id} - {purchase.first_name} {purchase.last_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Processed: {formatDate(purchase.processed_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-right">
+                            <p className="font-bold">{formatCurrency(purchase.amount)}</p>
+                            <p className="text-sm text-muted-foreground">Total Amount</p>
+                          </div>
+                          <Button
+                            onClick={() => {
+                              setSelectedGroupCard(purchase);
+                              setGroupManagementDialog(true);
+                            }}
+                            size="sm"
+                          >
+                            Manage Group
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
@@ -1073,6 +1233,173 @@ const ChargeCardAdminDashboard: React.FC = () => {
                     <Minus className="w-4 h-4" />
                   )}
                   {balanceAdjustment.type === 'add' ? 'Add Credits' : 'Deduct Credits'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Group Management Dialog */}
+      <Dialog open={groupManagementDialog} onOpenChange={setGroupManagementDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Group Card Management</DialogTitle>
+            <DialogDescription>
+              Manage balances for Group Card #{selectedGroupCard?.id} and its members
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedGroupCard && (
+            <div className="space-y-6">
+              {/* Group Card Info */}
+              <div className="p-4 border rounded-lg bg-muted/20">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Organizer</p>
+                    <p className="text-lg">{selectedGroupCard.first_name} {selectedGroupCard.last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Original Amount</p>
+                    <p className="text-lg font-bold">{formatCurrency(selectedGroupCard.amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Members</p>
+                    <p className="text-lg font-bold">{groupMembers.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Group Balance Adjustment */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Adjust Entire Group Balance</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="group-amount">Total Amount ($)</Label>
+                    <Input
+                      id="group-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={groupAdjustment.totalAmount}
+                      onChange={(e) => setGroupAdjustment(prev => ({ ...prev, totalAmount: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="group-type">Adjustment Type</Label>
+                    <Select 
+                      value={groupAdjustment.type} 
+                      onValueChange={(value: 'add' | 'deduct') => setGroupAdjustment(prev => ({ ...prev, type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="add">Add Credits</SelectItem>
+                        <SelectItem value="deduct">Deduct Credits</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="distribution-method">Distribution Method</Label>
+                  <Select 
+                    value={groupAdjustment.distributionMethod} 
+                    onValueChange={(value: 'equal' | 'proportional') => setGroupAdjustment(prev => ({ ...prev, distributionMethod: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="equal">Equal Distribution (same amount to each member)</SelectItem>
+                      <SelectItem value="proportional">Proportional Distribution (based on original allocations)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="group-reason">Reason for Group Adjustment</Label>
+                  <Input
+                    id="group-reason"
+                    placeholder="Enter reason for this group adjustment..."
+                    value={groupAdjustment.reason}
+                    onChange={(e) => setGroupAdjustment(prev => ({ ...prev, reason: e.target.value }))}
+                  />
+                </div>
+
+                <Button
+                  onClick={() => {
+                    const amount = parseFloat(groupAdjustment.totalAmount);
+                    if (!amount || amount <= 0 || !groupAdjustment.reason.trim()) {
+                      toast({
+                        title: "Invalid Input",
+                        description: "Please enter a valid amount and reason",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    adjustGroupBalanceMutation.mutate({
+                      purchaseId: selectedGroupCard.id,
+                      totalAmount: amount,
+                      type: groupAdjustment.type,
+                      reason: groupAdjustment.reason,
+                      distributionMethod: groupAdjustment.distributionMethod
+                    });
+                  }}
+                  disabled={adjustGroupBalanceMutation.isPending}
+                  className="w-full"
+                >
+                  {adjustGroupBalanceMutation.isPending ? 'Processing...' : `${groupAdjustment.type === 'add' ? 'Add' : 'Deduct'} Group Credits`}
+                </Button>
+              </div>
+
+              {/* Individual Member Management */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Group Members</h3>
+                {groupMembers.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    Loading group members...
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {groupMembers.map((member: any) => (
+                      <div key={member.user_id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div>
+                              <p className="font-medium">
+                                {member.first_name} {member.last_name} (@{member.username})
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Original allocation: {formatCurrency(member.allocation_amount)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">{formatCurrency(member.current_balance)}</p>
+                            <p className="text-sm text-muted-foreground">Current Balance</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setGroupManagementDialog(false);
+                    setSelectedGroupCard(null);
+                    setGroupAdjustment({ totalAmount: '', type: 'add', reason: '', distributionMethod: 'equal' });
+                  }}
+                >
+                  Close
                 </Button>
               </div>
             </div>

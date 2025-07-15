@@ -3774,6 +3774,29 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // Admin: Search users for balance management
+  app.get('/api/admin/charge-cards/search-users', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const query = req.query.query as string;
+      
+      if (!query || query.trim().length < 2) {
+        return res.status(400).json({
+          success: false,
+          error: 'Search query must be at least 2 characters long'
+        });
+      }
+      
+      const users = await storage.searchUsersForBalance(query.trim());
+      res.json({
+        success: true,
+        users
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error searching users:', error);
+      res.status(500).json({ success: false, error: 'Failed to search users' });
+    }
+  });
+
   // Admin: Adjust user balance
   app.post('/api/admin/charge-cards/adjust-balance', checkChargeCardAccess, async (req: Request, res: Response) => {
     try {
@@ -3821,6 +3844,157 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
       res.status(500).json({ 
         success: false, 
         error: error.message || 'Failed to adjust balance' 
+      });
+    }
+  });
+
+  // Admin: Get group card members
+  app.get('/api/admin/charge-cards/group/:purchaseId/members', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const purchaseId = parseInt(req.params.purchaseId);
+      
+      if (isNaN(purchaseId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid purchase ID'
+        });
+      }
+      
+      const members = await storage.getGroupCardMembers(purchaseId);
+      res.json({
+        success: true,
+        members
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching group members:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch group members' });
+    }
+  });
+
+  // Admin: Adjust entire group card balance
+  app.post('/api/admin/charge-cards/group/:purchaseId/adjust-balance', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const purchaseId = parseInt(req.params.purchaseId);
+      const { totalAmount, type, reason, distributionMethod } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (isNaN(purchaseId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid purchase ID'
+        });
+      }
+      
+      if (!totalAmount || !type || !reason || !distributionMethod) {
+        return res.status(400).json({
+          success: false,
+          error: 'Total amount, type (add/deduct), reason, and distribution method are required'
+        });
+      }
+      
+      if (type !== 'add' && type !== 'deduct') {
+        return res.status(400).json({
+          success: false,
+          error: 'Type must be either "add" or "deduct"'
+        });
+      }
+      
+      if (distributionMethod !== 'equal' && distributionMethod !== 'proportional') {
+        return res.status(400).json({
+          success: false,
+          error: 'Distribution method must be either "equal" or "proportional"'
+        });
+      }
+      
+      const amountInCents = Math.round(totalAmount * 100);
+      
+      if (amountInCents <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Amount must be positive'
+        });
+      }
+      
+      await storage.adjustGroupCardBalance(purchaseId, amountInCents, type, reason, adminId, distributionMethod);
+      
+      res.json({
+        success: true,
+        message: `Successfully ${type === 'add' ? 'added' : 'deducted'} $${totalAmount} ${type === 'add' ? 'to' : 'from'} group card using ${distributionMethod} distribution`,
+        adjustment: {
+          purchaseId,
+          totalAmount: amountInCents,
+          type,
+          reason,
+          distributionMethod,
+          adminId
+        }
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error adjusting group balance:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || 'Failed to adjust group balance' 
+      });
+    }
+  });
+
+  // Admin: Bulk adjust group members
+  app.post('/api/admin/charge-cards/group/:purchaseId/bulk-adjust', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const purchaseId = parseInt(req.params.purchaseId);
+      const { adjustments, reason } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (isNaN(purchaseId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid purchase ID'
+        });
+      }
+      
+      if (!adjustments || !Array.isArray(adjustments) || !reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'Adjustments array and reason are required'
+        });
+      }
+      
+      // Validate adjustments
+      for (const adj of adjustments) {
+        if (!adj.userId || !adj.amount || !adj.type) {
+          return res.status(400).json({
+            success: false,
+            error: 'Each adjustment must have userId, amount, and type'
+          });
+        }
+        
+        if (adj.type !== 'add' && adj.type !== 'deduct') {
+          return res.status(400).json({
+            success: false,
+            error: 'Each adjustment type must be either "add" or "deduct"'
+          });
+        }
+        
+        adj.amount = Math.round(adj.amount * 100); // Convert to cents
+      }
+      
+      await storage.bulkAdjustGroupMembers(purchaseId, adjustments, reason, adminId);
+      
+      res.json({
+        success: true,
+        message: `Successfully applied ${adjustments.length} bulk adjustments to group members`,
+        adjustment: {
+          purchaseId,
+          adjustmentCount: adjustments.length,
+          reason,
+          adminId
+        }
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error bulk adjusting group members:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || 'Failed to bulk adjust group members' 
       });
     }
   });

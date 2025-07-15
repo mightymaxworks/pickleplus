@@ -321,6 +321,12 @@ export interface IStorage extends CommunityStorage {
   adjustUserBalance(userId: number, amount: number, type: 'add' | 'deduct', reason: string, adminId: number): Promise<void>;
   getUserBalanceHistory(userId: number): Promise<any[]>;
   searchUsersForBalance(query: string): Promise<any[]>;
+  
+  // Group balance management
+  getGroupCardMembers(purchaseId: number): Promise<any[]>;
+  adjustGroupCardBalance(purchaseId: number, totalAmount: number, type: 'add' | 'deduct', reason: string, adminId: number, distributionMethod: 'equal' | 'proportional'): Promise<void>;
+  adjustGroupMemberBalance(purchaseId: number, userId: number, amount: number, type: 'add' | 'deduct', reason: string, adminId: number): Promise<void>;
+  bulkAdjustGroupMembers(purchaseId: number, adjustments: Array<{userId: number, amount: number, type: 'add' | 'deduct'}>, reason: string, adminId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3268,6 +3274,104 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage][ChargeCard] Error searching users:', error);
       return [];
+    }
+  }
+
+  // Group balance management methods
+  async getGroupCardMembers(purchaseId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT cca.*, u.username, u.first_name, u.last_name, u.email,
+               COALESCE(ccb.current_balance, 0) as current_balance,
+               COALESCE(ccb.total_credits, 0) as total_credits,
+               COALESCE(ccb.total_spent, 0) as total_spent
+        FROM charge_card_allocations cca
+        JOIN users u ON cca.user_id = u.id
+        LEFT JOIN charge_card_balances ccb ON u.id = ccb.user_id
+        WHERE cca.purchase_id = ${purchaseId}
+        ORDER BY u.username
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching group members:', error);
+      return [];
+    }
+  }
+
+  async adjustGroupCardBalance(purchaseId: number, totalAmount: number, type: 'add' | 'deduct', reason: string, adminId: number, distributionMethod: 'equal' | 'proportional'): Promise<void> {
+    try {
+      const members = await this.getGroupCardMembers(purchaseId);
+      
+      if (members.length === 0) {
+        throw new Error('No group members found for this purchase');
+      }
+
+      let adjustments: Array<{userId: number, amount: number}> = [];
+
+      if (distributionMethod === 'equal') {
+        const amountPerMember = Math.floor(totalAmount / members.length);
+        adjustments = members.map(member => ({
+          userId: member.user_id,
+          amount: amountPerMember
+        }));
+      } else { // proportional
+        const totalOriginalAllocations = members.reduce((sum, member) => sum + member.allocation_amount, 0);
+        adjustments = members.map(member => ({
+          userId: member.user_id,
+          amount: Math.floor((member.allocation_amount / totalOriginalAllocations) * totalAmount)
+        }));
+      }
+
+      // Apply adjustments to all members
+      for (const adjustment of adjustments) {
+        await this.adjustUserBalance(
+          adjustment.userId, 
+          adjustment.amount, 
+          type, 
+          `Group card adjustment (${distributionMethod}): ${reason}`, 
+          adminId
+        );
+      }
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error adjusting group balance:', error);
+      throw error;
+    }
+  }
+
+  async adjustGroupMemberBalance(purchaseId: number, userId: number, amount: number, type: 'add' | 'deduct', reason: string, adminId: number): Promise<void> {
+    try {
+      // Verify the user is part of this group card
+      const result = await db.execute(sql`
+        SELECT 1 FROM charge_card_allocations 
+        WHERE purchase_id = ${purchaseId} AND user_id = ${userId}
+      `);
+      
+      if (result.rows.length === 0) {
+        throw new Error('User is not a member of this group card');
+      }
+
+      await this.adjustUserBalance(userId, amount, type, `Group member adjustment: ${reason}`, adminId);
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error adjusting group member balance:', error);
+      throw error;
+    }
+  }
+
+  async bulkAdjustGroupMembers(purchaseId: number, adjustments: Array<{userId: number, amount: number, type: 'add' | 'deduct'}>, reason: string, adminId: number): Promise<void> {
+    try {
+      for (const adjustment of adjustments) {
+        await this.adjustGroupMemberBalance(
+          purchaseId, 
+          adjustment.userId, 
+          adjustment.amount, 
+          adjustment.type, 
+          reason, 
+          adminId
+        );
+      }
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error bulk adjusting group members:', error);
+      throw error;
     }
   }
 }
