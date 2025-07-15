@@ -3403,6 +3403,108 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // Admin: Process purchase with settlement method support
+  app.post('/api/admin/charge-cards/process-purchase', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { purchaseId, allocation } = req.body;
+      const adminId = req.user?.id || 1;
+
+      if (!purchaseId || !allocation) {
+        return res.status(400).json({
+          success: false,
+          error: 'Purchase ID and allocation details required'
+        });
+      }
+
+      const purchase = await storage.getChargeCardPurchase(purchaseId);
+      if (!purchase) {
+        return res.status(404).json({
+          success: false,
+          error: 'Purchase not found'
+        });
+      }
+
+      // Create enhanced payment details with settlement method
+      const paymentDetails = JSON.parse(purchase.payment_details);
+      const enhancedPaymentDetails = {
+        ...paymentDetails,
+        settlementMethod: allocation.settlementMethod || 'system_verified',
+        processedBy: adminId,
+        processedAt: new Date().toISOString()
+      };
+
+      // Update purchase with enhanced payment details
+      await storage.updateChargeCardPurchaseDetails(purchaseId, JSON.stringify(enhancedPaymentDetails));
+
+      let allocations = [];
+      let totalAmount = 0;
+
+      if (allocation.isGroupPurchase && allocation.groupName) {
+        // Handle group card processing
+        console.log(`[ChargeCard] Processing group card: ${allocation.groupName}`);
+        
+        for (const userAllocation of allocation.userAllocations) {
+          const allocationRecord = await storage.createChargeCardAllocation({
+            purchaseId,
+            userId: userAllocation.userId,
+            amount: userAllocation.amount, // Already in cents
+            allocatedBy: adminId,
+            notes: `Group card allocation: ${allocation.groupName} (Settlement: ${allocation.settlementMethod})`
+          });
+
+          // Add credits to user balance
+          await storage.addChargeCardCredits(
+            userAllocation.userId,
+            userAllocation.amount,
+            `Group card: ${allocation.groupName} (${allocation.settlementMethod})`,
+            purchaseId
+          );
+
+          allocations.push(allocationRecord);
+          totalAmount += userAllocation.amount;
+        }
+      } else {
+        // Handle regular purchase processing
+        const allocationRecord = await storage.createChargeCardAllocation({
+          purchaseId,
+          userId: allocation.organizerId,
+          amount: allocation.amount,
+          allocatedBy: adminId,
+          notes: `Payment processed (Settlement: ${allocation.settlementMethod})`
+        });
+
+        // Add credits to user balance
+        await storage.addChargeCardCredits(
+          allocation.organizerId,
+          allocation.amount,
+          `Payment processed (${allocation.settlementMethod})`,
+          purchaseId
+        );
+
+        allocations.push(allocationRecord);
+        totalAmount = allocation.amount;
+      }
+
+      // Mark purchase as processed
+      await storage.processChargeCardPurchase(purchaseId, adminId, totalAmount / 100);
+
+      res.json({
+        success: true,
+        message: `Payment processed using ${allocation.settlementMethod} settlement method`,
+        allocations,
+        totalAmount: totalAmount / 100,
+        settlementMethod: allocation.settlementMethod
+      });
+
+    } catch (error) {
+      console.error('[ChargeCard] Error processing purchase:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to process purchase' 
+      });
+    }
+  });
+
   // Submit offline payment for processing (anyone can submit)
   app.post('/api/charge-cards/purchase', async (req: Request, res: Response) => {
     try {

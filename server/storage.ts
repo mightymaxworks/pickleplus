@@ -305,6 +305,7 @@ export interface IStorage extends CommunityStorage {
   createChargeCardPurchase(data: any): Promise<any>;
   getChargeCardPurchases(status?: string): Promise<any[]>;
   getChargeCardPurchase(id: number): Promise<any>;
+  updateChargeCardPurchaseDetails(id: number, paymentDetails: string): Promise<void>;
   processChargeCardPurchase(id: number, processedBy: number, totalAmount: number): Promise<any>;
   createChargeCardAllocations(purchaseId: number, allocations: Array<{userId: number, amount: number}>): Promise<any[]>;
   getUserChargeCardBalance(userId: number): Promise<any>;
@@ -2964,6 +2965,19 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage][ChargeCard] Error fetching purchase:', error);
       return null;
+    }
+  }
+
+  async updateChargeCardPurchaseDetails(id: number, paymentDetails: string): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE charge_card_purchases 
+        SET payment_details = ${paymentDetails}
+        WHERE id = ${id}
+      `);
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error updating purchase details:', error);
+      throw error;
     }
   }
 

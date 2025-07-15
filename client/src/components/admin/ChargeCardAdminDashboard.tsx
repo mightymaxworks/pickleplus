@@ -92,6 +92,7 @@ const ChargeCardAdminDashboard: React.FC = () => {
   const [allocateUserId, setAllocateUserId] = useState('');
   const [allocateAmount, setAllocateAmount] = useState('');
   const [allocateDescription, setAllocateDescription] = useState('');
+  const [paymentSettlementMethod, setPaymentSettlementMethod] = useState('system_verified');
 
   // Fetch pending purchases
   const { data: pendingPurchases = [], isLoading: loadingPending } = useQuery({
@@ -126,7 +127,8 @@ const ChargeCardAdminDashboard: React.FC = () => {
   // Process purchase mutation
   const processPurchaseMutation = useMutation({
     mutationFn: async ({ purchaseId, allocation }: { purchaseId: number; allocation: any }) => {
-      const response = await apiRequest('POST', `/api/charge-cards/purchases/${purchaseId}/process`, {
+      const response = await apiRequest('POST', '/api/admin/charge-cards/process-purchase', {
+        purchaseId,
         allocation
       });
       return response.json();
@@ -218,12 +220,27 @@ const ChargeCardAdminDashboard: React.FC = () => {
     if (!selectedPurchase) return;
 
     const paymentDetails = JSON.parse(selectedPurchase.payment_details);
-    const allocation = {
-      organizerId: selectedPurchase.organizer_id,
-      amount: paymentDetails.amount * 100, // Convert to cents
-      isGroupPurchase: selectedPurchase.is_group_purchase,
-      participants: paymentDetails.participants || []
-    };
+    
+    let allocation;
+    if (paymentDetails.adminCreated && paymentDetails.groupName) {
+      // Handle group card processing
+      allocation = {
+        organizerId: selectedPurchase.organizer_id,
+        isGroupPurchase: true,
+        groupName: paymentDetails.groupName,
+        userAllocations: paymentDetails.users || [],
+        settlementMethod: paymentSettlementMethod
+      };
+    } else {
+      // Handle regular purchase processing
+      allocation = {
+        organizerId: selectedPurchase.organizer_id,
+        amount: paymentDetails.amount ? paymentDetails.amount * 100 : 0, // Convert to cents
+        isGroupPurchase: selectedPurchase.is_group_purchase,
+        participants: paymentDetails.participants || [],
+        settlementMethod: paymentSettlementMethod
+      };
+    }
 
     processPurchaseMutation.mutate({
       purchaseId: selectedPurchase.id,
@@ -658,6 +675,49 @@ const ChargeCardAdminDashboard: React.FC = () => {
                   );
                 }
               })()}
+
+              {/* Payment Settlement Method Selection */}
+              <div className="space-y-3 pt-4 border-t">
+                <Label>Payment Settlement Method</Label>
+                <Select value={paymentSettlementMethod} onValueChange={setPaymentSettlementMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select settlement method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="system_verified">✅ System Verified Payment</SelectItem>
+                    <SelectItem value="offline_payment">📝 Offline Payment (External System)</SelectItem>
+                    <SelectItem value="cash_payment">💵 Cash Payment</SelectItem>
+                    <SelectItem value="bank_transfer">🏦 Bank Transfer</SelectItem>
+                    <SelectItem value="third_party_platform">🌐 Third-Party Platform (PayPal, Venmo, etc.)</SelectItem>
+                    <SelectItem value="credit_adjustment">⚖️ Credit Adjustment</SelectItem>
+                    <SelectItem value="record_keeping_only">📋 Record Keeping Only</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <div className="text-sm text-muted-foreground">
+                  {(() => {
+                    switch (paymentSettlementMethod) {
+                      case 'system_verified':
+                        return 'Payment verified through integrated payment system with transaction records.';
+                      case 'offline_payment':
+                        return 'Payment processed through external system. This allocation is for record-keeping and credit distribution only.';
+                      case 'cash_payment':
+                        return 'Cash payment received in person. Manual verification required.';
+                      case 'bank_transfer':
+                        return 'Direct bank transfer received. Verify bank statement before processing.';
+                      case 'third_party_platform':
+                        return 'Payment received via PayPal, Venmo, or other third-party platform.';
+                      case 'credit_adjustment':
+                        return 'Administrative credit adjustment for refunds, corrections, or promotional credits.';
+                      case 'record_keeping_only':
+                        return 'This entry is purely for record-keeping purposes. No actual payment verification required.';
+                      default:
+                        return 'Select how this payment was settled to ensure proper record-keeping.';
+                    }
+                  })()}
+                </div>
+              </div>
+
               <div className="flex space-x-2">
                 <Button
                   onClick={submitProcessing}
@@ -870,7 +930,9 @@ const GroupCardCreationInterface: React.FC = () => {
         setSearchTerm('');
         
         // Refresh data
-        queryClient.invalidateQueries({ queryKey: ['admin-charge-cards'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/pending'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/balances'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/transactions'] });
       } else {
         toast({
           title: "Error",
