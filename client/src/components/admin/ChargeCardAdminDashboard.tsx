@@ -89,10 +89,20 @@ const ChargeCardAdminDashboard: React.FC = () => {
   const [selectedPurchase, setSelectedPurchase] = useState<ChargeCardPurchase | null>(null);
   const [allocateCreditsDialog, setAllocateCreditsDialog] = useState(false);
   const [manualCreditDialog, setManualCreditDialog] = useState(false);
+  const [balanceManagementDialog, setBalanceManagementDialog] = useState(false);
   const [allocateUserId, setAllocateUserId] = useState('');
   const [allocateAmount, setAllocateAmount] = useState('');
   const [allocateDescription, setAllocateDescription] = useState('');
   const [paymentSettlementMethod, setPaymentSettlementMethod] = useState('system_verified');
+  
+  // Balance management states
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [balanceAdjustment, setBalanceAdjustment] = useState({
+    amount: '',
+    type: 'add' as 'add' | 'deduct',
+    reason: ''
+  });
 
   // Fetch pending purchases
   const { data: pendingPurchases = [], isLoading: loadingPending } = useQuery({
@@ -182,6 +192,61 @@ const ChargeCardAdminDashboard: React.FC = () => {
         variant: "destructive",
       });
     },
+  });
+
+  // Balance adjustment mutation
+  const adjustBalanceMutation = useMutation({
+    mutationFn: async ({ userId, amount, type, reason }: { userId: number; amount: number; type: 'add' | 'deduct'; reason: string }) => {
+      const response = await apiRequest('POST', '/api/admin/charge-cards/adjust-balance', {
+        userId,
+        amount,
+        type,
+        reason
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Balance Adjusted",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/balances'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/charge-cards/transactions'] });
+      setBalanceManagementDialog(false);
+      setSelectedUser(null);
+      setBalanceAdjustment({ amount: '', type: 'add', reason: '' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Balance Adjustment Failed",
+        description: error.message || "Failed to adjust balance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Search users for balance management
+  const { data: userSearchResults = [] } = useQuery({
+    queryKey: ['/api/admin/charge-cards/users/search', userSearchQuery],
+    queryFn: async () => {
+      if (!userSearchQuery || userSearchQuery.length < 2) return [];
+      const response = await apiRequest('GET', `/api/admin/charge-cards/users/search?q=${encodeURIComponent(userSearchQuery)}`);
+      const data = await response.json();
+      return data.users || [];
+    },
+    enabled: userSearchQuery.length >= 2
+  });
+
+  // Get user balance history
+  const { data: userHistory = [] } = useQuery({
+    queryKey: ['/api/admin/charge-cards/users', selectedUser?.id, 'history'],
+    queryFn: async () => {
+      if (!selectedUser?.id) return [];
+      const response = await apiRequest('GET', `/api/admin/charge-cards/users/${selectedUser.id}/history`);
+      const data = await response.json();
+      return data.history || [];
+    },
+    enabled: !!selectedUser?.id
   });
 
   const formatCurrency = (cents: number) => {
@@ -347,6 +412,7 @@ const ChargeCardAdminDashboard: React.FC = () => {
           <TabsTrigger value="pending">Pending Payments</TabsTrigger>
           <TabsTrigger value="create-group">Create Group Card</TabsTrigger>
           <TabsTrigger value="balances">User Balances</TabsTrigger>
+          <TabsTrigger value="balance-management">Balance Management</TabsTrigger>
           <TabsTrigger value="transactions">Transaction History</TabsTrigger>
         </TabsList>
 
@@ -535,6 +601,68 @@ const ChargeCardAdminDashboard: React.FC = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Balance Management Tab */}
+        <TabsContent value="balance-management" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Balance Management</CardTitle>
+              <CardDescription>
+                Search users and manually adjust their charge card balances
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* User Search */}
+              <div className="space-y-2">
+                <Label htmlFor="user-search">Search Users</Label>
+                <Input
+                  id="user-search"
+                  placeholder="Search by username, name, or email..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Search Results */}
+              {userSearchResults.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Search Results</Label>
+                  <div className="grid gap-2 max-h-60 overflow-y-auto">
+                    {userSearchResults.map((user) => (
+                      <div 
+                        key={user.id} 
+                        className="border rounded-lg p-3 cursor-pointer hover:bg-accent"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setBalanceManagementDialog(true);
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">
+                              {user.first_name} {user.last_name} (@{user.username})
+                            </p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">{formatCurrency(user.current_balance)}</p>
+                            <p className="text-sm text-muted-foreground">Current Balance</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userSearchQuery.length >= 2 && userSearchResults.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  No users found matching "{userSearchQuery}"
                 </div>
               )}
             </CardContent>
@@ -801,6 +929,154 @@ const ChargeCardAdminDashboard: React.FC = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Balance Management Dialog */}
+      <Dialog open={balanceManagementDialog} onOpenChange={setBalanceManagementDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Balance Management</DialogTitle>
+            <DialogDescription>
+              Adjust balance for {selectedUser?.first_name} {selectedUser?.last_name} (@{selectedUser?.username})
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedUser && (
+            <div className="space-y-6">
+              {/* Current Balance Info */}
+              <div className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{formatCurrency(selectedUser.current_balance)}</p>
+                  <p className="text-sm text-muted-foreground">Current Balance</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold">{formatCurrency(selectedUser.total_credits)}</p>
+                  <p className="text-sm text-muted-foreground">Total Credits</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold">{formatCurrency(selectedUser.total_spent)}</p>
+                  <p className="text-sm text-muted-foreground">Total Spent</p>
+                </div>
+              </div>
+
+              {/* Balance Adjustment Form */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment-amount">Amount ($)</Label>
+                    <Input
+                      id="adjustment-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={balanceAdjustment.amount}
+                      onChange={(e) => setBalanceAdjustment(prev => ({ ...prev, amount: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment-type">Adjustment Type</Label>
+                    <Select 
+                      value={balanceAdjustment.type} 
+                      onValueChange={(value: 'add' | 'deduct') => setBalanceAdjustment(prev => ({ ...prev, type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="add">Add Credits</SelectItem>
+                        <SelectItem value="deduct">Deduct Credits</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="adjustment-reason">Reason for Adjustment</Label>
+                  <Input
+                    id="adjustment-reason"
+                    placeholder="Enter reason for this adjustment..."
+                    value={balanceAdjustment.reason}
+                    onChange={(e) => setBalanceAdjustment(prev => ({ ...prev, reason: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Transaction History Preview */}
+              <div className="space-y-2">
+                <Label>Recent Transaction History</Label>
+                <div className="max-h-40 overflow-y-auto border rounded-lg">
+                  {userHistory.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      No transaction history available
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {userHistory.slice(0, 5).map((transaction) => (
+                        <div key={transaction.id} className="flex justify-between items-center p-2 border-b last:border-b-0">
+                          <div>
+                            <p className="text-sm">{transaction.description}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(transaction.created_at)}
+                            </p>
+                          </div>
+                          <div className={`text-sm font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                            {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setBalanceManagementDialog(false);
+                    setSelectedUser(null);
+                    setBalanceAdjustment({ amount: '', type: 'add', reason: '' });
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    const amount = parseFloat(balanceAdjustment.amount);
+                    if (!amount || amount <= 0 || !balanceAdjustment.reason.trim()) {
+                      toast({
+                        title: "Invalid Input",
+                        description: "Please enter a valid amount and reason",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    adjustBalanceMutation.mutate({
+                      userId: selectedUser.id,
+                      amount,
+                      type: balanceAdjustment.type,
+                      reason: balanceAdjustment.reason
+                    });
+                  }}
+                  disabled={adjustBalanceMutation.isPending}
+                  className="gap-2"
+                >
+                  {adjustBalanceMutation.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : balanceAdjustment.type === 'add' ? (
+                    <Plus className="w-4 h-4" />
+                  ) : (
+                    <Minus className="w-4 h-4" />
+                  )}
+                  {balanceAdjustment.type === 'add' ? 'Add Credits' : 'Deduct Credits'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -316,6 +316,11 @@ export interface IStorage extends CommunityStorage {
   getAllChargeCardTransactions(): Promise<any[]>;
   hasChargeCardAccess(userId: number): Promise<boolean>;
   enableChargeCardAccess(userId: number, enabledBy: number): Promise<void>;
+  
+  // Manual balance adjustments
+  adjustUserBalance(userId: number, amount: number, type: 'add' | 'deduct', reason: string, adminId: number): Promise<void>;
+  getUserBalanceHistory(userId: number): Promise<any[]>;
+  searchUsersForBalance(query: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3206,6 +3211,63 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage][ChargeCard] Error creating allocation:', error);
       throw error;
+    }
+  }
+
+  // Manual balance adjustment methods
+  async adjustUserBalance(userId: number, amount: number, type: 'add' | 'deduct', reason: string, adminId: number): Promise<void> {
+    try {
+      if (type === 'add') {
+        await this.addChargeCardCredits(userId, amount, `Admin adjustment: ${reason}`, adminId);
+      } else {
+        const success = await this.deductChargeCardCredits(userId, amount, `Admin adjustment: ${reason}`, adminId);
+        if (!success) {
+          throw new Error('Insufficient balance for deduction');
+        }
+      }
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error adjusting balance:', error);
+      throw error;
+    }
+  }
+
+  async getUserBalanceHistory(userId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT cct.*, u.username, u.first_name, u.last_name
+        FROM charge_card_transactions cct
+        JOIN users u ON cct.user_id = u.id
+        WHERE cct.user_id = ${userId}
+        ORDER BY cct.created_at DESC
+        LIMIT 50
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error fetching user balance history:', error);
+      return [];
+    }
+  }
+
+  async searchUsersForBalance(query: string): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT u.id, u.username, u.first_name, u.last_name, u.email,
+               COALESCE(ccb.current_balance, 0) as current_balance,
+               COALESCE(ccb.total_credits, 0) as total_credits,
+               COALESCE(ccb.total_spent, 0) as total_spent
+        FROM users u
+        LEFT JOIN charge_card_balances ccb ON u.id = ccb.user_id
+        WHERE LOWER(u.username) LIKE LOWER(${'%' + query + '%'})
+           OR LOWER(u.first_name) LIKE LOWER(${'%' + query + '%'})
+           OR LOWER(u.last_name) LIKE LOWER(${'%' + query + '%'})
+           OR LOWER(u.email) LIKE LOWER(${'%' + query + '%'})
+        ORDER BY u.username
+        LIMIT 20
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('[Storage][ChargeCard] Error searching users:', error);
+      return [];
     }
   }
 }

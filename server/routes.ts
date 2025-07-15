@@ -3731,6 +3731,100 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
     }
   });
 
+  // Admin: Search users for balance management
+  app.get('/api/admin/charge-cards/users/search', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsersForBalance(query);
+      res.json({
+        success: true,
+        users
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error searching users for balance:', error);
+      res.status(500).json({ success: false, error: 'Failed to search users' });
+    }
+  });
+
+  // Admin: Get user balance history
+  app.get('/api/admin/charge-cards/users/:userId/history', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid user ID'
+        });
+      }
+      
+      const history = await storage.getUserBalanceHistory(userId);
+      res.json({
+        success: true,
+        history
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error fetching user balance history:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch balance history' });
+    }
+  });
+
+  // Admin: Adjust user balance
+  app.post('/api/admin/charge-cards/adjust-balance', checkChargeCardAccess, async (req: Request, res: Response) => {
+    try {
+      const { userId, amount, type, reason } = req.body;
+      const adminId = req.user?.id || 1;
+      
+      if (!userId || !amount || !type || !reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'User ID, amount, type (add/deduct), and reason are required'
+        });
+      }
+      
+      if (type !== 'add' && type !== 'deduct') {
+        return res.status(400).json({
+          success: false,
+          error: 'Type must be either "add" or "deduct"'
+        });
+      }
+      
+      const amountInCents = Math.round(amount * 100);
+      
+      if (amountInCents <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Amount must be positive'
+        });
+      }
+      
+      await storage.adjustUserBalance(userId, amountInCents, type, reason, adminId);
+      
+      res.json({
+        success: true,
+        message: `Successfully ${type === 'add' ? 'added' : 'deducted'} $${amount} ${type === 'add' ? 'to' : 'from'} user balance`,
+        adjustment: {
+          userId,
+          amount: amountInCents,
+          type,
+          reason,
+          adminId
+        }
+      });
+    } catch (error) {
+      console.error('[ChargeCard] Error adjusting balance:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || 'Failed to adjust balance' 
+      });
+    }
+  });
+
   // Admin: Create group card with direct user allocation
   app.post('/api/admin/charge-cards/create-group', checkChargeCardAccess, async (req: Request, res: Response) => {
     try {
