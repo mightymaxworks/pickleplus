@@ -3444,10 +3444,15 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
         console.log(`[ChargeCard] Processing group card: ${allocation.groupName}`);
         
         for (const userAllocation of allocation.userAllocations) {
+          // Convert amount to cents if it's a decimal string
+          const amountInCents = typeof userAllocation.amount === 'string' 
+            ? Math.round(parseFloat(userAllocation.amount) * 100)
+            : userAllocation.amount;
+
           const allocationRecord = await storage.createChargeCardAllocation({
             purchaseId,
             userId: userAllocation.userId,
-            amount: userAllocation.amount, // Already in cents
+            amount: amountInCents,
             allocatedBy: adminId,
             notes: `Group card allocation: ${allocation.groupName} (Settlement: ${allocation.settlementMethod})`
           });
@@ -3455,13 +3460,13 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
           // Add credits to user balance
           await storage.addChargeCardCredits(
             userAllocation.userId,
-            userAllocation.amount,
+            amountInCents,
             `Group card: ${allocation.groupName} (${allocation.settlementMethod})`,
             purchaseId
           );
 
           allocations.push(allocationRecord);
-          totalAmount += userAllocation.amount;
+          totalAmount += amountInCents;
         }
       } else {
         // Handle regular purchase processing
