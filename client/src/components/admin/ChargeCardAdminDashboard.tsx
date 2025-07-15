@@ -386,31 +386,70 @@ const ChargeCardAdminDashboard: React.FC = () => {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="font-medium">Amount:</span> {formatCurrency(paymentDetails.amount * 100)}
-                          </div>
-                          <div>
-                            <span className="font-medium">Payment Method:</span> {paymentDetails.paymentMethod}
-                          </div>
-                          <div>
-                            <span className="font-medium">Transaction ID:</span> {paymentDetails.transactionId}
-                          </div>
-                          <div>
-                            <span className="font-medium">Group Purchase:</span> {purchase.is_group_purchase ? 'Yes' : 'No'}
-                          </div>
-                        </div>
-
-                        {purchase.is_group_purchase && paymentDetails.participants && (
-                          <div>
-                            <span className="font-medium text-sm">Participants:</span>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {paymentDetails.participants.map((participant: string, index: number) => (
-                                <Badge key={index} variant="secondary">{participant}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        {(() => {
+                          const isGroupCard = paymentDetails.adminCreated && paymentDetails.groupName;
+                          
+                          if (isGroupCard) {
+                            const totalAmount = paymentDetails.users?.reduce((sum: number, user: any) => sum + (user.amount || 0), 0) || 0;
+                            return (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="font-medium">Group Name:</span> {paymentDetails.groupName}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Total Amount:</span> {formatCurrency(totalAmount * 100)}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Admin Created:</span> Yes
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Participants:</span> {paymentDetails.users?.length || 0} users
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-sm">User Allocations:</span>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {paymentDetails.users?.map((user: any, index: number) => (
+                                      <Badge key={index} variant="secondary">
+                                        {user.firstName} {user.lastName}: {formatCurrency((user.amount || 0) * 100)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="font-medium">Amount:</span> {paymentDetails.amount ? formatCurrency(paymentDetails.amount * 100) : 'N/A'}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Payment Method:</span> {paymentDetails.paymentMethod || 'N/A'}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Transaction ID:</span> {paymentDetails.transactionId || 'N/A'}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Group Purchase:</span> {purchase.is_group_purchase ? 'Yes' : 'No'}
+                                  </div>
+                                </div>
+                                {purchase.is_group_purchase && paymentDetails.participants && (
+                                  <div>
+                                    <span className="font-medium text-sm">Participants:</span>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                      {paymentDetails.participants.map((participant: string, index: number) => (
+                                        <Badge key={index} variant="secondary">{participant}</Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        })()}
                       </div>
                     );
                   })}
@@ -557,25 +596,68 @@ const ChargeCardAdminDashboard: React.FC = () => {
           
           {selectedPurchase && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Organizer:</span>
-                  <p>{selectedPurchase.first_name} {selectedPurchase.last_name}</p>
-                </div>
-                <div>
-                  <span className="font-medium">Amount:</span>
-                  <p>{formatCurrency(JSON.parse(selectedPurchase.payment_details).amount * 100)}</p>
-                </div>
-                <div>
-                  <span className="font-medium">Payment Method:</span>
-                  <p>{JSON.parse(selectedPurchase.payment_details).paymentMethod}</p>
-                </div>
-                <div>
-                  <span className="font-medium">Transaction ID:</span>
-                  <p>{JSON.parse(selectedPurchase.payment_details).transactionId}</p>
-                </div>
-              </div>
-
+              {(() => {
+                const paymentDetails = JSON.parse(selectedPurchase.payment_details);
+                const isGroupCard = paymentDetails.adminCreated && paymentDetails.groupName;
+                
+                if (isGroupCard) {
+                  // Group card display
+                  const totalAmount = paymentDetails.users?.reduce((sum: number, user: any) => sum + (user.amount || 0), 0) || 0;
+                  return (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium">Group Name:</span>
+                          <p>{paymentDetails.groupName}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium">Total Amount:</span>
+                          <p>{formatCurrency(totalAmount * 100)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium">Created By:</span>
+                          <p>Admin (Group Card)</p>
+                        </div>
+                        <div>
+                          <span className="font-medium">Participants:</span>
+                          <p>{paymentDetails.users?.length || 0} users</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="font-medium text-sm">User Allocations:</span>
+                        {paymentDetails.users?.map((user: any, index: number) => (
+                          <div key={index} className="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                            <span>{user.firstName} {user.lastName} (@{user.username})</span>
+                            <span>{formatCurrency((user.amount || 0) * 100)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                } else {
+                  // Regular purchase display
+                  return (
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Organizer:</span>
+                        <p>{selectedPurchase.first_name} {selectedPurchase.last_name}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Amount:</span>
+                        <p>{paymentDetails.amount ? formatCurrency(paymentDetails.amount * 100) : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Payment Method:</span>
+                        <p>{paymentDetails.paymentMethod || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Transaction ID:</span>
+                        <p>{paymentDetails.transactionId || 'N/A'}</p>
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
               <div className="flex space-x-2">
                 <Button
                   onClick={submitProcessing}
