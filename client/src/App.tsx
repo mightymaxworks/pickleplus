@@ -533,6 +533,13 @@ export default function App() {
                     pageTitle="Transparent Points Allocation"
                   />
                   
+                  {/* PKL-278651-COACH-MATCH-INTEGRATION - Phase 3: Coach Assessment Workflow */}
+                  <ProtectedRouteWithLayout
+                    path="/coach-assessment-workflow"
+                    component={lazyLoad(() => import('./pages/coach-assessment-workflow-page'))}
+                    pageTitle="Coach Assessment Workflow"
+                  />
+                  
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"

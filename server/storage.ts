@@ -244,6 +244,17 @@ export interface IStorage extends CommunityStorage {
   createCoachingSession(data: InsertCoachingSession): Promise<CoachingSession>;
   getCoachingSessions(coachId: number): Promise<CoachingSession[]>;
   
+  // Coach Assessment operations
+  saveCoachAssessment(data: any): Promise<any>;
+  getCoachAssessment(id: number): Promise<any>;
+  updateCoachAssessment(id: number, data: any): Promise<any>;
+  createCoachAssessment(data: any): Promise<number>;
+  createTransparentPointsBreakdown(data: any): Promise<void>;
+  getTransparentPointsBreakdown(params: any): Promise<any>;
+  getCoachEffectiveness(params: any): Promise<any>;
+  getMatchCoachingCorrelation(params: any): Promise<any>;
+  getAssessmentHistory(params: any): Promise<any[]>;
+  
   // Admin Coach Role Management operations
   updateCoachRoles(coachId: number, roleData: any): Promise<void>;
   getAllCoaches(): Promise<any[]>;
@@ -3658,6 +3669,211 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('[Storage][ChargeCard] Error bulk adjusting group members:', error);
+      throw error;
+    }
+  }
+  
+  // Coach Assessment operations
+  async saveCoachAssessment(data: any): Promise<any> {
+    try {
+      const assessment = {
+        id: Date.now(),
+        matchId: data.matchId,
+        playerId: data.playerId,
+        coachId: data.coachId,
+        ...data.assessment,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      console.log('[Storage][CoachAssessment] Saving assessment:', assessment);
+      
+      // In a real implementation, this would save to database
+      // For now, we'll just return the assessment with an ID
+      return assessment;
+    } catch (error) {
+      console.error('[Storage][CoachAssessment] Error saving assessment:', error);
+      throw error;
+    }
+  }
+  
+  async getCoachAssessment(id: number): Promise<any> {
+    try {
+      console.log('[Storage][CoachAssessment] Getting assessment:', id);
+      
+      // In a real implementation, this would fetch from database
+      // For now, return a mock assessment
+      return {
+        id,
+        matchId: 123,
+        playerId: 2,
+        coachId: 1,
+        technical: 0.75,
+        tactical: 0.60,
+        physical: 0.65,
+        mental: 0.70,
+        overallRating: 0.68,
+        notes: 'Good progress on technical skills. Focus on tactical awareness.',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[Storage][CoachAssessment] Error getting assessment:', error);
+      throw error;
+    }
+  }
+  
+  async updateCoachAssessment(id: number, data: any): Promise<any> {
+    try {
+      console.log('[Storage][CoachAssessment] Updating assessment:', id, data);
+      
+      // In a real implementation, this would update the database
+      // For now, just return the updated assessment
+      return {
+        id,
+        ...data,
+        updatedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[Storage][CoachAssessment] Error updating assessment:', error);
+      throw error;
+    }
+  }
+  
+  async createCoachAssessment(data: any): Promise<number> {
+    try {
+      const assessmentId = Date.now();
+      console.log('[Storage][CoachAssessment] Creating assessment:', assessmentId, data);
+      
+      // In a real implementation, this would save to database
+      // For now, just return the ID
+      return assessmentId;
+    } catch (error) {
+      console.error('[Storage][CoachAssessment] Error creating assessment:', error);
+      throw error;
+    }
+  }
+  
+  async createTransparentPointsBreakdown(data: any): Promise<void> {
+    try {
+      console.log('[Storage][TransparentPoints] Creating points breakdown:', data);
+      
+      // In a real implementation, this would save to database
+      // For now, just log the data
+    } catch (error) {
+      console.error('[Storage][TransparentPoints] Error creating points breakdown:', error);
+      throw error;
+    }
+  }
+  
+  async getTransparentPointsBreakdown(params: any): Promise<any> {
+    try {
+      console.log('[Storage][TransparentPoints] Getting points breakdown:', params);
+      
+      // Return mock data for demonstration
+      return {
+        totalSessions: 12,
+        totalPoints: 845,
+        averagePoints: 70.4,
+        breakdown: [
+          {
+            date: '2025-07-15',
+            basePoints: 10,
+            coachingMultiplier: 1.25,
+            improvementBonus: 2.5,
+            totalPoints: 15.0,
+            category: 'technical_focus'
+          },
+          {
+            date: '2025-07-14',
+            basePoints: 10,
+            coachingMultiplier: 1.15,
+            improvementBonus: 1.8,
+            totalPoints: 13.3,
+            category: 'tactical_development'
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Storage][TransparentPoints] Error getting points breakdown:', error);
+      throw error;
+    }
+  }
+  
+  async getCoachEffectiveness(params: any): Promise<any> {
+    try {
+      console.log('[Storage][CoachEffectiveness] Getting effectiveness metrics:', params);
+      
+      // Return mock data for demonstration
+      return {
+        overallScore: 8.7,
+        studentImprovement: 85.5,
+        sessionQuality: 92.0,
+        communication: 88.5,
+        technicalKnowledge: 94.0,
+        sessionsCompleted: 47,
+        averageSessionRating: 4.4,
+        improvementTrajectory: 'upward'
+      };
+    } catch (error) {
+      console.error('[Storage][CoachEffectiveness] Error getting effectiveness:', error);
+      throw error;
+    }
+  }
+  
+  async getMatchCoachingCorrelation(params: any): Promise<any> {
+    try {
+      console.log('[Storage][MatchCoachingCorrelation] Getting correlation data:', params);
+      
+      // Return mock data for demonstration
+      return {
+        correlationScore: 0.78,
+        coachingImpact: 'high',
+        performanceImprovement: 23.5,
+        matchesAnalyzed: 8,
+        keyInsights: [
+          'Strong tactical improvement during coached sessions',
+          'Consistent performance gains in competitive matches',
+          'Reduced unforced errors by 18%'
+        ]
+      };
+    } catch (error) {
+      console.error('[Storage][MatchCoachingCorrelation] Error getting correlation:', error);
+      throw error;
+    }
+  }
+  
+  async getAssessmentHistory(params: any): Promise<any[]> {
+    try {
+      console.log('[Storage][AssessmentHistory] Getting assessment history:', params);
+      
+      // Return mock data for demonstration
+      return [
+        {
+          id: 1,
+          date: '2025-07-17',
+          technical: 75,
+          tactical: 68,
+          physical: 72,
+          mental: 80,
+          overallRating: 73.75,
+          notes: 'Excellent progress on serve consistency',
+          coachName: 'Sarah Chen'
+        },
+        {
+          id: 2,
+          date: '2025-07-15',
+          technical: 70,
+          tactical: 65,
+          physical: 70,
+          mental: 75,
+          overallRating: 70.0,
+          notes: 'Focus on net play and positioning',
+          coachName: 'Sarah Chen'
+        }
+      ];
+    } catch (error) {
+      console.error('[Storage][AssessmentHistory] Error getting assessment history:', error);
       throw error;
     }
   }
