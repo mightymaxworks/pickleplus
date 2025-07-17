@@ -157,7 +157,7 @@ export function registerAllAdminComponents() {
   registerCoachComponents(); // Added Coach Management
   registerTrainingCenterComponents(); // Added Training Center Management
   registerSystemToolsComponents(); // Added System Tools
-  registerChargeCardComponents(); // Added Charge Card Management
+  // registerChargeCardComponents(); // Hidden for coaching features focus
   
   console.log('[Admin] Admin components registered');
 }
