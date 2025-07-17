@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
 import { PostMatchAssessment } from '@/components/match/PostMatchAssessment';
+import { CoachMatchRecording } from '@/components/coach-match-integration/CoachMatchRecording';
 import { 
   Card, 
   CardContent, 
@@ -15,6 +16,7 @@ import {
   CardFooter 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft,
   ArrowRight, 
@@ -24,7 +26,9 @@ import {
   Calendar,
   Award,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  GraduationCap,
+  Activity
 } from 'lucide-react';
 import { 
   motion, 
@@ -65,6 +69,11 @@ export default function RecordMatchPage() {
   // Pre-filled player data from QR scan
   const [prefilledPlayer, setPrefilledPlayer] = useState<any>(null);
   
+  // Coach-match integration state
+  const [coachMode, setCoachMode] = useState(false);
+  const [isCoach, setIsCoach] = useState(false);
+  const [activeMatchId, setActiveMatchId] = useState<number | null>(null);
+  
   // Initialize with user's data and check for QR scan data
   useEffect(() => {
     // Check for pre-filled player data from QR scan
@@ -84,6 +93,18 @@ export default function RecordMatchPage() {
       } catch (error) {
         console.error('Failed to parse stored player data:', error);
       }
+    }
+    
+    // Check if user is a coach
+    if (user?.coachProfile) {
+      setIsCoach(true);
+    }
+    
+    // Check for coach mode parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const coachModeParam = urlParams.get('coach');
+    if (coachModeParam === 'true') {
+      setCoachMode(true);
     }
     
     // Publish event that match recording has started
@@ -215,12 +236,57 @@ export default function RecordMatchPage() {
           )}
         </AnimatePresence>
         
+        {/* Coach Mode Toggle */}
+        {isCoach && (
+          <div className="mb-6">
+            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-900">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-blue-100 dark:bg-blue-800/30 rounded-full flex items-center justify-center">
+                      <GraduationCap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-700 dark:text-blue-400">
+                        Coach Mode Available
+                      </h3>
+                      <p className="text-sm text-blue-600 dark:text-blue-300">
+                        Enable advanced coaching features and real-time assessment
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={coachMode ? "default" : "outline"}>
+                      <Activity className="w-3 h-3 mr-1" />
+                      {coachMode ? "Coach Mode On" : "Standard Mode"}
+                    </Badge>
+                    <Button
+                      variant={coachMode ? "secondary" : "default"}
+                      onClick={() => setCoachMode(!coachMode)}
+                      size="sm"
+                    >
+                      {coachMode ? "Disable" : "Enable"} Coach Mode
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Main Content - Only show match recorder if not in success or assessment state */}
         {!showSuccess && !showAssessment && (
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardContent className="p-0">
-              {/* The actual match recording form */}
-              <QuickMatchRecorder onSuccess={handleMatchComplete} prefilledPlayer={prefilledPlayer} />
+              {coachMode ? (
+                <CoachMatchRecording
+                  coachMode={true}
+                  onMatchRecorded={handleMatchComplete}
+                  playerId={prefilledPlayer?.id}
+                />
+              ) : (
+                <QuickMatchRecorder onSuccess={handleMatchComplete} prefilledPlayer={prefilledPlayer} />
+              )}
             </CardContent>
           </Card>
         )}

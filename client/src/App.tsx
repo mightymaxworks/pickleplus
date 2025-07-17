@@ -519,6 +519,20 @@ export default function App() {
                     pageTitle="Coach Goal Management"
                   />
                   
+                  {/* PKL-278651-COACH-MATCH-INTEGRATION - Coach Match Integration Dashboard */}
+                  <ProtectedRouteWithLayout
+                    path="/coach-match-dashboard"
+                    component={lazyLoad(() => import('./pages/coach-match-dashboard-page'))}
+                    pageTitle="Coach Match Integration"
+                  />
+                  
+                  {/* PKL-278651-COACH-MATCH-INTEGRATION - Phase 2: Transparent Points Allocation */}
+                  <ProtectedRouteWithLayout
+                    path="/transparent-points-allocation"
+                    component={lazyLoad(() => import('./pages/transparent-points-allocation-page'))}
+                    pageTitle="Transparent Points Allocation"
+                  />
+                  
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"

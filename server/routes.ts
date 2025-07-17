@@ -64,6 +64,8 @@ import sageApiRoutes from "./routes/sage-api-routes"; // PKL-278651-SAGE-0029-AP
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { requireAdmin } from "./middleware/auth";
+import { coachMatchIntegrationRoutes } from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 1
+import { transparentPointsAllocationRoutes } from "./api/transparent-points-allocation"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 2
 // Removed special routes import - using consolidated multi-rankings implementation
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 import { 
@@ -83,6 +85,7 @@ import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-2
 import trainingCenterAdminRoutes from "./routes/training-center-admin-routes"; // PKL-278651-TRAINING-CENTER-ADMIN-001 - Training Center Admin
 import pcpCertificationRoutes from "./routes/pcp-certification-routes"; // PCP Coaching Certification Programme
 import pcpCoachingRoutes from "./routes/pcp-coaching-routes.js"; // PCP Coaching Ecosystem API Routes
+import { setupCoachMatchIntegrationRoutes } from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 1
 
 /**
  * Register all application routes with the Express app
@@ -4082,6 +4085,23 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   });
 
   console.log('[API] Charge Card system routes registered');
+
+  // PKL-278651-COACH-MATCH-INTEGRATION - Phase 1: Coach-Match Integration
+  setupCoachMatchIntegrationRoutes(app);
+  
+  // Phase 2: Transparent Points Allocation Routes
+  app.post('/api/transparent-points/allocation', transparentPointsAllocationRoutes.createPointsAllocation);
+  app.get('/api/transparent-points/allocation/:matchId/:playerId', transparentPointsAllocationRoutes.getPointsAllocation);
+  app.post('/api/transparent-points/coach-effectiveness', transparentPointsAllocationRoutes.createCoachEffectiveness);
+  app.get('/api/transparent-points/coach-effectiveness/:coachId', transparentPointsAllocationRoutes.getCoachEffectiveness);
+  app.post('/api/transparent-points/correlation', transparentPointsAllocationRoutes.createMatchCoachingCorrelation);
+  app.get('/api/transparent-points/correlation/:coachId/:studentId', transparentPointsAllocationRoutes.getMatchCoachingCorrelation);
+  app.put('/api/transparent-points/correlation/:coachId/:studentId', transparentPointsAllocationRoutes.updateMatchCoachingCorrelation);
+  app.post('/api/transparent-points/performance-prediction', transparentPointsAllocationRoutes.createPerformancePrediction);
+  app.get('/api/transparent-points/performance-prediction/:studentId', transparentPointsAllocationRoutes.getPerformancePrediction);
+  app.put('/api/transparent-points/performance-prediction/:id', transparentPointsAllocationRoutes.updatePerformancePrediction);
+  app.get('/api/transparent-points/analytics/:coachId', transparentPointsAllocationRoutes.getCoachAnalytics);
+  console.log('[API] Coach-Match Integration routes registered');
 
   // PKL-278651-NOTIF-0001 - Notifications System
   app.use('/api/notifications', notificationsRoutes);

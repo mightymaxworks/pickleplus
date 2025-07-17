@@ -591,6 +591,38 @@ import {
   type GoalPriorityType
 } from './schema/goals';
 
+// Import coach-match integration schema (PKL-278651-COACH-MATCH-INTEGRATION - Phase 1)
+import {
+  coachingSessionMatches,
+  coachMatchInput,
+  matchPcpAssessments,
+  pointsAllocationExplanation,
+  coachStudentProgress,
+  coachingSessionMatchesRelations,
+  coachMatchInputRelations,
+  matchPcpAssessmentsRelations,
+  pointsAllocationExplanationRelations,
+  coachStudentProgressRelations,
+  insertCoachingSessionMatchSchema,
+  insertCoachMatchInputSchema,
+  insertMatchPcpAssessmentSchema,
+  insertPointsAllocationExplanationSchema,
+  insertCoachStudentProgressSchema,
+  MatchContext,
+  CoachInputType,
+  SkillCategory,
+  type CoachingSessionMatch,
+  type InsertCoachingSessionMatch,
+  type CoachMatchInput,
+  type InsertCoachMatchInput,
+  type MatchPcpAssessment,
+  type InsertMatchPcpAssessment,
+  type PointsAllocationExplanation,
+  type InsertPointsAllocationExplanation,
+  type CoachStudentProgress,
+  type InsertCoachStudentProgress
+} from './schema/coach-match-integration';
+
 // Import moderation schema (PKL-278651-COMM-0029-MOD - Enhanced Community Moderation Tools)
 import {
   contentReports,
@@ -1823,6 +1855,38 @@ export {
   type InsertBounceAutomationSchedule,
   type BounceAutomationTestRun,
   type InsertBounceAutomationTestRun
+};
+
+// Export coach-match integration components (PKL-278651-COACH-MATCH-INTEGRATION - Phase 1)
+export {
+  coachingSessionMatches,
+  coachMatchInput,
+  matchPcpAssessments,
+  pointsAllocationExplanation,
+  coachStudentProgress,
+  coachingSessionMatchesRelations,
+  coachMatchInputRelations,
+  matchPcpAssessmentsRelations,
+  pointsAllocationExplanationRelations,
+  coachStudentProgressRelations,
+  insertCoachingSessionMatchSchema,
+  insertCoachMatchInputSchema,
+  insertMatchPcpAssessmentSchema,
+  insertPointsAllocationExplanationSchema,
+  insertCoachStudentProgressSchema,
+  MatchContext,
+  CoachInputType,
+  SkillCategory,
+  type CoachingSessionMatch,
+  type InsertCoachingSessionMatch,
+  type CoachMatchInput,
+  type InsertCoachMatchInput,
+  type MatchPcpAssessment,
+  type InsertMatchPcpAssessment,
+  type PointsAllocationExplanation,
+  type InsertPointsAllocationExplanation,
+  type CoachStudentProgress,
+  type InsertCoachStudentProgress
 };
 
 // Add additional core schema exports here as the system grows

@@ -5,8 +5,13 @@ import {
   tournaments,
   type XpTransaction, type InsertXpTransaction,
   activities, type InsertActivity,
-  chargeCardPurchases, chargeCardAllocations, chargeCardBalances, chargeCardTransactions, userFeatureFlags
+  chargeCardPurchases, chargeCardAllocations, chargeCardBalances, chargeCardTransactions, userFeatureFlags,
+  coachingSessionMatches, coachMatchInput, matchPcpAssessments, pointsAllocationExplanation, coachStudentProgress
 } from "@shared/schema";
+import {
+  pointsAllocationBreakdown, coachEffectivenessScoring, matchCoachingCorrelation, studentPerformancePrediction,
+  type PointsAllocationBreakdown, type CoachEffectivenessScoring, type MatchCoachingCorrelation, type StudentPerformancePrediction
+} from "@shared/schema/transparent-points-allocation";
 
 // Define coach types directly since they're not exported from schema yet
 interface CoachApplication {
@@ -1439,6 +1444,288 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return session;
+  }
+
+  async getCoachingSession(sessionId: number): Promise<any | null> {
+    const [session] = await db
+      .select()
+      .from(coachingSessions)
+      .where(eq(coachingSessions.id, sessionId));
+    return session || null;
+  }
+
+  // Coach-Match Integration operations
+  async createCoachingSessionMatch(data: any): Promise<any> {
+    const [sessionMatch] = await db
+      .insert(coachingSessionMatches)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return sessionMatch;
+  }
+
+  async getCoachingSessionsByMatch(matchId: number): Promise<any[]> {
+    return db
+      .select()
+      .from(coachingSessionMatches)
+      .where(eq(coachingSessionMatches.matchId, matchId))
+      .orderBy(desc(coachingSessionMatches.createdAt));
+  }
+
+  async createCoachMatchInput(data: any): Promise<any> {
+    const [input] = await db
+      .insert(coachMatchInput)
+      .values({
+        ...data,
+        createdAt: new Date()
+      })
+      .returning();
+    return input;
+  }
+
+  async getCoachMatchInputs(matchId: number): Promise<any[]> {
+    return db
+      .select()
+      .from(coachMatchInput)
+      .where(eq(coachMatchInput.matchId, matchId))
+      .orderBy(coachMatchInput.timestamp);
+  }
+
+  async createMatchPcpAssessment(data: any): Promise<any> {
+    const [assessment] = await db
+      .insert(matchPcpAssessments)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return assessment;
+  }
+
+  async getMatchPcpAssessment(matchId: number, playerId: number): Promise<any | null> {
+    const [assessment] = await db
+      .select()
+      .from(matchPcpAssessments)
+      .where(
+        and(
+          eq(matchPcpAssessments.matchId, matchId),
+          eq(matchPcpAssessments.playerId, playerId)
+        )
+      );
+    return assessment || null;
+  }
+
+  async createPointsAllocationExplanation(data: any): Promise<any> {
+    const [explanation] = await db
+      .insert(pointsAllocationExplanation)
+      .values({
+        ...data,
+        createdAt: new Date()
+      })
+      .returning();
+    return explanation;
+  }
+
+  async getPointsAllocationExplanation(matchId: number, playerId: number): Promise<any | null> {
+    const [explanation] = await db
+      .select()
+      .from(pointsAllocationExplanation)
+      .where(
+        and(
+          eq(pointsAllocationExplanation.matchId, matchId),
+          eq(pointsAllocationExplanation.playerId, playerId)
+        )
+      );
+    return explanation || null;
+  }
+
+  async upsertCoachStudentProgress(data: any): Promise<any> {
+    const [progress] = await db
+      .insert(coachStudentProgress)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: [coachStudentProgress.coachId, coachStudentProgress.studentId],
+        set: {
+          ...data,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return progress;
+  }
+
+  async getCoachStudentProgress(coachId: number, studentId?: number): Promise<any[]> {
+    const query = db
+      .select()
+      .from(coachStudentProgress)
+      .where(eq(coachStudentProgress.coachId, coachId));
+    
+    if (studentId) {
+      query.where(eq(coachStudentProgress.studentId, studentId));
+    }
+    
+    return query.orderBy(desc(coachStudentProgress.updatedAt));
+  }
+
+  // Transparent Points Allocation operations
+  async createPointsAllocationBreakdown(data: any): Promise<PointsAllocationBreakdown> {
+    const [breakdown] = await db
+      .insert(pointsAllocationBreakdown)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return breakdown;
+  }
+
+  async getPointsAllocationBreakdown(matchId: number, playerId: number): Promise<PointsAllocationBreakdown | null> {
+    const [breakdown] = await db
+      .select()
+      .from(pointsAllocationBreakdown)
+      .where(
+        and(
+          eq(pointsAllocationBreakdown.matchId, matchId),
+          eq(pointsAllocationBreakdown.playerId, playerId)
+        )
+      );
+    return breakdown || null;
+  }
+
+  async createCoachEffectivenessScoring(data: any): Promise<CoachEffectivenessScoring> {
+    const [scoring] = await db
+      .insert(coachEffectivenessScoring)
+      .values({
+        ...data,
+        createdAt: new Date()
+      })
+      .returning();
+    return scoring;
+  }
+
+  async getCoachEffectivenessScoring(coachId: number, studentId?: number): Promise<CoachEffectivenessScoring[]> {
+    const query = db
+      .select()
+      .from(coachEffectivenessScoring)
+      .where(eq(coachEffectivenessScoring.coachId, coachId));
+    
+    if (studentId) {
+      query.where(eq(coachEffectivenessScoring.studentId, studentId));
+    }
+    
+    return query.orderBy(desc(coachEffectivenessScoring.createdAt));
+  }
+
+  async createMatchCoachingCorrelation(data: any): Promise<MatchCoachingCorrelation> {
+    const [correlation] = await db
+      .insert(matchCoachingCorrelation)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return correlation;
+  }
+
+  async getMatchCoachingCorrelation(coachId: number, studentId: number): Promise<MatchCoachingCorrelation | null> {
+    const [correlation] = await db
+      .select()
+      .from(matchCoachingCorrelation)
+      .where(
+        and(
+          eq(matchCoachingCorrelation.coachId, coachId),
+          eq(matchCoachingCorrelation.studentId, studentId)
+        )
+      )
+      .orderBy(desc(matchCoachingCorrelation.updatedAt));
+    return correlation || null;
+  }
+
+  async updateMatchCoachingCorrelation(coachId: number, studentId: number, data: any): Promise<MatchCoachingCorrelation> {
+    const [correlation] = await db
+      .update(matchCoachingCorrelation)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(matchCoachingCorrelation.coachId, coachId),
+          eq(matchCoachingCorrelation.studentId, studentId)
+        )
+      )
+      .returning();
+    return correlation;
+  }
+
+  async createStudentPerformancePrediction(data: any): Promise<StudentPerformancePrediction> {
+    const [prediction] = await db
+      .insert(studentPerformancePrediction)
+      .values({
+        ...data,
+        createdAt: new Date()
+      })
+      .returning();
+    return prediction;
+  }
+
+  async getStudentPerformancePrediction(studentId: number, predictionType?: string): Promise<StudentPerformancePrediction[]> {
+    const query = db
+      .select()
+      .from(studentPerformancePrediction)
+      .where(eq(studentPerformancePrediction.studentId, studentId));
+    
+    if (predictionType) {
+      query.where(eq(studentPerformancePrediction.predictionType, predictionType));
+    }
+    
+    return query.orderBy(desc(studentPerformancePrediction.createdAt));
+  }
+
+  async updateStudentPerformancePrediction(id: number, data: any): Promise<StudentPerformancePrediction> {
+    const [prediction] = await db
+      .update(studentPerformancePrediction)
+      .set(data)
+      .where(eq(studentPerformancePrediction.id, id))
+      .returning();
+    return prediction;
+  }
+
+  async getCoachDashboardData(coachId: number): Promise<any> {
+    // Get coach's students with their progress
+    const students = await this.getCoachStudentProgress(coachId);
+    
+    // Get recent sessions
+    const recentSessions = await db
+      .select()
+      .from(coachingSessions)
+      .where(eq(coachingSessions.coachId, coachId))
+      .orderBy(desc(coachingSessions.createdAt))
+      .limit(10);
+    
+    // Get coaching effectiveness metrics
+    const coachingMetrics = await db
+      .select()
+      .from(matchPcpAssessments)
+      .where(eq(matchPcpAssessments.coachId, coachId))
+      .orderBy(desc(matchPcpAssessments.createdAt))
+      .limit(50);
+    
+    return {
+      students,
+      recentSessions,
+      coachingMetrics
+    };
   }
 
   // PCP Certification operations
