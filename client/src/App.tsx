@@ -540,6 +540,13 @@ export default function App() {
                     pageTitle="Coach Assessment Workflow"
                   />
                   
+                  {/* PKL-278651-COACH-WORKFLOW-GUIDE - Complete Coach Workflow Documentation */}
+                  <ProtectedRouteWithLayout
+                    path="/coach-workflow-guide"
+                    component={lazyLoad(() => import('./pages/coach-workflow-guide-page'))}
+                    pageTitle="Coach Workflow Guide"
+                  />
+                  
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
                     path="/courtiq/analysis"
