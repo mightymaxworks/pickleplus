@@ -1,6 +1,6 @@
 /**
- * PCP Coaching Certification Programme - Main Page
- * Comprehensive certification pathway for aspiring pickleball coaches
+ * PCP Coaching Certification Programme - Revolutionary Five Levels
+ * The gold standard pathway transforming passionate players into world-class coaches
  */
 
 import React, { useState } from 'react';
@@ -27,7 +27,15 @@ import {
   Calendar,
   FileText,
   Video,
-  UserCheck
+  UserCheck,
+  Briefcase,
+  Globe,
+  Building,
+  Heart,
+  Zap,
+  TrendingUp,
+  Shield,
+  Crown
 } from 'lucide-react';
 import { Link } from 'wouter';
 
@@ -73,10 +81,114 @@ export default function PCPCertificationPage() {
     enabled: !!user
   });
 
-  const levels = levelsResponse?.data || [];
+  // Revolutionary Five Levels of PCP Certification
+  const revolutionaryLevels = [
+    {
+      id: 1,
+      levelName: 'Clear Communication',
+      subtitle: 'Entry Coach',
+      emoji: '🌱',
+      badge: '🟢 Certified Starter Coach',
+      color: 'bg-green-500',
+      borderColor: 'border-green-200',
+      bgColor: 'bg-green-50',
+      description: 'Your First Step to Coaching Excellence',
+      tagline: 'PCP Level 1 Coaches learn to communicate with clarity, simplicity, and intention. They begin coaching at FPF facilities under supervision, running basic sessions and earning an income while gaining confidence and experience.',
+      realWorldRole: 'Entry-level assistant coach at FPF or affiliate venues.',
+      icon: Heart,
+      features: [
+        'Master clear, intentional communication',
+        'Start earning income while learning',
+        'Supervised coaching at premier facilities',
+        'Build confidence with real students'
+      ]
+    },
+    {
+      id: 2,
+      levelName: 'Listen and Observe',
+      subtitle: 'Technical Coach',
+      emoji: '🔧',
+      badge: '🔵 Certified Technical Coach',
+      color: 'bg-blue-500',
+      borderColor: 'border-blue-200',
+      bgColor: 'bg-blue-50',
+      description: 'Mastering the Art of Technique',
+      tagline: 'Level 2 coaches refine their ability to listen to players and observe movement patterns, correcting technique using the CLEAR model. They are recognized as independent technical coaches at PCP and FPF facilities.',
+      realWorldRole: 'Full-fledged technical coach with personal clients.',
+      icon: Target,
+      features: [
+        'Advanced movement pattern analysis',
+        'Independent coaching authorization',
+        'CLEAR model technique correction',
+        'Build personal client base'
+      ]
+    },
+    {
+      id: 3,
+      levelName: 'Educate and Demonstrate',
+      subtitle: 'Community Builder',
+      emoji: '🌟',
+      badge: '🟣 Community Leader Coach',
+      color: 'bg-purple-500',
+      borderColor: 'border-purple-200',
+      bgColor: 'bg-purple-50',
+      description: 'Beyond the Court: Leading With Impact',
+      tagline: 'Coaches at Level 3 are empowered to run community programs, lead group clinics, and mentor younger coaches. They focus on building local pickleball ecosystems and uplifting players through education and demonstration.',
+      realWorldRole: 'Lead community events, develop club culture, represent PCP in outreach.',
+      icon: Users,
+      features: [
+        'Lead community programs and clinics',
+        'Mentor emerging coaches',
+        'Build thriving pickleball ecosystems',
+        'Represent PCP in community outreach'
+      ]
+    },
+    {
+      id: 4,
+      levelName: 'Apply Techniques',
+      subtitle: 'Facility Manager',
+      emoji: '🏢',
+      badge: '🟠 Facility Operations Coach',
+      color: 'bg-orange-500',
+      borderColor: 'border-orange-200',
+      bgColor: 'bg-orange-50',
+      description: 'Operational Leadership Through Coaching',
+      tagline: 'At Level 4, coaching is applied to systems, not just individuals. Coaches are now qualified to manage venues, oversee staff, run leagues, and ensure operational excellence in line with PCP values.',
+      realWorldRole: 'Manage a PCP or FPF venue; lead leagues and program scheduling.',
+      icon: Building,
+      features: [
+        'Manage entire venues and facilities',
+        'Oversee coaching staff and operations',
+        'Run leagues and tournament programs',
+        'Ensure systematic operational excellence'
+      ]
+    },
+    {
+      id: 5,
+      levelName: 'Reinforce',
+      subtitle: 'Senior Management & National Coach Track',
+      emoji: '👑',
+      badge: '⚫️ Master Coach & Executive Track',
+      color: 'bg-gray-800',
+      borderColor: 'border-gray-300',
+      bgColor: 'bg-gray-50',
+      description: 'Visionary Coaching for the Future of the Sport',
+      tagline: 'PCP Level 5 Coaches are leaders, mentors, and decision-makers. They influence policy, coach national-level players, lead international certification, and represent PCP globally.',
+      realWorldRole: 'High-performance director, senior coach, certification examiner, executive track.',
+      icon: Crown,
+      features: [
+        'Influence sport policy and direction',
+        'Coach national and international players',
+        'Lead global certification programs',
+        'Executive leadership opportunities'
+      ]
+    }
+  ];
+
+  const levels = levelsResponse?.data || revolutionaryLevels;
   const userStatus: UserCertificationStatus = userStatusResponse?.data || {
     completedLevels: [],
-    availableLevels: levels.map((l: CertificationLevel) => l.id)
+    availableLevels: revolutionaryLevels.map(l => l.id)
   };
 
   const getLevelIcon = (levelCode: string) => {
@@ -101,124 +213,179 @@ export default function PCPCertificationPage() {
     }
   };
 
-  const ProgramOverview = () => (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center space-y-4">
+  const RevolutionaryOverview = () => (
+    <div className="space-y-12">
+      {/* Revolutionary Hero Section */}
+      <div className="text-center space-y-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 text-white p-12 rounded-3xl">
         <div className="flex justify-center">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-2xl">
-            <Award className="w-12 h-12 text-white" />
+          <div className="bg-white/20 backdrop-blur-sm p-6 rounded-3xl">
+            <Crown className="w-16 h-16 text-white" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold text-gray-900">PCP Coaching Certification Programme</h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Master the art of pickleball coaching with our comprehensive certification program. 
-          From beginner instruction to advanced strategy development.
-        </p>
+        <div className="space-y-4">
+          <h1 className="text-5xl font-bold">🌱 The Five Levels of PCP Certification</h1>
+          <p className="text-2xl font-light max-w-4xl mx-auto leading-relaxed">
+            The Revolutionary Pathway That Transforms Passionate Players Into World-Class Coaches
+          </p>
+          <p className="text-lg opacity-90 max-w-3xl mx-auto">
+            From your first step as an Entry Coach to leading the future of pickleball as a Master Coach, 
+            each level builds your expertise, earning potential, and impact on the sport.
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3 mt-8">
+          <Badge className="bg-white/20 text-white text-sm px-4 py-2">💰 Earn While You Learn</Badge>
+          <Badge className="bg-white/20 text-white text-sm px-4 py-2">🏆 Industry Recognition</Badge>
+          <Badge className="bg-white/20 text-white text-sm px-4 py-2">🌍 Global Opportunities</Badge>
+        </div>
       </div>
 
-      {/* Program Benefits */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="w-5 h-5 text-yellow-500" />
-            Why Choose PCP Certification?
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center space-y-2">
-              <div className="bg-blue-100 p-3 rounded-lg w-fit mx-auto">
-                <Trophy className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="font-semibold">Industry Recognition</h3>
-              <p className="text-sm text-gray-600">Recognized by training centers and facilities nationwide</p>
-            </div>
-            <div className="text-center space-y-2">
-              <div className="bg-green-100 p-3 rounded-lg w-fit mx-auto">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold">Higher Earning Potential</h3>
-              <p className="text-sm text-gray-600">Certified coaches earn 30-50% more than non-certified instructors</p>
-            </div>
-            <div className="text-center space-y-2">
-              <div className="bg-purple-100 p-3 rounded-lg w-fit mx-auto">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold">Professional Network</h3>
-              <p className="text-sm text-gray-600">Join a community of elite pickleball coaches</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Revolutionary Five Levels Showcase */}
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Your Revolutionary Journey Awaits</h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Each level unlocks new opportunities, income potential, and leadership roles in the rapidly growing pickleball industry.
+          </p>
+        </div>
 
-      {/* Learning Path */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-blue-500" />
-            Your Learning Journey
-          </CardTitle>
-          <CardDescription>
-            Structured progression from fundamental coaching skills to master-level expertise
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {levels.map((level: CertificationLevel, index: number) => {
-              const isCompleted = userStatus.completedLevels.includes(level.levelCode);
-              const isInProgress = userStatus.inProgress?.levelId === level.id;
-              const isAvailable = userStatus.availableLevels.includes(level.id);
-              
-              return (
-                <div key={level.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                  <div className={`p-2 rounded-lg ${getLevelColor(level.levelCode)}`}>
-                    {getLevelIcon(level.levelCode)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{level.levelName}</h3>
-                      <Badge variant="outline">{level.levelCode}</Badge>
-                      {isCompleted && <CheckCircle className="w-4 h-4 text-green-500" />}
-                      {isInProgress && <PlayCircle className="w-4 h-4 text-blue-500" />}
+        <div className="grid gap-8">
+          {revolutionaryLevels.map((level, index) => {
+            const IconComponent = level.icon;
+            const isCompleted = userStatus.completedLevels.includes(`PCP-L${level.id}`);
+            const isAvailable = userStatus.availableLevels.includes(level.id);
+            
+            return (
+              <Card key={level.id} className={`${level.borderColor} ${level.bgColor} border-2 overflow-hidden`}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`${level.color} text-white p-4 rounded-2xl`}>
+                        <IconComponent className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl">{level.emoji}</span>
+                          <h3 className="text-2xl font-bold text-gray-900">
+                            Level {level.id}: {level.levelName}
+                          </h3>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-700">{level.subtitle}</p>
+                        <Badge className={`${level.color} text-white mt-2`}>{level.badge}</Badge>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600">{level.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {level.duration <= 7 ? `${level.duration} day${level.duration > 1 ? 's' : ''}` : 
-                         level.duration === 180 ? '6 months' : `${level.duration} days`}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3" />
-                        ${(level.cost / 100).toFixed(0)}
-                      </span>
-                    </div>
-                    {isInProgress && (
-                      <Progress value={userStatus.inProgress?.progress || 0} className="mt-2" />
+                    {isCompleted && (
+                      <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">Completed</span>
+                      </div>
                     )}
                   </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
                   <div>
-                    {isCompleted ? (
-                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                    ) : isInProgress ? (
-                      <Link href={`/pcp-certification/level/${level.id}`}>
-                        <Button size="sm">Continue</Button>
-                      </Link>
-                    ) : isAvailable ? (
-                      <Link href={`/pcp-certification/apply/${level.id}`}>
-                        <Button size="sm" variant="outline">Apply</Button>
-                      </Link>
-                    ) : (
-                      <Badge variant="secondary">Locked</Badge>
-                    )}
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">{level.description}</h4>
+                    <p className="text-gray-700 leading-relaxed">{level.tagline}</p>
                   </div>
-                </div>
-              );
-            })}
+                  
+                  <div className="bg-white/80 p-4 rounded-lg">
+                    <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      Real-World Impact
+                    </h5>
+                    <p className="text-gray-700 italic">{level.realWorldRole}</p>
+                  </div>
+
+                  <div>
+                    <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      What You'll Master
+                    </h5>
+                    <div className="grid md:grid-cols-2 gap-2">
+                      {level.features.map((feature, featureIndex) => (
+                        <div key={featureIndex} className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <span className="text-sm text-gray-700">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="flex gap-6">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Investment</p>
+                        <p className="font-bold text-lg">Starting at $299</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Timeline</p>
+                        <p className="font-bold text-lg">2-6 weeks</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {isCompleted ? (
+                        <Button className="bg-green-600 hover:bg-green-700">
+                          <Trophy className="w-4 h-4 mr-2" />
+                          Certified
+                        </Button>
+                      ) : isAvailable ? (
+                        <Button className={`${level.color} hover:opacity-90`}>
+                          <Zap className="w-4 h-4 mr-2" />
+                          Start Level {level.id}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" disabled>
+                          <Shield className="w-4 h-4 mr-2" />
+                          Requires Level {level.id - 1}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Revolutionary Call to Action */}
+      <div className="bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-white p-12 rounded-3xl text-center space-y-6">
+        <div className="space-y-4">
+          <h2 className="text-4xl font-bold">Ready to Transform Your Coaching Career?</h2>
+          <p className="text-xl opacity-90 max-w-3xl mx-auto">
+            Join thousands of certified PCP coaches who have turned their passion into a thriving career. 
+            Start your journey today and become part of the pickleball coaching revolution.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+            <TrendingUp className="w-8 h-8 mx-auto mb-3" />
+            <h3 className="font-bold text-lg mb-2">150% Income Increase</h3>
+            <p className="text-sm opacity-90">Average certified coach earnings vs non-certified</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+            <Globe className="w-8 h-8 mx-auto mb-3" />
+            <h3 className="font-bold text-lg mb-2">Global Recognition</h3>
+            <p className="text-sm opacity-90">Recognized at 500+ facilities worldwide</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+            <Users className="w-8 h-8 mx-auto mb-3" />
+            <h3 className="font-bold text-lg mb-2">Elite Community</h3>
+            <p className="text-sm opacity-90">Network with top coaches and industry leaders</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 font-bold px-8 py-3">
+            <Zap className="w-5 h-5 mr-2" />
+            Start Level 1 Now
+          </Button>
+          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 font-bold px-8 py-3">
+            <Calendar className="w-5 h-5 mr-2" />
+            Schedule Info Session
+          </Button>
+        </div>
+      </div>
     </div>
   );
 
@@ -385,13 +552,13 @@ export default function PCPCertificationPage() {
       <div className="max-w-6xl mx-auto px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Program Overview</TabsTrigger>
-            <TabsTrigger value="levels">Certification Levels</TabsTrigger>
+            <TabsTrigger value="overview">🌱 Revolutionary Levels</TabsTrigger>
+            <TabsTrigger value="levels">Traditional View</TabsTrigger>
             <TabsTrigger value="progress">My Progress</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <ProgramOverview />
+            <RevolutionaryOverview />
           </TabsContent>
 
           <TabsContent value="levels">
