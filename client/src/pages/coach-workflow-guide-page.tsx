@@ -242,7 +242,7 @@ const CoachWorkflowGuidePage: React.FC<CoachWorkflowGuidePageProps> = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 mt-[57px] mb-[57px]">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
