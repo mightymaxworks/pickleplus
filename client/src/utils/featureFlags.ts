@@ -5,20 +5,20 @@
 
 export const FEATURE_FLAGS = {
   // Core UI Components
-  PKL_ENHANCED_PASSPORT: process.env.VITE_ENABLE_ENHANCED_PASSPORT === 'true',
-  PKL_ENHANCED_MATCH_RECORDER: process.env.VITE_ENABLE_ENHANCED_MATCH_RECORDER === 'true',
-  PKL_ENHANCED_RANKING: process.env.VITE_ENABLE_ENHANCED_RANKING === 'true',
-  PKL_ENHANCED_COACHING: process.env.VITE_ENABLE_ENHANCED_COACHING === 'true',
-  PKL_ENHANCED_COMMUNITY: process.env.VITE_ENABLE_ENHANCED_COMMUNITY === 'true',
+  PKL_ENHANCED_PASSPORT: import.meta.env.VITE_ENABLE_ENHANCED_PASSPORT === 'true',
+  PKL_ENHANCED_MATCH_RECORDER: import.meta.env.VITE_ENABLE_ENHANCED_MATCH_RECORDER === 'true',
+  PKL_ENHANCED_RANKING: import.meta.env.VITE_ENABLE_ENHANCED_RANKING === 'true',
+  PKL_ENHANCED_COACHING: import.meta.env.VITE_ENABLE_ENHANCED_COACHING === 'true',
+  PKL_ENHANCED_COMMUNITY: import.meta.env.VITE_ENABLE_ENHANCED_COMMUNITY === 'true',
   
   // Additional Features
-  PKL_ENHANCED_NAVIGATION: process.env.VITE_ENABLE_ENHANCED_NAVIGATION === 'true',
-  PKL_ENHANCED_TOURNAMENTS: process.env.VITE_ENABLE_ENHANCED_TOURNAMENTS === 'true',
-  PKL_ENHANCED_TRAINING_CENTERS: process.env.VITE_ENABLE_ENHANCED_TRAINING_CENTERS === 'true',
+  PKL_ENHANCED_NAVIGATION: import.meta.env.VITE_ENABLE_ENHANCED_NAVIGATION === 'true',
+  PKL_ENHANCED_TOURNAMENTS: import.meta.env.VITE_ENABLE_ENHANCED_TOURNAMENTS === 'true',
+  PKL_ENHANCED_TRAINING_CENTERS: import.meta.env.VITE_ENABLE_ENHANCED_TRAINING_CENTERS === 'true',
   
   // Global Settings
-  PKL_FORCE_MOBILE_OPTIMIZATIONS: process.env.VITE_FORCE_MOBILE_OPTIMIZATIONS === 'true',
-  PKL_ENABLE_PERFORMANCE_MONITORING: process.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true',
+  PKL_FORCE_MOBILE_OPTIMIZATIONS: import.meta.env.VITE_FORCE_MOBILE_OPTIMIZATIONS === 'true',
+  PKL_ENABLE_PERFORMANCE_MONITORING: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING === 'true',
 } as const;
 
 export type FeatureFlagKey = keyof typeof FEATURE_FLAGS;
@@ -75,7 +75,7 @@ export function getFeatureFlagStatus(): Record<string, boolean> {
  * Development helper to enable all PKL-278651 features
  */
 export function enableAllPKLFeatures(): void {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     Object.keys(FEATURE_FLAGS).forEach(flag => {
       if (flag.startsWith('PKL_')) {
         setFeatureFlag(flag as FeatureFlagKey, true);
