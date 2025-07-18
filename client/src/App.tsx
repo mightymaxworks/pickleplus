@@ -248,6 +248,7 @@ export default function App() {
                   <Route path="/complete-flow-demo" component={lazyLoad(() => import('./pages/CompleteFlowDemoPage'))} />
                   <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} />
                   <Route path="/mobile-ux-showcase" component={lazyLoad(() => import('./pages/mobile-ux-showcase'))} />
+                  <Route path="/enhanced-community-demo" component={lazyLoad(() => import('./pages/enhanced-community-demo'))} />
                   
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
