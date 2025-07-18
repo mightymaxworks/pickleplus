@@ -132,6 +132,9 @@ export default function Profile() {
 
   // Transform user tournaments to match what the UpcomingTournamentsCard component expects
   const userTournaments = useMemo(() => {
+    if (!userTournamentsRaw || !Array.isArray(userTournamentsRaw)) {
+      return [] as TournamentRegistration[];
+    }
     return userTournamentsRaw.map(t => ({
       id: t.id,
       name: t.name,
