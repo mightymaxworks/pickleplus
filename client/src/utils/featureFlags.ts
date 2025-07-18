@@ -86,6 +86,20 @@ export function enableAllPKLFeatures(): void {
 }
 
 /**
+ * Mobile-specific PKL-278651 feature activation
+ */
+export function enableMobilePKLFeatures(): void {
+  // Force enable mobile optimizations
+  setFeatureFlag('PKL_FORCE_MOBILE_OPTIMIZATIONS', true);
+  setFeatureFlag('PKL_ENHANCED_COMMUNITY', true);
+  setFeatureFlag('PKL_ENHANCED_PASSPORT', true);
+  setFeatureFlag('PKL_ENHANCED_NAVIGATION', true);
+  
+  console.log('Mobile PKL-278651 features activated');
+  window.location.reload(); // Reload to apply changes
+}
+
+/**
  * Emergency rollback function
  */
 export function emergencyRollback(): void {

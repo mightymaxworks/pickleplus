@@ -54,6 +54,10 @@ export function Header() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLocation("/dashboard")}>
+                  <User className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
                 {user?.isAdmin && (
                   <>
                     <DropdownMenuItem onClick={() => setLocation("/admin/dashboard")}>
@@ -62,12 +66,9 @@ export function Header() {
                     </DropdownMenuItem>
                   </>
                 )}
-                {/* For debugging - remove in production */}
-                <DropdownMenuItem className="text-xs text-muted-foreground">
-                  {user?.isAdmin ? "Admin: Yes" : "Admin: No"}
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
