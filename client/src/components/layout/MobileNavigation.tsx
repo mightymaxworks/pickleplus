@@ -51,12 +51,6 @@ export function MobileNavigation() {
       label: t('nav.coaching'), 
       path: '/pcp-certification',
       id: 'coaching'
-    },
-    { 
-      icon: <User size={20} />, 
-      label: t('nav.profile'), 
-      path: '/profile',
-      id: 'profile'
     }
   ];
 

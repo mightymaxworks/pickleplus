@@ -34,7 +34,7 @@ export default function QRScannerFAB() {
   return (
     <>
       <div 
-        className="fixed z-50 bottom-6 right-6"
+        className="fixed z-50 bottom-20 right-6 md:bottom-6"
         style={{ 
           transition: 'all 0.3s ease'
         }}
