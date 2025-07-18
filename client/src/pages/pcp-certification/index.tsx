@@ -314,7 +314,7 @@ export default function PCPCertificationPage() {
                     <div className="flex gap-6">
                       <div className="text-center">
                         <p className="text-xs text-gray-500 uppercase tracking-wide">Investment</p>
-                        <p className="font-bold text-lg">Starting at $299</p>
+                        <p className="font-bold text-lg">Starting at $699</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-gray-500 uppercase tracking-wide">Timeline</p>
@@ -551,18 +551,26 @@ export default function PCPCertificationPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 mt-[28px] mb-[28px]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">🌱 Revolutionary Levels</TabsTrigger>
-            <TabsTrigger value="levels">Traditional View</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">🌱 Certification Levels</TabsTrigger>
             <TabsTrigger value="progress">My Progress</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <RevolutionaryOverview />
-          </TabsContent>
-
-          <TabsContent value="levels">
-            <CertificationLevels />
+            <div className="space-y-12">
+              <RevolutionaryOverview />
+              
+              {/* Separator between revolutionary and detailed views */}
+              <div className="border-t-2 border-gray-200 pt-8">
+                <div className="text-center space-y-4 mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900">Detailed Level Breakdown</h2>
+                  <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Explore the complete requirements, benefits, and curriculum for each certification level
+                  </p>
+                </div>
+                <CertificationLevels />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="progress">

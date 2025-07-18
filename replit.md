@@ -127,6 +127,15 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
+### July 18, 2025 - PCP Certification Page UX Enhancement Complete
+- **Mobile Navigation Fixed**: Removed profile icon from bottom navigation, creating clean 4-tab layout (Home, Play, Community, Achievements)
+- **FAB Positioning Resolved**: QuickMatchFAB now positioned at bottom-20 on mobile (above nav bar) and bottom-6 on desktop to prevent blocking
+- **PCP Certification Pricing Updated**: Fixed hardcoded "$299" to correct "Starting at $699" reflecting actual Level 1 pricing
+- **Revolutionary & Traditional Views Merged**: Combined both certification views into single comprehensive page with revolutionary overview + detailed breakdown
+- **Simplified Navigation**: Reduced from 3 tabs to 2 tabs (Certification Levels + My Progress) for cleaner UX
+- **Enhanced Page Structure**: Added separator section between revolutionary overview and detailed level breakdown for better content organization
+- **Verified Backend Pricing**: Confirmed all 5 levels correctly priced (L1: $699, L2: $849, L3: $1,049, L4: $1,449, L5: $2,499)
+
 ### July 18, 2025 - PKL-278651 Incremental Migration Strategy Complete
 - **COMPREHENSIVE MIGRATION FRAMEWORK**: Implemented complete incremental migration system with feature flags, testing automation, and safety controls
 - **Feature Flag Infrastructure**: Built robust feature flag system with environment-based controls, user-specific overrides, and emergency rollback capabilities
