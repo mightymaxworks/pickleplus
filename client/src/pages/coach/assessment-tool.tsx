@@ -1,71 +1,53 @@
 /**
- * PCP Assessment Tool Page
- * 4-dimensional assessment system for coaches to evaluate players
+ * Enhanced PCP Assessment Tool Page
+ * Comprehensive 4-dimensional assessment system with real-time transparent points calculation
  */
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery } from '@tanstack/react-query';
 import { 
-  Target, 
-  Brain, 
-  Activity, 
-  Heart,
-  Save,
-  Eye,
   Users,
   ArrowLeft,
-  CheckCircle
+  Target,
+  Activity,
+  Zap
 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { queryClient } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
+import { CoachAssessmentCapture } from '@/components/coach-match-integration/CoachAssessmentCapture';
 
-interface AssessmentDimension {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  color: string;
-  weight: number;
-  description: string;
-  criteria: string[];
-}
-
-interface AssessmentData {
+interface PcpAssessment {
   technical: number;
   tactical: number;
   physical: number;
   mental: number;
-  notes: {
-    technical: string;
-    tactical: string;
-    physical: string;
-    mental: string;
-    overall: string;
-  };
+  overallImprovement: number;
+  sessionNotes: string;
+  keyObservations: string[];
+  recommendedFocus: string[];
+}
+
+interface TransparentPointsData {
+  basePoints: number;
+  coachingMultiplier: number;
+  improvementBonus: number;
+  technicalContribution: number;
+  tacticalContribution: number;
+  physicalContribution: number;
+  mentalContribution: number;
+  totalPoints: number;
+  calculationDetails: string[];
 }
 
 export default function CoachAssessmentToolPage() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
-  const [assessmentData, setAssessmentData] = useState<AssessmentData>({
-    technical: 50,
-    tactical: 50,
-    physical: 50,
-    mental: 50,
-    notes: {
-      technical: '',
-      tactical: '',
-      physical: '',
-      mental: '',
-      overall: ''
-    }
-  });
+  const [activeTab, setActiveTab] = useState('select-student');
+  const [assessmentComplete, setAssessmentComplete] = useState(false);
+  const [transparentPoints, setTransparentPoints] = useState<TransparentPointsData | null>(null);
 
   // Get student ID from URL params if available
   const urlParams = new URLSearchParams(window.location.search);
@@ -77,148 +59,77 @@ export default function CoachAssessmentToolPage() {
     staleTime: 30000,
   });
 
-  // Mock students data
+  // Mock students data with more comprehensive details
   const mockStudents = [
-    { id: 1, name: 'Sarah Johnson', level: '3.5' },
-    { id: 2, name: 'Mike Chen', level: '4.0' },
-    { id: 3, name: 'Emma Wilson', level: '3.0' }
+    { 
+      id: 1, 
+      name: 'Sarah Johnson', 
+      level: '3.5',
+      lastAssessment: '2025-07-10',
+      totalSessions: 12,
+      currentRating: 72
+    },
+    { 
+      id: 2, 
+      name: 'Mike Chen', 
+      level: '4.0',
+      lastAssessment: '2025-07-12',
+      totalSessions: 18,
+      currentRating: 78
+    },
+    { 
+      id: 3, 
+      name: 'Emma Wilson', 
+      level: '3.0',
+      lastAssessment: '2025-07-08',
+      totalSessions: 8,
+      currentRating: 65
+    },
+    { 
+      id: 4, 
+      name: 'David Rodriguez', 
+      level: '3.5',
+      lastAssessment: '2025-07-15',
+      totalSessions: 15,
+      currentRating: 69
+    },
+    { 
+      id: 5, 
+      name: 'Lisa Park', 
+      level: '4.0',
+      lastAssessment: '2025-07-14',
+      totalSessions: 22,
+      currentRating: 81
+    }
   ];
 
   const availableStudents = students || mockStudents;
 
-  // Assessment dimensions with PCP methodology
-  const dimensions: AssessmentDimension[] = [
-    {
-      id: 'technical',
-      name: 'Technical Skills',
-      icon: <Target className="h-5 w-5" />,
-      color: 'blue',
-      weight: 40,
-      description: 'Stroke mechanics, consistency, and technical fundamentals',
-      criteria: [
-        'Serve consistency and placement',
-        'Forehand and backhand technique',
-        'Volley and net play skills',
-        'Return of serve quality',
-        'Shot placement accuracy'
-      ]
-    },
-    {
-      id: 'tactical',
-      name: 'Tactical Awareness',
-      icon: <Brain className="h-5 w-5" />,
-      color: 'purple',
-      weight: 25,
-      description: 'Game strategy, decision-making, and court positioning',
-      criteria: [
-        'Shot selection and timing',
-        'Court positioning and movement',
-        'Pattern recognition',
-        'Opponent analysis',
-        'Strategic adaptability'
-      ]
-    },
-    {
-      id: 'physical',
-      name: 'Physical Fitness',
-      icon: <Activity className="h-5 w-5" />,
-      color: 'green',
-      weight: 20,
-      description: 'Athletic ability, movement, and physical conditioning',
-      criteria: [
-        'Speed and agility',
-        'Endurance and stamina',
-        'Balance and coordination',
-        'Flexibility and mobility',
-        'Recovery between points'
-      ]
-    },
-    {
-      id: 'mental',
-      name: 'Mental Game',
-      icon: <Heart className="h-5 w-5" />,
-      color: 'orange',
-      weight: 15,
-      description: 'Mental toughness, focus, and competitive mindset',
-      criteria: [
-        'Focus and concentration',
-        'Pressure handling',
-        'Confidence and composure',
-        'Competitive spirit',
-        'Learning attitude'
-      ]
-    }
-  ];
-
-  // Save assessment mutation
-  const saveAssessmentMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch('/api/coach/assessments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to save assessment');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Assessment Saved',
-        description: 'Player assessment has been saved successfully.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/coach/students'] });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Save Failed',
-        description: 'Failed to save assessment. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  });
-
-  // Calculate overall PCP rating
-  const calculateOverallRating = () => {
-    return Math.round(
-      (assessmentData.technical * 0.40) +
-      (assessmentData.tactical * 0.25) +
-      (assessmentData.physical * 0.20) +
-      (assessmentData.mental * 0.15)
-    );
+  // Handle assessment completion
+  const handleAssessmentComplete = (assessment: PcpAssessment) => {
+    console.log('Assessment completed:', assessment);
+    setAssessmentComplete(true);
+    setActiveTab('results');
   };
 
-  const handleSaveAssessment = () => {
-    if (!selectedStudent) {
-      toast({
-        title: 'Select Student',
-        description: 'Please select a student to assess.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const overallRating = calculateOverallRating();
-    
-    saveAssessmentMutation.mutate({
-      studentId: selectedStudent,
-      assessment: {
-        ...assessmentData,
-        overallRating,
-        assessmentDate: new Date().toISOString(),
-        coachId: 1 // This would come from auth context
-      }
-    });
+  // Handle points generation
+  const handlePointsGenerated = (points: TransparentPointsData) => {
+    setTransparentPoints(points);
   };
+
+  // Get selected student details
+  const selectedStudentDetails = availableStudents.find(s => s.id === selectedStudent);
 
   // Set student from URL if provided
   React.useEffect(() => {
     if (studentIdFromUrl && !selectedStudent) {
       setSelectedStudent(parseInt(studentIdFromUrl));
+      setActiveTab('assessment');
     }
   }, [studentIdFromUrl, selectedStudent]);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
+    <div className="max-w-6xl mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button 
@@ -230,185 +141,147 @@ export default function CoachAssessmentToolPage() {
           Back to Students
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">PCP Assessment Tool</h1>
-          <p className="text-gray-600">4-Dimensional Player Evaluation System</p>
+          <h1 className="text-3xl font-bold text-gray-900">Enhanced PCP Assessment Tool</h1>
+          <p className="text-gray-600">Comprehensive 4-Dimensional Player Evaluation with Real-Time Transparent Points</p>
         </div>
       </div>
 
-      {/* Student Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Select Student to Assess
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {availableStudents.map((student: any) => (
-              <Button
-                key={student.id}
-                variant={selectedStudent === student.id ? 'default' : 'outline'}
-                className="h-auto p-4 justify-start"
-                onClick={() => setSelectedStudent(student.id)}
-              >
-                <div className="text-left">
-                  <div className="font-medium">{student.name}</div>
-                  <div className="text-sm opacity-70">Level {student.level}</div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="select-student">
+            <Users className="h-4 w-4 mr-2" />
+            Select Student
+          </TabsTrigger>
+          <TabsTrigger value="assessment" disabled={!selectedStudent}>
+            <Target className="h-4 w-4 mr-2" />
+            PCP Assessment
+          </TabsTrigger>
+          <TabsTrigger value="results" disabled={!assessmentComplete}>
+            <Activity className="h-4 w-4 mr-2" />
+            Results
+          </TabsTrigger>
+        </TabsList>
 
-      {selectedStudent && (
-        <>
-          {/* Overall Rating Preview */}
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50">
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-2">
-                {calculateOverallRating()}/100
-              </div>
-              <div className="text-gray-600">Current PCP Rating</div>
-              <div className="mt-4 flex justify-center gap-4 text-sm">
-                {dimensions.map((dim) => (
-                  <div key={dim.id} className="text-center">
-                    <div className="font-medium">{dim.weight}%</div>
-                    <div className="text-gray-600">{dim.name}</div>
-                  </div>
+        {/* Student Selection Tab */}
+        <TabsContent value="select-student">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Select Student to Assess
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableStudents.map((student: any) => (
+                  <Card
+                    key={student.id}
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      selectedStudent === student.id 
+                        ? 'ring-2 ring-primary bg-primary/5' 
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => {
+                      setSelectedStudent(student.id);
+                      setActiveTab('assessment');
+                    }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <div className="font-semibold text-lg">{student.name}</div>
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>Level {student.level}</span>
+                          <Badge variant="outline">Rating: {student.currentRating}</Badge>
+                        </div>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div>Last Assessment: {student.lastAssessment}</div>
+                          <div>Total Sessions: {student.totalSessions}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Assessment Dimensions */}
-          <div className="space-y-6">
-            {dimensions.map((dimension) => (
-              <Card key={dimension.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-${dimension.color}-100 text-${dimension.color}-600`}>
-                      {dimension.icon}
+        {/* Assessment Tab */}
+        <TabsContent value="assessment">
+          {selectedStudent && selectedStudentDetails && (
+            <div className="space-y-6">
+              {/* Selected Student Info */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                      <span className="font-bold text-primary">
+                        {selectedStudentDetails.name.split(' ').map(n => n[0]).join('')}
+                      </span>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        {dimension.name}
-                        <Badge variant="outline">{dimension.weight}% weight</Badge>
-                      </div>
-                      <div className="text-sm font-normal text-gray-600">
-                        {dimension.description}
-                      </div>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Criteria Checklist */}
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 mb-2">Assessment Criteria:</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {dimension.criteria.map((criterion, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                          <CheckCircle className="h-4 w-4 text-gray-400" />
-                          {criterion}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Rating Slider */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Rating: {assessmentData[dimension.id as keyof typeof assessmentData]}%
-                      </label>
-                      <div className="text-xs text-gray-500">
-                        {assessmentData[dimension.id as keyof typeof assessmentData] < 30 ? 'Needs Development' :
-                         assessmentData[dimension.id as keyof typeof assessmentData] < 60 ? 'Developing' :
-                         assessmentData[dimension.id as keyof typeof assessmentData] < 80 ? 'Proficient' : 'Advanced'}
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{selectedStudentDetails.name}</h3>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span>Level {selectedStudentDetails.level}</span>
+                        <span>Current Rating: {selectedStudentDetails.currentRating}</span>
+                        <span>Sessions: {selectedStudentDetails.totalSessions}</span>
                       </div>
                     </div>
-                    <Slider
-                      value={[assessmentData[dimension.id as keyof typeof assessmentData] as number]}
-                      onValueChange={(value) => 
-                        setAssessmentData(prev => ({
-                          ...prev,
-                          [dimension.id]: value[0]
-                        }))
-                      }
-                      max={100}
-                      step={5}
-                      className="w-full"
-                    />
-                  </div>
-
-                  {/* Notes */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Notes & Observations:
-                    </label>
-                    <Textarea
-                      placeholder={`Specific observations about ${dimension.name.toLowerCase()}...`}
-                      value={assessmentData.notes[dimension.id as keyof typeof assessmentData.notes]}
-                      onChange={(e) => 
-                        setAssessmentData(prev => ({
-                          ...prev,
-                          notes: {
-                            ...prev.notes,
-                            [dimension.id]: e.target.value
-                          }
-                        }))
-                      }
-                      rows={3}
-                    />
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
 
-          {/* Overall Notes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Overall Assessment Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Overall performance summary, key strengths, areas for improvement, and recommended focus areas..."
-                value={assessmentData.notes.overall}
-                onChange={(e) => 
-                  setAssessmentData(prev => ({
-                    ...prev,
-                    notes: {
-                      ...prev.notes,
-                      overall: e.target.value
-                    }
-                  }))
-                }
-                rows={4}
+              {/* Comprehensive Assessment Component */}
+              <CoachAssessmentCapture
+                playerId={selectedStudent}
+                coachId={1} // This would come from auth context
+                onAssessmentComplete={handleAssessmentComplete}
+                onPointsGenerated={handlePointsGenerated}
               />
-            </CardContent>
-          </Card>
+            </div>
+          )}
+        </TabsContent>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-end">
-            <Button 
-              variant="outline"
-              onClick={() => setLocation(`/coach/student/${selectedStudent}`)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View Student Profile
-            </Button>
-            <Button 
-              onClick={handleSaveAssessment}
-              disabled={saveAssessmentMutation.isPending}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {saveAssessmentMutation.isPending ? 'Saving...' : 'Save Assessment'}
-            </Button>
-          </div>
-        </>
-      )}
+        {/* Results Tab */}
+        <TabsContent value="results">
+          {assessmentComplete && transparentPoints && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Assessment Complete - Transparent Points Generated
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-600">Final Transparent Points</div>
+                      <div className="text-3xl font-bold text-green-600">
+                        {transparentPoints.totalPoints.toFixed(1)}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-600">Coaching Multiplier</div>
+                      <div className="text-2xl font-bold">
+                        {transparentPoints.coachingMultiplier.toFixed(2)}x
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <div className="text-sm font-medium text-gray-700 mb-2">Calculation Details</div>
+                    <div className="bg-gray-50 p-3 rounded text-sm space-y-1 font-mono">
+                      {transparentPoints.calculationDetails.map((detail, index) => (
+                        <div key={index}>{detail}</div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
