@@ -17,17 +17,48 @@ import {
   Zap
 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { CoachAssessmentCapture } from '@/components/coach-match-integration/CoachAssessmentCapture';
+import { DetailedSkillAssessment } from '@/components/coach-match-integration/DetailedSkillAssessment';
 
-interface PcpAssessment {
-  technical: number;
-  tactical: number;
-  physical: number;
-  mental: number;
-  overallImprovement: number;
-  sessionNotes: string;
-  keyObservations: string[];
-  recommendedFocus: string[];
+interface DetailedSkills {
+  // Technical Skills (22 micro-skills)
+  serve_execution: number;
+  return_technique: number;
+  third_shot: number;
+  overhead_defense: number;
+  shot_creativity: number;
+  court_movement: number;
+  forehand_topspin: number;
+  forehand_slice: number;
+  backhand_topspin: number;
+  backhand_slice: number;
+  forehand_dead_dink: number;
+  forehand_topspin_dink: number;
+  forehand_slice_dink: number;
+  backhand_dead_dink: number;
+  backhand_topspin_dink: number;
+  backhand_slice_dink: number;
+  forehand_block_volley: number;
+  forehand_drive_volley: number;
+  forehand_dink_volley: number;
+  backhand_block_volley: number;
+  backhand_drive_volley: number;
+  backhand_dink_volley: number;
+  // Tactical Skills (5 skills)
+  shot_selection: number;
+  court_positioning: number;
+  pattern_recognition: number;
+  risk_management: number;
+  communication: number;
+  // Physical Skills (4 skills)
+  footwork: number;
+  balance_stability: number;
+  reaction_time: number;
+  endurance: number;
+  // Mental Skills (4 skills)
+  focus_concentration: number;
+  pressure_performance: number;
+  adaptability: number;
+  sportsmanship: number;
 }
 
 interface TransparentPointsData {
@@ -105,16 +136,54 @@ export default function CoachAssessmentToolPage() {
 
   const availableStudents = students || mockStudents;
 
+  const [dimensionalScores, setDimensionalScores] = useState({ technical: 50, tactical: 50, physical: 50, mental: 50 });
+
   // Handle assessment completion
-  const handleAssessmentComplete = (assessment: PcpAssessment) => {
-    console.log('Assessment completed:', assessment);
+  const handleAssessmentComplete = (skills: DetailedSkills) => {
+    console.log('Detailed skills assessment completed:', skills);
+    
+    // Calculate transparent points from dimensional scores
+    const basePoints = 10;
+    const technicalScore = (dimensionalScores.technical / 100) * 0.4;
+    const tacticalScore = (dimensionalScores.tactical / 100) * 0.25;
+    const physicalScore = (dimensionalScores.physical / 100) * 0.2;
+    const mentalScore = (dimensionalScores.mental / 100) * 0.15;
+    
+    const overallScore = technicalScore + tacticalScore + physicalScore + mentalScore;
+    const coachingMultiplier = 1.2; // Enhanced coaching session
+    const improvementBonus = 2.0; // Detailed assessment bonus
+    
+    const totalPoints = (basePoints * overallScore * coachingMultiplier) + improvementBonus;
+    
+    const pointsData: TransparentPointsData = {
+      basePoints,
+      coachingMultiplier,
+      improvementBonus,
+      technicalContribution: basePoints * technicalScore,
+      tacticalContribution: basePoints * tacticalScore,  
+      physicalContribution: basePoints * physicalScore,
+      mentalContribution: basePoints * mentalScore,
+      totalPoints,
+      calculationDetails: [
+        `Base Points: ${basePoints}`,
+        `Technical (40%): ${technicalScore.toFixed(2)} → ${(basePoints * technicalScore).toFixed(1)} points`,
+        `Tactical (25%): ${tacticalScore.toFixed(2)} → ${(basePoints * tacticalScore).toFixed(1)} points`,
+        `Physical (20%): ${physicalScore.toFixed(2)} → ${(basePoints * physicalScore).toFixed(1)} points`,
+        `Mental (15%): ${mentalScore.toFixed(2)} → ${(basePoints * mentalScore).toFixed(1)} points`,
+        `Coaching Multiplier: ${coachingMultiplier}x`,
+        `Detailed Assessment Bonus: +${improvementBonus} points`,
+        `Total: ${totalPoints.toFixed(1)} points`
+      ]
+    };
+    
+    setTransparentPoints(pointsData);
     setAssessmentComplete(true);
     setActiveTab('results');
   };
 
-  // Handle points generation
-  const handlePointsGenerated = (points: TransparentPointsData) => {
-    setTransparentPoints(points);
+  // Handle dimensional scores update
+  const handleDimensionalScores = (scores: { technical: number; tactical: number; physical: number; mental: number }) => {
+    setDimensionalScores(scores);
   };
 
   // Get selected student details
@@ -231,12 +300,12 @@ export default function CoachAssessmentToolPage() {
                 </CardContent>
               </Card>
 
-              {/* Comprehensive Assessment Component */}
-              <CoachAssessmentCapture
+              {/* Detailed Skill Assessment Component */}
+              <DetailedSkillAssessment
                 playerId={selectedStudent}
                 coachId={1} // This would come from auth context
                 onAssessmentComplete={handleAssessmentComplete}
-                onPointsGenerated={handlePointsGenerated}
+                onDimensionalScores={handleDimensionalScores}
               />
             </div>
           )}
