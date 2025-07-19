@@ -198,73 +198,92 @@ export default function CoachAssessmentToolPage() {
   }, [studentIdFromUrl, selectedStudent]);
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
+    <div className="max-w-6xl mx-auto p-3 md:p-4 pb-20 md:pb-4 space-y-4 md:space-y-6">
+      {/* Mobile-First Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <Button 
           variant="ghost" 
           size="sm"
           onClick={() => setLocation('/coach/students')}
+          className="self-start"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Students
+          Back
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Enhanced PCP Assessment Tool</h1>
-          <p className="text-gray-600">Comprehensive 4-Dimensional Player Evaluation with Real-Time Transparent Points</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground truncate">PCP Assessment Tool</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1 line-clamp-2">
+            35 detailed skills • Real-time transparent points • PCP methodology
+          </p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="select-student">
-            <Users className="h-4 w-4 mr-2" />
-            Select Student
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 h-auto bg-muted/50">
+          <TabsTrigger value="select-student" className="flex-col py-3 px-2 text-xs md:text-sm data-[state=active]:bg-background">
+            <Users className="h-4 w-4 mb-1" />
+            <span className="hidden sm:inline">Select Student</span>
+            <span className="sm:hidden">Select</span>
           </TabsTrigger>
-          <TabsTrigger value="assessment" disabled={!selectedStudent}>
-            <Target className="h-4 w-4 mr-2" />
-            PCP Assessment
+          <TabsTrigger value="assessment" disabled={!selectedStudent} className="flex-col py-3 px-2 text-xs md:text-sm data-[state=active]:bg-background">
+            <Target className="h-4 w-4 mb-1" />
+            Assessment
           </TabsTrigger>
-          <TabsTrigger value="results" disabled={!assessmentComplete}>
-            <Activity className="h-4 w-4 mr-2" />
+          <TabsTrigger value="results" disabled={!assessmentComplete} className="flex-col py-3 px-2 text-xs md:text-sm data-[state=active]:bg-background">
+            <Activity className="h-4 w-4 mb-1" />
             Results
           </TabsTrigger>
         </TabsList>
 
-        {/* Student Selection Tab */}
+        {/* Mobile-Optimized Student Selection */}
         <TabsContent value="select-student">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Select Student to Assess
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                </div>
+                Select Student
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardContent className="pt-0">
+              <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
                 {availableStudents.map((student: any) => (
-                  <Card
-                    key={student.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
+                  <Card 
+                    key={student.id} 
+                    className={`cursor-pointer transition-all hover:shadow-md active:scale-[0.98] ${
                       selectedStudent === student.id 
-                        ? 'ring-2 ring-primary bg-primary/5' 
-                        : 'hover:bg-gray-50'
+                        ? 'ring-2 ring-primary bg-primary/5 border-primary/20' 
+                        : 'border hover:border-primary/30'
                     }`}
                     onClick={() => {
                       setSelectedStudent(student.id);
                       setActiveTab('assessment');
                     }}
                   >
-                    <CardContent className="p-4">
-                      <div className="space-y-2">
-                        <div className="font-semibold text-lg">{student.name}</div>
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>Level {student.level}</span>
-                          <Badge variant="outline">Rating: {student.currentRating}</Badge>
+                    <CardContent className="p-3 md:p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full flex items-center justify-center shrink-0">
+                          <span className="font-bold text-primary text-sm">
+                            {student.name.split(' ').map((n: string) => n[0]).join('')}
+                          </span>
                         </div>
-                        <div className="text-xs text-gray-500 space-y-1">
-                          <div>Last Assessment: {student.lastAssessment}</div>
-                          <div>Total Sessions: {student.totalSessions}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm md:text-base truncate">{student.name}</div>
+                          <div className="text-xs text-muted-foreground">Level {student.level}</div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="text-xs">
+                            Rating: {student.currentRating}
+                          </Badge>
+                          <div className="text-xs text-muted-foreground">
+                            {student.totalSessions} sessions
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Last: {student.lastAssessment}
                         </div>
                       </div>
                     </CardContent>
@@ -275,25 +294,25 @@ export default function CoachAssessmentToolPage() {
           </Card>
         </TabsContent>
 
-        {/* Assessment Tab */}
+        {/* Mobile-Optimized Assessment Tab */}
         <TabsContent value="assessment">
           {selectedStudent && selectedStudentDetails && (
-            <div className="space-y-6">
-              {/* Selected Student Info */}
-              <Card>
+            <div className="space-y-4 md:space-y-6">
+              {/* Mobile-Optimized Student Info */}
+              <Card className="border-0 shadow-sm bg-gradient-to-r from-primary/5 to-primary/10">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-primary">
-                        {selectedStudentDetails.name.split(' ').map(n => n[0]).join('')}
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-full flex items-center justify-center shrink-0">
+                      <span className="font-bold text-primary text-sm">
+                        {selectedStudentDetails.name.split(' ').map((n: string) => n[0]).join('')}
                       </span>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{selectedStudentDetails.name}</h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span>Level {selectedStudentDetails.level}</span>
-                        <span>Current Rating: {selectedStudentDetails.currentRating}</span>
-                        <span>Sessions: {selectedStudentDetails.totalSessions}</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base md:text-lg truncate">{selectedStudentDetails.name}</h3>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground mt-1">
+                        <Badge variant="secondary" className="text-xs">Level {selectedStudentDetails.level}</Badge>
+                        <span>Rating: {selectedStudentDetails.currentRating}</span>
+                        <span>{selectedStudentDetails.totalSessions} sessions</span>
                       </div>
                     </div>
                   </div>
@@ -311,37 +330,41 @@ export default function CoachAssessmentToolPage() {
           )}
         </TabsContent>
 
-        {/* Results Tab */}
+        {/* Mobile-Optimized Results Tab */}
         <TabsContent value="results">
           {assessmentComplete && transparentPoints && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5" />
-                    Assessment Complete - Transparent Points Generated
+            <div className="space-y-4 md:space-y-6">
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <div className="p-2 rounded-lg bg-green-100">
+                      <Zap className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                    </div>
+                    Assessment Complete
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <div className="text-sm text-gray-600">Final Transparent Points</div>
-                      <div className="text-3xl font-bold text-green-600">
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+                    <div className="text-center md:text-left">
+                      <div className="text-xs md:text-sm text-muted-foreground mb-2">Transparent Points</div>
+                      <div className="text-2xl md:text-3xl font-bold text-green-600">
                         {transparentPoints.totalPoints.toFixed(1)}
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="text-sm text-gray-600">Coaching Multiplier</div>
-                      <div className="text-2xl font-bold">
+                    <div className="text-center md:text-left">
+                      <div className="text-xs md:text-sm text-muted-foreground mb-2">Coaching Multiplier</div>
+                      <div className="text-xl md:text-2xl font-bold text-primary">
                         {transparentPoints.coachingMultiplier.toFixed(2)}x
                       </div>
                     </div>
                   </div>
-                  <div className="mt-6">
-                    <div className="text-sm font-medium text-gray-700 mb-2">Calculation Details</div>
-                    <div className="bg-gray-50 p-3 rounded text-sm space-y-1 font-mono">
+                  <div className="mt-4 md:mt-6">
+                    <div className="text-xs md:text-sm font-medium text-foreground mb-3">Calculation Breakdown</div>
+                    <div className="bg-background/50 border p-3 rounded-lg text-xs md:text-sm space-y-2">
                       {transparentPoints.calculationDetails.map((detail, index) => (
-                        <div key={index}>{detail}</div>
+                        <div key={index} className="flex justify-between items-center py-1 border-b border-border/30 last:border-0">
+                          <span className="font-medium">{detail}</span>
+                        </div>
                       ))}
                     </div>
                   </div>

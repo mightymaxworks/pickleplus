@@ -19,7 +19,8 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
-  Zap
+  Zap,
+  Pencil
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -267,29 +268,40 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
   const dimensionalScores = calculateDimensionalScores();
 
   return (
-    <div className="space-y-6">
-      {/* Assessment Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Detailed Skill Assessment - PCP Methodology
+    <div className="space-y-4 md:space-y-6">
+      {/* Mobile-First Assessment Overview */}
+      <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <div className="p-2 rounded-lg bg-primary/20">
+              <Zap className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
+            PCP Assessment
           </CardTitle>
-          <div className="text-sm text-gray-600">
-            Comprehensive evaluation across 35 individual skills with weighted PCP scoring
+          <div className="text-xs md:text-sm text-muted-foreground">
+            35 individual skills • Weighted scoring system
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-4">
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {skillCategories.map(category => {
               const score = dimensionalScores[category.id as keyof typeof dimensionalScores];
+              const colorClasses = {
+                blue: 'text-blue-600 bg-blue-50 border-blue-200',
+                purple: 'text-purple-600 bg-purple-50 border-purple-200',
+                green: 'text-green-600 bg-green-50 border-green-200',
+                orange: 'text-orange-600 bg-orange-50 border-orange-200'
+              };
               return (
-                <div key={category.id} className="text-center">
-                  <div className={`text-2xl font-bold text-${category.color}-600`}>
-                    {(score / 10).toFixed(1)}
+                <div key={category.id} className={`p-3 rounded-lg border ${colorClasses[category.color as keyof typeof colorClasses]}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    {category.icon}
+                    <div className="text-xl md:text-2xl font-bold">
+                      {(score / 10).toFixed(1)}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">{category.name}</div>
-                  <div className="text-xs text-gray-500">({category.weight}% weight)</div>
+                  <div className="text-xs font-medium">{category.name}</div>
+                  <div className="text-xs opacity-70">{category.weight}% weight</div>
                 </div>
               );
             })}
@@ -297,73 +309,100 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
         </CardContent>
       </Card>
 
-      {/* Detailed Assessment by Category */}
-      <div className="space-y-4">
+      {/* Modern Mobile-First Category Assessment */}
+      <div className="space-y-3 md:space-y-4">
         {skillCategories.map(category => {
           const isExpanded = expandedCategories.includes(category.id);
           const categorySkills = groupSkillsBySubcategory(category.skills);
           const categoryAvg = dimensionalScores[category.id as keyof typeof dimensionalScores];
+          
+          const colorClasses = {
+            blue: 'border-blue-200 bg-blue-50/50 hover:bg-blue-50',
+            purple: 'border-purple-200 bg-purple-50/50 hover:bg-purple-50',
+            green: 'border-green-200 bg-green-50/50 hover:bg-green-50',
+            orange: 'border-orange-200 bg-orange-50/50 hover:bg-orange-50'
+          };
 
           return (
-            <Card key={category.id}>
+            <Card key={category.id} className={`border ${colorClasses[category.color as keyof typeof colorClasses]} transition-colors`}>
               <CardHeader 
-                className="cursor-pointer hover:bg-gray-50" 
+                className="cursor-pointer pb-3 active:scale-[0.98] transition-transform" 
                 onClick={() => toggleCategory(category.id)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-${category.color}-100`}>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`p-2.5 rounded-xl bg-${category.color}-100 shrink-0`}>
                       {category.icon}
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{category.name}</CardTitle>
-                      <div className="text-sm text-gray-600">{category.description}</div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base md:text-lg mb-1 truncate">{category.name}</CardTitle>
+                      <div className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                        {category.skills.length} skills • {category.description}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className={`text-xl font-bold text-${category.color}-600`}>
-                        {(categoryAvg / 10).toFixed(1)}/10
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right hidden sm:block">
+                      <div className={`text-lg font-bold text-${category.color}-600`}>
+                        {(categoryAvg / 10).toFixed(1)}
                       </div>
-                      <Progress value={categoryAvg} className="w-20 h-2" />
+                      <Progress value={categoryAvg} className="w-16 h-2" />
                     </div>
-                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    <div className="sm:hidden">
+                      <div className={`text-lg font-bold text-${category.color}-600`}>
+                        {(categoryAvg / 10).toFixed(1)}
+                      </div>
+                    </div>
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
                 </div>
               </CardHeader>
               
               {isExpanded && (
-                <CardContent>
-                  <div className="space-y-6">
+                <CardContent className="pt-0">
+                  <div className="space-y-4 md:space-y-6">
                     {Object.entries(categorySkills).map(([subcategory, subcategorySkills]) => (
                       <div key={subcategory}>
-                        <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                          {subcategory}
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-sm md:text-base text-foreground">
+                            {subcategory}
+                          </h4>
+                          <Badge variant="secondary" className="text-xs">
                             {subcategorySkills.length} skills
                           </Badge>
-                        </h4>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        </div>
+                        <div className="space-y-3">
                           {subcategorySkills.map(skill => (
-                            <div key={skill.id} className="space-y-2 p-4 bg-gray-50 rounded-lg">
-                              <div className="flex justify-between items-center">
-                                <label className="font-medium text-sm">{skill.name}</label>
-                                <span className="text-sm font-bold text-gray-700">
-                                  {(skills[skill.id] / 10).toFixed(1)}/10
-                                </span>
+                            <div key={skill.id} className="p-3 md:p-4 bg-background/50 border rounded-lg hover:shadow-sm transition-shadow">
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <label className="font-medium text-sm md:text-base block truncate">
+                                    {skill.name}
+                                  </label>
+                                  <div className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
+                                    {skill.description}
+                                  </div>
+                                </div>
+                                <div className="shrink-0 ml-3">
+                                  <div className="text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded">
+                                    {(skills[skill.id] / 10).toFixed(1)}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-600 mb-2">{skill.description}</div>
-                              <Slider
-                                value={[skills[skill.id]]}
-                                onValueChange={(value) => handleSkillChange(skill.id, value)}
-                                max={100}
-                                min={0}
-                                step={5}
-                                className="w-full"
-                              />
-                              <div className="flex justify-between text-xs text-gray-500">
-                                <span>Beginner</span>
-                                <span>Advanced</span>
+                              <div className="mt-3">
+                                <Slider
+                                  value={[skills[skill.id]]}
+                                  onValueChange={(value) => handleSkillChange(skill.id, value)}
+                                  max={100}
+                                  min={0}
+                                  step={5}
+                                  className="w-full touch-manipulation"
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                  <span>1.0</span>
+                                  <span>5.0</span>
+                                  <span>10.0</span>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -378,31 +417,38 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
         })}
       </div>
 
-      {/* Session Notes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Session Notes & Observations</CardTitle>
+      {/* Mobile-Optimized Session Notes */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-muted">
+              <Pencil className="h-4 w-4" />
+            </div>
+            Session Notes
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <Textarea
             value={sessionNotes}
             onChange={(e) => setSessionNotes(e.target.value)}
-            placeholder="Record key observations, improvements noted, areas of focus for next session..."
-            className="min-h-[100px]"
+            placeholder="Key observations, improvements, focus areas..."
+            className="min-h-[80px] md:min-h-[100px] resize-none"
           />
         </CardContent>
       </Card>
 
-      {/* Complete Assessment */}
-      <div className="flex justify-center">
-        <Button 
-          onClick={handleCompleteAssessment}
-          size="lg"
-          className="px-8 py-3"
-        >
-          <TrendingUp className="h-5 w-5 mr-2" />
-          Complete Detailed Assessment
-        </Button>
+      {/* Mobile-First Action Button */}
+      <div className="sticky bottom-4 md:static md:bottom-auto">
+        <div className="flex justify-center px-4 md:px-0">
+          <Button 
+            onClick={handleCompleteAssessment}
+            size="lg"
+            className="w-full max-w-md md:w-auto md:px-8 py-3 text-base font-semibold shadow-lg"
+          >
+            <TrendingUp className="h-5 w-5 mr-2" />
+            Complete Assessment
+          </Button>
+        </div>
       </div>
     </div>
   );
