@@ -223,9 +223,10 @@ export default function PCPCertificationPage() {
           </div>
         </div>
         <div className="space-y-4">
-          <h1 className="text-5xl font-bold">🌱 The Five Levels of PCP Certification</h1>
+          <h1 className="text-5xl font-bold">The Five Levels of PCP Certification</h1>
           <p className="text-2xl font-light max-w-4xl mx-auto leading-relaxed">
-            The Revolutionary Pathway That Transforms Passionate Players Into World-Class Coaches
+            The Revolutionary Pathway That Transforms<br />
+            Passionate Players Into World-Class Coaches
           </p>
           <p className="text-lg opacity-90 max-w-3xl mx-auto">
             From your first step as an Entry Coach to leading the future of pickleball as a Master Coach, 
@@ -552,7 +553,7 @@ export default function PCPCertificationPage() {
       <div className="max-w-6xl mx-auto px-4 mt-[28px] mb-[28px]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">🌱 Certification Levels</TabsTrigger>
+            <TabsTrigger value="overview">Certification Levels</TabsTrigger>
             <TabsTrigger value="progress">My Progress</TabsTrigger>
           </TabsList>
 
