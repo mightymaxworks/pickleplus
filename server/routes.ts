@@ -67,6 +67,7 @@ import { requireAdmin } from "./middleware/auth";
 import { coachMatchIntegrationRoutes } from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 1
 import { transparentPointsAllocationRoutes } from "./api/transparent-points-allocation"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 2
 import coachMatchIntegrationApiRoutes from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 3
+import { registerCoachHubRoutes } from "./routes/coach-hub-routes"; // Unified Coach Hub routes
 // Removed special routes import - using consolidated multi-rankings implementation
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 import { 
@@ -364,6 +365,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount user data API (Framework 5.3 frontend-driven approach)
   app.use('/api/user-data', simpleRatingApi);
+  
+  // Register unified coach hub routes
+  registerCoachHubRoutes(app);
   
   // Mount coach management routes
   app.use('/api/coach', coachManagementRoutes);

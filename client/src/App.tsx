@@ -389,14 +389,45 @@ export default function App() {
                     {(params) => <CentralProtectedRoute component={LazyPassportPage} path="/passport" />}
                   </Route>
                   
-                  {/* PKL-278651-COACH-0001-CORE - S.A.G.E. Coaching System */}
+                  {/* Unified Coach Hub - Smart routing based on user status */}
+                  <ProtectedRouteWithLayout
+                    path="/coach"
+                    component={lazyLoad(() => import('./pages/CoachHubPage'))}
+                    pageTitle="Coach Hub"
+                  />
+                  
+                  {/* Coach Application Process */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/apply"
+                    component={lazyLoad(() => import('./pages/coach/CoachApplicationWizard'))}
+                    pageTitle="Coach Application"
+                  />
+                  
+                  {/* PCP Certification integrated within coach hub */}
+                  <ProtectedRouteWithLayout
+                    path="/pcp-certification"
+                    component={lazyLoad(() => import('./pages/pcp-certification/index'))}
+                    pageTitle="PCP Certification"
+                  />
+                  
+                  {/* Coach Management Tools - for active coaches */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/students"
+                    component={lazyLoad(() => import('./pages/coach/students'))}
+                    pageTitle="My Students"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/coach/assessment-tool"
+                    component={lazyLoad(() => import('./pages/coach/assessment-tool'))}
+                    pageTitle="PCP Assessment Tool"
+                  />
+                  
+                  {/* Legacy coaching routes for backward compatibility */}
                   <ProtectedRouteWithLayout
                     path="/coach/sage"
                     component={LazySageCoachingPage}
                     pageTitle="S.A.G.E. Coaching"
                   />
-                  
-                  {/* PCP Coaching Ecosystem - Sprint 1 */}
                   <ProtectedRouteWithLayout
                     path="/coach/pcp"
                     component={lazyLoad(() => import('./pages/coach/pcp-coach-dashboard'))}
@@ -411,16 +442,6 @@ export default function App() {
                     path="/coach/pcp-assessment"
                     component={lazyLoad(() => import('./pages/coach/pcp-enhanced-assessment'))}
                     pageTitle="PCP Player Assessment"
-                  />
-                  <ProtectedRouteWithLayout
-                    path="/coach/students"
-                    component={lazyLoad(() => import('./pages/coach/students'))}
-                    pageTitle="My Students"
-                  />
-                  <ProtectedRouteWithLayout
-                    path="/coach/assessment-tool"
-                    component={lazyLoad(() => import('./pages/coach/assessment-tool'))}
-                    pageTitle="PCP Assessment Tool"
                   />
                   
                   {/* Player-Coach Connection System */}

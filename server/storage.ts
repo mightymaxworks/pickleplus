@@ -9,128 +9,15 @@ import {
   coachingSessionMatches, coachMatchInput, matchPcpAssessments, pointsAllocationExplanation, coachStudentProgress
 } from "@shared/schema";
 import {
+  type CoachApplication, type InsertCoachApplication,
+  type CoachProfile, type InsertCoachProfile,
+  type CoachCertification, type InsertCoachCertification,
+  type CoachReview, type InsertCoachReview
+} from "@shared/schema/coach-management";
+import {
   pointsAllocationBreakdown, coachEffectivenessScoring, matchCoachingCorrelation, studentPerformancePrediction,
   type PointsAllocationBreakdown, type CoachEffectivenessScoring, type MatchCoachingCorrelation, type StudentPerformancePrediction
 } from "@shared/schema/transparent-points-allocation";
-
-// Define coach types directly since they're not exported from schema yet
-interface CoachApplication {
-  id: number;
-  userId: number;
-  coachType: string;
-  applicationStatus: string;
-  submittedAt: Date;
-  reviewedAt?: Date;
-  reviewerId?: number;
-  rejectionReason?: string;
-  experienceYears: number;
-  teachingPhilosophy: string;
-  specializations: string[];
-  availabilityData: Record<string, any>;
-  previousExperience?: string;
-  refContacts: any[];
-  backgroundCheckConsent: boolean;
-  insuranceDetails: Record<string, any>;
-  emergencyContact: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface InsertCoachApplication {
-  userId: number;
-  coachType?: string;
-  applicationStatus?: string;
-  experienceYears: number;
-  teachingPhilosophy: string;
-  specializations: string[];
-  availabilityData: Record<string, any>;
-  previousExperience?: string;
-  refContacts?: any[];
-  backgroundCheckConsent: boolean;
-  insuranceDetails?: Record<string, any>;
-  emergencyContact?: Record<string, any>;
-}
-
-interface CoachCertification {
-  id: number;
-  applicationId: number;
-  certificationType: string;
-  issuingOrganization: string;
-  certificationNumber?: string;
-  issuedDate?: Date;
-  expirationDate?: Date;
-  documentUrl?: string;
-  verificationStatus: string;
-  verifiedBy?: number;
-  verifiedAt?: Date;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface InsertCoachCertification {
-  applicationId: number;
-  certificationType: string;
-  issuingOrganization: string;
-  certificationNumber?: string;
-  issuedDate?: Date;
-  expirationDate?: Date;
-  documentUrl?: string;
-  verificationStatus?: string;
-  notes?: string;
-}
-
-interface CoachProfile {
-  id: number;
-  userId: number;
-  coachType: string;
-  verificationLevel: string;
-  isActive: boolean;
-  bio?: string;
-  specializations: string[];
-  teachingStyle?: string;
-  languagesSpoken: string[];
-  hourlyRate?: number;
-  sessionTypes: string[];
-  availabilitySchedule: Record<string, any>;
-  averageRating: number;
-  totalReviews: number;
-  totalSessions: number;
-  studentRetentionRate: number;
-  approvedAt?: Date;
-  approvedBy?: number;
-  lastActiveAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface InsertCoachProfile {
-  userId: number;
-  coachType: string;
-  verificationLevel?: string;
-  isActive?: boolean;
-  bio?: string;
-  specializations: string[];
-  teachingStyle?: string;
-  languagesSpoken?: string[];
-  hourlyRate?: number;
-  sessionTypes?: string[];
-  availabilitySchedule?: Record<string, any>;
-}
-
-interface CoachReview {
-  id: number;
-  coachId: number;
-  studentId: number;
-  sessionId?: number;
-  rating: number;
-  reviewText?: string;
-  reviewDate: Date;
-  isVerified: boolean;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface InsertCoachReview {
   coachId: number;
@@ -343,6 +230,14 @@ export interface IStorage extends CommunityStorage {
   adjustGroupCardBalance(purchaseId: number, totalAmount: number, type: 'add' | 'deduct', reason: string, adminId: number, distributionMethod: 'equal' | 'proportional'): Promise<void>;
   adjustGroupMemberBalance(purchaseId: number, userId: number, amount: number, type: 'add' | 'deduct', reason: string, adminId: number): Promise<void>;
   bulkAdjustGroupMembers(purchaseId: number, adjustments: Array<{userId: number, amount: number, type: 'add' | 'deduct'}>, reason: string, adminId: number): Promise<void>;
+  
+  // Coach Hub methods
+  getCoachApplication(userId: number): Promise<CoachApplication | undefined>;
+  createCoachApplication(data: InsertCoachApplication): Promise<CoachApplication>;
+  updateCoachApplicationStatus(applicationId: number, updates: {applicationStatus: string, reviewedAt: Date, rejectionReason?: string}): Promise<CoachApplication | undefined>;
+  getCoachProfile(userId: number): Promise<CoachProfile | undefined>;
+  createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile>;
+  getPendingCoachApplications(): Promise<CoachApplication[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3875,6 +3770,121 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage][AssessmentHistory] Error getting assessment history:', error);
       throw error;
+    }
+  }
+
+  // Coach Hub Storage Methods
+  async getCoachApplication(userId: number): Promise<CoachApplication | undefined> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM coach_applications 
+        WHERE user_id = ${userId} 
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `);
+      return result.rows[0] as CoachApplication;
+    } catch (error) {
+      console.error('[Storage][CoachHub] Error getting coach application:', error);
+      return undefined;
+    }
+  }
+
+  async createCoachApplication(data: InsertCoachApplication): Promise<CoachApplication> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO coach_applications (
+          user_id, coach_type, application_status, experience_years, 
+          teaching_philosophy, specializations, availability_data, 
+          previous_experience, ref_contacts, background_check_consent,
+          insurance_details, emergency_contact, created_at, updated_at
+        ) VALUES (
+          ${data.userId}, ${data.coachType || 'facility'}, 
+          ${data.applicationStatus || 'pending'}, ${data.experienceYears}, 
+          ${data.teachingPhilosophy}, ${JSON.stringify(data.specializations)}, 
+          ${JSON.stringify(data.availabilityData)}, ${data.previousExperience || ''}, 
+          ${JSON.stringify(data.refContacts || [])}, ${data.backgroundCheckConsent},
+          ${JSON.stringify(data.insuranceDetails || {})}, 
+          ${JSON.stringify(data.emergencyContact || {})}, NOW(), NOW()
+        ) RETURNING *
+      `);
+      return result.rows[0] as CoachApplication;
+    } catch (error) {
+      console.error('[Storage][CoachHub] Error creating coach application:', error);
+      throw error;
+    }
+  }
+
+  async updateCoachApplicationStatus(applicationId: number, updates: {applicationStatus: string, reviewedAt: Date, rejectionReason?: string}): Promise<CoachApplication | undefined> {
+    try {
+      const result = await db.execute(sql`
+        UPDATE coach_applications 
+        SET application_status = ${updates.applicationStatus}, 
+            reviewed_at = ${updates.reviewedAt}, 
+            rejection_reason = ${updates.rejectionReason || null},
+            updated_at = NOW()
+        WHERE id = ${applicationId}
+        RETURNING *
+      `);
+      return result.rows[0] as CoachApplication;
+    } catch (error) {
+      console.error('[Storage][CoachHub] Error updating coach application status:', error);
+      return undefined;
+    }
+  }
+
+  async getCoachProfile(userId: number): Promise<CoachProfile | undefined> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM coach_profiles 
+        WHERE user_id = ${userId} 
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `);
+      return result.rows[0] as CoachProfile;
+    } catch (error) {
+      console.error('[Storage][CoachHub] Error getting coach profile:', error);
+      return undefined;
+    }
+  }
+
+  async createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO coach_profiles (
+          user_id, coach_type, verification_level, is_active, bio,
+          specializations, teaching_style, languages_spoken, hourly_rate,
+          session_types, availability_schedule, average_rating, total_reviews,
+          total_sessions, student_retention_rate, last_active_at, created_at, updated_at
+        ) VALUES (
+          ${data.userId}, ${data.coachType}, ${data.verificationLevel || 'pending'}, 
+          ${data.isActive || true}, ${data.bio || ''}, 
+          ${JSON.stringify(data.specializations)}, ${data.teachingStyle || ''}, 
+          ${JSON.stringify(data.languagesSpoken || ['English'])}, ${data.hourlyRate || 50},
+          ${JSON.stringify(data.sessionTypes || ['individual'])}, 
+          ${JSON.stringify(data.availabilitySchedule || {})}, 0, 0, 0, 0,
+          NOW(), NOW(), NOW()
+        ) RETURNING *
+      `);
+      return result.rows[0] as CoachProfile;
+    } catch (error) {
+      console.error('[Storage][CoachHub] Error creating coach profile:', error);
+      throw error;
+    }
+  }
+
+  async getPendingCoachApplications(): Promise<CoachApplication[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT ca.*, u.first_name, u.last_name, u.email, u.username 
+        FROM coach_applications ca
+        JOIN users u ON ca.user_id = u.id
+        WHERE ca.application_status = 'pending'
+        ORDER BY ca.created_at DESC
+      `);
+      return result.rows as CoachApplication[];
+    } catch (error) {
+      console.error('[Storage][CoachHub] Error getting pending coach applications:', error);
+      return [];
     }
   }
 }
