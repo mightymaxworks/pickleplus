@@ -84,10 +84,21 @@ export default function CoachHubPage() {
   // Determine user status for smart routing
   const getUserStatus = () => {
     if (!user) return 'guest';
-    if (coachProfile && 'isActiveCoach' in coachProfile && coachProfile.isActiveCoach) return 'active_coach';
+    
+    // Check if user is already a coach from database (is_coach = true)
+    if (user.isCoach) return 'active_coach';
+    
+    // Check certifications for Level 5 certified coaches
+    if (coachProfile?.certifications?.some(cert => cert.includes('Level 5'))) return 'active_coach';
+    
+    // Check if they have any PCP certifications
+    if (certificationStatus?.currentLevel && certificationStatus.currentLevel >= 1) return 'active_coach';
+    
+    // Check application status for non-certified users
     if (applicationStatus?.status === 'approved') return 'approved_coach';
     if (applicationStatus?.status === 'submitted') return 'pending_coach';
     if (applicationStatus?.status === 'rejected') return 'rejected_coach';
+    
     return 'prospective_coach';
   };
 
