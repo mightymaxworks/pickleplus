@@ -304,12 +304,50 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     try {
       console.log('[PCP-CERT] Getting user certification status');
       
+      // Get user from dev mode or session
+      const userId = (req as any).user?.id || 1; // Default to mightymax for testing
+      
+      // Query actual certifications from database
+      const result = await db.execute(sql`
+        SELECT cc.certification_type, cc.verification_status,
+               cp.certifications
+        FROM users u
+        LEFT JOIN coach_applications ca ON u.id = ca.user_id
+        LEFT JOIN coach_certifications cc ON ca.id = cc.application_id
+        LEFT JOIN coach_profiles cp ON u.id = cp.user_id
+        WHERE u.id = ${userId} AND cc.verification_status = 'verified'
+      `);
+      
+      const certifications = result.rows;
+      let currentLevel = 0;
+      const completedLevels: string[] = [];
+      
+      // Check for Level 5 certification
+      if (certifications.some((cert: any) => cert.certification_type?.includes('Level 5'))) {
+        currentLevel = 5;
+        completedLevels.push('PCP-L5');
+      } else if (certifications.some((cert: any) => cert.certification_type?.includes('Level 4'))) {
+        currentLevel = 4;
+        completedLevels.push('PCP-L4');
+      } else if (certifications.some((cert: any) => cert.certification_type?.includes('Level 3'))) {
+        currentLevel = 3;
+        completedLevels.push('PCP-L3');
+      } else if (certifications.some((cert: any) => cert.certification_type?.includes('Level 2'))) {
+        currentLevel = 2;
+        completedLevels.push('PCP-L2');
+      } else if (certifications.some((cert: any) => cert.certification_type?.includes('Level 1'))) {
+        currentLevel = 1;
+        completedLevels.push('PCP-L1');
+      }
+      
       const status = {
-        completedLevels: [],
+        currentLevel,
+        completedLevels,
         inProgress: null,
-        availableLevels: [1, 2, 3, 4, 5]
+        availableLevels: currentLevel < 5 ? [currentLevel + 1] : []
       };
       
+      console.log('[PCP-CERT] Returning status for user', userId, ':', status);
       res.json({ success: true, data: status });
     } catch (error) {
       console.error('[PCP-CERT] Error fetching user certification status:', error);
