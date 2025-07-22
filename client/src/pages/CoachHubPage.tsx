@@ -25,7 +25,8 @@ import {
   PlayCircle,
   FileText,
   Calendar,
-  Target
+  Target,
+  ClipboardCheck
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,7 +40,7 @@ interface CoachApplicationStatus {
 }
 
 interface CoachCertificationStatus {
-  currentLevel?: string;
+  currentLevel?: number;
   completedLevels: string[];
   inProgress?: {
     levelId: number;
@@ -454,8 +455,9 @@ function ApprovedCoachView({ certificationStatus }: { certificationStatus?: Coac
 function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: CoachProfile; certificationStatus?: CoachCertificationStatus }) {
   return (
     <div className="space-y-6">
+      {/* Welcome Header */}
       <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-green-600 text-white">
               <Crown className="h-6 w-6" />
@@ -465,37 +467,139 @@ function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: 
                 Welcome Back, Coach!
               </CardTitle>
               <CardDescription className="text-lg">
-                Manage your students and continue your certification journey
+                Manage your students and grow your coaching practice
               </CardDescription>
             </div>
           </div>
         </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">8</div>
+              <div className="text-sm text-muted-foreground">Active Students</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">Level {certificationStatus?.currentLevel || 1}</div>
+              <div className="text-sm text-muted-foreground">Certification</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">4.9</div>
+              <div className="text-sm text-muted-foreground">Coach Rating</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">23</div>
+              <div className="text-sm text-muted-foreground">Sessions This Month</div>
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
-      <Tabs defaultValue="coaching" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="coaching">My Coaching</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="certification">Certification</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="coaching" className="space-y-6">
-          <CoachingDashboard />
-        </TabsContent>
-        
-        <TabsContent value="students" className="space-y-6">
-          <StudentsManagement />
-        </TabsContent>
-        
-        <TabsContent value="certification" className="space-y-6">
-          <CertificationProgress certificationStatus={certificationStatus} />
-        </TabsContent>
-        
-        <TabsContent value="resources" className="space-y-6">
-          <CoachResources />
-        </TabsContent>
-      </Tabs>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="font-semibold">Manage Students</div>
+                <div className="text-sm text-muted-foreground">View profiles & progress</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
+                <ClipboardCheck className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="font-semibold">Assessment Tool</div>
+                <div className="text-sm text-muted-foreground">PCP 4-dimensional analysis</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
+                <Calendar className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <div className="font-semibold">Schedule Sessions</div>
+                <div className="text-sm text-muted-foreground">Book coaching time</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity & Certification Progress */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Recent Sessions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { student: "Sarah Chen", date: "Today, 2:00 PM", status: "Completed" },
+                { student: "Mike Rodriguez", date: "Yesterday, 4:30 PM", status: "Completed" },
+                { student: "Lisa Park", date: "Tomorrow, 10:00 AM", status: "Upcoming" }
+              ].map((session, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div>
+                    <div className="font-medium">{session.student}</div>
+                    <div className="text-sm text-muted-foreground">{session.date}</div>
+                  </div>
+                  <Badge variant={session.status === "Completed" ? "default" : "secondary"}>
+                    {session.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Certification Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Current Level: {certificationStatus?.currentLevel || 1}</span>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/pcp-certification">View Details</Link>
+                </Button>
+              </div>
+              
+              {certificationStatus?.currentLevel && certificationStatus.currentLevel < 5 && (
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Progress to Level {certificationStatus.currentLevel + 1}</span>
+                    <span>75%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-600 h-2 rounded-full w-3/4"></div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-sm text-muted-foreground">
+                {certificationStatus?.currentLevel === 5 
+                  ? "🎉 Master Coach Certified!" 
+                  : "Continue your certification journey to unlock advanced coaching techniques"}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
