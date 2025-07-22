@@ -70,12 +70,14 @@ export default function CoachHubPage() {
   });
 
   // Fetch coach certification status
-  const { data: certificationStatus } = useQuery<CoachCertificationStatus>({
+  const { data: certificationResponse } = useQuery({
     queryKey: ['/api/pcp-certification/my-status'],
     enabled: !!user,
     staleTime: 0, // Always refetch
     cacheTime: 0 // Don't cache
   });
+  
+  const certificationStatus = certificationResponse?.data as CoachCertificationStatus;
 
   // Fetch coach profile if they're an active coach
   const { data: coachProfile } = useQuery<CoachProfile>({
@@ -105,11 +107,6 @@ export default function CoachHubPage() {
   };
 
   const userStatus = getUserStatus();
-
-  // Debug logging
-  console.log('[CoachHub] certificationStatus:', certificationStatus);
-  console.log('[CoachHub] currentLevel:', certificationStatus?.currentLevel);
-  console.log('[CoachHub] userStatus:', userStatus);
 
   // Render content based on user status
   const renderContent = () => {
