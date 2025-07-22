@@ -425,7 +425,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
           backgroundSize: '60px 60px'
         }}></div>
       </div>
-      <div className="relative max-w-6xl mx-auto px-4 space-y-1 z-10 mt-[40px] mb-[40px]">
+      <div className="relative max-w-6xl mx-auto px-4 space-y-1 z-10 mt-[-63px] mb-[-63px]">
       {/* Onboarding Progress Indicator for new users */}
       <OnboardingProgressIndicator onShowFullOnboarding={onShowOnboarding} />
       
