@@ -49,7 +49,7 @@ export function MobileNavigation() {
     { 
       icon: <Award size={20} />, 
       label: t('nav.coaching'), 
-      path: '/pcp-certification',
+      path: '/coach',
       id: 'coaching'
     }
   ];
