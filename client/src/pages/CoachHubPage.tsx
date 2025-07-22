@@ -240,12 +240,20 @@ function ProspectiveCoachView() {
             </div>
           </div>
           
-          <Button asChild className="bg-green-600 hover:bg-green-700 w-full">
-            <Link to="/coach/apply">
-              Start Application Process
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="space-y-3">
+            <Button asChild className="bg-green-600 hover:bg-green-700 w-full">
+              <Link to="/coach/apply">
+                Start Application Process
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="w-full">
+              <Link to="/pcp-certification">
+                View PCP Certification Levels
+                <BookOpen className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

@@ -50,7 +50,7 @@ export function StandardLayout({
         {...headerProps}
       />
       {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 pt-0 pb-2 md:pb-2 pb-20 relative z-10 flex-1 mt-16">
+      <main className="container mx-auto px-4 sm:px-6 pt-0 md:pb-2 pb-20 relative z-10 flex-1 mt-[123px] mb-[123px]">
         {children}
       </main>
       {/* Mobile Navigation */}

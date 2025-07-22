@@ -16,7 +16,7 @@ export function BottomNavigation() {
     { label: "Home", icon: "home", path: "/dashboard" },
     { label: "Play", icon: "sports_tennis", path: "/tournaments" },
     { label: "Community", icon: "groups", path: "/connections" },
-    { label: "Achievements", icon: "military_tech", path: "/achievements" }
+    { label: "Coaching", icon: "school", path: "/coach" }
   ];
   
   // Only show on mobile devices
