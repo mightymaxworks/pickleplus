@@ -106,6 +106,11 @@ export default function CoachHubPage() {
 
   const userStatus = getUserStatus();
 
+  // Debug logging
+  console.log('[CoachHub] certificationStatus:', certificationStatus);
+  console.log('[CoachHub] currentLevel:', certificationStatus?.currentLevel);
+  console.log('[CoachHub] userStatus:', userStatus);
+
   // Render content based on user status
   const renderContent = () => {
     switch (userStatus) {
