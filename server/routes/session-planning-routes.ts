@@ -68,9 +68,9 @@ router.get('/session-plans', isAuthenticated, async (req, res) => {
                 'id', dl.id,
                 'title', dl.name,
                 'category', dl.category,
-                'difficulty', dl."skillLevel",
+                'difficulty', dl.skill_level,
                 'description', dl.objective,
-                'duration', dl."estimatedDuration"
+                'duration', dl.estimated_duration
               )
             ) ORDER BY sda.order_sequence
           ) FILTER (WHERE sda.drill_id IS NOT NULL),

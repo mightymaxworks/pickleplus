@@ -10,6 +10,17 @@ export function registerCurriculumManagementRoutes(app: Express) {
   // Drill Library Routes
   // ========================================
 
+  // Coach-specific curriculum drill endpoint (used by session planning)
+  app.get('/api/coach/curriculum/drills', async (req, res) => {
+    try {
+      const drills = await storage.getAllDrills();
+      res.json({ success: true, data: drills });
+    } catch (error) {
+      console.error('[Curriculum][API] Error getting coach curriculum drills:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch drills' });
+    }
+  });
+
   // Get all drills (general endpoint)
   app.get('/api/curriculum/drills', async (req, res) => {
     try {

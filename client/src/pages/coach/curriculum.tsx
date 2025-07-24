@@ -264,7 +264,7 @@ export default function CoachCurriculumPage() {
                         Create Session Plan
                       </Button>
                       <Button 
-                        onClick={() => window.open('/coach/session-planning', '_blank')}
+                        onClick={() => window.location.href = '/coach/session-planning'}
                         variant="outline"
                         className="px-6 py-2 rounded-2xl backdrop-blur-sm bg-white/50 border-white/20 hover:bg-white/70 hover:shadow-md transition-all duration-300 hover:scale-105"
                       >

@@ -73,13 +73,15 @@ export default function SessionPlanningPage() {
   const queryClient = useQueryClient();
 
   // Fetch available drills
-  const { data: drills = [], isLoading: drillsLoading } = useQuery({
+  const { data: drillsResponse, isLoading: drillsLoading } = useQuery({
     queryKey: ['/api/coach/curriculum/drills'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/coach/curriculum/drills');
       return response.json();
     }
   });
+
+  const drills = drillsResponse?.data || [];
 
   // Fetch session templates
   const { data: sessionTemplates = [], isLoading: templatesLoading } = useQuery({
@@ -192,14 +194,14 @@ export default function SessionPlanningPage() {
     createSessionPlan.mutate(sessionPlan);
   };
 
-  const filteredDrills = drills.filter((drill: Drill) => {
+  const filteredDrills = (drills || []).filter((drill: Drill) => {
     const matchesSearch = drill.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          drill.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || drill.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['all', ...Array.from(new Set(drills.map((drill: Drill) => drill.category)))];
+  const categories = ['all', ...Array.from(new Set((drills || []).map((drill: Drill) => drill.category)))];
 
   return (
     <StandardLayout>
