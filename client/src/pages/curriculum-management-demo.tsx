@@ -49,6 +49,8 @@ export default function CurriculumManagementDemo() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSkillLevel, setSelectedSkillLevel] = useState('');
   const [expandedDrills, setExpandedDrills] = useState<Set<number>>(new Set());
+  const [recentlyAddedDrills, setRecentlyAddedDrills] = useState<Set<number>>(new Set());
+  const [lastAddedDrill, setLastAddedDrill] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -88,10 +90,26 @@ export default function CurriculumManagementDemo() {
       const response = await apiRequest('POST', '/api/curriculum/drills', drillData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const newDrill = response.data;
+      setLastAddedDrill(newDrill);
+      setRecentlyAddedDrills(prev => new Set(Array.from(prev).concat(newDrill.id)));
+      
+      // Auto-expand the newly added drill
+      setExpandedDrills(prev => new Set(Array.from(prev).concat(newDrill.id)));
+      
+      // Clear highlight after 5 seconds
+      setTimeout(() => {
+        setRecentlyAddedDrills(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(newDrill.id);
+          return newSet;
+        });
+      }, 5000);
+      
       toast({
-        title: "Success",
-        description: "Drill created successfully!",
+        title: "Drill Added Successfully!",
+        description: `"${newDrill.name}" has been added to the curriculum library`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/curriculum/drills'] });
     },
@@ -300,6 +318,19 @@ export default function CurriculumManagementDemo() {
                 </div>
               </div>
 
+              {/* Last Added Drill Summary */}
+              {lastAddedDrill && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-green-800">Recently Added</span>
+                  </div>
+                  <div className="text-sm text-green-700">
+                    <strong>"{lastAddedDrill.name}"</strong> was added to {lastAddedDrill.category} • {lastAddedDrill.skillLevel} level
+                  </div>
+                </div>
+              )}
+
               {/* Results Summary */}
               <div className="flex items-center justify-between border-b pb-4">
                 <div className="text-sm text-muted-foreground">
@@ -312,6 +343,12 @@ export default function CurriculumManagementDemo() {
                     </span>
                   )}
                 </div>
+                {recentlyAddedDrills.size > 0 && (
+                  <div className="text-sm text-green-600 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    {recentlyAddedDrills.size} new drill{recentlyAddedDrills.size > 1 ? 's' : ''} added
+                  </div>
+                )}
               </div>
 
               {/* Drills List */}
@@ -324,7 +361,14 @@ export default function CurriculumManagementDemo() {
               ) : (
                 <div className="space-y-4">
                   {filteredDrills.map((drill) => (
-                    <Card key={drill.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary/20">
+                    <Card 
+                      key={drill.id} 
+                      className={`hover:shadow-lg transition-all duration-200 border-l-4 ${
+                        recentlyAddedDrills.has(drill.id) 
+                          ? 'border-l-green-500 bg-green-50/30 shadow-lg ring-2 ring-green-200' 
+                          : 'border-l-primary/20'
+                      }`}
+                    >
                       <Collapsible 
                         open={expandedDrills.has(drill.id)}
                         onOpenChange={() => toggleDrillExpansion(drill.id)}
@@ -334,7 +378,16 @@ export default function CurriculumManagementDemo() {
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                  <CardTitle className="text-lg">{drill.name}</CardTitle>
+                                  <CardTitle className={`text-lg ${
+                                    recentlyAddedDrills.has(drill.id) ? 'text-green-700 font-bold' : ''
+                                  }`}>
+                                    {drill.name}
+                                    {recentlyAddedDrills.has(drill.id) && (
+                                      <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 animate-pulse">
+                                        NEW!
+                                      </span>
+                                    )}
+                                  </CardTitle>
                                   {expandedDrills.has(drill.id) ? 
                                     <ChevronDown className="w-4 h-4 text-muted-foreground" /> : 
                                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
