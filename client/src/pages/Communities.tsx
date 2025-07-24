@@ -180,11 +180,11 @@ export default function Communities() {
           {/* Main Content with Tabs */}
           <Tabs defaultValue="discover" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="discover">Discover</TabsTrigger>
-            <TabsTrigger value="my-communities">My Communities</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="create">Create</TabsTrigger>
-          </TabsList>
+              <TabsTrigger value="discover">Discover</TabsTrigger>
+              <TabsTrigger value="my-communities">My Communities</TabsTrigger>
+              <TabsTrigger value="events">Events</TabsTrigger>
+              <TabsTrigger value="create">Create</TabsTrigger>
+            </TabsList>
 
           <TabsContent value="discover" className="space-y-6">
             {/* Search and Filter */}
