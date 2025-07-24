@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin } from 'lucide-react';
+import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin, Play, Video, ExternalLink } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,6 +22,8 @@ interface Drill {
   instructions: string;
   keyFocus: string;
   equipmentNeeded: string;
+  youtubeUrl?: string;
+  xiaohongshuUrl?: string;
   playersRequired?: number;
   estimatedDuration?: number;
   originalNumber: number;
@@ -104,7 +106,7 @@ export default function CurriculumManagementDemo() {
 
   const handleCreateSampleDrill = () => {
     const sampleDrill = {
-      name: "Advanced Dink Cross-Court Rally",
+      name: "Advanced Dink Cross-Court Rally with Video Demo",
       category: "Dinks", 
       skillLevel: "Intermediate",
       minPcpRating: "4.0",
@@ -114,6 +116,8 @@ export default function CurriculumManagementDemo() {
       instructions: "Maintain 10+ shot rallies with consistent placement and pace control",
       keyFocus: "Paddle angle consistency and target accuracy",
       equipmentNeeded: "Paddles, balls, target cones",
+      youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      xiaohongshuUrl: "https://www.xiaohongshu.com/explore/sample-drill",
       originalNumber: 2,
       isActive: true
     };
@@ -123,12 +127,12 @@ export default function CurriculumManagementDemo() {
   // Get unique categories and skill levels for filter buttons
   const uniqueCategories = useMemo(() => {
     if (!drills) return [];
-    return [...new Set(drills.map(drill => drill.category))].sort();
+    return Array.from(new Set(drills.map(drill => drill.category))).sort();
   }, [drills]);
 
   const uniqueSkillLevels = useMemo(() => {
     if (!drills) return [];
-    return [...new Set(drills.map(drill => drill.skillLevel))].sort();
+    return Array.from(new Set(drills.map(drill => drill.skillLevel))).sort();
   }, [drills]);
 
   const filteredDrills = useMemo(() => {
@@ -157,6 +161,17 @@ export default function CurriculumManagementDemo() {
       }
       return newSet;
     });
+  };
+
+  // Helper function to extract YouTube video ID from URL
+  const getYouTubeVideoId = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+    return match ? match[1] : null;
+  };
+
+  // Helper function to check if XiaoHongShu URL is valid
+  const isValidXiaohongshuUrl = (url: string) => {
+    return url.includes('xiaohongshu.com') || url.includes('xhs.com');
   };
 
   return (
@@ -339,6 +354,12 @@ export default function CurriculumManagementDemo() {
                                       {drill.playersRequired} players
                                     </Badge>
                                   )}
+                                  {(drill.youtubeUrl || drill.xiaohongshuUrl) && (
+                                    <Badge variant="outline" className="flex items-center gap-1 bg-red-50 text-red-700 border-red-200">
+                                      <Video className="w-3 h-3" />
+                                      Video Demo
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -350,6 +371,51 @@ export default function CurriculumManagementDemo() {
                         
                         <CollapsibleContent>
                           <CardContent className="pt-0 space-y-4">
+                            {/* Video Section - Full Width When Available */}
+                            {(drill.youtubeUrl || drill.xiaohongshuUrl) && (
+                              <div className="space-y-3">
+                                <h4 className="font-semibold text-sm flex items-center gap-2">
+                                  <Play className="w-4 h-4 text-red-600" />
+                                  Video Demonstration
+                                </h4>
+                                <div className="space-y-3">
+                                  {drill.youtubeUrl && getYouTubeVideoId(drill.youtubeUrl) && (
+                                    <div className="relative w-full rounded-lg overflow-hidden bg-black">
+                                      <iframe
+                                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(drill.youtubeUrl)}`}
+                                        title={`${drill.name} - YouTube Demo`}
+                                        className="w-full aspect-video"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                      />
+                                    </div>
+                                  )}
+                                  {drill.xiaohongshuUrl && isValidXiaohongshuUrl(drill.xiaohongshuUrl) && (
+                                    <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-200">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <h5 className="font-medium text-red-900">XiaoHongShu Video Demo</h5>
+                                          <p className="text-sm text-red-700 mt-1">
+                                            View this drill demonstration on XiaoHongShu
+                                          </p>
+                                        </div>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => window.open(drill.xiaohongshuUrl, '_blank')}
+                                          className="border-red-300 text-red-700 hover:bg-red-100"
+                                        >
+                                          <ExternalLink className="w-4 h-4 mr-2" />
+                                          Watch
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                             <div className="grid gap-4 md:grid-cols-2">
                               <div className="space-y-3">
                                 <div className="p-3 bg-muted/50 rounded-lg">
