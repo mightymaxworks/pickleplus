@@ -73,11 +73,10 @@ export default function CoachHubPage() {
   const { data: certificationResponse } = useQuery({
     queryKey: ['/api/pcp-certification/my-status'],
     enabled: !!user,
-    staleTime: 0, // Always refetch
-    cacheTime: 0 // Don't cache
+    staleTime: 0 // Always refetch
   });
   
-  const certificationStatus = certificationResponse?.data as CoachCertificationStatus;
+  const certificationStatus = (certificationResponse as any)?.data as CoachCertificationStatus;
 
   // Fetch coach profile if they're an active coach
   const { data: coachProfile } = useQuery<CoachProfile>({

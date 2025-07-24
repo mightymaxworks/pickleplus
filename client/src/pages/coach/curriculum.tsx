@@ -50,8 +50,8 @@ interface CurriculumTemplate {
 
 export default function CoachCurriculumPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSkillLevel, setSelectedSkillLevel] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSkillLevel, setSelectedSkillLevel] = useState('all');
   const [expandedDrills, setExpandedDrills] = useState<Set<number>>(new Set());
   const [selectedDrillsForSession, setSelectedDrillsForSession] = useState<Set<number>>(new Set());
   const [editingDrill, setEditingDrill] = useState<Drill | null>(null);
@@ -146,8 +146,8 @@ export default function CoachCurriculumPage() {
         drill.objective.toLowerCase().includes(searchQuery.toLowerCase()) ||
         drill.keyFocus.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesCategory = !selectedCategory || drill.category === selectedCategory;
-      const matchesSkillLevel = !selectedSkillLevel || drill.skillLevel === selectedSkillLevel;
+      const matchesCategory = !selectedCategory || selectedCategory === 'all' || drill.category === selectedCategory;
+      const matchesSkillLevel = !selectedSkillLevel || selectedSkillLevel === 'all' || drill.skillLevel === selectedSkillLevel;
       
       return matchesSearch && matchesCategory && matchesSkillLevel && drill.isActive;
     });
@@ -271,7 +271,7 @@ export default function CoachCurriculumPage() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {uniqueCategories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -282,7 +282,7 @@ export default function CoachCurriculumPage() {
                 <SelectValue placeholder="All Skill Levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Skill Levels</SelectItem>
+                <SelectItem value="all">All Skill Levels</SelectItem>
                 {uniqueSkillLevels.map(level => (
                   <SelectItem key={level} value={level}>{level}</SelectItem>
                 ))}
@@ -291,14 +291,14 @@ export default function CoachCurriculumPage() {
           </div>
           <div className="flex justify-between items-center text-sm text-gray-600">
             <span>Found {filteredDrills.length} drills</span>
-            {(selectedCategory || selectedSkillLevel || searchQuery) && (
+            {(selectedCategory !== 'all' || selectedSkillLevel !== 'all' || searchQuery) && (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => {
                   setSearchQuery('');
-                  setSelectedCategory('');
-                  setSelectedSkillLevel('');
+                  setSelectedCategory('all');
+                  setSelectedSkillLevel('all');
                 }}
               >
                 Clear Filters
