@@ -392,23 +392,68 @@ export default function CurriculumManagementDemo() {
                                     </div>
                                   )}
                                   {drill.xiaohongshuUrl && isValidXiaohongshuUrl(drill.xiaohongshuUrl) && (
-                                    <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-200">
-                                      <div className="flex items-center justify-between">
-                                        <div>
-                                          <h5 className="font-medium text-red-900">XiaoHongShu Video Demo</h5>
-                                          <p className="text-sm text-red-700 mt-1">
-                                            View this drill demonstration on XiaoHongShu
+                                    <div className="relative overflow-hidden rounded-lg border border-red-200 bg-gradient-to-br from-red-50 via-pink-50 to-orange-50">
+                                      {/* XiaoHongShu Branded Header */}
+                                      <div className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                                            <span className="text-red-500 font-bold text-xs">小</span>
+                                          </div>
+                                          <span className="font-medium text-sm">小红书 (XiaoHongShu)</span>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Content Area */}
+                                      <div className="p-4">
+                                        <div className="flex items-start gap-4">
+                                          {/* Video Thumbnail Placeholder */}
+                                          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-pink-100 rounded-lg flex items-center justify-center flex-shrink-0 border-2 border-red-200">
+                                            <Play className="w-8 h-8 text-red-600" />
+                                          </div>
+                                          
+                                          {/* Video Info */}
+                                          <div className="flex-1 min-w-0">
+                                            <h5 className="font-semibold text-red-900 text-sm mb-1 line-clamp-2">
+                                              {drill.name} - 小红书演示
+                                            </h5>
+                                            <p className="text-xs text-red-700 mb-3 opacity-90">
+                                              专业羽毛球技巧演示 • 小红书独家内容
+                                            </p>
+                                            
+                                            {/* Action Buttons */}
+                                            <div className="flex gap-2">
+                                              <Button
+                                                size="sm"
+                                                onClick={() => window.open(drill.xiaohongshuUrl, '_blank')}
+                                                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0 text-xs px-3 py-1.5 h-auto"
+                                              >
+                                                <ExternalLink className="w-3 h-3 mr-1.5" />
+                                                观看视频
+                                              </Button>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  navigator.clipboard.writeText(drill.xiaohongshuUrl || '');
+                                                  toast({
+                                                    title: "链接已复制",
+                                                    description: "小红书视频链接已复制到剪贴板",
+                                                  });
+                                                }}
+                                                className="border-red-300 text-red-700 hover:bg-red-50 text-xs px-3 py-1.5 h-auto"
+                                              >
+                                                复制链接
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Platform Note */}
+                                        <div className="mt-3 pt-3 border-t border-red-200">
+                                          <p className="text-xs text-red-600 opacity-75">
+                                            💡 小红书暂不支持直接嵌入播放，点击按钮在新窗口中观看完整视频
                                           </p>
                                         </div>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => window.open(drill.xiaohongshuUrl, '_blank')}
-                                          className="border-red-300 text-red-700 hover:bg-red-100"
-                                        >
-                                          <ExternalLink className="w-4 h-4 mr-2" />
-                                          Watch
-                                        </Button>
                                       </div>
                                     </div>
                                   )}
