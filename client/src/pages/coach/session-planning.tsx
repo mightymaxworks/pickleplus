@@ -84,7 +84,7 @@ export default function SessionPlanningPage() {
   const drills = drillsResponse?.data || [];
 
   // Fetch session templates
-  const { data: sessionTemplates = [], isLoading: templatesLoading } = useQuery({
+  const { data: sessionTemplatesResponse, isLoading: templatesLoading } = useQuery({
     queryKey: ['/api/coach/session-plans'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/coach/session-plans');
@@ -92,14 +92,19 @@ export default function SessionPlanningPage() {
     }
   });
 
-  // Fetch students for assignment
-  const { data: students = [], isLoading: studentsLoading } = useQuery({
+  const sessionTemplates = sessionTemplatesResponse?.data || [];
+
+  // Fetch students (temporarily disabled due to missing coaching_relationships table)
+  const { data: studentsResponse, isLoading: studentsLoading } = useQuery({
     queryKey: ['/api/coach/students'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/coach/students');
-      return response.json();
-    }
+      // Return mock data for now until coaching_relationships table is created
+      return { data: [] };
+    },
+    enabled: false // Disable this query for now
   });
+
+  const students = studentsResponse?.data || [];
 
   // Create session plan mutation
   const createSessionPlan = useMutation({
@@ -517,7 +522,7 @@ export default function SessionPlanningPage() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="rounded-md border border-white/20 backdrop-blur-sm bg-white/50 px-3 py-2"
                 >
-                  {categories.map(category => (
+                  {categories.map((category: string) => (
                     <option key={category} value={category}>
                       {category === 'all' ? 'All Categories' : category}
                     </option>
