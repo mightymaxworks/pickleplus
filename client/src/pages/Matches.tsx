@@ -90,26 +90,32 @@ export default function Matches() {
   };
 
   return (
-    <StandardLayout>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Modern Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">{t('nav.matches')}</h1>
-              <p className="text-muted-foreground mt-2">
-                Record matches, track performance, and analyze your game
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20">
+      <StandardLayout>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Modern Header Section */}
+          <div className="mb-8 backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 rounded-2xl p-8 border border-white/20 shadow-xl">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg">
+                  <Trophy className="w-8 h-8" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">{t('nav.matches')}</h1>
+                  <p className="text-gray-700 dark:text-gray-300 mt-2 text-lg">
+                    Record matches, track performance, and analyze your game
+                  </p>
+                </div>
+              </div>
+              <Button size="lg" onClick={handleRecordMatch} className="gap-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all">
+                <Plus className="h-5 w-5" />
+                {t('match.record')}
+              </Button>
             </div>
-            <Button size="lg" onClick={handleRecordMatch} className="gap-2 bg-primary hover:bg-primary/90">
-              <Plus className="h-5 w-5" />
-              {t('match.record')}
-            </Button>
-          </div>
 
           {/* Quick Stats Overview */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900">
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-blue-50/80 to-indigo-100/80 dark:from-blue-950/80 dark:to-indigo-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -123,7 +129,7 @@ export default function Matches() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900">
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-green-50/80 to-emerald-100/80 dark:from-green-950/80 dark:to-emerald-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -137,7 +143,7 @@ export default function Matches() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900">
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-purple-50/80 to-violet-100/80 dark:from-purple-950/80 dark:to-violet-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -151,7 +157,7 @@ export default function Matches() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900">
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-orange-50/80 to-amber-100/80 dark:from-orange-950/80 dark:to-amber-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -292,7 +298,8 @@ export default function Matches() {
             <QuickMatchRecorder onSuccess={handleMatchRecorded} />
           </DialogContent>
         </Dialog>
-      </div>
-    </StandardLayout>
+        </div>
+      </StandardLayout>
+    </div>
   );
 }

@@ -108,21 +108,27 @@ export default function Communities() {
   console.log('[Communities Debug] Community count:', communities.length);
 
   return (
-    <StandardLayout>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            {t('communities.title', 'Community Hub')}
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t('communities.subtitle', 'Connect with fellow players, join tournaments, and grow your pickleball journey together')}
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-green-900/20 dark:to-blue-900/20">
+      <StandardLayout>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Header Section */}
+          <div className="text-center mb-8 backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 rounded-2xl p-8 border border-white/20 shadow-xl">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-blue-500 text-white shadow-lg">
+                <Users className="w-8 h-8" />
+              </div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                {t('communities.title', 'Community Hub')}
+              </h1>
+            </div>
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+              {t('communities.subtitle', 'Connect with fellow players, join tournaments, and grow your pickleball journey together')}
+            </p>
+          </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 border-0">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="backdrop-blur-sm bg-gradient-to-br from-blue-50/80 to-indigo-100/80 dark:from-blue-950/80 dark:to-indigo-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -134,46 +140,46 @@ export default function Communities() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700 dark:text-green-300">Active Events</p>
-                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.activeEvents}</p>
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-green-50/80 to-emerald-100/80 dark:from-green-950/80 dark:to-emerald-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">Active Events</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.activeEvents}</p>
+                  </div>
+                  <Activity className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
-                <Activity className="h-8 w-8 text-green-600 dark:text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900 border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Events This Week</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.activeEvents}</p>
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-purple-50/80 to-violet-100/80 dark:from-purple-950/80 dark:to-violet-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Events This Week</p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.activeEvents}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                 </div>
-                <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950 dark:to-amber-900 border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Your Communities</p>
-                  <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats.userCommunities}</p>
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-orange-50/80 to-amber-100/80 dark:from-orange-950/80 dark:to-amber-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Your Communities</p>
+                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats.userCommunities}</p>
+                  </div>
+                  <Crown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                 </div>
-                <Crown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Main Content with Tabs */}
-        <Tabs defaultValue="discover" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          {/* Main Content with Tabs */}
+          <Tabs defaultValue="discover" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="discover">Discover</TabsTrigger>
             <TabsTrigger value="my-communities">My Communities</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -434,8 +440,9 @@ export default function Communities() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
-      </div>
-    </StandardLayout>
+          </Tabs>
+        </div>
+      </StandardLayout>
+    </div>
   );
 }
