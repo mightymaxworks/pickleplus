@@ -97,7 +97,7 @@ export function CommunityCard({
   if (compact) {
     return (
       <Card 
-        className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        className="backdrop-blur-sm bg-gradient-to-r from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-102 cursor-pointer overflow-hidden"
         onClick={handleViewCommunity}
       >
         <div className="flex items-center p-4">
@@ -199,7 +199,7 @@ export function CommunityCard({
   // Standard grid view
   return (
     <Card 
-      className="group overflow-hidden rounded-xl border-muted/50 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
+      className="group backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden rounded-xl"
       onClick={handleViewCommunity}
     >
       {/* Card Header with Banner Image or Gradient Background */}

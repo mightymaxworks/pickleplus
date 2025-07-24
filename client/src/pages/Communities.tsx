@@ -217,7 +217,7 @@ export default function Communities() {
             {communitiesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array(6).fill(0).map((_, i) => (
-                  <Card key={i} className="animate-pulse">
+                  <Card key={i} className="animate-pulse backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl">
                     <CardHeader>
                       <div className="h-6 bg-muted rounded mb-2" />
                       <div className="h-4 bg-muted rounded w-3/4" />
@@ -234,7 +234,7 @@ export default function Communities() {
             ) : communities.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {communities.map((community) => (
-                  <Card key={community.id} className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-800">
+                  <Card key={community.id} className="group backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -329,14 +329,14 @@ export default function Communities() {
                 ))}
               </div>
             ) : (
-              <Card>
+              <Card className="backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl">
                 <CardContent className="p-8 text-center">
                   <Compass className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Communities Found</h3>
                   <p className="text-muted-foreground mb-6">
                     {searchQuery ? `No communities match "${searchQuery}"` : "No communities available yet"}
                   </p>
-                  <Button>
+                  <Button className="hover:scale-105 transition-transform duration-200">
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Community
                   </Button>
@@ -346,14 +346,14 @@ export default function Communities() {
           </TabsContent>
 
           <TabsContent value="my-communities" className="mt-6">
-            <Card>
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl">
               <CardContent className="p-8 text-center">
                 <Users className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
                 <h3 className="text-lg font-medium mb-2">Your Communities</h3>
                 <p className="text-muted-foreground mb-6">
                   Join communities to see them here and stay connected with fellow players.
                 </p>
-                <Button>
+                <Button className="hover:scale-105 transition-transform duration-200">
                   <Compass className="h-4 w-4 mr-2" />
                   Discover Communities
                 </Button>
@@ -365,7 +365,7 @@ export default function Communities() {
             {eventsLoading ? (
               <div className="space-y-4">
                 {Array(3).fill(0).map((_, i) => (
-                  <Card key={i} className="animate-pulse">
+                  <Card key={i} className="animate-pulse backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl">
                     <CardContent className="p-6">
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 bg-muted rounded-full" />
@@ -381,7 +381,7 @@ export default function Communities() {
             ) : events.length > 0 ? (
               <div className="space-y-4">
                 {events.map((event) => (
-                  <Card key={event.id} className="hover:shadow-md transition-shadow">
+                  <Card key={event.id} className="backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -409,14 +409,14 @@ export default function Communities() {
                 ))}
               </div>
             ) : (
-              <Card>
+              <Card className="backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl">
                 <CardContent className="p-8 text-center">
                   <Calendar className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Events Scheduled</h3>
                   <p className="text-muted-foreground mb-6">
                     Check back later for upcoming community events and tournaments.
                   </p>
-                  <Button>
+                  <Button className="hover:scale-105 transition-transform duration-200">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Event
                   </Button>
@@ -426,14 +426,14 @@ export default function Communities() {
           </TabsContent>
 
           <TabsContent value="create" className="mt-6">
-            <Card>
+            <Card className="backdrop-blur-sm bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-800/80 dark:to-gray-900/80 border border-white/20 shadow-xl">
               <CardContent className="p-8 text-center">
                 <Plus className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
                 <h3 className="text-lg font-medium mb-2">Create Your Community</h3>
                 <p className="text-muted-foreground mb-6">
                   Start a new community to connect with players who share your interests and skill level.
                 </p>
-                <Button size="lg">
+                <Button size="lg" className="hover:scale-105 transition-transform duration-200">
                   <Plus className="h-4 w-4 mr-2" />
                   Create New Community
                 </Button>
