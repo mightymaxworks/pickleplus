@@ -70,6 +70,7 @@ import coachMatchIntegrationApiRoutes from "./api/coach-match-integration"; // P
 import { registerCoachHubRoutes } from "./routes/coach-hub-routes"; // Unified Coach Hub routes
 // Removed special routes import - using consolidated multi-rankings implementation
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
+import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes"; // Sprint 1: Curriculum Management & Lesson Planning
 import { 
   createAdministrativeMatch,
   createBulkMatches,
@@ -406,6 +407,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register unified coach hub routes
   registerCoachHubRoutes(app);
+  
+  // Register Sprint 1: Curriculum Management & Lesson Planning routes
+  registerCurriculumManagementRoutes(app);
   
   // Mount coach management routes
   app.use('/api/coach', coachManagementRoutes);

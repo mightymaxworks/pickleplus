@@ -326,6 +326,34 @@ import {
   type VerificationLevelType
 } from './schema/coach-management';
 
+// Import Curriculum Management system schema (Sprint 1: Curriculum Management & Lesson Planning Foundation)
+import {
+  drillLibrary,
+  curriculumTemplates,
+  lessonPlans,
+  sessionGoals,
+  drillCategories,
+  drillLibraryRelations,
+  curriculumTemplatesRelations,
+  lessonPlansRelations,
+  sessionGoalsRelations,
+  insertDrillLibrarySchema,
+  insertCurriculumTemplateSchema,
+  insertLessonPlanSchema,
+  insertSessionGoalSchema,
+  type DrillLibrary,
+  type InsertDrillLibrary,
+  type CurriculumTemplate,
+  type InsertCurriculumTemplate,
+  type LessonPlan,
+  type InsertLessonPlan,
+  type SessionGoal,
+  type InsertSessionGoal,
+  type DrillCategory,
+  type DrillWithCategory,
+  type LessonPlanWithTemplate
+} from './schema/curriculum-management';
+
 // Import Bounce testing system schema (PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System)
 import {
   bounceTestRuns,
@@ -2109,4 +2137,32 @@ export {
   type GoalCategory,
   type GoalStatusType,
   type GoalPriorityType
+};
+
+// Re-export Curriculum Management System components (Sprint 1)
+export {
+  drillLibrary,
+  curriculumTemplates,
+  lessonPlans,
+  sessionGoals,
+  drillCategories,
+  drillLibraryRelations,
+  curriculumTemplatesRelations,
+  lessonPlansRelations,
+  sessionGoalsRelations,
+  insertDrillLibrarySchema,
+  insertCurriculumTemplateSchema,
+  insertLessonPlanSchema,
+  insertSessionGoalSchema,
+  type DrillLibrary,
+  type InsertDrillLibrary,
+  type CurriculumTemplate,
+  type InsertCurriculumTemplate,
+  type LessonPlan,
+  type InsertLessonPlan,
+  type SessionGoal,
+  type InsertSessionGoal,
+  type DrillCategory,
+  type DrillWithCategory,
+  type LessonPlanWithTemplate
 };

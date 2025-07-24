@@ -6,7 +6,14 @@ import {
   type XpTransaction, type InsertXpTransaction,
   activities, type InsertActivity,
   chargeCardPurchases, chargeCardAllocations, chargeCardBalances, chargeCardTransactions, userFeatureFlags,
-  coachingSessionMatches, coachMatchInput, matchPcpAssessments, pointsAllocationExplanation, coachStudentProgress
+  coachingSessionMatches, coachMatchInput, matchPcpAssessments, pointsAllocationExplanation, coachStudentProgress,
+  // Sprint 1: Curriculum Management imports
+  drillLibrary, curriculumTemplates, lessonPlans, sessionGoals, drillCategories,
+  type DrillLibrary, type InsertDrillLibrary,
+  type CurriculumTemplate, type InsertCurriculumTemplate,
+  type LessonPlan, type InsertLessonPlan,
+  type SessionGoal, type InsertSessionGoal,
+  type DrillCategory
 } from "@shared/schema";
 import {
   type CoachApplication, type InsertCoachApplication,
@@ -238,6 +245,51 @@ export interface IStorage extends CommunityStorage {
   getCoachProfile(userId: number): Promise<CoachProfile | undefined>;
   createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile>;
   getPendingCoachApplications(): Promise<CoachApplication[]>;
+
+  // Sprint 1: Curriculum Management & Lesson Planning methods
+  // Drill Library operations
+  createDrill(data: any): Promise<any>;
+  getDrill(id: number): Promise<any>;
+  getDrillsByCategory(category: string): Promise<any[]>;
+  getDrillsBySkillLevel(skillLevel: string): Promise<any[]>;
+  getDrillsByPcpRating(minRating: number, maxRating: number): Promise<any[]>;
+  searchDrills(query: string): Promise<any[]>;
+  getAllDrills(): Promise<any[]>;
+  updateDrill(id: number, data: any): Promise<any>;
+  deleteDrill(id: number): Promise<boolean>;
+  
+  // Curriculum Template operations
+  createCurriculumTemplate(data: any): Promise<any>;
+  getCurriculumTemplate(id: number): Promise<any>;
+  getCurriculumTemplatesBySkillLevel(skillLevel: string): Promise<any[]>;
+  getCurriculumTemplatesByCreator(creatorId: number): Promise<any[]>;
+  getPublicCurriculumTemplates(): Promise<any[]>;
+  updateCurriculumTemplate(id: number, data: any): Promise<any>;
+  deleteCurriculumTemplate(id: number): Promise<boolean>;
+  incrementTemplateUsage(id: number): Promise<void>;
+  
+  // Lesson Plan operations
+  createLessonPlan(data: any): Promise<any>;
+  getLessonPlan(id: number): Promise<any>;
+  getCoachLessonPlans(coachId: number): Promise<any[]>;
+  updateLessonPlan(id: number, data: any): Promise<any>;
+  deleteLessonPlan(id: number): Promise<boolean>;
+  incrementLessonPlanUsage(id: number): Promise<void>;
+  
+  // Session Goal operations
+  createSessionGoal(data: any): Promise<any>;
+  getSessionGoal(id: number): Promise<any>;
+  getSessionGoalsByLesson(lessonPlanId: number): Promise<any[]>;
+  getCoachSessionGoals(coachId: number): Promise<any[]>;
+  getStudentSessionGoals(studentId: number): Promise<any[]>;
+  updateSessionGoal(id: number, data: any): Promise<any>;
+  markSessionGoalAchieved(id: number): Promise<any>;
+  deleteSessionGoal(id: number): Promise<boolean>;
+  
+  // Drill Category operations
+  getAllDrillCategories(): Promise<any[]>;
+  createDrillCategory(data: any): Promise<any>;
+  updateDrillCategory(id: number, data: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3885,6 +3937,446 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage][CoachHub] Error getting pending coach applications:', error);
       return [];
+    }
+  }
+
+  // ========================================
+  // Sprint 1: Curriculum Management & Lesson Planning Implementation
+  // ========================================
+
+  // Drill Library operations
+  async createDrill(data: InsertDrillLibrary): Promise<DrillLibrary> {
+    try {
+      const [drill] = await db.insert(drillLibrary).values(data).returning();
+      return drill;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error creating drill:', error);
+      throw error;
+    }
+  }
+
+  async getDrill(id: number): Promise<DrillLibrary | undefined> {
+    try {
+      const [drill] = await db.select().from(drillLibrary).where(eq(drillLibrary.id, id));
+      return drill;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting drill:', error);
+      return undefined;
+    }
+  }
+
+  async getDrillsByCategory(category: string): Promise<DrillLibrary[]> {
+    try {
+      const drills = await db.select()
+        .from(drillLibrary)
+        .where(and(eq(drillLibrary.category, category), eq(drillLibrary.isActive, true)))
+        .orderBy(asc(drillLibrary.originalNumber));
+      return drills;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting drills by category:', error);
+      return [];
+    }
+  }
+
+  async getDrillsBySkillLevel(skillLevel: string): Promise<DrillLibrary[]> {
+    try {
+      const drills = await db.select()
+        .from(drillLibrary)
+        .where(and(eq(drillLibrary.skillLevel, skillLevel), eq(drillLibrary.isActive, true)))
+        .orderBy(asc(drillLibrary.category), asc(drillLibrary.originalNumber));
+      return drills;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting drills by skill level:', error);
+      return [];
+    }
+  }
+
+  async getDrillsByPcpRating(minRating: number, maxRating: number): Promise<DrillLibrary[]> {
+    try {
+      const drills = await db.select()
+        .from(drillLibrary)
+        .where(and(
+          gte(drillLibrary.minPcpRating, minRating.toString()),
+          lte(drillLibrary.maxPcpRating, maxRating.toString()),
+          eq(drillLibrary.isActive, true)
+        ))
+        .orderBy(asc(drillLibrary.minPcpRating));
+      return drills;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting drills by PCP rating:', error);
+      return [];
+    }
+  }
+
+  async searchDrills(query: string): Promise<DrillLibrary[]> {
+    try {
+      const searchTerm = `%${query.toLowerCase()}%`;
+      const drills = await db.execute(sql`
+        SELECT * FROM drill_library 
+        WHERE is_active = true
+          AND (
+            LOWER(name) LIKE ${searchTerm} OR
+            LOWER(objective) LIKE ${searchTerm} OR
+            LOWER(key_focus) LIKE ${searchTerm} OR
+            LOWER(category) LIKE ${searchTerm}
+          )
+        ORDER BY category, original_number
+      `);
+      return drills.rows as DrillLibrary[];
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error searching drills:', error);
+      return [];
+    }
+  }
+
+  async getAllDrills(): Promise<DrillLibrary[]> {
+    try {
+      const drills = await db.select()
+        .from(drillLibrary)
+        .where(eq(drillLibrary.isActive, true))
+        .orderBy(asc(drillLibrary.category), asc(drillLibrary.originalNumber));
+      return drills;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting all drills:', error);
+      return [];
+    }
+  }
+
+  async updateDrill(id: number, data: Partial<InsertDrillLibrary>): Promise<DrillLibrary> {
+    try {
+      const [updatedDrill] = await db
+        .update(drillLibrary)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(drillLibrary.id, id))
+        .returning();
+      return updatedDrill;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error updating drill:', error);
+      throw error;
+    }
+  }
+
+  async deleteDrill(id: number): Promise<boolean> {
+    try {
+      // Soft delete by setting isActive to false
+      await db
+        .update(drillLibrary)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(drillLibrary.id, id));
+      return true;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error deleting drill:', error);
+      return false;
+    }
+  }
+
+  // Curriculum Template operations
+  async createCurriculumTemplate(data: InsertCurriculumTemplate): Promise<CurriculumTemplate> {
+    try {
+      const [template] = await db.insert(curriculumTemplates).values(data).returning();
+      return template;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error creating curriculum template:', error);
+      throw error;
+    }
+  }
+
+  async getCurriculumTemplate(id: number): Promise<CurriculumTemplate | undefined> {
+    try {
+      const [template] = await db.select().from(curriculumTemplates).where(eq(curriculumTemplates.id, id));
+      return template;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting curriculum template:', error);
+      return undefined;
+    }
+  }
+
+  async getCurriculumTemplatesBySkillLevel(skillLevel: string): Promise<CurriculumTemplate[]> {
+    try {
+      const templates = await db.select()
+        .from(curriculumTemplates)
+        .where(eq(curriculumTemplates.skillLevel, skillLevel))
+        .orderBy(desc(curriculumTemplates.usageCount), asc(curriculumTemplates.name));
+      return templates;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting templates by skill level:', error);
+      return [];
+    }
+  }
+
+  async getCurriculumTemplatesByCreator(creatorId: number): Promise<CurriculumTemplate[]> {
+    try {
+      const templates = await db.select()
+        .from(curriculumTemplates)
+        .where(eq(curriculumTemplates.createdBy, creatorId))
+        .orderBy(desc(curriculumTemplates.createdAt));
+      return templates;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting templates by creator:', error);
+      return [];
+    }
+  }
+
+  async getPublicCurriculumTemplates(): Promise<CurriculumTemplate[]> {
+    try {
+      const templates = await db.select()
+        .from(curriculumTemplates)
+        .where(eq(curriculumTemplates.isPublic, true))
+        .orderBy(desc(curriculumTemplates.usageCount), asc(curriculumTemplates.skillLevel));
+      return templates;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting public templates:', error);
+      return [];
+    }
+  }
+
+  async updateCurriculumTemplate(id: number, data: Partial<InsertCurriculumTemplate>): Promise<CurriculumTemplate> {
+    try {
+      const [updatedTemplate] = await db
+        .update(curriculumTemplates)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(curriculumTemplates.id, id))
+        .returning();
+      return updatedTemplate;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error updating curriculum template:', error);
+      throw error;
+    }
+  }
+
+  async deleteCurriculumTemplate(id: number): Promise<boolean> {
+    try {
+      await db.delete(curriculumTemplates).where(eq(curriculumTemplates.id, id));
+      return true;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error deleting curriculum template:', error);
+      return false;
+    }
+  }
+
+  async incrementTemplateUsage(id: number): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE curriculum_templates 
+        SET usage_count = usage_count + 1,
+            updated_at = NOW()
+        WHERE id = ${id}
+      `);
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error incrementing template usage:', error);
+    }
+  }
+
+  // Lesson Plan operations
+  async createLessonPlan(data: InsertLessonPlan): Promise<LessonPlan> {
+    try {
+      const [lessonPlan] = await db.insert(lessonPlans).values(data).returning();
+      return lessonPlan;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error creating lesson plan:', error);
+      throw error;
+    }
+  }
+
+  async getLessonPlan(id: number): Promise<LessonPlan | undefined> {
+    try {
+      const [lessonPlan] = await db.select().from(lessonPlans).where(eq(lessonPlans.id, id));
+      return lessonPlan;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting lesson plan:', error);
+      return undefined;
+    }
+  }
+
+  async getCoachLessonPlans(coachId: number): Promise<LessonPlan[]> {
+    try {
+      const plans = await db.select()
+        .from(lessonPlans)
+        .where(eq(lessonPlans.coachId, coachId))
+        .orderBy(desc(lessonPlans.lastUsed), desc(lessonPlans.createdAt));
+      return plans;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting coach lesson plans:', error);
+      return [];
+    }
+  }
+
+  async updateLessonPlan(id: number, data: Partial<InsertLessonPlan>): Promise<LessonPlan> {
+    try {
+      const [updatedPlan] = await db
+        .update(lessonPlans)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(lessonPlans.id, id))
+        .returning();
+      return updatedPlan;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error updating lesson plan:', error);
+      throw error;
+    }
+  }
+
+  async deleteLessonPlan(id: number): Promise<boolean> {
+    try {
+      await db.delete(lessonPlans).where(eq(lessonPlans.id, id));
+      return true;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error deleting lesson plan:', error);
+      return false;
+    }
+  }
+
+  async incrementLessonPlanUsage(id: number): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE lesson_plans 
+        SET times_used = times_used + 1,
+            last_used = NOW(),
+            updated_at = NOW()
+        WHERE id = ${id}
+      `);
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error incrementing lesson plan usage:', error);
+    }
+  }
+
+  // Session Goal operations
+  async createSessionGoal(data: InsertSessionGoal): Promise<SessionGoal> {
+    try {
+      const [goal] = await db.insert(sessionGoals).values(data).returning();
+      return goal;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error creating session goal:', error);
+      throw error;
+    }
+  }
+
+  async getSessionGoal(id: number): Promise<SessionGoal | undefined> {
+    try {
+      const [goal] = await db.select().from(sessionGoals).where(eq(sessionGoals.id, id));
+      return goal;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting session goal:', error);
+      return undefined;
+    }
+  }
+
+  async getSessionGoalsByLesson(lessonPlanId: number): Promise<SessionGoal[]> {
+    try {
+      const goals = await db.select()
+        .from(sessionGoals)
+        .where(eq(sessionGoals.lessonPlanId, lessonPlanId))
+        .orderBy(asc(sessionGoals.priority), desc(sessionGoals.createdAt));
+      return goals;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting session goals by lesson:', error);
+      return [];
+    }
+  }
+
+  async getCoachSessionGoals(coachId: number): Promise<SessionGoal[]> {
+    try {
+      const goals = await db.select()
+        .from(sessionGoals)
+        .where(eq(sessionGoals.coachId, coachId))
+        .orderBy(desc(sessionGoals.createdAt));
+      return goals;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting coach session goals:', error);
+      return [];
+    }
+  }
+
+  async getStudentSessionGoals(studentId: number): Promise<SessionGoal[]> {
+    try {
+      const goals = await db.select()
+        .from(sessionGoals)
+        .where(eq(sessionGoals.studentId, studentId))
+        .orderBy(desc(sessionGoals.isAchieved), desc(sessionGoals.createdAt));
+      return goals;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting student session goals:', error);
+      return [];
+    }
+  }
+
+  async updateSessionGoal(id: number, data: Partial<InsertSessionGoal>): Promise<SessionGoal> {
+    try {
+      const [updatedGoal] = await db
+        .update(sessionGoals)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(sessionGoals.id, id))
+        .returning();
+      return updatedGoal;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error updating session goal:', error);
+      throw error;
+    }
+  }
+
+  async markSessionGoalAchieved(id: number): Promise<SessionGoal> {
+    try {
+      const [achievedGoal] = await db
+        .update(sessionGoals)
+        .set({ 
+          isAchieved: true, 
+          achievedDate: new Date(),
+          progress: 100,
+          updatedAt: new Date() 
+        })
+        .where(eq(sessionGoals.id, id))
+        .returning();
+      return achievedGoal;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error marking session goal achieved:', error);
+      throw error;
+    }
+  }
+
+  async deleteSessionGoal(id: number): Promise<boolean> {
+    try {
+      await db.delete(sessionGoals).where(eq(sessionGoals.id, id));
+      return true;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error deleting session goal:', error);
+      return false;
+    }
+  }
+
+  // Drill Category operations
+  async getAllDrillCategories(): Promise<DrillCategory[]> {
+    try {
+      const categories = await db.select()
+        .from(drillCategories)
+        .where(eq(drillCategories.isActive, true))
+        .orderBy(asc(drillCategories.orderIndex), asc(drillCategories.name));
+      return categories;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error getting drill categories:', error);
+      return [];
+    }
+  }
+
+  async createDrillCategory(data: any): Promise<DrillCategory> {
+    try {
+      const [category] = await db.insert(drillCategories).values(data).returning();
+      return category;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error creating drill category:', error);
+      throw error;
+    }
+  }
+
+  async updateDrillCategory(id: number, data: any): Promise<DrillCategory> {
+    try {
+      const [updatedCategory] = await db
+        .update(drillCategories)
+        .set(data)
+        .where(eq(drillCategories.id, id))
+        .returning();
+      return updatedCategory;
+    } catch (error) {
+      console.error('[Storage][Curriculum] Error updating drill category:', error);
+      throw error;
     }
   }
 }
