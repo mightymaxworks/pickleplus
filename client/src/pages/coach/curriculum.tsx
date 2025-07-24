@@ -156,12 +156,12 @@ export default function CoachCurriculumPage() {
   // Get unique categories and skill levels for filters
   const uniqueCategories = useMemo(() => {
     if (!drills) return [];
-    return [...new Set(drills.map(drill => drill.category))];
+    return Array.from(new Set(drills.map(drill => drill.category)));
   }, [drills]);
 
   const uniqueSkillLevels = useMemo(() => {
     if (!drills) return [];
-    return [...new Set(drills.map(drill => drill.skillLevel))];
+    return Array.from(new Set(drills.map(drill => drill.skillLevel)));
   }, [drills]);
 
   const toggleDrillExpansion = (drillId: number) => {
