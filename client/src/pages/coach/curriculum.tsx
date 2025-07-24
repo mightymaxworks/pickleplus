@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin, Play, Video, ExternalLink, Edit, Trash2, Save, X, UserPlus, FileText, Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -254,13 +255,23 @@ export default function CoachCurriculumPage() {
                         {selectedDrillsForSession.size} drill{selectedDrillsForSession.size !== 1 ? 's' : ''} selected
                       </span>
                     </div>
-                    <Button 
-                      onClick={createSessionPlan}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-2 rounded-2xl shadow-lg hover:shadow-green-500/25 transition-all duration-300"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Create Session Plan
-                    </Button>
+                    <div className="flex gap-3">
+                      <Button 
+                        onClick={createSessionPlan}
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-2 rounded-2xl shadow-lg hover:shadow-green-500/25 transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Create Session Plan
+                      </Button>
+                      <Button 
+                        onClick={() => window.open('/coach/session-planning', '_blank')}
+                        variant="outline"
+                        className="px-6 py-2 rounded-2xl backdrop-blur-sm bg-white/50 border-white/20 hover:bg-white/70 hover:shadow-md transition-all duration-300 hover:scale-105"
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Session Planning
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -562,14 +573,22 @@ export default function CoachCurriculumPage() {
                           <Button
                             variant={selectedDrillsForSession.has(drill.id) ? "default" : "outline"}
                             onClick={() => toggleDrillSelection(drill.id)}
-                            className="rounded-xl"
+                            className={cn(
+                              "rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105",
+                              selectedDrillsForSession.has(drill.id) 
+                                ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-green-500/25 border-green-400/50" 
+                                : "border-white/20 bg-white/50 hover:bg-white/70 hover:shadow-md"
+                            )}
                           >
                             {selectedDrillsForSession.has(drill.id) ? (
-                              <>✓ Selected for Session</>
+                              <>
+                                <Trophy className="h-4 w-4 mr-2" />
+                                ✓ Selected for Session
+                              </>
                             ) : (
                               <>
-                                <UserPlus className="h-4 w-4 mr-2" />
-                                Add to Session
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Select for Session
                               </>
                             )}
                           </Button>

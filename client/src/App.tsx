@@ -141,6 +141,7 @@ import TrainingCenterPage from './pages/training-center' // PKL-278651-TRAINING-
 import TrainingCenterTabsPage from './pages/training-center-tabs' // PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration
 import MyClassesPage from './pages/MyClassesPage' // My Classes page
 import FontTestPage from './pages/FontTestPage' // Font comparison test page
+import SessionPlanningPage from './pages/coach/session-planning' // Sprint 2 Phase 2: Session Planning Integration
 
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -421,6 +422,11 @@ export default function App() {
                     path="/coach/curriculum"
                     component={lazyLoad(() => import('./pages/coach/curriculum'))}
                     pageTitle="Drill Library"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/coach/session-planning"
+                    component={SessionPlanningPage}
+                    pageTitle="Session Planning"
                   />
                   <ProtectedRouteWithLayout
                     path="/coach/assessment-tool"
