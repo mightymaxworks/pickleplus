@@ -3,10 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin, Play, Video, ExternalLink } from 'lucide-react';
+import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin, Play, Video, ExternalLink, Edit, Trash2, Save, X } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -51,6 +55,8 @@ export default function CurriculumManagementDemo() {
   const [expandedDrills, setExpandedDrills] = useState<Set<number>>(new Set());
   const [recentlyAddedDrills, setRecentlyAddedDrills] = useState<Set<number>>(new Set());
   const [lastAddedDrill, setLastAddedDrill] = useState<any>(null);
+  const [editingDrill, setEditingDrill] = useState<Drill | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -120,6 +126,53 @@ export default function CurriculumManagementDemo() {
         variant: "destructive",
       });
     }
+  });
+
+  // Update drill mutation
+  const updateDrillMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await apiRequest('PATCH', `/api/curriculum/drills/${id}`, data);
+      return response.json();
+    },
+    onSuccess: (response) => {
+      toast({
+        title: "Drill Updated Successfully!",
+        description: `"${response.data.name}" has been updated`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/curriculum/drills'] });
+      setShowEditDialog(false);
+      setEditingDrill(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update drill",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete drill mutation
+  const deleteDrillMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/curriculum/drills/${id}`);
+      return response.json();
+    },
+    onSuccess: (response, drillId) => {
+      const deletedDrill = drills?.find(d => d.id === drillId);
+      toast({
+        title: "Drill Deleted Successfully!",
+        description: `"${deletedDrill?.name}" has been removed from the library`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/curriculum/drills'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete drill",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleCreateSampleDrill = () => {
@@ -415,6 +468,35 @@ export default function CurriculumManagementDemo() {
                                   )}
                                 </div>
                               </div>
+                              
+                              {/* Action Buttons */}
+                              <div className="flex gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingDrill(drill);
+                                    setShowEditDialog(true);
+                                  }}
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Are you sure you want to delete "${drill.name}"?`)) {
+                                      deleteDrillMutation.mutate(drill.id);
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                             <CardDescription className="text-left">
                               {drill.objective}
@@ -659,6 +741,255 @@ export default function CurriculumManagementDemo() {
         </TabsContent>
       </Tabs>
       </div>
+      
+      {/* Edit Drill Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Drill</DialogTitle>
+            <DialogDescription>
+              Modify the drill details below and click Save to update.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingDrill && (
+            <EditDrillForm 
+              drill={editingDrill}
+              onSave={(data) => updateDrillMutation.mutate({ id: editingDrill.id, data })}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingDrill(null);
+              }}
+              isLoading={updateDrillMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// Edit Drill Form Component
+interface EditDrillFormProps {
+  drill: Drill;
+  onSave: (data: any) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}
+
+function EditDrillForm({ drill, onSave, onCancel, isLoading }: EditDrillFormProps) {
+  const [formData, setFormData] = useState({
+    name: drill.name,
+    category: drill.category,
+    skillLevel: drill.skillLevel,
+    minPcpRating: drill.minPcpRating,
+    maxPcpRating: drill.maxPcpRating,
+    objective: drill.objective,
+    setup: drill.setup,
+    instructions: drill.instructions,
+    keyFocus: drill.keyFocus,
+    equipmentNeeded: drill.equipmentNeeded,
+    youtubeUrl: drill.youtubeUrl || '',
+    xiaohongshuUrl: drill.xiaohongshuUrl || '',
+    playersRequired: drill.playersRequired || '',
+    estimatedDuration: drill.estimatedDuration || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const categories = ['Dinks', 'Serves', 'Returns', 'Volleys', 'Groundstrokes', 'Footwork', 'Strategy', 'Conditioning', 'Mental Game'];
+  const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="name">Drill Name *</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="category">Category *</Label>
+          <Select 
+            value={formData.category} 
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="skillLevel">Skill Level *</Label>
+          <Select 
+            value={formData.skillLevel} 
+            onValueChange={(value) => setFormData(prev => ({ ...prev, skillLevel: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select skill level" />
+            </SelectTrigger>
+            <SelectContent>
+              {skillLevels.map((level) => (
+                <SelectItem key={level} value={level}>{level}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="pcpRating">PCP Rating Range</Label>
+          <div className="flex gap-2 items-center">
+            <Input
+              placeholder="Min (e.g., 2.0)"
+              value={formData.minPcpRating}
+              onChange={(e) => setFormData(prev => ({ ...prev, minPcpRating: e.target.value }))}
+            />
+            <span>to</span>
+            <Input
+              placeholder="Max (e.g., 4.0)"
+              value={formData.maxPcpRating}
+              onChange={(e) => setFormData(prev => ({ ...prev, maxPcpRating: e.target.value }))}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="objective">Objective *</Label>
+        <Textarea
+          id="objective"
+          value={formData.objective}
+          onChange={(e) => setFormData(prev => ({ ...prev, objective: e.target.value }))}
+          required
+          rows={2}
+        />
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="setup">Setup Instructions *</Label>
+          <Textarea
+            id="setup"
+            value={formData.setup}
+            onChange={(e) => setFormData(prev => ({ ...prev, setup: e.target.value }))}
+            required
+            rows={3}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="instructions">Instructions *</Label>
+          <Textarea
+            id="instructions"
+            value={formData.instructions}
+            onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
+            required
+            rows={3}
+          />
+        </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="keyFocus">Key Focus *</Label>
+          <Input
+            id="keyFocus"
+            value={formData.keyFocus}
+            onChange={(e) => setFormData(prev => ({ ...prev, keyFocus: e.target.value }))}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="equipmentNeeded">Equipment Needed</Label>
+          <Input
+            id="equipmentNeeded"
+            value={formData.equipmentNeeded}
+            onChange={(e) => setFormData(prev => ({ ...prev, equipmentNeeded: e.target.value }))}
+          />
+        </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="youtubeUrl">YouTube URL</Label>
+          <Input
+            id="youtubeUrl"
+            value={formData.youtubeUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="xiaohongshuUrl">XiaoHongShu URL</Label>
+          <Input
+            id="xiaohongshuUrl"
+            value={formData.xiaohongshuUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, xiaohongshuUrl: e.target.value }))}
+            placeholder="https://www.xiaohongshu.com/..."
+          />
+        </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="playersRequired">Players Required</Label>
+          <Input
+            id="playersRequired"
+            type="number"
+            value={formData.playersRequired}
+            onChange={(e) => setFormData(prev => ({ ...prev, playersRequired: e.target.value }))}
+            min="1"
+            max="10"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="estimatedDuration">Duration (minutes)</Label>
+          <Input
+            id="estimatedDuration"
+            type="number"
+            value={formData.estimatedDuration}
+            onChange={(e) => setFormData(prev => ({ ...prev, estimatedDuration: e.target.value }))}
+            min="1"
+            max="120"
+          />
+        </div>
+      </div>
+      
+      <DialogFooter className="gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isLoading}
+        >
+          <X className="w-4 h-4 mr-2" />
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isLoading}
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {isLoading ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
