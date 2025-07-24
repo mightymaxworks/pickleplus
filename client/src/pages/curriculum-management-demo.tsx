@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Filter, BookOpen, Target, Calendar } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,6 +22,8 @@ interface Drill {
   instructions: string;
   keyFocus: string;
   equipmentNeeded: string;
+  playersRequired?: number;
+  estimatedDuration?: number;
   originalNumber: number;
   isActive: boolean;
   createdAt: string;
@@ -43,6 +46,7 @@ export default function CurriculumManagementDemo() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSkillLevel, setSelectedSkillLevel] = useState('');
+  const [expandedDrills, setExpandedDrills] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -116,29 +120,74 @@ export default function CurriculumManagementDemo() {
     createDrillMutation.mutate(sampleDrill);
   };
 
-  const filteredDrills = drills?.filter(drill => {
-    const matchesSearch = searchQuery === '' || 
-      drill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      drill.objective.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === '' || drill.category === selectedCategory;
-    const matchesSkillLevel = selectedSkillLevel === '' || drill.skillLevel === selectedSkillLevel;
+  // Get unique categories and skill levels for filter buttons
+  const uniqueCategories = useMemo(() => {
+    if (!drills) return [];
+    return [...new Set(drills.map(drill => drill.category))].sort();
+  }, [drills]);
+
+  const uniqueSkillLevels = useMemo(() => {
+    if (!drills) return [];
+    return [...new Set(drills.map(drill => drill.skillLevel))].sort();
+  }, [drills]);
+
+  const filteredDrills = useMemo(() => {
+    if (!drills) return [];
     
-    return matchesSearch && matchesCategory && matchesSkillLevel;
-  }) || [];
+    return drills.filter(drill => {
+      const matchesSearch = searchQuery === '' || 
+        drill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        drill.objective.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        drill.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        drill.keyFocus.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === '' || drill.category === selectedCategory;
+      const matchesSkillLevel = selectedSkillLevel === '' || drill.skillLevel === selectedSkillLevel;
+      
+      return matchesSearch && matchesCategory && matchesSkillLevel;
+    });
+  }, [drills, searchQuery, selectedCategory, selectedSkillLevel]);
+
+  const toggleDrillExpansion = (drillId: number) => {
+    setExpandedDrills(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(drillId)) {
+        newSet.delete(drillId);
+      } else {
+        newSet.add(drillId);
+      }
+      return newSet;
+    });
+  };
 
   return (
-    <div className="container max-w-6xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Sprint 1: Curriculum Management System</h1>
-        <p className="text-muted-foreground">
-          Interactive demonstration of the implemented curriculum management backend (83% complete)
-        </p>
-        <div className="flex justify-center gap-2">
-          <Badge variant="default">Backend 100%</Badge>
-          <Badge variant="secondary">API Routes 83%</Badge>
-          <Badge variant="outline">Frontend Demo</Badge>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Modern Header */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary font-medium text-sm">
+            <BookOpen className="w-4 h-4" />
+            Sprint 1: Curriculum Management
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            PCP Drill Library
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Comprehensive collection of 39 authentic PCP drills spanning all skill levels and categories
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Badge variant="default" className="px-3 py-1">
+              <Target className="w-3 h-3 mr-1" />
+              39 Authentic Drills
+            </Badge>
+            <Badge variant="secondary" className="px-3 py-1">
+              <Users className="w-3 h-3 mr-1" />
+              All Skill Levels
+            </Badge>
+            <Badge variant="outline" className="px-3 py-1">
+              PCP 2.0-8.0 Range
+            </Badge>
+          </div>
         </div>
-      </div>
 
       <Tabs defaultValue="drills" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -170,47 +219,84 @@ export default function CurriculumManagementDemo() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Search and Filters */}
-              <div className="flex gap-2">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Search drills..."
+                    placeholder="Search drills by name, category, objective, or focus..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full"
+                    className="pl-10"
                   />
                 </div>
-                <Button 
-                  onClick={handleCreateSampleDrill}
-                  disabled={createDrillMutation.isPending}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Sample Drill
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleCreateSampleDrill}
+                    disabled={createDrillMutation.isPending}
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Sample
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCategory('');
+                      setSelectedSkillLevel('');
+                    }}
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    Clear Filters
+                  </Button>
+                </div>
               </div>
 
-              {/* Filter buttons */}
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={selectedSkillLevel === 'Beginner' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedSkillLevel(selectedSkillLevel === 'Beginner' ? '' : 'Beginner')}
-                >
-                  Beginner
-                </Button>
-                <Button
-                  variant={selectedSkillLevel === 'Intermediate' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedSkillLevel(selectedSkillLevel === 'Intermediate' ? '' : 'Intermediate')}
-                >
-                  Intermediate
-                </Button>
-                <Button
-                  variant={selectedCategory === 'Dinks' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(selectedCategory === 'Dinks' ? '' : 'Dinks')}
-                >
-                  Dinks
-                </Button>
+              {/* Modern Filter Pills */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Skill Level:</span>
+                  {uniqueSkillLevels.map(level => (
+                    <Button
+                      key={level}
+                      variant={selectedSkillLevel === level ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedSkillLevel(selectedSkillLevel === level ? '' : level)}
+                      className="h-8"
+                    >
+                      {level}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Category:</span>
+                  {uniqueCategories.map(category => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedCategory(selectedCategory === category ? '' : category)}
+                      className="h-8"
+                    >
+                      {category}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Results Summary */}
+              <div className="flex items-center justify-between border-b pb-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {filteredDrills.length} of {drills?.length || 0} drills
+                  {(searchQuery || selectedCategory || selectedSkillLevel) && (
+                    <span className="ml-2">
+                      {searchQuery && `• Search: "${searchQuery}"`}
+                      {selectedCategory && ` • Category: ${selectedCategory}`}
+                      {selectedSkillLevel && ` • Level: ${selectedSkillLevel}`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Drills List */}
@@ -221,29 +307,89 @@ export default function CurriculumManagementDemo() {
                   {drills?.length === 0 ? 'No drills yet. Create a sample drill to get started!' : 'No drills match your filters.'}
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
                   {filteredDrills.map((drill) => (
-                    <Card key={drill.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg">{drill.name}</CardTitle>
-                          <Badge variant="outline">{drill.skillLevel}</Badge>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge variant="secondary">{drill.category}</Badge>
-                          <Badge variant="outline">
-                            PCP {drill.minPcpRating}-{drill.maxPcpRating}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <p className="text-sm font-medium">Objective:</p>
-                        <p className="text-sm text-muted-foreground">{drill.objective}</p>
-                        <p className="text-sm font-medium">Key Focus:</p>
-                        <p className="text-sm text-muted-foreground">{drill.keyFocus}</p>
-                        <p className="text-sm font-medium">Equipment:</p>
-                        <p className="text-sm text-muted-foreground">{drill.equipmentNeeded}</p>
-                      </CardContent>
+                    <Card key={drill.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary/20">
+                      <Collapsible 
+                        open={expandedDrills.has(drill.id)}
+                        onOpenChange={() => toggleDrillExpansion(drill.id)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <CardTitle className="text-lg">{drill.name}</CardTitle>
+                                  {expandedDrills.has(drill.id) ? 
+                                    <ChevronDown className="w-4 h-4 text-muted-foreground" /> : 
+                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                  }
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <Badge variant="outline" className="bg-primary/10">
+                                    {drill.skillLevel}
+                                  </Badge>
+                                  <Badge variant="secondary">{drill.category}</Badge>
+                                  <Badge variant="outline">
+                                    PCP {drill.minPcpRating}-{drill.maxPcpRating}
+                                  </Badge>
+                                  {drill.playersRequired && (
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                      <Users className="w-3 h-3" />
+                                      {drill.playersRequired} players
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <CardDescription className="text-left">
+                              {drill.objective}
+                            </CardDescription>
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent>
+                          <CardContent className="pt-0 space-y-4">
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-3">
+                                <div className="p-3 bg-muted/50 rounded-lg">
+                                  <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                                    <MapPin className="w-4 h-4" />
+                                    Setup Instructions
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">{drill.setup}</p>
+                                </div>
+                                
+                                <div className="p-3 bg-muted/50 rounded-lg">
+                                  <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
+                                    <Target className="w-4 h-4" />
+                                    Key Focus Areas
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">{drill.keyFocus}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-3">
+                                <div className="p-3 bg-muted/50 rounded-lg">
+                                  <h4 className="font-semibold text-sm mb-2">Detailed Instructions</h4>
+                                  <p className="text-sm text-muted-foreground">{drill.instructions}</p>
+                                </div>
+                                
+                                <div className="p-3 bg-muted/50 rounded-lg">
+                                  <h4 className="font-semibold text-sm mb-2">Equipment Needed</h4>
+                                  <p className="text-sm text-muted-foreground">{drill.equipmentNeeded}</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-4 pt-3 border-t text-xs text-muted-foreground">
+                              <span>Drill #{drill.originalNumber}</span>
+                              <span>Created: {new Date(drill.createdAt).toLocaleDateString()}</span>
+                              {drill.estimatedDuration && <span>Duration: {drill.estimatedDuration}min</span>}
+                            </div>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </Card>
                   ))}
                 </div>
@@ -348,6 +494,7 @@ export default function CurriculumManagementDemo() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
