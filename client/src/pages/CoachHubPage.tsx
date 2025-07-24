@@ -510,32 +510,52 @@ function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: 
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
-                <Users className="h-5 w-5 text-blue-600" />
+            <Link to="/coach/students" className="block">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-semibold">Manage Students</div>
+                  <div className="text-sm text-muted-foreground">View profiles & progress</div>
+                </div>
               </div>
-              <div>
-                <div className="font-semibold">Manage Students</div>
-                <div className="text-sm text-muted-foreground">View profiles & progress</div>
-              </div>
-            </div>
+            </Link>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
-                <ClipboardCheck className="h-5 w-5 text-purple-600" />
+            <Link to="/coach/curriculum" className="block">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
+                  <BookOpen className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <div className="font-semibold">Drill Library</div>
+                  <div className="text-sm text-muted-foreground">Browse & plan drills</div>
+                </div>
               </div>
-              <div>
-                <div className="font-semibold">Assessment Tool</div>
-                <div className="text-sm text-muted-foreground">PCP 4-dimensional analysis</div>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-4">
+            <Link to="/coach/assessment-tool" className="block">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
+                  <ClipboardCheck className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <div className="font-semibold">Assessment Tool</div>
+                  <div className="text-sm text-muted-foreground">PCP 4-dimensional analysis</div>
+                </div>
               </div>
-            </div>
+            </Link>
           </CardContent>
         </Card>
 

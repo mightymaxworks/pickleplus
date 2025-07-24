@@ -418,6 +418,11 @@ export default function App() {
                     pageTitle="My Students"
                   />
                   <ProtectedRouteWithLayout
+                    path="/coach/curriculum"
+                    component={lazyLoad(() => import('./pages/coach/curriculum'))}
+                    pageTitle="Drill Library"
+                  />
+                  <ProtectedRouteWithLayout
                     path="/coach/assessment-tool"
                     component={lazyLoad(() => import('./pages/coach/assessment-tool'))}
                     pageTitle="PCP Assessment Tool"
