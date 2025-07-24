@@ -522,7 +522,7 @@ export default function SessionPlanningPage() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="rounded-md border border-white/20 backdrop-blur-sm bg-white/50 px-3 py-2"
                 >
-                  {categories.map((category: string) => (
+                  {(categories as string[]).map((category: string) => (
                     <option key={category} value={category}>
                       {category === 'all' ? 'All Categories' : category}
                     </option>
