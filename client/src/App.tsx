@@ -40,7 +40,7 @@ import {
   LazyProfilePage,
   LazyProfileEditPage,
   LazyMatchesPage,
-  LazyMatchHistoryPage, // Sprint 1: Foundation - Match History & Statistics Interface
+  // LazyMatchHistoryPage removed - using LazyMatchesPage instead
   LazyRecordMatchPage,
   LazyTournamentDiscoveryPage,
   LazyTournamentManagementPage,
