@@ -34,16 +34,17 @@ export default function Dashboard() {
   };
 
   return (
-    <StandardLayout>
-      <PassportDashboard onShowOnboarding={handleShowOnboarding} />
-      {showOnboarding && (
-        <WelcomeOnboarding 
-          onComplete={handleOnboardingComplete}
-          onSkip={handleOnboardingSkip}
-          forceShow={true}
-        />
-      )}
-
-    </StandardLayout>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-purple-900/20">
+      <StandardLayout>
+        <PassportDashboard onShowOnboarding={handleShowOnboarding} />
+        {showOnboarding && (
+          <WelcomeOnboarding 
+            onComplete={handleOnboardingComplete}
+            onSkip={handleOnboardingSkip}
+            forceShow={true}
+          />
+        )}
+      </StandardLayout>
+    </div>
   );
 }

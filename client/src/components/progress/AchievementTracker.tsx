@@ -132,28 +132,39 @@ export default function AchievementTracker({
   };
 
   return (
-    <Card className={`${className}`}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Trophy className="w-5 h-5 text-yellow-500" />
-          Achievement Progress
+    <Card className={`backdrop-blur-md bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-900/60 border-white/20 shadow-2xl shadow-yellow-500/10 ${className}`}>
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-3 text-xl font-bold">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 text-white shadow-lg">
+            <Trophy className="w-6 h-6" />
+          </div>
+          <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">Achievement Progress</span>
         </CardTitle>
-        <div className="flex gap-4 text-sm text-muted-foreground">
-          <span>{completedCount} completed</span>
-          <span>{inProgressCount} in progress</span>
-          <span>{achievements.length - completedCount - inProgressCount} available</span>
+        <div className="flex gap-6 text-sm text-gray-600 dark:text-gray-300">
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            {completedCount} completed
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            {inProgressCount} in progress
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+            {achievements.length - completedCount - inProgressCount} available
+          </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {achievements.map((achievement) => (
           <div 
             key={achievement.id} 
-            className={`p-3 rounded-lg border transition-all ${
+            className={`p-4 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg ${
               achievement.completed 
-                ? 'bg-green-50 border-green-200' 
+                ? 'bg-gradient-to-br from-green-50/80 to-emerald-50/80 border-green-200/50 shadow-green-500/10' 
                 : achievement.progress > 0 
-                  ? 'bg-blue-50 border-blue-200' 
-                  : 'bg-gray-50 border-gray-200'
+                  ? 'bg-gradient-to-br from-blue-50/80 to-sky-50/80 border-blue-200/50 shadow-blue-500/10' 
+                  : 'bg-gradient-to-br from-gray-50/80 to-slate-50/80 border-gray-200/50 shadow-gray-500/10'
             }`}
           >
             <div className="flex items-start justify-between mb-2">
@@ -208,12 +219,14 @@ export default function AchievementTracker({
           </div>
         ))}
 
-        <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <Star className="w-4 h-4 text-purple-500" />
-            <span className="text-sm font-medium text-purple-800">Next Milestone</span>
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-100/60 to-blue-100/60 backdrop-blur-sm rounded-xl border border-purple-200/30 shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-md">
+              <Star className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Next Milestone</span>
           </div>
-          <p className="text-xs text-purple-600">
+          <p className="text-sm text-purple-700 dark:text-purple-300 leading-relaxed">
             Complete 2 more achievements to unlock the "Rising Star" badge and earn +200 Pickle Points!
           </p>
         </div>

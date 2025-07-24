@@ -126,7 +126,7 @@ export default function CommunitiesContent() {
 
   return (
     <CommunityProvider>
-      <div className="relative overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-purple-900/20 relative overflow-x-hidden">
         {/* Background Elements */}
         <CourtLinesBackground />
         
@@ -134,9 +134,9 @@ export default function CommunitiesContent() {
         <ConfettiEffect active={showConfetti} />
         
         {/* Floating Decoration Elements */}
-        <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-yellow-300/30 backdrop-blur-xl animate-pulse-slow"></div>
-        <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-green-300/20 backdrop-blur-xl animate-float"></div>
-        <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-blue-300/20 backdrop-blur-md animate-float-delay"></div>
+        <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400/30 to-orange-400/30 backdrop-blur-xl animate-pulse-slow shadow-lg"></div>
+        <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-xl animate-float shadow-lg"></div>
+        <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 backdrop-blur-md animate-float-delay shadow-lg"></div>
         
         <div className="container mx-auto py-8 px-4 relative z-10">
           

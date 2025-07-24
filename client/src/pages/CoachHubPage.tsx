@@ -128,15 +128,17 @@ export default function CoachHubPage() {
   };
 
   return (
-    <div className="container max-w-6xl py-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
       <title>Coach Hub | Pickle+</title>
       
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Coach Hub</h1>
-        <p className="text-muted-foreground">Your complete coaching journey starts here</p>
-      </div>
+      <div className="container max-w-6xl py-8">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">Coach Hub</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Your complete coaching journey starts here</p>
+        </div>
 
-      {renderContent()}
+        {renderContent()}
+      </div>
     </div>
   );
 }
@@ -144,18 +146,18 @@ export default function CoachHubPage() {
 // Guest view - show recruitment landing
 function GuestCoachView() {
   return (
-    <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-600 text-white">
-              <GraduationCap className="h-6 w-6" />
+    <div className="space-y-8">
+      <Card className="backdrop-blur-md bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-900/60 border-white/20 shadow-2xl shadow-blue-500/10">
+        <CardHeader className="pb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg">
+              <GraduationCap className="h-7 w-7" />
             </div>
             <div>
-              <CardTitle className="text-2xl text-blue-600 dark:text-blue-400">
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Become a Certified PCP Coach
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-lg text-gray-600 dark:text-gray-300 mt-2">
                 Transform passionate players into world-class coaches through our structured 5-level certification pathway
               </CardDescription>
             </div>
@@ -186,14 +188,14 @@ function GuestCoachView() {
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0">
               <Link to="/coach/apply">
                 Apply to Become a Coach
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-white/30 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300">
               <Link to="/pcp-certification">
                 Learn About PCP Certification
               </Link>
@@ -210,18 +212,18 @@ function GuestCoachView() {
 // Prospective coach view - show application process
 function ProspectiveCoachView() {
   return (
-    <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-600 text-white">
-              <Briefcase className="h-6 w-6" />
+    <div className="space-y-8">
+      <Card className="backdrop-blur-md bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-900/60 border-white/20 shadow-2xl shadow-green-500/10">
+        <CardHeader className="pb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+              <Briefcase className="h-7 w-7" />
             </div>
             <div>
-              <CardTitle className="text-2xl text-green-600 dark:text-green-400">
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                 Start Your Coaching Journey
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-lg text-gray-600 dark:text-gray-300 mt-2">
                 Begin with our structured coach application and Level 1 certification pathway
               </CardDescription>
             </div>
@@ -255,14 +257,14 @@ function ProspectiveCoachView() {
             </div>
           </div>
           
-          <div className="space-y-3">
-            <Button asChild className="bg-green-600 hover:bg-green-700 w-full">
+          <div className="space-y-4">
+            <Button asChild className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0 w-full">
               <Link to="/coach/apply">
                 Start Application Process
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="outline" asChild className="w-full">
+            <Button variant="outline" asChild className="w-full backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-white/30 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300">
               <Link to="/pcp-certification">
                 View PCP Certification Levels
                 <BookOpen className="ml-2 h-4 w-4" />

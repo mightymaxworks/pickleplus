@@ -241,13 +241,13 @@ export function WelcomeOnboarding({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start md:items-center justify-center overflow-y-auto"
+        className="fixed inset-0 bg-gradient-to-br from-black/40 via-blue-900/30 to-purple-900/40 backdrop-blur-md z-50 flex items-start md:items-center justify-center overflow-y-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         <motion.div
-          className="bg-white dark:bg-gray-900 rounded-lg md:rounded-2xl max-w-2xl w-full mx-2 md:mx-4 my-2 md:my-8 shadow-2xl mobile-modal-container flex flex-col h-[90vh] md:max-h-[90vh]"
+          className="backdrop-blur-xl bg-gradient-to-br from-white/95 to-white/85 dark:from-gray-800/95 dark:to-gray-900/85 rounded-2xl md:rounded-3xl border border-white/20 max-w-2xl w-full mx-2 md:mx-4 my-2 md:my-8 shadow-2xl mobile-modal-container flex flex-col h-[90vh] md:max-h-[90vh]"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
