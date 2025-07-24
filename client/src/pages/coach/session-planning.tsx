@@ -200,13 +200,13 @@ export default function SessionPlanningPage() {
   };
 
   const filteredDrills = (drills || []).filter((drill: Drill) => {
-    const matchesSearch = drill.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         drill.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || drill.category === selectedCategory;
+    const matchesSearch = (drill?.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         (drill?.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || drill?.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['all', ...Array.from(new Set((drills || []).map((drill: Drill) => drill.category)))];
+  const categories = ['all', ...Array.from(new Set((drills || []).map((drill: Drill) => drill?.category).filter(Boolean)))];
 
   return (
     <StandardLayout>
