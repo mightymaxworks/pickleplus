@@ -468,109 +468,174 @@ function ApprovedCoachView({ certificationStatus }: { certificationStatus?: Coac
 // Active coach view - show coaching tools and management
 function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: CoachProfile; certificationStatus?: CoachCertificationStatus }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Header */}
-      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-600 text-white">
-              <Crown className="h-6 w-6" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 dark:from-green-950/30 dark:via-emerald-950/30 dark:to-green-900/30 border border-green-200/50 dark:border-green-800/50">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="relative p-8">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                <Crown className="h-8 w-8" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  Welcome Back, Coach!
+                </h1>
+                <p className="text-lg text-gray-600 dark:text-gray-300">
+                  Manage your students and grow your coaching practice
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-2xl text-green-600 dark:text-green-400">
-                Welcome Back, Coach!
-              </CardTitle>
-              <CardDescription className="text-lg">
-                Manage your students and grow your coaching practice
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">8</div>
-              <div className="text-sm text-muted-foreground">Active Students</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">Level {certificationStatus?.currentLevel || 1}</div>
-              <div className="text-sm text-muted-foreground">Certification</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">4.9</div>
-              <div className="text-sm text-muted-foreground">Coach Rating</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">23</div>
-              <div className="text-sm text-muted-foreground">Sessions This Month</div>
+            <div className="text-right">
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Today</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardContent className="p-4">
-            <Link to="/coach/students" className="block">
+          
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+                <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/30">
                   <Users className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <div className="font-semibold">Manage Students</div>
-                  <div className="text-sm text-muted-foreground">View profiles & progress</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">8</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Active Students</div>
                 </div>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardContent className="p-4">
-            <Link to="/coach/curriculum" className="block">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                  <BookOpen className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-semibold">Drill Library</div>
-                  <div className="text-sm text-muted-foreground">Browse & plan drills</div>
-                </div>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardContent className="p-4">
-            <Link to="/coach/assessment-tool" className="block">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
-                  <ClipboardCheck className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <div className="font-semibold">Assessment Tool</div>
-                  <div className="text-sm text-muted-foreground">PCP 4-dimensional analysis</div>
-                </div>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
-                <Calendar className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <div className="font-semibold">Schedule Sessions</div>
-                <div className="text-sm text-muted-foreground">Book coaching time</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/30">
+                  <GraduationCap className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">Level {certificationStatus?.currentLevel || 1}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Certification</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                  <Star className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">4.9</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Coach Rating</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-green-100 dark:bg-green-900/30">
+                  <Calendar className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">23</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Sessions This Month</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Coaching Tools</h2>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Everything you need to coach effectively</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link to="/coach/students" className="group">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200/50 dark:border-blue-800/50 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg group-hover:shadow-blue-500/25 transition-shadow">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Manage Students</h3>
+                    <p className="text-gray-600 dark:text-gray-400">View profiles & track progress</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all" />
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                8 active students
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/coach/curriculum" className="group">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200/50 dark:border-green-800/50 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10 hover:-translate-y-1">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg group-hover:shadow-green-500/25 transition-shadow">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Drill Library</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Browse & plan practice drills</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all" />
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                39 curated drills
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/coach/assessment-tool" className="group">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950/30 dark:to-violet-950/30 border border-purple-200/50 dark:border-purple-800/50 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-lg group-hover:shadow-purple-500/25 transition-shadow">
+                    <ClipboardCheck className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Assessment Tool</h3>
+                    <p className="text-gray-600 dark:text-gray-400">PCP 4-dimensional analysis</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all" />
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400">
+                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                Advanced analytics
+              </div>
+            </div>
+          </Link>
+
+          <div className="group cursor-pointer">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/30 dark:to-amber-950/30 border border-orange-200/50 dark:border-orange-800/50 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-1">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-lg group-hover:shadow-orange-500/25 transition-shadow">
+                    <Calendar className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Schedule Sessions</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Book coaching appointments</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all" />
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
+                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                Coming soon
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Recent Activity & Certification Progress */}

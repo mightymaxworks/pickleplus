@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin, Play, Video, ExternalLink, Edit, Trash2, Save, X, UserPlus, FileText } from 'lucide-react';
+import { Search, Plus, Filter, BookOpen, Target, Calendar, ChevronDown, ChevronRight, Users, Clock, MapPin, Play, Video, ExternalLink, Edit, Trash2, Save, X, UserPlus, FileText, Trophy } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -228,245 +228,378 @@ export default function CoachCurriculumPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Drill Library</h1>
-          <p className="text-gray-600 mt-1">Manage your coaching curriculum and plan sessions</p>
-        </div>
-        <div className="flex gap-2">
-          {selectedDrillsForSession.size > 0 && (
-            <Button 
-              onClick={createSessionPlan}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Create Session Plan ({selectedDrillsForSession.size})
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search & Filter Drills
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search drills by name, objective, or focus..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {uniqueCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedSkillLevel} onValueChange={setSelectedSkillLevel}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="All Skill Levels" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Skill Levels</SelectItem>
-                {uniqueSkillLevels.map(level => (
-                  <SelectItem key={level} value={level}>{level}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex justify-between items-center text-sm text-gray-600">
-            <span>Found {filteredDrills.length} drills</span>
-            {(selectedCategory !== 'all' || selectedSkillLevel !== 'all' || searchQuery) && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('all');
-                  setSelectedSkillLevel('all');
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Drills List */}
-      <div className="space-y-4">
-        {filteredDrills.map((drill) => (
-          <Card key={drill.id} className={`transition-all duration-200 ${
-            selectedDrillsForSession.has(drill.id) ? 'ring-2 ring-green-500 bg-green-50' : ''
-          }`}>
-            <Collapsible 
-              open={expandedDrills.has(drill.id)}
-              onOpenChange={() => toggleDrillExpansion(drill.id)}
-            >
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {expandedDrills.has(drill.id) ? 
-                        <ChevronDown className="h-5 w-5 text-gray-400" /> : 
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                      }
-                      <div>
-                        <CardTitle className="text-lg font-semibold">{drill.name}</CardTitle>
-                        <CardDescription className="text-sm text-gray-600">
-                          {drill.objective}
-                        </CardDescription>
-                      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* Header Section */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 dark:from-green-950/30 dark:via-emerald-950/30 dark:to-green-900/30 border border-green-200/50 dark:border-green-800/50">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+          <div className="relative p-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                  <BookOpen className="h-8 w-8" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Drill Library</h1>
+                  <p className="text-lg text-gray-600 dark:text-gray-300">
+                    Curate your coaching curriculum and build effective session plans
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {selectedDrillsForSession.size > 0 && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/20">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {selectedDrillsForSession.size} drill{selectedDrillsForSession.size !== 1 ? 's' : ''} selected
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{drill.category}</Badge>
-                      <Badge variant="secondary">{drill.skillLevel}</Badge>
-                      <Badge variant="outline">PCP {drill.minPcpRating}-{drill.maxPcpRating}</Badge>
-                    </div>
+                    <Button 
+                      onClick={createSessionPlan}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-2 rounded-2xl shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Create Session Plan
+                    </Button>
                   </div>
-                </CardHeader>
-              </CollapsibleTrigger>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-white/20 dark:border-gray-700/50 shadow-xl">
+          <div className="p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                <Search className="h-5 w-5 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Search & Filter</h2>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      placeholder="Search drills by name, objective, or focus..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-12 h-12 rounded-2xl border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-full lg:w-48 h-12 rounded-2xl border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {uniqueCategories.map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedSkillLevel} onValueChange={setSelectedSkillLevel}>
+                    <SelectTrigger className="w-full lg:w-48 h-12 rounded-2xl border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                      <SelectValue placeholder="All Skill Levels" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Skill Levels</SelectItem>
+                      {uniqueSkillLevels.map(level => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               
-              <CollapsibleContent>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left Column - Drill Details */}
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">Setup & Instructions</h4>
-                        <p className="text-gray-700 mb-3">{drill.setup}</p>
-                        <p className="text-gray-700">{drill.instructions}</p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">Key Focus</h4>
-                        <p className="text-gray-700">{drill.keyFocus}</p>
-                      </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Found <span className="font-semibold text-gray-900 dark:text-white">{filteredDrills.length}</span> drills
+                  </span>
+                </div>
+                {(selectedCategory !== 'all' || selectedSkillLevel !== 'all' || searchQuery) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCategory('all');
+                      setSelectedSkillLevel('all');
+                    }}
+                    className="rounded-xl border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-600">Players:</span>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Users className="h-4 w-4 text-gray-400" />
-                            <span>{drill.playersRequired || 'Variable'}</span>
+        {/* Drills List */}
+        <div className="grid gap-6">
+          {filteredDrills.map((drill) => (
+            <div key={drill.id} className={`group transition-all duration-300 ${
+              selectedDrillsForSession.has(drill.id) 
+                ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-transparent' 
+                : ''
+            }`}>
+              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-white/20 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <Collapsible 
+                  open={expandedDrills.has(drill.id)}
+                  onOpenChange={() => toggleDrillExpansion(drill.id)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <div className="cursor-pointer p-6 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors rounded-3xl">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 group-hover:from-blue-200 group-hover:to-indigo-200 dark:group-hover:from-blue-800/40 dark:group-hover:to-indigo-800/40 transition-all">
+                            {expandedDrills.has(drill.id) ? 
+                              <ChevronDown className="h-5 w-5 text-blue-600" /> : 
+                              <ChevronRight className="h-5 w-5 text-blue-600" />
+                            }
                           </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Duration:</span>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span>{drill.estimatedDuration || 'Variable'} min</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {drill.equipmentNeeded && (
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Equipment Needed</h4>
-                          <p className="text-gray-700">{drill.equipmentNeeded}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right Column - Video Content */}
-                    <div className="space-y-4">
-                      {drill.youtubeUrl && (
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Video Tutorial</h4>
-                          <div className="aspect-video rounded-lg overflow-hidden">
-                            <iframe
-                              src={drill.youtubeUrl.replace('watch?v=', 'embed/')}
-                              title={`${drill.name} Tutorial`}
-                              frameBorder="0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              className="w-full h-full"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {drill.xiaohongshuUrl && (
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">小红书 Demo</h4>
-                          <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
-                                <Video className="h-6 w-6 text-white" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {drill.name}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4">
+                              {drill.objective}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-700/50">
+                                <Target className="h-3 w-3" />
+                                {drill.category}
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900">{drill.name} 演示</p>
-                                <p className="text-sm text-gray-600">专业教练技术示范</p>
+                              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 border border-green-200/50 dark:border-green-700/50">
+                                <Trophy className="h-3 w-3" />
+                                {drill.skillLevel}
                               </div>
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={drill.xiaohongshuUrl} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4 mr-2" />
-                                  观看
-                                </a>
-                              </Button>
+                              {drill.minPcpRating && drill.maxPcpRating && (
+                                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/50">
+                                  <Users className="h-3 w-3" />
+                                  PCP {drill.minPcpRating}-{drill.maxPcpRating}
+                                </div>
+                              )}
+                              {drill.estimatedDuration && (
+                                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50">
+                                  <Clock className="h-3 w-3" />
+                                  {drill.estimatedDuration} min
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                      )}
+                        <div className="flex items-center gap-2 ml-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDrillSelection(drill.id);
+                            }}
+                            className={`p-3 rounded-2xl transition-all duration-300 ${
+                              selectedDrillsForSession.has(drill.id)
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25' 
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <div className="px-6 pb-6">
+                      <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent mb-6"></div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Left Column - Drill Details */}
+                        <div className="space-y-6">
+                          <div className="bg-gray-50/50 dark:bg-gray-800/50 rounded-2xl p-6">
+                            <h4 className="flex items-center gap-2 font-bold text-gray-900 dark:text-white mb-4">
+                              <div className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                <Play className="h-4 w-4 text-blue-600" />
+                              </div>
+                              Setup & Instructions
+                            </h4>
+                            <div className="space-y-3">
+                              <div>
+                                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Setup:</div>
+                                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{drill.setup}</p>
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Instructions:</div>
+                                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{drill.instructions}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-green-50/50 dark:bg-green-900/20 rounded-2xl p-6">
+                            <h4 className="flex items-center gap-2 font-bold text-gray-900 dark:text-white mb-4">
+                              <div className="p-1 rounded-lg bg-green-100 dark:bg-green-900/30">
+                                <Target className="h-4 w-4 text-green-600" />
+                              </div>
+                              Key Focus
+                            </h4>
+                            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{drill.keyFocus}</p>
+                          </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex justify-between items-center mt-6 pt-4 border-t">
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={selectedDrillsForSession.has(drill.id) ? "default" : "outline"}
-                        onClick={() => toggleDrillSelection(drill.id)}
-                      >
-                        {selectedDrillsForSession.has(drill.id) ? (
-                          <>Selected for Session</>
-                        ) : (
-                          <>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Add to Session
-                          </>
-                        )}
-                      </Button>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-purple-50/50 dark:bg-purple-900/20 rounded-2xl p-4">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Users className="h-4 w-4 text-purple-600" />
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Players</span>
+                              </div>
+                              <div className="text-lg font-bold text-purple-600">{drill.playersRequired || 'Variable'}</div>
+                            </div>
+                            <div className="bg-orange-50/50 dark:bg-orange-900/20 rounded-2xl p-4">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Clock className="h-4 w-4 text-orange-600" />
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Duration</span>
+                              </div>
+                              <div className="text-lg font-bold text-orange-600">{drill.estimatedDuration || 'Variable'} min</div>
+                            </div>
+                          </div>
+
+                          {drill.equipmentNeeded && (
+                            <div className="bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-6">
+                              <h4 className="flex items-center gap-2 font-bold text-gray-900 dark:text-white mb-4">
+                                <div className="p-1 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                                  <MapPin className="h-4 w-4 text-amber-600" />
+                                </div>
+                                Equipment Needed
+                              </h4>
+                              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{drill.equipmentNeeded}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right Column - Video Content */}
+                        <div className="space-y-6">
+                          {drill.youtubeUrl && (
+                            <div className="bg-red-50/50 dark:bg-red-900/20 rounded-2xl p-6">
+                              <h4 className="flex items-center gap-2 font-bold text-gray-900 dark:text-white mb-4">
+                                <div className="p-1 rounded-lg bg-red-100 dark:bg-red-900/30">
+                                  <Video className="h-4 w-4 text-red-600" />
+                                </div>
+                                YouTube Video Demo
+                              </h4>
+                              <div className="bg-black rounded-2xl aspect-video flex items-center justify-center overflow-hidden">
+                                <iframe
+                                  src={`https://www.youtube.com/embed/${drill.youtubeUrl.split('v=')[1]?.split('&')[0]}`}
+                                  className="w-full h-full rounded-2xl"
+                                  allowFullScreen
+                                ></iframe>
+                              </div>
+                              <div className="flex items-center gap-2 mt-4">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => window.open(drill.youtubeUrl, '_blank')}
+                                  className="rounded-xl border-red-200 text-red-700 hover:bg-red-50"
+                                >
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  Watch on YouTube
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {drill.xiaohongshuUrl && (
+                            <div className="bg-pink-50/50 dark:bg-pink-900/20 rounded-2xl p-6">
+                              <h4 className="flex items-center gap-2 font-bold text-gray-900 dark:text-white mb-4">
+                                <div className="p-1 rounded-lg bg-pink-100 dark:bg-pink-900/30">
+                                  <Video className="h-4 w-4 text-pink-600" />
+                                </div>
+                                小红书 (XiaoHongShu) Video
+                              </h4>
+                              <div className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30 border border-red-200/50 dark:border-red-800/50 rounded-2xl p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                                    <span className="text-white font-bold text-lg">小</span>
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-red-900 dark:text-red-300">小红书</div>
+                                    <div className="text-sm text-red-700 dark:text-red-400">XiaoHongShu Video</div>
+                                  </div>
+                                </div>
+                                <p className="text-red-800 dark:text-red-300 text-sm mb-4 leading-relaxed">
+                                  Watch this drill demonstration on XiaoHongShu for detailed Chinese language instruction and tips.
+                                </p>
+                                <Button 
+                                  onClick={() => window.open(drill.xiaohongshuUrl, '_blank')}
+                                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 rounded-xl shadow-lg hover:shadow-red-500/25 transition-all"
+                                >
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  在小红书上观看
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {!drill.youtubeUrl && !drill.xiaohongshuUrl && (
+                            <div className="bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
+                              <div className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-700 inline-flex mb-4">
+                                <Video className="h-8 w-8 text-gray-400" />
+                              </div>
+                              <p className="text-gray-600 dark:text-gray-400 text-sm">No video demonstrations available for this drill</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+                        <div className="flex gap-3">
+                          <Button
+                            variant={selectedDrillsForSession.has(drill.id) ? "default" : "outline"}
+                            onClick={() => toggleDrillSelection(drill.id)}
+                            className="rounded-xl"
+                          >
+                            {selectedDrillsForSession.has(drill.id) ? (
+                              <>✓ Selected for Session</>
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Add to Session
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditDrill(drill)}
+                            className="rounded-xl text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/50"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteDrill(drill.id)}
+                            className="rounded-xl text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEditDrill(drill)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteDrill(drill.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Collapsible>
-          </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            </div>
         ))}
       </div>
 
@@ -566,6 +699,7 @@ export default function CoachCurriculumPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
