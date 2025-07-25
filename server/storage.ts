@@ -13,7 +13,8 @@ import {
   type CurriculumTemplate, type InsertCurriculumTemplate,
   type LessonPlan, type InsertLessonPlan,
   type SessionGoal, type InsertSessionGoal,
-  type DrillCategory
+  type DrillCategory,
+
 } from "@shared/schema";
 import {
   type CoachApplication, type InsertCoachApplication,
@@ -25,6 +26,13 @@ import {
   pointsAllocationBreakdown, coachEffectivenessScoring, matchCoachingCorrelation, studentPerformancePrediction,
   type PointsAllocationBreakdown, type CoachEffectivenessScoring, type MatchCoachingCorrelation, type StudentPerformancePrediction
 } from "@shared/schema/transparent-points-allocation";
+import {
+  studentDrillCompletions, sessionDrillAssignments, studentProgressSummary,
+  type StudentDrillCompletion, type InsertStudentDrillCompletion,
+  type SessionDrillAssignment, type InsertSessionDrillAssignment,
+  type StudentProgressSummary, type InsertStudentProgressSummary,
+  type StudentProgressOverview, type DrillCompletionRecord, type CoachProgressAnalytics
+} from "@shared/schema/student-progress";
 
 interface InsertCoachReview {
   coachId: number;
@@ -1684,6 +1692,347 @@ export class DatabaseStorage implements IStorage {
       recentSessions,
       coachingMetrics
     };
+  }
+
+  // Sprint 2 Phase 3: Student Progress Tracking Methods
+  async createStudentDrillCompletion(data: InsertStudentDrillCompletion): Promise<StudentDrillCompletion> {
+    console.log('[STORAGE] Creating drill completion:', data);
+    const [completion] = await db
+      .insert(studentDrillCompletions)
+      .values({
+        studentId: data.studentId,
+        coachId: data.coachId,
+        drillId: data.drillId,
+        performanceRating: data.performanceRating.toString(),
+        technicalRating: data.technicalRating?.toString(),
+        tacticalRating: data.tacticalRating?.toString(),
+        physicalRating: data.physicalRating?.toString(),
+        mentalRating: data.mentalRating?.toString(),
+        coachNotes: data.coachNotes
+      })
+      .returning();
+    return completion;
+  }
+
+  async getStudentProgressOverview(studentId: number, coachId: number): Promise<StudentProgressOverview> {
+    console.log('[STORAGE] Fetching progress overview for student:', studentId, 'coach:', coachId);
+    
+    // Get student info
+    const [student] = await db
+      .select({
+        id: users.id,
+        name: users.displayName,
+        email: users.email
+      })
+      .from(users)
+      .where(eq(users.id, studentId));
+
+    if (!student) {
+      throw new Error(`Student with ID ${studentId} not found`);
+    }
+
+    // Get or create progress summary
+    let [summary] = await db
+      .select()
+      .from(studentProgressSummary)
+      .where(
+        and(
+          eq(studentProgressSummary.studentId, studentId),
+          eq(studentProgressSummary.coachId, coachId)
+        )
+      );
+
+    if (!summary) {
+      // Create initial summary
+      [summary] = await db
+        .insert(studentProgressSummary)
+        .values({
+          studentId,
+          coachId,
+          totalDrillsCompleted: 0,
+          totalSessionMinutes: 0,
+          improvementTrend: 'stable'
+        })
+        .returning();
+    }
+
+    // Get recent completions
+    const recentCompletions = await db
+      .select()
+      .from(studentDrillCompletions)
+      .where(
+        and(
+          eq(studentDrillCompletions.studentId, studentId),
+          eq(studentDrillCompletions.coachId, coachId)
+        )
+      )
+      .orderBy(desc(studentDrillCompletions.completionDate))
+      .limit(10);
+
+    return {
+      studentId: student.id,
+      studentName: student.name || '',
+      studentEmail: student.email || '',
+      totalDrillsCompleted: summary.totalDrillsCompleted || 0,
+      avgPerformanceRating: parseFloat(summary.avgPerformanceRating || '0'),
+      avgTechnicalRating: parseFloat(summary.avgTechnicalRating || '0'),
+      avgTacticalRating: parseFloat(summary.avgTacticalRating || '0'),
+      avgPhysicalRating: parseFloat(summary.avgPhysicalRating || '0'),
+      avgMentalRating: parseFloat(summary.avgMentalRating || '0'),
+      lastSessionDate: summary.lastSessionDate?.toISOString() || null,
+      totalSessionMinutes: summary.totalSessionMinutes || 0,
+      improvementTrend: summary.improvementTrend as 'improving' | 'stable' | 'declining',
+      recentCompletions: recentCompletions as StudentDrillCompletion[]
+    };
+  }
+
+  async getStudentDrillHistory(studentId: number, coachId: number, limit: number = 50): Promise<DrillCompletionRecord[]> {
+    console.log('[STORAGE] Fetching drill history for student:', studentId);
+    
+    try {
+      // Use raw SQL to avoid Drizzle schema issues
+      const result = await db.execute(sql`
+        SELECT 
+          id,
+          drill_id,
+          completion_date,
+          performance_rating,
+          technical_rating,
+          tactical_rating,
+          physical_rating,
+          mental_rating,
+          coach_notes,
+          improvement_areas
+        FROM student_drill_completions 
+        WHERE student_id = ${studentId} AND coach_id = ${coachId}
+        ORDER BY completion_date DESC
+        LIMIT ${limit}
+      `);
+
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        drillTitle: `Drill ${row.drill_id}`,
+        drillCategory: 'Training',
+        completionDate: row.completion_date ? new Date(row.completion_date).toISOString() : '',
+        performanceRating: parseFloat(row.performance_rating || '0'),
+        technicalRating: parseFloat(row.technical_rating || '0'),
+        tacticalRating: parseFloat(row.tactical_rating || '0'),
+        physicalRating: parseFloat(row.physical_rating || '0'),
+        mentalRating: parseFloat(row.mental_rating || '0'),
+        coachNotes: row.coach_notes || '',
+        improvementAreas: Array.isArray(row.improvement_areas) ? row.improvement_areas : []
+      }));
+    } catch (error) {
+      console.error('[STORAGE] Error in getStudentDrillHistory:', error);
+      return [];
+    }
+  }
+
+  async getCoachProgressAnalytics(coachId: number): Promise<CoachProgressAnalytics> {
+    console.log('[STORAGE] Fetching coach analytics for:', coachId);
+    
+    // Get total students
+    const totalStudentsResult = await db
+      .select({ count: sql<number>`count(distinct student_id)` })
+      .from(studentProgressSummary)
+      .where(eq(studentProgressSummary.coachId, coachId));
+    
+    const totalStudents = totalStudentsResult[0]?.count || 0;
+
+    // Get total drills assigned and completed
+    const drillStatsResult = await db
+      .select({
+        totalAssigned: sql<number>`count(distinct drill_id)`,
+        totalCompletions: sql<number>`count(*)`
+      })
+      .from(studentDrillCompletions)
+      .where(eq(studentDrillCompletions.coachId, coachId));
+    
+    const drillStats = drillStatsResult[0] || { totalAssigned: 0, totalCompletions: 0 };
+
+    // Get average improvement (simplified calculation)
+    const avgImprovementResult = await db
+      .select({
+        avgImprovement: sql<number>`avg(CASE 
+          WHEN improvement_trend = 'improving' THEN 1.0 
+          WHEN improvement_trend = 'stable' THEN 0.0 
+          ELSE -1.0 END)`
+      })
+      .from(studentProgressSummary)
+      .where(eq(studentProgressSummary.coachId, coachId));
+    
+    const avgStudentImprovement = avgImprovementResult[0]?.avgImprovement || 0;
+
+    // Mock data for top performing drills and student trends
+    const topPerformingDrills = [
+      { drillId: 1, drillTitle: 'Dink and Patience', completionRate: 0.85, avgRating: 6.8 },
+      { drillId: 2, drillTitle: 'Cross-Court Dinking', completionRate: 0.78, avgRating: 6.5 },
+      { drillId: 3, drillTitle: 'Third Shot Drop', completionRate: 0.72, avgRating: 6.2 }
+    ];
+
+    const studentProgressTrends = [
+      { studentId: 1, studentName: 'Alex Player', trend: 'improving' as const, recentProgress: 0.85 },
+      { studentId: 2, studentName: 'Jordan Smith', trend: 'stable' as const, recentProgress: 0.65 },
+      { studentId: 3, studentName: 'Casey Wilson', trend: 'improving' as const, recentProgress: 0.78 }
+    ];
+
+    return {
+      totalStudents,
+      totalDrillsAssigned: drillStats.totalAssigned,
+      totalCompletions: drillStats.totalCompletions,
+      avgStudentImprovement,
+      topPerformingDrills,
+      studentProgressTrends
+    };
+  }
+
+  async assignDrillsToSession(sessionId: number, drills: InsertSessionDrillAssignment[]): Promise<SessionDrillAssignment[]> {
+    console.log('[STORAGE] Assigning drills to session:', sessionId, drills.length, 'drills');
+    
+    const assignments = await db
+      .insert(sessionDrillAssignments)
+      .values(drills.map(drill => ({
+        ...drill,
+        sessionId,
+        createdAt: new Date()
+      })))
+      .returning();
+    
+    return assignments;
+  }
+
+  async getSessionDrillAssignments(sessionId: number): Promise<any[]> {
+    console.log('[STORAGE] Fetching drill assignments for session:', sessionId);
+    
+    const assignments = await db
+      .select({
+        id: sessionDrillAssignments.id,
+        sessionId: sessionDrillAssignments.sessionId,
+        drillId: sessionDrillAssignments.drillId,
+        drillTitle: drillLibrary.title,
+        drillCategory: drillLibrary.category,
+        drillDescription: drillLibrary.description,
+        orderSequence: sessionDrillAssignments.orderSequence,
+        allocatedMinutes: sessionDrillAssignments.allocatedMinutes,
+        objectives: sessionDrillAssignments.objectives,
+        completionStatus: sessionDrillAssignments.completionStatus,
+        notes: sessionDrillAssignments.notes
+      })
+      .from(sessionDrillAssignments)
+      .leftJoin(drillLibrary, eq(sessionDrillAssignments.drillId, drillLibrary.id))
+      .where(eq(sessionDrillAssignments.sessionId, sessionId))
+      .orderBy(asc(sessionDrillAssignments.orderSequence));
+    
+    return assignments;
+  }
+
+  async updateSessionDrillStatus(sessionId: number, drillId: number, completionStatus: string, notes?: string): Promise<SessionDrillAssignment> {
+    console.log('[STORAGE] Updating drill status:', sessionId, drillId, completionStatus);
+    
+    const [updated] = await db
+      .update(sessionDrillAssignments)
+      .set({
+        completionStatus,
+        notes: notes || undefined
+      })
+      .where(
+        and(
+          eq(sessionDrillAssignments.sessionId, sessionId),
+          eq(sessionDrillAssignments.drillId, drillId)
+        )
+      )
+      .returning();
+    
+    return updated;
+  }
+
+  async updateStudentProgressSummary(studentId: number, coachId: number): Promise<void> {
+    console.log('[STORAGE] Updating progress summary for student:', studentId);
+    
+    // Calculate aggregated stats
+    const statsResult = await db
+      .select({
+        totalDrills: sql<number>`count(*)`,
+        avgPerformance: sql<number>`avg(performance_rating)`,
+        avgTechnical: sql<number>`avg(technical_rating)`,
+        avgTactical: sql<number>`avg(tactical_rating)`,
+        avgPhysical: sql<number>`avg(physical_rating)`,
+        avgMental: sql<number>`avg(mental_rating)`,
+        lastSession: sql<Date>`max(completion_date)`
+      })
+      .from(studentDrillCompletions)
+      .where(
+        and(
+          eq(studentDrillCompletions.studentId, studentId),
+          eq(studentDrillCompletions.coachId, coachId)
+        )
+      );
+    
+    const stats = statsResult[0];
+    
+    if (stats && stats.totalDrills > 0) {
+      // Upsert progress summary
+      await db
+        .insert(studentProgressSummary)
+        .values({
+          studentId,
+          coachId,
+          totalDrillsCompleted: stats.totalDrills,
+          avgPerformanceRating: stats.avgPerformance?.toString(),
+          avgTechnicalRating: stats.avgTechnical?.toString(),
+          avgTacticalRating: stats.avgTactical?.toString(),
+          avgPhysicalRating: stats.avgPhysical?.toString(),
+          avgMentalRating: stats.avgMental?.toString(),
+          improvementTrend: 'stable'
+        })
+        .onConflictDoUpdate({
+          target: [studentProgressSummary.studentId, studentProgressSummary.coachId],
+          set: {
+            totalDrillsCompleted: stats.totalDrills,
+            avgPerformanceRating: stats.avgPerformance?.toString(),
+            avgTechnicalRating: stats.avgTechnical?.toString(),
+            avgTacticalRating: stats.avgTactical?.toString(),
+            avgPhysicalRating: stats.avgPhysical?.toString(),
+            avgMentalRating: stats.avgMental?.toString(),
+            improvementTrend: 'stable'
+          }
+        });
+    }
+  }
+
+  async getCoachStudents(coachId: number): Promise<any[]> {
+    console.log('[STORAGE] Fetching students for coach:', coachId);
+    
+    // Return mock student data for testing
+    return [
+      {
+        id: 1,
+        name: 'Alex Player',
+        email: 'alex@example.com',
+        totalDrillsCompleted: 15,
+        avgPerformanceRating: 6.2,
+        lastSessionDate: '2025-07-20T10:00:00.000Z',
+        improvementTrend: 'improving'
+      },
+      {
+        id: 2,
+        name: 'Jordan Smith', 
+        email: 'jordan@example.com',
+        totalDrillsCompleted: 8,
+        avgPerformanceRating: 5.8,
+        lastSessionDate: '2025-07-18T14:00:00.000Z',
+        improvementTrend: 'stable'
+      },
+      {
+        id: 3,
+        name: 'Casey Wilson',
+        email: 'casey@example.com', 
+        totalDrillsCompleted: 22,
+        avgPerformanceRating: 7.1,
+        lastSessionDate: '2025-07-22T09:00:00.000Z',
+        improvementTrend: 'improving'
+      }
+    ];
   }
 
   // PCP Certification operations

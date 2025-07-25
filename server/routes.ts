@@ -53,6 +53,7 @@ import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-F
 import { registerSimplifiedGoalRoutes } from "./routes/goal-routes-simplified"; // PKL-278651-PHASE1-GOALS - Simplified Goal System
 import coachGoalManagementRoutes from "./routes/coach-goal-management-simple"; // PKL-278651-PHASE2-GOALS - Coach Goal Management
 import achievementRoutes from "./routes/achievement-routes"; // Mobile-optimized achievement tracking with peer verification
+import studentProgressRoutes from "./routes/student-progress-routes"; // Sprint 2 Phase 3: Student Progress Tracking
 import communityChallengeRoutes from "./routes/community-challenge-routes"; // Community challenges and events API
 import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIAL - Social Sharing Features
 import sageConciergeRoutes from "./routes/sage-concierge-routes"; // PKL-278651-SAGE-0013-CONCIERGE - SAGE Concierge
@@ -415,6 +416,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Sprint 2 Phase 2: Session Planning Integration routes
   app.use('/api/coach', sessionPlanningRoutes);
   console.log('[API] Sprint 2 Phase 2: Session Planning Integration routes registered successfully');
+  
+  // Register Sprint 2 Phase 3: Student Progress Tracking routes
+  app.use('/api/coach', studentProgressRoutes);
+  console.log('[API] Sprint 2 Phase 3: Student Progress Tracking routes registered successfully');
+
+  // Register Sprint 2 Phase 3: Student Progress Tracking routes
+  app.use('/api/coach', studentProgressRoutes);
+  console.log('[API] Sprint 2 Phase 3: Student Progress Tracking routes registered successfully');
   
   // Mount coach management routes
   app.use('/api/coach', coachManagementRoutes);
