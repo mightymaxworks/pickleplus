@@ -61,14 +61,18 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
       }
       const result = await response.json();
       // Transform analytics data to student list format
-      return result.data.studentProgressTrends?.map((student: any) => ({
+      if (!result.data || !result.data.studentProgressTrends) {
+        return [];
+      }
+      
+      return result.data.studentProgressTrends.map((student: any) => ({
         id: student.studentId,
         name: student.studentName,
         email: `${student.studentName.toLowerCase().replace(' ', '')}@pickleplus.com`,
         totalDrillsCompleted: Math.floor(student.recentProgress * 10), // Estimate from progress
         avgPerformanceRating: student.recentProgress * 8, // Scale to 0-8
         improvementTrend: student.trend
-      })) || [];
+      }));
     }
   });
 
@@ -491,10 +495,10 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
                   <div className="mt-2">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
                       <span>Avg Performance</span>
-                      <span>{student.avgPerformanceRating?.toFixed(1) || 'N/A'}</span>
+                      <span>{student.avgPerformanceRating ? student.avgPerformanceRating.toFixed(1) : 'N/A'}</span>
                     </div>
                     <Progress 
-                      value={(student.avgPerformanceRating / 8.0) * 100} 
+                      value={Math.min(100, Math.max(0, (student.avgPerformanceRating || 0) / 8.0 * 100))} 
                       className="h-2"
                     />
                   </div>
@@ -596,7 +600,7 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {drillHistory?.map((completion: any, index: number) => (
+                          {drillHistory && drillHistory.length > 0 ? drillHistory.map((completion: any, index: number) => (
                             <div key={index} className="p-4 bg-white/50 rounded-lg border border-gray-200">
                               <div className="flex items-center justify-between mb-2">
                                 <div>
@@ -639,7 +643,13 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
                                 </div>
                               )}
                             </div>
-                          ))}
+                          )) : (
+                            <div className="text-center py-8 text-gray-500">
+                              <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                              <p>No drill history available</p>
+                              <p className="text-sm">Drill completions will appear here once recorded</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>
