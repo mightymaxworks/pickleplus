@@ -66,12 +66,12 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
       }
       
       return result.data.studentProgressTrends.map((student: any) => ({
-        id: student.studentId,
-        name: student.studentName,
-        email: `${student.studentName.toLowerCase().replace(' ', '')}@pickleplus.com`,
-        totalDrillsCompleted: Math.floor(student.recentProgress * 10), // Estimate from progress
-        avgPerformanceRating: student.recentProgress * 8, // Scale to 0-8
-        improvementTrend: student.trend
+        id: student.studentId || 0,
+        name: student.studentName || 'Unknown Student',
+        email: `${(student.studentName || 'unknown').toLowerCase().replace(/\s+/g, '')}@pickleplus.com`,
+        totalDrillsCompleted: Math.floor((student.recentProgress || 0) * 10), // Estimate from progress
+        avgPerformanceRating: (student.recentProgress || 0) * 8, // Scale to 0-8
+        improvementTrend: student.trend || 'stable'
       }));
     }
   });
@@ -156,7 +156,8 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
     recordDrillMutation.mutate(data);
   };
 
-  const getTrendIcon = (trend: string) => {
+  const getTrendIcon = (trend?: string) => {
+    if (!trend) return <Activity className="h-4 w-4 text-yellow-500" />;
     switch (trend) {
       case 'improving': return <TrendingUp className="h-4 w-4 text-green-500" />;
       case 'declining': return <AlertCircle className="h-4 w-4 text-red-500" />;
@@ -164,7 +165,8 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
     }
   };
 
-  const getTrendColor = (trend: string) => {
+  const getTrendColor = (trend?: string) => {
+    if (!trend) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
     switch (trend) {
       case 'improving': return 'text-green-600 bg-green-50 border-green-200';
       case 'declining': return 'text-red-600 bg-red-50 border-red-200';
@@ -476,19 +478,21 @@ export default function StudentProgressDashboard({ coachId = 1 }: StudentProgres
                       : 'bg-white/50 border border-gray-200 hover:bg-white/70'
                   }`}
                   onClick={() => {
-                    setSelectedStudent(student.id);
-                    form.setValue('studentId', student.id);
+                    if (student && student.id) {
+                      setSelectedStudent(student.id);
+                      form.setValue('studentId', student.id);
+                    }
                   }}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{student.name}</h3>
-                      <p className="text-sm text-gray-600">{student.totalDrillsCompleted} drills completed</p>
+                      <h3 className="font-semibold text-gray-900">{student?.name || 'Unknown Student'}</h3>
+                      <p className="text-sm text-gray-600">{student?.totalDrillsCompleted || 0} drills completed</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {getTrendIcon(student.improvementTrend)}
-                      <Badge className={getTrendColor(student.improvementTrend)}>
-                        {student.improvementTrend}
+                      {getTrendIcon(student?.improvementTrend || 'stable')}
+                      <Badge className={getTrendColor(student?.improvementTrend || 'stable')}>
+                        {student?.improvementTrend || 'stable'}
                       </Badge>
                     </div>
                   </div>
