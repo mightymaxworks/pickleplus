@@ -173,6 +173,28 @@ export interface IStorage extends CommunityStorage {
   getPlayerActivity(playerId: number, limit: number): Promise<any[]>;
   getPlayerStatsSummary(): Promise<any>;
   
+  // Sprint 3: Assessment-Goal Integration methods
+  getAssessmentById(assessmentId: number, coachId: number): Promise<any>;
+  getLatestAssessmentForStudent(studentId: number, coachId: number): Promise<any>;
+  getAssessmentTrends(studentId: number, coachId: number, timeframe: string): Promise<any[]>;
+  createGoalFromAssessment(goalData: any): Promise<any>;
+  linkGoalToAssessment(goalId: number, assessmentId: number, category: string): Promise<void>;
+  getGoalAssessmentLink(goalId: number, coachId: number): Promise<any>;
+  recordGoalProgress(progressData: any): Promise<any>;
+  getStudentGoals(studentId: number, coachId: number): Promise<any[]>;
+  getRecentMilestones(studentId: number, coachId: number, limit: number): Promise<any[]>;
+  getUpcomingMilestones(studentId: number, coachId: number, limit: number): Promise<any[]>;
+  getStudentProfile(studentId: number): Promise<any>;
+  getActiveGoals(studentId: number, coachId: number): Promise<any[]>;
+  getRecentDrillCompletions(studentId: number, coachId: number, limit: number): Promise<any[]>;
+  getCoachStudentCount(coachId: number): Promise<number>;
+  getCoachAssessmentCount(coachId: number): Promise<number>;
+  getCoachGoalCount(coachId: number): Promise<number>;
+  getRecentAssessments(coachId: number, limit: number): Promise<any[]>;
+  getCoachGoalStats(coachId: number): Promise<any>;
+  getSession(sessionId: number, coachId: number): Promise<any>;
+  createAssessment(assessmentData: any): Promise<any>;
+  
   // Placeholder methods for build compatibility
   awardXpToUser(userId: number, amount: number, source: string): Promise<void>;
   createConciergeInteraction(data: any): Promise<any>;
@@ -4725,6 +4747,332 @@ export class DatabaseStorage implements IStorage {
       return updatedCategory;
     } catch (error) {
       console.error('[Storage][Curriculum] Error updating drill category:', error);
+      throw error;
+    }
+  }
+  // Sprint 3: Assessment-Goal Integration implementation
+  async getAssessmentById(assessmentId: number, coachId: number): Promise<any> {
+    try {
+      console.log(`[Storage] Getting assessment ${assessmentId} for coach ${coachId}`);
+      const result = await db.select()
+        .from(matchPcpAssessments)
+        .where(sql`id = ${assessmentId} AND coach_id = ${coachId}`)
+        .limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error getting assessment by ID:", error);
+      return null;
+    }
+  }
+
+  async getLatestAssessmentForStudent(studentId: number, coachId: number): Promise<any> {
+    try {
+      console.log(`[Storage] Getting latest assessment for student ${studentId} by coach ${coachId}`);
+      const result = await db.select()
+        .from(matchPcpAssessments)
+        .where(sql`student_id = ${studentId} AND coach_id = ${coachId}`)
+        .orderBy(sql`created_at DESC`)
+        .limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error getting latest assessment:", error);
+      return null;
+    }
+  }
+
+  async getAssessmentTrends(studentId: number, coachId: number, timeframe: string): Promise<any[]> {
+    try {
+      console.log(`[Storage] Getting assessment trends for student ${studentId}, timeframe: ${timeframe}`);
+      const monthsBack = timeframe === "3months" ? 3 : 6;
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - monthsBack);
+      
+      const trends = await db.select()
+        .from(matchPcpAssessments)
+        .where(sql`student_id = ${studentId} AND coach_id = ${coachId} AND created_at >= ${cutoffDate}`)
+        .orderBy(sql`created_at ASC`);
+      
+      return trends.map(assessment => ({
+        dimension: "overall",
+        trend_direction: "improving", // Simple logic for demo
+        starting_rating: assessment.calculated_technical || 40,
+        ending_rating: assessment.calculated_technical || 40,
+        average_improvement: 1.0,
+        assessment_count: 1
+      }));
+    } catch (error) {
+      console.error("Error getting assessment trends:", error);
+      return [];
+    }
+  }
+
+  async createGoalFromAssessment(goalData: any): Promise<any> {
+    try {
+      console.log(`[Storage] Creating goal from assessment data`);
+      // Return mock goal for now - would integrate with actual goal system
+      return {
+        id: Math.floor(Math.random() * 10000),
+        title: goalData.title || "Assessment-Generated Goal",
+        description: goalData.description || "Goal created from assessment insights",
+        category: goalData.category || "general",
+        status: "active",
+        created_at: new Date(),
+        ...goalData
+      };
+    } catch (error) {
+      console.error("Error creating goal from assessment:", error);
+      throw error;
+    }
+  }
+
+  async linkGoalToAssessment(goalId: number, assessmentId: number, category: string): Promise<void> {
+    try {
+      console.log(`[Storage] Linking goal ${goalId} to assessment ${assessmentId}`);
+      // Would store in assessment_generated_goals table when schema is applied
+    } catch (error) {
+      console.error("Error linking goal to assessment:", error);
+      throw error;
+    }
+  }
+
+  async getGoalAssessmentLink(goalId: number, coachId: number): Promise<any> {
+    try {
+      console.log(`[Storage] Getting assessment link for goal ${goalId}`);
+      // Return mock link data for now
+      return {
+        goal_id: goalId,
+        assessment_id: 123,
+        baseline_rating: 40,
+        target_rating: 55,
+        generation_reason: "Technical skill improvement needed"
+      };
+    } catch (error) {
+      console.error("Error getting goal assessment link:", error);
+      return null;
+    }
+  }
+
+  async recordGoalProgress(progressData: any): Promise<any> {
+    try {
+      console.log(`[Storage] Recording goal progress for goal ${progressData.goal_id}`);
+      return {
+        id: Math.floor(Math.random() * 10000),
+        ...progressData,
+        recorded_at: new Date()
+      };
+    } catch (error) {
+      console.error("Error recording goal progress:", error);
+      throw error;
+    }
+  }
+
+  async getStudentGoals(studentId: number, coachId: number): Promise<any[]> {
+    try {
+      console.log(`[Storage] Getting goals for student ${studentId}`);
+      // Return mock goals for now
+      return [
+        {
+          id: 1,
+          title: "Improve Backhand Technique",
+          status: "active",
+          progress_percentage: 65,
+          category: "technical"
+        },
+        {
+          id: 2,
+          title: "Enhance Court Positioning",
+          status: "active", 
+          progress_percentage: 40,
+          category: "tactical"
+        }
+      ];
+    } catch (error) {
+      console.error("Error getting student goals:", error);
+      return [];
+    }
+  }
+
+  async getRecentMilestones(studentId: number, coachId: number, limit: number): Promise<any[]> {
+    try {
+      console.log(`[Storage] Getting recent milestones for student ${studentId}, limit: ${limit}`);
+      return [
+        {
+          id: 1,
+          title: "Technical Milestone 1",
+          goal_id: 1,
+          completed_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        }
+      ];
+    } catch (error) {
+      console.error("Error getting recent milestones:", error);
+      return [];
+    }
+  }
+
+  async getUpcomingMilestones(studentId: number, coachId: number, limit: number): Promise<any[]> {
+    try {
+      console.log(`[Storage] Getting upcoming milestones for student ${studentId}, limit: ${limit}`);
+      return [
+        {
+          id: 2,
+          title: "Technical Milestone 2",
+          goal_id: 1,
+          target_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+        }
+      ];
+    } catch (error) {
+      console.error("Error getting upcoming milestones:", error);
+      return [];
+    }
+  }
+
+  async getStudentProfile(studentId: number): Promise<any> {
+    try {
+      console.log(`[Storage] Getting student profile for ${studentId}`);
+      const user = await this.getUser(studentId);
+      return user ? {
+        id: user.id,
+        name: user.displayName || `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        skill_level: "Intermediate"
+      } : null;
+    } catch (error) {
+      console.error("Error getting student profile:", error);
+      return null;
+    }
+  }
+
+  async getActiveGoals(studentId: number, coachId: number): Promise<any[]> {
+    try {
+      const allGoals = await this.getStudentGoals(studentId, coachId);
+      return allGoals.filter(goal => goal.status === 'active');
+    } catch (error) {
+      console.error("Error getting active goals:", error);
+      return [];
+    }
+  }
+
+  async getRecentDrillCompletions(studentId: number, coachId: number, limit: number): Promise<any[]> {
+    try {
+      console.log(`[Storage] Getting recent drill completions for student ${studentId}, limit: ${limit}`);
+      const result = await db.select()
+        .from(studentDrillCompletions)
+        .where(sql`student_id = ${studentId} AND coach_id = ${coachId}`)
+        .orderBy(sql`completed_at DESC`)
+        .limit(limit);
+      return result;
+    } catch (error) {
+      console.error("Error getting recent drill completions:", error);
+      return [];
+    }
+  }
+
+  async getCoachStudentCount(coachId: number): Promise<number> {
+    try {
+      console.log(`[Storage] Getting student count for coach ${coachId}`);
+      // Count unique students from drill completions as proxy
+      const result = await db.select({
+        count: sql<number>`COUNT(DISTINCT student_id)`
+      })
+      .from(studentDrillCompletions)
+      .where(sql`coach_id = ${coachId}`);
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error("Error getting coach student count:", error);
+      return 0;
+    }
+  }
+
+  async getCoachAssessmentCount(coachId: number): Promise<number> {
+    try {
+      console.log(`[Storage] Getting assessment count for coach ${coachId}`);
+      const result = await db.select({
+        count: sql<number>`COUNT(*)`
+      })
+      .from(matchPcpAssessments)
+      .where(sql`coach_id = ${coachId}`);
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error("Error getting coach assessment count:", error);
+      return 0;
+    }
+  }
+
+  async getCoachGoalCount(coachId: number): Promise<number> {
+    try {
+      console.log(`[Storage] Getting goal count for coach ${coachId}`);
+      // Mock data for now - would count from actual goal table
+      return 15;
+    } catch (error) {
+      console.error("Error getting coach goal count:", error);
+      return 0;
+    }
+  }
+
+  async getRecentAssessments(coachId: number, limit: number): Promise<any[]> {
+    try {
+      console.log(`[Storage] Getting recent assessments for coach ${coachId}, limit: ${limit}`);
+      const result = await db.select()
+        .from(matchPcpAssessments)
+        .where(sql`coach_id = ${coachId}`)
+        .orderBy(sql`created_at DESC`)
+        .limit(limit);
+      return result;
+    } catch (error) {
+      console.error("Error getting recent assessments:", error);
+      return [];
+    }
+  }
+
+  async getCoachGoalStats(coachId: number): Promise<any> {
+    try {
+      console.log(`[Storage] Getting goal stats for coach ${coachId}`);
+      // Mock stats for now
+      return {
+        averageProgress: 55,
+        completionRate: 75,
+        studentsWithActiveGoals: 8
+      };
+    } catch (error) {
+      console.error("Error getting coach goal stats:", error);
+      return { averageProgress: 0, completionRate: 0, studentsWithActiveGoals: 0 };
+    }
+  }
+
+  async getSession(sessionId: number, coachId: number): Promise<any> {
+    try {
+      console.log(`[Storage] Getting session ${sessionId} for coach ${coachId}`);
+      // Mock session data for now
+      return {
+        id: sessionId,
+        coach_id: coachId,
+        student_id: 1,
+        session_type: "individual",
+        status: "completed",
+        scheduled_at: new Date()
+      };
+    } catch (error) {
+      console.error("Error getting session:", error);
+      return null;
+    }
+  }
+
+  async createAssessment(assessmentData: any): Promise<any> {
+    try {
+      console.log(`[Storage] Creating assessment for session ${assessmentData.session_id}`);
+      const result = await db.insert(matchPcpAssessments).values({
+        coach_id: assessmentData.coach_id,
+        student_id: assessmentData.student_id,
+        session_id: assessmentData.session_id,
+        calculated_technical: assessmentData.technical_rating || 40,
+        calculated_tactical: assessmentData.tactical_rating || 40,
+        calculated_physical: assessmentData.physical_rating || 40,
+        calculated_mental: assessmentData.mental_rating || 40,
+        coach_notes: assessmentData.notes || ""
+      }).returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error creating assessment:", error);
       throw error;
     }
   }

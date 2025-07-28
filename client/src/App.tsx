@@ -439,6 +439,13 @@ export default function App() {
                     pageTitle="Student Progress Dashboard"
                   />
                   
+                  {/* Sprint 3 Phase 1: Assessment-Goal Integration Test Page */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/assessment-goal-integration-test"
+                    component={lazyLoad(() => import('./pages/coach/assessment-goal-integration-test'))}
+                    pageTitle="Sprint 3: Assessment-Goal Integration Test"
+                  />
+                  
                   {/* Legacy coaching routes for backward compatibility */}
                   <ProtectedRouteWithLayout
                     path="/coach/sage"
