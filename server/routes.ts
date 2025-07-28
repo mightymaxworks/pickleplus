@@ -423,7 +423,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   console.log('[API] Sprint 2 Phase 3: Student Progress Tracking routes registered successfully');
   
   // Register Sprint 3: Assessment-Goal Integration routes
-  app.use(assessmentGoalIntegrationRoutes);
+  app.use('/api', assessmentGoalIntegrationRoutes);
   console.log('[API] Sprint 3: Assessment-Goal Integration routes registered successfully');
   
   // Mount coach management routes

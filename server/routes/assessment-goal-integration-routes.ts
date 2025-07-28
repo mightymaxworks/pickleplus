@@ -82,12 +82,9 @@ router.post("/coach/assessments/:id/generate-goals", isAuthenticated, async (req
 
     console.log(`[ASSESSMENT-GOALS] Generating goals from assessment: ${assessmentId}`);
     
-    const goalRecommendations = await AssessmentGoalService.generateGoalsFromAssessment(
-      parseInt(assessmentId), 
-      coachId
-    );
+    const goalRecommendations = await storage.generateGoalRecommendations(parseInt(assessmentId), coachId);
     
-    console.log(`[ASSESSMENT-GOALS] Generated ${goalRecommendations.length} goal recommendations`);
+    console.log(`[ASSESSMENT-GOALS] Generated goal recommendations`);
     res.json({ success: true, data: goalRecommendations });
   } catch (error) {
     console.error("Error generating goals from assessment:", error);
@@ -110,7 +107,7 @@ router.get("/coach/assessments/:id/weak-areas", isAuthenticated, async (req, res
 
     console.log(`[ASSESSMENT-GOALS] Analyzing weak areas for assessment: ${assessmentId}`);
     
-    const analysis = await AssessmentGoalService.analyzeWeakAreas(parseInt(assessmentId), coachId);
+    const analysis = await storage.analyzeWeakAreas(parseInt(assessmentId), coachId);
     
     console.log(`[ASSESSMENT-GOALS] Weak area analysis completed`);
     res.json({ success: true, data: analysis });
@@ -279,7 +276,7 @@ router.get("/coach/dashboard/assessment-goal-metrics", isAuthenticated, async (r
 
     console.log(`[ASSESSMENT-GOALS] Fetching dashboard metrics for coach: ${coachId}`);
     
-    const metrics = await AssessmentGoalService.getCoachDashboardMetrics(coachId);
+    const metrics = await storage.getCoachDashboardMetrics(coachId);
     
     console.log(`[ASSESSMENT-GOALS] Dashboard metrics retrieved successfully`);
     res.json({ success: true, data: metrics });

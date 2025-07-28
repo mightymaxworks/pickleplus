@@ -61,13 +61,13 @@ export default function AssessmentGoalIntegrationTest() {
     },
     {
       name: 'Complete Workflow',
-      endpoint: `/api/coach/assessment-goal-workflow/student/${studentId}`,
+      endpoint: `/api/coach/workflow/${studentId}`,
       method: 'GET',
       description: 'Get complete assessment-goal workflow'
     },
     {
       name: 'Coach Dashboard Metrics',
-      endpoint: `/api/coach/assessment-goal-dashboard`,
+      endpoint: `/api/coach/dashboard/assessment-goal-metrics`,
       method: 'GET',
       description: 'Get coach dashboard metrics'
     }
