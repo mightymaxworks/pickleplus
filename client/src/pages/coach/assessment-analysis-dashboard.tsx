@@ -153,13 +153,18 @@ export default function AssessmentAnalysisDashboard() {
                   </CardDescription>
                 </div>
               </div>
-              <Button 
-                onClick={handleCreateGoals}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-              >
-                <Target className="h-4 w-4 mr-2" />
-                Create Smart Goals
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  onClick={handleCreateGoals}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white whitespace-nowrap"
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Create Goals
+                </Button>
+                <div className="hidden sm:block text-xs text-gray-500 self-center">
+                  AI-powered recommendations
+                </div>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -415,10 +420,10 @@ export default function AssessmentAnalysisDashboard() {
                   <Button 
                     onClick={handleCreateGoals}
                     size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3"
                   >
                     <Target className="h-5 w-5 mr-2" />
-                    Create Smart Goals
+                    <span className="whitespace-nowrap">Generate Goals</span>
                     <ArrowRight className="h-5 w-5 ml-2" />
                   </Button>
                 </div>
