@@ -253,6 +253,9 @@ export default function App() {
                   <Route path="/enhanced-community-demo" component={lazyLoad(() => import('./pages/enhanced-community-demo'))} />
                   <Route path="/migration-control-center" component={lazyLoad(() => import('./pages/migration-control-center'))} />
                   <Route path="/curriculum-management-demo" component={lazyLoad(() => import('./pages/curriculum-management-demo'))} />
+                  <Route path="/coach/progress-tracking-integration" component={lazyLoad(() => import('./pages/coach/progress-tracking-integration'))} />
+                  <Route path="/coach/advanced-analytics-dashboard" component={lazyLoad(() => import('./pages/coach/advanced-analytics-dashboard'))} />
+                  <Route path="/coach/phase3-advanced-features-demo" component={lazyLoad(() => import('./pages/coach/Phase3AdvancedFeaturesDemo'))} />
                   
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 

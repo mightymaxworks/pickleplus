@@ -73,7 +73,9 @@ import { registerCoachHubRoutes } from "./routes/coach-hub-routes"; // Unified C
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes"; // Sprint 1: Curriculum Management & Lesson Planning
 import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 2 Phase 2: Session Planning Integration
-import assessmentGoalIntegrationRoutes from "./routes/assessment-goal-integration-routes"; // Sprint 3: Assessment-Goal Integration
+import assessmentGoalIntegrationRoutes from "./routes/assessment-goal-integration-routes"; // Sprint 3 Phase 1 & 2: Assessment-Goal Integration
+import progressTrackingRoutes from "./routes/progress-tracking-routes"; // Sprint 3 Phase 3: Progress Tracking Integration
+import analyticsRoutes from "./routes/analytics-routes"; // Sprint 3 Phase 3: Advanced Analytics Dashboard
 import { 
   createAdministrativeMatch,
   createBulkMatches,
@@ -425,6 +427,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Sprint 3: Assessment-Goal Integration routes
   app.use('/api', assessmentGoalIntegrationRoutes);
   console.log('[API] Sprint 3: Assessment-Goal Integration routes registered successfully');
+  
+  // Register Sprint 3 Phase 3: Progress Tracking Integration routes
+  app.use('/api/coach/progress-tracking', progressTrackingRoutes);
+  console.log('[API] Sprint 3 Phase 3: Progress Tracking Integration routes registered successfully');
+  
+  // Register Sprint 3 Phase 3: Advanced Analytics Dashboard routes
+  app.use('/api/coach/analytics', analyticsRoutes);
+  console.log('[API] Sprint 3 Phase 3: Advanced Analytics Dashboard routes registered successfully');
   
   // Mount coach management routes
   app.use('/api/coach', coachManagementRoutes);
