@@ -446,6 +446,23 @@ export default function App() {
                     pageTitle="Sprint 3: Assessment-Goal Integration Test"
                   />
                   
+                  {/* Sprint 3 Phase 2: Enhanced Assessment-Goal UI */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/assessment-analysis-dashboard"
+                    component={lazyLoad(() => import('./pages/coach/assessment-analysis-dashboard'))}
+                    pageTitle="Assessment Analysis Dashboard"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/coach/intelligent-goal-creation"
+                    component={lazyLoad(() => import('./pages/coach/intelligent-goal-creation'))}
+                    pageTitle="Intelligent Goal Creation"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/coach/phase2-enhanced-ui-demo"
+                    component={lazyLoad(() => import('./pages/coach/phase2-enhanced-ui-demo'))}
+                    pageTitle="Phase 2: Enhanced UI Demo"
+                  />
+                  
                   {/* Legacy coaching routes for backward compatibility */}
                   <ProtectedRouteWithLayout
                     path="/coach/sage"
