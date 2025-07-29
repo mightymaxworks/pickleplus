@@ -36,9 +36,9 @@ export function EnhancedHeroSection() {
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
-              Professional Pickleball <br className="hidden sm:block" />
+              Your Pickleball <br className="hidden sm:block" />
               <span className="bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent relative">
-                Development Platform
+                Growth Platform
                 <svg className="absolute -bottom-1 left-0 w-full h-3 text-orange-300/50" viewBox="0 0 100 15" preserveAspectRatio="none">
                   <path d="M0,7.5 C15,2.5 35,12.5 50,7.5 C65,2.5 85,12.5 100,7.5 L100,15 L0,15 Z" fill="currentColor"/>
                 </svg>
@@ -46,8 +46,8 @@ export function EnhancedHeroSection() {
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-10 font-light max-w-3xl leading-relaxed">
-              Advanced coaching certification, real-time performance analytics, and comprehensive tournament management. 
-              <span className="hidden md:inline">Built for serious players, certified coaches, and professional facilities.</span>
+              Track your progress, improve your skills, and connect with the pickleball community. 
+              <span className="hidden md:inline">From beginner to pro, we help every player reach their potential.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
