@@ -512,3 +512,5 @@ export default function StudentProgressDashboardFixed({ coachId = 1 }: StudentPr
     </div>
   );
 }
+
+export default StudentProgressDashboard;

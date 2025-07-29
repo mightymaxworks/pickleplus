@@ -509,6 +509,13 @@ export default function App() {
                     pageTitle="Your Pickleball Journey"
                   />
                   
+                  {/* Achievements Page */}
+                  <ProtectedRouteWithLayout
+                    path="/achievements"
+                    component={lazyLoad(() => import('./pages/achievements'))}
+                    pageTitle="Achievements"
+                  />
+                  
                   {/* PKL-278651-PLAYER-DEVELOPMENT-HUB - Player Development Hub */}
                   <ProtectedRouteWithLayout
                     path="/player-development-hub"
