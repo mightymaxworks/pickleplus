@@ -1,103 +1,182 @@
 /**
  * Demo Player Passport Component for Landing Page
  * 
- * Shows a sample passport card exactly as it appears in the dashboard
+ * Shows a sample passport card exactly as it appears in PassportDashboard.tsx
  * but with demo data for non-authenticated users on the landing page.
- * Matches PlayerPassport.tsx structure exactly.
+ * Matches the ACTUAL passport design from the dashboard.
  */
 
 import React from 'react';
-import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
-import { Trophy, Scan } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Trophy, QrCode, Scan, Medal, Edit } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 export function DemoPlayerPassport() {
   return (
-    <div className="w-full">
-      <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl" style={{ height: '440px' }}>
-        {/* Top border accent */}
-        <div className="h-1 w-full bg-gradient-to-r from-[#FF5722] to-[#FF9800]"></div>
-        
-        {/* Header with orange gradient */}
-        <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] p-4">
-          <div className="flex justify-between items-center text-white">
-            <div className="font-bold text-lg">Founding Member</div>
-            <PicklePlusNewLogo height="32px" width="auto" preserveAspectRatio={true} />
-          </div>
-          
-          {/* Player info */}
-          <div className="flex items-center mt-3">
-            <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow">
-              <div className="h-full w-full rounded-full overflow-hidden bg-yellow-100">
-                <div className="h-full w-full rounded-full flex items-center justify-center text-white font-bold text-xl bg-gradient-to-r from-orange-500 to-amber-500">
-                  M
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="relative z-10"
+    >
+      <Card 
+        className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+      >
+        <CardContent className="p-2">
+          <div className="flex flex-col lg:flex-row items-center gap-4">
+            {/* Player Information */}
+            <div className="flex-1 text-center lg:text-left">
+              <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
+                {/* Profile Photo */}
+                <motion.div 
+                  className="relative cursor-pointer group"
+                  whileHover={{ scale: 1.08, rotate: 2 }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <div className="w-28 h-32 bg-gradient-to-br from-orange-500 via-red-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-xl hover:shadow-2xl transition-all duration-500 passport-photo border-4 border-orange-400">
+                    M
+                  </div>
+                  
+                  <motion.div 
+                    className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-3 border-white shadow-lg"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  ></motion.div>
+                </motion.div>
+                
+                <div>
+                  <motion.h1 
+                    className="text-3xl lg:text-4xl font-extrabold text-orange-900 tracking-[-0.02em] leading-[1.1] font-mono"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    style={{ fontFamily: '"SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif' }}
+                  >
+                    mightymax
+                  </motion.h1>
+                  <motion.p 
+                    className="text-orange-700 text-lg font-medium tracking-wide uppercase opacity-80"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}
+                  >
+                    @mightymax
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6, type: "spring" }}
+                  >
+                    <Badge className="mt-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-900 border-orange-300 px-3 py-1 text-sm font-bold shadow-md">
+                      <Medal className="w-4 h-4 mr-2" />
+                      Player Passport
+                    </Badge>
+                  </motion.div>
                 </div>
               </div>
-            </div>
-            
-            <div>
-              <div className="font-bold text-lg text-white">mightymax</div>
-              <div className="flex flex-wrap gap-1 text-sm text-white/90">
-                <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
-                  <Trophy size={12} className="text-yellow-300 mr-1" />
-                  DUPR 4.5
-                </div>
-                <div className="bg-white/20 rounded-full px-2 py-0.5 inline-block text-xs">
-                  1000MM7
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Stats section with glass morphism effect */}
-        <div className="flex-1 p-4 bg-gradient-to-br from-gray-50/90 to-white/90 dark:from-gray-800/90 dark:to-gray-900/90 backdrop-blur-sm relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-purple-500/5 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            {/* Level and XP */}
-            <div className="mb-4">
-              <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400 mb-1">
-                <span>Level 1 • 814 XP</span>
-                <span>81%</span>
-              </div>
-              
-              {/* XP Progress Bar */}
-              <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#FF5722] to-[#FF9800] rounded-full"
-                  style={{ width: '81%' }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Stats grid matching the exact dashboard layout */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 p-3 rounded-xl text-center">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Rating</div>
-                <div className="font-bold text-lg text-blue-600 dark:text-blue-400">0</div>
-              </div>
-              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 p-3 rounded-xl text-center">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Matches</div>
-                <div className="font-bold text-lg text-green-600 dark:text-green-400">3</div>
-              </div>
-              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 p-3 rounded-xl text-center">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Rank</div>
-                <div className="font-bold text-lg text-purple-600 dark:text-purple-400">-</div>
-              </div>
-            </div>
-            
-            {/* QR Code access button */}
-            <div className="mt-auto">
-              <button 
-                className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 rounded-xl w-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+
+              {/* Edit Profile Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="flex justify-center lg:justify-start mt-4"
               >
-                <Scan size={16} />
-                <span className="text-sm font-medium">View Passport QR Code</span>
-              </button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </motion.div>
+
+              {/* Key Stats Grid - Exact 6-column layout */}
+              <motion.div 
+                className="grid grid-cols-2 lg:grid-cols-6 gap-3"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+              >
+                <motion.div 
+                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">DUPR Rating</p>
+                  <p className="text-3xl font-black text-orange-900">4.5</p>
+                </motion.div>
+                <motion.div 
+                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Ranking Points</p>
+                  <p className="text-3xl font-black text-purple-700">245</p>
+                </motion.div>
+                <motion.div 
+                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Win Rate</p>
+                  <p className="text-3xl font-black text-green-700">87%</p>
+                </motion.div>
+                <motion.div 
+                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Matches</p>
+                  <p className="text-3xl font-black text-blue-700">23</p>
+                </motion.div>
+                <motion.div 
+                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Streak</p>
+                  <p className="text-3xl font-black text-indigo-700">5</p>
+                </motion.div>
+                <motion.div 
+                  className="text-center lg:text-left bg-gradient-to-r from-orange-100 to-yellow-100 border-2 border-orange-300 rounded-lg p-3 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,165,0,0.2)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">Passport Code</p>
+                  <p className="text-2xl font-mono font-black text-orange-800">
+                    MX8K7P2N
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1">Tap to Copy</p>
+                </motion.div>
+              </motion.div>
+            </div>
+            
+            {/* Prominent QR Code Section - Exact match */}
+            <div className="flex flex-col items-center">
+              <motion.div 
+                className="w-40 h-40 bg-white border-4 border-orange-300 rounded-xl flex items-center justify-center mb-3 shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <QrCode className="w-32 h-32 text-orange-600" />
+              </motion.div>
+              <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-300 px-3 py-1">
+                <Scan className="w-3 h-3 mr-1" />
+                Tap to Reveal
+              </Badge>
+              <p className="text-xs text-orange-600 mt-1 text-center max-w-32">
+                Share your passport
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
