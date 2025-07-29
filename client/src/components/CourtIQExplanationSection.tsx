@@ -23,7 +23,7 @@ const staggerContainer = {
 
 export function CourtIQExplanationSection() {
   return (
-    <section className="py-16 sm:py-24 bg-white overflow-hidden">
+    <section className="py-16 sm:py-24 bg-gradient-to-b from-black to-gray-900 text-white overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6">
         <motion.div 
           className="text-center mb-12 sm:mb-16"
@@ -77,54 +77,68 @@ export function CourtIQExplanationSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            <h3 className="text-2xl font-bold mb-4 text-[#673AB7]">CourtIQ™ Skill Profile</h3>
+            <h3 className="text-2xl font-bold mb-4 text-orange-500">CourtIQ™ Performance Analytics</h3>
             <p className="text-gray-600 mb-6">
-              Our proprietary skill radar provides a visual representation of your playing 
-              style and abilities across six critical dimensions of pickleball performance.
+              Advanced 6-dimensional skill analysis using radar visualization, exactly as shown in your dashboard. Track development across Power, Speed, Precision, Strategy, Control, and Consistency with DUPR integration.
             </p>
             
-            <div className="space-y-4">
-              <SkillItem 
-                name="Power" 
-                description="Driving force behind shots, measured through shot speed and impact"
-                icon={<Zap size={18} />} 
-                color="#FF5722" 
-              />
-              <SkillItem 
-                name="Control" 
-                description="Precision and consistency in shot placement and execution"
-                icon={<Target size={18} />} 
-                color="#2196F3" 
-              />
-              <SkillItem 
-                name="Speed" 
-                description="Court movement, reaction time, and quick-twitch capabilities"
-                icon={<Activity size={18} />} 
-                color="#4CAF50" 
-              />
-              <SkillItem 
-                name="Technique" 
-                description="Mechanical efficiency and form in executing shots"
-                icon={<Gauge size={18} />} 
-                color="#FF9800" 
-              />
-              <SkillItem 
-                name="Strategy" 
-                description="Court awareness, tactical decision-making, and adaptability"
-                icon={<Brain size={18} />} 
-                color="#9C27B0" 
-              />
-              <SkillItem 
-                name="Consistency" 
-                description="Reliability and performance stability across matches"
-                icon={<BarChart3 size={18} />} 
-                color="#00BCD4" 
-              />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-5 w-5 text-orange-500" />
+                  <span className="font-medium">Power</span>
+                </div>
+                <span className="text-orange-500 font-bold">8.2/10</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Activity className="h-5 w-5 text-orange-500" />
+                  <span className="font-medium">Speed</span>
+                </div>
+                <span className="text-orange-500 font-bold">7.8/10</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Target className="h-5 w-5 text-cyan-400" />
+                  <span className="font-medium">Precision</span>
+                </div>
+                <span className="text-cyan-400 font-bold">6.9/10</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Brain className="h-5 w-5 text-cyan-400" />
+                  <span className="font-medium">Strategy</span>
+                </div>
+                <span className="text-cyan-400 font-bold">7.3/10</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Gauge className="h-5 w-5 text-orange-500" />
+                  <span className="font-medium">Control</span>
+                </div>
+                <span className="text-orange-500 font-bold">8.7/10</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-5 w-5 text-cyan-400" />
+                  <span className="font-medium">Consistency</span>
+                </div>
+                <span className="text-cyan-400 font-bold">7.1/10</span>
+              </div>
             </div>
             
-            <div className="mt-8">
-              <Button variant="outline" className="text-[#673AB7] border-[#673AB7] hover:bg-[#673AB7]/10">
-                Learn More About Skill Assessment <ChevronRight className="ml-1 h-4 w-4" />
+            <div className="mt-6 p-4 bg-gradient-to-r from-orange-500/10 to-cyan-400/10 rounded-xl border border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="h-5 w-5 text-orange-500" />
+                <span className="font-semibold text-gray-900">Overall CourtIQ™ Rating</span>
+              </div>
+              <div className="text-2xl font-bold text-orange-500">875 Points</div>
+              <div className="text-sm text-gray-600">Advanced Level • Top 15% of players</div>
+            </div>
+            
+            <div className="mt-6">
+              <Button variant="outline" className="text-orange-500 border-orange-500 hover:bg-orange-500/10">
+                View Dashboard Analytics <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </motion.div>
@@ -167,49 +181,55 @@ export function CourtIQExplanationSection() {
                 <div className="absolute bottom-[14.64%] right-[14.64%] w-[100%] h-0.5 bg-gray-300 opacity-50 origin-top-right rotate-[30deg]"></div>
                 
                 {/* Skill labels */}
-                <div className="absolute top-1 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-[#FF5722]">Power</div>
-                <div className="absolute top-[25%] right-[5%] translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-[#2196F3]">Control</div>
-                <div className="absolute bottom-[25%] right-[5%] translate-x-1/2 translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-[#4CAF50]">Speed</div>
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-[#FF9800]">Technique</div>
-                <div className="absolute bottom-[25%] left-[5%] -translate-x-1/2 translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-[#9C27B0]">Strategy</div>
-                <div className="absolute top-[25%] left-[5%] -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-[#00BCD4]">Consistency</div>
+                <div className="absolute top-1 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-orange-500">Power</div>
+                <div className="absolute top-[25%] right-[5%] translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-orange-500">Control</div>
+                <div className="absolute bottom-[25%] right-[5%] translate-x-1/2 translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-orange-500">Speed</div>
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-cyan-400">Precision</div>
+                <div className="absolute bottom-[25%] left-[5%] -translate-x-1/2 translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-cyan-400">Strategy</div>
+                <div className="absolute top-[25%] left-[5%] -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded font-medium text-sm text-cyan-400">Consistency</div>
                 
                 {/* Player's skill polygon */}
                 <svg className="absolute inset-0" viewBox="0 0 200 200">
                   <defs>
                     <linearGradient id="skillGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#9C27B0" stopOpacity="0.7" />
-                      <stop offset="100%" stopColor="#2196F3" stopOpacity="0.7" />
+                      <stop offset="0%" stopColor="#FF5722" stopOpacity="0.7" />
+                      <stop offset="100%" stopColor="#00BCD4" stopOpacity="0.7" />
                     </linearGradient>
                   </defs>
                   <polygon 
                     points="100,40 140,60 140,140 100,160 60,140 60,60" 
                     fill="url(#skillGradient)" 
-                    stroke="#673AB7" 
+                    stroke="#FF5722" 
                     strokeWidth="2"
                     className="origin-center"
                   />
                 </svg>
                 
                 {/* Skill value dots */}
-                <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FF5722] rounded-full border-2 border-white"></div>
-                <div className="absolute top-[30%] right-[30%] w-4 h-4 bg-[#2196F3] rounded-full border-2 border-white"></div>
-                <div className="absolute bottom-[30%] right-[30%] w-4 h-4 bg-[#4CAF50] rounded-full border-2 border-white"></div>
-                <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FF9800] rounded-full border-2 border-white"></div>
+                <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div>
+                <div className="absolute top-[30%] right-[8%] w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-[30%] right-[8%] w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-[30%] left-[8%] w-4 h-4 bg-cyan-400 rounded-full border-2 border-white"></div>
+                <div className="absolute top-[30%] left-[8%] w-4 h-4 bg-cyan-400 rounded-full border-2 border-white"></div>
+
                 <div className="absolute bottom-[30%] left-[30%] w-4 h-4 bg-[#9C27B0] rounded-full border-2 border-white"></div>
                 <div className="absolute top-[30%] left-[30%] w-4 h-4 bg-[#00BCD4] rounded-full border-2 border-white"></div>
                 
                 {/* Center badge */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-white rounded-full h-16 w-16 flex items-center justify-center border-2 border-[#673AB7]">
-                    <div className="text-[#673AB7] font-bold text-xl">1248</div>
+                  <div className="bg-white rounded-full h-16 w-16 flex items-center justify-center border-2 border-orange-500">
+                    <div className="text-orange-500 font-bold text-xl">875</div>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-6 text-center">
-                <div className="font-bold text-[#673AB7] text-lg">John Smith</div>
-                <div className="text-gray-500 text-sm">Advanced Player • Level 7</div>
+              <div className="mt-4 text-center">
+                <div className="text-sm text-gray-300 mb-2">Based on 24 recorded matches</div>
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-xs">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Live DUPR Integration</span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -227,9 +247,9 @@ export function CourtIQExplanationSection() {
             variants={fadeIn}
             className="text-center mb-10"
           >
-            <h3 className="text-2xl font-bold mb-3">Why CourtIQ™ Is Different</h3>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Unlike traditional rating systems that only provide a single number, CourtIQ™ delivers actionable insights and personalized pathways.
+            <h3 className="text-2xl font-bold mb-3 text-white">Why CourtIQ™ Is Different</h3>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              Unlike traditional rating systems that only provide a single number, CourtIQ™ delivers actionable insights and personalized pathways through authentic platform analytics.
             </p>
           </motion.div>
           
@@ -267,7 +287,7 @@ interface PillarCardProps {
 function PillarCard({ icon, title, description, color, delay = 0 }: PillarCardProps) {
   return (
     <motion.div 
-      className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+      className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6 shadow-sm hover:shadow-md transition-shadow"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
