@@ -11,8 +11,6 @@ import {
 import { useKonamiCode } from "@/hooks/useKonamiCode";
 import { EasterEggModal } from "@/components/EasterEggModal";
 import { useState, useEffect } from "react";
-import { Features, useFeatureFlag } from "@/lib/featureFlags";
-import BounceMascot from "@/modules/guidance-mini/components/BounceMascot";
 import Footer from "@/components/Footer";
 
 // Import enhanced components
@@ -85,7 +83,6 @@ const HowItWorksStep = ({ number, title, description }: {
 export default function LandingPage() {
   const [, navigate] = useLocation();
   const [isEasterEggModalOpen, setIsEasterEggModalOpen] = useState(false);
-  const showMascot = useFeatureFlag(Features.GUIDANCE_MASCOT);
   
   // Set up Konami code detection
   const { konamiDetected, reset } = useKonamiCode();
@@ -636,7 +633,7 @@ export default function LandingPage() {
                     <div>
                       <div className="font-bold text-base sm:text-lg">Tournament Champion</div>
                       <div className="text-xs sm:text-sm text-gray-600">Win your first tournament</div>
-                      <div className="text-xs sm:text-sm font-semibold text-[#FF5722]">+500 XP</div>
+                      <div className="text-xs sm:text-sm font-semibold text-[#FF5722]">+50 Credits</div>
                     </div>
                   </div>
                 </div>
@@ -663,8 +660,8 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="text-sm sm:text-base font-medium">XP Earned</span>
-                        <span className="text-sm sm:text-base text-[#FF5722]">720</span>
+                        <span className="text-sm sm:text-base font-medium">Credits Earned</span>
+                        <span className="text-sm sm:text-base text-[#FF5722]">125</span>
                       </div>
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div className="bg-[#FF5722] h-full" style={{ width: '72%' }}></div>
@@ -704,23 +701,23 @@ export default function LandingPage() {
             <div className="space-y-6 sm:space-y-8 md:space-y-12">
               <HowItWorksStep 
                 number={1} 
-                title="Create Your Profile" 
-                description="Set up your player profile with your skill level and playing history to get personalized recommendations."
+                title="Professional Registration" 
+                description="Create your comprehensive profile with DUPR integration, PCP assessment baseline, and professional coaching preferences."
               />
               <HowItWorksStep 
                 number={2} 
-                title="Record Matches" 
-                description="Use our mobile-optimized interface to quickly log match results and track your performance over time."
+                title="Advanced Analytics" 
+                description="Utilize comprehensive match recording with real-time analytics, DUPR sync, and PCP 4-dimensional performance tracking."
               />
               <HowItWorksStep 
                 number={3} 
-                title="Earn Rewards" 
-                description="Unlock achievements and gain XP as you play more, leveling up your pickleball passport."
+                title="Earn Credits & Points" 
+                description="Accumulate credits for coaching sessions and earn PCP ranking points through assessments and tournaments."
               />
               <HowItWorksStep 
                 number={4} 
-                title="Join Tournaments" 
-                description="Register for events and check in with your digital passport. Track your tournament history."
+                title="Professional Development" 
+                description="Access PCP coaching certification, book professional coaching sessions, and participate in comprehensive tournament management."
               />
             </div>
 
@@ -800,28 +797,28 @@ export default function LandingPage() {
               <div className="w-16 h-16 rounded-full bg-[#FF5722]/10 flex items-center justify-center mx-auto mb-4">
                 <Award className="text-[#FF5722]" size={28} />
               </div>
-              <h3 className="font-bold text-xl mb-2 text-[#FF5722]">CourtIQ XP</h3>
+              <h3 className="font-bold text-xl mb-2 text-[#FF5722]">Pickle Credits</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Your experience progression tracks your overall journey and unlocks new features and achievements as you level up.
+                Your platform credits for accessing premium features, coaching sessions, and tournament entries.
               </p>
               <div className="bg-[#FF5722]/5 rounded-lg p-3 mb-2">
-                <div className="text-[#FF5722] font-bold mb-1 text-sm">How to earn XP:</div>
+                <div className="text-[#FF5722] font-bold mb-1 text-sm">How to earn Credits:</div>
                 <ul className="text-left text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#FF5722]"></div>
-                    <div>Playing matches (+15 XP)</div>
+                    <div>Purchase credit packages</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#FF5722]"></div>
-                    <div>Completing achievements (varies)</div>
+                    <div>Tournament participation rewards</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#FF5722]"></div>
-                    <div>Attending tournaments (+50 XP)</div>
+                    <div>Achievement milestone bonuses</div>
                   </li>
                 </ul>
               </div>
-              <div className="text-xs text-gray-500">XP never decreases — it's a lifetime measure of your pickleball journey</div>
+              <div className="text-xs text-gray-500">Use credits for coaching sessions, premium features, and tournament entries</div>
             </motion.div>
 
             <motion.div 
@@ -834,28 +831,28 @@ export default function LandingPage() {
               <div className="w-16 h-16 rounded-full bg-[#2196F3]/10 flex items-center justify-center mx-auto mb-4">
                 <Trophy className="text-[#2196F3]" size={28} />
               </div>
-              <h3 className="font-bold text-xl mb-2 text-[#2196F3]">CourtIQ Rankings</h3>
+              <h3 className="font-bold text-xl mb-2 text-[#2196F3]">PCP Ranking Points</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Your competitive standing based on match performance, tournament results, and quality of play.
+                Your competitive standing based on PCP assessment scores, match performance, and tournament results.
               </p>
               <div className="bg-[#2196F3]/5 rounded-lg p-3 mb-2">
-                <div className="text-[#2196F3] font-bold mb-1 text-sm">How ranking changes:</div>
+                <div className="text-[#2196F3] font-bold mb-1 text-sm">How points are earned:</div>
                 <ul className="text-left text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
-                    <div>Win vs higher-ranked (+12 pts)</div>
+                    <div>PCP assessment completion</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
-                    <div>Win vs similar-ranked (+8 pts)</div>
+                    <div>Tournament match results</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
-                    <div>Win vs lower-ranked (+5 pts)</div>
+                    <div>Coaching session feedback</div>
                   </li>
                 </ul>
               </div>
-              <div className="text-xs text-gray-500 italic">Point values shown are illustrative—your pickleball journey always moves forward!</div>
+              <div className="text-xs text-gray-500 italic">Points reflect your comprehensive skill development across all PCP dimensions</div>
             </motion.div>
 
             <motion.div 
@@ -868,9 +865,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mx-auto mb-4">
                 <Users className="text-[#4CAF50]" size={28} />
               </div>
-              <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">CourtIQ Rating</h3>
+              <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">DUPR Integration</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Our proprietary 1000-2500 rating system works alongside existing rating systems while providing format-specific insights.
+                Seamless integration with your DUPR rating while providing advanced analytics and PCP 4-dimensional assessments.
               </p>
               <div className="bg-[#4CAF50]/5 rounded-lg p-3 mb-2">
                 <div className="text-[#4CAF50] font-bold mb-1 text-sm">CourtIQ Rating Features:</div>
@@ -1203,8 +1200,7 @@ export default function LandingPage() {
         onClose={() => setIsEasterEggModalOpen(false)}
       />
       
-      {/* Bounce Mascot */}
-      {showMascot && <BounceMascot position="bottom-right" />}
+
     </div>
   );
 }
