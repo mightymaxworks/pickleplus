@@ -9,7 +9,7 @@
 import { lazyLoad } from '@/utils/lazyLoad';
 
 // Public pages
-export const LazyLandingPage = lazyLoad(() => import('./pages/EnhancedPassportLandingPage'));
+export const LazyLandingPage = lazyLoad(() => import('./pages/LandingPage'));
 export const LazyAuthPage = lazyLoad(() => import('./pages/auth-page'));
 export const LazyAboutUsPage = lazyLoad(() => import('./pages/AboutUs'));
 export const LazyFeatureShowcasePage = lazyLoad(() => import('./pages/FeatureShowcase'));
