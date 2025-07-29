@@ -133,7 +133,7 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **Platform Reality Achievement**: Landing page now 100% matches actual user experience - no more misleading or inaccurate representations
 - **CourtIQ Authenticity Fixed**: Completely recreated CourtIQ section to show simple badge-style ratings (4/5, 3/5, etc.) exactly as they appear in user dashboard
 - **Authentic Rating Display**: CourtIQ section now shows real platform format - "Technical Skills: 4/5 • Strongest", "Consistency: 2/5 • Focus Area" matching SAGE widget
-- **BREAKTHROUGH: Live Passport Component**: Replaced static image with actual live PlayerPassport React component showing authentic dashboard design with demo data
+- **BREAKTHROUGH: Live Passport Component**: Replaced static image with actual live DemoPlayerPassport React component showing authentic dashboard design with secure demo data for non-authenticated users
 - **Readability Improvements**: Fixed dark background issues by implementing white background with proper contrast for CourtIQ section
 - **Prominent Pickle Points**: Added authentic 875 points display with activity tracking and recent achievement notifications
 - **Removed Complex Visualizations**: Eliminated misleading radar charts and complex visualizations that don't exist in actual platform
