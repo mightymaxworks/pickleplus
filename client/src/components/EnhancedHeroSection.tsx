@@ -5,6 +5,7 @@ import { ArrowRight, ChevronDown, Trophy, LayoutDashboard } from "lucide-react";
 import { LanguageAwareLogo } from "@/components/icons/LanguageAwareLogo";
 import { ParticleBackground } from "./animations/ParticleBackground";
 import { useAuth } from "@/contexts/AuthContext";
+import passportImage from '@assets/IMG_6517.png';
 
 export function EnhancedHeroSection() {
   const [, navigate] = useLocation();
@@ -121,96 +122,13 @@ export function EnhancedHeroSection() {
               {/* Card glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-[#FFC107]/30 rounded-2xl blur-xl opacity-70"></div>
               
-              {/* Card container */}
+              {/* Actual passport image from dashboard */}
               <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
-                {/* Header with logo */}
-                <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-4 pb-6 px-5 text-white">
-                  <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center">
-                    <div className="font-bold text-xl mb-2 sm:mb-0">Player Passport</div>
-                    <LanguageAwareLogo className="h-8 w-auto" />
-                  </div>
-                  
-                  {/* CourtIQ badge */}
-                  <div className="absolute hidden sm:flex top-16 right-3 bg-black/20 px-2 py-1 rounded-full text-xs font-medium items-center">
-                    <div className="w-2 h-2 bg-blue-300 rounded-full mr-1"></div>
-                    Powered by CourtIQ™
-                  </div>
-                  {/* Mobile CourtIQ badge */}
-                  <div className="flex sm:hidden justify-center mt-2 bg-black/20 px-2 py-1 rounded-full text-xs font-medium items-center w-fit mx-auto">
-                    <div className="w-2 h-2 bg-blue-300 rounded-full mr-1"></div>
-                    Powered by CourtIQ™
-                  </div>
-                  
-                  {/* Player info */}
-                  <div className="flex flex-col sm:flex-row sm:items-center mt-3">
-                    <div className="h-16 w-16 rounded-full bg-white p-0.5 mx-auto sm:mx-0 sm:mr-3 shadow-lg mb-2 sm:mb-0">
-                      <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-2xl">
-                        {user ? user.displayName?.substring(0, 2).toUpperCase() : "JS"}
-                      </div>
-                    </div>
-                    <div className="text-center sm:text-left">
-                      <div className="font-bold text-2xl">{user ? user.displayName : "John Smith"}</div>
-                      <div className="flex flex-col sm:flex-row items-center text-sm text-white/80 mt-1">
-                        <div className="font-medium bg-white/20 rounded-full px-2 py-0.5 flex items-center mb-1 sm:mb-0">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full mr-1"></span>
-                          {user?.skillLevel || "3.5 Intermediate+"}
-                        </div>
-                        <div className="sm:ml-2 text-xs">Passport: {user?.passportCode || "XP39R45"}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Stats section */}
-                <div className="p-5">
-                  {/* XP Progress */}
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="font-bold text-gray-700">Level 5</div>
-                      <div className="text-[#FF5722] font-medium text-sm">520/1000 XP</div>
-                    </div>
-                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] h-full rounded-full" style={{ width: '52%' }}></div>
-                    </div>
-                  </div>
-                  
-                  {/* CourtIQ metrics in a grid */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center">
-                      <div className="text-[#FF5722] font-bold text-lg mb-0.5">Lvl 5</div>
-                      <div className="text-xs text-gray-600">CourtIQ XP</div>
-                    </div>
-                    <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
-                      <div className="text-[#2196F3] font-bold text-lg mb-0.5">1,248</div>
-                      <div className="text-xs text-gray-600">CourtIQ Rating</div>
-                    </div>
-                    <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center">
-                      <div className="text-[#673AB7] font-bold text-lg mb-0.5">7th</div>
-                      <div className="text-xs text-gray-600">CourtIQ Rank</div>
-                    </div>
-                  </div>
-                  
-                  {/* Additional stats */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center">
-                      <div className="text-[#4CAF50] font-bold text-lg">3</div>
-                      <div className="text-xs text-gray-600">Tournaments</div>
-                    </div>
-                    <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center">
-                      <div className="text-[#FF9800] font-bold text-lg">24</div>
-                      <div className="text-xs text-gray-600">Matches Played</div>
-                    </div>
-                  </div>
-                  
-                  {/* Activity badge - latest achievement */}
-                  <div className="mt-4 flex flex-wrap items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
-                    <div className="bg-[#2196F3] rounded-full p-1 text-white">
-                      <Trophy size={16} />
-                    </div>
-                    <div className="text-xs text-gray-700 flex-1 min-w-0">Won mixed doubles tournament at Willow Park</div>
-                    <div className="text-[10px] text-[#2196F3] font-medium ml-auto mt-0 sm:mt-0">+100 RP</div>
-                  </div>
-                </div>
+                <img 
+                  src={passportImage} 
+                  alt="Pickle+ Professional Passport - Current Dashboard Design" 
+                  className="w-full h-auto object-cover rounded-2xl"
+                />
               </div>
               
               {/* Shadow decoration */}

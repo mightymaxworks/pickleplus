@@ -133,6 +133,7 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **Credit & Points System Integration**: Replaced all outdated "XP system" references with accurate "credit and points system" terminology throughout landing page
 - **Bounce Mascot Removal**: Completely removed Bounce mascot references from landing page as requested - eliminated imports, components, and variable declarations
 - **Passport Image Modernization**: Updated passport image reference in EmotionallyAdaptivePrompt component from outdated admin panel image (IMG_0115.png) to current Founding Member passport design (IMG_6517.png)
+- **Landing Page Hero Passport Update**: Replaced coded passport mockup in hero section with actual current passport image (IMG_6517.png) showing modern Founding Member design from dashboard
 - **Professional Hero Section**: Updated hero messaging to "Professional Pickleball Development Platform" emphasizing coaching certification, DUPR integration, and mobile-first design
 - **Accurate Features Showcase**: Features section now highlights real platform capabilities including PCP 4-dimensional assessments, DUPR integration, and professional coaching certification
 - **Professional Testimonials**: Updated testimonials to reflect actual user base - 4.2 DUPR Player, Tournament Competitor, Facility Manager - emphasizing real platform capabilities
