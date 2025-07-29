@@ -144,6 +144,9 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **API REUSE**: 90% existing APIs work as-is, only 3 new WeChat-specific endpoints needed for auth and simplified data
 - **3-WEEK TIMELINE**: Rapid market validation approach - Week 1 (setup/auth), Week 2 (features), Week 3 (testing/launch)
 - **EXPANSION READY**: Foundation allows gradual feature addition (match recording → coach discovery → social features) based on market response
+- **WEB ROUTE ACCESS CONFIRMED**: WeChat Mini Program functionality accessible via web routes (e.g., /wechat/passport) in same project for development and testing
+- **DUAL ACCESS STRATEGY**: Same backend APIs serve both web browser testing routes and actual WeChat Mini Program - perfect for rapid iteration
+- **DEVELOPMENT WORKFLOW**: Can build and test WeChat-style interfaces using web browser dev tools before WeChat Mini Program compilation
 
 ### July 29, 2025 - FINAL LANDING PAGE ACCURACY COMPLETION: Inclusive Messaging & Authentic Platform Representation
 - **COMPLETE ACCURACY OVERHAUL**: Successfully transformed landing page to accurately represent actual platform experience with authentic CourtIQ ratings and passport display
