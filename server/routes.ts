@@ -897,6 +897,47 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Mount Player-Coach Connection routes
 
   
+  // Create Test Coach Profile for mightymax - Dual Testing Purpose
+  app.post('/api/coaches/create-test-profile', async (req: Request, res: Response) => {
+    try {
+      const { userId, bio, specialties, certifications, experienceYears, rating, totalReviews, hourlyRate, isVerified, availabilitySchedule } = req.body;
+      
+      // Check if coach profile already exists
+      const existingProfile = await storage.getCoachProfile(userId);
+      if (existingProfile) {
+        return res.json({ success: true, message: 'Coach profile already exists', profile: existingProfile });
+      }
+      
+      // Create coach profile
+      const profileData = {
+        userId,
+        coachType: 'independent' as const,
+        verificationLevel: 'verified' as const,
+        isActive: true,
+        bio: bio || 'Experienced PCP certified coach',
+        specializations: specialties || ['Technical Skills', 'Strategic Development'],
+        teachingStyle: 'Patient and analytical approach',
+        languagesSpoken: ['English'],
+        hourlyRate: hourlyRate || 85,
+        sessionTypes: ['individual', 'group'],
+        availabilitySchedule: availabilitySchedule || {}
+      };
+      
+      const profile = await storage.createCoachProfile(profileData);
+      
+      console.log(`[API][TestCoach] Created coach profile for user ${userId}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'Coach profile created successfully',
+        profile 
+      });
+    } catch (error) {
+      console.error('[API][TestCoach] Error creating coach profile:', error);
+      res.status(500).json({ error: 'Failed to create coach profile' });
+    }
+  });
+
   // Coach Application Submit Endpoint - PKL-278651-COACH-001
   app.post('/api/coach/application/submit', isAuthenticated, async (req: any, res) => {
     try {
