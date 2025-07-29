@@ -1424,7 +1424,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                     <Button 
                       variant="outline" 
                       className="w-full justify-start"
-                      onClick={() => window.location.href = '/coaches'}
+                      onClick={() => window.location.href = '/find-coaches'}
                     >
                       <Search className="h-4 w-4 mr-2" />
                       Browse All Coaches
