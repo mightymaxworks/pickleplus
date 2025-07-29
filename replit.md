@@ -130,14 +130,14 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 ### July 29, 2025 - WeChat Integration Strategy Discussion: Scaled-Down Platform Approach
 - **STRATEGIC EXPANSION PLANNING**: Analyzed WeChat Mini Program vs. standalone app approach for Chinese market entry
 - **WeChat Mini Program Recommended**: Hybrid architecture with shared backend infrastructure provides optimal balance of development speed and market penetration
-- **Feature Prioritization Complete**: Identified core MVP features for WeChat (user auth, coach discovery, match recording, basic analytics)
-- **Technical Architecture Defined**: Monorepo structure with wechat-mini/ directory leveraging existing server/ backend
-- **Development Timeline**: 8-week implementation cycle with 3-phase rollout (Foundation → Enhancement → Launch)
-- **Business Case Analysis**: 1.3B+ user market opportunity with WeChat Pay integration and social virality potential
-- **Resource Requirements**: 1 full-time WeChat developer + 0.5 backend integration support for 8-week cycle
-- **Success Metrics Framework**: Technical KPIs (load time, retention) and business KPIs (user acquisition, GMV) established
-- **Regulatory Considerations**: Chinese data compliance, content review, and payment licensing requirements identified
-- **RECOMMENDATION**: Proceed with WeChat Mini Program as Phase 1 of Chinese market expansion using hybrid shared-backend approach
+- **Tencent Cloud Clarification**: WeChat Mini Programs do NOT require full Tencent Cloud migration - can use existing Replit backend with minimal cloud functions for WeChat-specific features (auth, pay)
+- **Bridge Architecture Solution**: "Bridge & Delegate" pattern - WeChat Cloud Functions handle WeChat-specific features, existing APIs handle business logic
+- **Scaled-Down Feature Mapping**: WeChat version focuses on core features (simplified dashboard, basic coach discovery, quick match entry) vs. full platform complexity
+- **Technical Implementation**: Gradual migration approach - start with WeChat frontend + minimal cloud functions, expand based on market validation
+- **Development Phases**: Phase 1 (minimal Tencent usage, validate market), Phase 2 (hybrid optimization), Phase 3 (full localization if successful)
+- **Cost Analysis**: Minimal approach $50-100/month vs. full migration $300-500/month - significant cost advantage for market validation
+- **Project Structure**: wechat-mini/ directory with 20-30 components vs. client/ with 100+ components - true scaled-down version
+- **UPDATED RECOMMENDATION**: Start with gradual migration using existing infrastructure + minimal Tencent Cloud Functions for WeChat-specific features only
 
 ### July 29, 2025 - FINAL LANDING PAGE ACCURACY COMPLETION: Inclusive Messaging & Authentic Platform Representation
 - **COMPLETE ACCURACY OVERHAUL**: Successfully transformed landing page to accurately represent actual platform experience with authentic CourtIQ ratings and passport display
