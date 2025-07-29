@@ -138,6 +138,12 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **Cost Analysis**: Minimal approach $50-100/month vs. full migration $300-500/month - significant cost advantage for market validation
 - **Project Structure**: wechat-mini/ directory with 20-30 components vs. client/ with 100+ components - true scaled-down version
 - **UPDATED RECOMMENDATION**: Start with gradual migration using existing infrastructure + minimal Tencent Cloud Functions for WeChat-specific features only
+- **MVP SCOPE DEFINED**: Ultra-focused WeChat Mini Program with just 3 screens (registration, passport, rankings) for market validation
+- **ZERO IMPACT DEVELOPMENT**: WeChat Mini Program development has no effect on existing web app - parallel development possible
+- **TRANSLATION STRATEGY**: Multi-language support with zh-CN, zh-TW, and en translation files using WeChat i18n patterns
+- **API REUSE**: 90% existing APIs work as-is, only 3 new WeChat-specific endpoints needed for auth and simplified data
+- **3-WEEK TIMELINE**: Rapid market validation approach - Week 1 (setup/auth), Week 2 (features), Week 3 (testing/launch)
+- **EXPANSION READY**: Foundation allows gradual feature addition (match recording → coach discovery → social features) based on market response
 
 ### July 29, 2025 - FINAL LANDING PAGE ACCURACY COMPLETION: Inclusive Messaging & Authentic Platform Representation
 - **COMPLETE ACCURACY OVERHAUL**: Successfully transformed landing page to accurately represent actual platform experience with authentic CourtIQ ratings and passport display
