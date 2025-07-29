@@ -103,7 +103,7 @@ export default function LandingPage() {
       {/* Enhanced Hero Section */}
       <EnhancedHeroSection />
 
-      {/* Social Proof Section */}
+      {/* Platform Overview Section */}
       <section className="py-16 sm:py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
@@ -113,13 +113,13 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Join Our Growing Community</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The Complete Pickleball Development Platform</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Players like you are using Pickle+ to transform their game, connect with others, and enjoy the sport they love.
+              Professional coaching, advanced analytics, and community features designed for serious players and certified coaches.
             </p>
           </motion.div>
           
-          {/* Social Proof Stats */}
+          {/* Platform Stats */}
           <motion.div 
             className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -128,20 +128,20 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">5000+</div>
-              <div className="text-gray-600 font-medium">Matches Recorded</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">PCP</div>
+              <div className="text-gray-600 font-medium">Certified Coaches</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">150+</div>
-              <div className="text-gray-600 font-medium">Active Communities</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">4D</div>
+              <div className="text-gray-600 font-medium">Assessment System</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">300+</div>
-              <div className="text-gray-600 font-medium">Tournaments</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">DUPR</div>
+              <div className="text-gray-600 font-medium">Integration</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">50K+</div>
-              <div className="text-gray-600 font-medium">Hours of Training</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">24/7</div>
+              <div className="text-gray-600 font-medium">Mobile Access</div>
             </div>
           </motion.div>
           
@@ -160,11 +160,11 @@ export default function LandingPage() {
                 </div>
                 <div className="ml-4">
                   <div className="font-semibold">Michael S.</div>
-                  <div className="text-sm text-gray-500">Intermediate Player</div>
+                  <div className="text-sm text-gray-500">4.2 DUPR Player</div>
                 </div>
               </div>
               <p className="text-gray-700 italic mb-2 leading-relaxed">
-                "The intelligent analytics and coaching tools have transformed my approach to pickleball. I've seen remarkable improvement in areas I didn't even know needed work."
+                "The PCP coaching system and 4-dimensional assessment tools have revolutionized my development. The professional analytics provide insights I never had before."
               </p>
               <div className="flex text-[#FFC107]">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -198,11 +198,11 @@ export default function LandingPage() {
                 </div>
                 <div className="ml-4">
                   <div className="font-semibold">Jennifer D.</div>
-                  <div className="text-sm text-gray-500">Advanced Player</div>
+                  <div className="text-sm text-gray-500">Tournament Competitor</div>
                 </div>
               </div>
               <p className="text-gray-700 italic mb-2 leading-relaxed">
-                "The community features and tournament system have elevated my entire pickleball experience. Finding competitive matches and tracking progress has never been easier."
+                "The tournament management system and DUPR integration are game-changers. Real-time analytics during matches have improved my strategic decision-making significantly."
               </p>
               <div className="flex text-[#FFC107]">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -236,11 +236,11 @@ export default function LandingPage() {
                 </div>
                 <div className="ml-4">
                   <div className="font-semibold">Robert T.</div>
-                  <div className="text-sm text-gray-500">Club Owner</div>
+                  <div className="text-sm text-gray-500">Facility Manager</div>
                 </div>
               </div>
               <p className="text-gray-700 italic mb-2 leading-relaxed">
-                "Pickle+ has revolutionized how our facility operates. Member engagement is at an all-time high, and the professional coaching tools have attracted top-tier instructors."
+                "The comprehensive coaching ecosystem and facility management tools have transformed our business. PCP certification has elevated our coaching standards significantly."
               </p>
               <div className="flex text-[#FFC107]">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -267,6 +267,70 @@ export default function LandingPage() {
       {/* CourtIQ Explanation Section */}
       <CourtIQExplanationSection />
       
+      {/* Core Platform Features Section */}
+      <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-12 sm:mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Complete Professional Platform
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+              Everything serious players, certified coaches, and facility managers need to excel in the modern pickleball ecosystem.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <FeatureCard 
+              icon={<Award className="h-8 w-8" />}
+              title="PCP Coaching System"
+              description="Professional Certified Pickleball (PCP) coaching certification with 5 levels (L1-L5) and comprehensive 4-dimensional assessment tools covering Technical, Tactical, Physical, and Mental skills."
+            />
+            
+            <FeatureCard 
+              icon={<BarChart className="h-8 w-8" />}
+              title="Advanced Match Analytics"
+              description="Real-time performance tracking with DUPR integration, CourtIQ analysis, and AI-powered insights. Professional-grade analytics for serious competitive development."
+            />
+            
+            <FeatureCard 
+              icon={<Users className="h-8 w-8" />}
+              title="PickleJourney™ System"
+              description="Personal development tracking with XP progression, achievement milestones, and comprehensive skill monitoring across all four PCP dimensions."
+            />
+            
+            <FeatureCard 
+              icon={<Trophy className="h-8 w-8" />}
+              title="Tournament Platform"
+              description="Professional tournament management with automated brackets, live scoring, comprehensive analytics, and integration with national ranking systems."
+            />
+            
+            <FeatureCard 
+              icon={<Calendar className="h-8 w-8" />}
+              title="Coach Session Management"
+              description="Complete coaching workflow with session booking, student progress tracking, assessment tools, and professional business management features."
+            />
+            
+            <FeatureCard 
+              icon={<Activity className="h-8 w-8" />}
+              title="Mobile-First Design"
+              description="QR scanning for facility access, on-court match recording, real-time data capture, and professional tools designed for courtside use."
+            />
+          </motion.div>
+        </div>
+      </section>
+      
       {/* Coming Soon / V1.0 Features Section */}
       <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
@@ -282,10 +346,9 @@ export default function LandingPage() {
               <span className="text-sm font-medium text-[#FF5722]">Coming in v1.0</span>
             </div>
             
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The Future of Pickle+</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Professional-Grade Features</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              We're constantly evolving the platform with new features to enhance your pickleball journey.
-              Here's a sneak peek at what's coming next.
+              Advanced tools and systems designed for serious players, certified coaches, and facility managers.
             </p>
           </motion.div>
           
@@ -1017,13 +1080,13 @@ export default function LandingPage() {
               </motion.div>
               
               <h2 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
-                Transform Your <br className="hidden sm:block" />
-                <span className="text-[#FF5722]">Pickleball Journey</span> <br className="hidden sm:block" />
+                Enter the Professional <br className="hidden sm:block" />
+                <span className="text-[#FF5722]">Pickleball Platform</span> <br className="hidden sm:block" />
                 Today
               </h2>
               
               <p className="text-lg text-gray-700 mb-8 max-w-lg">
-                Join thousands of players who are tracking their progress, connecting with the community, and taking their game to the next level with Pickle+.
+                Join certified coaches, serious competitors, and professional facilities using comprehensive development tools, advanced analytics, and tournament-grade features.
               </p>
               
               <div className="space-y-4 mb-8">
@@ -1031,19 +1094,19 @@ export default function LandingPage() {
                   <div className="h-6 w-6 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mr-3">
                     <Check className="h-4 w-4 text-[#4CAF50]" />
                   </div>
-                  <span className="font-medium">Free access to community features</span>
+                  <span className="font-medium">Professional coaching certification</span>
                 </div>
                 <div className="flex items-center text-gray-700">
                   <div className="h-6 w-6 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mr-3">
                     <Check className="h-4 w-4 text-[#4CAF50]" />
                   </div>
-                  <span className="font-medium">Unlimited match tracking</span>
+                  <span className="font-medium">Advanced analytics with DUPR integration</span>
                 </div>
                 <div className="flex items-center text-gray-700">
                   <div className="h-6 w-6 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mr-3">
                     <Check className="h-4 w-4 text-[#4CAF50]" />
                   </div>
-                  <span className="font-medium">Exclusive early access to new features</span>
+                  <span className="font-medium">Tournament management and facility tools</span>
                 </div>
               </div>
               

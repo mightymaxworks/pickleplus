@@ -31,13 +31,13 @@ export function EnhancedHeroSection() {
           >
             <div className="inline-flex items-center bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-blue-200/50 shadow-lg">
               <span className="flex h-2 w-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
-              <span className="text-sm font-medium text-gray-700">Platform Evolution: Advanced Features Now Live</span>
+              <span className="text-sm font-medium text-gray-700">PCP Certification • DUPR Integration • Mobile-First</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
-              Transform Your Pickleball <br className="hidden sm:block" />
+              Professional Pickleball <br className="hidden sm:block" />
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent relative">
-                Experience Forever
+                Development Platform
                 <svg className="absolute -bottom-1 left-0 w-full h-3 text-blue-200" viewBox="0 0 100 15" preserveAspectRatio="none">
                   <path d="M0,7.5 C15,2.5 35,12.5 50,7.5 C65,2.5 85,12.5 100,7.5 L100,15 L0,15 Z" fill="currentColor"/>
                 </svg>
@@ -45,9 +45,8 @@ export function EnhancedHeroSection() {
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 font-light max-w-3xl leading-relaxed">
-              Join thousands of players elevating their game through intelligent analytics, 
-              professional coaching, and dynamic community experiences. 
-              <span className="hidden md:inline">Where every match becomes a pathway to mastery.</span>
+              Advanced coaching certification, real-time performance analytics, and comprehensive tournament management. 
+              <span className="hidden md:inline">Built for serious players, certified coaches, and professional facilities.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
