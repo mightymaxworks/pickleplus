@@ -946,6 +946,11 @@ export default function App() {
                   {/* Font Test Page */}
                   <Route path="/font-test" component={FontTestPage} />
                   
+                  {/* Enhanced Coaching Landing Page - Go-to-Market Strategy */}
+                  <Route path="/enhanced-coaching-landing">
+                    {React.createElement(lazyLoad(() => import('./pages/enhanced-coaching-landing')))}
+                  </Route>
+                  
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">
                     {(params) => <TestLoginPage />}
