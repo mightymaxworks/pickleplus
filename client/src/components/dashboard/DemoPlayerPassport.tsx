@@ -37,7 +37,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <div className="w-28 h-32 bg-gradient-to-br from-orange-500 via-red-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-xl hover:shadow-2xl transition-all duration-500 passport-photo border-4 border-orange-400">
-                    M
+                    MU
                   </div>
                   
                   <motion.div 
@@ -55,7 +55,7 @@ export function DemoPlayerPassport() {
                     transition={{ delay: 0.2 }}
                     style={{ fontFamily: '"SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif' }}
                   >
-                    mightymax
+                    Mock User
                   </motion.h1>
                   <motion.p 
                     className="text-orange-700 text-lg font-medium tracking-wide uppercase opacity-80"
@@ -64,7 +64,7 @@ export function DemoPlayerPassport() {
                     transition={{ delay: 0.4 }}
                     style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}
                   >
-                    @mightymax
+                    @mockuser
                   </motion.p>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -109,7 +109,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">DUPR Rating</p>
-                  <p className="text-3xl font-black text-orange-900">4.5</p>
+                  <p className="text-3xl font-black text-orange-900">3.8</p>
                 </motion.div>
                 <motion.div 
                   className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
@@ -117,7 +117,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <p className="text-xs text-purple-600 font-bold uppercase tracking-wider">Ranking Points</p>
-                  <p className="text-3xl font-black text-purple-700">245</p>
+                  <p className="text-3xl font-black text-purple-700">150</p>
                 </motion.div>
                 <motion.div 
                   className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
@@ -125,7 +125,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Win Rate</p>
-                  <p className="text-3xl font-black text-green-700">87%</p>
+                  <p className="text-3xl font-black text-green-700">68%</p>
                 </motion.div>
                 <motion.div 
                   className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
@@ -133,7 +133,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Matches</p>
-                  <p className="text-3xl font-black text-blue-700">23</p>
+                  <p className="text-3xl font-black text-blue-700">12</p>
                 </motion.div>
                 <motion.div 
                   className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
@@ -141,7 +141,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Streak</p>
-                  <p className="text-3xl font-black text-indigo-700">5</p>
+                  <p className="text-3xl font-black text-indigo-700">3</p>
                 </motion.div>
                 <motion.div 
                   className="text-center lg:text-left bg-gradient-to-r from-orange-100 to-yellow-100 border-2 border-orange-300 rounded-lg p-3 shadow-md hover:shadow-lg transition-all cursor-pointer"
@@ -150,7 +150,7 @@ export function DemoPlayerPassport() {
                 >
                   <p className="text-xs text-orange-700 font-bold uppercase tracking-wider">Passport Code</p>
                   <p className="text-2xl font-mono font-black text-orange-800">
-                    MX8K7P2N
+                    DEMO123X
                   </p>
                   <p className="text-xs text-orange-600 mt-1">Tap to Copy</p>
                 </motion.div>
