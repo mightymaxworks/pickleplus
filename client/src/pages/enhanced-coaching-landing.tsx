@@ -119,7 +119,7 @@ export default function EnhancedCoachingLanding() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-6">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
@@ -145,19 +145,19 @@ export default function EnhancedCoachingLanding() {
             </motion.div>
 
             <motion.div 
-              className="flex flex-col sm:flex-row gap-4 justify-center"
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
               variants={fadeIn}
             >
-              <Button size="lg" asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg">
-                <Link to="/coach">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  Become a Certified Coach
+              <Button size="lg" asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap">
+                <Link to="/coach" className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Become a Certified Coach</span>
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg">
-                <Link to="/find-coaches">
-                  <User className="mr-2 h-5 w-5" />
-                  Find Your Coach
+              <Button size="lg" variant="outline" asChild className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 whitespace-nowrap">
+                <Link to="/find-coaches" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>Find Your Coach</span>
                 </Link>
               </Button>
             </motion.div>
@@ -169,23 +169,23 @@ export default function EnhancedCoachingLanding() {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center mb-12">
-            <div className="bg-white p-2 rounded-2xl shadow-lg border">
+            <div className="bg-white p-1.5 rounded-full shadow-lg border backdrop-blur-sm">
               <button
                 onClick={() => setSelectedTab('coach')}
-                className={`px-8 py-4 rounded-xl font-semibold transition-all ${
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 whitespace-nowrap ${
                   selectedTab === 'coach'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 Coach Journey
               </button>
               <button
                 onClick={() => setSelectedTab('student')}
-                className={`px-8 py-4 rounded-xl font-semibold transition-all ${
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 whitespace-nowrap ${
                   selectedTab === 'student'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 Student Journey
