@@ -131,15 +131,15 @@ export default function EnhancedCoachingLanding() {
             variants={staggerContainer}
           >
             <motion.div variants={fadeIn}>
-              <Badge className="mb-4 px-4 py-2 text-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <Badge className="mb-4 px-3 py-1.5 text-sm md:text-base bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 🏆 Complete Coaching Ecosystem Now Live
               </Badge>
-              <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 leading-tight">
                 Transform Pickleball Through
                 <br />
-                <span className="text-7xl">Scientific Coaching</span>
+                <span className="text-4xl md:text-5xl lg:text-6xl">Scientific Coaching</span>
               </h1>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Pickle+ combines PCP methodology with advanced AI analytics to create the world's most comprehensive pickleball coaching platform. Whether you're becoming a certified coach or seeking elite improvement.
               </p>
             </motion.div>
