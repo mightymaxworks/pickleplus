@@ -11,11 +11,12 @@ export function EnhancedHeroSection() {
   const { user, isLoading } = useAuth();
 
   return (
-    <section className="relative bg-gradient-to-br from-[#FF5722] to-[#FF7043] text-white overflow-hidden">
-      <div className="absolute inset-0 opacity-40">
+    <section className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 text-gray-900 overflow-hidden min-h-screen flex items-center">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5"></div>
+      <div className="absolute inset-0 opacity-30">
         <ParticleBackground 
-          count={60}
-          colors={['#FFFFFF', '#FFD6C9', '#FFC5B3', '#FFA98C', '#FFE0D6']}
+          count={40}
+          colors={['#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#C084FC']}
         />
       </div>
       
@@ -28,25 +29,25 @@ export function EnhancedHeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
-              <span className="flex h-2 w-2 rounded-full bg-white mr-2 animate-pulse"></span>
-              <span className="text-sm font-medium">Final Beta v0.9.0: Limited Access Available</span>
+            <div className="inline-flex items-center bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-blue-200/50 shadow-lg">
+              <span className="flex h-2 w-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
+              <span className="text-sm font-medium text-gray-700">Platform Evolution: Advanced Features Now Live</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
-              Elevate Your Game with <br className="hidden sm:block" />
-              <span className="text-white relative">
-                Data-Driven Intelligence
-                <svg className="absolute -bottom-1 left-0 w-full h-3 text-[#FFCCBC]" viewBox="0 0 100 15" preserveAspectRatio="none">
+              Transform Your Pickleball <br className="hidden sm:block" />
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent relative">
+                Experience Forever
+                <svg className="absolute -bottom-1 left-0 w-full h-3 text-blue-200" viewBox="0 0 100 15" preserveAspectRatio="none">
                   <path d="M0,7.5 C15,2.5 35,12.5 50,7.5 C65,2.5 85,12.5 100,7.5 L100,15 L0,15 Z" fill="currentColor"/>
                 </svg>
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 font-light max-w-3xl">
-              Join our thriving community of players transforming their game through 
-              CourtIQ™ analytics, achievement systems, and immersive tournament experiences.
-              <span className="hidden md:inline"> The final beta is now available before full launch.</span>
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 font-light max-w-3xl leading-relaxed">
+              Join thousands of players elevating their game through intelligent analytics, 
+              professional coaching, and dynamic community experiences. 
+              <span className="hidden md:inline">Where every match becomes a pathway to mastery.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
@@ -54,57 +55,58 @@ export function EnhancedHeroSection() {
                 // Already logged in - show dashboard button
                 <Button 
                   size="lg"
-                  className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto flex items-center justify-center"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto flex items-center justify-center transition-all duration-300"
                   onClick={() => navigate("/dashboard")}
                 >
-                  <LayoutDashboard className="h-5 w-5 mr-2" />
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
                   <span>Go to Dashboard</span>
                 </Button>
               ) : (
                 // Not logged in - show account creation button
                 <Button 
                   size="lg"
-                  className="text-[#FF5722] bg-white hover:bg-white/90 shadow-xl text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-semibold w-full sm:w-auto relative overflow-hidden group"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto relative overflow-hidden group transition-all duration-300"
                   onClick={() => navigate("/auth")}
                   disabled={isLoading}
                 >
-                  <span className="relative z-10">
-                    {isLoading ? "Loading..." : "Secure Your Beta Spot"}
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Trophy className="h-4 w-4" />
+                    {isLoading ? "Loading..." : "Start Your Journey"}
                   </span>
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                 </Button>
               )}
               
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-white border-white border-2 bg-white/10 hover:bg-white/20 text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto flex items-center justify-center"
+                className="text-blue-600 border-blue-600 border-2 bg-white/60 hover:bg-blue-50 backdrop-blur-sm text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300"
                 onClick={() => {
                   document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                <span className="whitespace-nowrap mr-2">See How It Works</span> <ArrowRight className="h-5 w-5" />
+                <span className="whitespace-nowrap mr-2">See How It Works</span> <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
             
-            <div className="mt-8 sm:mt-10 flex flex-wrap justify-center md:justify-start gap-3 sm:gap-5 text-sm text-white/80">
+            <div className="mt-8 sm:mt-10 flex flex-wrap justify-center md:justify-start gap-3 sm:gap-5 text-sm text-gray-600">
               <div className="flex items-center">
-                <div className="w-4 h-4 mr-1.5 bg-white/20 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-4 h-4 mr-1.5 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                 </div>
                 <span>Free to create an account</span>
               </div>
               <div className="flex items-center">
-                <div className="w-4 h-4 mr-1.5 bg-white/20 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-4 h-4 mr-1.5 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                 </div>
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center">
-                <div className="w-4 h-4 mr-1.5 bg-white/20 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-4 h-4 mr-1.5 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                 </div>
-                <span>Join our growing community</span>
+                <span>Join thousands of players worldwide</span>
               </div>
             </div>
           </motion.div>

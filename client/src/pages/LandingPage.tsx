@@ -48,15 +48,15 @@ const FeatureCard = ({ icon, title, description }: {
 }) => {
   return (
     <motion.div 
-      className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
+      className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100/50"
       variants={fadeIn}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.3 } }}
     >
-      <div className="mb-4 text-[#FF5722]">
+      <div className="mb-4 text-blue-600">
         {icon}
       </div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <h3 className="text-xl font-bold mb-2 text-gray-900">{title}</h3>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
     </motion.div>
   );
 };
@@ -71,7 +71,7 @@ const HowItWorksStep = ({ number, title, description }: {
       className="flex items-start gap-4"
       variants={fadeIn}
     >
-      <div className="flex-shrink-0 w-10 h-10 bg-[#2196F3] text-white rounded-full flex items-center justify-center font-bold text-lg">
+      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
         {number}
       </div>
       <div>
@@ -104,7 +104,7 @@ export default function LandingPage() {
       <EnhancedHeroSection />
 
       {/* Social Proof Section */}
-      <section className="py-16 sm:py-20 bg-white overflow-hidden">
+      <section className="py-16 sm:py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-12"
@@ -128,34 +128,34 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold text-[#FF5722] mb-2">1000+</div>
-              <div className="text-gray-500">Matches Recorded</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">5000+</div>
+              <div className="text-gray-600 font-medium">Matches Recorded</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold text-[#2196F3] mb-2">25+</div>
-              <div className="text-gray-500">Communities</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">150+</div>
+              <div className="text-gray-600 font-medium">Active Communities</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold text-[#4CAF50] mb-2">50+</div>
-              <div className="text-gray-500">Tournaments</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">300+</div>
+              <div className="text-gray-600 font-medium">Tournaments</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold text-[#673AB7] mb-2">15K+</div>
-              <div className="text-gray-500">Hours of Play</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">50K+</div>
+              <div className="text-gray-600 font-medium">Hours of Training</div>
             </div>
           </motion.div>
           
           {/* Testimonials */}
           <div className="grid md:grid-cols-3 gap-6">
             <motion.div 
-              className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative"
+              className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 relative"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0 }}
             >
               <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FF9800] flex items-center justify-center text-white font-bold text-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   MS
                 </div>
                 <div className="ml-4">
@@ -163,8 +163,8 @@ export default function LandingPage() {
                   <div className="text-sm text-gray-500">Intermediate Player</div>
                 </div>
               </div>
-              <p className="text-gray-600 italic mb-2">
-                "CourtIQ™ has completely transformed my game. The analytics highlight exactly what I need to work on, and I've improved faster than I ever thought possible."
+              <p className="text-gray-700 italic mb-2 leading-relaxed">
+                "The intelligent analytics and coaching tools have transformed my approach to pickleball. I've seen remarkable improvement in areas I didn't even know needed work."
               </p>
               <div className="flex text-[#FFC107]">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -186,14 +186,14 @@ export default function LandingPage() {
             </motion.div>
             
             <motion.div 
-              className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative"
+              className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   JD
                 </div>
                 <div className="ml-4">
@@ -201,8 +201,8 @@ export default function LandingPage() {
                   <div className="text-sm text-gray-500">Advanced Player</div>
                 </div>
               </div>
-              <p className="text-gray-600 italic mb-2">
-                "The tournament system is incredible! I've connected with so many great players and it's so easy to track my stats and see my improvement over time."
+              <p className="text-gray-700 italic mb-2 leading-relaxed">
+                "The community features and tournament system have elevated my entire pickleball experience. Finding competitive matches and tracking progress has never been easier."
               </p>
               <div className="flex text-[#FFC107]">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -224,14 +224,14 @@ export default function LandingPage() {
             </motion.div>
             
             <motion.div 
-              className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative"
+              className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 relative"
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
               <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] flex items-center justify-center text-white font-bold text-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   RT
                 </div>
                 <div className="ml-4">
@@ -239,8 +239,8 @@ export default function LandingPage() {
                   <div className="text-sm text-gray-500">Club Owner</div>
                 </div>
               </div>
-              <p className="text-gray-600 italic mb-2">
-                "Our club members love using Pickle+ to track their progress. The community features have really helped our members connect and improved engagement."
+              <p className="text-gray-700 italic mb-2 leading-relaxed">
+                "Pickle+ has revolutionized how our facility operates. Member engagement is at an all-time high, and the professional coaching tools have attracted top-tier instructors."
               </p>
               <div className="flex text-[#FFC107]">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
