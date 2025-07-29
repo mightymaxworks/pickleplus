@@ -229,7 +229,7 @@ export default function App() {
                     
                     <Switch>
                     {/* Public Routes */}
-                  <Route path="/" component={ModernLandingPage} />
+                  <Route path="/" component={LazyLandingPage} />
                   <Route path="/login" component={LazyAuthPage} />
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
