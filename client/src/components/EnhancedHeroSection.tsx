@@ -5,7 +5,7 @@ import { ArrowRight, ChevronDown, Trophy, LayoutDashboard } from "lucide-react";
 import { LanguageAwareLogo } from "@/components/icons/LanguageAwareLogo";
 import { ParticleBackground } from "./animations/ParticleBackground";
 import { useAuth } from "@/contexts/AuthContext";
-import passportImage from '@assets/IMG_6517.png';
+import { DemoPlayerPassport } from '@/components/dashboard/DemoPlayerPassport';
 
 export function EnhancedHeroSection() {
   const [, navigate] = useLocation();
@@ -111,7 +111,7 @@ export function EnhancedHeroSection() {
             </div>
           </motion.div>
           
-          {/* Passport Card */}
+          {/* Live Passport Component */}
           <motion.div 
             className="md:col-span-5"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -122,13 +122,9 @@ export function EnhancedHeroSection() {
               {/* Card glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-[#FFC107]/30 rounded-2xl blur-xl opacity-70"></div>
               
-              {/* Actual passport image from dashboard */}
-              <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
-                <img 
-                  src={passportImage} 
-                  alt="Pickle+ Professional Passport - Current Dashboard Design" 
-                  className="w-full h-auto object-cover rounded-2xl"
-                />
+              {/* Demo passport component showing authentic design */}
+              <div className="relative">
+                <DemoPlayerPassport />
               </div>
               
               {/* Shadow decoration */}
