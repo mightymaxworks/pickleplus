@@ -12,12 +12,12 @@ export function EnhancedHeroSection() {
   const { user, isLoading } = useAuth();
 
   return (
-    <section className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 text-gray-900 overflow-hidden min-h-screen flex items-center">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5"></div>
-      <div className="absolute inset-0 opacity-30">
+    <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white overflow-hidden min-h-screen flex items-center">
+      <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-cyan-500/10"></div>
+      <div className="absolute inset-0 opacity-20">
         <ParticleBackground 
           count={40}
-          colors={['#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#C084FC']}
+          colors={['#FF5722', '#F4511E', '#E64A19', '#00BCD4', '#00ACC1']}
         />
       </div>
       
@@ -30,22 +30,22 @@ export function EnhancedHeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-blue-200/50 shadow-lg">
-              <span className="flex h-2 w-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
-              <span className="text-sm font-medium text-gray-700">PCP Certification • DUPR Integration • Mobile-First</span>
+            <div className="inline-flex items-center bg-orange-500/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-orange-400/50 shadow-lg">
+              <span className="flex h-2 w-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span>
+              <span className="text-sm font-medium text-orange-100">PCP Certification • DUPR Integration • Mobile-First</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
               Professional Pickleball <br className="hidden sm:block" />
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent relative">
+              <span className="bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent relative">
                 Development Platform
-                <svg className="absolute -bottom-1 left-0 w-full h-3 text-blue-200" viewBox="0 0 100 15" preserveAspectRatio="none">
+                <svg className="absolute -bottom-1 left-0 w-full h-3 text-orange-300/50" viewBox="0 0 100 15" preserveAspectRatio="none">
                   <path d="M0,7.5 C15,2.5 35,12.5 50,7.5 C65,2.5 85,12.5 100,7.5 L100,15 L0,15 Z" fill="currentColor"/>
                 </svg>
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 font-light max-w-3xl leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-10 font-light max-w-3xl leading-relaxed">
               Advanced coaching certification, real-time performance analytics, and comprehensive tournament management. 
               <span className="hidden md:inline">Built for serious players, certified coaches, and professional facilities.</span>
             </p>
@@ -55,7 +55,7 @@ export function EnhancedHeroSection() {
                 // Already logged in - show dashboard button
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto flex items-center justify-center transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto flex items-center justify-center transition-all duration-300"
                   onClick={() => navigate("/dashboard")}
                 >
                   <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -65,7 +65,7 @@ export function EnhancedHeroSection() {
                 // Not logged in - show account creation button
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto relative overflow-hidden group transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto relative overflow-hidden group transition-all duration-300"
                   onClick={() => navigate("/auth")}
                   disabled={isLoading}
                 >
@@ -80,7 +80,7 @@ export function EnhancedHeroSection() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-blue-600 border-blue-600 border-2 bg-white/60 hover:bg-blue-50 backdrop-blur-sm text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300"
+                className="text-cyan-400 border-cyan-400 border-2 bg-cyan-400/10 hover:bg-cyan-400/20 backdrop-blur-sm text-base sm:text-lg px-6 py-3 rounded-full font-medium w-full sm:w-auto flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300"
                 onClick={() => {
                   document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
                 }}
@@ -89,22 +89,22 @@ export function EnhancedHeroSection() {
               </Button>
             </div>
             
-            <div className="mt-8 sm:mt-10 flex flex-wrap justify-center md:justify-start gap-3 sm:gap-5 text-sm text-gray-600">
+            <div className="mt-8 sm:mt-10 flex flex-wrap justify-center md:justify-start gap-3 sm:gap-5 text-sm text-gray-300">
               <div className="flex items-center">
-                <div className="w-4 h-4 mr-1.5 bg-blue-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div className="w-4 h-4 mr-1.5 bg-orange-500/20 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 </div>
                 <span>Free to create an account</span>
               </div>
               <div className="flex items-center">
-                <div className="w-4 h-4 mr-1.5 bg-blue-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div className="w-4 h-4 mr-1.5 bg-orange-500/20 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 </div>
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center">
-                <div className="w-4 h-4 mr-1.5 bg-blue-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div className="w-4 h-4 mr-1.5 bg-orange-500/20 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 </div>
                 <span>Join thousands of players worldwide</span>
               </div>
@@ -138,7 +138,7 @@ export function EnhancedHeroSection() {
         </div>
         
         {/* Scroll indicator */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/80 animate-bounce">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-cyan-400/80 animate-bounce">
           <ChevronDown size={24} />
         </div>
       </div>

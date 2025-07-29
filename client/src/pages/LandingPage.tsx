@@ -46,15 +46,15 @@ const FeatureCard = ({ icon, title, description }: {
 }) => {
   return (
     <motion.div 
-      className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100/50"
+      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-500/20 hover:border-orange-500/40"
       variants={fadeIn}
       whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.3 } }}
     >
-      <div className="mb-4 text-blue-600">
+      <div className="mb-4 text-orange-500">
         {icon}
       </div>
-      <h3 className="text-xl font-bold mb-2 text-gray-900">{title}</h3>
-      <p className="text-gray-600 leading-relaxed">{description}</p>
+      <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>
+      <p className="text-gray-300 leading-relaxed">{description}</p>
     </motion.div>
   );
 };
@@ -69,12 +69,12 @@ const HowItWorksStep = ({ number, title, description }: {
       className="flex items-start gap-4"
       variants={fadeIn}
     >
-      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-orange-500 to-cyan-400 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
         {number}
       </div>
       <div>
-        <h3 className="text-lg font-bold mb-1">{title}</h3>
-        <p className="text-gray-600">{description}</p>
+        <h3 className="text-lg font-bold mb-1 text-white">{title}</h3>
+        <p className="text-gray-300">{description}</p>
       </div>
     </motion.div>
   );
@@ -101,7 +101,7 @@ export default function LandingPage() {
       <EnhancedHeroSection />
 
       {/* Platform Overview Section */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+      <section className="py-16 sm:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-12"
@@ -110,8 +110,8 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The Complete Pickleball Development Platform</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">The Complete <span className="text-orange-500">PICKLE<span className="text-cyan-400">+</span></span> Platform</h2>
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
               Professional coaching, advanced analytics, and community features designed for serious players and certified coaches.
             </p>
           </motion.div>
@@ -125,42 +125,42 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">PCP</div>
-              <div className="text-gray-600 font-medium">Certified Coaches</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">PCP</div>
+              <div className="text-gray-300 font-medium">Certified Coaches</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">4D</div>
-              <div className="text-gray-600 font-medium">Assessment System</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">4D</div>
+              <div className="text-gray-300 font-medium">Assessment System</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">DUPR</div>
-              <div className="text-gray-600 font-medium">Integration</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">DUPR</div>
+              <div className="text-gray-300 font-medium">Integration</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">24/7</div>
-              <div className="text-gray-600 font-medium">Mobile Access</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">24/7</div>
+              <div className="text-gray-300 font-medium">Mobile Access</div>
             </div>
           </motion.div>
           
           {/* Testimonials */}
           <div className="grid md:grid-cols-3 gap-6">
             <motion.div 
-              className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 relative"
+              className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-orange-500/20 shadow-lg hover:shadow-xl transition-all duration-300 relative"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0 }}
             >
               <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-orange-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   MS
                 </div>
                 <div className="ml-4">
-                  <div className="font-semibold">Michael S.</div>
-                  <div className="text-sm text-gray-500">4.2 DUPR Player</div>
+                  <div className="font-semibold text-white">Michael S.</div>
+                  <div className="text-sm text-gray-400">4.2 DUPR Player</div>
                 </div>
               </div>
-              <p className="text-gray-700 italic mb-2 leading-relaxed">
+              <p className="text-gray-300 italic mb-2 leading-relaxed">
                 "The PCP coaching system and 4-dimensional assessment tools have revolutionized my development. The professional analytics provide insights I never had before."
               </p>
               <div className="flex text-[#FFC107]">
@@ -183,22 +183,22 @@ export default function LandingPage() {
             </motion.div>
             
             <motion.div 
-              className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 relative"
+              className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-orange-500/20 shadow-lg hover:shadow-xl transition-all duration-300 relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-orange-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   JD
                 </div>
                 <div className="ml-4">
-                  <div className="font-semibold">Jennifer D.</div>
-                  <div className="text-sm text-gray-500">Tournament Competitor</div>
+                  <div className="font-semibold text-white">Jennifer D.</div>
+                  <div className="text-sm text-gray-400">Tournament Competitor</div>
                 </div>
               </div>
-              <p className="text-gray-700 italic mb-2 leading-relaxed">
+              <p className="text-gray-300 italic mb-2 leading-relaxed">
                 "The tournament management system and DUPR integration are game-changers. Real-time analytics during matches have improved my strategic decision-making significantly."
               </p>
               <div className="flex text-[#FFC107]">
@@ -221,22 +221,22 @@ export default function LandingPage() {
             </motion.div>
             
             <motion.div 
-              className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 relative"
+              className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-orange-500/20 shadow-lg hover:shadow-xl transition-all duration-300 relative"
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
               <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-orange-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   RT
                 </div>
                 <div className="ml-4">
-                  <div className="font-semibold">Robert T.</div>
-                  <div className="text-sm text-gray-500">Facility Manager</div>
+                  <div className="font-semibold text-white">Robert T.</div>
+                  <div className="text-sm text-gray-400">Facility Manager</div>
                 </div>
               </div>
-              <p className="text-gray-700 italic mb-2 leading-relaxed">
+              <p className="text-gray-300 italic mb-2 leading-relaxed">
                 "The comprehensive coaching ecosystem and facility management tools have transformed our business. PCP certification has elevated our coaching standards significantly."
               </p>
               <div className="flex text-[#FFC107]">
@@ -265,7 +265,7 @@ export default function LandingPage() {
       <CourtIQExplanationSection />
       
       {/* Core Platform Features Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+      <section className="py-16 sm:py-24 bg-gradient-to-b from-black to-gray-900 text-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-12 sm:mb-16"
