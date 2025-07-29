@@ -32,7 +32,7 @@ import { UserRole } from '@/lib/roles';
 import excitedProudImage from '@assets/Pickle (10).png';
 import determinedGrowthImage from '@assets/Untitled design (50).png';
 import frustratedImage from '@assets/Pickle (12).png';
-import neutralImage from '@assets/IMG_0115.png';
+import neutralImage from '@assets/IMG_6517.png';
 
 interface EmotionallyAdaptivePromptProps {
   className?: string;
