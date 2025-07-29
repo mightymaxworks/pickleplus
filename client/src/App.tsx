@@ -951,6 +951,11 @@ export default function App() {
                     {React.createElement(lazyLoad(() => import('./pages/enhanced-coaching-landing')))}
                   </Route>
                   
+                  {/* Elegant Coaching Landing Page - Public Access */}  
+                  <Route path="/coaching">
+                    {React.createElement(lazyLoad(() => import('./pages/enhanced-coaching-landing')))}
+                  </Route>
+                  
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">
                     {(params) => <TestLoginPage />}

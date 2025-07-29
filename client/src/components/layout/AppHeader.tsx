@@ -41,7 +41,8 @@ import {
   Share,
   LifeBuoy,
   Building2,
-  Compass
+  Compass,
+  GraduationCap
 } from 'lucide-react';
 import { LanguageAwareLogo } from '@/components/icons/LanguageAwareLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -139,6 +140,7 @@ export function AppHeader({
   // Default navigation items - reorganized for better UX
   const defaultNavItems = [
     { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
+    { label: 'Coaching Platform', icon: <GraduationCap size={18} />, path: '/coaching' },
     { label: t('nav.features'), icon: <Compass size={18} />, path: '/features' },
     { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
     { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
