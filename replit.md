@@ -127,6 +127,18 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 
 ## Recent Changes
 
+### July 29, 2025 - WeChat Integration Strategy Discussion: Scaled-Down Platform Approach
+- **STRATEGIC EXPANSION PLANNING**: Analyzed WeChat Mini Program vs. standalone app approach for Chinese market entry
+- **WeChat Mini Program Recommended**: Hybrid architecture with shared backend infrastructure provides optimal balance of development speed and market penetration
+- **Feature Prioritization Complete**: Identified core MVP features for WeChat (user auth, coach discovery, match recording, basic analytics)
+- **Technical Architecture Defined**: Monorepo structure with wechat-mini/ directory leveraging existing server/ backend
+- **Development Timeline**: 8-week implementation cycle with 3-phase rollout (Foundation → Enhancement → Launch)
+- **Business Case Analysis**: 1.3B+ user market opportunity with WeChat Pay integration and social virality potential
+- **Resource Requirements**: 1 full-time WeChat developer + 0.5 backend integration support for 8-week cycle
+- **Success Metrics Framework**: Technical KPIs (load time, retention) and business KPIs (user acquisition, GMV) established
+- **Regulatory Considerations**: Chinese data compliance, content review, and payment licensing requirements identified
+- **RECOMMENDATION**: Proceed with WeChat Mini Program as Phase 1 of Chinese market expansion using hybrid shared-backend approach
+
 ### July 29, 2025 - FINAL LANDING PAGE ACCURACY COMPLETION: Inclusive Messaging & Authentic Platform Representation
 - **COMPLETE ACCURACY OVERHAUL**: Successfully transformed landing page to accurately represent actual platform experience with authentic CourtIQ ratings and passport display
 - **Inclusive Messaging Update**: Changed hero from "Professional Pickleball Development Platform" to "Your Pickleball Growth Platform" for more welcoming, inclusive approach
