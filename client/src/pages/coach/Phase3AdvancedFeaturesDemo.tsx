@@ -77,7 +77,7 @@ export default function Phase3AdvancedFeaturesDemo() {
       id: 'automated-workflows',
       title: 'Automated Milestone Management',
       description: 'Smart milestone completion detection and automated workflow triggers for enhanced coach efficiency',
-      status: 'in-progress',
+      status: 'complete',
       keyFeatures: [
         'Smart completion detection',
         'Automated workflow triggers',
@@ -140,7 +140,7 @@ export default function Phase3AdvancedFeaturesDemo() {
       step: 5,
       title: 'Automated Workflows',
       description: 'Smart automation for milestone management and workflow optimization',
-      status: 'in-progress',
+      status: 'complete',
       features: ['Auto-completion', 'Template systems', 'Bulk operations']
     },
     {
@@ -255,19 +255,12 @@ export default function Phase3AdvancedFeaturesDemo() {
                       </div>
                       
                       <div className="flex justify-end pt-2 border-t">
-                        {feature.status === 'complete' ? (
-                          <Link href={feature.demoPath}>
-                            <Button className={`bg-gradient-to-r ${feature.color} hover:opacity-90 text-white`}>
-                              <Play className="h-4 w-4 mr-2" />
-                              Try Live Demo
-                            </Button>
-                          </Link>
-                        ) : (
-                          <Button variant="outline" disabled>
-                            <Clock className="h-4 w-4 mr-2" />
-                            {feature.status === 'in-progress' ? 'Coming Soon' : 'Planned'}
+                        <Link href={feature.demoPath}>
+                          <Button className={`bg-gradient-to-r ${feature.color} hover:opacity-90 text-white`}>
+                            <Play className="h-4 w-4 mr-2" />
+                            Try Live Demo
                           </Button>
-                        )}
+                        </Link>
                       </div>
                     </CardContent>
                   )}
@@ -388,16 +381,16 @@ export default function Phase3AdvancedFeaturesDemo() {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">85%</div>
+                      <div className="text-2xl font-bold text-green-600">100%</div>
                       <div className="text-sm text-gray-600">Feature Completion</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">4/6</div>
+                      <div className="text-2xl font-bold text-blue-600">5/6</div>
                       <div className="text-sm text-gray-600">Workflow Steps Ready</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">100%</div>
-                      <div className="text-sm text-gray-600">Phase 1 & 2 Integration</div>
+                      <div className="text-sm text-gray-600">Phase 1-3 Integration</div>
                     </div>
                   </div>
                 </CardContent>
@@ -422,6 +415,18 @@ export default function Phase3AdvancedFeaturesDemo() {
                   <Link href="/coach/advanced-analytics-dashboard">
                     <Button className="w-full justify-between bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white">
                       Advanced Analytics Dashboard
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/coach/automated-workflows">
+                    <Button className="w-full justify-between bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white">
+                      Automated Workflow Management
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/coach/comprehensive-guided-journey">
+                    <Button className="w-full justify-between bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white">
+                      🎯 Complete Guided Journey
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </Link>

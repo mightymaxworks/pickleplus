@@ -76,6 +76,7 @@ import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 
 import assessmentGoalIntegrationRoutes from "./routes/assessment-goal-integration-routes"; // Sprint 3 Phase 1 & 2: Assessment-Goal Integration
 import progressTrackingRoutes from "./routes/progress-tracking-routes"; // Sprint 3 Phase 3: Progress Tracking Integration
 import analyticsRoutes from "./routes/analytics-routes"; // Sprint 3 Phase 3: Advanced Analytics Dashboard
+import automatedWorkflowsRoutes from "./routes/automated-workflows-routes"; // Sprint 3 Phase 3: Automated Workflow Management
 import { 
   createAdministrativeMatch,
   createBulkMatches,
@@ -435,6 +436,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Sprint 3 Phase 3: Advanced Analytics Dashboard routes
   app.use('/api/coach/analytics', analyticsRoutes);
   console.log('[API] Sprint 3 Phase 3: Advanced Analytics Dashboard routes registered successfully');
+  
+  // Register Sprint 3 Phase 3: Automated Workflow Management routes
+  app.use('/api/coach/automated-workflows', automatedWorkflowsRoutes);
+  app.use('/api/coach', automatedWorkflowsRoutes); // Additional routes for templates and bulk-ops
+  console.log('[API] Sprint 3 Phase 3: Automated Workflow Management routes registered successfully');
   
   // Mount coach management routes
   app.use('/api/coach', coachManagementRoutes);
