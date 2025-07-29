@@ -186,8 +186,9 @@ export default function CoachAssessmentToolPage() {
     setDimensionalScores(scores);
   };
 
-  // Get selected student details
-  const selectedStudentDetails = availableStudents.find(s => s.id === selectedStudent);
+  // Ensure availableStudents is an array and get selected student details
+  const studentsArray = Array.isArray(availableStudents?.data) ? availableStudents.data : [];
+  const selectedStudentDetails = studentsArray.find((s: any) => s.id === selectedStudent);
 
   // Set student from URL if provided
   React.useEffect(() => {
@@ -248,7 +249,7 @@ export default function CoachAssessmentToolPage() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
-                {availableStudents.map((student: any) => (
+                {studentsArray.map((student: any) => (
                   <Card 
                     key={student.id} 
                     className={`cursor-pointer transition-all hover:shadow-md active:scale-[0.98] ${

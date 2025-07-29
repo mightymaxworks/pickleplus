@@ -2229,22 +2229,43 @@ export class DatabaseStorage implements IStorage {
         app.application_status === 'in_progress' || app.application_status === 'approved'
       );
 
+      // Determine available levels based on sequential progression
+      let availableLevels: number[] = [];
+      const completedLevelNumbers = completedLevels.map((code: string) => {
+        const match = code.match(/L(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      });
+      
+      const highestCompleted = Math.max(0, ...completedLevelNumbers);
+      
+      // Only next level is available (sequential progression)
+      if (highestCompleted < 5) {
+        availableLevels = [highestCompleted + 1];
+      }
+      
+      // If no levels completed, start with Level 1
+      if (completedLevelNumbers.length === 0) {
+        availableLevels = [1];
+      }
+
       return {
         completedLevels,
+        currentLevel: highestCompleted || 0,
         inProgress: inProgressApp ? {
           levelId: inProgressApp.certification_level_id,
           applicationId: inProgressApp.application_id,
           progress: 65, // Calculate from actual progress
           status: inProgressApp.application_status
         } : null,
-        availableLevels: [1, 2, 3, 4, 5] // Determine based on prerequisites
+        availableLevels // Sequential progression only
       };
     } catch (error) {
       console.error('Error fetching user certification status:', error);
       return {
         completedLevels: [],
+        currentLevel: 0,
         inProgress: null,
-        availableLevels: [1, 2, 3, 4, 5]
+        availableLevels: [1] // Start with Level 1 on error
       };
     }
   }

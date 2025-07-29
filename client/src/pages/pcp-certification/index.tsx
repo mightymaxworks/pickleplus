@@ -446,10 +446,53 @@ export default function PCPCertificationPage() {
             )}
 
             <div className="flex gap-2 pt-4">
-              <Link href={`/pcp-certification/apply/${level.id}`}>
-                <Button className="flex-1">Apply for {level.levelName}</Button>
-              </Link>
-              <Button variant="outline">Learn More</Button>
+              {(() => {
+                const isCompleted = userStatus?.completedLevels?.includes(level.levelCode);
+                const isInProgress = userStatus?.inProgress?.levelId === level.id;
+                const isAvailable = userStatus?.availableLevels?.includes(level.id);
+                const canApply = !isCompleted && !isInProgress && isAvailable;
+                
+                // Sequential progression logic
+                const levelNumber = parseInt(level.levelCode.match(/L(\d+)/)?.[1] || '1');
+                const currentLevel = userStatus?.currentLevel || 0;
+                const isNextInSequence = levelNumber === (currentLevel + 1);
+                const isLocked = levelNumber > (currentLevel + 1);
+
+                if (isCompleted) {
+                  return (
+                    <div className="flex-1 text-center p-3 bg-green-100 text-green-800 rounded-lg font-medium">
+                      ✅ Completed
+                    </div>
+                  );
+                } else if (isInProgress) {
+                  return (
+                    <div className="flex-1 text-center p-3 bg-blue-100 text-blue-800 rounded-lg font-medium">
+                      🔄 In Progress
+                    </div>
+                  );
+                } else if (isLocked) {
+                  return (
+                    <div className="flex-1 text-center p-3 bg-gray-100 text-gray-600 rounded-lg font-medium">
+                      🔒 Locked - Complete Level {currentLevel + 1} first
+                    </div>
+                  );
+                } else if (isNextInSequence && canApply) {
+                  return (
+                    <>
+                      <Link href={`/pcp-certification/apply/${level.id}`}>
+                        <Button className="flex-1 bg-green-600 hover:bg-green-700">Apply for {level.levelName}</Button>
+                      </Link>
+                      <Button variant="outline">Learn More</Button>
+                    </>
+                  );
+                } else {
+                  return (
+                    <div className="flex-1 text-center p-3 bg-yellow-100 text-yellow-800 rounded-lg font-medium">
+                      ⏳ Complete prerequisites first
+                    </div>
+                  );
+                }
+              })()}
             </div>
           </CardContent>
         </Card>

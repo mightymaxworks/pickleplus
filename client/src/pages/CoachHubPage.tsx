@@ -642,9 +642,11 @@ function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: 
 
       {/* Recent Activity & Certification Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="backdrop-blur-sm bg-gradient-to-br from-green-50/80 to-emerald-100/60 border-green-200/50 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Recent Sessions</CardTitle>
+            <CardTitle className="text-lg bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent">
+              Recent Sessions
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -653,12 +655,16 @@ function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: 
                 { student: "Mike Rodriguez", date: "Yesterday, 4:30 PM", status: "Completed" },
                 { student: "Lisa Park", date: "Tomorrow, 10:00 AM", status: "Upcoming" }
               ].map((session, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div key={i} className="flex items-center justify-between p-3 bg-white/60 border border-green-200/30 rounded-lg shadow-sm">
                   <div>
-                    <div className="font-medium">{session.student}</div>
-                    <div className="text-sm text-muted-foreground">{session.date}</div>
+                    <div className="font-medium text-green-900">{session.student}</div>
+                    <div className="text-sm text-green-700/70">{session.date}</div>
                   </div>
-                  <Badge variant={session.status === "Completed" ? "default" : "secondary"}>
+                  <Badge variant={session.status === "Completed" ? "default" : "secondary"} className={
+                    session.status === "Completed" 
+                      ? "bg-green-100 text-green-800 border-green-200" 
+                      : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                  }>
                     {session.status}
                   </Badge>
                 </div>
@@ -667,35 +673,44 @@ function ActiveCoachView({ coachProfile, certificationStatus }: { coachProfile: 
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="backdrop-blur-sm bg-gradient-to-br from-blue-50/80 to-indigo-100/60 border-blue-200/50 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Certification Progress</CardTitle>
+            <CardTitle className="text-lg bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+              PCP Certification Journey
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Current Level: {certificationStatus?.currentLevel || 1}</span>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/pcp-certification">View Details</Link>
+                <span className="text-sm font-medium">Current Level: 
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
+                    Level {certificationStatus?.currentLevel || 1}
+                  </span>
+                </span>
+                <Button variant="outline" size="sm" asChild className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                  <Link to="/pcp-certification">View Journey</Link>
                 </Button>
               </div>
               
               {certificationStatus?.currentLevel && certificationStatus.currentLevel < 5 && (
-                <div>
+                <div className="bg-white/60 p-3 rounded-lg border border-blue-200/50">
                   <div className="flex justify-between text-sm mb-2">
-                    <span>Progress to Level {certificationStatus.currentLevel + 1}</span>
-                    <span>75%</span>
+                    <span className="text-blue-700 font-medium">Next: Level {certificationStatus.currentLevel + 1}</span>
+                    <span className="text-blue-600">Sequential Progression</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full w-3/4"></div>
+                  <div className="w-full bg-blue-100/50 rounded-full h-3">
+                    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full w-3/4 shadow-sm"></div>
                   </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    Complete Level {certificationStatus.currentLevel} to unlock Level {certificationStatus.currentLevel + 1}
+                  </p>
                 </div>
               )}
               
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-blue-700/80 bg-blue-50/50 p-3 rounded-lg border border-blue-200/30">
                 {certificationStatus?.currentLevel === 5 
-                  ? "🎉 Master Coach Certified!" 
-                  : "Continue your certification journey to unlock advanced coaching techniques"}
+                  ? "🏆 Master Coach Certified! You've achieved the highest level of PCP certification." 
+                  : `📚 PCP follows sequential progression: Level ${(certificationStatus?.currentLevel || 0) + 1} becomes available after completing Level ${certificationStatus?.currentLevel || 1}`}
               </div>
             </div>
           </CardContent>
