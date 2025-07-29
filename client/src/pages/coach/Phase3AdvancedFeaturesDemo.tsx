@@ -25,6 +25,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Link } from 'wouter';
+import { CoachLayout } from '@/components/layout/CoachLayout';
 
 interface FeatureShowcase {
   id: string;
@@ -166,8 +167,8 @@ export default function Phase3AdvancedFeaturesDemo() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <CoachLayout currentPage="Phase 3 Advanced Features Demo">
+      <div className="space-y-6">
         
         {/* Header */}
         <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-lg">
@@ -436,6 +437,6 @@ export default function Phase3AdvancedFeaturesDemo() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </CoachLayout>
   );
 }

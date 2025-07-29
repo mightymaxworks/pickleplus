@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { CoachLayout } from '@/components/layout/CoachLayout';
 
 interface AssessmentData {
   id: number;
@@ -135,8 +136,8 @@ export default function AssessmentAnalysisDashboard() {
   const weakAreas = weakAreasData?.data as WeakAreaData;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <CoachLayout currentPage="Assessment Analysis Dashboard">
+      <div className="space-y-6">
         
         {/* Header */}
         <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-lg">
@@ -432,6 +433,6 @@ export default function AssessmentAnalysisDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </CoachLayout>
   );
 }

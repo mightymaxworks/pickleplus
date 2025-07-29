@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { CoachLayout } from '@/components/layout/CoachLayout';
 
 interface AutomatedWorkflow {
   id: number;
@@ -278,8 +279,8 @@ export default function AutomatedWorkflows() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <CoachLayout currentPage="Automated Workflow Management">
+      <div className="space-y-6">
         
         {/* Header */}
         <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-lg">
@@ -635,6 +636,6 @@ export default function AutomatedWorkflows() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </CoachLayout>
   );
 }
