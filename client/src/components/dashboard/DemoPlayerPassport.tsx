@@ -24,8 +24,8 @@ export function DemoPlayerPassport() {
       <Card 
         className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
       >
-        <CardContent className="p-3 md:p-4 lg:p-6">
-          <div className="flex flex-col lg:flex-row items-center gap-4 lg:gap-8">
+        <CardContent className="p-3 md:p-6 lg:p-8">
+          <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
             {/* Player Information */}
             <div className="flex-1 text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
@@ -49,7 +49,7 @@ export function DemoPlayerPassport() {
                 
                 <div>
                   <motion.h1 
-                    className="text-3xl lg:text-4xl font-extrabold text-orange-900 tracking-[-0.02em] leading-[1.1] font-mono"
+                    className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-orange-900 tracking-[-0.02em] leading-[1.1] font-mono"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
@@ -96,9 +96,9 @@ export function DemoPlayerPassport() {
                 </Button>
               </motion.div>
 
-              {/* Key Stats Grid - Responsive layout */}
+              {/* Key Stats Grid - More spacious desktop layout */}
               <motion.div 
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mt-4 lg:mt-6"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 lg:gap-8 mt-6 lg:mt-8 w-full"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8, duration: 0.6 }}

@@ -22,10 +22,10 @@ export function EnhancedHeroSection() {
       </div>
       
       <div className="container relative z-10 mx-auto px-4 sm:px-6 py-16 md:py-24">
-        <div className="grid md:grid-cols-12 gap-8 md:gap-12 items-center">
+        <div className="grid md:grid-cols-12 gap-8 md:gap-16 items-center">
           {/* Content */}
           <motion.div 
-            className="md:col-span-7 text-center md:text-left"
+            className="md:col-span-6 text-center md:text-left"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -113,12 +113,12 @@ export function EnhancedHeroSection() {
           
           {/* Live Passport Component */}
           <motion.div 
-            className="md:col-span-5"
+            className="md:col-span-6"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div className="relative max-w-sm md:max-w-2xl lg:max-w-3xl mx-auto">
+            <div className="relative max-w-sm md:max-w-none lg:max-w-none mx-auto w-full">
               {/* Card glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-[#FFC107]/30 rounded-2xl blur-xl opacity-70"></div>
               
