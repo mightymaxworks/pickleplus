@@ -927,14 +927,18 @@ export default function App() {
                   <Route path="/font-test" component={FontTestPage} />
                   
                   {/* Enhanced Coaching Landing Page - Go-to-Market Strategy */}
-                  <Route path="/enhanced-coaching-landing">
-                    {React.createElement(lazyLoad(() => import('./pages/enhanced-coaching-landing')))}
-                  </Route>
+                  <ProtectedRouteWithLayout
+                    path="/enhanced-coaching-landing" 
+                    component={lazyLoad(() => import('./pages/enhanced-coaching-landing'))} 
+                    pageTitle="Enhanced Coaching Landing"
+                  />
                   
                   {/* Elegant Coaching Landing Page - Public Access */}  
-                  <Route path="/coaching">
-                    {React.createElement(lazyLoad(() => import('./pages/enhanced-coaching-landing')))}
-                  </Route>
+                  <ProtectedRouteWithLayout
+                    path="/coaching" 
+                    component={lazyLoad(() => import('./pages/enhanced-coaching-landing'))} 
+                    pageTitle="Coaching Hub"
+                  />
                   
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">
