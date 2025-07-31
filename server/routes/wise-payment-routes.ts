@@ -29,17 +29,36 @@ const processPaymentSchema = z.object({
 
 // Helper function to make Wise API calls
 async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any) {
-  const response = await fetch(`${WISE_API_BASE}${endpoint}`, {
+  const url = `${WISE_API_BASE}${endpoint}`;
+  const token = process.env.WISE_API_TOKEN;
+  
+  console.log('WISE API Debug:', {
+    url,
+    method,
+    hasToken: !!token,
+    tokenPrefix: token ? token.substring(0, 10) + '...' : 'missing',
+    environment: process.env.NODE_ENV || 'development'
+  });
+  
+  const response = await fetch(url, {
     method,
     headers: {
-      'Authorization': `Bearer ${process.env.WISE_API_TOKEN}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: data ? JSON.stringify(data) : undefined
   });
   
+  console.log('WISE API Response:', {
+    status: response.status,
+    statusText: response.statusText,
+    headers: Object.fromEntries(response.headers.entries())
+  });
+  
   if (!response.ok) {
-    throw new Error(`Wise API error: ${response.status} ${response.statusText}`);
+    const errorBody = await response.text();
+    console.error('WISE API Error Body:', errorBody);
+    throw new Error(`Wise API error: ${response.status} ${response.statusText} - ${errorBody}`);
   }
   
   return response.json();
@@ -314,6 +333,19 @@ router.get('/test', (req, res) => {
     success: true, 
     message: 'Wise payment routes are working',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Debug endpoint to check environment variables
+router.get('/debug', (req, res) => {
+  res.json({
+    hasToken: !!process.env.WISE_API_TOKEN,
+    hasProfileId: !!process.env.WISE_BUSINESS_PROFILE_ID,
+    hasSecret: !!process.env.WISE_WEBHOOK_SECRET,
+    tokenPrefix: process.env.WISE_API_TOKEN ? process.env.WISE_API_TOKEN.substring(0, 10) + '...' : 'missing',
+    profileId: process.env.WISE_BUSINESS_PROFILE_ID || 'missing',
+    apiBase: WISE_API_BASE,
     environment: process.env.NODE_ENV || 'development'
   });
 });
