@@ -20,7 +20,8 @@ import {
   Clock,
   TrendingUp,
   Award,
-  Globe
+  Globe,
+  BarChart3
 } from "lucide-react";
 
 export default function CommunitySystemDemo() {
@@ -210,11 +211,23 @@ export default function CommunitySystemDemo() {
 
       <div className="max-w-7xl mx-auto">
         <Tabs defaultValue="discovery" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="discovery">Community Discovery</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="social">Social Feed</TabsTrigger>
-            <TabsTrigger value="management">Management</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 h-auto">
+            <TabsTrigger value="discovery" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Community Discovery</span>
+              <span className="sm:hidden">Discover</span>
+            </TabsTrigger>
+            <TabsTrigger value="events" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Events</span>
+              <span className="sm:hidden">Events</span>
+            </TabsTrigger>
+            <TabsTrigger value="social" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Social Feed</span>
+              <span className="sm:hidden">Social</span>
+            </TabsTrigger>
+            <TabsTrigger value="management" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Management</span>
+              <span className="sm:hidden">Manage</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Community Discovery Tab */}
