@@ -198,7 +198,7 @@ export default function CommunityDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-4 sm:py-8 px-2 sm:px-4 community-page-container">
         {/* Community Header with basic info and navigation */}
         <CommunityHeader 
           community={community}
@@ -213,8 +213,8 @@ export default function CommunityDetailPage() {
         <div className="mt-8">
           {/* About Tab */}
           {activeTab === "about" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+              <div className="w-full lg:col-span-2 space-y-4 sm:space-y-6">
                 {/* PKL-278651-COMM-0014-UI-INFO - Sprint 1.4 - Collapsible Info Cards */}
                 {/* About section - enhanced with collapsible card */}
                 <CommunityInfoCard 
@@ -240,7 +240,7 @@ export default function CommunityDetailPage() {
                   {/* Additional metadata */}
                   <div className="mt-4 border-t pt-4">
                     <h4 className="text-sm font-medium mb-2">Community Details</h4>
-                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <dl className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-sm">
                       <div>
                         <dt className="text-muted-foreground">Founded</dt>
                         <dd>

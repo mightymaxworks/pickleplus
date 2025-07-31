@@ -276,10 +276,10 @@ export function CommunityHeader({
         </div>
         
         <div className="relative z-10">
-          <div className="flex items-center gap-3 sm:gap-4 mb-3">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 sm:gap-4 mb-3">
             {/* Enhanced Avatar with improved styling */}
-            <div className="relative">
-              <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 border-4 border-white/20 shadow-lg flex-shrink-0 ring-4 ring-offset-2 ring-offset-transparent ring-white/10">
+            <div className="relative flex-shrink-0">
+              <Avatar className="h-12 w-12 xs:h-16 xs:w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 border-2 xs:border-4 border-white/20 shadow-lg ring-2 xs:ring-4 ring-offset-1 xs:ring-offset-2 ring-offset-transparent ring-white/10">
                 <AvatarImage 
                   src={community.avatarUrl || undefined} 
                   alt={community.name}
@@ -302,12 +302,12 @@ export function CommunityHeader({
               )}
             </div>
             
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 w-full xs:w-auto">
               {/* Title */}
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">{community.name}</h1>
+              <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold truncate community-title">{community.name}</h1>
               
               {/* Location and Skill level - condensed for mobile */}
-              <div className="flex flex-wrap items-center text-xs sm:text-sm gap-2 sm:gap-3 text-white/90 mt-1">
+              <div className="flex flex-wrap items-center text-xs sm:text-sm gap-1 xs:gap-2 sm:gap-3 text-white/90 mt-1">
                 {community.location && (
                   <div className="flex items-center">
                     <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
@@ -324,7 +324,7 @@ export function CommunityHeader({
               </div>
               
               {/* Badges */}
-              <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+              <div className="flex flex-wrap items-center gap-1 mt-1 max-w-full overflow-hidden">
                 {community.isDefault && (
                   <Badge variant="outline" className="border-orange-400 text-orange-100 bg-orange-500/20 text-xs py-0 px-1.5 h-5">
                     <Megaphone className="h-3 w-3 mr-1" />
@@ -359,17 +359,17 @@ export function CommunityHeader({
             </div>
             
             {/* PKL-278651-COMM-0035-PROF - Enhanced Action Buttons Implementation - Sprint 1.5 */}
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex flex-col xs:flex-row gap-1 xs:gap-2 flex-shrink-0 w-full xs:w-auto mt-2 xs:mt-0">
               {/* Primary Action Button */}
               {hasManagePermissions ? (
                 /* Primary Manage Button for admins/mods/creators */
                 <Button 
                   size="sm" 
-                  className="bg-white hover:bg-white/90 text-primary h-8 font-medium"
+                  className="bg-white hover:bg-white/90 text-primary h-9 xs:h-8 font-medium min-w-[44px] justify-center xs:justify-start"
                   onClick={() => handleTabChange("manage")}
                 >
-                  <Settings className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Manage</span>
+                  <Settings className="h-4 w-4 xs:mr-1" />
+                  <span className="hidden xs:inline">Manage</span>
                 </Button>
               ) : isMember ? (
                 community.isDefault ? (
@@ -377,11 +377,11 @@ export function CommunityHeader({
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="bg-white/10 border-white/20 text-white h-8 cursor-default"
+                    className="bg-white/10 border-white/20 text-white h-9 xs:h-8 cursor-default min-w-[44px] justify-center xs:justify-start"
                     disabled
                   >
-                    <Users className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Member</span>
+                    <Users className="h-4 w-4 xs:mr-1" />
+                    <span className="hidden xs:inline">Member</span>
                   </Button>
                 ) : (
                   /* Primary Leave Button for members with confirmation dropdown */
@@ -390,11 +390,11 @@ export function CommunityHeader({
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
+                        className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-9 xs:h-8 min-w-[44px] justify-center xs:justify-start"
                       >
-                        <LogOut className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Leave</span>
-                        <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+                        <LogOut className="h-4 w-4 xs:mr-1" />
+                        <span className="hidden xs:inline">Leave</span>
+                        <ChevronDown className="h-3 w-3 xs:ml-1 opacity-70 hidden xs:inline" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
@@ -411,11 +411,11 @@ export function CommunityHeader({
                 /* Primary Join Button for non-members */
                 <Button 
                   size="sm" 
-                  className="bg-white hover:bg-white/90 text-primary h-8 font-medium"
+                  className="bg-white hover:bg-white/90 text-primary h-9 xs:h-8 font-medium min-w-[44px] justify-center xs:justify-start"
                   onClick={handleJoin}
                 >
-                  <Users className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Join</span>
+                  <Users className="h-4 w-4 xs:mr-1" />
+                  <span className="hidden xs:inline">Join</span>
                 </Button>
               )}
               
@@ -425,7 +425,7 @@ export function CommunityHeader({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
+                    className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-9 xs:h-8 min-w-[44px] justify-center"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>

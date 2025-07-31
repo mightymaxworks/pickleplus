@@ -107,5 +107,5 @@ export const LazyDashboardPage = lazyLoad(() => import('../pages/Dashboard'));
 export const LazyFeaturesPage = lazyLoad(() => import('../pages/FeatureShowcase'));
 export const LazyForgotPasswordPage = lazyLoad(() => import('../pages/ForgotPasswordPage'));
 export const LazyResetPasswordPage = lazyLoad(() => import('../pages/ResetPasswordPage'));
-export const LazyTestPage = lazyLoad(() => import('../pages/test-login-page'));
+// LazyTestPage removed - test-login-page file deleted in cleanup
 export const LazyNotFoundPage = lazyLoad(() => import('../pages/not-found'));

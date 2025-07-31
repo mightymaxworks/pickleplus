@@ -62,7 +62,7 @@ import {
   LazyCoachApplicationPage,
   LazyReportsPage,
   LazySettingsPage,
-  LazyMobileTestPage,
+  // LazyMobileTestPage removed - test file deleted
   LazyBugReportDashboard,
   LazyBouncePage, // PKL-278651-BOUNCE-0001-CORE
   LazyBounceFindingsPage, // PKL-278651-BOUNCE-0006-ADMIN
@@ -610,11 +610,11 @@ export default function App() {
                     pageTitle="CourtIQ Analysis"
                   />
                   {/* PKL-278651-COACH-0001-AI - AI Coach */}
-                  <ProtectedRouteWithLayout 
+                  {/* <ProtectedRouteWithLayout 
                     path="/coach"
                     component={CoachPage}
                     pageTitle="AI Coach"
-                  />
+                  /> - CoachPage removed */}
                   
                   {/* PKL-278651-COACH-001 - Coach Application */}
                   <ProtectedRouteWithLayout 
@@ -686,7 +686,7 @@ export default function App() {
                   <Route path="/admin/mobile-test">
                     {(params) => (
                       <AdminProtectedRoute>
-                        <LazyMobileTestPage />
+                        {/* LazyMobileTestPage removed - test file deleted */}
                       </AdminProtectedRoute>
                     )}
                   </Route>
@@ -812,54 +812,54 @@ export default function App() {
                     component={NotificationPreferencesPage}
                     pageTitle="Notification Preferences"
                   />
-                  <Route path="/demo/match-reward" component={MatchRewardDemo} />
-                  <Route path="/dev/qr-test" component={QRTestPage} />
+                  {/* <Route path="/demo/match-reward" component={MatchRewardDemo} /> - MatchRewardDemo removed */}
+                  {/* <Route path="/dev/qr-test" component={QRTestPage} /> - QRTestPage removed */}
                   <Route path="/events">
                     {(params) => <CentralProtectedRoute component={LazyEventDiscoveryPage} path="/events" />}
                   </Route>
                   <Route path="/events/my">
                     {(params) => <CentralProtectedRoute component={LazyMyEventsPage} path="/events/my" />}
                   </Route>
-                  <Route path="/events/test">
+                  {/* <Route path="/events/test">
                     {(params) => <CentralProtectedRoute component={EventTestPage} path="/events/test" />}
-                  </Route>
-                  <Route path="/search-test">
+                  </Route> - EventTestPage removed */}
+                  {/* <Route path="/search-test">
                     {(params) => <CentralProtectedRoute component={SearchTestPage} path="/search-test" />}
-                  </Route>
-                  <Route path="/player-search-test">
+                  </Route> - SearchTestPage removed */}
+                  {/* <Route path="/player-search-test">
                     {(params) => <CentralProtectedRoute component={PlayerSearchTestPage} path="/player-search-test" />}
-                  </Route>
+                  </Route> - PlayerSearchTestPage removed */}
                   
                   {/* PKL-278651-COMM-0001-UIMOCK - Community Module UI Test Route */}
-                  <Route path="/test/community" component={TestCommunityPage} />
+                  {/* <Route path="/test/community" component={TestCommunityPage} /> - TestCommunityPage removed */}
                   
                   {/* PKL-278651-COMM-0002-DASH-MOCK - Community Dashboard Mockup Route */}
-                  <Route path="/test/community-dashboard" component={CommunityDashboardMockup} />
+                  {/* <Route path="/test/community-dashboard" component={CommunityDashboardMockup} /> - CommunityDashboardMockup removed */}
                   
                   {/* PKL-278651-COMM-0003-DASH-MODERN - Modern Social Media Inspired Dashboard Route */}
-                  <Route path="/test/modern-community" component={ModernCommunityDashboard} />
+                  {/* <Route path="/test/modern-community" component={ModernCommunityDashboard} /> - ModernCommunityDashboard removed */}
                   
                   {/* PKL-278651-COMM-0004-DASH-TWITTER - Twitter/X-Inspired Dashboard Route */}
-                  <Route path="/test/twitter-style" component={FixedTwitterDashboard} />
+                  {/* <Route path="/test/twitter-style" component={FixedTwitterDashboard} /> - FixedTwitterDashboard removed */}
                   
                   {/* PKL-278651-XP-0002-UI - XP System Dashboard */}
                   <Route path="/xp-dashboard">
-                    {(params) => <CentralProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
+                    {/* {(params) => <CentralProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />} - XpDashboardPage removed */}
                   </Route>
                   
                   {/* PKL-278651-POINTS-0001-DEMO - Pickle+ Points Demo */}
                   <Route path="/points-demo">
-                    {(params) => <CentralProtectedRoute component={PointsDemo} path="/points-demo" />}
+                    {/* {(params) => <CentralProtectedRoute component={PointsDemo} path="/points-demo" />} - PointsDemo removed */}
                   </Route>
                   
                   {/* PKL-278651-COMM-0005-DASH-UNIFIED - Unified Activity-Centric Dashboard Route */}
-                  <Route path="/test/unified-activity" component={UnifiedActivityDashboard} />
+                  {/* <Route path="/test/unified-activity" component={UnifiedActivityDashboard} /> - UnifiedActivityDashboard removed */}
                   
                   {/* PKL-278651-COMM-0005-DASH-SIMPLE - Simple Unified Activity-Centric Dashboard Route */}
-                  <Route path="/test/simple-unified" component={SimpleUnifiedDashboard} />
+                  {/* <Route path="/test/simple-unified" component={SimpleUnifiedDashboard} /> - SimpleUnifiedDashboard removed */}
                   
                   {/* PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo Route */}
-                  <Route path="/test/feedback" component={FeedbackDemo} />
+                  {/* <Route path="/test/feedback" component={FeedbackDemo} /> - FeedbackDemo removed */}
                   
                   {/* PKL-278651-COMM-0006-HUB - Community Hub Implementation */}
                   <Route path="/communities/create">
@@ -938,7 +938,7 @@ export default function App() {
                   
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">
-                    {(params) => <TestLoginPage />}
+                    {/* {(params) => <TestLoginPage />} - TestLoginPage removed */}
                   </Route>
                   
                   <Route component={LazyNotFoundPage} />

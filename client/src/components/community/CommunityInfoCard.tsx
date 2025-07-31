@@ -43,11 +43,11 @@ export function CommunityInfoCard({
 
   return (
     <Card className={cn("overflow-hidden transition-all duration-200", className)}>
-      <CardHeader className="px-4 py-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-base sm:text-lg flex items-center gap-2 truncate">
-            <span className="flex-shrink-0">{icon}</span>
-            <span className="truncate">{title}</span>
+      <CardHeader className="px-3 sm:px-4 py-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex justify-between items-center min-w-0">
+          <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-1 sm:gap-2 truncate min-w-0">
+            <span className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5">{icon}</span>
+            <span className="truncate min-w-0">{title}</span>
             {badgeText && (
               <Badge variant={badgeVariant} className="ml-2 text-xs flex-shrink-0">
                 {badgeText}
@@ -66,7 +66,7 @@ export function CommunityInfoCard({
         )}
       >
         <div className="overflow-hidden">
-          <CardContent className="px-4 py-3">
+          <CardContent className="px-3 sm:px-4 py-3">
             {children}
           </CardContent>
         </div>
@@ -131,15 +131,15 @@ export function CommunityInfoStats({
   stats: Array<{ label: string; value: string | number; icon?: React.ReactNode }>
 }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-2">
+    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mt-2">
       {stats.map((stat, i) => (
-        <div key={i} className="flex flex-col items-center justify-center p-3 bg-muted/50 rounded-md">
+        <div key={i} className="flex flex-col items-center justify-center p-2 sm:p-3 bg-muted/50 rounded-md">
           {/* Always show icon prominently for mobile first design */}
           <div className="mb-1 text-primary text-opacity-80">
             {stat.icon || <span className="inline-block h-5 w-5" />}
           </div>
-          <div className="text-xl font-semibold">{stat.value}</div>
-          <div className="text-xs text-muted-foreground text-center">{stat.label}</div>
+          <div className="text-lg sm:text-xl font-semibold">{stat.value}</div>
+          <div className="text-xs text-muted-foreground text-center leading-tight">{stat.label}</div>
         </div>
       ))}
     </div>
