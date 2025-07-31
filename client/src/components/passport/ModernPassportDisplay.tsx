@@ -58,10 +58,25 @@ interface PassportData {
     tier: string;
   };
   rankings: {
-    global: { rank: number; total: number };
-    local: { rank: number; total: number; location: string };
-    age: { rank: number; total: number; bracket: string };
-    skill: { rank: number; total: number; level: string };
+    singles: {
+      global: { rank: number; total: number };
+      local: { rank: number; total: number; location: string };
+      age: { rank: number; total: number; bracket: string };
+    };
+    doubles: {
+      global: { rank: number; total: number };
+      local: { rank: number; total: number; location: string };
+      age: { rank: number; total: number; bracket: string };
+    };
+    mixed: {
+      global: { rank: number; total: number };
+      local: { rank: number; total: number; location: string };
+      age: { rank: number; total: number; bracket: string };
+    };
+    tournaments: {
+      career: { wins: number; total: number; winRate: number };
+      recent: { wins: number; total: number; period: string };
+    };
   };
   qrCode: {
     passportId: string;
@@ -112,10 +127,25 @@ const demoPassportData: PassportData = {
     tier: "Gold"
   },
   rankings: {
-    global: { rank: 42, total: 15847 },
-    local: { rank: 8, total: 234, location: "San Francisco Bay Area" },
-    age: { rank: 12, total: 891, bracket: "25-35" },
-    skill: { rank: 23, total: 1205, level: "4.0-4.5 DUPR" }
+    singles: {
+      global: { rank: 42, total: 15847 },
+      local: { rank: 8, total: 234, location: "San Francisco Bay Area" },
+      age: { rank: 12, total: 891, bracket: "25-35" }
+    },
+    doubles: {
+      global: { rank: 28, total: 18932 },
+      local: { rank: 5, total: 287, location: "San Francisco Bay Area" },
+      age: { rank: 7, total: 1034, bracket: "25-35" }
+    },
+    mixed: {
+      global: { rank: 156, total: 12453 },
+      local: { rank: 18, total: 198, location: "San Francisco Bay Area" },
+      age: { rank: 31, total: 743, bracket: "25-35" }
+    },
+    tournaments: {
+      career: { wins: 23, total: 45, winRate: 51.1 },
+      recent: { wins: 8, total: 12, period: "Last 6 months" }
+    }
   },
   qrCode: {
     passportId: "PKL-AC-2024-7719",
@@ -479,76 +509,159 @@ export default function ModernPassportDisplay({
         {/* Rankings Tab */}
         {selectedTab === 'rankings' && (
           <>
-            <Card>
+            {/* Game Format Rankings */}
+            <Card className="lg:col-span-2">
               <CardContent className="p-6">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-6">
                   <Crown className="w-5 h-5 text-yellow-500" />
-                  Global Rankings
+                  Competition Rankings
                 </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center gap-3">
-                      <Crown className="w-6 h-6 text-yellow-600" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Global Ranking</p>
-                        <p className="text-sm text-gray-600">All players worldwide</p>
+                
+                {/* Singles Rankings */}
+                <div className="mb-8">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    Singles Rankings
+                  </h4>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                      <div className="text-center">
+                        <Crown className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-blue-700">#{data.rankings.singles.global.rank}</p>
+                        <p className="text-sm text-blue-600">Global</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.singles.global.total.toLocaleString()}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-yellow-600">#{data.rankings.global.rank}</p>
-                      <p className="text-sm text-gray-500">of {data.rankings.global.total.toLocaleString()}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-6 h-6 text-blue-600" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Local Ranking</p>
-                        <p className="text-sm text-gray-600">{data.rankings.local.location}</p>
+                    
+                    <div className="p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg border border-cyan-200">
+                      <div className="text-center">
+                        <MapPin className="w-6 h-6 text-cyan-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-cyan-700">#{data.rankings.singles.local.rank}</p>
+                        <p className="text-sm text-cyan-600">Local</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.singles.local.total}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-blue-600">#{data.rankings.local.rank}</p>
-                      <p className="text-sm text-gray-500">of {data.rankings.local.total}</p>
+                    
+                    <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                      <div className="text-center">
+                        <Hash className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-green-700">#{data.rankings.singles.age.rank}</p>
+                        <p className="text-sm text-green-600">Age {data.rankings.singles.age.bracket}</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.singles.age.total}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Medal className="w-5 h-5 text-purple-500" />
-                  Category Rankings
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <div className="flex items-center gap-3">
-                      <Hash className="w-6 h-6 text-green-600" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Age Bracket</p>
-                        <p className="text-sm text-gray-600">{data.rankings.age.bracket} years old</p>
+                {/* Doubles Rankings */}
+                <div className="mb-8">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    Doubles Rankings
+                  </h4>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                      <div className="text-center">
+                        <Crown className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-purple-700">#{data.rankings.doubles.global.rank}</p>
+                        <p className="text-sm text-purple-600">Global</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.doubles.global.total.toLocaleString()}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">#{data.rankings.age.rank}</p>
-                      <p className="text-sm text-gray-500">of {data.rankings.age.total}</p>
+                    
+                    <div className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200">
+                      <div className="text-center">
+                        <MapPin className="w-6 h-6 text-indigo-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-indigo-700">#{data.rankings.doubles.local.rank}</p>
+                        <p className="text-sm text-indigo-600">Local</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.doubles.local.total}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg border border-teal-200">
+                      <div className="text-center">
+                        <Hash className="w-6 h-6 text-teal-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-teal-700">#{data.rankings.doubles.age.rank}</p>
+                        <p className="text-sm text-teal-600">Age {data.rankings.doubles.age.bracket}</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.doubles.age.total}</p>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                    <div className="flex items-center gap-3">
-                      <Target className="w-6 h-6 text-purple-600" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Skill Level</p>
-                        <p className="text-sm text-gray-600">{data.rankings.skill.level}</p>
+                {/* Mixed Doubles Rankings */}
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    Mixed Doubles Rankings
+                  </h4>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+                      <div className="text-center">
+                        <Crown className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-orange-700">#{data.rankings.mixed.global.rank}</p>
+                        <p className="text-sm text-orange-600">Global</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.mixed.global.total.toLocaleString()}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-purple-600">#{data.rankings.skill.rank}</p>
-                      <p className="text-sm text-gray-500">of {data.rankings.skill.total}</p>
+                    
+                    <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
+                      <div className="text-center">
+                        <MapPin className="w-6 h-6 text-red-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-red-700">#{data.rankings.mixed.local.rank}</p>
+                        <p className="text-sm text-red-600">Local</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.mixed.local.total}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg border border-pink-200">
+                      <div className="text-center">
+                        <Hash className="w-6 h-6 text-pink-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-pink-700">#{data.rankings.mixed.age.rank}</p>
+                        <p className="text-sm text-pink-600">Age {data.rankings.mixed.age.bracket}</p>
+                        <p className="text-xs text-gray-600">of {data.rankings.mixed.age.total}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tournament Performance */}
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    Tournament Performance
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gradient-to-br from-yellow-50 to-amber-100 rounded-lg border border-yellow-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">Career Record</p>
+                          <p className="text-sm text-gray-600">All tournaments</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-yellow-700">
+                            {data.rankings.tournaments.career.wins}-{data.rankings.tournaments.career.total - data.rankings.tournaments.career.wins}
+                          </p>
+                          <p className="text-sm text-gray-600">{data.rankings.tournaments.career.winRate}% win rate</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-lg border border-emerald-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">Recent Form</p>
+                          <p className="text-sm text-gray-600">{data.rankings.tournaments.recent.period}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-emerald-700">
+                            {data.rankings.tournaments.recent.wins}-{data.rankings.tournaments.recent.total - data.rankings.tournaments.recent.wins}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {Math.round((data.rankings.tournaments.recent.wins / data.rankings.tournaments.recent.total) * 100)}% win rate
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
