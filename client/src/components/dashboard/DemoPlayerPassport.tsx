@@ -37,7 +37,7 @@ export function DemoPlayerPassport() {
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <div className="w-28 h-32 bg-gradient-to-br from-orange-500 via-red-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-xl hover:shadow-2xl transition-all duration-500 passport-photo border-4 border-orange-400">
-                    MU
+                    AJ
                   </div>
                   
                   <motion.div 
@@ -55,7 +55,7 @@ export function DemoPlayerPassport() {
                     transition={{ delay: 0.2 }}
                     style={{ fontFamily: '"SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif' }}
                   >
-                    Mock User
+                    Alex Jordan
                   </motion.h1>
                   <motion.p 
                     className="text-orange-700 text-lg font-medium tracking-wide uppercase opacity-80"
@@ -64,7 +64,7 @@ export function DemoPlayerPassport() {
                     transition={{ delay: 0.4 }}
                     style={{ fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}
                   >
-                    @mockuser
+                    @alexjordan
                   </motion.p>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
