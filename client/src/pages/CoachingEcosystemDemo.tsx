@@ -154,12 +154,27 @@ export default function CoachingEcosystemDemo() {
 
       <div className="max-w-7xl mx-auto">
         <Tabs defaultValue="certification" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="certification">PCP Certification</TabsTrigger>
-            <TabsTrigger value="assessment">Assessment Tool</TabsTrigger>
-            <TabsTrigger value="students">Student Management</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics Dashboard</TabsTrigger>
-            <TabsTrigger value="sessions">Session Planning</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 h-auto">
+            <TabsTrigger value="certification" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">PCP Certification</span>
+              <span className="sm:hidden">Cert</span>
+            </TabsTrigger>
+            <TabsTrigger value="assessment" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Assessment Tool</span>
+              <span className="sm:hidden">Test</span>
+            </TabsTrigger>
+            <TabsTrigger value="students" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Student Management</span>
+              <span className="sm:hidden">Students</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Analytics Dashboard</span>
+              <span className="sm:hidden">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="text-xs sm:text-sm px-2 py-3 sm:px-4">
+              <span className="hidden sm:inline">Session Planning</span>
+              <span className="sm:hidden">Sessions</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* PCP Certification Tab */}
@@ -311,40 +326,96 @@ export default function CoachingEcosystemDemo() {
                           </div>
                         </div>
                         
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Forehand</span>
+                              <span>Forehand Drive</span>
                               <span className="font-medium">8.0/10</span>
                             </div>
                             <Progress value={80} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Backhand</span>
+                              <span>Backhand Drive</span>
                               <span className="font-medium">6.5/10</span>
                             </div>
                             <Progress value={65} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Serve</span>
+                              <span>Serve (Power)</span>
                               <span className="font-medium">7.0/10</span>
                             </div>
                             <Progress value={70} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Volleys</span>
+                              <span>Serve (Placement)</span>
                               <span className="font-medium">7.5/10</span>
                             </div>
                             <Progress value={75} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Return of Serve</span>
+                              <span className="font-medium">6.8/10</span>
+                            </div>
+                            <Progress value={68} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Third Shot Drop</span>
+                              <span className="font-medium">6.0/10</span>
+                            </div>
+                            <Progress value={60} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Third Shot Drive</span>
+                              <span className="font-medium">7.2/10</span>
+                            </div>
+                            <Progress value={72} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Dinking</span>
+                              <span className="font-medium">7.8/10</span>
+                            </div>
+                            <Progress value={78} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Volleying</span>
+                              <span className="font-medium">7.5/10</span>
+                            </div>
+                            <Progress value={75} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Overhead Smash</span>
+                              <span className="font-medium">6.9/10</span>
+                            </div>
+                            <Progress value={69} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Lob Defense</span>
+                              <span className="font-medium">6.3/10</span>
+                            </div>
+                            <Progress value={63} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Drop Shot</span>
+                              <span className="font-medium">7.1/10</span>
+                            </div>
+                            <Progress value={71} className="h-2" />
                           </div>
                         </div>
                         
                         <div className="bg-white p-3 rounded-lg">
                           <p className="text-sm font-medium text-blue-800 mb-1">Key Focus Areas:</p>
-                          <p className="text-sm text-gray-700">Improve backhand consistency, work on third shot drop technique</p>
+                          <p className="text-sm text-gray-700">Improve backhand drive consistency, master third shot drop technique, enhance lob defense positioning</p>
                         </div>
                       </div>
 
@@ -366,7 +437,7 @@ export default function CoachingEcosystemDemo() {
                           </div>
                         </div>
                         
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                               <span>Court Positioning</span>
@@ -390,16 +461,58 @@ export default function CoachingEcosystemDemo() {
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
+                              <span>Singles Strategy</span>
+                              <span className="font-medium">6.8/10</span>
+                            </div>
+                            <Progress value={68} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
                               <span>Pattern Recognition</span>
                               <span className="font-medium">6.5/10</span>
                             </div>
                             <Progress value={65} className="h-2" />
                           </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Transition Game</span>
+                              <span className="font-medium">6.7/10</span>
+                            </div>
+                            <Progress value={67} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Kitchen Play</span>
+                              <span className="font-medium">7.3/10</span>
+                            </div>
+                            <Progress value={73} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Baseline Strategy</span>
+                              <span className="font-medium">6.4/10</span>
+                            </div>
+                            <Progress value={64} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Communication</span>
+                              <span className="font-medium">7.8/10</span>
+                            </div>
+                            <Progress value={78} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Game Adaptation</span>
+                              <span className="font-medium">6.6/10</span>
+                            </div>
+                            <Progress value={66} className="h-2" />
+                          </div>
                         </div>
                         
                         <div className="bg-white p-3 rounded-lg">
                           <p className="text-sm font-medium text-green-800 mb-1">Improvement Areas:</p>
-                          <p className="text-sm text-gray-700">Enhance shot selection under pressure, develop advanced doubles positioning</p>
+                          <p className="text-sm text-gray-700">Enhance shot selection under pressure, improve baseline strategy, develop better game adaptation skills</p>
                         </div>
                       </div>
 
@@ -421,40 +534,82 @@ export default function CoachingEcosystemDemo() {
                           </div>
                         </div>
                         
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Footwork</span>
+                              <span>Footwork & Movement</span>
                               <span className="font-medium">7.0/10</span>
                             </div>
                             <Progress value={70} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Endurance</span>
+                              <span>Cardiovascular Endurance</span>
                               <span className="font-medium">6.5/10</span>
                             </div>
                             <Progress value={65} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Agility</span>
+                              <span>Agility & Quickness</span>
                               <span className="font-medium">7.5/10</span>
                             </div>
                             <Progress value={75} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Recovery</span>
+                              <span>Balance & Stability</span>
+                              <span className="font-medium">7.2/10</span>
+                            </div>
+                            <Progress value={72} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Core Strength</span>
+                              <span className="font-medium">6.8/10</span>
+                            </div>
+                            <Progress value={68} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Flexibility</span>
+                              <span className="font-medium">6.9/10</span>
+                            </div>
+                            <Progress value={69} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Recovery Time</span>
                               <span className="font-medium">6.5/10</span>
                             </div>
                             <Progress value={65} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Injury Prevention</span>
+                              <span className="font-medium">7.3/10</span>
+                            </div>
+                            <Progress value={73} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Power & Explosiveness</span>
+                              <span className="font-medium">6.7/10</span>
+                            </div>
+                            <Progress value={67} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Court Coverage</span>
+                              <span className="font-medium">7.1/10</span>
+                            </div>
+                            <Progress value={71} className="h-2" />
                           </div>
                         </div>
                         
                         <div className="bg-white p-3 rounded-lg">
                           <p className="text-sm font-medium text-purple-800 mb-1">Training Focus:</p>
-                          <p className="text-sm text-gray-700">Build cardiovascular endurance, improve recovery protocols</p>
+                          <p className="text-sm text-gray-700">Build cardiovascular endurance, improve recovery protocols, strengthen core stability, enhance power development</p>
                         </div>
                       </div>
 
@@ -476,24 +631,24 @@ export default function CoachingEcosystemDemo() {
                           </div>
                         </div>
                         
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Focus</span>
+                              <span>Focus & Concentration</span>
                               <span className="font-medium">7.5/10</span>
                             </div>
                             <Progress value={75} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Pressure Handling</span>
+                              <span>Pressure Management</span>
                               <span className="font-medium">6.5/10</span>
                             </div>
                             <Progress value={65} className="h-2" />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
-                              <span>Confidence</span>
+                              <span>Confidence Level</span>
                               <span className="font-medium">8.0/10</span>
                             </div>
                             <Progress value={80} className="h-2" />
@@ -505,11 +660,53 @@ export default function CoachingEcosystemDemo() {
                             </div>
                             <Progress value={70} className="h-2" />
                           </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Emotional Control</span>
+                              <span className="font-medium">6.8/10</span>
+                            </div>
+                            <Progress value={68} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Competitive Spirit</span>
+                              <span className="font-medium">7.9/10</span>
+                            </div>
+                            <Progress value={79} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Mental Resilience</span>
+                              <span className="font-medium">7.1/10</span>
+                            </div>
+                            <Progress value={71} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Game Intelligence</span>
+                              <span className="font-medium">7.4/10</span>
+                            </div>
+                            <Progress value={74} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Visualization Skills</span>
+                              <span className="font-medium">6.6/10</span>
+                            </div>
+                            <Progress value={66} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Pre-Point Routine</span>
+                              <span className="font-medium">6.3/10</span>
+                            </div>
+                            <Progress value={63} className="h-2" />
+                          </div>
                         </div>
                         
                         <div className="bg-white p-3 rounded-lg">
                           <p className="text-sm font-medium text-orange-800 mb-1">Development Areas:</p>
-                          <p className="text-sm text-gray-700">Enhance pressure performance, develop pre-point routines</p>
+                          <p className="text-sm text-gray-700">Enhance pressure performance, develop consistent pre-point routines, improve visualization techniques, strengthen emotional control</p>
                         </div>
                       </div>
                     </div>
