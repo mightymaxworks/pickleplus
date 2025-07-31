@@ -86,7 +86,7 @@ interface StudentProgressDashboardProps {
   coachId?: number;
 }
 
-export default function StudentProgressDashboardFixed({ coachId = 1 }: StudentProgressDashboardProps) {
+function StudentProgressDashboardFixed({ coachId = 1 }: StudentProgressDashboardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
@@ -122,7 +122,7 @@ export default function StudentProgressDashboardFixed({ coachId = 1 }: StudentPr
     return defaultValue;
   };
 
-  const safeArray = <T>(value: any, defaultValue: T[] = []): T[] => {
+  const safeArray = <T,>(value: any, defaultValue: T[] = []): T[] => {
     if (Array.isArray(value)) return value;
     return defaultValue;
   };
@@ -513,4 +513,4 @@ export default function StudentProgressDashboardFixed({ coachId = 1 }: StudentPr
   );
 }
 
-export default StudentProgressDashboard;
+export default StudentProgressDashboardFixed;
