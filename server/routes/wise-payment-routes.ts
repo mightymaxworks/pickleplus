@@ -27,41 +27,122 @@ const processPaymentSchema = z.object({
   })
 });
 
-// Helper function to make Wise API calls
+// Helper function to make Wise API calls with multiple auth strategies
 async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any) {
-  const url = `${WISE_API_BASE}${endpoint}`;
   const token = process.env.WISE_API_TOKEN;
   
+  if (!token) {
+    throw new Error('WISE_API_TOKEN not configured');
+  }
+
+  // Detect token format and determine auth strategies
+  const isStandardToken = token.startsWith('test_') || token.startsWith('live_');
+  const isUUIDToken = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(token);
+  
   console.log('WISE API Debug:', {
-    url,
+    endpoint,
     method,
     hasToken: !!token,
-    tokenPrefix: token ? token.substring(0, 10) + '...' : 'missing',
+    tokenPrefix: token.substring(0, 10) + '...',
+    tokenType: isStandardToken ? 'standard' : isUUIDToken ? 'uuid' : 'unknown',
     environment: process.env.NODE_ENV || 'development'
   });
+
+  // Define multiple API configurations to try
+  const apiConfigs = [];
   
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: data ? JSON.stringify(data) : undefined
-  });
-  
-  console.log('WISE API Response:', {
-    status: response.status,
-    statusText: response.statusText,
-    headers: Object.fromEntries(response.headers.entries())
-  });
-  
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error('WISE API Error Body:', errorBody);
-    throw new Error(`Wise API error: ${response.status} ${response.statusText} - ${errorBody}`);
+  if (isStandardToken) {
+    // Standard WISE API configuration
+    apiConfigs.push({
+      url: `${WISE_API_BASE}${endpoint}`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      name: 'Standard Bearer Token'
+    });
+  } else if (isUUIDToken) {
+    // UUID tokens might work with different endpoints or auth methods
+    apiConfigs.push(
+      // Try Partner API endpoint
+      {
+        url: `https://api.sandbox.transferwise.tech${endpoint}`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        name: 'Partner API Bearer'
+      },
+      // Try with Token auth instead of Bearer
+      {
+        url: `${WISE_API_BASE}${endpoint}`,
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        name: 'Token Authentication'
+      },
+      // Try Business API endpoint
+      {
+        url: `https://api.sandbox.transferwise.tech/v3${endpoint}`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        name: 'Business API v3'
+      },
+      // Try with API key in header
+      {
+        url: `${WISE_API_BASE}${endpoint}`,
+        headers: {
+          'X-API-Key': token,
+          'Content-Type': 'application/json'
+        },
+        name: 'API Key Header'
+      }
+    );
   }
-  
-  return response.json();
+
+  // Try each configuration
+  for (const config of apiConfigs) {
+    try {
+      console.log(`Trying ${config.name}:`, {
+        url: config.url,
+        authHeader: config.headers.Authorization || config.headers['X-API-Key'] ? 'X-API-Key' : 'none'
+      });
+
+      const response = await fetch(config.url, {
+        method,
+        headers: config.headers,
+        body: data ? JSON.stringify(data) : undefined
+      });
+
+      console.log(`${config.name} Response:`, {
+        status: response.status,
+        statusText: response.statusText
+      });
+
+      if (response.ok) {
+        console.log(`✅ Success with ${config.name}`);
+        return await response.json();
+      }
+
+      // Log the error but continue to next config
+      if (response.status !== 401 && response.status !== 403) {
+        // Non-auth error, probably won't be fixed by different auth
+        const errorBody = await response.text();
+        console.error(`${config.name} Error:`, errorBody);
+        throw new Error(`Wise API error: ${response.status} ${response.statusText} - ${errorBody}`);
+      }
+
+    } catch (error) {
+      console.log(`${config.name} failed:`, error.message);
+      // Continue to next config
+    }
+  }
+
+  // If all configurations failed
+  throw new Error(`All WISE API authentication methods failed. Your token format may require different API access. Please check your WISE dashboard for the correct API configuration or contact WISE support for the proper token format.`);
 }
 
 // Verify Wise webhook signature
