@@ -235,6 +235,7 @@ export default function App() {
                   
                   {/* UI/UX Demo Page */}
                   <Route path="/ui-ux-demo" component={lazyLoad(() => import('./pages/UIUXDemo'))} />
+                  <Route path="/passport-demo" component={lazyLoad(() => import('./pages/PassportDemo'))} />
                   
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
