@@ -18,6 +18,8 @@ import { EnhancedHeroSection } from "@/components/EnhancedHeroSection";
 import { CourtIQExplanationSection } from "@/components/CourtIQExplanationSection";
 import { RatingSystemsIntegrationSection } from "@/components/RatingSystemsIntegrationSection";
 import { EnhancedChangelogSection } from "@/components/EnhancedChangelogSection";
+import { CoachCertificationFlow } from "@/components/journey/CoachCertificationFlow";
+import { StudentJourneyFlow } from "@/components/journey/StudentJourneyFlow";
 
 // Animation variants
 const fadeIn = {
@@ -675,6 +677,34 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Student Journey Section */}
+      <section className="py-12 sm:py-20 bg-gray-50 overflow-hidden" id="student-journey">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+          >
+            <StudentJourneyFlow />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Coach Certification Section */}
+      <section className="py-12 sm:py-20 bg-white overflow-hidden" id="coach-certification">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+          >
+            <CoachCertificationFlow />
+          </motion.div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section className="py-12 sm:py-20 bg-gray-50 overflow-hidden" id="how-it-works">
         <div className="container mx-auto px-4 sm:px-6">
@@ -685,9 +715,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">How Pickle+ Works</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Platform Features</h2>
             <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Get started in minutes and begin your pickleball journey with these simple steps
+              Discover the comprehensive tools and features that make Pickle+ the ultimate pickleball platform
             </p>
           </motion.div>
 

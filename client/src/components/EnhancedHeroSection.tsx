@@ -5,7 +5,7 @@ import { ArrowRight, ChevronDown, Trophy, LayoutDashboard } from "lucide-react";
 import { LanguageAwareLogo } from "@/components/icons/LanguageAwareLogo";
 import { ParticleBackground } from "./animations/ParticleBackground";
 import { useAuth } from "@/contexts/AuthContext";
-import { DemoPlayerPassport } from '@/components/dashboard/DemoPlayerPassport';
+import { AlternativePassportDisplay } from '@/components/dashboard/AlternativePassportDisplay';
 
 export function EnhancedHeroSection() {
   const [, navigate] = useLocation();
@@ -122,9 +122,9 @@ export function EnhancedHeroSection() {
               {/* Card glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-[#FFC107]/30 rounded-2xl blur-xl opacity-70"></div>
               
-              {/* Demo passport component showing authentic design */}
+              {/* Alternative passport display - more spacious */}
               <div className="relative">
-                <DemoPlayerPassport />
+                <AlternativePassportDisplay />
               </div>
               
               {/* Shadow decoration */}
