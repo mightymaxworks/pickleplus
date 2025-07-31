@@ -233,6 +233,9 @@ export default function App() {
                   <Route path="/coach/automated-workflows" component={lazyLoad(() => import('./pages/coach/automated-workflows'))} />
                   <Route path="/coach/comprehensive-guided-journey" component={lazyLoad(() => import('./pages/coach/comprehensive-guided-journey'))} />
                   
+                  {/* UI/UX Demo Page */}
+                  <Route path="/ui-ux-demo" component={lazyLoad(() => import('./pages/UIUXDemo'))} />
+                  
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 
