@@ -24,8 +24,8 @@ export function DemoPlayerPassport() {
       <Card 
         className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
       >
-        <CardContent className="p-2">
-          <div className="flex flex-col lg:flex-row items-center gap-4">
+        <CardContent className="p-3 md:p-4 lg:p-6">
+          <div className="flex flex-col lg:flex-row items-center gap-4 lg:gap-8">
             {/* Player Information */}
             <div className="flex-1 text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
@@ -96,15 +96,15 @@ export function DemoPlayerPassport() {
                 </Button>
               </motion.div>
 
-              {/* Key Stats Grid - Exact 6-column layout */}
+              {/* Key Stats Grid - Responsive layout */}
               <motion.div 
-                className="grid grid-cols-2 lg:grid-cols-6 gap-3"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mt-4 lg:mt-6"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8, duration: 0.6 }}
               >
                 <motion.div 
-                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all"
+                  className="text-center lg:text-left bg-white/50 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all"
                   whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.8)" }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
@@ -157,14 +157,14 @@ export function DemoPlayerPassport() {
               </motion.div>
             </div>
             
-            {/* Prominent QR Code Section - Exact match */}
-            <div className="flex flex-col items-center">
+            {/* Prominent QR Code Section - Responsive */}
+            <div className="flex flex-col items-center lg:ml-6">
               <motion.div 
-                className="w-40 h-40 bg-white border-4 border-orange-300 rounded-xl flex items-center justify-center mb-3 shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
+                className="w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 bg-white border-4 border-orange-300 rounded-xl flex items-center justify-center mb-3 shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <QrCode className="w-32 h-32 text-orange-600" />
+                <QrCode className="w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 text-orange-600" />
               </motion.div>
               <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-300 px-3 py-1">
                 <Scan className="w-3 h-3 mr-1" />

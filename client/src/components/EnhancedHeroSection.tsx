@@ -118,7 +118,7 @@ export function EnhancedHeroSection() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div className="relative max-w-sm mx-auto">
+            <div className="relative max-w-sm md:max-w-2xl lg:max-w-3xl mx-auto">
               {/* Card glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-[#FFC107]/30 rounded-2xl blur-xl opacity-70"></div>
               
