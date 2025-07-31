@@ -233,9 +233,12 @@ export default function App() {
                   <Route path="/coach/automated-workflows" component={lazyLoad(() => import('./pages/coach/automated-workflows'))} />
                   <Route path="/coach/comprehensive-guided-journey" component={lazyLoad(() => import('./pages/coach/comprehensive-guided-journey'))} />
                   
-                  {/* UI/UX Demo Page */}
+                  {/* UI/UX Demo Pages */}
                   <Route path="/ui-ux-demo" component={lazyLoad(() => import('./pages/UIUXDemo'))} />
                   <Route path="/passport-demo" component={lazyLoad(() => import('./pages/PassportDemo'))} />
+                  <Route path="/component-showcase" component={lazyLoad(() => import('./pages/ComponentShowcase'))} />
+                  <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} />
+                  <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} />
                   
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
