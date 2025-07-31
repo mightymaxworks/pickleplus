@@ -24,7 +24,11 @@ import {
   Eye,
   Zap,
   Shield,
-  Sparkles
+  Sparkles,
+  QrCode,
+  Crown,
+  Medal,
+  Hash
 } from "lucide-react";
 
 interface PassportData {
@@ -52,6 +56,17 @@ interface PassportData {
     totalPoints: number;
     rank: number;
     tier: string;
+  };
+  rankings: {
+    global: { rank: number; total: number };
+    local: { rank: number; total: number; location: string };
+    age: { rank: number; total: number; bracket: string };
+    skill: { rank: number; total: number; level: string };
+  };
+  qrCode: {
+    passportId: string;
+    facilityAccess: boolean;
+    membershipLevel: string;
   };
   achievements: Array<{
     id: string;
@@ -95,6 +110,17 @@ const demoPassportData: PassportData = {
     totalPoints: 2847,
     rank: 42,
     tier: "Gold"
+  },
+  rankings: {
+    global: { rank: 42, total: 15847 },
+    local: { rank: 8, total: 234, location: "San Francisco Bay Area" },
+    age: { rank: 12, total: 891, bracket: "25-35" },
+    skill: { rank: 23, total: 1205, level: "4.0-4.5 DUPR" }
+  },
+  qrCode: {
+    passportId: "PKL-AC-2024-7719",
+    facilityAccess: true,
+    membershipLevel: "Premium"
   },
   achievements: [
     {
@@ -156,7 +182,7 @@ export default function ModernPassportDisplay({
   interactive = true 
 }: ModernPassportDisplayProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'stats' | 'achievements' | 'activity'>('overview');
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'stats' | 'rankings' | 'achievements' | 'activity'>('overview');
 
   const rarityColors = {
     common: 'border-gray-300 bg-gray-50',
@@ -177,16 +203,17 @@ export default function ModernPassportDisplay({
   const getQuickActions = () => {
     if (view === 'facility') {
       return [
+        { icon: QrCode, label: 'Show QR', action: 'show-qr' },
         { icon: Calendar, label: 'Book Court', action: 'book-court' },
         { icon: Users, label: 'Find Partner', action: 'find-partner' },
         { icon: Activity, label: 'Check In', action: 'check-in' }
       ];
     }
     return [
+      { icon: QrCode, label: 'Show QR', action: 'show-qr' },
       { icon: Trophy, label: 'Record Match', action: 'record-match' },
       { icon: Calendar, label: 'Book Session', action: 'book-session' },
-      { icon: Share2, label: 'Share', action: 'share' },
-      { icon: Edit3, label: 'Edit', action: 'edit' }
+      { icon: Share2, label: 'Share', action: 'share' }
     ];
   };
 
@@ -204,7 +231,7 @@ export default function ModernPassportDisplay({
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="grid grid-cols-2 gap-2 text-center mb-3">
             <div className="p-2 bg-blue-50 rounded-lg">
               <p className="text-sm text-gray-600">DUPR</p>
               <p className="text-xl font-bold text-blue-600">{data.ratings.dupr}</p>
@@ -212,6 +239,15 @@ export default function ModernPassportDisplay({
             <div className="p-2 bg-green-50 rounded-lg">
               <p className="text-sm text-gray-600">Points</p>
               <p className="text-xl font-bold text-green-600">{data.stats.totalPoints}</p>
+            </div>
+          </div>
+          
+          {/* QR Code for Compact View */}
+          <div className="flex items-center justify-center p-2 bg-gray-100 rounded-lg">
+            <QrCode className="w-6 h-6 text-gray-600 mr-2" />
+            <div className="text-center">
+              <p className="text-xs font-mono text-gray-600">{data.qrCode.passportId}</p>
+              <p className="text-xs text-gray-500">{data.qrCode.membershipLevel}</p>
             </div>
           </div>
         </CardContent>
@@ -246,7 +282,7 @@ export default function ModernPassportDisplay({
             </div>
 
             {/* Quick Stats */}
-            <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:ml-auto">
+            <div className="flex-1 grid grid-cols-2 lg:grid-cols-5 gap-4 lg:ml-auto">
               <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
                 <p className="text-3xl font-bold">{data.ratings.dupr}</p>
                 <p className="text-sm text-orange-100">DUPR Rating</p>
@@ -264,6 +300,12 @@ export default function ModernPassportDisplay({
                   {data.stats.tier} Tier
                 </Badge>
                 <p className="text-sm text-orange-100 mt-1">{data.stats.totalPoints} pts</p>
+              </div>
+              {/* QR Code Quick Access */}
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3 cursor-pointer hover:bg-white/20 transition-colors">
+                <QrCode className="w-8 h-8 mx-auto mb-1 text-white" />
+                <p className="text-xs text-orange-100">QR Code</p>
+                <p className="text-xs text-orange-200 font-mono">{data.qrCode.passportId.split('-').pop()}</p>
               </div>
             </div>
           </div>
@@ -296,6 +338,7 @@ export default function ModernPassportDisplay({
           {[
             { key: 'overview', label: 'Overview', icon: Eye },
             { key: 'stats', label: 'Statistics', icon: BarChart3 },
+            { key: 'rankings', label: 'Rankings', icon: Crown },
             { key: 'achievements', label: 'Achievements', icon: Award },
             { key: 'activity', label: 'Activity', icon: Activity }
           ].map((tab) => {
@@ -344,31 +387,38 @@ export default function ModernPassportDisplay({
               </CardContent>
             </Card>
 
-            {/* Recent Achievements */}
+            {/* QR Code & Passport ID */}
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-purple-500" />
-                  Recent Achievements
+                  <QrCode className="w-5 h-5 text-blue-500" />
+                  Digital Passport
                 </h3>
-                <div className="space-y-3">
-                  {data.achievements.slice(0, 3).map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className={`p-3 rounded-lg border-2 ${rarityColors[achievement.rarity]}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{achievement.icon}</span>
-                        <div className="flex-1">
-                          <p className="font-semibold">{achievement.title}</p>
-                          <p className="text-sm text-gray-600">{achievement.description}</p>
-                        </div>
-                        <Badge variant="outline" className="capitalize">
-                          {achievement.rarity}
-                        </Badge>
-                      </div>
+                <div className="text-center space-y-4">
+                  {/* QR Code Placeholder */}
+                  <div className="w-32 h-32 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <QrCode className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-xs text-gray-500">QR Code</p>
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="font-mono text-lg font-bold text-gray-900">{data.qrCode.passportId}</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <Badge variant={data.qrCode.facilityAccess ? "default" : "secondary"}>
+                        {data.qrCode.facilityAccess ? "Facility Access ✓" : "Limited Access"}
+                      </Badge>
+                      <Badge variant="outline">{data.qrCode.membershipLevel}</Badge>
+                    </div>
+                  </div>
+                  
+                  {view === 'facility' && (
+                    <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm font-medium text-green-800">✓ Verified for Facility Access</p>
+                      <p className="text-xs text-green-600">Scan this code at any Pickle+ facility</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -424,6 +474,121 @@ export default function ModernPassportDisplay({
               </CardContent>
             </Card>
           </>
+        )}
+
+        {/* Rankings Tab */}
+        {selectedTab === 'rankings' && (
+          <>
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                  Global Rankings
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-3">
+                      <Crown className="w-6 h-6 text-yellow-600" />
+                      <div>
+                        <p className="font-semibold text-gray-900">Global Ranking</p>
+                        <p className="text-sm text-gray-600">All players worldwide</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-yellow-600">#{data.rankings.global.rank}</p>
+                      <p className="text-sm text-gray-500">of {data.rankings.global.total.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-6 h-6 text-blue-600" />
+                      <div>
+                        <p className="font-semibold text-gray-900">Local Ranking</p>
+                        <p className="text-sm text-gray-600">{data.rankings.local.location}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-blue-600">#{data.rankings.local.rank}</p>
+                      <p className="text-sm text-gray-500">of {data.rankings.local.total}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                  <Medal className="w-5 h-5 text-purple-500" />
+                  Category Rankings
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <Hash className="w-6 h-6 text-green-600" />
+                      <div>
+                        <p className="font-semibold text-gray-900">Age Bracket</p>
+                        <p className="text-sm text-gray-600">{data.rankings.age.bracket} years old</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-600">#{data.rankings.age.rank}</p>
+                      <p className="text-sm text-gray-500">of {data.rankings.age.total}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <Target className="w-6 h-6 text-purple-600" />
+                      <div>
+                        <p className="font-semibold text-gray-900">Skill Level</p>
+                        <p className="text-sm text-gray-600">{data.rankings.skill.level}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-purple-600">#{data.rankings.skill.rank}</p>
+                      <p className="text-sm text-gray-500">of {data.rankings.skill.total}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Achievements Tab */}
+        {selectedTab === 'achievements' && (
+          <Card className="lg:col-span-2">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                Achievements & Badges
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {data.achievements.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`p-4 rounded-lg border-2 ${rarityColors[achievement.rarity]}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl">{achievement.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-lg">{achievement.title}</p>
+                        <p className="text-sm text-gray-600 mb-2">{achievement.description}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="capitalize">
+                            {achievement.rarity}
+                          </Badge>
+                          <span className="text-xs text-gray-500">{achievement.earnedDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Other tabs content would go here */}
