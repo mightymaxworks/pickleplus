@@ -65,7 +65,6 @@ import sageApiRoutes from "./routes/sage-api-routes"; // PKL-278651-SAGE-0029-AP
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { requireAdmin } from "./middleware/auth";
-import { coachMatchIntegrationRoutes } from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 1
 import { transparentPointsAllocationRoutes } from "./api/transparent-points-allocation"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 2
 import coachMatchIntegrationApiRoutes from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 3
 import { registerCoachHubRoutes } from "./routes/coach-hub-routes"; // Unified Coach Hub routes
@@ -96,7 +95,7 @@ import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-2
 import trainingCenterAdminRoutes from "./routes/training-center-admin-routes"; // PKL-278651-TRAINING-CENTER-ADMIN-001 - Training Center Admin
 import pcpCertificationRoutes from "./routes/pcp-certification-routes"; // PCP Coaching Certification Programme
 import pcpCoachingRoutes from "./routes/pcp-coaching-routes.js"; // PCP Coaching Ecosystem API Routes
-import coachMatchIntegrationApiRoutes from "./api/coach-match-integration"; // PKL-278651-COACH-MATCH-INTEGRATION - Phase 1
+// Removed duplicate import
 
 /**
  * Register all application routes with the Express app
