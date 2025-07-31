@@ -62,6 +62,10 @@ interface AppHeaderProps {
     label: string;
     icon: React.ReactNode;
     path: string;
+    dropdown?: Array<{
+      label: string;
+      path: string;
+    }>;
   }>;
 }
 
@@ -137,18 +141,28 @@ export function AppHeader({
     }
   };
 
-  // Default navigation items - reorganized for better UX
+  // Streamlined navigation items - 5 core sections
   const defaultNavItems = [
-    { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
-    { label: 'Coaching Platform', icon: <GraduationCap size={18} />, path: '/coaching' },
-    { label: t('nav.features'), icon: <Compass size={18} />, path: '/features' },
-    { label: t('nav.matches'), icon: <Calendar size={18} />, path: '/matches' },
-    { label: t('nav.communities'), icon: <Users size={18} />, path: '/communities' },
-    { label: t('nav.pcpCertification'), icon: <Award size={18} />, path: '/pcp-certification' },
-    { label: t('nav.developmentHub'), icon: <Building2 size={18} />, path: '/player-development-hub' },
-    { label: t('nav.referrals'), icon: <Share size={18} />, path: '/referrals' },
-    { label: t('settings.general'), icon: <Settings size={18} />, path: '/settings' },
-    ...(user?.isAdmin ? [{ label: t('nav.adminPanel'), icon: <Shield size={18} />, path: '/admin' }] : [])
+    { label: 'Home', icon: <Home size={18} />, path: '/dashboard' },
+    { label: 'Play', icon: <Calendar size={18} />, path: '/matches' },
+    { label: 'Community', icon: <Users size={18} />, path: '/communities' },
+    { label: 'Coaching', icon: <GraduationCap size={18} />, path: '/coach', 
+      dropdown: [
+        { label: 'Coach Hub', path: '/coach' },
+        { label: 'Find Coaches', path: '/find-coaches' },
+        { label: 'PCP Certification', path: '/pcp-certification' },
+        { label: 'Player Development', path: '/player-development-hub' }
+      ]
+    },
+    { label: 'More', icon: <Settings size={18} />, path: '/settings',
+      dropdown: [
+        { label: 'Settings', path: '/settings' },
+        { label: 'Features', path: '/features' },
+        { label: 'Achievements', path: '/achievements' },
+        { label: 'Referrals', path: '/referrals' },
+        ...(user?.isAdmin ? [{ label: 'Admin Panel', path: '/admin' }] : [])
+      ]
+    }
   ];
 
   // Use custom nav items if provided, otherwise use default
@@ -233,42 +247,71 @@ export function AppHeader({
             <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
               {/* Navigation Items */}
               {navigationItems.map((item, i) => {
-                const isActive = location === item.path;
+                const isActive = location === item.path || (item.dropdown && item.dropdown.some(subItem => location === subItem.path));
                 
                 return (
-                  <motion.button 
-                    key={item.label}
-                    className={`flex items-center w-full py-3 px-4 rounded-xl ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-[#FF5722]/10 to-[#FF9800]/10 border border-[#FF5722]/20' 
-                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                    } shadow-sm`}
-                    onClick={() => {
-                      // Close menu first before navigation to ensure UI is updated properly
-                      setMobileMenuOpen(false);
-                      // Use setTimeout to ensure the menu close animation completes
-                      // before navigating, preventing UI conflicts
-                      setTimeout(() => navigate(item.path), 300);
-                    }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 * i }}
-                    whileHover={{ x: 5 }}
-                  >
-                    <span className={`mr-3 ${isActive ? 'text-[#FF5722]' : 'text-gray-500 dark:text-gray-400'}`}>
-                      {item.icon}
-                    </span>
-                    <span className={`font-medium ${isActive ? 'text-[#FF5722]' : 'text-gray-700 dark:text-gray-300'}`}>
-                      {item.label}
-                    </span>
-                    
-                    {isActive && (
-                      <motion.div 
-                        className="ml-auto w-1.5 h-6 bg-[#FF5722] rounded-full"
-                        layoutId="navActiveIndicator"
-                      />
+                  <div key={item.label}>
+                    <motion.button 
+                      className={`flex items-center justify-between w-full py-3 px-4 rounded-xl ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-[#FF5722]/10 to-[#FF9800]/10 border border-[#FF5722]/20' 
+                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                      } shadow-sm`}
+                      onClick={() => {
+                        if (item.dropdown) {
+                          // For dropdown items, just navigate to main path
+                          setMobileMenuOpen(false);
+                          setTimeout(() => navigate(item.path), 300);
+                        } else {
+                          setMobileMenuOpen(false);
+                          setTimeout(() => navigate(item.path), 300);
+                        }
+                      }}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      whileHover={{ x: 5 }}
+                    >
+                      <div className="flex items-center">
+                        <span className={`mr-3 ${isActive ? 'text-[#FF5722]' : 'text-gray-500 dark:text-gray-400'}`}>
+                          {item.icon}
+                        </span>
+                        <span className={`font-medium ${isActive ? 'text-[#FF5722]' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {item.label}
+                        </span>
+                      </div>
+                    </motion.button>
+
+                    {/* Dropdown Items - Show as indented sub-items */}
+                    {item.dropdown && (
+                      <div className="ml-4 mt-2 space-y-1">
+                        {item.dropdown.map((subItem) => {
+                          const subIsActive = location === subItem.path;
+                          return (
+                            <motion.button
+                              key={subItem.path}
+                              className={`flex items-center w-full py-2 px-3 rounded-lg text-sm ${
+                                subIsActive
+                                  ? 'bg-[#FF5722]/5 text-[#FF5722] border-l-2 border-[#FF5722]'
+                                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(false);
+                                setTimeout(() => navigate(subItem.path), 300);
+                              }}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.1 + (0.05 * i) }}
+                            >
+                              <span className="text-xs mr-2">•</span>
+                              {subItem.label}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </motion.button>
+                  </div>
                 );
               })}
               

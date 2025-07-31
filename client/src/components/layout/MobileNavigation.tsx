@@ -30,25 +30,25 @@ export function MobileNavigation() {
   const navItems = [
     { 
       icon: <Home size={20} />, 
-      label: t('nav.home'), 
+      label: 'Home', 
       path: '/dashboard',
       id: 'home'
     },
     { 
       icon: <Calendar size={20} />, 
-      label: t('nav.matches'), 
+      label: 'Play', 
       path: '/matches',
-      id: 'matches'
+      id: 'play'
     },
     { 
       icon: <Users size={20} />, 
-      label: t('nav.community'), 
+      label: 'Community', 
       path: '/communities',
       id: 'community'
     },
     { 
       icon: <Award size={20} />, 
-      label: t('nav.coaching'), 
+      label: 'Coaching', 
       path: '/coach',
       id: 'coaching'
     }

@@ -14,8 +14,8 @@ export function BottomNavigation() {
   
   const navItems: NavItem[] = [
     { label: "Home", icon: "home", path: "/dashboard" },
-    { label: "Play", icon: "sports_tennis", path: "/tournaments" },
-    { label: "Community", icon: "groups", path: "/connections" },
+    { label: "Play", icon: "sports_tennis", path: "/matches" },
+    { label: "Community", icon: "groups", path: "/communities" },
     { label: "Coaching", icon: "school", path: "/coach" }
   ];
   
