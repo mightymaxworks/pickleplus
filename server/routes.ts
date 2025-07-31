@@ -73,6 +73,7 @@ import { registerCoachHubRoutes } from "./routes/coach-hub-routes"; // Unified C
 import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes"; // Sprint 1: Curriculum Management & Lesson Planning
 import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 2 Phase 2: Session Planning Integration
+import duprIntegrationRoutes from './routes/dupr-integration-routes'; // DUPR Rating Integration System
 import assessmentGoalIntegrationRoutes from "./routes/assessment-goal-integration-routes"; // Sprint 3 Phase 1 & 2: Assessment-Goal Integration
 import progressTrackingRoutes from "./routes/progress-tracking-routes"; // Sprint 3 Phase 3: Progress Tracking Integration
 import analyticsRoutes from "./routes/analytics-routes"; // Sprint 3 Phase 3: Advanced Analytics Dashboard
@@ -420,6 +421,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Sprint 2 Phase 2: Session Planning Integration routes
   app.use('/api/coach', sessionPlanningRoutes);
   console.log('[API] Sprint 2 Phase 2: Session Planning Integration routes registered successfully');
+  
+  // Register DUPR Integration routes
+  app.use('/api/dupr', duprIntegrationRoutes);
+  console.log('[API] DUPR Rating Integration routes registered successfully');
   
   // Register Sprint 2 Phase 3: Student Progress Tracking routes
   app.use('/api/coach', studentProgressRoutes);

@@ -411,6 +411,13 @@ export default function App() {
                     component={lazyLoad(() => import('./pages/coach/assessment-tool'))}
                     pageTitle="PCP Assessment Tool"
                   />
+                  
+                  {/* DUPR Integration */}
+                  <ProtectedRouteWithLayout
+                    path="/dupr-integration"
+                    component={lazyLoad(() => import('./pages/dupr-integration'))}
+                    pageTitle="DUPR Integration"
+                  />
                   <ProtectedRouteWithLayout
                     path="/coach/student-progress-dashboard"
                     component={lazyLoad(() => import('./pages/coach/student-progress-dashboard-fixed'))}

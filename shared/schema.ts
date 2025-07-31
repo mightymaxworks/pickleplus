@@ -843,6 +843,7 @@ export const users = pgTable("users", {
   preferredMatchDuration: varchar("preferred_match_duration", { length: 50 }),
   fitnessLevel: varchar("fitness_level", { length: 50 }),
   mobilityLimitations: text("mobility_limitations"),
+  
   privateMessagePreference: varchar("private_message_preference", { length: 50 }).default("all"),
   
   // Location data
