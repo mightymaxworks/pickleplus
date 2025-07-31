@@ -105,7 +105,7 @@ export default function CoachApplication() {
   const [pcpCertificationInterest, setPcpCertificationInterest] = useState(false);
   const [pcpCertificationEmail, setPcpCertificationEmail] = useState('');
 
-  const totalSteps = 6;
+  const totalSteps = 7; // Updated to include PCP marketing step
   const progress = (currentStep / totalSteps) * 100;
 
   // Coach type options
@@ -165,8 +165,10 @@ export default function CoachApplication() {
         }
         return true;
       case 2:
-        return true; // PCP certification step - always can proceed
+        return true; // PCP certification marketing step - always can proceed
       case 3:
+        return true; // Application continuation step - always can proceed  
+      case 4:
         if (!applicationData.teachingPhilosophy || applicationData.teachingPhilosophy.length < 50) {
           toast({
             title: "Validation Error",
@@ -179,6 +181,36 @@ export default function CoachApplication() {
           toast({
             title: "Validation Error",
             description: "Please select at least one specialization",
+            variant: "destructive"
+          });
+          return false;
+        }
+        return true;
+      case 5:
+        if (!applicationData.previousExperience || applicationData.previousExperience.length < 20) {
+          toast({
+            title: "Validation Error",
+            description: "Previous experience must be at least 20 characters",
+            variant: "destructive"
+          });
+          return false;
+        }
+        return true;
+      case 6:
+        if (!applicationData.hourlyRate || applicationData.hourlyRate < 20) {
+          toast({
+            title: "Validation Error",
+            description: "Please set a valid hourly rate (minimum $20)",
+            variant: "destructive"
+          });
+          return false;
+        }
+        return true;
+      case 7:
+        if (!applicationData.backgroundCheckConsent) {
+          toast({
+            title: "Validation Error",
+            description: "Background check consent is required",
             variant: "destructive"
           });
           return false;
@@ -415,87 +447,169 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* PCP Certification Promotion - Appears between Step 1 and 2 */}
+            {/* Enhanced PCP Certification Marketing - Strong Value Proposition */}
             {currentStep === 2 && !pcpCertificationInterest && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6 mb-8"
               >
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-blue-100 p-3 rounded-lg">
-                      <Award className="w-8 h-8 text-blue-600" />
+                <div className="bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 border-2 border-emerald-200 rounded-2xl p-8 shadow-lg">
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-6 py-3 rounded-full mb-4">
+                      <Award className="w-6 h-6" />
+                      <span className="font-bold text-lg">UNLOCK PREMIUM EARNING POTENTIAL</span>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-blue-900 mb-2">
-                        PCP Coaching Certification Programme
-                      </h3>
-                      <p className="text-blue-800 mb-4">
-                        Want to stand out as a top-tier coach? The PCP Coaching Certification Programme 
-                        is the gold standard in pickleball instruction, recognized by facilities 
-                        and players nationwide.
-                      </p>
-                      
-                      <div className="grid md:grid-cols-2 gap-4 mb-6">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-blue-900">Benefits Include:</h4>
-                          <ul className="text-sm text-blue-700 space-y-1">
-                            <li className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                              Higher coaching rates and credibility
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                              Access to exclusive coaching resources
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                              Priority placement in coach directories
-                            </li>
-                          </ul>
-                        </div>
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-blue-900">Program Features:</h4>
-                          <ul className="text-sm text-blue-700 space-y-1">
-                            <li className="flex items-center gap-2">
-                              <Star className="w-4 h-4 text-yellow-500" />
-                              Comprehensive online coursework
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <Star className="w-4 h-4 text-yellow-500" />
-                              Practical skill assessments
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <Star className="w-4 h-4 text-yellow-500" />
-                              Ongoing education opportunities
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                      PCP Certified Coaches Earn 40-60% More
+                    </h2>
+                    <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+                      Join the elite tier of pickleball coaches with PCP Certification and gain access to premium facilities, higher-paying clients, and exclusive coaching opportunities.
+                    </p>
+                  </div>
 
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Button
-                          onClick={() => {
-                            setPcpCertificationInterest(true);
-                            setCurrentStep(currentStep + 1);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2"
-                        >
-                          I'm Interested
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setPcpCertificationInterest(false);
-                            setCurrentStep(currentStep + 1);
-                          }}
-                          className="border-blue-300 text-blue-700 hover:bg-blue-50 text-sm px-3 py-2"
-                        >
-                          Maybe Later
-                        </Button>
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    {/* Higher Earnings */}
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-green-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Star className="w-6 h-6 text-green-600" />
+                        </div>
+                        <h3 className="font-bold text-green-900">Premium Rates</h3>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Standard Coach:</span>
+                          <span className="font-medium">$50-75/hour</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2">
+                          <span className="text-sm font-medium text-green-700">PCP Certified:</span>
+                          <span className="font-bold text-green-700">$85-120/hour</span>
+                        </div>
+                        <div className="bg-green-50 rounded-lg p-3 mt-3">
+                          <p className="text-xs text-green-800 font-medium">
+                            Average increase: $2,800+ per month for active coaches
+                          </p>
+                        </div>
                       </div>
                     </div>
+
+                    {/* FPF Facility Access */}
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-blue-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <MapPin className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <h3 className="font-bold text-blue-900">FPF Facility Access</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm">Exclusive coaching rights at FPF facilities</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm">Premium court access during peak hours</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm">Marketing support from facilities</span>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-3 mt-3">
+                          <p className="text-xs text-blue-800 font-medium">
+                            Access to 300+ premier facilities nationwide
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Elite Recognition */}
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-purple-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Shield className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <h3 className="font-bold text-purple-900">Elite Status</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm">Verified PCP badge on profile</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm">Priority in coach search results</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm">Advanced coaching tools access</span>
+                        </div>
+                        <div className="bg-purple-50 rounded-lg p-3 mt-3">
+                          <p className="text-xs text-purple-800 font-medium">
+                            Join the top 15% of elite certified coaches
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 mb-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <Clock className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-orange-900 mb-2">Limited Time: Early Bird Pricing</h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-orange-800 mb-3">
+                              Get started with Level 1 PCP Certification for just $699 (regularly $899). 
+                              Level up your coaching career and start earning premium rates within 30 days.
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-lg p-4 border">
+                            <h4 className="font-bold text-gray-900 mb-2">Investment ROI</h4>
+                            <div className="text-sm space-y-1">
+                              <div className="flex justify-between">
+                                <span>Level 1 Cost:</span>
+                                <span className="font-medium">$699</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Monthly Increase:</span>
+                                <span className="font-bold text-green-600">+$2,800</span>
+                              </div>
+                              <div className="border-t pt-1 flex justify-between">
+                                <span className="font-medium">ROI Timeline:</span>
+                                <span className="font-bold text-green-600">8 days</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button
+                      size="lg"
+                      onClick={() => {
+                        setPcpCertificationInterest(true);
+                      }}
+                      className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white font-bold px-8 py-4 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    >
+                      YES! I Want PCP Certification
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => {
+                        setPcpCertificationInterest(false);
+                      }}
+                      className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg"
+                    >
+                      Continue Without PCP
+                    </Button>
                   </div>
                 </div>
               </motion.div>
@@ -552,8 +666,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 3: Teaching Philosophy & Specializations */}
-            {currentStep === 3 && (
+            {/* Step 4: Teaching Philosophy & Specializations */}
+            {currentStep === 4 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -609,8 +723,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 4: Previous Experience */}
-            {currentStep === 4 && (
+            {/* Step 5: Previous Experience */}
+            {currentStep === 5 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -685,8 +799,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 4: Achievements */}
-            {currentStep === 4 && (
+            {/* Step 5: Achievements */}
+            {currentStep === 5 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -719,8 +833,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 5: Coaching Rates */}
-            {currentStep === 5 && (
+            {/* Step 6: Coaching Rates */}
+            {currentStep === 6 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -790,8 +904,8 @@ export default function CoachApplication() {
               </motion.div>
             )}
 
-            {/* Step 6: Legal & Background Check */}
-            {currentStep === 6 && (
+            {/* Step 7: Legal & Background Check */}
+            {currentStep === 7 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}

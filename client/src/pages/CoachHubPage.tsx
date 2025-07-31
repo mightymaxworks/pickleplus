@@ -209,65 +209,145 @@ function GuestCoachView() {
   );
 }
 
-// Prospective coach view - show application process
+// Prospective coach view - show application process with enhanced PCP marketing
 function ProspectiveCoachView() {
   return (
     <div className="space-y-8">
-      <Card className="backdrop-blur-md bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-900/60 border-white/20 shadow-2xl shadow-green-500/10">
+      {/* Enhanced PCP Value Proposition Card */}
+      <Card className="backdrop-blur-md bg-gradient-to-br from-emerald-50/90 via-blue-50/90 to-purple-50/90 border-2 border-emerald-200 shadow-2xl shadow-emerald-500/20">
         <CardHeader className="pb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
-              <Briefcase className="h-7 w-7" />
+          <div className="text-center">
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-6 py-3 rounded-full mb-4">
+              <Crown className="h-6 w-6" />
+              <span className="font-bold text-lg">ELITE COACHING OPPORTUNITY</span>
             </div>
-            <div>
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                Start Your Coaching Journey
-              </CardTitle>
-              <CardDescription className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-                Begin with our structured coach application and Level 1 certification pathway
-              </CardDescription>
-            </div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              Earn $85-120/Hour as a PCP Certified Coach
+            </CardTitle>
+            <CardDescription className="text-lg text-gray-700 max-w-2xl mx-auto">
+              Join the top 15% of elite pickleball coaches with PCP Certification and unlock premium earning potential plus exclusive FPF facility access.
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Your Next Steps:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
-                <FileText className="h-5 w-5 text-green-600" />
-                <div>
-                  <div className="font-medium">1. Submit Coach Application</div>
-                  <div className="text-sm text-muted-foreground">Complete our 5-step application process</div>
+          {/* Income Comparison */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white/80 rounded-xl p-6 border border-gray-200 shadow-md">
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-gray-700 mb-2">Standard Coach</h3>
+                <div className="text-3xl font-bold text-gray-600">$50-75</div>
+                <div className="text-sm text-gray-500">per hour</div>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <span>Basic profile listing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <span>Limited facility access</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <span>Self-sourced students</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border">
-                <Clock className="h-5 w-5 text-gray-400" />
-                <div>
-                  <div className="font-medium text-gray-600 dark:text-gray-300">2. Application Review</div>
-                  <div className="text-sm text-muted-foreground">Administrator reviews your application</div>
-                </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-emerald-100 to-blue-100 rounded-xl p-6 border-2 border-emerald-300 shadow-lg relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-4 py-1">RECOMMENDED</Badge>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border">
-                <GraduationCap className="h-5 w-5 text-gray-400" />
-                <div>
-                  <div className="font-medium text-gray-600 dark:text-gray-300">3. Begin Level 1 Certification</div>
-                  <div className="text-sm text-muted-foreground">Start your coaching education journey</div>
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-emerald-800 mb-2">PCP Certified Coach</h3>
+                <div className="text-3xl font-bold text-emerald-700">$85-120</div>
+                <div className="text-sm text-emerald-600">per hour</div>
+                <div className="text-xs text-emerald-700 font-medium mt-1">+40-60% premium</div>
+              </div>
+              <div className="space-y-2 text-sm text-emerald-700">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Verified PCP badge & priority listing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Exclusive FPF facility coaching rights</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Premium student referrals</span>
                 </div>
               </div>
             </div>
           </div>
-          
+
+          {/* FPF Facility Benefits */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <MapPin className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-blue-900 mb-3">Exclusive FPF Facility Access</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-blue-800">Coaching rights at 300+ premier facilities</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-blue-800">Premium court access during peak hours</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-blue-800">Marketing support from facilities</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-blue-800">Referrals from facility members</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick ROI Calculation */}
+          <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 mb-8">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-orange-900 mb-4">Investment Returns in Just 8 Days</h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-orange-700">$699</div>
+                  <div className="text-sm text-orange-600">Level 1 Investment</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-green-700">+$2,800</div>
+                  <div className="text-sm text-green-600">Monthly Increase</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-700">8 Days</div>
+                  <div className="text-sm text-blue-600">ROI Timeline</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
           <div className="space-y-4">
-            <Button asChild className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0 w-full">
+            <Button asChild size="lg" className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 border-0 w-full py-4 text-lg">
               <Link to="/coach/apply">
-                Start Application Process
-                <ArrowRight className="ml-2 h-4 w-4" />
+                Start Premium Coach Application
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="outline" asChild className="w-full backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-white/30 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300">
+            <Button variant="outline" asChild size="lg" className="w-full border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 py-4 text-lg">
               <Link to="/pcp-certification">
-                View PCP Certification Levels
-                <BookOpen className="ml-2 h-4 w-4" />
+                Learn About PCP Certification
+                <BookOpen className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
