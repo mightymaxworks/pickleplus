@@ -153,7 +153,7 @@ Pickle+ is a comprehensive pickleball platform that combines player development,
 - **SPECIALIZED DEMO PAGES**: Built dedicated CoachingEcosystemDemo.tsx and CommunitySystemDemo.tsx providing detailed interactive demonstrations of complex systems
 - **PASSPORT SYSTEM INTEGRATION**: Enhanced passport display with proper singles, doubles, and mixed doubles rankings breakdown across global, local, and age categories
 - **QR CODE PROMINENCE**: Positioned QR code (PKL-AC-2024-7719) for instant facility scanning, membership verification, and player identification
-- **COACHING ECOSYSTEM DEMO**: Complete PCP certification tracking (L1-L5), student management, session planning, and analytics dashboard visualization
+- **COACHING ECOSYSTEM DEMO**: Complete PCP certification tracking (L1-L5), detailed 4-dimensional assessment tool, student management, session planning, and analytics dashboard visualization
 - **COMMUNITY SYSTEM DEMO**: Advanced community discovery, event management, social feed, and member engagement with filtering and search capabilities
 - **INTERACTIVE NAVIGATION**: All demo components include direct links to full-featured demonstration pages for comprehensive testing
 - **DESIGN CONSISTENCY**: Applied PKL-278651 glassmorphism design framework across all components with gradient backgrounds and responsive layouts

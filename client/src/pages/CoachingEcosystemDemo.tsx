@@ -154,8 +154,9 @@ export default function CoachingEcosystemDemo() {
 
       <div className="max-w-7xl mx-auto">
         <Tabs defaultValue="certification" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="certification">PCP Certification</TabsTrigger>
+            <TabsTrigger value="assessment">Assessment Tool</TabsTrigger>
             <TabsTrigger value="students">Student Management</TabsTrigger>
             <TabsTrigger value="analytics">Analytics Dashboard</TabsTrigger>
             <TabsTrigger value="sessions">Session Planning</TabsTrigger>
@@ -277,6 +278,341 @@ export default function CoachingEcosystemDemo() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Assessment Tool Tab */}
+          <TabsContent value="assessment" className="space-y-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      PCP 4-Dimensional Assessment System
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {/* Technical Skills Assessment */}
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                              <Target className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-blue-800">Technical Skills</h4>
+                              <p className="text-sm text-blue-600">Stroke mechanics and fundamentals</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-blue-700">7.2/10</div>
+                            <div className="text-sm text-blue-600">Current Rating</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Forehand</span>
+                              <span className="font-medium">8.0/10</span>
+                            </div>
+                            <Progress value={80} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Backhand</span>
+                              <span className="font-medium">6.5/10</span>
+                            </div>
+                            <Progress value={65} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Serve</span>
+                              <span className="font-medium">7.0/10</span>
+                            </div>
+                            <Progress value={70} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Volleys</span>
+                              <span className="font-medium">7.5/10</span>
+                            </div>
+                            <Progress value={75} className="h-2" />
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-3 rounded-lg">
+                          <p className="text-sm font-medium text-blue-800 mb-1">Key Focus Areas:</p>
+                          <p className="text-sm text-gray-700">Improve backhand consistency, work on third shot drop technique</p>
+                        </div>
+                      </div>
+
+                      {/* Tactical Skills Assessment */}
+                      <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                              <BarChart3 className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-green-800">Tactical Awareness</h4>
+                              <p className="text-sm text-green-600">Game strategy and court positioning</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-green-700">6.8/10</div>
+                            <div className="text-sm text-green-600">Current Rating</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Court Positioning</span>
+                              <span className="font-medium">7.5/10</span>
+                            </div>
+                            <Progress value={75} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Shot Selection</span>
+                              <span className="font-medium">6.0/10</span>
+                            </div>
+                            <Progress value={60} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Doubles Strategy</span>
+                              <span className="font-medium">7.0/10</span>
+                            </div>
+                            <Progress value={70} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Pattern Recognition</span>
+                              <span className="font-medium">6.5/10</span>
+                            </div>
+                            <Progress value={65} className="h-2" />
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-3 rounded-lg">
+                          <p className="text-sm font-medium text-green-800 mb-1">Improvement Areas:</p>
+                          <p className="text-sm text-gray-700">Enhance shot selection under pressure, develop advanced doubles positioning</p>
+                        </div>
+                      </div>
+
+                      {/* Physical Assessment */}
+                      <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                              <TrendingUp className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-purple-800">Physical Conditioning</h4>
+                              <p className="text-sm text-purple-600">Fitness and movement quality</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-purple-700">6.9/10</div>
+                            <div className="text-sm text-purple-600">Current Rating</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Footwork</span>
+                              <span className="font-medium">7.0/10</span>
+                            </div>
+                            <Progress value={70} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Endurance</span>
+                              <span className="font-medium">6.5/10</span>
+                            </div>
+                            <Progress value={65} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Agility</span>
+                              <span className="font-medium">7.5/10</span>
+                            </div>
+                            <Progress value={75} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Recovery</span>
+                              <span className="font-medium">6.5/10</span>
+                            </div>
+                            <Progress value={65} className="h-2" />
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-3 rounded-lg">
+                          <p className="text-sm font-medium text-purple-800 mb-1">Training Focus:</p>
+                          <p className="text-sm text-gray-700">Build cardiovascular endurance, improve recovery protocols</p>
+                        </div>
+                      </div>
+
+                      {/* Mental Assessment */}
+                      <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                              <Trophy className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-orange-800">Mental Performance</h4>
+                              <p className="text-sm text-orange-600">Focus and competitive mindset</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-orange-700">7.3/10</div>
+                            <div className="text-sm text-orange-600">Current Rating</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Focus</span>
+                              <span className="font-medium">7.5/10</span>
+                            </div>
+                            <Progress value={75} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Pressure Handling</span>
+                              <span className="font-medium">6.5/10</span>
+                            </div>
+                            <Progress value={65} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Confidence</span>
+                              <span className="font-medium">8.0/10</span>
+                            </div>
+                            <Progress value={80} className="h-2" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Adaptability</span>
+                              <span className="font-medium">7.0/10</span>
+                            </div>
+                            <Progress value={70} className="h-2" />
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white p-3 rounded-lg">
+                          <p className="text-sm font-medium text-orange-800 mb-1">Development Areas:</p>
+                          <p className="text-sm text-gray-700">Enhance pressure performance, develop pre-point routines</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Assessment Tools Sidebar */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Assessment Tools
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button className="w-full">New Assessment</Button>
+                    <Button className="w-full" variant="outline">Video Analysis</Button>
+                    <Button className="w-full" variant="outline">Progress Report</Button>
+                    <Button className="w-full" variant="outline">Compare Results</Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      Overall Score
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center space-y-4">
+                      <div className="text-4xl font-bold text-blue-600">7.1/10</div>
+                      <div className="text-sm text-gray-600">Comprehensive Rating</div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            Technical
+                          </span>
+                          <span className="font-medium">7.2</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            Tactical
+                          </span>
+                          <span className="font-medium">6.8</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            Physical
+                          </span>
+                          <span className="font-medium">6.9</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                            Mental
+                          </span>
+                          <span className="font-medium">7.3</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="w-5 h-5" />
+                      Recent Assessments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-sm">Sarah Chen</span>
+                        <span className="text-xs text-gray-500">2 days ago</span>
+                      </div>
+                      <div className="text-sm text-gray-600">Overall: 6.8/10</div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-sm">Mike Rodriguez</span>
+                        <span className="text-xs text-gray-500">1 week ago</span>
+                      </div>
+                      <div className="text-sm text-gray-600">Overall: 7.4/10</div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-sm">Jenny Park</span>
+                        <span className="text-xs text-gray-500">2 weeks ago</span>
+                      </div>
+                      <div className="text-sm text-gray-600">Overall: 5.9/10</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Student Management Tab */}
