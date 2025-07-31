@@ -59,11 +59,8 @@ router.get('/recommendations', async (req: Request, res: Response) => {
     const { type = 'all' } = req.query;
     let userId = req.user?.id;
 
-    // In development mode, provide a fallback user ID if not authenticated
-    if (!userId && process.env.NODE_ENV === 'development') {
-      console.log('[DEV MODE] Using default user ID for SAGE dashboard recommendations');
-      userId = 1; // Default test user ID
-    } else if (!userId) {
+    // PRODUCTION SECURITY FIX: Authentication is required for all environments
+    if (!userId) {
       return res.status(401).json({
         success: false,
         error: 'Authentication required'

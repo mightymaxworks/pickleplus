@@ -93,39 +93,10 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
     return next();
   }
   
-  // PKL-278651-AUTH-0017-DEBUG - Development-only test user bypass
-  // For development, allow requests to proceed even without authentication
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[DEV MODE] Bypassing authentication for ${req.path}`);
+  // PRODUCTION SECURITY FIX: Remove DEV MODE bypass for production readiness
+  // Authentication is now required for all environments
+  console.log(`[SECURITY] Authentication required for ${req.path} - no bypass allowed`);
     
-    // Attach a development test user to the request
-    req.user = {
-      id: 1,
-      username: 'testdev',
-      email: 'dev@pickle.plus',
-      isAdmin: true,
-      passportId: '1000MM7',
-      firstName: 'Mighty',
-      lastName: 'Max',
-      displayName: 'Mighty Max',
-      dateOfBirth: null,
-      avatarUrl: null,
-      avatarInitials: 'MM',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      verifiedEmail: true,
-      xp: 1000,
-      level: 10,
-      role: 'PLAYER'
-    } as any;
-    
-    return next();
-  }
-  
-  // Log authentication failure for debugging
-  console.log(`Authentication failed for ${req.path} - Session ID: ${req.sessionID}`);
-  console.log('Cookies available:', req.headers.cookie);
-  
   // Return standard 401 Unauthorized response
   res.status(401).json({ message: "Not authenticated" });
 }
@@ -356,7 +327,8 @@ export function setupAuth(app: Express) {
         }
         
         // Check for test users in case they've been temporarily removed
-        if (username === 'testuser1' && process.env.NODE_ENV !== 'production') {
+        // PRODUCTION SECURITY FIX: Remove test user bypass
+        if (false) { // Disabled for production security
           console.log('[Auth] Special handling for test user: testuser1');
         }
         
@@ -1079,45 +1051,10 @@ export function setupAuth(app: Express) {
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
     
-    // PKL-278651-AUTH-0017-DEBUG - Development-only test user
-    // For development, allow a test user to be returned automatically
-    if (process.env.NODE_ENV !== 'production' && !req.isAuthenticated()) {
-      console.log('[DEV MODE] Fetching actual test user from database');
-      try {
-        const { storage } = await import('./storage');
-        const testUser = await storage.getUser(1); // Get actual user from database
-        if (testUser) {
-          console.log('[DEV MODE] Found test user with passport code:', testUser.passportCode);
-          return res.json(testUser);
-        }
-      } catch (error) {
-        console.error('[DEV MODE] Error fetching test user:', error);
-      }
-      
-      // Fallback to hardcoded user if database fetch fails
-      console.log('[DEV MODE] Using fallback test user');
-      return res.json({
-        id: 1,
-        username: 'testdev',
-        email: 'dev@pickle.plus',
-        isAdmin: true,
-        passportCode: 'MX8K7P2N',
-        firstName: 'Mighty',
-        lastName: 'Max',
-        displayName: 'Mighty Max',
-        dateOfBirth: null,
-        avatarUrl: null,
-        avatarInitials: 'MM',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        verifiedEmail: true,
-        xp: 1000,
-        level: 10
-      });
-    }
-    
+    // PRODUCTION SECURITY FIX: Authentication required for all environments
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+      console.log('[SECURITY] Authentication required for /api/auth/current-user endpoint');
+      return res.status(401).json({ message: "Authentication required" });
     }
     
     try {

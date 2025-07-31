@@ -20,22 +20,20 @@ const router = Router();
 
 // Authentication middleware for admin routes
 const requireAdmin = (req: Request, res: Response, next: any) => {
-  // In development, bypass authentication
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[DEV MODE] Bypassing admin authentication for PCP learning management');
-    return next();
-  }
-  
+  // PRODUCTION SECURITY FIX: Authentication required for all environments
   if (!req.isAuthenticated()) {
+    console.log('[SECURITY] Admin authentication required for PCP learning management');
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   // Check if user has admin role
   const user = req.user as any;
-  if (!user || user.role !== 'admin') {
+  if (!user || (user.role !== 'admin' && !user.isAdmin)) {
+    console.log('[SECURITY] Admin privileges required for PCP learning management');
     return res.status(403).json({ error: 'Admin access required' });
   }
   
+  console.log(`[ADMIN] Admin access granted to ${user.username} for PCP learning management`);
   next();
 };
 

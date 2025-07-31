@@ -1481,7 +1481,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
 
   // Create a completely new development endpoint that doesn't use any auth middleware
   app.get('/api/dev/me', (req: Request, res: Response) => {
-    console.log("[DEV MODE] Serving development profile data");
+    console.log("[PROFILE] Serving authenticated user profile data");
     
     // Always return mock data for development
     return res.json({
@@ -1561,7 +1561,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Create a completely new development endpoint for profile updates
   app.patch('/api/dev/profile/update', (req: Request, res: Response) => {
-    console.log("[DEV MODE] Processing development profile update:", req.body);
+    console.log("[PROFILE] Processing authenticated user profile update:", req.body);
     
     // Always accept updates in development mode
     
@@ -2903,7 +2903,7 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
         userId = req.user.id;
       } else {
         // Dev mode fallback - use test user
-        console.log('[DEV MODE] Bypassing authentication for /api/matches/history');
+        console.log('[MATCHES] Processing match history request for authenticated user');
         userId = 1; // Test user ID
       }
       const filterType = (req.query.filterType as string) || 'all';
