@@ -99,17 +99,26 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
     retry: false
   });
   
+  // Fetch DUPR data for enhanced display
+  const { data: duprData, isLoading: isDuprLoading } = useQuery({
+    queryKey: ['/api/dupr/user-data'],
+    retry: false
+  });
+  
   const isCoach = coachProfile && (coachProfile as any).id;
+  const hasDuprIntegration = duprData && (duprData as any).duprRating;
   
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
       // Separate coaching fields from user profile fields
       const coachingFields = ['coachBio', 'experienceYears', 'hourlyRate', 'specialties', 'certifications'];
+      const duprFields = ['duprId', 'duprRating'];
       const userProfileData: any = {};
       const coachingData: any = {};
+      const duprData: any = {};
       
-      // Split fields based on whether they're coaching-related
+      // Split fields based on whether they're coaching-related or DUPR-related
       Object.keys(profileData).forEach(key => {
         if (coachingFields.includes(key)) {
           // Map field names for coaching profile
@@ -118,6 +127,8 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
           } else {
             coachingData[key] = profileData[key];
           }
+        } else if (duprFields.includes(key)) {
+          duprData[key] = profileData[key];
         } else {
           userProfileData[key] = profileData[key];
         }
@@ -169,11 +180,31 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
           const errorData = await coachResponse.json().catch(() => ({}));
           throw new Error(errorData.message || 'Failed to update coaching profile');
         }
-        
-        return coachResponse.json();
       }
       
-      // Return success if only user profile was updated
+      // Update DUPR data if DUPR fields are present
+      const hasDuprChanges = Object.keys(duprData).length > 0;
+      
+      if (hasDuprChanges && duprData.duprId && duprData.duprRating) {
+        const duprResponse = await fetch('/api/dupr/import', {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            duprId: duprData.duprId,
+            duprRating: parseFloat(duprData.duprRating),
+            verificationMethod: 'user_provided',
+            notes: 'Updated via profile form'
+          }),
+        });
+
+        if (!duprResponse.ok) {
+          const errorData = await duprResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to update DUPR rating');
+        }
+      }
+      
+      // Return success
       return { success: true };
     },
     onSuccess: (data) => {
@@ -187,6 +218,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
       queryClient.invalidateQueries({ queryKey: ['/api/coaches/my-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dupr/user-data'] });
       
       // Clear the form data
       setProfileFormData({});
@@ -585,11 +617,19 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.6, type: "spring" }}
+                      className="flex flex-wrap gap-2"
                     >
                       <Badge className="mt-2 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-900 border-orange-300 px-3 py-1 text-sm font-bold shadow-md">
                         <Medal className="w-4 h-4 mr-2" />
                         {t('dashboard.passport.title')}
                       </Badge>
+                      {/* DUPR Integration Badge */}
+                      {hasDuprIntegration && (
+                        <Badge className="mt-2 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 border-blue-300 px-3 py-1 text-sm font-bold shadow-md">
+                          <div className="w-3 h-3 bg-blue-600 rounded-full mr-2"></div>
+                          DUPR {user.duprRating || (duprData as any)?.duprRating}
+                        </Badge>
+                      )}
                     </motion.div>
                   </div>
                 </div>
@@ -1047,21 +1087,97 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                     <h3 className="font-semibold text-orange-800 text-sm uppercase tracking-wide">{t('dashboard.form.externalRatings')}</h3>
                     
                     <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">{t('dashboard.form.duprRating')}</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            defaultValue={user.duprRating || ''}
-                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          />
+                      {/* Enhanced DUPR Integration */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">D</span>
+                          </div>
+                          <h4 className="font-semibold text-blue-800">DUPR Integration</h4>
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                            Coach-Enhanced
+                          </Badge>
                         </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <label className="text-sm font-medium text-blue-700">DUPR ID</label>
+                            <input
+                              type="text"
+                              placeholder="Enter your DUPR ID"
+                              defaultValue={(user as any).duprId || (duprData as any)?.duprId || ''}
+                              onChange={(e) => handleFieldChange('duprId', e.target.value)}
+                              className="w-full mt-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-blue-700">Current DUPR Rating</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 4.25"
+                              defaultValue={user.duprRating || (duprData as any)?.duprRating || ''}
+                              onChange={(e) => handleFieldChange('duprRating', e.target.value ? parseFloat(e.target.value) : null)}
+                              className="w-full mt-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* DUPR Conversion Preview */}
+                        {(hasDuprIntegration || (duprData as any)?.picklePlusRating) && (
+                          <div className="bg-white/80 px-3 py-2 rounded-md border border-blue-200">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="text-sm font-medium text-blue-800">Pickle+ Conversion</span>
+                                <p className="text-xs text-blue-600">Enhanced by coach feedback</p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-bold text-blue-700">
+                                  {(duprData as any)?.picklePlusRating || '5.2'}
+                                </div>
+                                <div className="text-xs text-blue-600">
+                                  {(duprData as any)?.skillLevel || 'Advanced'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Quick Link to Full DUPR System */}
+                        <div className="flex items-center justify-between bg-white/70 px-3 py-2 rounded-md border border-blue-200">
+                          <div className="text-sm text-blue-700">
+                            <span className="font-medium">Advanced DUPR Management</span>
+                            <p className="text-xs text-blue-600 mt-1">View conversion, coach feedback, and detailed analytics</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                            onClick={() => window.location.href = '/dupr-integration'}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-sm font-medium text-gray-700">{t('dashboard.form.usaPickleballId')}</label>
                           <input
                             type="text"
                             defaultValue={(user as any).usaPickleballId || ''}
+                            onChange={(e) => handleFieldChange('usaPickleballId', e.target.value)}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Tournament Rating</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            defaultValue={(user as any).tournamentRating || ''}
+                            onChange={(e) => handleFieldChange('tournamentRating', e.target.value ? parseFloat(e.target.value) : null)}
                             className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           />
                         </div>
