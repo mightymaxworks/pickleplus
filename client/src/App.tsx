@@ -102,40 +102,17 @@ import ReferralPage from './pages/ReferralPage'
 // Import social content page (PKL-278651-SAGE-0011-SOCIAL)
 import SocialContentPage from './pages/social-content'
 
-// Import SAGE Demo Page (PKL-278651-COACH-0021-WIDGET-DEMO)
-import SageDemoPage from './pages/SageDemoPage'
-
-// Import custom test login page to help with loading issues
-import TestLoginPage from './pages/test-login-page'
+// Removed SAGE demo import
 
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
 
-// Keep imports for non-lazy loaded pages
-import TestAuthPage from './pages/TestAuthPage'
-import TestRoutingPage from './pages/TestRoutingPage'
-import PlayerSearchTestPage from './pages/PlayerSearchTestPage'
-import MatchRewardDemo from './pages/match-reward-demo'
-
-
-import LandingPageTest from './pages/LandingPageTest'
-import ModernLandingPage from './pages/ModernLandingPage'
-import QRTestPage from './pages/dev/QRTestPage'
-import EventTestPage from './pages/events/EventTestPage'
+// Keep imports for non-lazy loaded pages (cleaned up)
+// QRTestPage and EventTestPage removed - files deleted
 import CommunityPage from './pages/CommunityPage'
 import SettingsPage from './pages/SettingsPage'
-import SearchTestPage from './pages/SearchTest'
-import Register from './pages/Register'
-import TestCommunityPage from './pages/TestCommunityPage' // PKL-278651-COMM-0001-UIMOCK
-import CommunityDashboardMockup from './pages/CommunityDashboardMockup' // PKL-278651-COMM-0002-DASH-MOCK
-import ModernCommunityDashboard from './pages/ModernCommunityDashboard' // PKL-278651-COMM-0003-DASH-MODERN
-import FixedTwitterDashboard from './pages/FixedTwitterDashboard' // PKL-278651-COMM-0004-DASH-TWITTER
-import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-278651-COMM-0005-DASH-UNIFIED
-import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-278651-COMM-0005-DASH-SIMPLE
-import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
-import PointsDemo from './pages/points-demo' // PKL-278651-POINTS-0001-DEMO - Pickle+ Points Demo
-import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
-import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo
+// SearchTest and Register removed - files deleted
+// Removed duplicate dashboard and demo imports
  // PKL-278651-PROF-0008-DEV - Development Profile Page
 import TrainingCenterPage from './pages/training-center' // PKL-278651-TRAINING-CENTER-001 - Training Center Management
 import TrainingCenterTabsPage from './pages/training-center-tabs' // PKL-278651-TRAINING-CENTER-CALENDAR - Complete Calendar Integration
@@ -231,7 +208,7 @@ export default function App() {
                     {/* Public Routes */}
                   <Route path="/" component={LazyLandingPage} />
                   <Route path="/login" component={LazyAuthPage} />
-                  <Route path="/register" component={Register} />
+                  {/* Register component removed - using auth page for registration */}
                   <Route path="/auth" component={LazyAuthPage} />
                   <Route path="/forgot-password" component={lazyLoad(() => import('./pages/ForgotPasswordPage'))} />
                   <Route path="/reset-password" component={lazyLoad(() => import('./pages/ResetPasswordPage'))} />
@@ -239,11 +216,7 @@ export default function App() {
                   {/* Onboarding routes completely removed - system disabled */}
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/features" component={LazyFeatureShowcasePage} />
-                  <Route path="/test-routing" component={TestRoutingPage} />
-                  <Route path="/landing-test" component={LandingPageTest} />
-                  <Route path="/modern-landing" component={ModernLandingPage} />
-                  <Route path="/test-login" component={TestLoginPage} />
-                  <Route path="/sage-demo" component={SageDemoPage} />
+                  {/* Removed test/demo routes - files deleted */}
                   <Route path="/mobile-test" component={lazyLoad(() => import('./pages/MobileTestPage'))} />
                   <Route path="/sprint4-demo" component={lazyLoad(() => import('./pages/Sprint4DemoPage'))} />
                   <Route path="/session-management-demo" component={lazyLoad(() => import('./pages/SessionManagementDemoPage'))} />

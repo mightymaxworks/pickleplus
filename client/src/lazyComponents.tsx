@@ -71,7 +71,7 @@ export const LazyGoldenTicketAdmin = lazyLoad(() => import('./pages/admin/Golden
 export const LazyPassportVerificationPage = lazyLoad(() => import('./pages/admin/PassportVerificationPage'));
 export const LazyReportsPage = lazyLoad(() => import('./pages/admin/ReportsPage'));
 export const LazySettingsPage = lazyLoad(() => import('./pages/admin/SettingsPage'));
-export const LazyMobileTestPage = lazyLoad(() => import('./pages/admin/MobileTestPage'));
+// LazyMobileTestPage removed - test file deleted
 export const LazyBugReportDashboard = lazyLoad(() => import('./modules/admin/components/feedback/BugReportDashboard'));
 export const LazyBouncePage = lazyLoad(() => import('./pages/admin/BouncePage')); // PKL-278651-BOUNCE-0001-CORE
 export const LazyBounceFindingsPage = lazyLoad(() => import('./pages/admin/BounceFindingsPage')); // PKL-278651-BOUNCE-0006-ADMIN
