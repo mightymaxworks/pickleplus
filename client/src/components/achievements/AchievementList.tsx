@@ -4,7 +4,7 @@ interface AchievementListProps {
   achievements: { achievement: Achievement; userAchievement: UserAchievement }[];
 }
 
-const AchievementList = ({ achievements }: AchievementListProps) => {
+export const AchievementList = ({ achievements }: AchievementListProps) => {
   if (achievements.length === 0) {
     return (
       <div className="p-8 text-center">

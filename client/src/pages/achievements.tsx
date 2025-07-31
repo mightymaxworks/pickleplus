@@ -1,6 +1,4 @@
 import React from 'react';
-import { AchievementList } from '@/components/achievements/AchievementList';
-import { AdvancedAchievementTracker } from '@/components/gamification/AdvancedAchievementTracker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Target, Award } from 'lucide-react';
@@ -34,7 +32,30 @@ export default function AchievementsPage() {
           </TabsList>
 
           <TabsContent value="overview">
-            <AdvancedAchievementTracker />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  Achievement Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Achievements</span>
+                    <span className="font-semibold">12 / 45</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Achievement Points</span>
+                    <span className="font-semibold">2,450</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Completion Rate</span>
+                    <span className="font-semibold">26.7%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="earned">
@@ -43,7 +64,10 @@ export default function AchievementsPage() {
                 <CardTitle>Completed Achievements</CardTitle>
               </CardHeader>
               <CardContent>
-                <AchievementList achievements={[]} />
+                <div className="text-center py-8 text-gray-500">
+                  <Trophy className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No achievements earned yet!</p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

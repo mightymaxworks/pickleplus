@@ -19,7 +19,6 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.communities': 'Communities',
     'nav.referrals': 'Referrals',
     'nav.tournaments': 'Tournaments',
-    'nav.profile': 'Profile',
     'nav.findCoaches': 'Find Coaches',
     'nav.findPlayers': 'Find Players',
     'nav.trainingFacilities': 'Training Facilities',
@@ -193,7 +192,6 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.earnMore': 'Earn More',
     'dashboard.picklePoints.earnDescription': 'Discover new ways to earn Pickle Points through challenges, referrals, and community activities.',
     'dashboard.picklePoints.dialogTitle': 'What are Pickle Points?',
-    'common.close': 'Close',
 
     // Profile Completion Modal
     'profile.completion.title': 'Complete Your Profile',
@@ -523,7 +521,6 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.communities': '社区',
     'nav.referrals': '推荐',
     'nav.tournaments': '锦标赛',
-    'nav.profile': '个人资料',
     'nav.findCoaches': '寻找教练',
     'nav.findPlayers': '寻找球员',
     'nav.trainingFacilities': '训练设施',
@@ -909,9 +906,6 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signIn': '登录',
     
     // Complete auth translations
-    'auth.backToHome': '返回首页',
-    'auth.welcomeTitle': '欢迎来到 Pickle+',
-    'auth.welcomeSubtitle': '加入发展最快的匹克球社区',
     'auth.loginTab': '登录',
     'auth.registerTab': '注册',
     'auth.signInTitle': '登录您的账户',
@@ -972,23 +966,7 @@ const translations: Record<Language, Record<string, string>> = {
     'stats.winRate': '胜率',
     'stats.matches': '比赛',
     'stats.loading': '加载中...',
-    
-    // Tournament & Competition
-    'tournament.upcoming': '即将举行的锦标赛',
-    'tournament.results': '锦标赛结果',
-    'tournament.registration': '报名',
-    'tournament.bracket': '对战表',
-    'tournament.leaderboard': '排行榜',
-    'tournament.format': '比赛形式',
-    'tournament.division': '组别',
-    'tournament.date': '日期',
-    'tournament.location': '地点',
-    'tournament.today': '今天！',
-    'tournament.daysRemaining': '还剩{count}天',
-    'tournament.players': '球员',
-    'tournament.checkedIn': '已签到',
-    'tournament.checkInRequired': '即将需要签到',
-    'tournament.registrationComplete': '报名完成',
+
     
     // Training & Facilities
     'training.centers': '训练中心',
@@ -1088,17 +1066,6 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.loggingIn': '登录中...',
     'auth.createAccountTitle': '创建您的账户',
     'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。',
-
-    // Profile Completion Modal
-    'profile.completion.title': '完善您的个人资料',
-    'profile.completion.description': '请添加您的姓名，帮助其他球员认识您。目前在比赛记录中显示为"{username}"。',
-    'profile.completion.firstName': '名字',
-    'profile.completion.lastName': '姓氏',
-    'profile.completion.firstNamePlaceholder': '请输入您的名字',
-    'profile.completion.lastNamePlaceholder': '请输入您的姓氏',
-    'profile.completion.skipForNow': '暂时跳过',
-    'profile.completion.updating': '更新中...',
-    'profile.completion.updateProfile': '更新资料',
 
     // Navigation Items
     'nav.features': '功能',
