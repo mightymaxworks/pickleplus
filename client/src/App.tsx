@@ -218,6 +218,7 @@ export default function App() {
                   <Route path="/features" component={LazyFeatureShowcasePage} />
                   {/* Removed test/demo routes - files deleted */}
                   <Route path="/mobile-test" component={lazyLoad(() => import('./pages/MobileTestPage'))} />
+                  <Route path="/wise-payment-demo" component={lazyLoad(() => import('./pages/WisePaymentDemo'))} />
                   <Route path="/sprint4-demo" component={lazyLoad(() => import('./pages/Sprint4DemoPage'))} />
                   <Route path="/session-management-demo" component={lazyLoad(() => import('./pages/SessionManagementDemoPage'))} />
                   <Route path="/complete-flow-demo" component={lazyLoad(() => import('./pages/CompleteFlowDemoPage'))} />
