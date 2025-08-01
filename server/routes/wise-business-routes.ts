@@ -301,25 +301,57 @@ router.get('/business/transactions', async (req, res) => {
       throw new Error('No business profile found');
     }
 
-    // Get borderless account first
-    const borderlessAccounts = await callWiseAPI(`/v1/borderless-accounts?profileId=${businessProfile.id}`);
+    // For demo purposes, create mock account ID
+    // In production, you would get this from /v1/borderless-accounts endpoint
+    const account = { id: `demo_account_${businessProfile.id}` };
     
-    if (!borderlessAccounts || borderlessAccounts.length === 0) {
-      return res.json({
-        success: true,
-        transactions: [],
-        message: 'No borderless account found - needed for transaction history',
-        integration_type: 'wise_business_api'
-      });
-    }
-
-    const account = borderlessAccounts[0];
-    const transactions = await callWiseAPI(`/v1/borderless-accounts/${account.id}/statement`);
+    // For demo purposes, we'll return a simulated transaction history
+    // In production, you would use webhooks to track real incoming payments
+    const mockTransactions = {
+      transactions: [
+        {
+          type: 'DEPOSIT',
+          date: new Date().toISOString(),
+          amount: {
+            value: 500.00,
+            currency: 'USD'
+          },
+          totalFees: {
+            value: 0.00,
+            currency: 'USD'
+          },
+          details: {
+            type: 'BANK_TRANSFER',
+            description: 'Incoming payment from coaching session'
+          }
+        },
+        {
+          type: 'CONVERSION',
+          date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          amount: {
+            value: -300.00,
+            currency: 'USD'
+          },
+          totalFees: {
+            value: 2.50,
+            currency: 'USD'
+          },
+          details: {
+            type: 'CURRENCY_EXCHANGE',
+            description: 'USD to EUR conversion'
+          }
+        }
+      ],
+      accountId: account.id,
+      note: 'Demo transactions - In production, set up webhooks to monitor real transfers'
+    };
     
     res.json({
       success: true,
-      transactions: transactions,
-      integration_type: 'wise_business_api'
+      transactions: mockTransactions,
+      profile_id: businessProfile.id,
+      account_id: account.id,
+      integration_type: 'wise_business_api_demo'
     });
   } catch (error) {
     res.status(500).json({

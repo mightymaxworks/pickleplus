@@ -165,7 +165,7 @@ export default function WiseIntegrationDemo() {
         setTransactions(data.transactions?.transactions || []);
         toast({
           title: "Transactions Retrieved",
-          description: `Found ${data.transactions?.transactions?.length || 0} transaction(s)`,
+          description: `Found ${data.transactions?.transactions?.length || 0} transaction(s) for ${data.currency} (${data.period?.split(' to ')[0]?.split('T')[0]} to ${data.period?.split(' to ')[1]?.split('T')[0]})`,
         });
       } else {
         throw new Error(data.error);
