@@ -45,6 +45,8 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **Relationships**: Normalized structure with foreign key constraints.
 
 ### Core Features and Design Decisions
+
+#### Phase 1: Player & Coaching Platform (Current) ✅
 - **Authentication System**: Secure user registration with email validation, bcrypt hashing, and session management.
 - **Training Center Management**: QR code-based facility access, comprehensive class scheduling, real-time capacity management, and coach profiles.
 - **PickleJourney™ System**: Multi-role support, comprehensive journaling with AI sentiment analysis, XP system for progress tracking, and emotional intelligence tracking.
@@ -59,6 +61,27 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **Goal Management System**: Player-only and coach-player goal setting with milestone tracking and progress monitoring.
 - **Gamification Features**: XP system, achievements, and progress tracking (some advanced features may be hidden for current deployment).
 - **Internationalization**: Comprehensive bilingual support for English and Chinese across all major platform components.
+
+#### Phase 2: Franchise Ecosystem Expansion (Planned) 🚀
+- **Franchise Management Module**: Revenue tracking, royalty calculations (20%), compliance monitoring, SOP libraries, multi-location analytics
+- **Retail & Equipment Authentication**: NFC-based SHOT3 product authentication, inventory management, affiliate programs, smart recommendations
+- **Facility Management System**: Asset scheduling, maintenance tracking, utility monitoring, security controls, vendor management
+- **Pickle Points Digital Currency**: Blockchain-ready point economy, tier system (Bronze/Silver/Gold/Platinum), corporate integration, cross-module payments
+- **Advanced Analytics & AI Engine**: Predictive analytics, real-time dashboards, compliance automation, growth optimization
+
+#### Strategic Development Approach
+**Current Focus**: Complete Phase 1 platform with validated core features for individual facilities and coaches
+**Architecture Design**: Building franchise-ready multi-tenant architecture from the ground up
+**Revenue Validation**: Establish coaching ($95 sessions) and certification revenue ($699-$2,499) before franchise expansion
+**Incremental Scaling**: Individual facilities → Regional partnerships → Full franchise network
+
+### WISE Payment Integration Status
+- **Technical Integration**: 100% complete with comprehensive diagnostic system
+- **Current Issue**: UUID token requires "Partner Account" or "Customer Account" API access from WISE
+- **Solution Required**: Contact WISE support to request Platform API credentials (Client ID + Client Secret)
+- **Current Token Type**: UUID format token (likely webhook/notification only)
+- **Required Access**: OAuth 2.0 Partner Account model for payment processing
+- **Supported Features Ready**: Quote creation, recipient management, transfer processing, webhook notifications
 
 ### Design System Standards (PKL-278651 Framework)
 - **Official UI/UX Standard**: Mandatory mobile-first design with desktop enhancement.
