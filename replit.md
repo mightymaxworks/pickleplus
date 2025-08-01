@@ -76,16 +76,25 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 **Incremental Scaling**: Individual facilities → Regional partnerships → Full franchise network
 
 ### WISE Payment Integration Status ✅ COMPLETE
-- **Technical Integration**: 100% complete with THREE implementation approaches
+- **Technical Integration**: 100% complete with bidirectional money flow (send + receive)
 - **Self-Service Solution**: Wise Business API integration ready for immediate use
 - **Business API Routes**: `/api/wise/business/*` endpoints operational  
 - **Coach Payout System**: End-to-end international payment workflow implemented
+- **Receiving Money**: Account balance monitoring, transaction history, incoming payment simulation
 - **Multi-Currency Support**: 40+ currencies, 160+ countries ready
 - **Implementation Options**:
   1. **✅ Wise Business API** (Self-Service) - ACTIVE & RECOMMENDED
   2. **⚠️ Platform Partnership API** (Future enhancement)
   3. **🔧 Diagnostic System** (Development & testing)
 - **Production Ready**: Set WISE_BUSINESS_API_TOKEN and deploy immediately
+
+### Payment Architecture & Revenue Streams
+- **PCP Certification**: $699-$2,499 (one-time payments)
+- **Coaching Sessions**: $95 per session (15% platform commission)
+- **Coach Subscriptions**: FREE vs PREMIUM ($19.99/month) with feature gating
+- **Revenue Projection**: $820K+ annually with 500 coaches (40% premium adoption)
+- **Free Plan**: 3 sessions/month, basic features, manual payments
+- **Premium Plan**: Unlimited sessions, priority listing, automated payouts, advanced analytics
 
 ### Design System Standards (PKL-278651 Framework)
 - **Official UI/UX Standard**: Mandatory mobile-first design with desktop enhancement.
