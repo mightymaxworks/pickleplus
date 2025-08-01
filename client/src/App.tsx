@@ -240,6 +240,7 @@ export default function App() {
                   <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} />
                   <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} />
                   <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} />
+                  <Route path="/wise-integration-demo" component={lazyLoad(() => import('./pages/WiseIntegrationDemo'))} />
                   <Route path="/apple-style-demo" component={lazyLoad(() => import('./pages/AppleStyleDemo'))} />
                   <Route path="/clean-passport-demo" component={lazyLoad(() => import('./pages/CleanPassportDemo'))} />
                   

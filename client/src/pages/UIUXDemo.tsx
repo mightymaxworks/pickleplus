@@ -63,6 +63,13 @@ export default function UIUXDemo() {
     ]
   };
 
+  const demoPages = [
+    { label: 'Apple Style Demo', path: '/demo/apple-style' },
+    { label: 'Clean Passport Demo', path: '/demo/clean-passport' }, 
+    { label: 'Wise Integration Demo', path: '/demo/wise-integration' },
+    { label: 'Current Demo', path: '/demo/ui-ux' }
+  ];
+
   const navigationItems = {
     player: [
       { icon: Home, label: 'Dashboard', key: 'dashboard' },

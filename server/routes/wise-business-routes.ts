@@ -3,16 +3,14 @@ import { Router } from 'express';
 const router = Router();
 
 // Wise Business API Configuration (Self-Service)
-const WISE_API_BASE = process.env.NODE_ENV === 'production' 
-  ? 'https://api.wise.com' 
-  : 'https://api.sandbox.transferwise.tech';
+const WISE_API_BASE = 'https://api.transferwise.com';
 
-const WISE_BUSINESS_TOKEN = process.env.WISE_BUSINESS_API_TOKEN;
+const WISE_BUSINESS_TOKEN = process.env.WISE_API_TOKEN;
 
 // Business API helper
 async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any) {
   if (!WISE_BUSINESS_TOKEN) {
-    throw new Error('WISE_BUSINESS_API_TOKEN required. Set up Wise Business account and generate API token.');
+    throw new Error('WISE_API_TOKEN required. Set up Wise Business account and generate API token.');
   }
   
   const url = `${WISE_API_BASE}${endpoint}`;
@@ -65,7 +63,7 @@ router.get('/business/profiles', async (req, res) => {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       integration_type: 'wise_business_api',
-      solution: 'Set WISE_BUSINESS_API_TOKEN environment variable'
+      solution: 'Set WISE_API_TOKEN environment variable'
     });
   }
 });
