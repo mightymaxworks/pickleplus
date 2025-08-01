@@ -22,27 +22,35 @@ This document outlines the complete payment integration strategy for Pickle+, le
 - **Payment Timeline**: Weekly automated payouts via Wise Business API
 - **Multi-Currency**: Support for 40+ currencies across 160+ countries
 
-### 3. 🔄 Coach Subscription Plans (NEW)
-**Premium Coach Subscription**: $19.99/month
+### 3. 🔄 Coach Subscription Plans (NEW) - PCP Level-Based
+**Premium Coach Subscription**: $19.99/month (Available to all PCP-certified coaches)
 
-#### Free Plan Limitations:
+#### Automatic Coach Listing (PCP Certification Required):
+All PCP-certified coaches are automatically listed with level-based benefits:
+
+**🥉 Level 1 ($699)**: Entry Coach badge, 15% commission
+**🥈 Level 2 ($1,299)**: Certified Coach badge, 13% commission, improved ranking  
+**🥇 Level 3 ($2,499)**: Advanced Coach badge, 12% commission, priority placement
+**💎 Level 4+**: Master/Grand Master tiers with premium placement and reduced commissions
+
+#### Free Plan (All Certification Levels):
 - 3 coaching sessions per month maximum
-- Basic profile listing (lower search ranking)
-- Standard analytics (basic metrics only)
+- Level-appropriate certification badge display
+- Basic profile with certification details
 - Manual payment processing
 - Email support only
 
 #### Premium Plan Benefits ($19.99/month):
 - **Unlimited coaching sessions**
-- **Priority coach discovery ranking**
-- **Advanced analytics dashboard**
+- **Enhanced certification badge prominence**
 - **Automated payment processing** (instant Wise payouts)
-- **Custom pricing & package creation**
-- **Video session integration**
+- **Level-specific premium features**:
+  - Level 1: Basic video sessions, standard analytics
+  - Level 2: Group session management, intermediate analytics
+  - Level 3: Advanced student tracking, curriculum creation tools
+  - Level 4+: Mentorship capabilities, content monetization
 - **Marketing tools** (promo codes, referrals)
-- **Facility partnership access**
 - **Premium support** (priority response)
-- **Advanced student tracking**
 
 ## Technical Payment Architecture
 

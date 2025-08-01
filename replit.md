@@ -89,12 +89,13 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **Production Ready**: Set WISE_BUSINESS_API_TOKEN and deploy immediately
 
 ### Payment Architecture & Revenue Streams
-- **PCP Certification**: $699-$2,499 (one-time payments)
-- **Coaching Sessions**: $95 per session (15% platform commission)
-- **Coach Subscriptions**: FREE vs PREMIUM ($19.99/month) with feature gating
+- **PCP Certification**: $699-$2,499 (automatic platform listing upon completion)
+- **Coaching Sessions**: $95 per session (tiered commission: 15% Level 1, 13% Level 2, 12% Level 3+)
+- **Coach Subscriptions**: FREE vs PREMIUM ($19.99/month) with level-based feature gating
 - **Revenue Projection**: $820K+ annually with 500 coaches (40% premium adoption)
-- **Free Plan**: 3 sessions/month, basic features, manual payments
-- **Premium Plan**: Unlimited sessions, priority listing, automated payouts, advanced analytics
+- **Coach Tiers**: Level-based system (1-5) with automatic listing for all PCP-certified coaches
+- **Free Plan**: 3 sessions/month, certification badge, basic features
+- **Premium Plan**: Unlimited sessions, enhanced badges, automated payouts, level-specific advanced features
 
 ### Design System Standards (PKL-278651 Framework)
 - **Official UI/UX Standard**: Mandatory mobile-first design with desktop enhancement.
