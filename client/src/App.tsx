@@ -239,6 +239,7 @@ export default function App() {
                   <Route path="/component-showcase" component={lazyLoad(() => import('./pages/ComponentShowcase'))} />
                   <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} />
                   <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} />
+                  <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} />
                   
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 

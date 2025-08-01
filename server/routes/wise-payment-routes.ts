@@ -27,12 +27,12 @@ const processPaymentSchema = z.object({
   })
 });
 
-// Helper function to make Wise API calls with multiple auth strategies
+// Helper function to make Wise API calls with Business API authentication
 async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any) {
-  const token = process.env.WISE_API_TOKEN;
+  const token = process.env.WISE_BUSINESS_API_TOKEN || process.env.WISE_API_TOKEN;
   
   if (!token) {
-    throw new Error('WISE_API_TOKEN not configured');
+    throw new Error('WISE_BUSINESS_API_TOKEN not configured. Create a Wise Business account and generate an API token from Settings → API Tokens');
   }
 
   // Detect token format and determine auth strategies
