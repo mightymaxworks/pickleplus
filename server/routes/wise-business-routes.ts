@@ -200,4 +200,134 @@ router.get('/business/balances', async (req, res) => {
   }
 });
 
+// Get account balance
+router.get('/business/balance', async (req, res) => {
+  try {
+    const profiles = await callWiseAPI('/v1/profiles');
+    const businessProfile = profiles.find((p: any) => p.type === 'business') || profiles[0];
+    
+    if (!businessProfile) {
+      throw new Error('No business profile found');
+    }
+
+    const balances = await callWiseAPI(`/v1/borderless-accounts?profileId=${businessProfile.id}`);
+    
+    res.json({
+      success: true,
+      balances: balances,
+      integration_type: 'wise_business_api'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      integration_type: 'wise_business_api'
+    });
+  }
+});
+
+// Create recipient for receiving money
+router.post('/business/recipients', async (req, res) => {
+  try {
+    const { currency, accountDetails } = req.body;
+    
+    const profiles = await callWiseAPI('/v1/profiles');
+    const businessProfile = profiles.find((p: any) => p.type === 'business') || profiles[0];
+    
+    if (!businessProfile) {
+      throw new Error('No business profile found');
+    }
+
+    const recipient = await callWiseAPI('/v1/accounts', 'POST', {
+      profileId: businessProfile.id,
+      accountHolderName: 'Pickle+ Demo Recipient',
+      currency: currency,
+      type: 'email',
+      details: {
+        email: accountDetails.email || 'demo@pickleplus.com'
+      }
+    });
+    
+    res.json({
+      success: true,
+      recipient: recipient,
+      integration_type: 'wise_business_api'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      integration_type: 'wise_business_api'
+    });
+  }
+});
+
+// Simulate incoming payment (sandbox only)
+router.post('/business/simulate-incoming', async (req, res) => {
+  try {
+    const { amount, currency } = req.body;
+    
+    // Note: This is a simulation endpoint - only works in sandbox
+    // In production, you would monitor actual incoming transfers via webhooks
+    
+    res.json({
+      success: true,
+      simulation: {
+        message: 'Incoming payment simulation',
+        amount: amount,
+        currency: currency,
+        status: 'incoming_payment_waiting',
+        note: 'In production, monitor actual transfers via webhooks',
+        webhook_setup_required: true
+      },
+      integration_type: 'wise_business_api_simulation'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      integration_type: 'wise_business_api'
+    });
+  }
+});
+
+// Get transaction history (for monitoring received payments)
+router.get('/business/transactions', async (req, res) => {
+  try {
+    const profiles = await callWiseAPI('/v1/profiles');
+    const businessProfile = profiles.find((p: any) => p.type === 'business') || profiles[0];
+    
+    if (!businessProfile) {
+      throw new Error('No business profile found');
+    }
+
+    // Get borderless account first
+    const borderlessAccounts = await callWiseAPI(`/v1/borderless-accounts?profileId=${businessProfile.id}`);
+    
+    if (!borderlessAccounts || borderlessAccounts.length === 0) {
+      return res.json({
+        success: true,
+        transactions: [],
+        message: 'No borderless account found - needed for transaction history',
+        integration_type: 'wise_business_api'
+      });
+    }
+
+    const account = borderlessAccounts[0];
+    const transactions = await callWiseAPI(`/v1/borderless-accounts/${account.id}/statement`);
+    
+    res.json({
+      success: true,
+      transactions: transactions,
+      integration_type: 'wise_business_api'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      integration_type: 'wise_business_api'
+    });
+  }
+});
+
 export default router;

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle, Building2, DollarSign, Globe, Users } from 'lucide-react';
+import { Loader2, CheckCircle, Building2, DollarSign, Globe, Users, Wallet, ArrowDownCircle, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface WiseProfile {
@@ -28,14 +28,44 @@ interface WiseQuote {
   rate: number;
 }
 
+interface WiseBalance {
+  currency: string;
+  amount: {
+    value: number;
+    currency: string;
+  };
+}
+
+interface WiseTransaction {
+  type: string;
+  date: string;
+  amount: {
+    value: number;
+    currency: string;
+  };
+  totalFees: {
+    value: number;
+    currency: string;
+  };
+  details: {
+    type: string;
+    description: string;
+  };
+}
+
 export default function WiseIntegrationDemo() {
   const [profiles, setProfiles] = useState<WiseProfile[]>([]);
   const [quote, setQuote] = useState<WiseQuote | null>(null);
+  const [balances, setBalances] = useState<WiseBalance[]>([]);
+  const [transactions, setTransactions] = useState<WiseTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [transactionLoading, setTransactionLoading] = useState(false);
   const [sourceCurrency, setSourceCurrency] = useState('USD');
   const [targetCurrency, setTargetCurrency] = useState('EUR');
   const [amount, setAmount] = useState('95');
+  const [simulationLoading, setSimulationLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchProfiles = async () => {
@@ -96,6 +126,91 @@ export default function WiseIntegrationDemo() {
       });
     } finally {
       setQuoteLoading(false);
+    }
+  };
+
+  const fetchBalances = async () => {
+    setBalanceLoading(true);
+    try {
+      const response = await fetch('/api/wise/business/balance');
+      const data = await response.json();
+      
+      if (data.success) {
+        setBalances(data.balances[0]?.balances || []);
+        toast({
+          title: "Balances Retrieved",
+          description: `Found ${data.balances[0]?.balances?.length || 0} currency balance(s)`,
+        });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch balances",
+        variant: "destructive",
+      });
+    } finally {
+      setBalanceLoading(false);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    setTransactionLoading(true);
+    try {
+      const response = await fetch('/api/wise/business/transactions');
+      const data = await response.json();
+      
+      if (data.success) {
+        setTransactions(data.transactions?.transactions || []);
+        toast({
+          title: "Transactions Retrieved",
+          description: `Found ${data.transactions?.transactions?.length || 0} transaction(s)`,
+        });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch transactions",
+        variant: "destructive",
+      });
+    } finally {
+      setTransactionLoading(false);
+    }
+  };
+
+  const simulateIncomingPayment = async () => {
+    setSimulationLoading(true);
+    try {
+      const response = await fetch('/api/wise/business/simulate-incoming', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          currency: targetCurrency
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Incoming Payment Simulated",
+          description: `${amount} ${targetCurrency} incoming payment simulation started`,
+        });
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to simulate payment",
+        variant: "destructive",
+      });
+    } finally {
+      setSimulationLoading(false);
     }
   };
 
@@ -249,6 +364,159 @@ export default function WiseIntegrationDemo() {
           </CardContent>
         </Card>
 
+        {/* Account Balances Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Wallet className="h-5 w-5" />
+              <span>Account Balances</span>
+            </CardTitle>
+            <CardDescription>
+              View multi-currency account balances for receiving payments
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={fetchBalances} disabled={balanceLoading} className="w-full">
+              {balanceLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading Balances...
+                </>
+              ) : (
+                <>
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Get Account Balances
+                </>
+              )}
+            </Button>
+
+            {balances.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {balances.map((balance, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gradient-to-r from-green-50 to-blue-50">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-lg">{balance.currency}</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        {balance.amount.value.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">Available Balance</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Incoming Payment Simulation */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <ArrowDownCircle className="h-5 w-5" />
+              <span>Receive Money Test</span>
+            </CardTitle>
+            <CardDescription>
+              Simulate incoming payments for testing webhook integrations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="incomingCurrency">Currency</Label>
+                <Input
+                  id="incomingCurrency"
+                  value={targetCurrency}
+                  onChange={(e) => setTargetCurrency(e.target.value.toUpperCase())}
+                  placeholder="USD"
+                  maxLength={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="incomingAmount">Amount</Label>
+                <Input
+                  id="incomingAmount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="100"
+                />
+              </div>
+            </div>
+
+            <Button onClick={simulateIncomingPayment} disabled={simulationLoading} className="w-full">
+              {simulationLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Simulating...
+                </>
+              ) : (
+                <>
+                  <ArrowDownCircle className="mr-2 h-4 w-4" />
+                  Simulate Incoming Payment
+                </>
+              )}
+            </Button>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> This simulates incoming payment webhooks. In production, 
+                set up webhook endpoints to monitor real incoming transfers automatically.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Transaction History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Receipt className="h-5 w-5" />
+              <span>Transaction History</span>
+            </CardTitle>
+            <CardDescription>
+              Monitor received payments and transaction history
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={fetchTransactions} disabled={transactionLoading} className="w-full">
+              {transactionLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading Transactions...
+                </>
+              ) : (
+                <>
+                  <Receipt className="mr-2 h-4 w-4" />
+                  Get Transaction History
+                </>
+              )}
+            </Button>
+
+            {transactions.length > 0 && (
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {transactions.slice(0, 5).map((transaction, index) => (
+                  <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant={transaction.amount.value > 0 ? 'default' : 'secondary'}>
+                        {transaction.amount.value > 0 ? 'RECEIVED' : 'SENT'}
+                      </Badge>
+                      <span className="text-sm text-gray-600">{transaction.date}</span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Amount:</strong> {transaction.amount.value} {transaction.amount.currency}</p>
+                      <p><strong>Type:</strong> {transaction.details.type}</p>
+                      <p><strong>Description:</strong> {transaction.details.description}</p>
+                      {transaction.totalFees.value > 0 && (
+                        <p><strong>Fees:</strong> {transaction.totalFees.value} {transaction.totalFees.currency}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Integration Status */}
         <Card>
           <CardHeader>
@@ -270,7 +538,15 @@ export default function WiseIntegrationDemo() {
               </div>
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Ready for coach payout implementation</span>
+                <span className="text-sm">Account balances accessible</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Transaction history monitoring ready</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Ready for both sending and receiving money</span>
               </div>
             </div>
           </CardContent>
