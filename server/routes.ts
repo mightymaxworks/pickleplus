@@ -73,6 +73,7 @@ import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-S
 import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes"; // Sprint 1: Curriculum Management & Lesson Planning
 import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 2 Phase 2: Session Planning Integration
 import wisePaymentRoutes from "./routes/wise-payment-routes"; // Wise Payment Integration
+import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes"; // WISE API Diagnostic Tool
 import duprIntegrationRoutes from './routes/dupr-integration-routes'; // DUPR Rating Integration System
 import assessmentGoalIntegrationRoutes from "./routes/assessment-goal-integration-routes"; // Sprint 3 Phase 1 & 2: Assessment-Goal Integration
 import progressTrackingRoutes from "./routes/progress-tracking-routes"; // Sprint 3 Phase 3: Progress Tracking Integration
@@ -428,6 +429,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Wise Payment Integration routes
   app.use('/api/wise', wisePaymentRoutes);
+  app.use('/api/wise-diagnostic', wiseDiagnosticRoutes);
   console.log('[API] Wise Payment Integration routes registered successfully');
   
   // Register Sprint 2 Phase 3: Student Progress Tracking routes
