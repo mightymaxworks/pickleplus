@@ -1,7 +1,17 @@
-# Pickle+ - Compressed replit.md
+# Pickle+ - Comprehensive Ecosystem Platform
 
 ## Overview
-Pickle+ is a comprehensive pickleball platform offering player development, coaching tools, social features, and training center management. It aims to be the go-to platform for pickleball enthusiasts, coaches, and facilities, fostering growth and community within the sport. The platform integrates an XP system with tier progression, a PCP ranking system based on performance and achievements, and a PickleJourney™ system for emotional intelligence tracking. It includes robust coach onboarding and management capabilities, and aims for international expansion with strategic localization.
+Pickle+ is the central operating system for the global FPF (Future Pickleball Federation) franchise network, designed as a comprehensive ecosystem that unifies players, coaches, franchisees, headquarters, events, retail, facilities, and digital currency into one seamless and scalable platform. 
+
+The platform serves multiple stakeholder groups:
+- **Players**: From casual participants to competitive athletes, with both members and non-members
+- **Coaches**: PCP-certified professionals with standardized training and performance tracking
+- **Franchisees**: Business owners managing facilities, revenue, and local operations
+- **FPF Headquarters**: Strategic oversight, compliance monitoring, and network growth
+- **Facilities**: Physical locations requiring operational management and optimization
+- **Retail Partners**: Equipment authentication, inventory management, and sales integration
+
+The ecosystem emphasizes a unified player passport system, gamified loyalty through Pickle Points digital currency, and comprehensive franchise management capabilities while maintaining the core pickleball community and coaching development features.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
