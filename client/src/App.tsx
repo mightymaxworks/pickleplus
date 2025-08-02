@@ -525,7 +525,7 @@ export default function App() {
                   {/* Achievements Page */}
                   <ProtectedRouteWithLayout
                     path="/achievements"
-                    component={lazyLoad(() => import('./pages/achievements'))}
+                    component={lazyLoad(() => import('./pages/Achievements'))}
                     pageTitle="Achievements"
                   />
                   
@@ -745,7 +745,7 @@ export default function App() {
                   <Route path="/admin/mobile-test">
                     {(params) => (
                       <AdminProtectedRoute>
-                        {/* LazyMobileTestPage removed - test file deleted */}
+                        <div>Mobile test page removed</div>
                       </AdminProtectedRoute>
                     )}
                   </Route>

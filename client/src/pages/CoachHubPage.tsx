@@ -26,7 +26,8 @@ import {
   FileText,
   Calendar,
   Target,
-  ClipboardCheck
+  ClipboardCheck,
+  MapPin
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
