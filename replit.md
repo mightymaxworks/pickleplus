@@ -27,7 +27,7 @@ Coach workflow preferences:
 - End-to-end tested and functional = "OPERATIONALLY COMPLETE"
 - Single source of truth: `client/src/pages/EnhancedCoachingWorkflowAnalysis.tsx`
 - All completion claims must include evidence (screenshots, test results, working URLs)
-- **Mandatory Development Dashboard**: EnhancedCoachingWorkflowAnalysis.tsx serves as real-time progress tracker
+- **Mandatory Development Dashboard**: EnhancedCoachingWorkflowAnalysis.tsx serves as universal real-time progress tracker for ALL development modules (coaching, franchise, retail, facilities)
 - **User Journey Validation**: Each feature must include UX testing (happy path, error handling, mobile, accessibility)
 - See `DEVELOPMENT_ACCURACY_FRAMEWORK.md` for complete standards
 

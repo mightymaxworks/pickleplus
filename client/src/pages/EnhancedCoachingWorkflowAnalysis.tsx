@@ -354,9 +354,9 @@ const EnhancedCoachingWorkflowAnalysis: React.FC = () => {
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Enhanced Coaching Workflow Analysis</h1>
+        <h1 className="text-3xl font-bold mb-2">Universal Development Analysis Dashboard</h1>
         <p className="text-gray-600">
-          Comprehensive assessment of missing features and requirements for the complete coaching ecosystem
+          Central command center for all development modules - tracks progress across coaching, franchise, retail, facility management, and platform infrastructure systems
         </p>
       </div>
 
@@ -645,7 +645,8 @@ const TestRoutesDashboard: React.FC = () => {
         <Alert className="mt-6">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Development Workflow:</strong> After completing each feature, return to this dashboard to verify routes and update status. 
+            <strong>Universal Development Workflow:</strong> This dashboard serves all development modules (coaching, franchise, retail, facilities). 
+            After completing ANY feature in ANY module, the system should automatically redirect here for verification.
             Test all routes marked as "operational" to ensure no regressions have been introduced.
           </AlertDescription>
         </Alert>
