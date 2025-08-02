@@ -247,6 +247,9 @@ export default function App() {
                   <Route path="/apple-style-demo" component={lazyLoad(() => import('./pages/AppleStyleDemo'))} />
                   <Route path="/clean-passport-demo" component={lazyLoad(() => import('./pages/CleanPassportDemo'))} />
                   
+                  {/* PCP Level Validation Test Page */}
+                  <Route path="/pcp-level-validation-test" component={lazyLoad(() => import('./pages/PCPLevelValidationTestPage'))} />
+                  
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 
