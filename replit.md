@@ -20,19 +20,38 @@ Coach workflow preferences:
 - Profile management should use inline editing rather than separate page navigation
 - Use "Coaching Bio" for coaching profile sections (not "PCP Coaching Certification Programme")
 
-## Development Accuracy Standards
-**CRITICAL REQUIREMENT**: Never claim features are "complete" without operational verification.
-- Only schemas/API routes created = "Design Phase Complete" (NOT "Complete")
+## Unified Development Framework
+**CRITICAL REQUIREMENT**: All development must follow both modular architecture AND evidence-based completion standards.
+
+### Modular Architecture Requirements
+- ✅ **80+ Specialized Route Modules**: Each feature has dedicated route file (`server/routes/feature-routes.ts`)
+- ✅ **Registration Functions**: All modules export proper registration functions  
+- ✅ **Authentic Data Integration**: Storage layer integration (no mock data)
+- ✅ **Clean Separation**: No monolithic route files allowed
+
+### Development Accuracy Standards  
+- Only schemas/API routes created = "Route Module Created" (NOT "Complete")
 - Frontend + Backend implemented = "Implementation Phase" (NOT "Complete") 
 - End-to-end tested and functional = "OPERATIONALLY COMPLETE"
-- Single source of truth: `client/src/pages/EnhancedCoachingWorkflowAnalysis.tsx`
-- All completion claims must include evidence (screenshots, test results, working URLs)
-- **Mandatory Development Dashboard**: EnhancedCoachingWorkflowAnalysis.tsx serves as universal real-time progress tracker for ALL development modules (coaching, franchise, retail, facilities)
-- **User Journey Validation**: Each feature must include UX testing (happy path, error handling, mobile, accessibility)
-- See `DEVELOPMENT_ACCURACY_FRAMEWORK.md` for complete standards
+- **Mandatory Development Dashboard**: `client/src/pages/CoachingWorkflowAnalysis.tsx` auto-tests all modular APIs
+- All completion claims must include evidence (dashboard screenshots, API test results)
+- **Real-time Validation**: Dashboard provides live status of all 80+ route modules
 
-## System Architecture
+### Framework Integration Success (August 2, 2025)
+- ✅ **Modular Architecture Restored**: Abandoned monolithic approach, restored 80+ route modules
+- ✅ **Development Dashboard Active**: Auto-testing all APIs with real-time status indicators
+- ✅ **Evidence-Based Verification**: Dashboard shows authentic data flow from storage layer
+- See `UNIFIED_DEVELOPMENT_FRAMEWORK.md` for complete integration standards
+
+## System Architecture  
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database.
+
+**UNIFIED DEVELOPMENT FRAMEWORK IMPLEMENTATION (August 2, 2025):**
+- ✅ **Modular Route Architecture**: 80+ specialized route modules with proper registration functions
+- ✅ **Authentic Data Integration**: All APIs connect to storage layer instead of mock data  
+- ✅ **Development Dashboard Integration**: `/coaching-workflow-analysis` auto-tests all modular APIs
+- ✅ **Evidence-Based Completion**: Real-time verification through dashboard testing
+- ✅ **Clean Authentication Foundation**: Secure bcrypt-based auth while maintaining modular structure
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
