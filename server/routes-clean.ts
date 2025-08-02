@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         passportCode,
-        duprRating: 3.0,
+        duprRating: "3.0",
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -105,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Admin access required' });
       }
       
-      const users = await storage.getAllUsers();
+      const users = await storage.getUsers();
       res.json(users);
     } catch (error) {
       console.error('[API][Admin] Error fetching users:', error);
