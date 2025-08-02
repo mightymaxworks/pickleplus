@@ -33,24 +33,27 @@ All PCP-certified coaches are automatically listed with level-based benefits:
 **🥇 Level 3 ($2,499)**: Advanced Coach badge, 12% commission, priority placement
 **💎 Level 4+**: Master/Grand Master tiers with premium placement and reduced commissions
 
-#### Free Plan (All Certification Levels):
-- 3 coaching sessions per month maximum
-- Level-appropriate certification badge display
-- Basic profile with certification details
-- Manual payment processing
-- Email support only
+#### Comprehensive Basic Tier (All PCP-Certified Coaches) - FREE:
+- **Unlimited coaching sessions** (no artificial limits)
+- **Full certification badge display** (Level 1-5 with proper prominence) 
+- **Complete coach profile** (bio, specialties, availability, photos)
+- **Basic scheduling system** (calendar integration, booking management)
+- **Standard payment processing** (level-based commission: 15%/13%/12%)
+- **Student communication tools** (messaging, session notes)
+- **Basic analytics** (session count, earnings, student feedback)
+- **Mobile app access** (full coaching functionality)
+- **Community forum participation**
+- **Standard customer support**
 
-#### Premium Plan Benefits ($19.99/month):
-- **Unlimited coaching sessions**
-- **Enhanced certification badge prominence**
-- **Automated payment processing** (instant Wise payouts)
-- **Level-specific premium features**:
-  - Level 1: Basic video sessions, standard analytics
-  - Level 2: Group session management, intermediate analytics
-  - Level 3: Advanced student tracking, curriculum creation tools
-  - Level 4+: Mentorship capabilities, content monetization
-- **Marketing tools** (promo codes, referrals)
-- **Premium support** (priority response)
+#### Premium Business Tools ($19.99/month):
+- **Automated Wise payouts** (vs manual/weekly payouts)
+- **Advanced analytics dashboard** (student progress tracking, retention metrics, revenue forecasting)
+- **Marketing & growth tools** (referral system, promotional codes, social media integration)
+- **Video session capabilities** (integrated video calls for remote coaching)
+- **Custom package creation** (multi-session packages, group rates)
+- **Priority customer support** (faster response times)
+- **Advanced student management** (detailed progress tracking, custom assessments)
+- **Business reporting** (tax documents, detailed financial reports)
 
 ## Technical Payment Architecture
 
