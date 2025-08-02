@@ -73,6 +73,23 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   // PCP Certification System
   {
     category: 'PCP Certification',
+    feature: 'Course Module System',
+    status: 'complete',
+    priority: 'high',
+    description: 'Display and navigate PCP training modules with progress tracking',
+    userJourney: {
+      happyPath: 'tested',
+      errorHandling: 'tested',
+      mobileUX: 'pending',
+      accessibility: 'pending'
+    },
+    evidence: {
+      demoUrl: '/course-modules',
+      testResults: 'Route verified operational - HTTP 200, API integration working, component renders correctly'
+    }
+  },
+  {
+    category: 'PCP Certification',
     feature: 'Sequential Level Progression',
     status: 'complete',
     priority: 'high',
@@ -343,6 +360,9 @@ const EnhancedCoachingWorkflowAnalysis: React.FC = () => {
         </p>
       </div>
 
+      {/* Test Routes Dashboard */}
+      <TestRoutesDashboard />
+
       {/* Overall Statistics */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <Card>
@@ -535,6 +555,102 @@ const EnhancedCoachingWorkflowAnalysis: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+// Test Routes Dashboard Component
+const TestRoutesDashboard: React.FC = () => {
+  const testRoutes = [
+    { name: 'Course Modules', path: '/course-modules', status: 'operational', description: 'PCP training modules with progress tracking' },
+    { name: 'Coach Application', path: '/coach-application', status: 'operational', description: 'Multi-step coaching application workflow' },
+    { name: 'PCP Certification', path: '/pcp-certification', status: 'operational', description: 'Sequential level progression system' },
+    { name: 'PickleJourney Dashboard', path: '/picklejourney', status: 'operational', description: 'Player development tracking system' },
+    { name: 'Training Centers', path: '/training-centers', status: 'operational', description: 'QR-based facility access system' },
+    { name: 'Wise Payment Integration', path: '/wise-integration-demo', status: 'operational', description: 'International payment processing' },
+    { name: 'Assessment System', path: '/assessment', status: 'partial', description: '42-skillset PCP assessment tool' },
+    { name: 'Session Management', path: '/sessions', status: 'partial', description: 'Coach-player session booking workflow' },
+    { name: 'Goal Management', path: '/goals', status: 'partial', description: 'Player and coach goal setting system' },
+    { name: 'Ranking System', path: '/ranking', status: 'partial', description: 'Points-based performance ranking' },
+    { name: 'Admin Dashboard', path: '/admin', status: 'partial', description: 'System administration and monitoring' },
+    { name: 'Tournament System', path: '/tournaments', status: 'schema-only', description: 'Tournament creation and management' },
+    { name: 'Content Management', path: '/admin/content', status: 'missing', description: 'Module and assessment content editing' },
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'operational': return 'bg-green-100 text-green-800 border-green-200';
+      case 'partial': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'schema-only': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'missing': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'operational': return <CheckCircle className="h-4 w-4" />;
+      case 'partial': return <Clock className="h-4 w-4" />;
+      case 'schema-only': return <FileText className="h-4 w-4" />;
+      case 'missing': return <AlertTriangle className="h-4 w-4" />;
+      default: return <AlertTriangle className="h-4 w-4" />;
+    }
+  };
+
+  return (
+    <Card className="w-full mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Development Test Routes Dashboard
+        </CardTitle>
+        <CardDescription>
+          One-click access to all major features for testing and verification
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {testRoutes.map((route, index) => (
+            <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-medium text-sm">{route.name}</h3>
+                <Badge className={`text-xs ${getStatusColor(route.status)} flex items-center gap-1`}>
+                  {getStatusIcon(route.status)}
+                  {route.status}
+                </Badge>
+              </div>
+              <p className="text-xs text-gray-600 mb-3">{route.description}</p>
+              <div className="flex gap-2">
+                {route.status === 'operational' || route.status === 'partial' ? (
+                  <a 
+                    href={route.path} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Test Route
+                  </a>
+                ) : (
+                  <span className="text-xs bg-gray-300 text-gray-600 px-2 py-1 rounded cursor-not-allowed">
+                    Not Available
+                  </span>
+                )}
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                  {route.path}
+                </code>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <Alert className="mt-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Development Workflow:</strong> After completing each feature, return to this dashboard to verify routes and update status. 
+            Test all routes marked as "operational" to ensure no regressions have been introduced.
+          </AlertDescription>
+        </Alert>
+      </CardContent>
+    </Card>
   );
 };
 
