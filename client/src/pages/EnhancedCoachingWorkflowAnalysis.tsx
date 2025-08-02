@@ -992,7 +992,7 @@ const RouteTestingPanel: React.FC<{
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {testRoutes.map((route, index) => (
-            <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+        <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-medium text-sm">{route.name}</h3>
                 <Badge className={`text-xs ${getStatusColor(route.status)} flex items-center gap-1`}>
@@ -1020,20 +1020,19 @@ const RouteTestingPanel: React.FC<{
                   {route.path}
                 </code>
               </div>
-            </div>
-          ))}
         </div>
-        
-        <Alert className="mt-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Universal Development Workflow:</strong> This dashboard serves all development modules (coaching, franchise, retail, facilities). 
-            After completing ANY feature in ANY module, the system should automatically redirect here for verification.
-            Test all routes marked as "operational" to ensure no regressions have been introduced.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  };
+      ))}
+    </div>
+    
+    <Alert className="mt-6">
+      <AlertTriangle className="h-4 w-4" />
+      <AlertDescription>
+        <strong>Universal Development Workflow:</strong> This dashboard serves all development modules (coaching, franchise, retail, facilities). 
+        After completing ANY feature in ANY module, the system should automatically redirect here for verification.
+        Test all routes marked as "operational" to ensure no regressions have been introduced.
+      </AlertDescription>
+    </Alert>
+  );
+};
 
 export default EnhancedCoachingWorkflowAnalysis;
