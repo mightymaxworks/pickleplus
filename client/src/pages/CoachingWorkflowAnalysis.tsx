@@ -377,6 +377,198 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     { name: 'Student Progress Analytics', path: '/student-progress-analytics', status: 'operational', description: 'Phase 2: Student tracking' }
   ];
 
+  // LMS API Test Endpoints
+  const lmsApiTests = [
+    {
+      category: 'Curriculum Management',
+      tests: [
+        { name: 'Get All Drills', endpoint: '/api/curriculum/drills', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get Drill Categories', endpoint: '/api/curriculum/categories', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Search Drills', endpoint: '/api/curriculum/drills/search?q=forehand', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get Drills by Skill Level', endpoint: '/api/curriculum/drills/skill-level/beginner', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get Public Templates', endpoint: '/api/curriculum/templates', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get Coach Lesson Plans', endpoint: '/api/curriculum/lesson-plans/my-plans', method: 'GET', status: 'idle', responseTime: null }
+      ]
+    },
+    {
+      category: 'SAGE AI Integration',
+      tests: [
+        { name: 'Get User Profile', endpoint: '/api/sage/user-profile', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get Drill Recommendations', endpoint: '/api/sage/drill-recommendations', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get CourtIQ Details', endpoint: '/api/sage/courtiq-details', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Get Match History', endpoint: '/api/sage/match-history?limit=5', method: 'GET', status: 'idle', responseTime: null }
+      ]
+    },
+    {
+      category: 'Coach Business Analytics',
+      tests: [
+        { name: 'Revenue Analytics', endpoint: '/api/coach/analytics/revenue', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Client Metrics', endpoint: '/api/coach/analytics/clients', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Schedule Optimization', endpoint: '/api/coach/analytics/schedule', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Performance KPIs', endpoint: '/api/coach/analytics/kpis', method: 'GET', status: 'idle', responseTime: null }
+      ]
+    },
+    {
+      category: 'Student Progress Tracking',
+      tests: [
+        { name: 'Progress Overview', endpoint: '/api/coach/students/progress-overview', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Skill Assessments', endpoint: '/api/coach/students/assessments', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Goal Tracking', endpoint: '/api/coach/students/goals', method: 'GET', status: 'idle', responseTime: null },
+        { name: 'Session History', endpoint: '/api/coach/students/sessions', method: 'GET', status: 'idle', responseTime: null }
+      ]
+    }
+  ];
+
+  const [lmsTests, setLmsTests] = useState(lmsApiTests);
+
+  // User Journey Tests
+  const userJourneyTests = [
+    {
+      name: 'Coach Content Creation Journey',
+      steps: [
+        { name: 'Access Coach Hub', route: '/coach', status: 'idle' },
+        { name: 'Navigate to Curriculum', route: '/coach/curriculum', status: 'idle' },
+        { name: 'Create New Drill', endpoint: '/api/curriculum/drills', method: 'POST', status: 'idle' },
+        { name: 'Create Lesson Plan', endpoint: '/api/curriculum/lesson-plans', method: 'POST', status: 'idle' },
+        { name: 'Verify Content Saved', endpoint: '/api/curriculum/lesson-plans/my-plans', method: 'GET', status: 'idle' }
+      ],
+      status: 'idle',
+      progress: 0
+    },
+    {
+      name: 'AI-Powered Drill Recommendation Journey',
+      steps: [
+        { name: 'Student Assessment', endpoint: '/api/students/assessment', method: 'GET', status: 'idle' },
+        { name: 'Get AI Recommendations', endpoint: '/api/sage/drill-recommendations', method: 'POST', status: 'idle' },
+        { name: 'Review Drill Details', endpoint: '/api/sage/drills/1/details', method: 'GET', status: 'idle' },
+        { name: 'Save Drill for Later', endpoint: '/api/sage/drills/1/save', method: 'POST', status: 'idle' },
+        { name: 'Mark as Completed', endpoint: '/api/sage/drills/1/complete', method: 'POST', status: 'idle' }
+      ],
+      status: 'idle',
+      progress: 0
+    },
+    {
+      name: 'Comprehensive Analytics Review Journey',
+      steps: [
+        { name: 'Access Business Dashboard', route: '/coach-business-dashboard', status: 'idle' },
+        { name: 'Load Revenue Data', endpoint: '/api/coach/analytics/revenue', method: 'GET', status: 'idle' },
+        { name: 'Check Student Progress', route: '/student-progress-analytics', status: 'idle' },
+        { name: 'Review Performance KPIs', endpoint: '/api/coach/analytics/kpis', method: 'GET', status: 'idle' },
+        { name: 'Generate Progress Report', endpoint: '/api/coach/reports/generate', method: 'POST', status: 'idle' }
+      ],
+      status: 'idle',
+      progress: 0
+    }
+  ];
+
+  const [journeyTests, setJourneyTests] = useState(userJourneyTests);
+
+  // LMS API Testing Functions
+  const runLMSTest = async (categoryIndex: number, testIndex: number) => {
+    const newTests = [...lmsTests];
+    newTests[categoryIndex].tests[testIndex].status = 'running';
+    setLmsTests(newTests);
+
+    const startTime = Date.now();
+    
+    try {
+      const test = newTests[categoryIndex].tests[testIndex];
+      const response = await fetch(test.endpoint, { 
+        method: test.method,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        ...(test.method === 'POST' && {
+          body: JSON.stringify({
+            query: 'Test drill recommendation',
+            playerLevel: 'intermediate',
+            conversationId: 'test-' + Date.now()
+          })
+        })
+      });
+      
+      const responseTime = Date.now() - startTime;
+      
+      newTests[categoryIndex].tests[testIndex] = {
+        ...newTests[categoryIndex].tests[testIndex],
+        status: response.ok ? 'passed' : 'failed',
+        responseTime: responseTime
+      };
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      newTests[categoryIndex].tests[testIndex] = {
+        ...newTests[categoryIndex].tests[testIndex],
+        status: 'failed',
+        responseTime: responseTime
+      };
+    }
+    
+    setLmsTests(newTests);
+  };
+
+  const runAllLMSTests = async () => {
+    for (let categoryIndex = 0; categoryIndex < lmsTests.length; categoryIndex++) {
+      for (let testIndex = 0; testIndex < lmsTests[categoryIndex].tests.length; testIndex++) {
+        await runLMSTest(categoryIndex, testIndex);
+        await new Promise(resolve => setTimeout(resolve, 300)); // Delay between tests
+      }
+    }
+  };
+
+  // User Journey Testing Functions
+  const runJourneyTest = async (journeyIndex: number) => {
+    const newJourneys = [...journeyTests];
+    newJourneys[journeyIndex].status = 'running';
+    newJourneys[journeyIndex].progress = 0;
+    setJourneyTests(newJourneys);
+
+    const journey = newJourneys[journeyIndex];
+    
+    for (let stepIndex = 0; stepIndex < journey.steps.length; stepIndex++) {
+      const step = journey.steps[stepIndex];
+      step.status = 'running';
+      setJourneyTests([...newJourneys]);
+
+      try {
+        if (step.endpoint) {
+          // API call test
+          const response = await fetch(step.endpoint, {
+            method: step.method || 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            ...(step.method === 'POST' && {
+              body: JSON.stringify({
+                title: 'Test Drill',
+                description: 'Automated test drill',
+                category: 'technical',
+                skillLevel: 'beginner'
+              })
+            })
+          });
+          
+          step.status = response.ok ? 'passed' : 'failed';
+        } else if (step.route) {
+          // Route navigation test
+          const response = await fetch(step.route);
+          step.status = response.ok ? 'passed' : 'failed';
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+      } catch (error) {
+        step.status = 'failed';
+      }
+      
+      newJourneys[journeyIndex].progress = ((stepIndex + 1) / journey.steps.length) * 100;
+      setJourneyTests([...newJourneys]);
+    }
+    
+    const allPassed = journey.steps.every(step => step.status === 'passed');
+    newJourneys[journeyIndex].status = allPassed ? 'passed' : 'failed';
+    setJourneyTests([...newJourneys]);
+  };
+
   const runSingleTest = async (categoryIndex: number, testIndex: number) => {
     const newTests = [...apiTests];
     newTests[categoryIndex].tests[testIndex].status = 'running';
@@ -512,9 +704,11 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="system-overview">System Overview</TabsTrigger>
           <TabsTrigger value="coaching-workflows">Coaching Workflows</TabsTrigger>
+          <TabsTrigger value="lms-testing">LMS Testing</TabsTrigger>
+          <TabsTrigger value="journey-testing">Journey Testing</TabsTrigger>
           <TabsTrigger value="user-journeys">User Journeys</TabsTrigger>
           <TabsTrigger value="api-testing">API Testing</TabsTrigger>
           <TabsTrigger value="route-testing">Route Testing</TabsTrigger>
@@ -689,6 +883,145 @@ const CoachingWorkflowAnalysis: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="lms-testing" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Learning Management System API Testing</h3>
+            <Button onClick={runAllLMSTests} className="bg-blue-600 hover:bg-blue-700">
+              <Play className="w-4 h-4 mr-2" />
+              Run All LMS Tests
+            </Button>
+          </div>
+          
+          <div className="grid gap-6">
+            {lmsTests.map((category, categoryIndex) => (
+              <Card key={category.category}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    {category.category}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {category.tests.map((test, testIndex) => (
+                      <div key={test.name} className="flex items-center justify-between p-3 border rounded">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {test.status === 'idle' && <Clock className="w-4 h-4 text-gray-400" />}
+                            {test.status === 'running' && <Activity className="w-4 h-4 text-blue-500 animate-spin" />}
+                            {test.status === 'passed' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                            {test.status === 'failed' && <XCircle className="w-4 h-4 text-red-500" />}
+                            <Badge variant={test.method === 'GET' ? 'secondary' : 'default'}>
+                              {test.method}
+                            </Badge>
+                          </div>
+                          <div>
+                            <div className="font-medium">{test.name}</div>
+                            <div className="text-sm text-gray-500">{test.endpoint}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {test.responseTime && (
+                            <span className="text-sm text-gray-500">{test.responseTime}ms</span>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => runLMSTest(categoryIndex, testIndex)}
+                            disabled={test.status === 'running'}
+                          >
+                            <Play className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="journey-testing" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">User Journey Testing</h3>
+            <div className="text-sm text-gray-500">
+              End-to-end workflow validation for coaching features
+            </div>
+          </div>
+          
+          <div className="grid gap-6">
+            {journeyTests.map((journey, journeyIndex) => (
+              <Card key={journey.name}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      {journey.name}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => runJourneyTest(journeyIndex)}
+                      disabled={journey.status === 'running'}
+                    >
+                      {journey.status === 'running' ? (
+                        <Activity className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                      {journey.status === 'running' ? 'Testing...' : 'Test Journey'}
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {journey.status === 'running' && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress</span>
+                          <span>{Math.round(journey.progress)}%</span>
+                        </div>
+                        <Progress value={journey.progress} className="h-2" />
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      {journey.steps.map((step, stepIndex) => (
+                        <div key={stepIndex} className="flex items-center gap-3 p-2 rounded border">
+                          <div className="flex items-center gap-2">
+                            {step.status === 'idle' && <Clock className="w-4 h-4 text-gray-400" />}
+                            {step.status === 'running' && <Activity className="w-4 h-4 text-blue-500 animate-spin" />}
+                            {step.status === 'passed' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                            {step.status === 'failed' && <XCircle className="w-4 h-4 text-red-500" />}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{step.name}</div>
+                            {step.endpoint && (
+                              <div className="text-xs text-gray-500">{step.endpoint}</div>
+                            )}
+                            {step.route && (
+                              <div className="text-xs text-gray-500">Route: {step.route}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {journey.status !== 'idle' && journey.status !== 'running' && (
+                      <Alert>
+                        <AlertDescription>
+                          Journey {journey.status === 'passed' ? 'completed successfully' : 'failed'}. 
+                          {journey.status === 'failed' && ' Check individual steps above for details.'}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
         <TabsContent value="user-journeys" className="space-y-6">
