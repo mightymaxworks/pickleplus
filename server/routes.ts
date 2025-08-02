@@ -73,6 +73,7 @@ import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-S
 import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes"; // Sprint 1: Curriculum Management & Lesson Planning
 import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 2 Phase 2: Session Planning Integration
 import wisePaymentRoutes from "./routes/wise-payment-routes"; // Wise Payment Integration
+import { registerCourseModuleRoutes } from "./api/course-modules"; // Course Module System - DAF Implementation
 import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes"; // WISE API Diagnostic Tool
 import wiseBusinessRoutes from "./routes/wise-business-routes"; // Wise Business API (Self-Service)
 import duprIntegrationRoutes from './routes/dupr-integration-routes'; // DUPR Rating Integration System
@@ -419,6 +420,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Sprint 1: Curriculum Management & Lesson Planning routes
   registerCurriculumManagementRoutes(app);
+  
+  // Register Course Module System routes - DAF Level 2 Implementation
+  registerCourseModuleRoutes(app);
   
   // Register Sprint 2 Phase 2: Session Planning Integration routes
   app.use('/api/coach', sessionPlanningRoutes);

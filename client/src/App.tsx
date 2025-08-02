@@ -256,6 +256,13 @@ export default function App() {
                   {/* Enhanced Coaching Workflow Analysis */}
                   <Route path="/coaching-workflow-analysis" component={lazyLoad(() => import('./pages/EnhancedCoachingWorkflowAnalysis'))} />
                   
+                  {/* Course Module System - DAF Level 3 Frontend Implementation */}
+                  <ProtectedRouteWithLayout 
+                    path="/course-modules" 
+                    component={lazyLoad(() => import('./pages/CourseModulesPage'))} 
+                    pageTitle="PCP Course Modules"
+                  />
+                  
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 

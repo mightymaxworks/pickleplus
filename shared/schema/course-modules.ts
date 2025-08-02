@@ -144,7 +144,7 @@ export const certificationApplications = pgTable("certification_applications", {
   // Module completion tracking
   requiredModules: text("required_modules").notNull(), // JSON array of module IDs
   completedModules: text("completed_modules"), // JSON array of completed module IDs
-  moduleCompletionPercentage: decimal("module_completion_percentage", { precision: 5, scale: 2 }).default(0),
+  moduleCompletionPercentage: decimal("module_completion_percentage", { precision: 5, scale: 2 }).default("0"),
   
   // Assessment results
   overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
