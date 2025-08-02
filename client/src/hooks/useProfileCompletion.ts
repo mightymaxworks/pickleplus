@@ -23,13 +23,17 @@ export function useProfileCompletion() {
   });
 
   // Show modal if profile needs completion and user hasn't dismissed it
+  // TEMP FIX: Disable automatic modal showing to avoid confusion with password reset
   useEffect(() => {
     if (completionStatus?.needsCompletion && !hasUserDismissed) {
-      // Add a small delay to avoid showing immediately on page load
-      const timer = setTimeout(() => {
-        setShouldShowModal(true);
-      }, 2000);
-      return () => clearTimeout(timer);
+      // DISABLED: Add a small delay to avoid showing immediately on page load
+      // const timer = setTimeout(() => {
+      //   setShouldShowModal(true);
+      // }, 2000);
+      // return () => clearTimeout(timer);
+      
+      // Profile completion is now optional - user can access via profile settings
+      console.log('[ProfileCompletion] Profile needs completion but modal disabled to avoid confusion');
     }
   }, [completionStatus?.needsCompletion, hasUserDismissed]);
 
