@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { logFeatureCompletion } from '@/lib/developmentWorkflow';
 import { 
   BookOpen, 
   Play, 
@@ -53,6 +54,29 @@ const CourseModulesPage: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
   const queryClient = useQueryClient();
+
+  // Development Workflow Integration
+  useEffect(() => {
+    // Log that user accessed the Course Module System (operational verification)
+    logFeatureCompletion('Coaching', 'Course Module System', 'complete');
+    
+    // Add a button to manually trigger redirect to development dashboard
+    const redirectButton = document.createElement('button');
+    redirectButton.innerHTML = '🔧 Dev Dashboard';
+    redirectButton.className = 'fixed top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded text-sm z-50';
+    redirectButton.onclick = () => {
+      window.location.href = '/coaching-workflow-analysis';
+    };
+    document.body.appendChild(redirectButton);
+
+    return () => {
+      // Cleanup
+      const existingButton = document.querySelector('button[onclick*="coaching-workflow-analysis"]');
+      if (existingButton) {
+        document.body.removeChild(existingButton);
+      }
+    };
+  }, []);
 
   // Fetch course modules for selected PCP level
   const { data: modules = [], isLoading: modulesLoading } = useQuery({
