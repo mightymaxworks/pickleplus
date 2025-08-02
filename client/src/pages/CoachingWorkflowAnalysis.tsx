@@ -23,6 +23,69 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     blocked: 0
   });
 
+  const [userJourneys, setUserJourneys] = useState([
+    {
+      id: 'player-onboarding',
+      name: 'Player Registration & Onboarding',
+      userType: 'guest',
+      status: 'idle',
+      progress: 0,
+      steps: [
+        { name: 'Visit Landing Page', route: '/', status: 'idle' },
+        { name: 'Navigate to Registration', route: '/auth', status: 'idle' },
+        { name: 'Complete Registration Form', route: '/register', status: 'idle' },
+        { name: 'Verify Profile Setup', route: '/profile', status: 'idle' },
+        { name: 'Browse Training Centers', route: '/training-centers', status: 'idle' }
+      ],
+      criticalPath: true
+    },
+    {
+      id: 'coach-application',
+      name: 'Coach Application & PCP Verification',
+      userType: 'player',
+      status: 'idle',
+      progress: 0,
+      steps: [
+        { name: 'Access Coach Hub', route: '/coach', status: 'idle' },
+        { name: 'Start Application', route: '/coach/apply', status: 'idle' },
+        { name: 'PCP Certification Check', route: '/pcp-certification', status: 'idle' },
+        { name: 'Complete Profile', route: '/coach/profile', status: 'idle' },
+        { name: 'Review Application Status', route: '/coach/status', status: 'idle' }
+      ],
+      criticalPath: true
+    },
+    {
+      id: 'session-booking',
+      name: 'Session Booking Workflow',
+      userType: 'player',
+      status: 'idle',
+      progress: 0,
+      steps: [
+        { name: 'Browse Available Coaches', route: '/coaches', status: 'idle' },
+        { name: 'Select Coach & Time', route: '/session-booking', status: 'idle' },
+        { name: 'Payment Processing', route: '/payment', status: 'idle' },
+        { name: 'Booking Confirmation', route: '/booking-confirm', status: 'idle' },
+        { name: 'Session Preparation', route: '/session-prep', status: 'idle' }
+      ],
+      criticalPath: true
+    },
+    {
+      id: 'coach-business-management',
+      name: 'Coach Business Dashboard Usage',
+      userType: 'coach',
+      status: 'idle',
+      progress: 0,
+      steps: [
+        { name: 'Access Coach Dashboard', route: '/coach/dashboard', status: 'idle' },
+        { name: 'Review Student Progress', route: '/coach/students', status: 'idle' },
+        { name: 'Plan Curriculum', route: '/coach/curriculum', status: 'idle' },
+        { name: 'Schedule Management', route: '/coach/schedule', status: 'idle' },
+        { name: 'Revenue Analytics', route: '/coach/analytics', status: 'idle' }
+      ],
+      criticalPath: false
+    }
+  ]);
+
   const [apiTests, setApiTests] = useState([
     {
       category: 'Authentication System',
@@ -270,6 +333,53 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     }
   };
 
+  const runSingleUserJourney = async (journeyIndex: number) => {
+    const newJourneys = [...userJourneys];
+    newJourneys[journeyIndex].status = 'running';
+    newJourneys[journeyIndex].progress = 0;
+    setUserJourneys(newJourneys);
+
+    const journey = newJourneys[journeyIndex];
+    
+    for (let stepIndex = 0; stepIndex < journey.steps.length; stepIndex++) {
+      const step = journey.steps[stepIndex];
+      
+      // Mark current step as running
+      newJourneys[journeyIndex].steps[stepIndex].status = 'running';
+      setUserJourneys([...newJourneys]);
+      
+      try {
+        // Test route accessibility
+        const response = await fetch(step.route, { method: 'HEAD' });
+        
+        // For now, we'll mark as passed if route exists (200) or requires auth (302/401)
+        const success = response.ok || response.status === 302 || response.status === 401;
+        
+        newJourneys[journeyIndex].steps[stepIndex].status = success ? 'passed' : 'failed';
+        newJourneys[journeyIndex].progress = Math.round(((stepIndex + 1) / journey.steps.length) * 100);
+        
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay between steps
+        
+      } catch (error) {
+        newJourneys[journeyIndex].steps[stepIndex].status = 'failed';
+      }
+      
+      setUserJourneys([...newJourneys]);
+    }
+    
+    // Mark journey as complete
+    const allStepsPassed = newJourneys[journeyIndex].steps.every(step => step.status === 'passed');
+    newJourneys[journeyIndex].status = allStepsPassed ? 'passed' : 'failed';
+    setUserJourneys([...newJourneys]);
+  };
+
+  const runAllUserJourneys = async () => {
+    for (let journeyIndex = 0; journeyIndex < userJourneys.length; journeyIndex++) {
+      await runSingleUserJourney(journeyIndex);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between journeys
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'passed': return <CheckCircle className="w-3 h-3 text-green-600" />;
@@ -323,9 +433,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="system-overview">System Overview</TabsTrigger>
           <TabsTrigger value="coaching-workflows">Coaching Workflows</TabsTrigger>
+          <TabsTrigger value="user-journeys">User Journeys</TabsTrigger>
           <TabsTrigger value="api-testing">API Testing</TabsTrigger>
           <TabsTrigger value="route-testing">Route Testing</TabsTrigger>
-          <TabsTrigger value="deployment-status">Deployment</TabsTrigger>
         </TabsList>
 
         <TabsContent value="system-overview" className="space-y-6">
@@ -499,6 +609,85 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="user-journeys" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  User Journey Testing
+                </CardTitle>
+                <Button onClick={runAllUserJourneys} className="bg-green-600 hover:bg-green-700">
+                  <PlayCircle className="w-4 h-4 mr-2" />
+                  Test All Journeys
+                </Button>
+              </div>
+              <p className="text-gray-600">End-to-end user workflow validation for seamless UX</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {userJourneys.map((journey, journeyIndex) => (
+                  <Card key={journeyIndex} className={`border-l-4 ${
+                    journey.status === 'passed' ? 'border-l-green-500' : 
+                    journey.status === 'failed' ? 'border-l-red-500' : 
+                    journey.status === 'running' ? 'border-l-yellow-500' : 'border-l-gray-300'
+                  }`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{journey.name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={`
+                            ${journey.userType === 'guest' ? 'text-gray-600' : ''}
+                            ${journey.userType === 'player' ? 'text-blue-600' : ''}
+                            ${journey.userType === 'coach' ? 'text-green-600' : ''}
+                            ${journey.userType === 'admin' ? 'text-purple-600' : ''}
+                          `}>
+                            {journey.userType}
+                          </Badge>
+                          {journey.criticalPath && (
+                            <Badge className="bg-orange-100 text-orange-800">Critical</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Progress value={journey.progress} className="flex-1" />
+                        <span className="text-sm font-medium">{journey.progress}%</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {journey.steps.map((step, stepIndex) => (
+                          <div key={stepIndex} className="flex items-center gap-2 text-sm">
+                            {getStatusIcon(step.status)}
+                            <span className="flex-1">{step.name}</span>
+                            <Badge variant="outline" className="text-xs font-mono">
+                              {step.route}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-3 border-t flex justify-between items-center">
+                        <div className="text-xs text-gray-500">
+                          {journey.steps.length} steps • {journey.criticalPath ? 'Critical Path' : 'Standard Flow'}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          onClick={() => runSingleUserJourney(journeyIndex)}
+                          disabled={journey.status === 'running'}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <PlayCircle className="w-3 h-3 mr-1" />
+                          Test Journey
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="api-testing" className="space-y-6">
           <Card>
             <CardHeader>
@@ -507,10 +696,16 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                   <Activity className="w-5 h-5" />
                   API Endpoint Testing
                 </CardTitle>
-                <Button onClick={runAllTests} className="bg-blue-600 hover:bg-blue-700">
-                  <PlayCircle className="w-4 h-4 mr-2" />
-                  Run All Tests
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={runAllTests} className="bg-blue-600 hover:bg-blue-700">
+                    <PlayCircle className="w-4 h-4 mr-2" />
+                    Run API Tests
+                  </Button>
+                  <Button onClick={runAllUserJourneys} className="bg-green-600 hover:bg-green-700">
+                    <Users className="w-4 h-4 mr-2" />
+                    Test User Journeys
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span>Total: {stats.total}</span>

@@ -5,6 +5,7 @@
 
 import express from 'express';
 import { storage } from '../storage';
+import { isAuthenticated } from '../auth';
 
 const router = express.Router();
 
@@ -287,5 +288,4 @@ router.get('/certificate/:certificateId', isAuthenticated, async (req, res) => {
   }
 });
 
-module.exports = router;
 export default router;

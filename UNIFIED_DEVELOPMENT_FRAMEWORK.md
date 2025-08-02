@@ -83,8 +83,9 @@ server/routes/[feature-name]-routes.ts
 1. **Feature Development**: Create modular route file
 2. **Registration**: Add to main routes.ts with proper registration
 3. **Automatic Testing**: System automatically tests via `/coaching-workflow-analysis`
-4. **Evidence Collection**: Dashboard provides real-time status verification
-5. **Completion Validation**: Only claim completion after dashboard shows operational status
+4. **User Journey Validation**: Test complete user workflows end-to-end
+5. **Evidence Collection**: Dashboard provides real-time status verification
+6. **Completion Validation**: Only claim completion after dashboard shows operational status
 
 ### Development Dashboard Requirements (`/coaching-workflow-analysis`)
 - **Real-time API Testing**: Auto-test all registered route modules
@@ -92,7 +93,64 @@ server/routes/[feature-name]-routes.ts
 - **Authentic Data Verification**: Confirm storage layer integration (no mock data)
 - **Performance Metrics**: Response time tracking for all endpoints
 - **Authentication Testing**: Verify security implementation
+- **User Journey Testing**: Complete workflow validation (happy path + error scenarios)
 - **Evidence Generation**: Provide screenshots/test results for completion claims
+
+## USER JOURNEY TESTING FRAMEWORK
+
+### User Journey Categories
+1. **Guest User Journeys**: Non-authenticated user flows
+2. **Player User Journeys**: Authenticated player workflows
+3. **Coach User Journeys**: Coach-specific workflows  
+4. **Admin User Journeys**: Administrative workflows
+5. **Mobile User Journeys**: Mobile-optimized pathway testing
+
+### Journey Testing Requirements
+Each user journey MUST be tested for:
+- **Happy Path**: Successful completion of intended workflow
+- **Error Scenarios**: Graceful handling of failures and edge cases
+- **Authentication Gates**: Proper redirect and access control
+- **Mobile Responsiveness**: Touch-friendly interactions on mobile devices
+- **Performance**: Acceptable load times and response rates
+- **Accessibility**: Screen reader compatibility and keyboard navigation
+
+### Journey Testing Implementation
+```typescript
+interface UserJourney {
+  id: string;
+  name: string;
+  userType: 'guest' | 'player' | 'coach' | 'admin';
+  steps: JourneyStep[];
+  expectedOutcome: string;
+  criticalPath: boolean;
+}
+
+interface JourneyStep {
+  action: string;
+  route: string;
+  apiCalls: string[];
+  expectedResponse: any;
+  validations: ValidationCheck[];
+}
+```
+
+### Critical User Journeys (Phase 1)
+1. **Player Registration & Onboarding**
+   - Sign up → Email verification → Profile setup → First session booking
+2. **Coach Application & Approval**
+   - Apply as coach → PCP verification → Profile completion → First student
+3. **Session Booking Workflow**
+   - Browse coaches → Select availability → Payment → Confirmation
+4. **Training Center Access**
+   - QR scan → Facility access → Class check-in → Session completion
+
+### Advanced User Journeys (Phase 2)
+1. **Coach Business Management**
+   - Dashboard access → Revenue review → Schedule management → Student progress tracking
+2. **Student Progress Tracking**
+   - Assessment creation → Progress monitoring → Goal setting → Achievement tracking
+3. **Curriculum Development**
+   - Drill selection → Lesson planning → Session delivery → Feedback collection
 
 ## CURRENT SYSTEM STATUS (August 2, 2025)
 
