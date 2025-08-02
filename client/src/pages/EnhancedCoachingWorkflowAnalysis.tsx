@@ -1016,10 +1016,7 @@ const RouteTestingPanel: React.FC<{
                     Not Available
                   </span>
                 )}
-              </div>
-            </div>
-          ))}
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono ml-2">
                   {route.path}
                 </code>
               </div>
@@ -1038,6 +1035,5 @@ const RouteTestingPanel: React.FC<{
       </div>
     );
   };
-};
 
 export default EnhancedCoachingWorkflowAnalysis;
