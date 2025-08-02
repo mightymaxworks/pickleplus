@@ -3,10 +3,13 @@
  * PKL-278651-PCP-BASIC-TIER - Complete system requirements analysis
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { 
   CheckCircle, 
   Clock, 
@@ -21,8 +24,25 @@ import {
   FileText,
   Calendar,
   Target,
-  TrendingUp
+  TrendingUp,
+  Play,
+  RefreshCw
 } from 'lucide-react';
+
+interface TestResult {
+  name: string;
+  status: 'pending' | 'running' | 'passed' | 'failed';
+  endpoint: string;
+  response?: any;
+  error?: string;
+  duration?: number;
+}
+
+interface TestCategory {
+  category: string;
+  description: string;
+  tests: TestResult[];
+}
 
 interface WorkflowRequirement {
   category: string;
@@ -42,6 +62,59 @@ interface WorkflowRequirement {
     testResults?: string;
   };
 }
+
+const PHASE_1_TESTS: TestCategory[] = [
+  {
+    category: "Authentication System",
+    description: "Core user authentication and session management",
+    tests: [
+      { name: "User Registration", status: 'pending', endpoint: '/api/auth/register' },
+      { name: "User Login", status: 'pending', endpoint: '/api/auth/login' },
+      { name: "Session Validation", status: 'pending', endpoint: '/api/auth/user' },
+      { name: "Password Reset", status: 'pending', endpoint: '/api/auth/reset-password' }
+    ]
+  },
+  {
+    category: "PCP Certification System",
+    description: "Sequential Level 1→5 certification with validation",
+    tests: [
+      { name: "PCP Levels List", status: 'pending', endpoint: '/api/pcp-certification/levels' },
+      { name: "Coach Profiles", status: 'pending', endpoint: '/api/pcp-coach/profiles' },
+      { name: "Level Validation", status: 'pending', endpoint: '/api/pcp-cert/validate-level' },
+      { name: "Certification Progress", status: 'pending', endpoint: '/api/pcp-coach/progress' }
+    ]
+  },
+  {
+    category: "Session Booking System", 
+    description: "Complete request → response → schedule → payment workflow",
+    tests: [
+      { name: "Session Requests", status: 'pending', endpoint: '/api/session-booking/requests' },
+      { name: "Coach Responses", status: 'pending', endpoint: '/api/session-booking/responses' },
+      { name: "Schedule Management", status: 'pending', endpoint: '/api/session-booking/schedule' },
+      { name: "Booking Status", status: 'pending', endpoint: '/api/session-booking/status' }
+    ]
+  },
+  {
+    category: "WISE Payment Integration",
+    description: "International payment processing and coach payouts",
+    tests: [
+      { name: "Account Balance", status: 'pending', endpoint: '/api/wise/business/balance' },
+      { name: "Payment Simulation", status: 'pending', endpoint: '/api/wise/diagnostic/simulate-payment' },
+      { name: "Payout Processing", status: 'pending', endpoint: '/api/wise/business/transfers' },
+      { name: "Transaction History", status: 'pending', endpoint: '/api/wise/business/transactions' }
+    ]
+  },
+  {
+    category: "Admin Approval Workflow",
+    description: "Coach application and certification management",
+    tests: [
+      { name: "Approval Status", status: 'pending', endpoint: '/api/admin-approval/status' },
+      { name: "Pending Applications", status: 'pending', endpoint: '/api/admin-approval/pending' },
+      { name: "Approval Actions", status: 'pending', endpoint: '/api/admin-approval/approve' },
+      { name: "Rejection Workflow", status: 'pending', endpoint: '/api/admin-approval/reject' }
+    ]
+  }
+];
 
 const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   // Authentication & Profile Management
@@ -639,6 +712,115 @@ const EnhancedCoachingWorkflowAnalysis: React.FC = () => {
 
 // Test Routes Dashboard Component
 const TestRoutesDashboard: React.FC = () => {
+  const [testCategories, setTestCategories] = useState<TestCategory[]>(PHASE_1_TESTS);
+  const [isRunning, setIsRunning] = useState(false);
+  const [activeTab, setActiveTab] = useState('routes');
+
+  const runSingleTest = async (categoryIndex: number, testIndex: number): Promise<void> => {
+    const test = testCategories[categoryIndex].tests[testIndex];
+    
+    setTestCategories(prev => {
+      const updated = [...prev];
+      updated[categoryIndex].tests[testIndex].status = 'running';
+      return updated;
+    });
+
+    const startTime = Date.now();
+    
+    try {
+      const response = await fetch(test.endpoint, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      const duration = Date.now() - startTime;
+      let responseData;
+      
+      try {
+        responseData = await response.json();
+      } catch {
+        responseData = await response.text();
+      }
+
+      setTestCategories(prev => {
+        const updated = [...prev];
+        updated[categoryIndex].tests[testIndex] = {
+          ...test,
+          status: response.ok ? 'passed' : 'failed',
+          response: responseData,
+          error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
+          duration
+        };
+        return updated;
+      });
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      setTestCategories(prev => {
+        const updated = [...prev];
+        updated[categoryIndex].tests[testIndex] = {
+          ...test,
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Network error',
+          duration
+        };
+        return updated;
+      });
+    }
+  };
+
+  const runAllTests = async () => {
+    setIsRunning(true);
+    
+    for (let categoryIndex = 0; categoryIndex < testCategories.length; categoryIndex++) {
+      for (let testIndex = 0; testIndex < testCategories[categoryIndex].tests.length; testIndex++) {
+        await runSingleTest(categoryIndex, testIndex);
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    
+    setIsRunning(false);
+  };
+
+  const resetTests = () => {
+    setTestCategories(prev => prev.map(category => ({
+      ...category,
+      tests: category.tests.map(test => ({
+        ...test,
+        status: 'pending',
+        response: undefined,
+        error: undefined,
+        duration: undefined
+      }))
+    })));
+  };
+
+  const getTestStatusIcon = (status: string) => {
+    switch (status) {
+      case 'passed': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'failed': return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case 'running': return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
+      default: return <Clock className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getTestStatusColor = (status: string) => {
+    switch (status) {
+      case 'passed': return 'bg-green-100 text-green-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'running': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const allTests = testCategories.flatMap(cat => cat.tests);
+  const passedTests = allTests.filter(test => test.status === 'passed').length;
+  const failedTests = allTests.filter(test => test.status === 'failed').length;
+  const totalTests = allTests.length;
+  const completionPercentage = Math.round(((passedTests + failedTests) / totalTests) * 100);
+
   const testRoutes = [
     { name: 'Course Modules', path: '/course-modules', status: 'operational', description: 'PCP training modules with progress tracking' },
     { name: 'Coach Application', path: '/coach-application', status: 'operational', description: 'Multi-step coaching application workflow' },
@@ -687,8 +869,129 @@ const TestRoutesDashboard: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {testRoutes.map((route, index) => (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="routes">Route Testing</TabsTrigger>
+            <TabsTrigger value="api">Phase 1 API Testing</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="routes" className="mt-4">
+            <RouteTestingPanel testRoutes={testRoutes} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />
+          </TabsContent>
+          
+          <TabsContent value="api" className="mt-4">
+            <div className="space-y-6">
+              {/* Phase 1 Testing Summary */}
+              <div className="grid grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600">{totalTests}</div>
+                    <div className="text-sm text-gray-600">Total Tests</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">{passedTests}</div>
+                    <div className="text-sm text-gray-600">Passed</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-red-600">{failedTests}</div>
+                    <div className="text-sm text-gray-600">Failed</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-gray-600">{completionPercentage}%</div>
+                    <div className="text-sm text-gray-600">Complete</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Test Controls */}
+              <div className="flex gap-4">
+                <Button 
+                  onClick={runAllTests} 
+                  disabled={isRunning}
+                  className="flex items-center gap-2"
+                >
+                  {isRunning ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Running Tests...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Run All Phase 1 Tests
+                    </>
+                  )}
+                </Button>
+                <Button variant="outline" onClick={resetTests}>
+                  Reset Tests
+                </Button>
+              </div>
+
+              {/* Test Categories */}
+              <div className="space-y-4">
+                {testCategories.map((category, categoryIndex) => (
+                  <Card key={categoryIndex}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{category.category}</CardTitle>
+                      <CardDescription>{category.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {category.tests.map((test, testIndex) => (
+                          <div key={testIndex} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              {getTestStatusIcon(test.status)}
+                              <div>
+                                <div className="font-medium">{test.name}</div>
+                                <div className="text-sm text-gray-600">{test.endpoint}</div>
+                                {test.duration && (
+                                  <div className="text-xs text-gray-500">{test.duration}ms</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={getTestStatusColor(test.status)}>
+                                {test.status}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => runSingleTest(categoryIndex, testIndex)}
+                                disabled={test.status === 'running'}
+                              >
+                                Test
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Route Testing Panel Component
+const RouteTestingPanel: React.FC<{
+  testRoutes: any[];
+  getStatusColor: (status: string) => string;
+  getStatusIcon: (status: string) => React.ReactNode;
+}> = ({ testRoutes, getStatusColor, getStatusIcon }) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {testRoutes.map((route, index) => (
             <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-medium text-sm">{route.name}</h3>
@@ -713,6 +1016,9 @@ const TestRoutesDashboard: React.FC = () => {
                     Not Available
                   </span>
                 )}
+              </div>
+            </div>
+          ))}
                 <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
                   {route.path}
                 </code>
@@ -729,9 +1035,9 @@ const TestRoutesDashboard: React.FC = () => {
             Test all routes marked as "operational" to ensure no regressions have been introduced.
           </AlertDescription>
         </Alert>
-      </CardContent>
-    </Card>
-  );
+      </div>
+    );
+  };
 };
 
 export default EnhancedCoachingWorkflowAnalysis;
