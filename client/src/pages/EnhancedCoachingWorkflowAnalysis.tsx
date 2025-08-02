@@ -316,6 +316,65 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   }
 ];
 
+// Phase tracking for comprehensive progress monitoring
+interface PhaseStatus {
+  id: string;
+  name: string;
+  status: 'complete' | 'in-progress' | 'planned';
+  completion: number;
+  description: string;
+  keyFeatures: string[];
+  blockers?: string[];
+  completedDate?: string;
+}
+
+const PHASE_TRACKING: PhaseStatus[] = [
+  {
+    id: 'phase-1',
+    name: 'Phase 1: Core Coaching Marketplace',
+    status: 'complete',
+    completion: 100,
+    description: 'Complete coaching infrastructure with PCP certification, session booking, and payment processing',
+    keyFeatures: [
+      '✓ PCP Certification System (Sequential Level 1→5)',
+      '✓ Session Booking Workflow (Request → Response → Schedule)',
+      '✓ WISE Payment Integration (International Payouts)',
+      '✓ Coach Profile Management & Discovery',
+      '✓ Admin Approval Workflow',
+      '✓ Authentication & Authorization'
+    ],
+    completedDate: 'August 2, 2025'
+  },
+  {
+    id: 'phase-2',
+    name: 'Phase 2: Franchise Ecosystem Expansion',
+    status: 'planned',
+    completion: 0,
+    description: 'Multi-tenant franchise management with retail integration and facility operations',
+    keyFeatures: [
+      '⚪ Franchise Management Module (Revenue tracking, royalties)',
+      '⚪ Retail & Equipment Authentication (NFC SHOT3 products)',
+      '⚪ Facility Management System (Asset scheduling, maintenance)',
+      '⚪ Multi-location Analytics Dashboard',
+      '⚪ Franchise Compliance Monitoring'
+    ]
+  },
+  {
+    id: 'phase-3',
+    name: 'Phase 3: Advanced AI & Digital Currency',
+    status: 'planned',
+    completion: 0,
+    description: 'Pickle Points economy with AI-driven analytics and blockchain integration',
+    keyFeatures: [
+      '⚪ Pickle Points Digital Currency System',
+      '⚪ Advanced Analytics & AI Engine',
+      '⚪ Predictive Performance Insights',
+      '⚪ Corporate Integration Platform',
+      '⚪ Blockchain-Ready Architecture'
+    ]
+  }
+];
+
 const EnhancedCoachingWorkflowAnalysis: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
