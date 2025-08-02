@@ -20,6 +20,15 @@ Coach workflow preferences:
 - Profile management should use inline editing rather than separate page navigation
 - Use "Coaching Bio" for coaching profile sections (not "PCP Coaching Certification Programme")
 
+## Development Accuracy Standards
+**CRITICAL REQUIREMENT**: Never claim features are "complete" without operational verification.
+- Only schemas/API routes created = "Design Phase Complete" (NOT "Complete")
+- Frontend + Backend implemented = "Implementation Phase" (NOT "Complete") 
+- End-to-end tested and functional = "OPERATIONALLY COMPLETE"
+- Single source of truth: `client/src/pages/EnhancedCoachingWorkflowAnalysis.tsx`
+- All completion claims must include evidence (screenshots, test results, working URLs)
+- See `DEVELOPMENT_ACCURACY_FRAMEWORK.md` for complete standards
+
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database.
 

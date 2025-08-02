@@ -67,9 +67,9 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   {
     category: 'PCP Certification',
     feature: 'Course Module System',
-    status: 'missing',
+    status: 'partial',
     priority: 'high',
-    description: 'Interactive course modules for each PCP level'
+    description: 'Interactive course modules for each PCP level - Schema created, API routes defined, implementation needed'
   },
   {
     category: 'PCP Certification',
@@ -81,9 +81,9 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   {
     category: 'PCP Certification',
     feature: 'Admin Approval Workflow',
-    status: 'missing',
+    status: 'partial',
     priority: 'high',
-    description: 'Administrator review and approval system for full certification'
+    description: 'Administrator review and approval system for full certification - Schema created, integration needed'
   },
   
   // Payment & Financial
@@ -104,9 +104,9 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   {
     category: 'Payment',
     feature: 'Payout System',
-    status: 'missing',
+    status: 'partial',
     priority: 'high',
-    description: 'Automated coach payouts after session completion'
+    description: 'Automated coach payouts after session completion - Schema and API framework created, WISE integration needed'
   },
   
   // Coach Directory & Marketplace
@@ -136,9 +136,9 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   {
     category: 'Sessions',
     feature: 'Booking System',
-    status: 'missing',
+    status: 'partial',
     priority: 'high',
-    description: 'Calendar integration and session booking workflow'
+    description: 'Calendar integration and session booking workflow - Schema and API routes created, frontend needed'
   },
   {
     category: 'Sessions',
