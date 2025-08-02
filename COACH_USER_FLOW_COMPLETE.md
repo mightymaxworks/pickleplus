@@ -130,22 +130,29 @@ The Pickle+ coach ecosystem follows a streamlined flow designed around the Apple
 
 ## Key Differentiators of Pickle+ Approach
 
-### 1. No Artificial Barriers
+### 1. Sequential PCP Level Progression (CRITICAL REQUIREMENT)
+- **Mandatory Sequential Completion**: Coaches must complete Level 1 → Level 2 → Level 3 → Level 4 → Level 5
+- **No Level Skipping**: System validates certification history and prevents accessing higher levels without prerequisites
+- **Automatic Validation**: Real-time verification of completed levels during onboarding
+- **Clear Progression Path**: Visual indicator showing available next level and requirements
+
+### 2. No Artificial Barriers
 - **No session limits** in basic tier
 - **Immediate full access** upon PCP certification
 - **No graduation periods** or approval delays
 
-### 2. PCP-First Quality Assurance
+### 3. PCP-First Quality Assurance
 - **Only PCP certified coaches** can join
 - **Automatic verification** of credentials
 - **Standardized quality** across all coaches
+- **Sequential certification enforcement** ensures proper skill development
 
-### 3. Transparent Commission Structure
+### 4. Transparent Commission Structure
 - **Level-based commissions** reward higher certifications
 - **Lower rates for advanced coaches** (reverse traditional model)
 - **Clear, upfront pricing** with no hidden fees
 
-### 4. Business Growth Path
+### 5. Business Growth Path
 - **Start coaching immediately** with comprehensive basic tier
 - **Upgrade when ready** to scale business operations
 - **No forced premium subscriptions** for basic functionality

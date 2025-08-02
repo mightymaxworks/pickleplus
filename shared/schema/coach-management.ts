@@ -9,14 +9,48 @@ import { pgTable, serial, integer, varchar, text, timestamp, boolean, decimal, j
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-// PCP Level Configuration
+// PCP Level Configuration - Sequential Progression Required
 export const PCP_LEVEL_CONFIG = {
-  1: { name: 'Entry Coach', badge: '🥉', commission: 15, cost: 699 },
-  2: { name: 'Certified Coach', badge: '🥈', commission: 13, cost: 1299 },
-  3: { name: 'Advanced Coach', badge: '🥇', commission: 12, cost: 2499 },
-  4: { name: 'Master Coach', badge: '💎', commission: 10, cost: 4999 },
-  5: { name: 'Grand Master', badge: '👑', commission: 8, cost: 7999 }
+  1: { name: 'Entry Coach', badge: '🥉', commission: 15, cost: 699, prerequisite: null },
+  2: { name: 'Certified Coach', badge: '🥈', commission: 13, cost: 1299, prerequisite: 1 },
+  3: { name: 'Advanced Coach', badge: '🥇', commission: 12, cost: 2499, prerequisite: 2 },
+  4: { name: 'Master Coach', badge: '💎', commission: 10, cost: 4999, prerequisite: 3 },
+  5: { name: 'Grand Master', badge: '👑', commission: 8, cost: 7999, prerequisite: 4 }
 } as const;
+
+// PCP Level Validation Helper
+export function validatePCPLevelProgression(currentLevel: number, targetLevel: number): {
+  isValid: boolean;
+  error?: string;
+  requiredPath?: number[];
+} {
+  if (targetLevel < 1 || targetLevel > 5) {
+    return { isValid: false, error: 'Invalid PCP level. Must be between 1 and 5.' };
+  }
+  
+  if (currentLevel === 0 && targetLevel !== 1) {
+    return { 
+      isValid: false, 
+      error: 'Must start with Level 1 (Entry Coach) certification.',
+      requiredPath: [1]
+    };
+  }
+  
+  if (targetLevel !== currentLevel + 1) {
+    const requiredPath = [];
+    for (let level = currentLevel + 1; level <= targetLevel; level++) {
+      requiredPath.push(level);
+    }
+    
+    return { 
+      isValid: false, 
+      error: `Cannot skip levels. Must complete Level ${currentLevel + 1} first.`,
+      requiredPath
+    };
+  }
+  
+  return { isValid: true };
+}
 
 // Subscription Tiers
 export const SUBSCRIPTION_TIERS = {
@@ -34,8 +68,9 @@ export const coachProfiles = pgTable('coach_profiles', {
   verificationLevel: varchar('verification_level', { length: 20 }).notNull().default('verified'), // verified, pending, unverified
   isActive: boolean('is_active').notNull().default(true),
   
-  // PCP Certification Details
-  pcpLevel: integer('pcp_level'), // 1-5 for PCP levels
+  // PCP Certification Details - Sequential Progression Required
+  pcpLevel: integer('pcp_level'), // Current highest completed level (1-5)
+  completedLevels: json('completed_levels').notNull().default('[]'), // Array of completed level objects
   pcpCertificationNumber: varchar('pcp_certification_number', { length: 100 }),
   pcpCertifiedAt: timestamp('pcp_certified_at'),
   pcpExpiresAt: timestamp('pcp_expires_at'),
@@ -194,6 +229,14 @@ export interface PCPLevelConfig {
   badge: string;
   commission: number;
   cost: number;
+  prerequisite: number | null;
+}
+
+export interface CompletedPCPLevel {
+  level: number;
+  certificationNumber: string;
+  completedAt: Date;
+  expiresAt?: Date;
 }
 
 // Comprehensive Basic Tier Features

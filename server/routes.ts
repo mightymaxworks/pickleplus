@@ -476,6 +476,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   try {
     const { pcpCoachOnboardingRoutes } = await import('./routes/pcp-coach-onboarding');
     app.use('/api/pcp-coach', pcpCoachOnboardingRoutes);
+  
+  // PCP Certification Validation routes (Sequential Level Progression)
+  const pcpCertificationValidationRoutes = require('./routes/pcp-certification-validation').default;
+  app.use('/api/pcp-cert', pcpCertificationValidationRoutes);
+  console.log('[API] PCP Certification Validation routes registered at /api/pcp-cert');
     console.log('[API] PCP Coach Onboarding routes registered at /api/pcp-coach');
   } catch (error) {
     console.error('[API] Error loading PCP Coach Onboarding routes:', error);

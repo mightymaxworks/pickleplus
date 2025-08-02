@@ -15,7 +15,9 @@ import { z } from 'zod';
 import { 
   PCP_LEVEL_CONFIG, 
   SUBSCRIPTION_TIERS,
-  type InsertCoachProfile 
+  validatePCPLevelProgression,
+  type InsertCoachProfile,
+  type CompletedPCPLevel
 } from '../../shared/schema/coach-management';
 
 const router = Router();
@@ -63,7 +65,7 @@ router.post('/register', async (req, res) => {
       return res.status(401).json({ message: 'User ID not found' });
     }
 
-    // Check if coach profile already exists
+    // Check if coach profile already exists and get current level
     const existingProfile = await storage.getCoachProfile?.(userId);
     if (existingProfile) {
       return res.status(409).json({ 
@@ -72,10 +74,27 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Verify PCP certification level and get commission rate
+    // Verify PCP certification level progression
     const pcpConfig = PCP_LEVEL_CONFIG[validatedData.pcpLevel as keyof typeof PCP_LEVEL_CONFIG];
     if (!pcpConfig) {
-      return res.status(400).json({ message: 'Invalid PCP level' });
+      return res.status(400).json({ 
+        message: 'Invalid PCP level',
+        availableLevels: Object.keys(PCP_LEVEL_CONFIG)
+      });
+    }
+
+    // Check if user has completed prerequisite levels  
+    const currentHighestLevel = existingProfile?.pcpLevel || 0;
+    const levelValidation = validatePCPLevelProgression(currentHighestLevel, validatedData.pcpLevel);
+    
+    if (!levelValidation.isValid) {
+      return res.status(422).json({
+        message: levelValidation.error,
+        requiredPath: levelValidation.requiredPath,
+        currentLevel: currentHighestLevel,
+        availableNextLevel: currentHighestLevel + 1,
+        levelInfo: PCP_LEVEL_CONFIG[(currentHighestLevel + 1) as keyof typeof PCP_LEVEL_CONFIG] || null
+      });
     }
 
     // Create comprehensive basic tier coach profile
