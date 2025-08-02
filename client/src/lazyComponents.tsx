@@ -127,4 +127,4 @@ export const preloadAdminPages = () => {
 export const LazySessionBookingPage = lazyLoad(() => import('./pages/SessionBookingPage'), 'SessionBookingPage', 'Session Booking');
 
 // Phase 1 Testing Suite - Comprehensive operational validation
-export const LazyPhase1TestingSuite = lazyLoad(() => import('./pages/Phase1TestingSuite'));
+export const LazyCoachingWorkflowAnalysis = lazyLoad(() => import('./pages/CoachingWorkflowAnalysis'));
