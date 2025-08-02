@@ -253,6 +253,9 @@ export default function App() {
                   {/* Complete Coaching Flow Demo */}
                   <Route path="/complete-coaching-flow" component={lazyLoad(() => import('./pages/CompleteCoachingFlowDemo'))} />
                   
+                  {/* Enhanced Coaching Workflow Analysis */}
+                  <Route path="/coaching-workflow-analysis" component={lazyLoad(() => import('./pages/EnhancedCoachingWorkflowAnalysis'))} />
+                  
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 

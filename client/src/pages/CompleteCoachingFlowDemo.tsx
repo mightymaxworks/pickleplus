@@ -25,8 +25,11 @@ import {
   ArrowRight,
   Star,
   MapPin,
-  Calendar
+  Calendar,
+  BookOpen,
+  Shield
 } from 'lucide-react';
+import { ProfileAutoFill } from '@/components/coach/ProfileAutoFill';
 
 interface PCP_Level {
   level: number;
@@ -100,7 +103,7 @@ const CompleteCoachingFlowDemo: React.FC = () => {
     bio: '',
     coachingPhilosophy: '',
     specializations: [] as string[],
-    hourlyRate: 9500,
+    hourlyRate: 95.00,
     languagesSpoken: ['English'],
     
     // PCP Certification
@@ -114,6 +117,7 @@ const CompleteCoachingFlowDemo: React.FC = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [profileCreated, setProfileCreated] = useState(false);
+  const [certificationStatus, setCertificationStatus] = useState<'provisional' | 'active' | 'pending'>('pending');
 
   const handleLevelSelect = (level: number) => {
     setSelectedLevel(level);
@@ -127,6 +131,7 @@ const CompleteCoachingFlowDemo: React.FC = () => {
     
     setPaymentProcessing(false);
     setPaymentComplete(true);
+    setCertificationStatus('provisional');
     setFormData(prev => ({ 
       ...prev, 
       paymentStatus: 'completed',
@@ -269,6 +274,10 @@ const CompleteCoachingFlowDemo: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <ProfileAutoFill
+                onAutoFill={(data) => setFormData(prev => ({ ...prev, ...data }))}
+                currentData={formData}
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name</Label>
@@ -323,16 +332,17 @@ const CompleteCoachingFlowDemo: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="hourlyRate">Hourly Rate (cents)</Label>
+                <Label htmlFor="hourlyRate">Hourly Rate (USD)</Label>
                 <Input
                   id="hourlyRate"
                   type="number"
+                  step="0.01"
                   value={formData.hourlyRate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) }))}
-                  placeholder="9500"
+                  onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseFloat(e.target.value) || 0 }))}
+                  placeholder="95.00"
                 />
                 <p className="text-sm text-gray-600 mt-1">
-                  ${(formData.hourlyRate / 100).toFixed(2)} per session
+                  ${formData.hourlyRate.toFixed(2)} per session
                 </p>
               </div>
 
@@ -446,15 +456,18 @@ const CompleteCoachingFlowDemo: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-green-50 p-6 rounded-lg text-center">
+              <div className="bg-amber-50 p-6 rounded-lg text-center border border-amber-200">
                 <div className="text-4xl mb-4">{selectedLevelInfo.badge}</div>
-                <h3 className="text-xl font-bold text-green-800 mb-2">
+                <h3 className="text-xl font-bold text-amber-800 mb-2">
                   PCP Level {selectedLevel}: {selectedLevelInfo.name}
                 </h3>
-                <p className="text-green-700 mb-4">
+                <p className="text-amber-700 mb-4">
                   Certification Number: {formData.pcpCertificationNumber}
                 </p>
-                <Badge className="bg-green-600">Active Certification</Badge>
+                <Badge className="bg-amber-600">Provisional Certification</Badge>
+                <p className="text-sm text-amber-700 mt-2">
+                  Complete course modules and await admin approval for full activation
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -466,7 +479,7 @@ const CompleteCoachingFlowDemo: React.FC = () => {
                 </div>
                 <div className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-primary">
-                    ${((formData.hourlyRate / 100) * (1 - selectedLevelInfo.commission / 100)).toFixed(2)}
+                    ${(formData.hourlyRate * (1 - selectedLevelInfo.commission / 100)).toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-600">You Earn Per Session</div>
                 </div>
@@ -474,10 +487,22 @@ const CompleteCoachingFlowDemo: React.FC = () => {
 
               <Alert>
                 <AlertDescription>
-                  <strong>Next Steps:</strong> Create your coach profile to start accepting students. 
-                  You'll be automatically listed in the Pickle+ coach directory.
+                  <strong>Next Steps:</strong> Your certification is now provisional. Complete the required course modules 
+                  and practical assessments to receive full certification approval from our administrators.
                 </AlertDescription>
               </Alert>
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">Required Course Modules:</h4>
+                <ul className="text-sm space-y-1">
+                  {selectedLevelInfo.skills.map((skill, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      {skill} Module (Pending)
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               <Button 
                 onClick={createCoachProfile}
@@ -520,7 +545,7 @@ const CompleteCoachingFlowDemo: React.FC = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-4 h-4" />
-                        ${(formData.hourlyRate / 100).toFixed(2)}/session
+                        ${formData.hourlyRate.toFixed(2)}/session
                       </span>
                       <span className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
@@ -539,25 +564,25 @@ const CompleteCoachingFlowDemo: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-lg font-bold text-green-800">Active</div>
-                  <div className="text-sm text-green-600">Profile Status</div>
+                <div className="text-center p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="text-lg font-bold text-amber-800">Provisional</div>
+                  <div className="text-sm text-amber-600">Profile Status</div>
                 </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-lg font-bold text-blue-800">Listed</div>
-                  <div className="text-sm text-blue-600">Directory Status</div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-lg font-bold text-gray-600">Pending</div>
+                  <div className="text-sm text-gray-500">Directory Status</div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-lg font-bold text-purple-800">Ready</div>
-                  <div className="text-sm text-purple-600">Booking Status</div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-lg font-bold text-gray-600">Restricted</div>
+                  <div className="text-sm text-gray-500">Booking Status</div>
                 </div>
               </div>
 
-              <Alert>
+              <Alert className="border-amber-200 bg-amber-50">
                 <AlertDescription>
-                  <strong>Congratulations!</strong> You're now part of the Pickle+ coaching ecosystem. 
-                  Students can find and book sessions with you immediately. Your comprehensive basic tier 
-                  includes unlimited sessions, full platform access, and automatic payment processing.
+                  <strong>Provisional Status:</strong> Your coach profile has been created with provisional certification. 
+                  Complete your course modules and receive admin approval to begin accepting student bookings. 
+                  Your comprehensive basic tier includes unlimited sessions once fully certified.
                 </AlertDescription>
               </Alert>
 
