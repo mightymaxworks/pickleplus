@@ -142,9 +142,19 @@ const WORKFLOW_REQUIREMENTS: WorkflowRequirement[] = [
   {
     category: 'PCP Certification',
     feature: 'Assessment & Testing',
-    status: 'missing',
+    status: 'complete',
     priority: 'high',
-    description: 'Practical assessments and knowledge tests for certification'
+    description: 'Practical assessments and knowledge tests for certification',
+    userJourney: {
+      happyPath: 'tested',
+      errorHandling: 'tested',
+      mobileUX: 'tested',
+      accessibility: 'pending'
+    },
+    evidence: {
+      demoUrl: '/assessment',
+      testResults: 'DAF Level 3 Complete: Schema + API + Frontend implementation with sample questions and assessment templates'
+    }
   },
   {
     category: 'PCP Certification',

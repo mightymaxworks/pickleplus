@@ -259,6 +259,9 @@ export default function App() {
                   {/* Course Module System - DAF Level 3 Frontend Implementation */}
                   <Route path="/course-modules" component={lazyLoad(() => import('./pages/CourseModulesPage'))} />
                   
+                  {/* Assessment & Testing System */}
+                  <Route path="/assessment" component={lazyLoad(() => import('./pages/AssessmentPage'))} />
+                  
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 

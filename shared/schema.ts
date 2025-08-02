@@ -1711,6 +1711,9 @@ export const communityRolesRelations = relations(communityRoles, ({ one }) => ({
 // Import required types for enhanced match recording system
 import { matchStatistics, performanceImpacts, matchHighlights } from './match-statistics-schema';
 
+// Import assessment system schema
+export * from './schema/assessment';
+
 // Update match relations to include VALMAT tables and Enhanced Match Recording System tables
 export const matchRelationsExtended = relations(matches, ({ one, many }) => ({
   playerOne: one(users, { fields: [matches.playerOneId], references: [users.id], relationName: "playerOne" }),

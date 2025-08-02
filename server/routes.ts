@@ -74,6 +74,7 @@ import { registerCurriculumManagementRoutes } from "./routes/curriculum-manageme
 import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 2 Phase 2: Session Planning Integration
 import wisePaymentRoutes from "./routes/wise-payment-routes"; // Wise Payment Integration
 import { registerCourseModuleRoutes } from "./api/course-modules"; // Course Module System - DAF Implementation
+import assessmentRoutes from "./api/assessment"; // Assessment & Testing System
 import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes"; // WISE API Diagnostic Tool
 import wiseBusinessRoutes from "./routes/wise-business-routes"; // Wise Business API (Self-Service)
 import duprIntegrationRoutes from './routes/dupr-integration-routes'; // DUPR Rating Integration System
@@ -423,6 +424,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Course Module System routes - DAF Level 2 Implementation
   registerCourseModuleRoutes(app);
+  
+  // Register Assessment & Testing System routes
+  app.use('/api/assessment', assessmentRoutes);
+  console.log('[API] Assessment & Testing System routes registered successfully');
   
   // Register Sprint 2 Phase 2: Session Planning Integration routes
   app.use('/api/coach', sessionPlanningRoutes);
