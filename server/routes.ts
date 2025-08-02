@@ -99,6 +99,7 @@ import { trainingCenterRoutes } from "./routes/training-center-routes"; // PKL-2
 import trainingCenterAdminRoutes from "./routes/training-center-admin-routes"; // PKL-278651-TRAINING-CENTER-ADMIN-001 - Training Center Admin
 import pcpCertificationRoutes from "./routes/pcp-certification-routes"; // PCP Coaching Certification Programme
 import pcpCoachingRoutes from "./routes/pcp-coaching-routes.js"; // PCP Coaching Ecosystem API Routes
+import adminApprovalRoutes from "./api/admin-approval"; // PKL-278651-ADMIN-APPROVAL-WORKFLOW - Admin Approval System
 // Removed duplicate import
 
 /**
@@ -5080,6 +5081,10 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
   });
 
   console.log('[API] Charge Card system routes registered');
+  
+  // Admin Approval Workflow routes - PKL-278651-ADMIN-APPROVAL-WORKFLOW
+  app.use("/api/admin-approval", requireAdmin, adminApprovalRoutes); // Admin approval system for coach applications
+  console.log('[API] Admin Approval Workflow routes registered successfully');
 
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
   const server = http.createServer(app);

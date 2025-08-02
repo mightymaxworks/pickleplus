@@ -20,7 +20,8 @@ import {
   type CoachApplication, type InsertCoachApplication,
   type CoachProfile, type InsertCoachProfile,
   type CoachCertification, type InsertCoachCertification,
-  type CoachReview, type InsertCoachReview
+  type CoachReview, type InsertCoachReview,
+  coachApplications
 } from "@shared/schema/coach-management";
 import {
   pointsAllocationBreakdown, coachEffectivenessScoring, matchCoachingCorrelation, studentPerformancePrediction,
@@ -320,6 +321,36 @@ export interface IStorage extends CommunityStorage {
   getAllDrillCategories(): Promise<any[]>;
   createDrillCategory(data: any): Promise<any>;
   updateDrillCategory(id: number, data: any): Promise<any>;
+  
+  // Admin Approval Workflow Methods - PKL-278651-ADMIN-APPROVAL-WORKFLOW
+  getPendingCoachApplications(): Promise<any[]>;
+  getCoachApplication(applicationId: number): Promise<any | null>;
+  approveCoachApplication(data: {
+    applicationId: number;
+    adminUserId: number;
+    reviewComments?: string;
+    conditionalRequirements?: string[];
+  }): Promise<any>;
+  rejectCoachApplication(data: {
+    applicationId: number;
+    adminUserId: number;
+    reviewComments?: string;
+    rejectionReason: string;
+  }): Promise<any>;
+  requestApplicationChanges(data: {
+    applicationId: number;
+    adminUserId: number;
+    requestedChanges: string[];
+    reviewComments?: string;
+  }): Promise<any>;
+  getApplicationApprovalHistory(applicationId: number): Promise<any[]>;
+  getAdminApprovalStats(): Promise<any>;
+  processBulkApproval(data: {
+    applicationIds: number[];
+    action: 'approve' | 'reject';
+    adminUserId: number;
+    reviewComments?: string;
+  }): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5281,6 +5312,246 @@ export class DatabaseStorage implements IStorage {
       return result[0];
     } catch (error) {
       console.error("Error creating assessment:", error);
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // ADMIN APPROVAL WORKFLOW - PKL-278651-ADMIN-APPROVAL-WORKFLOW
+  // ============================================================================
+
+  async getPendingCoachApplications(): Promise<any[]> {
+    try {
+      const results = await this.db
+        .select()
+        .from(coachApplications)
+        .where(eq(coachApplications.applicationStatus, 'pending'))
+        .orderBy(desc(coachApplications.submittedAt));
+      
+      return results || [];
+    } catch (error) {
+      console.error('[STORAGE] Error fetching pending coach applications:', error);
+      return [];
+    }
+  }
+
+  async getCoachApplication(applicationId: number): Promise<any | null> {
+    try {
+      const [result] = await this.db
+        .select()
+        .from(coachApplications)
+        .where(eq(coachApplications.id, applicationId));
+      
+      return result || null;
+    } catch (error) {
+      console.error('[STORAGE] Error fetching coach application:', error);
+      return null;
+    }
+  }
+
+  async approveCoachApplication(data: {
+    applicationId: number;
+    adminUserId: number;
+    reviewComments?: string;
+    conditionalRequirements?: string[];
+  }): Promise<any> {
+    try {
+      const { applicationId, adminUserId, reviewComments } = data;
+
+      // Update application status
+      const [updatedApplication] = await this.db
+        .update(coachApplications)
+        .set({
+          applicationStatus: 'approved',
+          reviewedBy: adminUserId,
+          reviewedAt: new Date(),
+          reviewNotes: reviewComments,
+          updatedAt: new Date()
+        })
+        .where(eq(coachApplications.id, applicationId))
+        .returning();
+
+      if (!updatedApplication) {
+        throw new Error('Application not found');
+      }
+
+      // Get the application to create coach profile
+      const application = await this.getCoachApplication(applicationId);
+      
+      if (application) {
+        // Update user as coach
+        await this.db
+          .update(users)
+          .set({ isCoach: true })
+          .where(eq(users.id, application.userId));
+      }
+
+      return updatedApplication;
+    } catch (error) {
+      console.error('[STORAGE] Error approving coach application:', error);
+      throw error;
+    }
+  }
+
+  async rejectCoachApplication(data: {
+    applicationId: number;
+    adminUserId: number;
+    reviewComments?: string;
+    rejectionReason: string;
+  }): Promise<any> {
+    try {
+      const { applicationId, adminUserId, reviewComments, rejectionReason } = data;
+
+      const [updatedApplication] = await this.db
+        .update(coachApplications)
+        .set({
+          applicationStatus: 'rejected',
+          reviewedBy: adminUserId,
+          reviewedAt: new Date(),
+          reviewNotes: reviewComments,
+          rejectionReason,
+          updatedAt: new Date()
+        })
+        .where(eq(coachApplications.id, applicationId))
+        .returning();
+
+      return updatedApplication;
+    } catch (error) {
+      console.error('[STORAGE] Error rejecting coach application:', error);
+      throw error;
+    }
+  }
+
+  async requestApplicationChanges(data: {
+    applicationId: number;
+    adminUserId: number;
+    requestedChanges: string[];
+    reviewComments?: string;
+  }): Promise<any> {
+    try {
+      const { applicationId, adminUserId, reviewComments } = data;
+
+      const [updatedApplication] = await this.db
+        .update(coachApplications)
+        .set({
+          applicationStatus: 'changes_requested',
+          reviewedBy: adminUserId,
+          reviewedAt: new Date(),
+          reviewNotes: reviewComments,
+          updatedAt: new Date()
+        })
+        .where(eq(coachApplications.id, applicationId))
+        .returning();
+
+      return updatedApplication;
+    } catch (error) {
+      console.error('[STORAGE] Error requesting application changes:', error);
+      throw error;
+    }
+  }
+
+  async getApplicationApprovalHistory(applicationId: number): Promise<any[]> {
+    try {
+      const application = await this.getCoachApplication(applicationId);
+      
+      if (!application) return [];
+
+      const history = [];
+      
+      if (application.submittedAt) {
+        history.push({
+          action: 'submitted',
+          timestamp: application.submittedAt,
+          performedBy: application.userId,
+          details: 'Application submitted'
+        });
+      }
+
+      if (application.reviewedAt) {
+        history.push({
+          action: application.applicationStatus,
+          timestamp: application.reviewedAt,
+          performedBy: application.reviewedBy,
+          details: application.reviewNotes || `Application ${application.applicationStatus}`
+        });
+      }
+
+      return history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    } catch (error) {
+      console.error('[STORAGE] Error fetching application approval history:', error);
+      return [];
+    }
+  }
+
+  async getAdminApprovalStats(): Promise<any> {
+    try {
+      const [pending, approved, rejected, changesRequested, total] = await Promise.all([
+        this.db.select({ count: sql<number>`count(*)` }).from(coachApplications).where(eq(coachApplications.applicationStatus, 'pending')),
+        this.db.select({ count: sql<number>`count(*)` }).from(coachApplications).where(eq(coachApplications.applicationStatus, 'approved')),
+        this.db.select({ count: sql<number>`count(*)` }).from(coachApplications).where(eq(coachApplications.applicationStatus, 'rejected')),
+        this.db.select({ count: sql<number>`count(*)` }).from(coachApplications).where(eq(coachApplications.applicationStatus, 'changes_requested')),
+        this.db.select({ count: sql<number>`count(*)` }).from(coachApplications)
+      ]);
+
+      return {
+        pendingCount: pending[0]?.count || 0,
+        approvedCount: approved[0]?.count || 0,
+        rejectedCount: rejected[0]?.count || 0,
+        changesRequestedCount: changesRequested[0]?.count || 0,
+        totalApplications: total[0]?.count || 0,
+        avgProcessingTime: 0,
+        recentActivity: []
+      };
+    } catch (error) {
+      console.error('[STORAGE] Error fetching admin approval stats:', error);
+      return {
+        pendingCount: 0,
+        approvedCount: 0,
+        rejectedCount: 0,
+        changesRequestedCount: 0,
+        totalApplications: 0,
+        avgProcessingTime: 0,
+        recentActivity: []
+      };
+    }
+  }
+
+  async processBulkApproval(data: {
+    applicationIds: number[];
+    action: 'approve' | 'reject';
+    adminUserId: number;
+    reviewComments?: string;
+  }): Promise<any> {
+    try {
+      const { applicationIds, action, adminUserId, reviewComments } = data;
+      const results = { successful: [], failed: [] };
+
+      for (const applicationId of applicationIds) {
+        try {
+          if (action === 'approve') {
+            await this.approveCoachApplication({
+              applicationId,
+              adminUserId,
+              reviewComments
+            });
+          } else {
+            await this.rejectCoachApplication({
+              applicationId,
+              adminUserId,
+              reviewComments,
+              rejectionReason: reviewComments || 'Bulk rejection'
+            });
+          }
+          results.successful.push(applicationId);
+        } catch (error) {
+          console.error(`[STORAGE] Error processing application ${applicationId}:`, error);
+          results.failed.push({ applicationId, error: error.message });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('[STORAGE] Error processing bulk approval:', error);
       throw error;
     }
   }
