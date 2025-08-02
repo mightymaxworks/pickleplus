@@ -91,6 +91,7 @@ import { db } from "./db";
 import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import { sessionBookingMethods } from './storage-session-booking';
 
 const PostgresSessionStore = connectPg(session);
 

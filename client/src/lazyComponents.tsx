@@ -122,3 +122,6 @@ export const preloadAdminPages = () => {
   LazyUserDetailsPage.preload(); // PKL-278651-ADMIN-0015-USER
   LazyUsersPage.preload(); // PKL-278651-ADMIN-0015-USER
 };
+
+// Session Booking System - PKL-278651-SESSION-BOOKING
+export const LazySessionBookingPage = lazyLoad(() => import('./pages/SessionBookingPage'), 'SessionBookingPage', 'Session Booking');

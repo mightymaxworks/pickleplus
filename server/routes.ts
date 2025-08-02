@@ -73,6 +73,7 @@ import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-S
 import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes"; // Sprint 1: Curriculum Management & Lesson Planning
 import sessionPlanningRoutes from "./routes/session-planning-routes"; // Sprint 2 Phase 2: Session Planning Integration
 import wisePaymentRoutes from "./routes/wise-payment-routes"; // Wise Payment Integration
+import sessionBookingRoutes from "./routes/session-booking-routes"; // PKL-278651-SESSION-BOOKING - Session Booking System
 import { registerCourseModuleRoutes } from "./api/course-modules"; // Course Module System - DAF Implementation
 import assessmentRoutes from "./api/assessment"; // Assessment & Testing System
 import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes"; // WISE API Diagnostic Tool
@@ -440,6 +441,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Wise Payment Integration routes
   app.use('/api/wise', wisePaymentRoutes);
+  
+  // Session Booking System Routes - PKL-278651-SESSION-BOOKING 
+  app.use('/api/session-booking', sessionBookingRoutes);
   app.use('/api/wise-diagnostic', wiseDiagnosticRoutes);
   app.use('/api/wise', wiseBusinessRoutes); // Self-service Wise Business API integration
   console.log('[API] Wise Payment Integration routes registered successfully');

@@ -73,6 +73,7 @@ import {
   LazyDashboardPage,
 
   LazyCourtIQDetailedAnalysisPage, // PKL-278651-COURTIQ-0005-DETAIL
+  LazySessionBookingPage, // PKL-278651-SESSION-BOOKING
   LazyPassportPage, // PKL-278651-CONN-0008-UX-MOD2
   preloadProfilePages,
   preloadMatchPages,
@@ -619,6 +620,13 @@ export default function App() {
                     path="/transparent-points-allocation"
                     component={lazyLoad(() => import('./pages/transparent-points-allocation-page'))}
                     pageTitle="Transparent Points Allocation"
+                  />
+                  
+                  {/* PKL-278651-SESSION-BOOKING - Session Booking System */}
+                  <ProtectedRouteWithLayout
+                    path="/session-booking"
+                    component={LazySessionBookingPage}
+                    pageTitle="Session Booking"
                   />
                   
                   {/* PKL-278651-COACH-MATCH-INTEGRATION - Phase 3: Coach Assessment Workflow */}
