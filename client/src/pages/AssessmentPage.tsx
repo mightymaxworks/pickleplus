@@ -74,10 +74,10 @@ const AssessmentPage: React.FC = () => {
   const [attemptId, setAttemptId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // Development workflow integration
-  useEffect(() => {
-    logFeatureCompletion('Coaching', 'Assessment System', 'complete');
-  }, []);
+  // Development workflow integration - commented out to allow normal usage
+  // useEffect(() => {
+  //   logFeatureCompletion('Coaching', 'Assessment System', 'complete');
+  // }, []);
 
   // Fetch assessment templates
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
