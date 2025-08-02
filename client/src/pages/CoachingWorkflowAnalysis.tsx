@@ -705,13 +705,13 @@ const CoachingWorkflowAnalysis: React.FC = () => {
 
       <Tabs defaultValue="system-overview" className="w-full">
         <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="system-overview">System Overview</TabsTrigger>
-          <TabsTrigger value="coaching-workflows">Coaching Workflows</TabsTrigger>
-          <TabsTrigger value="lms-testing">LMS Testing</TabsTrigger>
-          <TabsTrigger value="journey-testing">Journey Testing</TabsTrigger>
-          <TabsTrigger value="user-journeys">User Journeys</TabsTrigger>
-          <TabsTrigger value="api-testing">API Testing</TabsTrigger>
-          <TabsTrigger value="route-testing">Route Testing</TabsTrigger>
+          <TabsTrigger value="system-overview">Overview</TabsTrigger>
+          <TabsTrigger value="coaching-workflows">Coaching</TabsTrigger>
+          <TabsTrigger value="lms-testing">LMS</TabsTrigger>
+          <TabsTrigger value="journey-testing">Journeys</TabsTrigger>
+          <TabsTrigger value="user-journeys">Users</TabsTrigger>
+          <TabsTrigger value="api-testing">APIs</TabsTrigger>
+          <TabsTrigger value="route-testing">Routes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="system-overview" className="space-y-6">
