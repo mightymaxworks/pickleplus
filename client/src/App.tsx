@@ -99,6 +99,9 @@ import PickleJourneyDashboard from './pages/PickleJourneyDashboard'
 // Import referral page (PKL-278651-COMM-0007 - Enhanced Referral System)
 import ReferralPage from './pages/ReferralPage'
 
+// Import PCP Coach Onboarding Components (PKL-278651-PCP-BASIC-TIER)
+import { LazyPCPCoachOnboardingPage, LazyCoachDashboardPage } from './components/coach/LazyPCPCoachOnboardingPage'
+
 // Import social content page (PKL-278651-SAGE-0011-SOCIAL)
 import SocialContentPage from './pages/social-content'
 
@@ -664,6 +667,18 @@ export default function App() {
                     path="/my-coach"
                     component={lazyLoad(() => import('./pages/my-coach'))}
                     pageTitle="My Coach"
+                  />
+
+                  {/* PCP Coach Onboarding & Dashboard (PKL-278651-PCP-BASIC-TIER) */}
+                  <ProtectedRouteWithLayout 
+                    path="/pcp-coach/onboarding"
+                    component={LazyPCPCoachOnboardingPage}
+                    pageTitle="PCP Coach Onboarding"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/coach/dashboard"
+                    component={LazyCoachDashboardPage}
+                    pageTitle="Coach Dashboard"
                   />
                   {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management - DISABLED FOR DEPLOYMENT */}
                   {/* <ProtectedRouteWithLayout 

@@ -122,7 +122,7 @@ router.post('/applications', async (req, res) => {
           await storage.addCoachCertification?.({
             applicationId: application!.id,
             ...cert,
-            verificationStatus: 'pending',
+            notes: null,
             issuedDate: cert.issuedDate ? new Date(cert.issuedDate) : null,
             expirationDate: cert.expirationDate ? new Date(cert.expirationDate) : null
           });
@@ -180,7 +180,7 @@ router.get('/applications/my', async (req, res) => {
         ...application,
         specializations: JSON.parse(application.specializations as string || '[]'),
         availabilityData: JSON.parse(application.availabilityData as string || '{}'),
-        references: JSON.parse(application.references as string || '[]'),
+        references: JSON.parse(application.refContacts as string || '[]'),
         emergencyContact: JSON.parse(application.emergencyContact as string || '{}')
       },
       certifications

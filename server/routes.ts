@@ -472,6 +472,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.use('/api/pcp', pcpCoachingRoutes);
   console.log('[API] PCP Coaching Ecosystem routes registered at /api/pcp');
 
+  // PCP Coach Onboarding Routes (PKL-278651-PCP-BASIC-TIER)
+  try {
+    const { pcpCoachOnboardingRoutes } = await import('./routes/pcp-coach-onboarding');
+    app.use('/api/pcp-coach', pcpCoachOnboardingRoutes);
+    console.log('[API] PCP Coach Onboarding routes registered at /api/pcp-coach');
+  } catch (error) {
+    console.error('[API] Error loading PCP Coach Onboarding routes:', error);
+  }
+
   // CRITICAL MISSING ENDPOINTS - Complete User Flow Implementation
   
   // User Registration API - Step 1 of user flow

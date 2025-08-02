@@ -1,305 +1,220 @@
-import { pgTable, integer, varchar, text, boolean, timestamp, jsonb, serial } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+/**
+ * Coach Management Schema
+ * PKL-278651-PCP-BASIC-TIER - Comprehensive Basic Tier Implementation
+ * 
+ * Unified schema for PCP coach profiles, applications, and subscription tiers
+ */
 
-// Coach Applications Table
-export const coachApplications = pgTable("coach_applications", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  coachType: varchar("coach_type", { length: 50 }).default("facility"),
-  applicationStatus: varchar("application_status", { length: 50 }).default("pending"),
-  submittedAt: timestamp("submitted_at").defaultNow(),
-  reviewedAt: timestamp("reviewed_at"),
-  reviewerId: integer("reviewer_id"),
-  rejectionReason: text("rejection_reason"),
-  experienceYears: integer("experience_years").notNull(),
-  teachingPhilosophy: text("teaching_philosophy").notNull(),
-  specializations: jsonb("specializations").notNull(), // Array of strings
-  availabilityData: jsonb("availability_data").notNull(), // Object with schedule data
-  previousExperience: text("previous_experience"),
-  refContacts: jsonb("ref_contacts").default([]), // Array of contact objects
-  backgroundCheckConsent: boolean("background_check_consent").notNull(),
-  insuranceDetails: jsonb("insurance_details").default({}),
-  emergencyContact: jsonb("emergency_contact").default({}),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+import { pgTable, serial, integer, varchar, text, timestamp, boolean, decimal, json } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
+
+// PCP Level Configuration
+export const PCP_LEVEL_CONFIG = {
+  1: { name: 'Entry Coach', badge: '🥉', commission: 15, cost: 699 },
+  2: { name: 'Certified Coach', badge: '🥈', commission: 13, cost: 1299 },
+  3: { name: 'Advanced Coach', badge: '🥇', commission: 12, cost: 2499 },
+  4: { name: 'Master Coach', badge: '💎', commission: 10, cost: 4999 },
+  5: { name: 'Grand Master', badge: '👑', commission: 8, cost: 7999 }
+} as const;
+
+// Subscription Tiers
+export const SUBSCRIPTION_TIERS = {
+  BASIC: 'basic',
+  PREMIUM: 'premium'
+} as const;
+
+// Coach Profiles Table - Comprehensive Basic Tier Implementation
+export const coachProfiles = pgTable('coach_profiles', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().unique(),
+  
+  // Coach Classification
+  coachType: varchar('coach_type', { length: 50 }).notNull().default('certified-pcp'), // certified-pcp, community, etc.
+  verificationLevel: varchar('verification_level', { length: 20 }).notNull().default('verified'), // verified, pending, unverified
+  isActive: boolean('is_active').notNull().default(true),
+  
+  // PCP Certification Details
+  pcpLevel: integer('pcp_level'), // 1-5 for PCP levels
+  pcpCertificationNumber: varchar('pcp_certification_number', { length: 100 }),
+  pcpCertifiedAt: timestamp('pcp_certified_at'),
+  pcpExpiresAt: timestamp('pcp_expires_at'),
+  
+  // Profile Information
+  bio: text('bio').notNull(),
+  profileImageUrl: varchar('profile_image_url', { length: 500 }),
+  specializations: json('specializations').notNull().default('[]'), // Array of specialization strings
+  teachingStyle: text('teaching_style').notNull(),
+  coachingPhilosophy: text('coaching_philosophy').notNull(),
+  languagesSpoken: json('languages_spoken').notNull().default('["English"]'), // Array of language strings
+  
+  // Session Management
+  hourlyRate: integer('hourly_rate').notNull(), // In cents
+  sessionTypes: json('session_types').notNull().default('[]'), // Array of session type strings
+  packageOfferings: json('package_offerings').notNull().default('[]'), // Array of package objects
+  availabilitySchedule: json('availability_schedule').notNull().default('{}'), // Schedule object
+  
+  // Subscription & Tier Management (PKL-278651-PCP-BASIC-TIER)
+  subscriptionTier: varchar('subscription_tier', { length: 20 }).notNull().default(SUBSCRIPTION_TIERS.BASIC),
+  subscriptionStartedAt: timestamp('subscription_started_at'),
+  subscriptionExpiresAt: timestamp('subscription_expires_at'),
+  
+  // Performance Metrics
+  totalSessions: integer('total_sessions').notNull().default(0),
+  totalEarnings: integer('total_earnings').notNull().default(0), // In cents
+  averageRating: integer('average_rating').notNull().default(0), // 0-100 scale
+  totalReviews: integer('total_reviews').notNull().default(0),
+  
+  // Status & Timestamps
+  lastActiveAt: timestamp('last_active_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
 
-// Coach Profiles Table
-export const coachProfiles = pgTable("coach_profiles", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  coachType: varchar("coach_type", { length: 50 }).notNull(),
-  verificationLevel: varchar("verification_level", { length: 50 }).default("pending"),
-  isActive: boolean("is_active").default(true),
-  bio: text("bio"),
-  specializations: jsonb("specializations").notNull(), // Array of strings
-  teachingStyle: text("teaching_style"),
-  languagesSpoken: jsonb("languages_spoken").default(["English"]), // Array of strings
-  hourlyRate: integer("hourly_rate"), // In cents
-  sessionTypes: jsonb("session_types").default(["individual"]), // Array of strings
-  availabilitySchedule: jsonb("availability_schedule").default({}),
-  averageRating: integer("average_rating").default(0), // Out of 100
-  totalReviews: integer("total_reviews").default(0),
-  totalSessions: integer("total_sessions").default(0),
-  studentRetentionRate: integer("student_retention_rate").default(0), // Percentage
-  approvedAt: timestamp("approved_at"),
-  approvedBy: integer("approved_by"),
-  lastActiveAt: timestamp("last_active_at").defaultNow(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+// Coach Applications Table (for new coach applications)
+export const coachApplications = pgTable('coach_applications', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  
+  // Application Details
+  applicationType: varchar('application_type', { length: 50 }).notNull().default('pcp-coach'),
+  applicationStatus: varchar('application_status', { length: 20 }).notNull().default('pending'),
+  
+  // Application Content
+  motivation: text('motivation').notNull(),
+  experience: text('experience').notNull(),
+  certifications: json('certifications').notNull().default('[]'),
+  availability: json('availability').notNull().default('{}'),
+  
+  // Review Process
+  reviewedBy: integer('reviewed_by'),
+  reviewedAt: timestamp('reviewed_at'),
+  reviewNotes: text('review_notes'),
+  rejectionReason: text('rejection_reason'),
+  
+  // Timestamps
+  submittedAt: timestamp('submitted_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
 
-// Coach Certifications Table
-export const coachCertifications = pgTable("coach_certifications", {
-  id: serial("id").primaryKey(),
-  applicationId: integer("application_id").notNull(),
-  certificationType: varchar("certification_type", { length: 100 }).notNull(),
-  issuingOrganization: varchar("issuing_organization", { length: 200 }).notNull(),
-  certificationNumber: varchar("certification_number", { length: 100 }),
-  issuedDate: timestamp("issued_date"),
-  expirationDate: timestamp("expiration_date"),
-  documentUrl: text("document_url"),
-  verificationStatus: varchar("verification_status", { length: 50 }).default("pending"),
-  verifiedBy: integer("verified_by"),
-  verifiedAt: timestamp("verified_at"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+// Coach Certifications Table (for tracking certifications)
+export const coachCertifications = pgTable('coach_certifications', {
+  id: serial('id').primaryKey(),
+  applicationId: integer('application_id').notNull(),
+  
+  // Certification Details
+  certificationType: varchar('certification_type', { length: 100 }).notNull(),
+  certificationLevel: varchar('certification_level', { length: 50 }),
+  issuingOrganization: varchar('issuing_organization', { length: 200 }).notNull(),
+  certificationNumber: varchar('certification_number', { length: 100 }),
+  
+  // Verification
+  verificationStatus: varchar('verification_status', { length: 20 }).notNull().default('pending'),
+  verificationDocumentUrl: varchar('verification_document_url', { length: 500 }),
+  verifiedBy: integer('verified_by'),
+  verifiedAt: timestamp('verified_at'),
+  
+  // Validity
+  issuedAt: timestamp('issued_at').notNull(),
+  expiresAt: timestamp('expires_at'),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
 
-// Coach Reviews Table
-export const coachReviews = pgTable("coach_reviews", {
-  id: serial("id").primaryKey(),
-  coachId: integer("coach_id").notNull(),
-  studentId: integer("student_id").notNull(),
-  sessionId: integer("session_id"),
-  rating: integer("rating").notNull(), // 1-5 stars
-  review: text("review"),
-  technicalRating: integer("technical_rating"), // 1-5
-  communicationRating: integer("communication_rating"), // 1-5
-  punctualityRating: integer("punctuality_rating"), // 1-5
-  overallSatisfaction: integer("overall_satisfaction"), // 1-5
-  wouldRecommend: boolean("would_recommend"),
-  tags: jsonb("tags").default([]), // Array of review tags
-  isVerified: boolean("is_verified").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+// Coach Reviews Table (for student feedback)
+export const coachReviews = pgTable('coach_reviews', {
+  id: serial('id').primaryKey(),
+  coachId: integer('coach_id').notNull(),
+  studentId: integer('student_id').notNull(),
+  sessionId: integer('session_id'),
+  
+  // Review Content
+  rating: integer('rating').notNull(), // 1-5 stars (stored as 20-100 for compatibility)
+  reviewText: text('review_text'),
+  wouldRecommend: boolean('would_recommend').notNull().default(true),
+  
+  // Review Metadata
+  isVerified: boolean('is_verified').notNull().default(false),
+  isPublic: boolean('is_public').notNull().default(true),
+  helpfulVotes: integer('helpful_votes').notNull().default(0),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
 
-// Zod schemas for validation
-export const insertCoachApplicationSchema = createInsertSchema(coachApplications).omit({
-  id: true,
-  submittedAt: true,
-  reviewedAt: true,
-  reviewerId: true,
-  rejectionReason: true,
-  createdAt: true,
-  updatedAt: true
+// Zod Schemas for Validation
+export const insertCoachProfileSchema = createInsertSchema(coachProfiles, {
+  hourlyRate: z.number().min(5000).max(30000), // $50-$300 in cents
+  bio: z.string().min(50).max(1000),
+  coachingPhilosophy: z.string().min(30).max(500),
+  teachingStyle: z.string().min(20).max(300)
 });
 
-export const insertCoachProfileSchema = createInsertSchema(coachProfiles).omit({
-  id: true,
-  averageRating: true,
-  totalReviews: true,
-  totalSessions: true,
-  studentRetentionRate: true,
-  approvedAt: true,
-  approvedBy: true,
-  lastActiveAt: true,
-  createdAt: true,
-  updatedAt: true
+export const selectCoachProfileSchema = createSelectSchema(coachProfiles);
+
+export const insertCoachApplicationSchema = createInsertSchema(coachApplications, {
+  motivation: z.string().min(100).max(2000),
+  experience: z.string().min(50).max(2000)
 });
 
-export const insertCoachCertificationSchema = createInsertSchema(coachCertifications).omit({
-  id: true,
-  verificationStatus: true,
-  verifiedBy: true,
-  verifiedAt: true,
-  createdAt: true,
-  updatedAt: true
+export const selectCoachApplicationSchema = createSelectSchema(coachApplications);
+
+export const insertCoachCertificationSchema = createInsertSchema(coachCertifications);
+export const selectCoachCertificationSchema = createSelectSchema(coachCertifications);
+
+export const insertCoachReviewSchema = createInsertSchema(coachReviews, {
+  rating: z.number().min(1).max(5),
+  reviewText: z.string().min(10).max(1000).optional()
 });
 
-export const insertCoachReviewSchema = createInsertSchema(coachReviews).omit({
-  id: true,
-  isVerified: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const selectCoachReviewSchema = createSelectSchema(coachReviews);
 
-// TypeScript types
-export type CoachApplication = typeof coachApplications.$inferSelect;
-export type InsertCoachApplication = z.infer<typeof insertCoachApplicationSchema>;
-
+// TypeScript Types
 export type CoachProfile = typeof coachProfiles.$inferSelect;
-export type InsertCoachProfile = z.infer<typeof insertCoachProfileSchema>;
+export type InsertCoachProfile = typeof coachProfiles.$inferInsert;
+
+export type CoachApplication = typeof coachApplications.$inferSelect;
+export type InsertCoachApplication = typeof coachApplications.$inferInsert;
 
 export type CoachCertification = typeof coachCertifications.$inferSelect;
-export type InsertCoachCertification = z.infer<typeof insertCoachCertificationSchema>;
+export type InsertCoachCertification = typeof coachCertifications.$inferInsert;
 
 export type CoachReview = typeof coachReviews.$inferSelect;
-export type InsertCoachReview = z.infer<typeof insertCoachReviewSchema>;
+export type InsertCoachReview = typeof coachReviews.$inferInsert;
 
-// Coach status enums
-export const COACH_APPLICATION_STATUS = {
-  PENDING: 'pending',
-  APPROVED: 'approved',
-  REJECTED: 'rejected',
-  UNDER_REVIEW: 'under_review'
+// Helper Types for Frontend
+export type PCPLevel = 1 | 2 | 3 | 4 | 5;
+export type SubscriptionTier = 'basic' | 'premium';
+
+export interface PCPLevelConfig {
+  name: string;
+  badge: string;
+  commission: number;
+  cost: number;
+}
+
+// Comprehensive Basic Tier Features
+export const BASIC_TIER_FEATURES = {
+  unlimited_sessions: true,
+  full_profile: true,
+  basic_analytics: true,
+  student_messaging: true,
+  standard_payments: true,
+  mobile_app_access: true,
+  community_access: true,
+  scheduling_tools: true
 } as const;
 
-export const COACH_VERIFICATION_LEVEL = {
-  PENDING: 'pending',
-  BASIC: 'basic',
-  VERIFIED: 'verified',
-  ELITE: 'elite'
+export const PREMIUM_TIER_FEATURES = {
+  ...BASIC_TIER_FEATURES,
+  automated_payouts: true,
+  advanced_analytics: true,
+  marketing_tools: true,
+  video_sessions: true,
+  custom_packages: true,
+  priority_support: true,
+  business_reporting: true
 } as const;
-
-export const CERTIFICATION_STATUS = {
-  PENDING: 'pending',
-  VERIFIED: 'verified',
-  EXPIRED: 'expired',
-  REJECTED: 'rejected'
-} as const;
-
-// Coach Sessions Table
-export const coachingSessions = pgTable("coaching_sessions", {
-  id: serial("id").primaryKey(),
-  coachId: integer("coach_id").notNull(),
-  studentId: integer("student_id").notNull(),
-  sessionType: varchar("session_type", { length: 50 }).default("individual"),
-  sessionStatus: varchar("session_status", { length: 50 }).default("scheduled"),
-  scheduledAt: timestamp("scheduled_at").notNull(),
-  durationMinutes: integer("duration_minutes").default(60),
-  locationType: varchar("location_type", { length: 50 }),
-  locationDetails: text("location_details"),
-  priceAmount: integer("price_amount"), // In cents
-  currency: varchar("currency", { length: 3 }).default("USD"),
-  paymentStatus: varchar("payment_status", { length: 50 }).default("pending"),
-  sessionNotes: text("session_notes"),
-  feedbackForStudent: text("feedback_for_student"),
-  studentGoals: jsonb("student_goals").default([]),
-  sessionSummary: text("session_summary"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Coach Payments Table
-export const coachPayments = pgTable("coach_payments", {
-  id: serial("id").primaryKey(),
-  coachId: integer("coach_id").notNull(),
-  sessionId: integer("session_id"),
-  paymentType: varchar("payment_type", { length: 50 }).notNull(),
-  amount: integer("amount").notNull(), // In cents
-  currency: varchar("currency", { length: 3 }).default("USD"),
-  paymentStatus: varchar("payment_status", { length: 50 }).default("pending"),
-  paymentMethod: varchar("payment_method", { length: 50 }),
-  transactionId: varchar("transaction_id", { length: 100 }),
-  processedAt: timestamp("processed_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Coach Facility Assignments Table
-export const coachFacilityAssignments = pgTable("coach_facility_assignments", {
-  id: serial("id").primaryKey(),
-  coachId: integer("coach_id").notNull(),
-  facilityId: integer("facility_id").notNull(),
-  assignmentStatus: varchar("assignment_status", { length: 50 }).default("active"),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date"),
-  maxStudentsPerSession: integer("max_students_per_session").default(8),
-  hourlyRate: integer("hourly_rate"), // In cents
-  commissionRate: integer("commission_rate").default(15), // Percentage
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Additional Zod schemas for new tables
-export const insertCoachingSessionSchema = createInsertSchema(coachingSessions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export const insertCoachPaymentSchema = createInsertSchema(coachPayments).omit({
-  id: true,
-  processedAt: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export const insertCoachFacilityAssignmentSchema = createInsertSchema(coachFacilityAssignments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-// Additional TypeScript types
-export type CoachingSession = typeof coachingSessions.$inferSelect;
-export type InsertCoachingSession = z.infer<typeof insertCoachingSessionSchema>;
-
-export type CoachPayment = typeof coachPayments.$inferSelect;
-export type InsertCoachPayment = z.infer<typeof insertCoachPaymentSchema>;
-
-export type CoachFacilityAssignment = typeof coachFacilityAssignments.$inferSelect;
-export type InsertCoachFacilityAssignment = z.infer<typeof insertCoachFacilityAssignmentSchema>;
-
-// Relations (for Drizzle ORM)
-import { relations } from "drizzle-orm";
-
-export const coachApplicationsRelations = relations(coachApplications, ({ one, many }) => ({
-  certifications: many(coachCertifications),
-  profile: one(coachProfiles, {
-    fields: [coachApplications.userId],
-    references: [coachProfiles.userId]
-  })
-}));
-
-export const coachCertificationsRelations = relations(coachCertifications, ({ one }) => ({
-  application: one(coachApplications, {
-    fields: [coachCertifications.applicationId],
-    references: [coachApplications.id]
-  })
-}));
-
-export const coachProfilesRelations = relations(coachProfiles, ({ one, many }) => ({
-  application: one(coachApplications, {
-    fields: [coachProfiles.userId],
-    references: [coachApplications.userId]
-  }),
-  reviews: many(coachReviews),
-  sessions: many(coachingSessions),
-  payments: many(coachPayments),
-  facilityAssignments: many(coachFacilityAssignments)
-}));
-
-export const coachReviewsRelations = relations(coachReviews, ({ one }) => ({
-  coach: one(coachProfiles, {
-    fields: [coachReviews.coachId],
-    references: [coachProfiles.id]
-  }),
-  session: one(coachingSessions, {
-    fields: [coachReviews.sessionId],
-    references: [coachingSessions.id]
-  })
-}));
-
-export const coachingSessionsRelations = relations(coachingSessions, ({ one, many }) => ({
-  coach: one(coachProfiles, {
-    fields: [coachingSessions.coachId],
-    references: [coachProfiles.id]
-  }),
-  reviews: many(coachReviews),
-  payments: many(coachPayments)
-}));
-
-// Coach type enums for validation
-export const CoachApplicationStatus = z.enum(['pending', 'approved', 'rejected', 'under_review']);
-export const CoachType = z.enum(['facility', 'independent', 'traveling']);
-export const VerificationLevel = z.enum(['pending', 'basic', 'verified', 'elite']);
-
-export type CoachApplicationStatusType = z.infer<typeof CoachApplicationStatus>;
-export type CoachTypeType = z.infer<typeof CoachType>;
-export type VerificationLevelType = z.infer<typeof VerificationLevel>;
