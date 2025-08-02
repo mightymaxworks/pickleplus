@@ -18,6 +18,8 @@ import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes";
 import { trainingCenterRoutes } from "./routes/training-center-routes";
 import { registerJournalRoutes } from "./routes/journal-routes";
 import pcpRoutes from "./routes/pcp-routes";
+import { registerCoachBusinessAnalyticsRoutes } from "./routes/coach-business-analytics-routes";
+import { registerStudentProgressAnalyticsRoutes } from "./routes/student-progress-analytics-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
@@ -165,6 +167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
     registerAdminRoutes(app);
+    
+    // Phase 2: Advanced Coaching Analytics
+    console.log("[ROUTES] Registering Coach Business Analytics routes...");
+    registerCoachBusinessAnalyticsRoutes(app);
+    
+    console.log("[ROUTES] Registering Student Progress Analytics routes...");
+    registerStudentProgressAnalyticsRoutes(app);
     
     console.log("[ROUTES] All modular route systems registered successfully");
     

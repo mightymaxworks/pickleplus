@@ -128,3 +128,7 @@ export const LazySessionBookingPage = lazyLoad(() => import('./pages/SessionBook
 
 // Phase 1 Testing Suite - Comprehensive operational validation
 export const LazyCoachingWorkflowAnalysis = lazyLoad(() => import('./pages/CoachingWorkflowAnalysis'));
+
+// Phase 2: Advanced Coaching Analytics
+export const LazyCoachBusinessDashboard = lazyLoad(() => import('./pages/CoachBusinessDashboard'));
+export const LazyStudentProgressAnalytics = lazyLoad(() => import('./pages/StudentProgressAnalytics'));

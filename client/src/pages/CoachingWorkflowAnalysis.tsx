@@ -71,16 +71,16 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     },
     {
       id: 'coach-business-management',
-      name: 'Coach Business Dashboard Usage',
+      name: 'Coach Business & Analytics Management',
       userType: 'coach',
       status: 'idle',
       progress: 0,
       steps: [
         { name: 'Access Coach Dashboard', route: '/coach/dashboard', status: 'idle' },
-        { name: 'Review Student Progress', route: '/coach/students', status: 'idle' },
+        { name: 'Review Student Progress', route: '/student-progress-analytics', status: 'idle' },
         { name: 'Plan Curriculum', route: '/coach/curriculum', status: 'idle' },
         { name: 'Schedule Management', route: '/coach/schedule', status: 'idle' },
-        { name: 'Revenue Analytics', route: '/coach/analytics', status: 'idle' }
+        { name: 'Business Analytics', route: '/coach-business-dashboard', status: 'idle' }
       ],
       criticalPath: false
     }
@@ -133,12 +133,23 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       ]
     },
     {
-      category: 'Phase 2 Advanced Features',
+      category: 'Phase 2: Coach Business Analytics',
       tests: [
-        { name: 'Curriculum Management', endpoint: '/api/curriculum', status: 'idle', responseTime: null },
-        { name: 'Student Analytics', endpoint: '/api/analytics/student-progress', status: 'idle', responseTime: null },
-        { name: 'Coach Business Dashboard', endpoint: '/api/coach/business-metrics', status: 'idle', responseTime: null },
-        { name: 'Communication Tools', endpoint: '/api/communication/status', status: 'idle', responseTime: null }
+        { name: 'Revenue Analytics', endpoint: '/api/coach/business/revenue-analytics', status: 'idle', responseTime: null },
+        { name: 'Client Metrics', endpoint: '/api/coach/business/client-metrics', status: 'idle', responseTime: null },
+        { name: 'Schedule Optimization', endpoint: '/api/coach/business/schedule-optimization', status: 'idle', responseTime: null },
+        { name: 'Marketing Metrics', endpoint: '/api/coach/business/marketing-metrics', status: 'idle', responseTime: null },
+        { name: 'Performance KPIs', endpoint: '/api/coach/business/performance-kpis', status: 'idle', responseTime: null }
+      ]
+    },
+    {
+      category: 'Phase 2: Student Progress Analytics',
+      tests: [
+        { name: 'Students Overview', endpoint: '/api/coach/students/progress-overview', status: 'idle', responseTime: null },
+        { name: 'Individual Progress', endpoint: '/api/coach/students/1/progress', status: 'idle', responseTime: null },
+        { name: 'Create Assessment', endpoint: '/api/coach/students/1/assessment', status: 'idle', responseTime: null },
+        { name: 'Set Goals', endpoint: '/api/coach/students/1/goals', status: 'idle', responseTime: null },
+        { name: 'Generate Report', endpoint: '/api/coach/students/1/generate-report', status: 'idle', responseTime: null }
       ]
     }
   ]);
@@ -292,7 +303,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     { name: 'Session Booking', path: '/session-booking', status: 'operational', description: 'Book coaching sessions' },
     { name: 'Player Dashboard', path: '/dashboard', status: 'operational', description: 'Player main view' },
     { name: 'Admin Panel', path: '/admin', status: 'operational', description: 'Admin tools' },
-    { name: 'Profile Settings', path: '/settings', status: 'operational', description: 'User settings' }
+    { name: 'Profile Settings', path: '/settings', status: 'operational', description: 'User settings' },
+    { name: 'Coach Business Dashboard', path: '/coach-business-dashboard', status: 'operational', description: 'Phase 2: Business analytics' },
+    { name: 'Student Progress Analytics', path: '/student-progress-analytics', status: 'operational', description: 'Phase 2: Student tracking' }
   ];
 
   const runSingleTest = async (categoryIndex: number, testIndex: number) => {

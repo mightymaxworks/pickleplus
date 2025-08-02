@@ -73,6 +73,8 @@ import {
   LazyDashboardPage,
 
   LazyCourtIQDetailedAnalysisPage, // PKL-278651-COURTIQ-0005-DETAIL
+  LazyCoachBusinessDashboard, // Phase 2: Coach Business Analytics
+  LazyStudentProgressAnalytics, // Phase 2: Student Progress Analytics
   LazySessionBookingPage, // PKL-278651-SESSION-BOOKING
   LazyCoachingWorkflowAnalysis, // Phase 1 Testing Suite
   LazyPassportPage, // PKL-278651-CONN-0008-UX-MOD2
@@ -258,6 +260,10 @@ export default function App() {
                   {/* Coaching Workflow Analysis */}
                   <Route path="/coaching-workflow-analysis" component={LazyCoachingWorkflowAnalysis} />
                   <Route path="/phase1-testing" component={LazyCoachingWorkflowAnalysis} />
+                  
+                  {/* Phase 2: Advanced Coaching Analytics */}
+                  <Route path="/coach-business-dashboard" component={LazyCoachBusinessDashboard} />
+                  <Route path="/student-progress-analytics" component={LazyStudentProgressAnalytics} />
                   
                   {/* Course Module System - DAF Level 3 Frontend Implementation */}
                   <Route path="/course-modules" component={lazyLoad(() => import('./pages/CourseModulesPage'))} />
