@@ -292,6 +292,75 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           apiEndpoints: ['COMPREHENSIVE API COVERAGE']
         }
       ]
+    },
+    {
+      phase: 'Phase 3A: AI-Driven Coaching Intelligence',
+      status: 'planned',
+      progress: 0,
+      systems: [
+        {
+          name: 'Predictive Performance Analytics',
+          icon: <TrendingUp className="w-5 h-5" />,
+          status: 'planned',
+          features: ['AI Skill Progression Forecasting', 'Performance Bottleneck Detection', 'Injury Risk Assessment', 'Optimal Training Load Recommendations'],
+          routes: ['/coach/ai-analytics', '/coach/predictions'],
+          apiEndpoints: ['/api/coach/ai/performance-predictions', '/api/coach/ai/skill-forecasting', '/api/coach/ai/risk-assessment']
+        },
+        {
+          name: 'Intelligent Drill Recommendations',
+          icon: <Activity className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Personalized Drill Selection', 'Weakness-Based Training Plans', 'Dynamic Difficulty Adjustment', 'Progress-Responsive Curricula'],
+          routes: ['/coach/ai-drills', '/coach/adaptive-training'],
+          apiEndpoints: ['/api/coach/ai/drill-recommendations', '/api/coach/ai/adaptive-plans', '/api/coach/ai/difficulty-optimization']
+        }
+      ]
+    },
+    {
+      phase: 'Phase 3B: Advanced Coach Optimization',
+      status: 'planned',
+      progress: 0,
+      systems: [
+        {
+          name: 'Multi-Student Session Management',
+          icon: <Users className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Group Session Optimization', 'Skill-Based Student Grouping', 'Dynamic Session Scaling', 'Multi-Court Coordination'],
+          routes: ['/coach/group-sessions', '/coach/multi-court'],
+          apiEndpoints: ['/api/coach/group-management', '/api/coach/court-optimization', '/api/coach/session-scaling']
+        },
+        {
+          name: 'Performance Benchmarking System',
+          icon: <BarChart3 className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Peer Performance Comparisons', 'Regional Skill Benchmarks', 'Competitive Readiness Assessment', 'Tournament Prediction Modeling'],
+          routes: ['/coach/benchmarking', '/coach/competitive-analysis'],
+          apiEndpoints: ['/api/coach/benchmarks', '/api/coach/competitive-readiness', '/api/coach/tournament-predictions']
+        }
+      ]
+    },
+    {
+      phase: 'Phase 3C: Coaching Business Intelligence',
+      status: 'planned',
+      progress: 0,
+      systems: [
+        {
+          name: 'Market Intelligence Dashboard',
+          icon: <Globe className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Local Market Analysis', 'Pricing Optimization', 'Competitor Insights', 'Demand Forecasting'],
+          routes: ['/coach/market-intelligence', '/coach/pricing-optimization'],
+          apiEndpoints: ['/api/coach/market-analysis', '/api/coach/pricing-optimization', '/api/coach/demand-forecasting']
+        },
+        {
+          name: 'Advanced Client Retention System',
+          icon: <MessageSquare className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Churn Risk Prediction', 'Automated Retention Campaigns', 'Satisfaction Monitoring', 'Loyalty Program Management'],
+          routes: ['/coach/retention', '/coach/loyalty-programs'],
+          apiEndpoints: ['/api/coach/churn-prediction', '/api/coach/retention-campaigns', '/api/coach/loyalty-management']
+        }
+      ]
     }
   ];
 
