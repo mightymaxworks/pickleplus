@@ -250,6 +250,9 @@ export default function App() {
                   {/* PCP Level Validation Test Page */}
                   <Route path="/pcp-level-validation-test" component={lazyLoad(() => import('./pages/PCPLevelValidationTestPage'))} />
                   
+                  {/* Complete Coaching Flow Demo */}
+                  <Route path="/complete-coaching-flow" component={lazyLoad(() => import('./pages/CompleteCoachingFlowDemo'))} />
+                  
                   {/* QR Code Scanning Pages */}
                   <ProtectedRouteWithLayout 
                     path="/scan" 

@@ -232,4 +232,5 @@ function getKeySkills(level: number): string[] {
   return skills[level as keyof typeof skills] || [];
 }
 
-export default router;
+module.exports = router;
+module.exports.default = router;
