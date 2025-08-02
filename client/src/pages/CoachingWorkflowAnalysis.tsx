@@ -27,46 +27,46 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     {
       category: 'Authentication System',
       tests: [
-        { name: 'User Registration', endpoint: '/api/auth/register', status: 'idle', responseTime: null },
-        { name: 'User Login', endpoint: '/api/auth/login', status: 'idle', responseTime: null },
-        { name: 'Current User', endpoint: '/api/auth/current-user', status: 'idle', responseTime: null },
-        { name: 'Logout', endpoint: '/api/auth/logout', status: 'idle', responseTime: null }
+        { name: 'Auth Register', endpoint: '/api/auth/register', status: 'idle', responseTime: null },
+        { name: 'Auth Login', endpoint: '/api/auth/login', status: 'idle', responseTime: null },
+        { name: 'Current User', endpoint: '/api/user', status: 'idle', responseTime: null },
+        { name: 'Auth Logout', endpoint: '/api/auth/logout', status: 'idle', responseTime: null }
       ]
     },
     {
       category: 'PCP Certification',
       tests: [
-        { name: 'Certification Status', endpoint: '/api/pcp-cert/status', status: 'idle', responseTime: null },
-        { name: 'Level Validation', endpoint: '/api/pcp-cert/level-validation', status: 'idle', responseTime: null },
-        { name: 'Coach Onboarding', endpoint: '/api/pcp-coach/onboard', status: 'idle', responseTime: null },
-        { name: 'Profile Setup', endpoint: '/api/pcp-coach/profile', status: 'idle', responseTime: null }
+        { name: 'PCP Levels', endpoint: '/api/pcp-certification/levels', status: 'idle', responseTime: null },
+        { name: 'My Status', endpoint: '/api/pcp-certification/my-status', status: 'idle', responseTime: null },
+        { name: 'PCP Routes', endpoint: '/api/pcp', status: 'idle', responseTime: null },
+        { name: 'Coach Hub', endpoint: '/api/coach-hub', status: 'idle', responseTime: null }
       ]
     },
     {
       category: 'Session Booking',
       tests: [
-        { name: 'Request Session', endpoint: '/api/sessions/request', status: 'idle', responseTime: null },
-        { name: 'Coach Response', endpoint: '/api/sessions/respond', status: 'idle', responseTime: null },
-        { name: 'Session History', endpoint: '/api/sessions/history', status: 'idle', responseTime: null },
-        { name: 'Booking Status', endpoint: '/api/sessions/status', status: 'idle', responseTime: null }
+        { name: 'Session Booking', endpoint: '/api/session-booking', status: 'idle', responseTime: null },
+        { name: 'Training Centers', endpoint: '/api/training-centers', status: 'idle', responseTime: null },
+        { name: 'Admin Training Centers', endpoint: '/api/admin/training-centers', status: 'idle', responseTime: null },
+        { name: 'QR Scanning', endpoint: '/api/qr', status: 'idle', responseTime: null }
       ]
     },
     {
       category: 'WISE Payment',
       tests: [
-        { name: 'Create Transfer', endpoint: '/api/wise/create-transfer', status: 'idle', responseTime: null },
-        { name: 'Transfer Status', endpoint: '/api/wise/transfer-status', status: 'idle', responseTime: null },
-        { name: 'Account Balance', endpoint: '/api/wise/account-balance', status: 'idle', responseTime: null },
-        { name: 'Transaction History', endpoint: '/api/wise/transactions', status: 'idle', responseTime: null }
+        { name: 'WISE API', endpoint: '/api/wise', status: 'idle', responseTime: null },
+        { name: 'WISE Diagnostic', endpoint: '/api/wise-diagnostic', status: 'idle', responseTime: null },
+        { name: 'Business API', endpoint: '/api/wise/business', status: 'idle', responseTime: null },
+        { name: 'Payments Status', endpoint: '/api/wise/status', status: 'idle', responseTime: null }
       ]
     },
     {
-      category: 'Admin Approval',
+      category: 'Admin System',
       tests: [
-        { name: 'Pending Approvals', endpoint: '/api/admin/pending-approvals', status: 'idle', responseTime: null },
-        { name: 'Approve Coach', endpoint: '/api/admin/approve-coach', status: 'idle', responseTime: null },
-        { name: 'Rejection Workflow', endpoint: '/api/admin/reject-application', status: 'idle', responseTime: null },
-        { name: 'Approval History', endpoint: '/api/admin/approval-history', status: 'idle', responseTime: null }
+        { name: 'Admin Dashboard', endpoint: '/api/admin', status: 'idle', responseTime: null },
+        { name: 'Admin Users', endpoint: '/api/admin/users', status: 'idle', responseTime: null },
+        { name: 'Admin Coaches', endpoint: '/api/admin/coaches', status: 'idle', responseTime: null },
+        { name: 'Admin Players', endpoint: '/api/admin/players', status: 'idle', responseTime: null }
       ]
     }
   ]);
