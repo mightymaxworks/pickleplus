@@ -74,6 +74,7 @@ import {
 
   LazyCourtIQDetailedAnalysisPage, // PKL-278651-COURTIQ-0005-DETAIL
   LazySessionBookingPage, // PKL-278651-SESSION-BOOKING
+  LazyPhase1TestingSuite, // Phase 1 Testing Suite
   LazyPassportPage, // PKL-278651-CONN-0008-UX-MOD2
   preloadProfilePages,
   preloadMatchPages,
@@ -256,6 +257,7 @@ export default function App() {
                   
                   {/* Enhanced Coaching Workflow Analysis */}
                   <Route path="/coaching-workflow-analysis" component={lazyLoad(() => import('./pages/EnhancedCoachingWorkflowAnalysis'))} />
+                  <Route path="/phase1-testing" component={LazyPhase1TestingSuite} />
                   
                   {/* Course Module System - DAF Level 3 Frontend Implementation */}
                   <Route path="/course-modules" component={lazyLoad(() => import('./pages/CourseModulesPage'))} />

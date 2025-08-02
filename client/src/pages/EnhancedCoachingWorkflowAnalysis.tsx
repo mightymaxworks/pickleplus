@@ -414,7 +414,7 @@ const EnhancedCoachingWorkflowAnalysis: React.FC = () => {
     'Communication': FileText
   };
 
-  const categories = [...new Set(WORKFLOW_REQUIREMENTS.map(req => req.category))];
+  const categories = Array.from(new Set(WORKFLOW_REQUIREMENTS.map(req => req.category)));
   
   const getCompletionStats = (category: string) => {
     const categoryReqs = WORKFLOW_REQUIREMENTS.filter(req => req.category === category);

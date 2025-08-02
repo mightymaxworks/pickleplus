@@ -125,3 +125,6 @@ export const preloadAdminPages = () => {
 
 // Session Booking System - PKL-278651-SESSION-BOOKING
 export const LazySessionBookingPage = lazyLoad(() => import('./pages/SessionBookingPage'), 'SessionBookingPage', 'Session Booking');
+
+// Phase 1 Testing Suite - Comprehensive operational validation
+export const LazyPhase1TestingSuite = lazyLoad(() => import('./pages/Phase1TestingSuite'));
