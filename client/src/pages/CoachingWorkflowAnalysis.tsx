@@ -26,53 +26,153 @@ const CoachingWorkflowAnalysis: React.FC = () => {
   const [userJourneys, setUserJourneys] = useState([
     {
       id: 'player-onboarding',
-      name: 'Player Registration & Onboarding',
+      name: '🎯 Player Registration & Onboarding',
       userType: 'guest',
-      status: 'idle',
-      progress: 0,
+      status: 'operational',
+      progress: 85,
       steps: [
-        { name: 'Visit Landing Page', route: '/', status: 'idle' },
-        { name: 'Navigate to Registration', route: '/auth', status: 'idle' },
-        { name: 'Complete Registration Form', route: '/register', status: 'idle' },
-        { name: 'Verify Profile Setup', route: '/profile', status: 'idle' },
-        { name: 'Browse Training Centers', route: '/training-centers', status: 'idle' }
+        { name: 'Visit Landing Page', route: '/', status: 'operational' },
+        { name: 'Navigate to Registration', route: '/auth', status: 'operational' },
+        { name: 'Complete Registration Form', route: '/register', status: 'operational' },
+        { name: 'Verify Profile Setup', route: '/profile', status: 'operational' },
+        { name: 'Browse Training Centers', route: '/training-centers', status: 'needs-testing' }
       ],
-      criticalPath: true
+      criticalPath: true,
+      phase: 'Phase 1 Complete'
     },
     {
       id: 'coach-application',
-      name: 'Coach Application & PCP Verification',
+      name: '🎓 Coach Application & Onboarding',
       userType: 'player',
-      status: 'idle',
-      progress: 0,
+      status: 'operational',
+      progress: 90,
       steps: [
-        { name: 'Access Coach Hub', route: '/coach', status: 'idle' },
-        { name: 'Start Application', route: '/coach/apply', status: 'idle' },
-        { name: 'PCP Certification Check', route: '/pcp-certification', status: 'idle' },
-        { name: 'Complete Profile', route: '/coach/profile', status: 'idle' },
-        { name: 'Review Application Status', route: '/coach/status', status: 'idle' }
+        { name: 'Access Coach Hub', route: '/coach', status: 'operational' },
+        { name: 'Start Application', route: '/coach/apply', status: 'operational' },
+        { name: 'Complete 7-Step Application', route: '/coach/apply', status: 'operational' },
+        { name: 'Review Application Status', route: '/coach/status', status: 'operational' },
+        { name: 'Coach Profile Creation', route: '/coach/profile', status: 'operational' }
       ],
-      criticalPath: true
+      criticalPath: true,
+      phase: 'Phase 1 Complete'
+    },
+    {
+      id: 'pcp-certification-journey',
+      name: '🏆 PCP Certification Process',
+      userType: 'aspiring-coach',
+      status: 'critical-gaps',
+      progress: 40,
+      steps: [
+        { name: 'PCP Level 1 Assessment', route: '/pcp-certification/level-1', status: 'missing' },
+        { name: 'Sequential Level Progression', route: '/pcp-certification/progression', status: 'missing' },
+        { name: 'Practical Skill Validation', route: '/pcp-certification/practical', status: 'missing' },
+        { name: 'Certification Verification', route: '/pcp-certification/verify', status: 'missing' },
+        { name: 'Coach Marketplace Listing', route: '/coach-marketplace', status: 'missing' }
+      ],
+      criticalPath: true,
+      phase: 'PHASE 4: MISSING CRITICAL PATH',
+      priority: 'HIGH'
     },
     {
       id: 'session-booking',
-      name: 'Session Booking Workflow',
+      name: '📅 Session Booking & Management',
       userType: 'player',
-      status: 'idle',
-      progress: 0,
+      status: 'operational',
+      progress: 95,
       steps: [
-        { name: 'Browse Available Coaches', route: '/coaches', status: 'idle' },
-        { name: 'Select Coach & Time', route: '/session-booking', status: 'idle' },
-        { name: 'Payment Processing', route: '/payment', status: 'idle' },
-        { name: 'Booking Confirmation', route: '/booking-confirm', status: 'idle' },
-        { name: 'Session Preparation', route: '/session-prep', status: 'idle' }
+        { name: 'Browse Available Coaches', route: '/coaches', status: 'operational' },
+        { name: 'Select Coach & Time', route: '/session-booking', status: 'operational' },
+        { name: 'WISE Payment Processing', route: '/payment', status: 'operational' },
+        { name: 'Booking Confirmation', route: '/booking-confirm', status: 'operational' },
+        { name: 'Session Management', route: '/session-management', status: 'operational' }
       ],
-      criticalPath: true
+      criticalPath: true,
+      phase: 'Phase 1 Complete'
     },
     {
       id: 'coach-business-management',
-      name: 'Coach Business & Analytics Management',
+      name: '📊 Coach Business & Analytics',
       userType: 'coach',
+      status: 'operational',
+      progress: 100,
+      steps: [
+        { name: 'Business Dashboard', route: '/coach-business-dashboard', status: 'operational' },
+        { name: 'Advanced Analytics (Phase 3)', route: '/advanced-coach-analytics', status: 'operational' },
+        { name: 'Revenue Forecasting', route: '/api/coach/advanced/predictive/revenue-forecast', status: 'operational' },
+        { name: 'Client Retention Analytics', route: '/api/coach/advanced/retention/risk-analysis', status: 'operational' },
+        { name: 'Competitive Intelligence', route: '/api/coach/advanced/intelligence/competitive-analysis', status: 'operational' }
+      ],
+      criticalPath: false,
+      phase: 'Phase 3 Complete'
+    },
+    {
+      id: 'coach-marketplace-integration',
+      name: '🏪 Coach Marketplace & Discovery',
+      userType: 'certified-coach',
+      status: 'critical-gaps',
+      progress: 25,
+      steps: [
+        { name: 'Public Coach Profiles', route: '/coaches/public-profiles', status: 'missing' },
+        { name: 'Coach Search & Filtering', route: '/coaches/search', status: 'missing' },
+        { name: 'Rating & Review System', route: '/coaches/reviews', status: 'missing' },
+        { name: 'Coach Availability Display', route: '/coaches/availability', status: 'missing' },
+        { name: 'Direct Coach Booking', route: '/coaches/direct-booking', status: 'missing' }
+      ],
+      criticalPath: true,
+      phase: 'PHASE 5: MISSING MARKET DISCOVERY',
+      priority: 'HIGH'
+    },
+    {
+      id: 'pcp-sequential-validation',
+      name: '🔒 PCP Sequential Level Enforcement',
+      userType: 'aspiring-coach',
+      status: 'critical-gaps',
+      progress: 10,
+      steps: [
+        { name: 'Level 1 → 2 → 3 → 4 → 5 Enforcement', route: '/pcp-certification/sequential', status: 'missing' },
+        { name: 'Dynamic Level Blocking', route: '/pcp-certification/blocking', status: 'missing' },
+        { name: 'Certification Verification API', route: '/api/pcp/verify-level', status: 'missing' },
+        { name: 'Level Prerequisites Check', route: '/api/pcp/prerequisites', status: 'missing' },
+        { name: 'Coach Status Validation', route: '/api/coach/certification-status', status: 'missing' }
+      ],
+      criticalPath: true,
+      phase: 'PHASE 6: MISSING CORE REQUIREMENT',
+      priority: 'CRITICAL'
+    },
+    {
+      id: 'player-coach-discovery',
+      name: '🔍 Player Coach Discovery & Booking',
+      userType: 'player',
+      status: 'critical-gaps',
+      progress: 30,
+      steps: [
+        { name: 'Browse Coach Directory', route: '/coaches/directory', status: 'missing' },
+        { name: 'Filter by Location/Price/Skills', route: '/coaches/filter', status: 'missing' },
+        { name: 'View Coach Public Profiles', route: '/coaches/profile/:id', status: 'missing' },
+        { name: 'Check Real-time Availability', route: '/coaches/availability', status: 'missing' },
+        { name: 'Direct Coach Booking', route: '/coaches/book/:id', status: 'missing' }
+      ],
+      criticalPath: true,
+      phase: 'PHASE 7: MISSING PLAYER DISCOVERY',
+      priority: 'HIGH'
+    },
+    {
+      id: 'coach-reputation-system',
+      name: '⭐ Coach Rating & Review System',
+      userType: 'player',
+      status: 'missing',
+      progress: 0,
+      steps: [
+        { name: 'Session Rating Interface', route: '/session/rating', status: 'missing' },
+        { name: 'Coach Review System', route: '/coaches/reviews', status: 'missing' },
+        { name: 'Rating Aggregation Display', route: '/coaches/ratings', status: 'missing' },
+        { name: 'Review Moderation System', route: '/admin/review-moderation', status: 'missing' },
+        { name: 'Coach Reputation Scoring', route: '/api/coaches/reputation', status: 'missing' }
+      ],
+      criticalPath: false,
+      phase: 'PHASE 8: MISSING TRUST SYSTEM',
+      priority: 'MEDIUM'
+    },
       status: 'idle',
       progress: 0,
       steps: [
