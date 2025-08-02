@@ -5,7 +5,7 @@
  * Demonstrates the complete flow from PCP certification payment to coach directory listing
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,6 +92,8 @@ const PCP_LEVELS: PCP_Level[] = [
 const CompleteCoachingFlowDemo: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
+  const [currentCoachLevel, setCurrentCoachLevel] = useState(0); // User's current PCP level
+  const [levelEligibility, setLevelEligibility] = useState<{[key: number]: boolean}>({});
   const [formData, setFormData] = useState({
     // Personal Info
     firstName: '',
@@ -149,6 +151,36 @@ const CompleteCoachingFlowDemo: React.FC = () => {
 
   const selectedLevelInfo = PCP_LEVELS.find(l => l.level === selectedLevel)!;
 
+  // Check user's current PCP level and determine eligibility
+  useEffect(() => {
+    const checkLevelEligibility = async () => {
+      try {
+        // Simulate fetching user's current coaching level
+        // In real implementation, this would check against authenticated user's PCP status
+        const mockCurrentLevel = 0; // No certification yet
+        setCurrentCoachLevel(mockCurrentLevel);
+        
+        // Calculate eligibility - can only progress to next level
+        const eligibility: {[key: number]: boolean} = {};
+        PCP_LEVELS.forEach(level => {
+          // Can apply for Level 1 if no certification, or next level only
+          eligibility[level.level] = level.level === (mockCurrentLevel + 1);
+        });
+        setLevelEligibility(eligibility);
+        
+        // Set default to first eligible level
+        const firstEligibleLevel = Object.keys(eligibility).find(key => eligibility[parseInt(key)]);
+        if (firstEligibleLevel) {
+          setSelectedLevel(parseInt(firstEligibleLevel));
+        }
+      } catch (error) {
+        console.error('Failed to check level eligibility:', error);
+      }
+    };
+    
+    checkLevelEligibility();
+  }, []);
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
@@ -199,16 +231,23 @@ const CompleteCoachingFlowDemo: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
-                {PCP_LEVELS.map((level) => (
-                  <Card 
-                    key={level.level}
-                    className={`cursor-pointer transition-all ${
-                      selectedLevel === level.level 
-                        ? 'ring-2 ring-primary border-primary' 
-                        : 'hover:shadow-md'
-                    }`}
-                    onClick={() => handleLevelSelect(level.level)}
-                  >
+                {PCP_LEVELS.map((level) => {
+                  const isEligible = levelEligibility[level.level] !== false;
+                  const isCurrentLevel = level.level === currentCoachLevel;
+                  const isSelected = selectedLevel === level.level;
+                  
+                  return (
+                    <Card 
+                      key={level.level}
+                      className={`transition-all ${
+                        !isEligible 
+                          ? 'opacity-50 cursor-not-allowed bg-gray-50' 
+                          : isSelected
+                            ? 'ring-2 ring-primary border-primary cursor-pointer' 
+                            : 'hover:shadow-md cursor-pointer'
+                      }`}
+                      onClick={() => isEligible && handleLevelSelect(level.level)}
+                    >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -245,10 +284,18 @@ const CompleteCoachingFlowDemo: React.FC = () => {
               
               <Alert>
                 <AlertDescription>
-                  <strong>Sequential Progression:</strong> You must complete Level 1 before Level 2, 
-                  Level 2 before Level 3, and so on. This ensures proper skill development.
+                  <strong>🔒 Level Eligibility:</strong> Based on your current certification status, only eligible levels are available for selection. Sequential progression ensures proper skill development and maintains PCP quality standards.
                 </AlertDescription>
               </Alert>
+              
+              {currentCoachLevel > 0 && (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="w-4 h-4" />
+                  <AlertDescription>
+                    <strong>Current Level:</strong> You are certified as Level {currentCoachLevel} Coach. You can now progress to Level {currentCoachLevel + 1}.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <Button 
                 onClick={() => setCurrentStep(2)}

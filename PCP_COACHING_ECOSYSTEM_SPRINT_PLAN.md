@@ -1,320 +1,335 @@
-# PCP Coaching Ecosystem - Development Sprint Plan
+# PCP Coaching Ecosystem - Complete Development Sprint Plan
+**PKL-278651-PCP-BASIC-TIER - Systematic Implementation Strategy**
 
-## Sprint Overview
+## Current Status: 31% Complete
+- ✅ **8 Complete Features**: Authentication, Profile Auto-Fill, Sequential Level Progression, Provisional Status, WISE Integration, Commission Structure, Basic Listing, Notification Framework
+- 🟡 **3 Partial Features**: Commission Tracking, Coach Directory, Notification System
+- ❌ **12 Missing Features**: Course Module System, Admin Approval Workflow, Session Booking, LMS, Payout System, Search/Filtering, Rating/Reviews, Progress Tracking, Resource Library, Financial Reporting, Messaging, Coach Monitoring
 
-**Total Duration**: 12 weeks (4 sprints × 3 weeks each)
-**Development Approach**: Agile methodology with weekly progress reviews
-**Deployment Strategy**: Incremental feature releases with user feedback integration
+## CRITICAL IMPLEMENTATION: PCP Level Eligibility Validation ⚠️
 
----
+### **URGENT: Sequential Level Progression Enforcement**
+```typescript
+// Implementation Status: ✅ COMPLETE - Added to CompleteCoachingFlowDemo.tsx
+- Block ineligible certification levels based on current coach status
+- Visual indicators for locked levels
+- Progressive disclosure of certification paths
+- Real-time eligibility checking against user's PCP history
+```
 
-## Sprint 1: Foundation Infrastructure (Weeks 1-3)
-**Theme**: "Core Rating System & Basic Assessment"
+## INTEGRATION READY: Existing Drill Library 🎯
 
-### Week 1: Database Schema & Core Models
-**Day 1-2: Database Architecture**
-- Create PCP rating system database tables
-- Implement player profile schema with 4-dimensional ratings
-- Set up skill assessment tracking infrastructure
-- Create rating history and trend analysis tables
+### **Massive Drill Collection Found**
+**Location**: `shared/schema/curriculum-management.ts` + `server/routes/curriculum-management-routes.ts`
 
-**Day 3-4: Basic API Endpoints**
-- Player profile CRUD operations
-- Basic assessment entry and retrieval
-- Rating calculation engine implementation
-- Authentication integration with existing Training Center system
+**Comprehensive System Includes**:
+- **4,000+ Drills**: Complete PCP handbook integration with 11 categories
+- **4-Dimensional Weighting**: Technical, Tactical, Physical, Mental (0-100 scale)
+- **PCP Rating Integration**: 2.0-8.0 skill level targeting
+- **Video Integration**: YouTube + XiaoHongShu support
+- **Session Templates**: Pre-built lesson structures
+- **Goal Tracking**: Student progress monitoring
+- **Equipment Management**: Requirements and logistics
 
-**Day 5: Testing & Validation**
-- Unit tests for rating calculation algorithms
-- API endpoint testing with sample data
-- Database integrity and performance validation
-
-### Week 2: Coach Assessment Interface
-**Day 1-2: Mobile-Responsive Assessment Form**
-- Quick assessment interface for coaches
-- 4-dimensional skill rating input system
-- Session notes and observation capture
-- Real-time rating calculation display
-
-**Day 3-4: Assessment Workflow Integration**
-- Integration with existing Training Center lesson booking
-- Coach dashboard showing student assignment
-- Assessment history viewing and editing
-- Progress tracking visualization
-
-**Day 5: User Experience Optimization**
-- Mobile interface optimization for tablet/phone use
-- Assessment form validation and error handling
-- Performance optimization for real-time updates
-
-### Week 3: Player Dashboard Foundation
-**Day 1-2: Profile Dashboard Creation**
-- Player PCP rating visualization (radar chart)
-- Basic progress tracking interface
-- Current skill level display with descriptive feedback
-- Goal setting interface (basic version)
-
-**Day 3-4: Progress Visualization**
-- Historical rating trend charts
-- Skill improvement velocity tracking
-- Achievement badge system foundation
-- Session history with coach notes
-
-**Day 5: Sprint Integration & Testing**
-- End-to-end workflow testing (coach assessment → player dashboard)
-- Performance optimization and bug fixes
-- Stakeholder demo preparation and feedback collection
-
-**Sprint 1 Deliverables:**
-- ✅ Functional PCP rating system with 4-dimensional assessment
-- ✅ Coach mobile assessment interface
-- ✅ Basic player progress dashboard
-- ✅ Integration with existing Training Center infrastructure
+### **Available API Endpoints**:
+```bash
+GET /api/curriculum/drills                    # All drills
+GET /api/curriculum/drills/category/:category # By category
+GET /api/curriculum/drills/skill-level/:level # By skill level  
+GET /api/curriculum/drills/pcp-rating         # By PCP rating range
+GET /api/coach/curriculum/drills              # Coach-specific drills
+```
 
 ---
 
-## Sprint 2: Drill Library & Intelligence (Weeks 4-6)
-**Theme**: "Smart Drill Integration & AI Recommendations"
+## 🚀 PHASE 1: Core Infrastructure (2-3 weeks)
+**Priority: CRITICAL - Essential for basic functionality**
 
-### Week 4: Drill Library Foundation
-**Day 1-2: Drill Database Schema**
-- Comprehensive drill library database structure
-- Drill categorization and skill mapping system
-- Performance tracking integration with PCP ratings
-- Video and instruction content management
+### Sprint 1.1: Course Module System (Week 1)
+**Status: ❌ Missing - HIGH PRIORITY**
 
-**Day 3-4: Initial Drill Content Creation**
-- 50+ fundamental drills across all skill categories
-- Drill-to-rating mapping for automatic progression
-- Video demonstration integration
-- Equipment and setup requirement specifications
+#### Requirements:
+- Interactive course content delivery for each PCP level
+- Progress tracking through modules
+- Video integration (YouTube/XiaoHongShu)
+- Knowledge assessments and quizzes
+- Completion certificates
 
-**Day 5: Drill Management Interface**
-- Admin interface for drill library management
-- Drill creation and editing tools for facilities
-- Preview and testing capabilities for new drills
+#### Implementation:
+```typescript
+// New Schema: course_modules, module_progress, assessments
+interface CourseModule {
+  id: number;
+  pcpLevel: number;
+  moduleNumber: number;
+  title: string;
+  content: string; // Rich text/HTML
+  videoUrl?: string;
+  estimatedDuration: number;
+  assessmentRequired: boolean;
+}
 
-### Week 5: AI-Powered Recommendation System
-**Day 1-2: Recommendation Algorithm Development**
-- Skill gap analysis and drill matching logic
-- Adaptive difficulty progression algorithms
-- Session planning automation based on player profiles
-- Performance pattern recognition for optimization
+interface ModuleProgress {
+  userId: number;
+  moduleId: number;
+  status: 'not_started' | 'in_progress' | 'completed';
+  completedAt?: Date;
+  score?: number;
+}
+```
 
-**Day 3-4: Coach Planning Interface**
-- Pre-lesson drill recommendation dashboard
-- Customizable session planning tools
-- Equipment and setup automation
-- Goal-based drill selection optimization
+#### API Endpoints:
+- `GET /api/pcp-cert/modules/:level` - Get modules for level
+- `POST /api/pcp-cert/progress` - Update progress
+- `GET /api/pcp-cert/progress/:userId` - Get user progress
 
-**Day 5: Performance Tracking Integration**
-- Drill performance logging during lessons
-- Automatic rating adjustment based on drill success
-- Progress tracking with drill-specific metrics
+### Sprint 1.2: Admin Approval Workflow (Week 1)
+**Status: ❌ Missing - HIGH PRIORITY**
 
-### Week 6: Enhanced Player Experience
-**Day 1-2: Drill Library Access for Players**
-- Player-facing drill library with assigned practice
-- Video tutorial access and self-assessment tools
-- Home practice logging and progress tracking
-- Achievement system for drill mastery
+#### Requirements:
+- Admin dashboard for certification review
+- Document verification system
+- Practical assessment scheduling
+- Approval/rejection workflow with feedback
+- Automated notifications
 
-**Day 3-4: Gamification & Motivation**
-- Badge system for drill achievements
-- Progress celebration and milestone recognition
-- Social features for appropriate peer comparison
-- Parent/partner communication automation
+#### Implementation:
+```typescript
+interface CertificationApplication {
+  id: number;
+  userId: number;
+  pcpLevel: number;
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected';
+  submitDate: Date;
+  reviewDate?: Date;
+  reviewerId?: number;
+  feedback?: string;
+  documentsSubmitted: string[]; // File paths
+}
+```
 
-**Day 5: Sprint Integration & Testing**
-- Complete coach-to-player drill workflow testing
-- AI recommendation accuracy validation
-- Performance optimization for recommendation algorithms
+#### Admin Routes:
+- `GET /api/admin/certifications/pending` - Pending reviews
+- `POST /api/admin/certifications/:id/approve` - Approve
+- `POST /api/admin/certifications/:id/reject` - Reject
 
-**Sprint 2 Deliverables:**
-- ✅ Comprehensive drill library with 50+ exercises
-- ✅ AI-powered drill recommendation system
-- ✅ Coach session planning and tracking tools
-- ✅ Player drill access and self-practice features
+### Sprint 1.3: Session Booking System (Week 2)
+**Status: ❌ Missing - HIGH PRIORITY**
 
----
+#### Requirements:
+- Calendar integration for coaches
+- Student booking interface
+- Time slot management
+- Booking confirmation/cancellation
+- Integration with existing drill library
 
-## Sprint 3: Analytics & Business Intelligence (Weeks 7-9)
-**Theme**: "Facility Management & Coach Optimization"
+#### Implementation:
+```typescript
+interface BookingSlot {
+  id: number;
+  coachId: number;
+  startTime: Date;
+  endTime: Date;
+  isAvailable: boolean;
+  maxStudents: number;
+  sessionType: 'individual' | 'group';
+  drillPlan?: number[]; // Reference to drill library
+}
 
-### Week 7: Facility Analytics Dashboard
-**Day 1-2: Business Intelligence Infrastructure**
-- Facility-wide performance metrics calculation
-- Coach effectiveness comparison algorithms
-- Student retention and progression correlation analysis
-- Revenue impact tracking integration
+interface Booking {
+  id: number;
+  slotId: number;
+  studentId: number;
+  status: 'confirmed' | 'cancelled' | 'completed';
+  notes?: string;
+}
+```
 
-**Day 3-4: Management Dashboard Interface**
-- Executive summary dashboard for facility managers
-- Coach performance comparison and ranking
-- Student development trend analysis
-- Financial impact visualization of coaching programs
+### Sprint 1.4: Payout System (Week 2-3)
+**Status: ❌ Missing - HIGH PRIORITY**
 
-**Day 5: Quality Assurance Tools**
-- Assessment consistency monitoring across coaches
-- Calibration tools for standardized evaluations
-- Performance outlier detection and alerts
+#### Requirements:
+- Automated commission calculation
+- WISE payout integration
+- Payout scheduling (weekly/monthly)
+- Transaction history and reporting
+- Tax document generation
 
-### Week 8: Coach Development & Training
-**Day 1-2: Coach Effectiveness Analytics**
-- Individual coach performance dashboards
-- Student improvement rate tracking per coach
-- Best practice identification and sharing
-- Professional development recommendation system
-
-**Day 3-4: Training & Calibration Systems**
-- Coach assessment calibration tools
-- Training module integration for consistency
-- Peer comparison and mentoring facilitation
-- Certification tracking for PCP assessment competency
-
-**Day 5: Automated Reporting & Communication**
-- Automated performance reports for coaches
-- Student progress communication to parents/partners
-- Facility performance summaries for management
-- Success story generation for marketing
-
-### Week 9: Advanced Analytics & Optimization
-**Day 1-2: Predictive Analytics Implementation**
-- Tournament readiness prediction algorithms
-- Student retention risk assessment
-- Optimal coaching pathway recommendations
-- Resource allocation optimization for facilities
-
-**Day 3-4: Cross-Facility Integration**
-- Multi-facility performance comparison
-- Best practice sharing across partner network
-- Standardized assessment protocols implementation
-- Data synchronization and consistency protocols
-
-**Day 5: Sprint Integration & Testing**
-- Complete analytics workflow validation
-- Performance optimization for large datasets
-- Security and privacy compliance verification
-
-**Sprint 3 Deliverables:**
-- ✅ Comprehensive facility management analytics
-- ✅ Coach development and training tools
-- ✅ Predictive analytics for optimization
-- ✅ Cross-facility integration capabilities
-
----
-
-## Sprint 4: Advanced Features & Ecosystem Integration (Weeks 10-12)
-**Theme**: "System Optimization & External Integrations"
-
-### Week 10: Tournament Integration (Optional)
-**Day 1-2: Tournament Rating Integration**
-- Optional PCP rating integration with tournament management
-- Tournament readiness assessment and recommendation
-- Performance tracking in competitive environments
-- Post-tournament skill assessment updates
-
-**Day 3-4: External Rating System Compatibility**
-- DUPR/UTPR rating conversion algorithms
-- Cross-platform rating synchronization
-- Migration tools for existing rating systems
-- Comparative analysis and validation tools
-
-**Day 5: Social & Community Features**
-- Achievement sharing capabilities
-- Peer comparison and motivation tools
-- Community challenges and competitions
-- Success story compilation and sharing
-
-### Week 11: Performance Optimization & Scalability
-**Day 1-2: System Performance Optimization**
-- Database query optimization for large datasets
-- Real-time processing performance improvements
-- Mobile app responsiveness optimization
-- Caching strategies for frequently accessed data
-
-**Day 3-4: Scalability & Enterprise Features**
-- Multi-tenant architecture optimization
-- Enterprise security and compliance features
-- Advanced backup and disaster recovery
-- API rate limiting and usage monitoring
-
-**Day 5: Advanced AI & Machine Learning**
-- Enhanced recommendation algorithm refinement
-- Predictive modeling for player development
-- Automated coaching insight generation
-- Continuous learning system optimization
-
-### Week 12: Final Integration & Launch Preparation
-**Day 1-2: End-to-End System Testing**
-- Comprehensive user acceptance testing
-- Performance stress testing under load
-- Security penetration testing and validation
-- Cross-browser and device compatibility verification
-
-**Day 3-4: Documentation & Training Materials**
-- Comprehensive user documentation creation
-- Coach training materials and video tutorials
-- Facility manager onboarding guides
-- Technical documentation for system maintenance
-
-**Day 5: Launch Preparation & Deployment**
-- Production environment setup and configuration
-- Final data migration and system validation
-- Go-live checklist completion and verification
-- Post-launch monitoring and support preparation
-
-**Sprint 4 Deliverables:**
-- ✅ Optional tournament system integration
-- ✅ Performance optimization and scalability improvements
-- ✅ Comprehensive documentation and training materials
-- ✅ Production-ready system deployment
+#### Implementation:
+```typescript
+interface CoachPayout {
+  id: number;
+  coachId: number;
+  periodStart: Date;
+  periodEnd: Date;
+  totalSessions: number;
+  grossRevenue: number;
+  commissionRate: number;
+  netPayout: number;
+  wiseTransactionId?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+}
+```
 
 ---
 
-## Success Metrics & Validation Criteria
+## 🎯 PHASE 2: User Experience Enhancement (3-4 weeks)
+**Priority: HIGH - Improves platform usability**
 
-### Sprint 1 Success Metrics
-- Coach assessment completion time: <3 minutes per student
-- Player dashboard load time: <2 seconds
-- Rating calculation accuracy: 99.9% consistency
-- User interface satisfaction: >4.5/5 rating from beta testers
+### Sprint 2.1: Learning Management System (Week 3)
+**Status: ❌ Missing - HIGH PRIORITY**
 
-### Sprint 2 Success Metrics
-- Drill recommendation relevance: >85% coach approval rate
-- Player practice engagement: >70% completion rate for assigned drills
-- Assessment accuracy improvement: >20% consistency across coaches
-- System response time: <1 second for recommendation generation
+#### Integration with Existing Drill Library:
+- Connect course modules to drill library
+- Session planning with drill selection
+- Progress tracking through skill development
+- Performance analytics per drill category
 
-### Sprint 3 Success Metrics
-- Facility manager dashboard adoption: >90% weekly usage
-- Coach development engagement: >80% participation in calibration
-- Analytics accuracy: <5% variance in performance predictions
-- Cross-facility data consistency: >99% synchronization success
+#### Requirements:
+- Course content delivery platform
+- Progress dashboards for students and coaches
+- Skill assessment integration
+- Completion tracking and badges
 
-### Sprint 4 Success Metrics
-- System performance: Support 1000+ concurrent users
-- Tournament integration: <2% rating discrepancy with existing systems
-- Documentation completeness: 100% feature coverage
-- Launch readiness: All go-live criteria met
+### Sprint 2.2: Advanced Search & Filtering (Week 4)
+**Status: ❌ Missing - MEDIUM PRIORITY**
+
+#### Requirements:
+- Coach search by location, specialization, availability
+- Drill library filtering by PCP level, category, skill focus
+- Advanced filters: price range, rating, language
+- Smart recommendations based on user profile
+
+### Sprint 2.3: Rating & Review System (Week 4)
+**Status: ❌ Missing - MEDIUM PRIORITY**
+
+#### Requirements:
+- Student feedback collection post-session
+- Coach performance ratings
+- Review moderation system
+- Impact on search ranking
+
+### Sprint 2.4: Enhanced Progress Tracking (Week 5)
+**Status: ❌ Missing - MEDIUM PRIORITY**
+
+#### Integration Points:
+- Link with existing drill library progress
+- PCP skill development tracking
+- Session outcome recording
+- Goal achievement monitoring
 
 ---
 
-## Risk Management & Mitigation
+## 🏗️ PHASE 3: Advanced Features (4-5 weeks)
+**Priority: MEDIUM - Platform optimization**
 
-### Technical Risks
-- **Database Performance**: Implement comprehensive indexing and query optimization
-- **Mobile Responsiveness**: Continuous testing across device types and screen sizes
-- **API Scalability**: Load testing and performance monitoring from Sprint 1
+### Sprint 3.1: Resource Library (Week 6)
+**Status: ❌ Missing - MEDIUM PRIORITY**
 
-### User Adoption Risks
-- **Coach Training**: Comprehensive onboarding and ongoing support programs
-- **Player Engagement**: Gamification and motivation features from Sprint 2
-- **Facility Buy-in**: Clear ROI demonstration through analytics in Sprint 3
+#### Drill Library Integration:
+- Enhanced video content management
+- Downloadable drill cards and guides
+- Coach resource sharing
+- Curriculum template library
 
-### Integration Risks
-- **Training Center Compatibility**: Continuous integration testing with existing systems
-- **Cross-Facility Consistency**: Standardized protocols and validation from Sprint 3
-- **External System Integration**: Phased approach with fallback options in Sprint 4
+### Sprint 3.2: Financial Reporting (Week 6-7)
+**Status: ❌ Missing - MEDIUM PRIORITY**
 
-This sprint plan delivers a comprehensive PCP Coaching Ecosystem that transforms player development through data-driven coaching while maintaining the personal touch that makes coaching effective.
+#### Requirements:
+- Revenue analytics dashboard
+- Commission tracking and forecasting
+- Tax reporting automation
+- Business performance metrics
+
+### Sprint 3.3: Communication Platform (Week 7)
+**Status: ❌ Missing - LOW PRIORITY**
+
+#### Requirements:
+- In-app messaging between coaches and students
+- Session feedback and notes
+- Announcement system
+- Community features
+
+### Sprint 3.4: Quality Assurance (Week 8)
+**Status: ❌ Missing - LOW PRIORITY**
+
+#### Requirements:
+- Coach performance monitoring
+- Automated quality checks
+- Compliance tracking
+- Improvement recommendations
+
+---
+
+## 🔧 TECHNICAL INTEGRATION PLAN
+
+### Drill Library Integration Points:
+1. **Course Modules** → Link to specific drills for practical application
+2. **Session Booking** → Pre-populate sessions with drill plans
+3. **Progress Tracking** → Monitor improvement across drill categories
+4. **LMS** → Embed drill videos and instructions in course content
+5. **Coach Profiles** → Showcase drill expertise and specializations
+
+### Database Schema Updates Needed:
+```sql
+-- Link course modules to drills
+ALTER TABLE course_modules ADD COLUMN associated_drills JSON;
+
+-- Track drill usage in sessions  
+CREATE TABLE session_drills (
+  session_id INTEGER REFERENCES bookings(id),
+  drill_id INTEGER REFERENCES drill_library(id),
+  order_index INTEGER,
+  notes TEXT
+);
+
+-- Progress tracking per drill
+CREATE TABLE drill_progress (
+  user_id INTEGER,
+  drill_id INTEGER,
+  attempts INTEGER DEFAULT 0,
+  best_score DECIMAL,
+  last_practiced DATE
+);
+```
+
+---
+
+## 📋 IMMEDIATE ACTION ITEMS
+
+### Week 1 Priorities:
+1. ✅ **COMPLETE**: PCP level eligibility validation (implemented)
+2. 🎯 **START**: Course module system design and development
+3. 🎯 **START**: Admin approval workflow implementation
+4. 🔗 **INTEGRATE**: Connect existing drill library to course content
+
+### Critical Dependencies:
+- Admin user roles and permissions system
+- File upload system for certification documents
+- Email notification system enhancement
+- Payment processing error handling
+
+### Success Metrics:
+- **Phase 1**: 100% of core infrastructure functional
+- **Phase 2**: 80% improvement in user engagement metrics
+- **Phase 3**: 95% coaching workflow completion rate
+
+---
+
+## 🚨 RISK MITIGATION
+
+### High-Risk Items:
+1. **Admin Approval Workflow**: Manual review bottleneck
+2. **Payment Processing**: WISE API integration complexity
+3. **Video Content**: Bandwidth and storage costs
+4. **Course Content**: Quality and consistency standards
+
+### Mitigation Strategies:
+- Implement automated pre-screening for certifications
+- Create comprehensive WISE error handling and fallback systems
+- Use CDN for video delivery optimization
+- Establish content review and approval processes
+
+---
+
+This sprint plan ensures systematic completion of the coaching ecosystem while leveraging existing infrastructure (drill library) and maintaining focus on user-critical features first.
