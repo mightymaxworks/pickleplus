@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play, BookOpen } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const CoachingWorkflowAnalysis: React.FC = () => {
@@ -253,12 +253,12 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       progress: 100,
       systems: [
         {
-          name: 'Curriculum Management System',
-          icon: <BarChart3 className="w-5 h-5" />,
+          name: 'Learning Management System (LMS)',
+          icon: <BookOpen className="w-5 h-5" />,
           status: 'complete',
-          features: ['Drill Libraries', 'Lesson Planning', 'Progress Tracking', 'Custom Curricula'],
-          routes: ['/coach/curriculum', '/coach/lesson-plans'],
-          apiEndpoints: ['/api/curriculum/*', '/api/lesson-plans/*']
+          features: ['Comprehensive Drill Library', 'Curriculum Templates', 'Lesson Planning', 'SAGE AI Integration', 'Progress Tracking', 'Coach Content Creation'],
+          routes: ['/coach/curriculum', '/coach/lesson-plans', '/coach/drills'],
+          apiEndpoints: ['/api/curriculum/drills', '/api/curriculum/templates', '/api/curriculum/lesson-plans', '/api/sage/drill-recommendations']
         },
         {
           name: 'Advanced Communication Tools',
