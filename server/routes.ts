@@ -223,6 +223,76 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     });
   });
 
+  // Phase 2A: Advanced Coaching Tools API Routes - EARLY REGISTRATION
+  app.get('/api/curriculum', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      res.json({
+        success: true,
+        data: {
+          drillLibraries: ['Basic Fundamentals', 'Advanced Techniques', 'Tournament Prep'],
+          totalDrills: 247,
+          customCurricula: 12,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Curriculum system operational' });
+    }
+  });
+
+  app.get('/api/analytics/student-progress', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      res.json({
+        success: true,
+        data: {
+          totalStudents: 89,
+          activeAssessments: 34,
+          completedGoals: 156,
+          averageImprovement: 23.5,
+          systemStatus: 'operational'
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Analytics system operational' });
+    }
+  });
+
+  // Phase 2B: Business Intelligence API Routes - EARLY REGISTRATION
+  app.get('/api/coach/business-metrics', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      res.json({
+        success: true,
+        data: {
+          monthlyRevenue: 4750.00,
+          totalClients: 23,
+          sessionsCompleted: 87,
+          clientRetention: 92.3,
+          systemStatus: 'operational'
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Business metrics operational' });
+    }
+  });
+
+  app.get('/api/communication/status', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      res.json({
+        success: true,
+        data: {
+          videoSessionsEnabled: true,
+          automatedFollowUps: true,
+          parentCommunication: true,
+          systemStatus: 'operational'
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Communication tools operational' });
+    }
+  });
+
+  console.log('[API] Phase 2 Advanced Coaching Tools routes registered EARLY');
+
   app.get('/api/wise/status', async (req: Request, res: Response) => {
     res.json({ 
       message: 'WISE Status API',
@@ -5205,75 +5275,7 @@ function getCategoryMultiplier(category: { format: string; division: string }) {
 
   console.log('[API] Charge Card system routes registered');
   
-  // Phase 2A: Advanced Coaching Tools API Routes
-  app.get('/api/curriculum', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          drillLibraries: ['Basic Fundamentals', 'Advanced Techniques', 'Tournament Prep'],
-          totalDrills: 247,
-          customCurricula: 12,
-          lastUpdated: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, error: 'Curriculum system operational' });
-    }
-  });
 
-  app.get('/api/analytics/student-progress', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          totalStudents: 89,
-          activeAssessments: 34,
-          completedGoals: 156,
-          averageImprovement: 23.5,
-          systemStatus: 'operational'
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, error: 'Analytics system operational' });
-    }
-  });
-
-  // Phase 2B: Business Intelligence API Routes
-  app.get('/api/coach/business-metrics', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          monthlyRevenue: 4750.00,
-          totalClients: 23,
-          sessionsCompleted: 87,
-          clientRetention: 92.3,
-          systemStatus: 'operational'
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, error: 'Business metrics operational' });
-    }
-  });
-
-  app.get('/api/communication/status', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          videoSessionsEnabled: true,
-          automatedFollowUps: true,
-          parentCommunication: true,
-          systemStatus: 'operational'
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, error: 'Communication tools operational' });
-    }
-  });
-
-  console.log('[API] Phase 2 Advanced Coaching Tools routes registered');
   
   // Admin Approval Workflow routes - PKL-278651-ADMIN-APPROVAL-WORKFLOW
   app.use("/api/admin-approval", requireAdmin, adminApprovalRoutes); // Admin approval system for coach applications
