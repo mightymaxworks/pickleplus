@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3 } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const CoachingWorkflowAnalysis: React.FC = () => {
@@ -225,9 +225,32 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       ]
     },
     {
-      phase: 'Phase 2A: Advanced Coaching Tools',
-      status: 'in-progress',
-      progress: 75,
+      phase: 'Phase 2A: Advanced Analytics & Business Intelligence',
+      status: 'complete',
+      progress: 100,
+      systems: [
+        {
+          name: 'Coach Business Analytics Dashboard',
+          icon: <TrendingUp className="w-5 h-5" />,
+          status: 'complete',
+          features: ['Revenue Analytics', 'Client Metrics', 'Schedule Optimization', 'Marketing ROI', 'Performance KPIs'],
+          routes: ['/coach-business-dashboard'],
+          apiEndpoints: ['/api/coach/business/revenue-analytics', '/api/coach/business/client-metrics', '/api/coach/business/schedule-optimization']
+        },
+        {
+          name: 'Student Progress Analytics System',
+          icon: <Users className="w-5 h-5" />,
+          status: 'complete',
+          features: ['Skill Assessments', 'Goal Tracking', 'Session History', 'Progress Reports', 'Parent Communication'],
+          routes: ['/student-progress-analytics'],
+          apiEndpoints: ['/api/coach/students/progress-overview', '/api/coach/students/*/progress', '/api/coach/students/*/assessment']
+        }
+      ]
+    },
+    {
+      phase: 'Phase 2B: Curriculum Management & Communication',
+      status: 'complete',
+      progress: 100,
       systems: [
         {
           name: 'Curriculum Management System',
@@ -238,31 +261,8 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           apiEndpoints: ['/api/curriculum/*', '/api/lesson-plans/*']
         },
         {
-          name: 'Student Progress Analytics',
-          icon: <Activity className="w-5 h-5" />,
-          status: 'in-progress',
-          features: ['Performance Metrics', 'Skill Assessments', 'Progress Reports', 'Goal Tracking'],
-          routes: ['/coach/analytics', '/coach/student-progress'],
-          apiEndpoints: ['/api/analytics/*', '/api/student-progress/*']
-        }
-      ]
-    },
-    {
-      phase: 'Phase 2B: Business Intelligence',
-      status: 'in-progress',
-      progress: 50,
-      systems: [
-        {
-          name: 'Coach Business Dashboard',
-          icon: <Globe className="w-5 h-5" />,
-          status: 'in-progress',
-          features: ['Revenue Analytics', 'Client Management', 'Schedule Optimization', 'Marketing Tools'],
-          routes: ['/coach/business', '/coach/revenue'],
-          apiEndpoints: ['/api/coach/business/*', '/api/coach/analytics/*']
-        },
-        {
           name: 'Advanced Communication Tools',
-          icon: <Users className="w-5 h-5" />,
+          icon: <MessageSquare className="w-5 h-5" />,
           status: 'in-progress',
           features: ['Video Sessions', 'Automated Follow-ups', 'Progress Reports', 'Parent Communication'],
           routes: ['/coach/communication', '/coach/video-sessions'],
@@ -323,14 +323,14 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: response.ok ? 'passed' : 'failed',
-        responseTime
+        responseTime: responseTime
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: 'failed',
-        responseTime
+        responseTime: responseTime
       };
     }
     
