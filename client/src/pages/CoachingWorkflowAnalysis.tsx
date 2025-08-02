@@ -71,54 +71,121 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     }
   ]);
 
-  const phase1Systems = [
-    { 
-      name: 'Authentication System',
-      icon: <Shield className="w-5 h-5" />,
+  const coachingWorkflowPhases = [
+    {
+      phase: 'Phase 1A: Foundation & Onboarding',
       status: 'complete',
       progress: 100,
-      features: ['User Registration', 'Login/Logout', 'Session Management', 'Password Security'],
-      routes: ['/auth', '/login', '/register']
+      systems: [
+        {
+          name: 'Authentication & User Management',
+          icon: <Shield className="w-5 h-5" />,
+          status: 'complete',
+          features: ['User Registration', 'Login/Logout', 'Session Management', 'Password Security'],
+          routes: ['/auth', '/login', '/register'],
+          apiEndpoints: ['/api/auth/register', '/api/auth/login', '/api/user']
+        },
+        {
+          name: 'PCP Certification System',
+          icon: <FileText className="w-5 h-5" />,
+          status: 'complete',
+          features: ['Level 1-5 Sequential Progression', 'Coach Onboarding', 'Certification Tracking', 'Level Validation'],
+          routes: ['/coach/apply', '/pcp-certification'],
+          apiEndpoints: ['/api/pcp-certification/levels', '/api/pcp-certification/my-status']
+        }
+      ]
     },
     {
-      name: 'PCP Certification System',
-      icon: <FileText className="w-5 h-5" />,
-      status: 'complete', 
-      progress: 100,
-      features: ['Level Validation', 'Sequential Progression', 'Coach Onboarding', 'Certification Tracking'],
-      routes: ['/coach/apply', '/pcp-certification']
-    },
-    {
-      name: 'Session Booking System',
-      icon: <Users className="w-5 h-5" />,
+      phase: 'Phase 1B: Core Coaching Operations',
       status: 'complete',
       progress: 100,
-      features: ['Session Requests', 'Coach Responses', 'Scheduling', 'History Tracking'],
-      routes: ['/session-booking', '/sessions']
+      systems: [
+        {
+          name: 'Session Booking & Management',
+          icon: <Users className="w-5 h-5" />,
+          status: 'complete',
+          features: ['Session Requests', 'Coach Responses', 'Scheduling', 'History Tracking', 'Real-time Booking'],
+          routes: ['/session-booking', '/sessions'],
+          apiEndpoints: ['/api/session-booking', '/api/sessions/*']
+        },
+        {
+          name: 'Training Center Integration',
+          icon: <Database className="w-5 h-5" />,
+          status: 'complete',
+          features: ['QR Code Access', 'Facility Listings', 'Capacity Management', 'Coach-Facility Assignment'],
+          routes: ['/training-centers', '/scan'],
+          apiEndpoints: ['/api/training-centers', '/api/qr', '/api/admin/training-centers']
+        }
+      ]
     },
     {
-      name: 'WISE Payment Gateway',
-      icon: <CreditCard className="w-5 h-5" />,
+      phase: 'Phase 1C: Payment & Administration',
       status: 'complete',
       progress: 100,
-      features: ['International Transfers', 'Coach Payouts', 'Transaction History', 'Multi-Currency'],
-      routes: ['/payment-demo', '/wise-integration']
+      systems: [
+        {
+          name: 'WISE Payment Gateway',
+          icon: <CreditCard className="w-5 h-5" />,
+          status: 'complete',
+          features: ['International Transfers', 'Coach Payouts', 'Multi-Currency Support', 'Transaction History'],
+          routes: ['/payment-demo', '/wise-integration'],
+          apiEndpoints: ['/api/wise/*', '/api/wise-diagnostic/*']
+        },
+        {
+          name: 'Admin Approval Workflow',
+          icon: <Settings className="w-5 h-5" />,
+          status: 'complete',
+          features: ['Coach Applications', 'Approval Process', 'Rejection Workflow', 'History Tracking'],
+          routes: ['/admin', '/admin/approvals'],
+          apiEndpoints: ['/api/admin/*', '/api/admin/coaches', '/api/admin/players']
+        }
+      ]
     },
     {
-      name: 'Admin Approval Workflow',
-      icon: <Settings className="w-5 h-5" />,
-      status: 'complete',
-      progress: 100,
-      features: ['Coach Applications', 'Approval Process', 'Rejection Workflow', 'History Tracking'],
-      routes: ['/admin', '/admin/approvals']
+      phase: 'Phase 2A: Advanced Coaching Tools (PLANNED)',
+      status: 'planned',
+      progress: 0,
+      systems: [
+        {
+          name: 'Curriculum Management System',
+          icon: <BarChart3 className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Drill Libraries', 'Lesson Planning', 'Progress Tracking', 'Custom Curricula'],
+          routes: ['/coach/curriculum', '/coach/lesson-plans'],
+          apiEndpoints: ['/api/curriculum/*', '/api/lesson-plans/*']
+        },
+        {
+          name: 'Student Progress Analytics',
+          icon: <Activity className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Performance Metrics', 'Skill Assessments', 'Progress Reports', 'Goal Tracking'],
+          routes: ['/coach/analytics', '/coach/student-progress'],
+          apiEndpoints: ['/api/analytics/*', '/api/student-progress/*']
+        }
+      ]
     },
     {
-      name: 'Training Center Management',
-      icon: <Database className="w-5 h-5" />,
-      status: 'complete',
-      progress: 100,
-      features: ['QR Code Access', 'Facility Listings', 'Capacity Management', 'Coach Assignments'],
-      routes: ['/training-centers', '/scan']
+      phase: 'Phase 2B: Business Intelligence (PLANNED)',
+      status: 'planned',
+      progress: 0,
+      systems: [
+        {
+          name: 'Coach Business Dashboard',
+          icon: <Globe className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Revenue Analytics', 'Client Management', 'Schedule Optimization', 'Marketing Tools'],
+          routes: ['/coach/business', '/coach/revenue'],
+          apiEndpoints: ['/api/coach/business/*', '/api/coach/analytics/*']
+        },
+        {
+          name: 'Advanced Communication Tools',
+          icon: <Users className="w-5 h-5" />,
+          status: 'planned',
+          features: ['Video Sessions', 'Automated Follow-ups', 'Progress Reports', 'Parent Communication'],
+          routes: ['/coach/communication', '/coach/video-sessions'],
+          apiEndpoints: ['/api/communication/*', '/api/video-sessions/*']
+        }
+      ]
     }
   ];
 
@@ -221,8 +288,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="system-overview">System Overview</TabsTrigger>
+          <TabsTrigger value="coaching-workflows">Coaching Workflows</TabsTrigger>
           <TabsTrigger value="api-testing">API Testing</TabsTrigger>
           <TabsTrigger value="route-testing">Route Testing</TabsTrigger>
           <TabsTrigger value="deployment-status">Deployment</TabsTrigger>
@@ -270,39 +338,34 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {phase1Systems.map((system, index) => (
-              <Card key={index} className={`border-l-4 ${system.status === 'complete' ? 'border-l-green-500' : 'border-l-yellow-500'}`}>
+            {coachingWorkflowPhases.slice(0, 3).map((phase, index) => (
+              <Card key={index} className={`border-l-4 ${phase.status === 'complete' ? 'border-l-green-500' : 'border-l-blue-500'}`}>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    {system.icon}
-                    {system.name}
-                    <Badge className={system.status === 'complete' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                      {system.status}
+                    <BarChart3 className="w-5 h-5" />
+                    {phase.phase}
+                    <Badge className={phase.status === 'complete' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
+                      {phase.status}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Progress value={system.progress} className="mb-3" />
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Key Features:</h4>
-                    <div className="grid grid-cols-2 gap-1">
-                      {system.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
-                          <CheckCircle className="w-3 h-3 text-green-500" />
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 pt-2 border-t">
-                      <p className="text-xs text-gray-500 mb-1">Test Routes:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {system.routes.map((route, idx) => (
-                          <code key={idx} className="text-xs bg-gray-100 px-1 py-0.5 rounded">
-                            {route}
-                          </code>
-                        ))}
+                  <Progress value={phase.progress} className="mb-4" />
+                  <div className="grid grid-cols-1 gap-2">
+                    {phase.systems.map((system, sysIndex) => (
+                      <div key={sysIndex} className="flex items-center gap-2 text-sm">
+                        {system.icon}
+                        <span className="font-medium">{system.name}</span>
+                        <Badge variant="outline" className={system.status === 'complete' ? 'text-green-600' : 'text-blue-600'}>
+                          {system.status}
+                        </Badge>
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs text-gray-500">
+                      {phase.systems.length} systems • Progress: {phase.progress}%
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -310,36 +373,131 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           </div>
         </TabsContent>
 
+        <TabsContent value="coaching-workflows" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Comprehensive Coaching Workflow Phases
+              </CardTitle>
+              <p className="text-gray-600">Detailed breakdown of all coaching system phases and their operational status</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {coachingWorkflowPhases.map((phase, phaseIndex) => (
+                  <Card key={phaseIndex} className={`border-l-4 ${phase.status === 'complete' ? 'border-l-green-500' : phase.status === 'in-progress' ? 'border-l-yellow-500' : 'border-l-blue-500'}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl font-bold">{phase.phase}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge className={
+                            phase.status === 'complete' ? 'bg-green-100 text-green-800' : 
+                            phase.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-blue-100 text-blue-800'
+                          }>
+                            {phase.status.toUpperCase()}
+                          </Badge>
+                          <span className="text-sm font-medium">{phase.progress}%</span>
+                        </div>
+                      </div>
+                      <Progress value={phase.progress} className="mt-2" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {phase.systems.map((system, systemIndex) => (
+                          <Card key={systemIndex} className="bg-gray-50">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="flex items-center gap-2 text-lg">
+                                {system.icon}
+                                {system.name}
+                                <Badge variant="outline" className={
+                                  system.status === 'complete' ? 'text-green-600 border-green-600' : 
+                                  system.status === 'in-progress' ? 'text-yellow-600 border-yellow-600' :
+                                  'text-blue-600 border-blue-600'
+                                }>
+                                  {system.status}
+                                </Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                <div>
+                                  <h4 className="font-medium text-sm text-gray-700 mb-2">Key Features:</h4>
+                                  <div className="grid grid-cols-1 gap-1">
+                                    {system.features.map((feature, featureIndex) => (
+                                      <div key={featureIndex} className="flex items-center gap-1 text-xs text-gray-600">
+                                        <CheckCircle className="w-3 h-3 text-green-500" />
+                                        <span>{feature}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="font-medium text-sm text-gray-700 mb-2">Routes:</h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {system.routes.map((route, routeIndex) => (
+                                      <Badge key={routeIndex} variant="secondary" className="text-xs">
+                                        {route}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h4 className="font-medium text-sm text-gray-700 mb-2">API Endpoints:</h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {system.apiEndpoints.map((endpoint, endpointIndex) => (
+                                      <Badge key={endpointIndex} variant="outline" className="text-xs font-mono">
+                                        {endpoint}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="api-testing" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Phase 1 API Testing Suite
-                <div className="flex gap-2">
-                  <Badge variant="outline">{stats.total} Total Tests</Badge>
-                  <Badge className="bg-green-100 text-green-800">{stats.passed} Passed</Badge>
-                  <Badge className="bg-red-100 text-red-800">{stats.failed} Failed</Badge>
-                  <Badge variant="outline">{stats.completion}% Complete</Badge>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center mb-6">
-                <Button onClick={runAllTests} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2">
-                  Run All Phase 1 Tests
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  API Endpoint Testing
+                </CardTitle>
+                <Button onClick={runAllTests} className="bg-blue-600 hover:bg-blue-700">
+                  <PlayCircle className="w-4 h-4 mr-2" />
+                  Run All Tests
                 </Button>
               </div>
-              
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Total: {stats.total}</span>
+                <span className="text-green-600">Passed: {stats.passed}</span>
+                <span className="text-red-600">Failed: {stats.failed}</span>
+                <span>Coverage: {stats.completion}%</span>
+              </div>
+            </CardHeader>
+            <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {apiTests.map((category, categoryIndex) => (
-                  <Card key={categoryIndex} className="border-l-4 border-l-blue-500">
+                  <Card key={categoryIndex} className="bg-gray-50">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg">{category.category}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         {category.tests.map((test, testIndex) => (
-                          <div key={testIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div key={testIndex} className="flex items-center justify-between p-3 bg-white rounded-lg border">
                             <div className="flex items-center gap-3">
                               {getStatusIcon(test.status)}
                               <div>
@@ -349,10 +507,10 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               {test.responseTime && (
-                                <span className="text-xs text-gray-500">{test.responseTime}ms</span>
+                                <span className="text-xs text-gray-500">{test.responseTime}ms</span>  
                               )}
-                              <Button
-                                size="sm"
+                              <Button 
+                                size="sm" 
                                 variant="outline"
                                 onClick={() => runSingleTest(categoryIndex, testIndex)}
                                 disabled={test.status === 'running'}
@@ -374,51 +532,39 @@ const CoachingWorkflowAnalysis: React.FC = () => {
         <TabsContent value="route-testing" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Route Testing Panel</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="w-5 h-5" />
+                Route Validation Testing
+              </CardTitle>
+              <p className="text-gray-600">Test operational status of all Phase 1 routes</p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {testRoutes.map((route, index) => (
-                  <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium text-sm">{route.name}</h3>
-                      <Badge className={`text-xs ${getStatusColor(route.status)} flex items-center gap-1`}>
-                        {getStatusIcon(route.status)}
-                        {route.status}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-3">{route.description}</p>
-                    <div className="flex gap-2">
-                      {route.status === 'operational' || route.status === 'partial' ? (
-                        <a 
-                          href={route.path} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
-                        >
-                          Test Route
-                        </a>
-                      ) : (
-                        <span className="text-xs bg-gray-300 text-gray-600 px-2 py-1 rounded cursor-not-allowed">
-                          Not Available
-                        </span>
-                      )}
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono ml-2">
-                        {route.path}
-                      </code>
-                    </div>
-                  </div>
+                  <Card key={index} className="border-l-4 border-l-green-500">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center justify-between">
+                        {route.name}
+                        <Badge className={getStatusColor(route.status)}>
+                          {route.status}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-2">{route.description}</p>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block">{route.path}</code>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="mt-2 w-full"
+                        onClick={() => window.open(route.path, '_blank')}
+                      >
+                        Test Route
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-              
-              <Alert className="mt-6">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Universal Development Workflow:</strong> This dashboard serves all development modules (coaching, franchise, retail, facilities). 
-                  After completing ANY feature in ANY module, the system should automatically redirect here for verification.
-                  Test all routes marked as "operational" to ensure no regressions have been introduced.
-                </AlertDescription>
-              </Alert>
             </CardContent>
           </Card>
         </TabsContent>
