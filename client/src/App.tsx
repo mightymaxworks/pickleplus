@@ -259,6 +259,7 @@ export default function App() {
                   
                   {/* Coaching Workflow Analysis */}
                   <Route path="/coaching-workflow-analysis" component={LazyCoachingWorkflowAnalysis} />
+        <Route path="/advanced-coach-analytics" component={lazyLoad(() => import('./pages/AdvancedCoachAnalyticsTest'))} />
                   <Route path="/phase1-testing" component={LazyCoachingWorkflowAnalysis} />
                   
                   {/* Phase 2: Advanced Coaching Analytics */}

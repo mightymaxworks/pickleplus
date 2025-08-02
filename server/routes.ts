@@ -166,6 +166,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Admin routes...");
     registerAdminRoutes(app);
     
+    // Phase 3: Advanced Coach Analytics
+    console.log("[ROUTES] Registering Advanced Coach Analytics routes...");
+    const advancedCoachAnalyticsRoutes = await import('./routes/advanced-coach-analytics-routes');
+    app.use('/api/coach/advanced', advancedCoachAnalyticsRoutes.default);
+    console.log("[ROUTES] Advanced Coach Analytics routes registered successfully");
+    
     console.log("[ROUTES] All modular route systems registered successfully");
     
   } catch (error) {
