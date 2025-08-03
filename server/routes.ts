@@ -18,6 +18,7 @@ import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes";
 import { trainingCenterRoutes } from "./routes/training-center-routes";
 import { registerJournalRoutes } from "./routes/journal-routes";
 import pcpRoutes from "./routes/pcp-routes";
+import pcpEnforcementRoutes from "./routes/pcp-enforcement-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
@@ -171,6 +172,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const advancedCoachAnalyticsRoutes = await import('./routes/advanced-coach-analytics-routes');
     app.use('/api/coach/advanced', advancedCoachAnalyticsRoutes.default);
     console.log("[ROUTES] Advanced Coach Analytics routes registered successfully");
+    
+    // Phase 4: PCP Sequential Enforcement System
+    console.log("[ROUTES] Registering PCP Sequential Enforcement routes...");
+    app.use('/api/pcp', pcpEnforcementRoutes);
+    console.log("[ROUTES] PCP Sequential Enforcement routes registered successfully");
     
     console.log("[ROUTES] All modular route systems registered successfully");
     

@@ -763,6 +763,70 @@ import {
   type InsertRatingProgression
 } from './schema/training-center';
 
+// Import PCP Sequential Enforcement schema (Phase 4 - Critical Gap Implementation)
+import {
+  pcpCoachCertifications,
+  pcpLevelRequirements,
+  pcpSequentialValidationLog,
+  pcpBusinessMetrics,
+  pcpCoachCertificationsRelations,
+  pcpSequentialValidationLogRelations,
+  pcpBusinessMetricsRelations,
+  insertPcpCoachCertificationSchema,
+  insertPcpLevelRequirementSchema,
+  insertPcpSequentialValidationLogSchema,
+  insertPcpBusinessMetricsSchema,
+  pcpLevelApplicationSchema,
+  PCP_LEVELS,
+  PCP_LEVEL_NAMES,
+  COMMISSION_TIERS,
+  type PcpCoachCertification,
+  type InsertPcpCoachCertification,
+  type PcpLevelRequirement,
+  type InsertPcpLevelRequirement,
+  type PcpSequentialValidationLog,
+  type InsertPcpSequentialValidationLog,
+  type PcpBusinessMetrics,
+  type InsertPcpBusinessMetrics,
+  type PcpLevelApplication,
+  type PcpLevel,
+  type CommissionTier,
+  type ValidationResult,
+  type PcpProgressionAnalytics
+} from './schema/pcp-sequential-enforcement';
+
+// Re-export PCP Sequential Enforcement
+export {
+  pcpCoachCertifications,
+  pcpLevelRequirements,
+  pcpSequentialValidationLog,
+  pcpBusinessMetrics,
+  pcpCoachCertificationsRelations,
+  pcpSequentialValidationLogRelations,
+  pcpBusinessMetricsRelations,
+  insertPcpCoachCertificationSchema,
+  insertPcpLevelRequirementSchema,
+  insertPcpSequentialValidationLogSchema,
+  insertPcpBusinessMetricsSchema,
+  pcpLevelApplicationSchema,
+  PCP_LEVELS,
+  PCP_LEVEL_NAMES,
+  COMMISSION_TIERS,
+  type PcpCoachCertification,
+  type InsertPcpCoachCertification,
+  type PcpLevelRequirement,
+  type InsertPcpLevelRequirement,
+  type PcpSequentialValidationLog,
+  type InsertPcpSequentialValidationLog,
+  type PcpBusinessMetrics,
+  type InsertPcpBusinessMetrics,
+  type PcpLevelApplication,
+  type PcpLevel,
+  type CommissionTier,
+  type ValidationResult,
+  type PcpProgressionAnalytics
+};
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
