@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play, BookOpen } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play, BookOpen, Target, Zap, Calendar, Construction } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const CoachingWorkflowAnalysis: React.FC = () => {
@@ -173,6 +173,105 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       phase: 'PHASE 8: MISSING TRUST SYSTEM',
       priority: 'MEDIUM'
     },
+  ]);
+
+  const [developmentPhases, setDevelopmentPhases] = useState([
+    {
+      id: 'phase-4-pcp-enforcement',
+      name: 'Phase 4: PCP Sequential Enforcement',
+      priority: 'CRITICAL',
+      status: 'ready-to-start',
+      timeline: '1-2 weeks',
+      complexity: 'Medium',
+      businessImpact: 'Prevents certification level skipping',
+      progress: 0,
+      components: [
+        { name: 'API Foundation', status: 'pending', description: '/api/pcp/verify-level, /api/pcp/prerequisites' },
+        { name: 'Frontend Enforcement', status: 'pending', description: 'Dynamic level blocking UI' },
+        { name: 'Business Logic', status: 'pending', description: 'Level-based access control' }
+      ],
+      dependencies: [],
+      blockers: []
+    },
+    {
+      id: 'phase-5-marketplace',
+      name: 'Phase 5: Coach Marketplace Discovery',
+      priority: 'HIGH',
+      status: 'waiting',
+      timeline: '2-3 weeks',
+      complexity: 'High',
+      businessImpact: 'Direct marketplace monetization',
+      progress: 25,
+      components: [
+        { name: 'Public Coach Profiles', status: 'partial', description: '/coaches/directory, /coaches/profile/:id' },
+        { name: 'Search & Discovery', status: 'missing', description: 'Advanced filtering and search' },
+        { name: 'Direct Booking', status: 'missing', description: 'Player-initiated coach booking' }
+      ],
+      dependencies: ['phase-4-pcp-enforcement'],
+      blockers: ['PCP certification validation required first']
+    },
+    {
+      id: 'phase-6-reputation',
+      name: 'Phase 6: Reputation & Trust System',
+      priority: 'MEDIUM',
+      status: 'waiting',
+      timeline: '2-3 weeks',
+      complexity: 'Medium',
+      businessImpact: 'Quality assurance and coach differentiation',
+      progress: 0,
+      components: [
+        { name: 'Rating Infrastructure', status: 'missing', description: 'Post-session rating interface' },
+        { name: 'Review System', status: 'missing', description: 'Review submission and moderation' },
+        { name: 'Trust Features', status: 'missing', description: 'Badge system and verified indicators' }
+      ],
+      dependencies: ['phase-4-pcp-enforcement', 'phase-5-marketplace'],
+      blockers: ['Coach marketplace must exist first']
+    }
+  ]);
+
+  const [criticalBlockers, setCriticalBlockers] = useState([
+    {
+      id: 'pcp-sequential-violation',
+      title: 'PCP Certification Sequential Enforcement',
+      impact: 'CRITICAL',
+      description: 'Coaches can potentially skip certification levels, violating PCP business model',
+      affectedSystems: ['Coach Certification', 'Business Model Integrity', 'Platform Credibility'],
+      solution: 'Implement Level 1→2→3→4→5 enforcement with dynamic validation',
+      estimatedEffort: '1-2 weeks',
+      status: 'identified'
+    },
+    {
+      id: 'marketplace-revenue-block',
+      title: 'Coach Discovery & Marketplace Revenue',
+      impact: 'HIGH',
+      description: 'Players cannot discover and book coaches independently, blocking marketplace revenue',
+      affectedSystems: ['Revenue Generation', 'Coach Visibility', 'Player Experience'],
+      solution: 'Build coach directory, search, and direct booking system',
+      estimatedEffort: '2-3 weeks',
+      status: 'identified'
+    },
+    {
+      id: 'quality-assurance-gap',
+      title: 'Coach Quality & Trust Validation',
+      impact: 'MEDIUM',
+      description: 'No way to verify coach competency or player satisfaction',
+      affectedSystems: ['Quality Assurance', 'Legal/Liability', 'Coach Reputation'],
+      solution: 'Implement rating, review, and reputation management system',
+      estimatedEffort: '2-3 weeks',
+      status: 'identified'
+    }
+  ]);
+
+  const [deploymentReadiness, setDeploymentReadiness] = useState({
+    coreInfrastructure: { status: 'operational', progress: 100, critical: true },
+    advancedAnalytics: { status: 'operational', progress: 100, critical: false },
+    paymentProcessing: { status: 'operational', progress: 100, critical: true },
+    sessionBooking: { status: 'operational', progress: 95, critical: true },
+    coachApplications: { status: 'operational', progress: 90, critical: true },
+    pcpEnforcement: { status: 'critical-gap', progress: 10, critical: true },
+    coachMarketplace: { status: 'critical-gap', progress: 25, critical: true },
+    reputationSystem: { status: 'missing', progress: 0, critical: false }
+  });
       status: 'idle',
       progress: 0,
       steps: [
@@ -804,12 +903,13 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="system-overview">Overview</TabsTrigger>
           <TabsTrigger value="coaching-workflows">Coaching</TabsTrigger>
+          <TabsTrigger value="gaps">Critical Gaps</TabsTrigger>
+          <TabsTrigger value="development">Development</TabsTrigger>
           <TabsTrigger value="lms-testing">LMS</TabsTrigger>
           <TabsTrigger value="journey-testing">Journeys</TabsTrigger>
-          <TabsTrigger value="user-journeys">Users</TabsTrigger>
           <TabsTrigger value="api-testing">APIs</TabsTrigger>
           <TabsTrigger value="route-testing">Routes</TabsTrigger>
         </TabsList>
@@ -1042,6 +1142,193 @@ const CoachingWorkflowAnalysis: React.FC = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="gaps" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                Critical Deployment Blockers
+              </CardTitle>
+              <p className="text-gray-600">Identified gaps that prevent full production deployment</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {criticalBlockers.map((blocker, index) => (
+                  <Card key={index} className={`border-l-4 ${
+                    blocker.impact === 'CRITICAL' ? 'border-l-red-500' : 
+                    blocker.impact === 'HIGH' ? 'border-l-orange-500' : 'border-l-yellow-500'
+                  }`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <Badge className={`${
+                          blocker.impact === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
+                          blocker.impact === 'HIGH' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {blocker.impact}
+                        </Badge>
+                        <Badge variant="outline">{blocker.estimatedEffort}</Badge>
+                      </div>
+                      <CardTitle className="text-lg">{blocker.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-4">{blocker.description}</p>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-medium text-sm mb-2">Affected Systems:</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {blocker.affectedSystems.map((system, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs">{system}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium text-sm mb-2">Solution:</h4>
+                          <p className="text-xs text-gray-600">{blocker.solution}</p>
+                        </div>
+                        
+                        <div className="pt-2 border-t">
+                          <Badge className={`${
+                            blocker.status === 'identified' ? 'bg-yellow-100 text-yellow-800' : 
+                            blocker.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                          }`}>
+                            {blocker.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="development" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Construction className="w-5 h-5 text-blue-500" />
+                Development Phases Strategy
+              </CardTitle>
+              <p className="text-gray-600">Prioritized development roadmap for addressing critical gaps</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {developmentPhases.map((phase, index) => (
+                  <Card key={index} className={`border-l-4 ${
+                    phase.priority === 'CRITICAL' ? 'border-l-red-500' : 
+                    phase.priority === 'HIGH' ? 'border-l-orange-500' : 'border-l-blue-500'
+                  }`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${
+                            phase.priority === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
+                            phase.priority === 'HIGH' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {phase.priority}
+                          </Badge>
+                          <Badge variant="outline">{phase.complexity}</Badge>
+                          <Badge variant="secondary">{phase.timeline}</Badge>
+                        </div>
+                        <Badge className={`${
+                          phase.status === 'ready-to-start' ? 'bg-green-100 text-green-800' : 
+                          phase.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {phase.status}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg">{phase.name}</CardTitle>
+                      <p className="text-sm text-gray-600">{phase.businessImpact}</p>
+                      
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span>Progress</span>
+                          <span>{phase.progress}%</span>
+                        </div>
+                        <Progress value={phase.progress} className="h-2" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium text-sm mb-3">Components:</h4>
+                          <div className="space-y-2">
+                            {phase.components.map((component, i) => (
+                              <div key={i} className="flex items-center gap-3 p-2 rounded border">
+                                <div className="flex items-center gap-2">
+                                  {component.status === 'pending' && <Clock className="w-4 h-4 text-gray-400" />}
+                                  {component.status === 'partial' && <Activity className="w-4 h-4 text-yellow-500" />}
+                                  {component.status === 'complete' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                                  {component.status === 'missing' && <XCircle className="w-4 h-4 text-red-500" />}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{component.name}</div>
+                                  <div className="text-xs text-gray-500">{component.description}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {phase.dependencies.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Dependencies:</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {phase.dependencies.map((dep, i) => (
+                                <Badge key={i} variant="outline" className="text-xs">{dep}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {phase.blockers.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Blockers:</h4>
+                            <div className="space-y-1">
+                              {phase.blockers.map((blocker, i) => (
+                                <div key={i} className="text-xs text-red-600 flex items-center gap-1">
+                                  <XCircle className="w-3 h-3" />
+                                  {blocker}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="pt-3 border-t flex justify-between items-center">
+                          <div className="text-xs text-gray-500">
+                            {phase.components.length} components • {phase.timeline}
+                          </div>
+                          <Button 
+                            size="sm" 
+                            disabled={phase.status !== 'ready-to-start'}
+                            className={phase.status === 'ready-to-start' ? 'bg-green-600 hover:bg-green-700' : ''}
+                          >
+                            {phase.status === 'ready-to-start' ? (
+                              <>
+                                <Zap className="w-3 h-3 mr-1" />
+                                Start Development
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="w-3 h-3 mr-1" />
+                                Waiting
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="journey-testing" className="space-y-6">

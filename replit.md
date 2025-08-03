@@ -10,6 +10,12 @@ Coach workflow preferences:
 - Profile management should use inline editing rather than separate page navigation
 - Use "Coaching Bio" for coaching profile sections (not "PCP Coaching Certification Programme")
 
+## Development Guidelines
+- Keep things simple - avoid unnecessary complex naming like "Enhanced" prefixes
+- Use only `/coaching-workflow-analysis` route for development dashboard
+- Tab labels must be concise and easy to navigate
+- All critical gaps development strategy must be integrated into universal development dashboard before proceeding with implementation
+
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration. A mandatory Development Dashboard (`client/src/pages/CoachingWorkflowAnalysis.tsx`) auto-tests all modular APIs, providing real-time validation and status of all modules.
 
@@ -57,6 +63,8 @@ The platform is developed in phases, with current focus on core coaching marketp
 - **PCP Coach Onboarding System**: 4-step onboarding flow for coaches, supporting sequential level progression with tiered commission structures.
 - **Payment Architecture**: Revenue from PCP Certifications, Coaching Sessions (tiered commission), and optional Premium Coach Subscriptions ($19.99/month) for advanced business tools.
 - **Design System Standards (PKL-278651 Framework)**: Mandatory mobile-first design, gesture navigation, 44px+ touch targets, micro-animations, voice-ready architecture, progressive disclosure. Color scheme includes Primary Orange, Secondary Blue, with Inter and Roboto Mono fonts.
+- **Critical Gaps Analysis System**: Comprehensive deployment readiness assessment with identified critical gaps: PCP Sequential Enforcement (10% complete), Coach Marketplace Discovery (25% complete), and Coach Reputation System (0% complete).
+- **Universal Development Dashboard**: Integrated at `/coaching-workflow-analysis` with Critical Gaps and Development phases tabs for tracking progress on missing components.
 
 ## External Dependencies
 ### Core Dependencies
