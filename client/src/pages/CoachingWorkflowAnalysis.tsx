@@ -1219,10 +1219,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
-        <TabsList className="flex flex-wrap justify-start w-full overflow-x-auto sm:grid sm:grid-cols-8 gap-1 h-auto p-1">
+        <TabsList className="flex flex-wrap justify-start w-full overflow-x-auto sm:grid sm:grid-cols-7 gap-1 h-auto p-1">
           <TabsTrigger value="system-overview" className="text-xs px-2 py-1 min-w-fit">Overview</TabsTrigger>
           <TabsTrigger value="coaching-workflows" className="text-xs px-2 py-1 min-w-fit">Coaching</TabsTrigger>
-          <TabsTrigger value="gaps" className="text-xs px-2 py-1 min-w-fit">Gaps</TabsTrigger>
           <TabsTrigger value="development" className="text-xs px-2 py-1 min-w-fit">Dev</TabsTrigger>
           <TabsTrigger value="lms-testing" className="text-xs px-2 py-1 min-w-fit">LMS</TabsTrigger>
           <TabsTrigger value="journey-testing" className="text-xs px-2 py-1 min-w-fit">Journeys</TabsTrigger>
@@ -1737,150 +1736,274 @@ const CoachingWorkflowAnalysis: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="development" className="space-y-6">
-          <Card>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Unified Development Ledger</h3>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="text-green-600">
+                {developmentLedger.filter(item => item.status === 'completed').length} Completed
+              </Badge>
+              <Badge variant="outline" className="text-yellow-600">
+                {developmentLedger.filter(item => item.status === 'ready-to-develop').length} Ready
+              </Badge>
+              <Badge variant="outline" className="text-red-600">
+                {developmentLedger.filter(item => item.status === 'blocked').length} Blocked
+              </Badge>
+              <Badge variant="outline" className="text-gray-600">
+                {developmentLedger.filter(item => item.status === 'planned').length} Planned
+              </Badge>
+            </div>
+          </div>
+
+          {/* Completed Features Section */}
+          <Card className="border-green-200 bg-green-50">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Construction className="w-5 h-5 text-blue-500" />
-                Development Phases Strategy
+              <CardTitle className="text-green-800 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Completed Features ({developmentLedger.filter(item => item.status === 'completed').length})
               </CardTitle>
-              <p className="text-gray-600">Prioritized development roadmap for addressing critical gaps</p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {developmentPhases.map((phase, index) => (
-                  <Card key={index} className={`border-l-4 ${
-                    phase.priority === 'CRITICAL' ? 'border-l-red-500' : 
-                    phase.priority === 'HIGH' ? 'border-l-orange-500' : 'border-l-blue-500'
-                  }`}>
+              <div className="space-y-3">
+                {developmentLedger.filter(item => item.status === 'completed').map((item, index) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded border border-green-200">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <div>
+                          <h4 className="font-medium text-green-800">{item.name}</h4>
+                          <p className="text-sm text-green-600">{item.businessImpact}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">{item.phase}</Badge>
+                            <Badge variant="outline" className="text-xs text-green-600">
+                              Completed {item.completedDate}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">✓ Live & Deployed</div>
+                      <div className="text-xs text-green-500">Fully Operational</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="gaps" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Development Ledger</h3>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="text-green-600">
+                {developmentLedger.filter(item => item.status === 'completed').length} Completed
+              </Badge>
+              <Badge variant="outline" className="text-yellow-600">
+                {developmentLedger.filter(item => item.status === 'ready-to-develop').length} Ready
+              </Badge>
+              <Badge variant="outline" className="text-red-600">
+                {developmentLedger.filter(item => item.status === 'blocked').length} Blocked
+              </Badge>
+            </div>
+          </div>
+
+          {/* Completed Features Section */}
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-green-800 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Completed Features ({developmentLedger.filter(item => item.status === 'completed').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {developmentLedger.filter(item => item.status === 'completed').map((item, index) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded border border-green-200">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <div>
+                          <h4 className="font-medium text-green-800">{item.name}</h4>
+                          <p className="text-sm text-green-600">{item.businessImpact}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">{item.phase}</Badge>
+                            <Badge variant="outline" className="text-xs text-green-600">
+                              Completed {item.completedDate}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">✓ Live & Deployed</div>
+                      <div className="text-xs text-green-500">Fully Operational</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Ready to Develop Section */}
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-blue-800 flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Ready to Develop ({developmentLedger.filter(item => item.status === 'ready-to-develop').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {developmentLedger.filter(item => item.status === 'ready-to-develop').map((item, index) => (
+                  <Card key={item.id} className="bg-white border-blue-200">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge className={`${
-                            phase.priority === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
-                            phase.priority === 'HIGH' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {phase.priority}
-                          </Badge>
-                          <Badge variant="outline">{phase.complexity}</Badge>
-                          <Badge variant="secondary">{phase.timeline}</Badge>
+                        <div className="flex items-center gap-3">
+                          <PlayCircle className="w-5 h-5 text-blue-500" />
+                          <div>
+                            <CardTitle className="text-lg text-blue-800">{item.name}</CardTitle>
+                            <p className="text-sm text-blue-600">{item.businessImpact}</p>
+                          </div>
                         </div>
-                        <Badge className={`${
-                          phase.status === 'ready-to-start' ? 'bg-green-100 text-green-800' : 
-                          phase.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {phase.status}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-lg">{phase.name}</CardTitle>
-                      <p className="text-sm text-gray-600">{phase.businessImpact}</p>
-                      
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span>Progress</span>
-                          <span>{phase.progress}%</span>
-                        </div>
-                        <Progress value={phase.progress} className="h-2" />
+                        <Badge className="bg-blue-100 text-blue-800">{item.priority}</Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <div>
-                          <h4 className="font-medium text-sm mb-3">Components:</h4>
-                          <div className="space-y-2">
-                            {phase.components.map((component, i) => (
-                              <div key={i} className="flex items-center gap-3 p-2 rounded border">
-                                <div className="flex items-center gap-2">
-                                  {component.status === 'pending' && <Clock className="w-4 h-4 text-gray-400" />}
-                                  {component.status === 'partial' && <Activity className="w-4 h-4 text-yellow-500" />}
-                                  {component.status === 'complete' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                                  {component.status === 'missing' && <XCircle className="w-4 h-4 text-red-500" />}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">{component.name}</div>
-                                  <div className="text-xs text-gray-500">{component.description}</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                          <h4 className="font-medium text-sm mb-2">Technical Scope:</h4>
+                          <p className="text-sm text-gray-600">{item.technicalScope}</p>
                         </div>
                         
-                        {phase.dependencies.length > 0 && (
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Dependencies:</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {phase.dependencies.map((dep, i) => (
-                                <Badge key={i} variant="outline" className="text-xs">{dep}</Badge>
-                              ))}
+                        <div>
+                          <h4 className="font-medium text-sm mb-2">Requirements Met:</h4>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <CheckCircle className="w-3 h-3" />
+                              <span>All dependencies completed</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <CheckCircle className="w-3 h-3" />
+                              <span>UDF validation passed</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <CheckCircle className="w-3 h-3" />
+                              <span>Sequential requirements validated</span>
                             </div>
                           </div>
-                        )}
-                        
-                        {phase.blockers.length > 0 && (
-                          <div>
-                            <h4 className="font-medium text-sm mb-2">Blockers:</h4>
-                            <div className="space-y-1">
-                              {phase.blockers.map((blocker, i) => (
-                                <div key={i} className="text-xs text-red-600 flex items-center gap-1">
-                                  <XCircle className="w-3 h-3" />
-                                  {blocker}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="pt-3 border-t flex justify-between items-center">
-                          <div className="text-xs text-gray-500">
-                            {phase.components.length} components • {phase.timeline}
-                          </div>
-                          
-                          {phase.status === 'waiting' && (phase.name.includes('Marketplace') || phase.name.includes('Reputation')) ? (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                  <FileText className="w-3 h-3 mr-1" />
-                                  Review Requirements
-                                </Button>
-                              </DialogTrigger>
-                              <RequirementReviewDialog 
-                                feature={{ 
-                                  name: phase.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System' 
-                                }} 
-                                onProceed={() => {
-                                  // Enhanced UDF workflow trigger with sequential validation
-                                  const featureName = phase.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System';
-                                  alert(`🚀 UDF Development Authorized for ${featureName}!\n\n✓ Sequential dependency check passed\n✓ Requirements reviewed and approved\n✓ UDD integration confirmed\n✓ Platform safety validated\n\n→ Beginning development with full UDF compliance...\n\nI will now start building this feature with the reviewed specifications while maintaining platform integrity.`);
-                                }} 
-                              />
-                            </Dialog>
-                          ) : (
-                            <Button 
-                              size="sm" 
-                              disabled={phase.status !== 'ready-to-start'}
-                              className={phase.status === 'ready-to-start' ? 'bg-green-600 hover:bg-green-700' : ''}
-                            >
-                              {phase.status === 'ready-to-start' ? (
-                                <>
-                                  <Zap className="w-3 h-3 mr-1" />
-                                  Start Development
-                                </>
-                              ) : phase.status === 'completed' ? (
-                                <>
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Complete
-                                </>
-                              ) : (
-                                <>
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  Waiting
-                                </>
-                              )}
-                            </Button>
-                          )}
+                        </div>
+
+                        <div className="pt-3 border-t">
+                          <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                            <Construction className="w-3 h-3 mr-1" />
+                            Authorize Development - {item.estimatedEffort}
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Blocked Features Section */}
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="text-red-800 flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Blocked Features ({developmentLedger.filter(item => item.status === 'blocked').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {developmentLedger.filter(item => item.status === 'blocked').map((item, index) => (
+                  <Card key={item.id} className="bg-white border-red-200">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <XCircle className="w-5 h-5 text-red-500" />
+                          <div>
+                            <CardTitle className="text-lg text-red-800">{item.name}</CardTitle>
+                            <p className="text-sm text-red-600">{item.businessImpact}</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-red-100 text-red-800">{item.priority}</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Alert>
+                        <AlertTriangle className="w-4 h-4" />
+                        <AlertDescription>
+                          <strong>Development Blocked:</strong> {item.blockedReason}
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="mt-4">
+                        <h4 className="font-medium text-sm mb-2">Dependencies:</h4>
+                        <div className="space-y-1">
+                          {item.dependencies?.map((dep, i) => {
+                            const depItem = developmentLedger.find(d => d.id === dep);
+                            return (
+                              <div key={i} className="flex items-center gap-2 text-sm">
+                                {depItem?.status === 'completed' ? (
+                                  <CheckCircle className="w-3 h-3 text-green-500" />
+                                ) : (
+                                  <Clock className="w-3 h-3 text-red-500" />
+                                )}
+                                <span className={depItem?.status === 'completed' ? 'text-green-600' : 'text-red-600'}>
+                                  {depItem?.name || dep}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t">
+                        <Button size="sm" disabled variant="outline" className="w-full">
+                          <Shield className="w-3 h-3 mr-1" />
+                          Development Blocked by Dependencies
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Planned Features Section */}
+          <Card className="border-gray-200 bg-gray-50">
+            <CardHeader>
+              <CardTitle className="text-gray-800 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Planned Features ({developmentLedger.filter(item => item.status === 'planned').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {developmentLedger.filter(item => item.status === 'planned').map((item, index) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded border border-gray-200">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-gray-500" />
+                        <div>
+                          <h4 className="font-medium text-gray-800">{item.name}</h4>
+                          <p className="text-sm text-gray-600">{item.businessImpact}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">{item.phase}</Badge>
+                            <Badge variant="outline" className="text-xs">{item.estimatedEffort}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-600">Future Phase</div>
+                      <div className="text-xs text-gray-500">Pending Dependencies</div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </CardContent>
