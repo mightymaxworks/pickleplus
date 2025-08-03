@@ -272,18 +272,6 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     coachMarketplace: { status: 'critical-gap', progress: 25, critical: true },
     reputationSystem: { status: 'missing', progress: 0, critical: false }
   });
-      status: 'idle',
-      progress: 0,
-      steps: [
-        { name: 'Access Coach Dashboard', route: '/coach/dashboard', status: 'idle' },
-        { name: 'Review Student Progress', route: '/student-progress-analytics', status: 'idle' },
-        { name: 'Plan Curriculum', route: '/coach/curriculum', status: 'idle' },
-        { name: 'Schedule Management', route: '/coach/schedule', status: 'idle' },
-        { name: 'Business Analytics', route: '/coach-business-dashboard', status: 'idle' }
-      ],
-      criticalPath: false
-    }
-  ]);
 
   const [apiTests, setApiTests] = useState([
     {
@@ -581,39 +569,39 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     {
       category: 'Curriculum Management',
       tests: [
-        { name: 'Get All Drills', endpoint: '/api/curriculum/drills', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get Drill Categories', endpoint: '/api/curriculum/categories', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Search Drills', endpoint: '/api/curriculum/drills/search?q=forehand', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get Drills by Skill Level', endpoint: '/api/curriculum/drills/skill-level/beginner', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get Public Templates', endpoint: '/api/curriculum/templates', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get Coach Lesson Plans', endpoint: '/api/curriculum/lesson-plans/my-plans', method: 'GET', status: 'idle', responseTime: null }
+        { name: 'Get All Drills', endpoint: '/api/curriculum/drills', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get Drill Categories', endpoint: '/api/curriculum/categories', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Search Drills', endpoint: '/api/curriculum/drills/search?q=forehand', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get Drills by Skill Level', endpoint: '/api/curriculum/drills/skill-level/beginner', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get Public Templates', endpoint: '/api/curriculum/templates', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get Coach Lesson Plans', endpoint: '/api/curriculum/lesson-plans/my-plans', method: 'GET', status: 'idle', responseTime: null as number | null }
       ]
     },
     {
       category: 'SAGE AI Integration',
       tests: [
-        { name: 'Get User Profile', endpoint: '/api/sage/user-profile', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get Drill Recommendations', endpoint: '/api/sage/drill-recommendations', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get CourtIQ Details', endpoint: '/api/sage/courtiq-details', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Get Match History', endpoint: '/api/sage/match-history?limit=5', method: 'GET', status: 'idle', responseTime: null }
+        { name: 'Get User Profile', endpoint: '/api/sage/user-profile', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get Drill Recommendations', endpoint: '/api/sage/drill-recommendations', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get CourtIQ Details', endpoint: '/api/sage/courtiq-details', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Get Match History', endpoint: '/api/sage/match-history?limit=5', method: 'GET', status: 'idle', responseTime: null as number | null }
       ]
     },
     {
       category: 'Coach Business Analytics',
       tests: [
-        { name: 'Revenue Analytics', endpoint: '/api/coach/analytics/revenue', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Client Metrics', endpoint: '/api/coach/analytics/clients', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Schedule Optimization', endpoint: '/api/coach/analytics/schedule', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Performance KPIs', endpoint: '/api/coach/analytics/kpis', method: 'GET', status: 'idle', responseTime: null }
+        { name: 'Revenue Analytics', endpoint: '/api/coach/analytics/revenue', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Client Metrics', endpoint: '/api/coach/analytics/clients', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Schedule Optimization', endpoint: '/api/coach/analytics/schedule', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Performance KPIs', endpoint: '/api/coach/analytics/kpis', method: 'GET', status: 'idle', responseTime: null as number | null }
       ]
     },
     {
       category: 'Student Progress Tracking',
       tests: [
-        { name: 'Progress Overview', endpoint: '/api/coach/students/progress-overview', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Skill Assessments', endpoint: '/api/coach/students/assessments', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Goal Tracking', endpoint: '/api/coach/students/goals', method: 'GET', status: 'idle', responseTime: null },
-        { name: 'Session History', endpoint: '/api/coach/students/sessions', method: 'GET', status: 'idle', responseTime: null }
+        { name: 'Progress Overview', endpoint: '/api/coach/students/progress-overview', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Skill Assessments', endpoint: '/api/coach/students/assessments', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Goal Tracking', endpoint: '/api/coach/students/goals', method: 'GET', status: 'idle', responseTime: null as number | null },
+        { name: 'Session History', endpoint: '/api/coach/students/sessions', method: 'GET', status: 'idle', responseTime: null as number | null }
       ]
     }
   ];
@@ -783,14 +771,14 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: response.ok ? 'passed' : 'failed',
-        responseTime: responseTime
+        responseTime: responseTime as number | null
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: 'failed',
-        responseTime: responseTime
+        responseTime: responseTime as number | null
       };
     }
     
