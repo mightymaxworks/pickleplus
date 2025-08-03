@@ -933,10 +933,10 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Complete Coaching Ecosystem Dashboard
+          Universal Development Dashboard (UDD)
         </h1>
         <p className="text-gray-600">
-          Phase 1 & Phase 2 system validation - Ready for comprehensive testing
+          Unified tracking for modules, user journeys, UI/UX development, and system validation
         </p>
       </div>
 

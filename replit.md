@@ -12,12 +12,22 @@ Coach workflow preferences:
 
 ## Development Guidelines
 - Keep things simple - avoid unnecessary complex naming like "Enhanced" prefixes
-- Use only `/coaching-workflow-analysis` route for development dashboard
+- Use only `/udd` route for Universal Development Dashboard
 - Tab labels must be concise and easy to navigate
 - All critical gaps development strategy must be integrated into universal development dashboard before proceeding with implementation
 
 ## System Architecture
-Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration. A mandatory Development Dashboard (`client/src/pages/CoachingWorkflowAnalysis.tsx`) auto-tests all modular APIs, providing real-time validation and status of all modules.
+Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.
+
+### Universal Development Framework
+- **Universal Development Dashboard (UDD)**: Located at `/udd` route (`client/src/pages/CoachingWorkflowAnalysis.tsx`), this dashboard serves as the central hub for tracking all development workflows including:
+  - Module development and integration status
+  - User journey implementation and testing
+  - UI/UX component development tracking
+  - API endpoint validation and testing
+  - Critical gaps analysis and resolution
+  - Phase-based development progression
+- **Unified Tracking**: All development activities are monitored through the UDD, providing real-time validation and comprehensive status reporting across the entire platform ecosystem.
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
@@ -64,7 +74,7 @@ The platform is developed in phases, with current focus on core coaching marketp
 - **Payment Architecture**: Revenue from PCP Certifications, Coaching Sessions (tiered commission), and optional Premium Coach Subscriptions ($19.99/month) for advanced business tools.
 - **Design System Standards (PKL-278651 Framework)**: Mandatory mobile-first design, gesture navigation, 44px+ touch targets, micro-animations, voice-ready architecture, progressive disclosure. Color scheme includes Primary Orange, Secondary Blue, with Inter and Roboto Mono fonts.
 - **Critical Gaps Analysis System**: Comprehensive deployment readiness assessment with identified critical gaps: PCP Sequential Enforcement (10% complete), Coach Marketplace Discovery (25% complete), and Coach Reputation System (0% complete).
-- **Universal Development Dashboard**: Integrated at `/coaching-workflow-analysis` with Critical Gaps and Development phases tabs for tracking progress on missing components.
+- **Universal Development Dashboard (UDD)**: Integrated at `/udd` route as part of the unified development framework. Features Critical Gaps and Development phases tabs for tracking progress on missing components, user journeys, UI/UX development, and module implementation status.
 
 ## External Dependencies
 ### Core Dependencies

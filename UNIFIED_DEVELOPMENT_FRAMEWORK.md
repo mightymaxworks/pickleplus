@@ -26,7 +26,7 @@ server/routes/[feature-name]-routes.ts
 2. **Export Registration Function**: `export function registerFeatureRoutes(app: Express)`
 3. **Import in Main Routes**: `import { registerFeatureRoutes } from "./routes/feature-routes"`
 4. **Register in Main Function**: `registerFeatureRoutes(app)`
-5. **Test via Development Dashboard**: Auto-tested via `/coaching-workflow-analysis`
+5. **Test via Development Dashboard**: Auto-tested via `/udd` (Universal Development Dashboard)
 
 ### Anti-Patterns (FORBIDDEN)
 - ❌ **Monolithic Routes**: Single file with all endpoints
@@ -57,7 +57,7 @@ server/routes/[feature-name]-routes.ts
 
 ### 🟡 LEVEL 3: DEVELOPMENT DASHBOARD INTEGRATION
 - All endpoints accessible via Development Dashboard
-- API tests show "success" status in `/coaching-workflow-analysis`
+- API tests show "success" status in `/udd` dashboard
 - Authentication properly implemented where required
 - **Status**: "Dashboard Integration Complete" (NOT "Complete")
 - **Evidence Required**: Dashboard shows green status for all endpoints
@@ -82,12 +82,12 @@ server/routes/[feature-name]-routes.ts
 ### Mandatory Development Workflow
 1. **Feature Development**: Create modular route file
 2. **Registration**: Add to main routes.ts with proper registration
-3. **Automatic Testing**: System automatically tests via `/coaching-workflow-analysis`
+3. **Automatic Testing**: System automatically tests via `/udd` (Universal Development Dashboard)
 4. **User Journey Validation**: Test complete user workflows end-to-end
 5. **Evidence Collection**: Dashboard provides real-time status verification
 6. **Completion Validation**: Only claim completion after dashboard shows operational status
 
-### Development Dashboard Requirements (`/coaching-workflow-analysis`)
+### Universal Development Dashboard Requirements (`/udd`)
 - **Real-time API Testing**: Auto-test all registered route modules
 - **Modular Architecture Validation**: Verify each module registers properly
 - **Authentic Data Verification**: Confirm storage layer integration (no mock data)
@@ -203,7 +203,7 @@ Based on Development Dashboard evidence:
 **Evidence Package:**
 - ✅ Route Module: `server/routes/[feature]-routes.ts` 
 - ✅ Registration: Properly integrated in main routes
-- ✅ Dashboard Status: All endpoints green in `/coaching-workflow-analysis`
+- ✅ Dashboard Status: All endpoints green in `/udd` (Universal Development Dashboard)
 - ✅ Authentic Data: Storage layer integration confirmed
 - ✅ User Testing: [Screenshots of working user journey]
 - ✅ Performance: <200ms average response time
@@ -218,7 +218,7 @@ Based on Development Dashboard evidence:
 ## FRAMEWORK ENFORCEMENT
 
 ### Automatic Validation
-- All development work MUST be validated via `/coaching-workflow-analysis`
+- All development work MUST be validated via `/udd` (Universal Development Dashboard)
 - No completion claims without dashboard evidence
 - Automatic redirect to dashboard after any major feature work
 
