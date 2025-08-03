@@ -1,10 +1,35 @@
-# Unified Development Framework
-**PKL-278651-UNIFIED-DEV-FRAMEWORK - Modular Architecture + Development Accuracy Standards**
+# Unified Development Framework (UDF)
+**PKL-278651-UNIFIED-DEV-FRAMEWORK - Comprehensive Development Workflow Standards**
 
 ## FRAMEWORK INTEGRATION
-This framework unifies two critical methodologies:
+This framework unifies critical development methodologies:
 1. **Development Accuracy Framework**: Evidence-based completion verification
 2. **Modular Architecture Framework**: 80+ specialized route modules with authentic data
+3. **Requirements Planning Protocol**: Mandatory UDD integration before development
+4. **Mobile-First Design Standards**: Optimized, concise interfaces for all dashboard components
+
+## REQUIREMENTS PLANNING PROTOCOL
+
+### Mandatory Pre-Development Workflow
+Before any new feature development begins:
+
+1. **Discussion & Confirmation**: User discusses new requirements and confirms scope
+2. **UDD Requirements Integration**: Update Universal Development Dashboard with:
+   - New feature requirements breakdown
+   - Phase-based development plan
+   - Mobile-optimized interface considerations
+   - Testing and validation criteria
+3. **Review & Approval**: Review updated UDD before proceeding with implementation
+4. **Development Execution**: Begin development only after UDD integration complete
+
+### UDD Integration Standards
+Every new requirement MUST be added to UDD with:
+- **Feature Name**: Clear, concise identifier
+- **Phase Breakdown**: Logical development phases (Phase 1, 2, 3...)
+- **Mobile Optimization**: Interface designed for mobile-first experience
+- **Success Criteria**: Measurable completion indicators
+- **Dependencies**: Required prerequisites and blockers
+- **Testing Protocol**: Validation and evidence requirements
 
 ## MODULAR ARCHITECTURE STANDARDS
 
@@ -80,12 +105,15 @@ server/routes/[feature-name]-routes.ts
 ## DEVELOPMENT DASHBOARD INTEGRATION
 
 ### Mandatory Development Workflow
-1. **Feature Development**: Create modular route file
-2. **Registration**: Add to main routes.ts with proper registration
-3. **Automatic Testing**: System automatically tests via `/udd` (Universal Development Dashboard)
-4. **User Journey Validation**: Test complete user workflows end-to-end
-5. **Evidence Collection**: Dashboard provides real-time status verification
-6. **Completion Validation**: Only claim completion after dashboard shows operational status
+1. **Requirements Discussion**: User discusses new feature requirements and confirms scope
+2. **UDD Planning Integration**: Update UDD with requirements breakdown, phases, and mobile optimization plan
+3. **Pre-Development Review**: Review and approve UDD updates before starting development
+4. **Feature Development**: Create modular route file following approved plan
+5. **Registration**: Add to main routes.ts with proper registration
+6. **Automatic Testing**: System automatically tests via `/udd` (Universal Development Dashboard)
+7. **User Journey Validation**: Test complete user workflows end-to-end
+8. **Evidence Collection**: Dashboard provides real-time status verification
+9. **Completion Validation**: Only claim completion after dashboard shows operational status
 
 ### Universal Development Dashboard Requirements (`/udd`)
 - **Real-time API Testing**: Auto-test all registered route modules
@@ -95,6 +123,9 @@ server/routes/[feature-name]-routes.ts
 - **Authentication Testing**: Verify security implementation
 - **User Journey Testing**: Complete workflow validation (happy path + error scenarios)
 - **Evidence Generation**: Provide screenshots/test results for completion claims
+- **Mobile-First Interface**: All dashboard sections optimized for mobile devices
+- **Concise Information Display**: Minimize length, maximize clarity for mobile viewing
+- **Requirements Planning**: Integration point for all new feature discussions and approvals
 
 ## USER JOURNEY TESTING FRAMEWORK
 
@@ -229,4 +260,21 @@ Based on Development Dashboard evidence:
 4. **Dashboard Integration**: All features must be testable via development dashboard
 5. **Evidence Documentation**: All completion claims require evidence package
 
-This unified framework ensures both architectural integrity and truthful progress reporting through evidence-based verification.
+## MOBILE-FIRST DESIGN STANDARDS
+
+### UDD Interface Requirements
+- **Responsive Design**: All dashboard sections must work seamlessly on mobile devices
+- **Concise Information**: Minimize text length, use icons and visual indicators
+- **Touch-Friendly**: 44px+ touch targets, easy navigation
+- **Progressive Disclosure**: Show essential information first, expandable details
+- **Fast Loading**: Optimized for mobile data connections
+- **Accessible**: Screen reader compatible, high contrast options
+
+### Dashboard Section Standards
+- **Overview Tab**: High-level system status, max 3-4 key metrics
+- **Development Tab**: Phase progress with visual indicators, expandable details
+- **LMS Tab**: Quick test results with one-tap actions
+- **Critical Gaps**: Priority issues with clear action items
+- **User Journeys**: Visual workflow status, mobile-optimized testing
+
+This unified framework ensures architectural integrity, truthful progress reporting through evidence-based verification, and seamless mobile-first user experience across all development activities.

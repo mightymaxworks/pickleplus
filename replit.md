@@ -14,6 +14,8 @@ Coach workflow preferences:
 - Keep things simple - avoid unnecessary complex naming like "Enhanced" prefixes
 - Use only `/udd` route for Universal Development Dashboard
 - Tab labels must be concise and easy to navigate
+- **Mandatory Pre-Development Protocol**: All new requirements must be discussed, confirmed, and integrated into UDD before development begins
+- **Mobile-First UDD Design**: All dashboard sections must be mobile-optimized and concise
 - All critical gaps development strategy must be integrated into universal development dashboard before proceeding with implementation
 
 ## System Architecture
@@ -21,6 +23,8 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 
 ### Universal Development Framework
 - **Universal Development Dashboard (UDD)**: Located at `/udd` route (`client/src/pages/CoachingWorkflowAnalysis.tsx`), this dashboard serves as the central hub for tracking all development workflows including:
+  - **Requirements Planning**: Mandatory integration point for all new feature discussions and approvals
+  - **Mobile-First Design**: Optimized interface for mobile devices with concise information display
   - Module development and integration status
   - User journey implementation and testing
   - UI/UX component development tracking
@@ -28,6 +32,7 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
   - Critical gaps analysis and resolution
   - Phase-based development progression
 - **Unified Tracking**: All development activities are monitored through the UDD, providing real-time validation and comprehensive status reporting across the entire platform ecosystem.
+- **Pre-Development Protocol**: No development begins until requirements are discussed, confirmed, and integrated into UDD with proper phase planning.
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
