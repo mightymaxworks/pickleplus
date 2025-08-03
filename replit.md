@@ -37,6 +37,7 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
   - RequirementReviewDialog with sequential validation checks
   - Workflow state management and history tracking
   - Proper dependency validation before development authorization
+  - **Agent Communication System**: "Begin Development" button generates and copies development request message for user to send to agent, triggering actual implementation work
 - **Unified Tracking**: All development activities are monitored through the UDD, providing real-time validation and comprehensive status reporting across the entire platform ecosystem.
 - **Pre-Development Protocol**: No development begins until requirements are discussed, confirmed, and integrated into UDD with proper phase planning.
 - **Development Workflow**: Discussion → UDD Integration → Review & Validation → Sequential Dependency Check → Development Authorization → Implementation
