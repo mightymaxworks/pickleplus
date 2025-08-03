@@ -539,8 +539,8 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     },
     {
       phase: 'Phase 4: PCP Sequential Enforcement System',
-      status: 'in-development',
-      progress: 75,
+      status: 'complete',
+      progress: 100,
       systems: [
         {
           name: 'PCP Sequential Level Validation',
@@ -941,54 +941,66 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="system-overview">Overview</TabsTrigger>
-          <TabsTrigger value="coaching-workflows">Coaching</TabsTrigger>
-          <TabsTrigger value="gaps">Critical Gaps</TabsTrigger>
-          <TabsTrigger value="development">Development</TabsTrigger>
-          <TabsTrigger value="lms-testing">LMS</TabsTrigger>
-          <TabsTrigger value="journey-testing">Journeys</TabsTrigger>
-          <TabsTrigger value="api-testing">APIs</TabsTrigger>
-          <TabsTrigger value="route-testing">Routes</TabsTrigger>
+        <TabsList className="flex flex-wrap justify-start w-full overflow-x-auto sm:grid sm:grid-cols-8 gap-1 h-auto p-1">
+          <TabsTrigger value="system-overview" className="text-xs px-2 py-1 min-w-fit">Overview</TabsTrigger>
+          <TabsTrigger value="coaching-workflows" className="text-xs px-2 py-1 min-w-fit">Coaching</TabsTrigger>
+          <TabsTrigger value="gaps" className="text-xs px-2 py-1 min-w-fit">Gaps</TabsTrigger>
+          <TabsTrigger value="development" className="text-xs px-2 py-1 min-w-fit">Dev</TabsTrigger>
+          <TabsTrigger value="lms-testing" className="text-xs px-2 py-1 min-w-fit">LMS</TabsTrigger>
+          <TabsTrigger value="journey-testing" className="text-xs px-2 py-1 min-w-fit">Journeys</TabsTrigger>
+          <TabsTrigger value="api-testing" className="text-xs px-2 py-1 min-w-fit">APIs</TabsTrigger>
+          <TabsTrigger value="route-testing" className="text-xs px-2 py-1 min-w-fit">Routes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="system-overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <Card className="border-l-4 border-l-green-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Phase 1 Progress</CardTitle>
+              <CardHeader className="pb-1">
+                <CardTitle className="text-xs font-medium text-gray-600">Phase 4</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600 mb-2">
-                  {Math.round((phase1Progress.completedFeatures / phase1Progress.totalFeatures) * 100)}%
+              <CardContent className="pt-1">
+                <div className="text-lg font-bold text-green-600 flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  100%
                 </div>
-                <Progress value={(phase1Progress.completedFeatures / phase1Progress.totalFeatures) * 100} className="mb-2" />
-                <p className="text-xs text-gray-500">
-                  {phase1Progress.completedFeatures} of {phase1Progress.totalFeatures} systems complete
-                </p>
+                <p className="text-xs text-gray-500">Sequential Complete</p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-blue-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">System Health</CardTitle>
+              <CardHeader className="pb-1">
+                <CardTitle className="text-xs font-medium text-gray-600">System</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600 mb-2">
-                  <Activity className="w-6 h-6 inline mr-2" />
-                  Operational
+              <CardContent className="pt-1">
+                <div className="text-lg font-bold text-blue-600 flex items-center gap-1">
+                  <Activity className="w-4 h-4" />
+                  Live
                 </div>
-                <p className="text-xs text-gray-500">All core systems running</p>
+                <p className="text-xs text-gray-500">All modules active</p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-purple-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Next Phase</CardTitle>
+              <CardHeader className="pb-1">
+                <CardTitle className="text-xs font-medium text-gray-600">Tests</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600 mb-2">Phase 2</div>
-                <p className="text-xs text-gray-500">Franchise & Retail Ready</p>
+              <CardContent className="pt-1">
+                <div className="text-lg font-bold text-purple-600">
+                  {stats.passed}/{stats.total}
+                </div>
+                <p className="text-xs text-gray-500">APIs passing</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="pb-1">
+                <CardTitle className="text-xs font-medium text-gray-600">UDD</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-1">
+                <div className="text-lg font-bold text-orange-600">
+                  Ready
+                </div>
+                <p className="text-xs text-gray-500">Mobile optimized</p>
               </CardContent>
             </Card>
           </div>
