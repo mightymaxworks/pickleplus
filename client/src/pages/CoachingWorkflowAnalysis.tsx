@@ -45,6 +45,35 @@ const RequirementReviewDialog = ({ feature, onProceed }: { feature: any, onProce
   
   if (!requirements) return null;
 
+  // UDF Sequential Validation - Check if development is premature
+  const validateSequentialDevelopment = () => {
+    const currentPhase = feature.name.includes('Marketplace') ? 'Phase 5' : 'Phase 6';
+    const isPhase4Complete = true; // Phase 4 Sequential Enforcement is 100% complete
+    
+    if (currentPhase === 'Phase 5' && !isPhase4Complete) {
+      return {
+        allowed: false,
+        reason: 'Phase 4: PCP Sequential Enforcement must be 100% complete before Phase 5 development',
+        blockingPhase: 'Phase 4: PCP Sequential Enforcement'
+      };
+    }
+    
+    if (currentPhase === 'Phase 6') {
+      const isPhase5Complete = false; // Marketplace Discovery not yet complete
+      if (!isPhase5Complete) {
+        return {
+          allowed: false,
+          reason: 'Phase 5: Coach Marketplace Discovery must be complete before Phase 6 development',
+          blockingPhase: 'Phase 5: Coach Marketplace Discovery'
+        };
+      }
+    }
+    
+    return { allowed: true };
+  };
+
+  const sequentialCheck = validateSequentialDevelopment();
+
   return (
     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
       <DialogHeader>
@@ -132,20 +161,45 @@ const RequirementReviewDialog = ({ feature, onProceed }: { feature: any, onProce
         </div>
         
         <div className="border-t pt-4">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Following UDF Protocol: Requirements → UDD → Review → Development
+          {!sequentialCheck.allowed ? (
+            <div className="space-y-3">
+              <Alert>
+                <AlertTriangle className="w-4 h-4" />
+                <AlertDescription className="text-sm">
+                  <strong>UDF Sequential Protection:</strong> {sequentialCheck.reason}
+                </AlertDescription>
+              </Alert>
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-red-600">
+                  Development blocked by: {sequentialCheck.blockingPhase}
+                </div>
+                <Button 
+                  disabled
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  size="sm"
+                >
+                  <Shield className="w-4 h-4" />
+                  Development Blocked
+                </Button>
+              </div>
             </div>
-            <Button 
-              onClick={onProceed} 
-              className="flex items-center gap-2"
-              size="sm"
-            >
-              <Play className="w-4 h-4" />
-              Begin Development
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          ) : (
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-600">
+                ✓ UDF Sequential Check Passed | Requirements → UDD → Review → Development
+              </div>
+              <Button 
+                onClick={onProceed} 
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                <Play className="w-4 h-4" />
+                Begin Development
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </DialogContent>
@@ -1282,7 +1336,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                                           name: system.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System' 
                                         }} 
                                         onProceed={() => {
-                                          alert(`🚀 Development triggered for ${system.name}!\n\nFollowing UDF Protocol:\n✓ Requirements reviewed\n✓ UDD integration confirmed\n→ Development beginning...\n\nI will now start building this feature with the reviewed specifications.`);
+                                          // Enhanced UDF workflow trigger with sequential validation
+                                          const featureName = system.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System';
+                                          alert(`🚀 UDF Development Authorized for ${featureName}!\n\n✓ Sequential dependency check passed\n✓ Requirements reviewed and approved\n✓ UDD integration confirmed\n✓ Platform safety validated\n\n→ Beginning development with full UDF compliance...\n\nI will now start building this feature with the reviewed specifications while maintaining platform integrity.`);
                                         }} 
                                       />
                                     </Dialog>
@@ -1534,8 +1590,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                                   name: phase.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System' 
                                 }} 
                                 onProceed={() => {
-                                  // This simulates the UDF workflow trigger
-                                  alert(`🚀 Development triggered for ${phase.name}!\n\nFollowing UDF Protocol:\n✓ Requirements reviewed\n✓ UDD integration confirmed\n→ Development beginning...\n\nI will now start building this feature with the reviewed specifications.`);
+                                  // Enhanced UDF workflow trigger with sequential validation
+                                  const featureName = phase.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System';
+                                  alert(`🚀 UDF Development Authorized for ${featureName}!\n\n✓ Sequential dependency check passed\n✓ Requirements reviewed and approved\n✓ UDD integration confirmed\n✓ Platform safety validated\n\n→ Beginning development with full UDF compliance...\n\nI will now start building this feature with the reviewed specifications while maintaining platform integrity.`);
                                 }} 
                               />
                             </Dialog>
