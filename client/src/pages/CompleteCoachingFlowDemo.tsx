@@ -248,38 +248,39 @@ const CompleteCoachingFlowDemo: React.FC = () => {
                       }`}
                       onClick={() => isEligible && handleLevelSelect(level.level)}
                     >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{level.badge}</span>
-                          <div>
-                            <div className="font-semibold">
-                              Level {level.level}: {level.name}
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{level.badge}</span>
+                            <div>
+                              <div className="font-semibold">
+                                Level {level.level}: {level.name}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {level.description}
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {level.skills.map((skill, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600">
-                              {level.description}
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold">
+                              ${level.cost.toLocaleString()}
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {level.skills.map((skill, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {skill}
-                                </Badge>
-                              ))}
+                            <div className="text-sm text-green-600">
+                              {level.commission}% commission rate
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold">
-                            ${level.cost.toLocaleString()}
-                          </div>
-                          <div className="text-sm text-green-600">
-                            {level.commission}% commission rate
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
               
               <Alert>
