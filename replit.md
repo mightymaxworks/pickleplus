@@ -33,6 +33,7 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
   - Phase-based development progression
 - **Unified Tracking**: All development activities are monitored through the UDD, providing real-time validation and comprehensive status reporting across the entire platform ecosystem.
 - **Pre-Development Protocol**: No development begins until requirements are discussed, confirmed, and integrated into UDD with proper phase planning.
+- **Development Workflow**: Discussion → UDD Integration → Review & Validation → Sequential Dependency Check → Development Authorization → Implementation
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
