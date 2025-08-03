@@ -1099,14 +1099,14 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: response.ok ? 'passed' : 'failed',
-        responseTime: responseTime as number | null
+        responseTime: responseTime
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: 'failed',
-        responseTime: responseTime as number | null
+        responseTime: responseTime
       };
     }
     
@@ -1669,7 +1669,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                       <div className="mt-4">
                         <h4 className="font-medium text-sm mb-2">Dependencies:</h4>
                         <div className="space-y-1">
-                          {item.dependencies.map((dep, i) => {
+                          {item.dependencies?.map((dep, i) => {
                             const depItem = developmentLedger.find(d => d.id === dep);
                             return (
                               <div key={i} className="flex items-center gap-2 text-sm">
@@ -1730,58 +1730,6 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                       <div className="text-xs text-gray-500">Pending Dependencies</div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {criticalBlockers.map((blocker, index) => (
-                  <Card key={index} className={`border-l-4 ${
-                    blocker.impact === 'CRITICAL' ? 'border-l-red-500' : 
-                    blocker.impact === 'HIGH' ? 'border-l-orange-500' : 'border-l-yellow-500'
-                  }`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <Badge className={`${
-                          blocker.impact === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
-                          blocker.impact === 'HIGH' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {blocker.impact}
-                        </Badge>
-                        <Badge variant="outline">{blocker.estimatedEffort}</Badge>
-                      </div>
-                      <CardTitle className="text-lg">{blocker.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-600 mb-4">{blocker.description}</p>
-                      
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="font-medium text-sm mb-2">Affected Systems:</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {blocker.affectedSystems.map((system, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs">{system}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-medium text-sm mb-2">Solution:</h4>
-                          <p className="text-xs text-gray-600">{blocker.solution}</p>
-                        </div>
-                        
-                        <div className="pt-2 border-t">
-                          <Badge className={`${
-                            blocker.status === 'identified' ? 'bg-yellow-100 text-yellow-800' : 
-                            blocker.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                          }`}>
-                            {blocker.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
                 ))}
               </div>
             </CardContent>
