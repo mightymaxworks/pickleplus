@@ -1592,10 +1592,9 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
-        <TabsList className="flex flex-wrap justify-start w-full overflow-x-auto sm:grid sm:grid-cols-7 gap-1 h-auto p-1">
+        <TabsList className="flex flex-wrap justify-start w-full overflow-x-auto sm:grid sm:grid-cols-6 gap-1 h-auto p-1">
           <TabsTrigger value="system-overview" className="text-xs px-2 py-1 min-w-fit">Overview</TabsTrigger>
-          <TabsTrigger value="coaching-workflows" className="text-xs px-2 py-1 min-w-fit">Coaching</TabsTrigger>
-          <TabsTrigger value="development" className="text-xs px-2 py-1 min-w-fit">Dev</TabsTrigger>
+          <TabsTrigger value="development" className="text-xs px-2 py-1 min-w-fit">Development</TabsTrigger>
           <TabsTrigger value="lms-testing" className="text-xs px-2 py-1 min-w-fit">LMS</TabsTrigger>
           <TabsTrigger value="journey-testing" className="text-xs px-2 py-1 min-w-fit">Journeys</TabsTrigger>
           <TabsTrigger value="api-testing" className="text-xs px-2 py-1 min-w-fit">APIs</TabsTrigger>
@@ -1691,122 +1690,6 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="coaching-workflows" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Comprehensive Coaching Workflow Phases
-              </CardTitle>
-              <p className="text-gray-600">Detailed breakdown of all coaching system phases and their operational status</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {coachingWorkflowPhases.map((phase, phaseIndex) => (
-                  <Card key={phaseIndex} className={`border-l-4 ${phase.status === 'complete' ? 'border-l-green-500' : phase.status === 'in-progress' ? 'border-l-yellow-500' : 'border-l-blue-500'}`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl font-bold">{phase.phase}</CardTitle>
-                        <div className="flex items-center gap-2">
-                          <Badge className={
-                            phase.status === 'complete' ? 'bg-green-100 text-green-800' : 
-                            phase.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 
-                            'bg-blue-100 text-blue-800'
-                          }>
-                            {phase.status.toUpperCase()}
-                          </Badge>
-                          <span className="text-sm font-medium">{phase.progress}%</span>
-                        </div>
-                      </div>
-                      <Progress value={phase.progress} className="mt-2" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {phase.systems.map((system, systemIndex) => (
-                          <Card key={systemIndex} className="bg-gray-50">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="flex items-center gap-2 text-lg">
-                                {system.icon}
-                                {system.name}
-                                <Badge variant="outline" className={
-                                  system.status === 'complete' ? 'text-green-600 border-green-600' : 
-                                  system.status === 'in-progress' ? 'text-yellow-600 border-yellow-600' :
-                                  'text-blue-600 border-blue-600'
-                                }>
-                                  {system.status}
-                                </Badge>
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                <div>
-                                  <h4 className="font-medium text-sm text-gray-700 mb-2">Key Features:</h4>
-                                  <div className="grid grid-cols-1 gap-1">
-                                    {system.features.map((feature, featureIndex) => (
-                                      <div key={featureIndex} className="flex items-center gap-1 text-xs text-gray-600">
-                                        <CheckCircle className="w-3 h-3 text-green-500" />
-                                        <span>{feature}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                                
-                                <div>
-                                  <h4 className="font-medium text-sm text-gray-700 mb-2">Routes:</h4>
-                                  <div className="flex flex-wrap gap-1">
-                                    {system.routes.map((route, routeIndex) => (
-                                      <Badge key={routeIndex} variant="secondary" className="text-xs">
-                                        {route}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <h4 className="font-medium text-sm text-gray-700 mb-2">API Endpoints:</h4>
-                                  <div className="flex flex-wrap gap-1">
-                                    {system.apiEndpoints.map((endpoint, endpointIndex) => (
-                                      <Badge key={endpointIndex} variant="outline" className="text-xs font-mono">
-                                        {endpoint}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                                
-                                {system.status === 'missing' && (system.name.includes('Marketplace') || system.name.includes('Reputation')) && (
-                                  <div className="pt-3 border-t">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                                          <FileText className="w-3 h-3 mr-1" />
-                                          Review Requirements & Begin Development
-                                        </Button>
-                                      </DialogTrigger>
-                                      <RequirementReviewDialog 
-                                        feature={{ 
-                                          name: system.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System' 
-                                        }} 
-                                        onProceed={() => {
-                                          // Enhanced UDF workflow trigger with sequential validation
-                                          const featureName = system.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System';
-                                          alert(`🚀 UDF Development Authorized for ${featureName}!\n\n✓ Sequential dependency check passed\n✓ Requirements reviewed and approved\n✓ UDD integration confirmed\n✓ Platform safety validated\n\n→ Beginning development with full UDF compliance...\n\nI will now start building this feature with the reviewed specifications while maintaining platform integrity.`);
-                                        }} 
-                                      />
-                                    </Dialog>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="lms-testing" className="space-y-6">
           <div className="flex items-center justify-between">
@@ -1867,7 +1750,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="gaps" className="space-y-6">
+        <TabsContent value="development" className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Development Ledger</h3>
             <div className="flex gap-2">
