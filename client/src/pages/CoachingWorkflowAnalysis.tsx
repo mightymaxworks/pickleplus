@@ -4,8 +4,153 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play, BookOpen, Target, Zap, Calendar, Construction } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CheckCircle, XCircle, AlertTriangle, Clock, PlayCircle, Database, Server, Users, CreditCard, Shield, Activity, FileText, Globe, Settings, BarChart3, TrendingUp, MessageSquare, Play, BookOpen, Target, Zap, Calendar, Construction, ArrowRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+
+// Feature requirement details for development
+const featureRequirements = {
+  'Coach Marketplace Discovery': {
+    title: 'Coach Marketplace Discovery System',
+    description: 'AI-powered coach matching and discovery platform',
+    businessValue: 'Enables players to find perfect coaches based on skills, location, and availability',
+    phases: [
+      { name: 'Phase 1: Basic Search', tasks: ['Coach profiles', 'Search filters', 'Basic matching'], duration: '2 weeks' },
+      { name: 'Phase 2: AI Matching', tasks: ['ML algorithms', 'Preference learning', 'Smart recommendations'], duration: '3 weeks' },
+      { name: 'Phase 3: Advanced Features', tasks: ['Reviews system', 'Coach ratings', 'Booking integration'], duration: '2 weeks' }
+    ],
+    apiEndpoints: ['/api/coaches/search', '/api/coaches/match', '/api/coaches/recommendations'],
+    dependencies: ['Coach profiles', 'PCP certification system', 'Session booking'],
+    mobileOptimizations: ['Touch-friendly search', 'Swipe gestures', 'Quick filters'],
+    successCriteria: ['Sub-second search response', 'Accurate match scoring', 'Mobile-first interface']
+  },
+  'Coach Reputation System': {
+    title: 'Coach Reputation & Rating System',
+    description: 'Comprehensive coach evaluation and reputation management',
+    businessValue: 'Builds trust and quality assurance in the coaching marketplace',
+    phases: [
+      { name: 'Phase 1: Basic Ratings', tasks: ['5-star rating system', 'Review collection', 'Rating display'], duration: '2 weeks' },
+      { name: 'Phase 2: Advanced Metrics', tasks: ['Performance tracking', 'Student progress correlation', 'Achievement badges'], duration: '3 weeks' },
+      { name: 'Phase 3: Community Features', tasks: ['Verified reviews', 'Response system', 'Reputation scores'], duration: '2 weeks' }
+    ],
+    apiEndpoints: ['/api/coaches/ratings', '/api/coaches/reviews', '/api/coaches/reputation'],
+    dependencies: ['Session completion tracking', 'Student progress analytics', 'Coach profiles'],
+    mobileOptimizations: ['Quick rating taps', 'Photo review uploads', 'Voice feedback'],
+    successCriteria: ['Authentic review verification', 'Real-time reputation updates', 'Fair scoring algorithm']
+  }
+};
+
+const RequirementReviewDialog = ({ feature, onProceed }: { feature: any, onProceed: () => void }) => {
+  const requirements = featureRequirements[feature.name as keyof typeof featureRequirements];
+  
+  if (!requirements) return null;
+
+  return (
+    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <FileText className="w-5 h-5" />
+          {requirements.title}
+        </DialogTitle>
+      </DialogHeader>
+      
+      <div className="space-y-4">
+        <div>
+          <h4 className="font-medium text-sm mb-2">Description</h4>
+          <p className="text-sm text-gray-600">{requirements.description}</p>
+        </div>
+        
+        <div>
+          <h4 className="font-medium text-sm mb-2">Business Value</h4>
+          <p className="text-sm text-gray-600">{requirements.businessValue}</p>
+        </div>
+        
+        <div>
+          <h4 className="font-medium text-sm mb-2">Development Phases</h4>
+          <div className="space-y-2">
+            {requirements.phases.map((phase, index) => (
+              <div key={index} className="border rounded-lg p-3">
+                <div className="flex justify-between items-center mb-2">
+                  <h5 className="font-medium text-sm">{phase.name}</h5>
+                  <Badge variant="outline" className="text-xs">{phase.duration}</Badge>
+                </div>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  {phase.tasks.map((task, taskIndex) => (
+                    <li key={taskIndex} className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                      {task}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 className="font-medium text-sm mb-2">API Endpoints</h4>
+            <ul className="text-xs text-gray-600 space-y-1">
+              {requirements.apiEndpoints.map((endpoint, index) => (
+                <li key={index} className="font-mono bg-gray-100 p-1 rounded">{endpoint}</li>
+              ))}
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-sm mb-2">Dependencies</h4>
+            <ul className="text-xs text-gray-600 space-y-1">
+              {requirements.dependencies.map((dep, index) => (
+                <li key={index} className="flex items-center gap-2">
+                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  {dep}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        
+        <div>
+          <h4 className="font-medium text-sm mb-2">Mobile Optimizations</h4>
+          <div className="flex flex-wrap gap-2">
+            {requirements.mobileOptimizations.map((opt, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">{opt}</Badge>
+            ))}
+          </div>
+        </div>
+        
+        <div>
+          <h4 className="font-medium text-sm mb-2">Success Criteria</h4>
+          <ul className="text-xs text-gray-600 space-y-1">
+            {requirements.successCriteria.map((criteria, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <Target className="w-3 h-3 text-blue-500" />
+                {criteria}
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              Following UDF Protocol: Requirements → UDD → Review → Development
+            </div>
+            <Button 
+              onClick={onProceed} 
+              className="flex items-center gap-2"
+              size="sm"
+            >
+              <Play className="w-4 h-4" />
+              Begin Development
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </DialogContent>
+  );
+};
 
 const CoachingWorkflowAnalysis: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState({
@@ -1122,6 +1267,27 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                                     ))}
                                   </div>
                                 </div>
+                                
+                                {system.status === 'missing' && (system.name.includes('Marketplace') || system.name.includes('Reputation')) && (
+                                  <div className="pt-3 border-t">
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                                          <FileText className="w-3 h-3 mr-1" />
+                                          Review Requirements & Begin Development
+                                        </Button>
+                                      </DialogTrigger>
+                                      <RequirementReviewDialog 
+                                        feature={{ 
+                                          name: system.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System' 
+                                        }} 
+                                        onProceed={() => {
+                                          alert(`🚀 Development triggered for ${system.name}!\n\nFollowing UDF Protocol:\n✓ Requirements reviewed\n✓ UDD integration confirmed\n→ Development beginning...\n\nI will now start building this feature with the reviewed specifications.`);
+                                        }} 
+                                      />
+                                    </Dialog>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
@@ -1354,23 +1520,49 @@ const CoachingWorkflowAnalysis: React.FC = () => {
                           <div className="text-xs text-gray-500">
                             {phase.components.length} components • {phase.timeline}
                           </div>
-                          <Button 
-                            size="sm" 
-                            disabled={phase.status !== 'ready-to-start'}
-                            className={phase.status === 'ready-to-start' ? 'bg-green-600 hover:bg-green-700' : ''}
-                          >
-                            {phase.status === 'ready-to-start' ? (
-                              <>
-                                <Zap className="w-3 h-3 mr-1" />
-                                Start Development
-                              </>
-                            ) : (
-                              <>
-                                <Clock className="w-3 h-3 mr-1" />
-                                Waiting
-                              </>
-                            )}
-                          </Button>
+                          
+                          {phase.status === 'waiting' && (phase.name.includes('Marketplace') || phase.name.includes('Reputation')) ? (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  Review Requirements
+                                </Button>
+                              </DialogTrigger>
+                              <RequirementReviewDialog 
+                                feature={{ 
+                                  name: phase.name.includes('Marketplace') ? 'Coach Marketplace Discovery' : 'Coach Reputation System' 
+                                }} 
+                                onProceed={() => {
+                                  // This simulates the UDF workflow trigger
+                                  alert(`🚀 Development triggered for ${phase.name}!\n\nFollowing UDF Protocol:\n✓ Requirements reviewed\n✓ UDD integration confirmed\n→ Development beginning...\n\nI will now start building this feature with the reviewed specifications.`);
+                                }} 
+                              />
+                            </Dialog>
+                          ) : (
+                            <Button 
+                              size="sm" 
+                              disabled={phase.status !== 'ready-to-start'}
+                              className={phase.status === 'ready-to-start' ? 'bg-green-600 hover:bg-green-700' : ''}
+                            >
+                              {phase.status === 'ready-to-start' ? (
+                                <>
+                                  <Zap className="w-3 h-3 mr-1" />
+                                  Start Development
+                                </>
+                              ) : phase.status === 'completed' ? (
+                                <>
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Complete
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  Waiting
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
