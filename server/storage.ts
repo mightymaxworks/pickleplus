@@ -293,6 +293,14 @@ export interface IStorage extends CommunityStorage {
   createCoachProfile(data: InsertCoachProfile): Promise<CoachProfile>;
   getPendingCoachApplications(): Promise<CoachApplication[]>;
 
+  // Player-Coach Direct Booking System - Phase 5B (UDF Implementation)
+  createBooking(data: any): Promise<any>;
+  getBooking(bookingId: number): Promise<any>;
+  getUserBookings(studentId: number): Promise<any[]>;
+  updateBooking(bookingId: number, data: any): Promise<any>;
+  getCoachBookings(coachId: number): Promise<any[]>;
+  getCoachAvailability(coachId: number, date: string): Promise<any[]>;
+  
   // Sprint 1: Curriculum Management & Lesson Planning methods
   // Drill Library operations
   createDrill(data: any): Promise<any>;
@@ -5863,6 +5871,159 @@ export class DatabaseStorage implements IStorage {
       console.error('Error updating goal progress:', error);
       return { id: goalId, progress, notes };
     }
+  }
+
+  // Player-Coach Direct Booking System - Phase 5B (UDF Implementation)
+  async createBooking(data: any): Promise<any> {
+    try {
+      const booking = {
+        id: Date.now(), // Use timestamp for simple ID
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log(`[STORAGE] Booking created: ${booking.id} for coach ${data.coachId} by student ${data.studentId}`);
+      
+      // In real implementation, would insert into bookings table
+      // For now, store in memory for testing
+      if (!this.bookings) {
+        this.bookings = [];
+      }
+      this.bookings.push(booking);
+      
+      return booking;
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      throw error;
+    }
+  }
+
+  async getBooking(bookingId: number): Promise<any> {
+    try {
+      // In real implementation, would query bookings table
+      // For now, use in-memory storage for testing
+      if (!this.bookings) {
+        this.bookings = this.initializeBookings();
+      }
+      return this.bookings.find(booking => booking.id === bookingId);
+    } catch (error) {
+      console.error('Error getting booking:', error);
+      return null;
+    }
+  }
+
+  async getUserBookings(studentId: number): Promise<any[]> {
+    try {
+      // In real implementation, would query bookings table
+      // For now, use in-memory storage for testing
+      if (!this.bookings) {
+        this.bookings = this.initializeBookings();
+      }
+      return this.bookings
+        .filter(booking => booking.studentId === studentId)
+        .sort((a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime());
+    } catch (error) {
+      console.error('Error getting user bookings:', error);
+      return [];
+    }
+  }
+
+  async updateBooking(bookingId: number, data: any): Promise<any> {
+    try {
+      // In real implementation, would update bookings table
+      // For now, use in-memory storage for testing
+      if (!this.bookings) {
+        this.bookings = this.initializeBookings();
+      }
+      
+      const bookingIndex = this.bookings.findIndex(booking => booking.id === bookingId);
+      if (bookingIndex === -1) {
+        throw new Error(`Booking ${bookingId} not found`);
+      }
+
+      this.bookings[bookingIndex] = {
+        ...this.bookings[bookingIndex],
+        ...data,
+        updatedAt: new Date()
+      };
+
+      console.log(`[STORAGE] Booking ${bookingId} updated`);
+      return this.bookings[bookingIndex];
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      throw error;
+    }
+  }
+
+  async getCoachBookings(coachId: number): Promise<any[]> {
+    try {
+      // In real implementation, would query bookings table
+      // For now, use in-memory storage for testing
+      if (!this.bookings) {
+        this.bookings = this.initializeBookings();
+      }
+      return this.bookings
+        .filter(booking => booking.coachId === coachId)
+        .sort((a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime());
+    } catch (error) {
+      console.error('Error getting coach bookings:', error);
+      return [];
+    }
+  }
+
+  async getCoachAvailability(coachId: number, date: string): Promise<any[]> {
+    try {
+      // Generate sample availability for the coach on the given date
+      const slots = [];
+      const startHour = 8;
+      const endHour = 20;
+
+      for (let hour = startHour; hour < endHour; hour++) {
+        ['00', '30'].forEach(minute => {
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
+          slots.push({
+            id: `${date}-${timeString}`,
+            time: timeString,
+            available: Math.random() > 0.3, // 70% availability
+            price: 95 + (hour > 16 ? 10 : 0), // Peak hours cost more
+            duration: 60
+          });
+        });
+      }
+
+      return slots;
+    } catch (error) {
+      console.error('Error getting coach availability:', error);
+      return [];
+    }
+  }
+
+  // Initialize booking storage for testing
+  private bookings: any[] | undefined;
+
+  private initializeBookings(): any[] {
+    return [
+      // Sample booking data for testing
+      {
+        id: 1,
+        studentId: 218, // Admin user for testing
+        coachId: 2,
+        sessionDate: '2025-08-05',
+        timeSlot: '10:00',
+        sessionType: 'individual',
+        duration: 60,
+        location: 'coach_location',
+        totalPrice: 95,
+        status: 'confirmed',
+        paymentStatus: 'pending',
+        canCancel: true,
+        canReschedule: true,
+        specialRequests: 'Focus on forehand technique',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
   }
 }
 

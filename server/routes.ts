@@ -184,6 +184,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/coaches', coachMarketplaceRoutes);
     console.log("[ROUTES] Coach Marketplace Discovery routes registered successfully");
     
+    // Player-Coach Direct Booking System - Phase 5B (UDF Development)
+    console.log("[ROUTES] Registering Player-Coach Direct Booking System routes...");
+    const bookingApiRoutes = await import('./api/booking-api');
+    app.use('/api/booking', bookingApiRoutes.default);
+    console.log("[ROUTES] Player-Coach Direct Booking System routes registered successfully");
+    
     console.log("[ROUTES] All modular route systems registered successfully");
     
   } catch (error) {

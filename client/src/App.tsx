@@ -539,6 +539,28 @@ export default function App() {
                     }}
                   </Route>
                   
+                  {/* Player-Coach Booking System Routes - Phase 5B */}
+                  <Route path="/coaches/book/:coachId">
+                    {(params) => {
+                      const CoachBookingPage = lazyLoad(() => 
+                        import('./pages/CoachBooking').then(mod => ({
+                          default: (props: any) => <mod.default {...props} />
+                        }))
+                      );
+                      return <CoachBookingPage />;
+                    }}
+                  </Route>
+                  <ProtectedRouteWithLayout 
+                    path="/booking/manage" 
+                    component={lazyLoad(() => import('./pages/BookingManagement'))} 
+                    pageTitle="My Bookings"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/booking/confirm" 
+                    component={lazyLoad(() => import('./pages/BookingManagement'))} 
+                    pageTitle="Booking Confirmation"
+                  />
+                  
                   {/* PKL-278651-JOUR-001 - PickleJourney™ */}
                   <ProtectedRouteWithLayout
                     path="/journey"
