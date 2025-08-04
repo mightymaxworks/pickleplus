@@ -135,7 +135,7 @@ const ServiceCard: React.FC<{ service: CoachService }> = ({ service }) => (
         
         <div className="flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-gray-500" />
-          <span className="text-lg font-bold">${(service.price / 100).toFixed(2)}</span>
+          <span className="text-lg font-bold">${((service.price || 0) / 100).toFixed(2)}</span>
         </div>
       </div>
       
@@ -178,8 +178,10 @@ interface CoachPublicProfileProps {
 }
 
 const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug }) => {
+  console.log('[CoachProfile] Component started. PropSlug:', propSlug);
   const { slug: paramSlug } = useParams();
   const slug = propSlug || paramSlug;
+  console.log('[CoachProfile] Final slug value:', slug, 'propSlug:', propSlug, 'paramSlug:', paramSlug);
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -227,7 +229,7 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
           <p>Loading coach profile for {slug}...</p>
-          {error && <p className="text-red-500 mt-2">Error: {error.message}</p>}
+          {error && <p className="text-red-500 mt-2">Error: {String(error)}</p>}
         </div>
       </div>
     );
@@ -304,9 +306,9 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
                     </div>
                     
                     {/* Specializations */}
-                    {coach.specializations.length > 0 && (
+                    {(coach.specializations || []).length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
-                        {coach.specializations.map((spec, index) => (
+                        {(coach.specializations || []).map((spec, index) => (
                           <Badge key={index} variant="secondary">{spec}</Badge>
                         ))}
                       </div>
@@ -448,11 +450,11 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
                     </div>
                   )}
                   
-                  {coach.certifications.length > 0 && (
+                  {(coach.certifications || []).length > 0 && (
                     <div>
                       <h4 className="font-medium mb-1">Certifications</h4>
                       <div className="space-y-1">
-                        {coach.certifications.map((cert, index) => (
+                        {(coach.certifications || []).map((cert, index) => (
                           <div key={index} className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-green-500" />
                             <span className="text-gray-600">{cert}</span>
