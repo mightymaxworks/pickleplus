@@ -70,8 +70,8 @@ import RealTimeNotifications from '@/components/gamification/RealTimeNotificatio
 import { EnhancedSocialHub } from '@/components/gamification/EnhancedSocialHub';
 import PerformanceAnalyticsDashboard from '@/components/gamification/PerformanceAnalyticsDashboard';
 import { MobileCoachingEntry } from '@/components/coaching/MobileCoachingEntry';
-import { EnhancedLeaderboard } from '@/components/match/EnhancedLeaderboard';
-import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import EnhancedLeaderboard from '@/components/match/EnhancedLeaderboard';
+import QuickMatchRecorder from '@/components/match/QuickMatchRecorder';
 
 interface PassportDashboardProps {
   onShowOnboarding?: () => void;

@@ -401,7 +401,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         scoringSystem,
         pointsToWin,
         division,
-        matchType, // Use the selected match type for hybrid point system
+        matchType: "casual" as const, // Players only record casual matches (50% points)
         eventTier: "local",
         players,
         // Ensure gameScores is properly formatted for database storage
