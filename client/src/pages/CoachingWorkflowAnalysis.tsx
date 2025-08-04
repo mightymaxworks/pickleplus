@@ -1531,14 +1531,14 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: response.ok ? 'passed' : 'failed',
-        responseTime: responseTime
+        responseTime: responseTime || 0
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
       newTests[categoryIndex].tests[testIndex] = {
         ...newTests[categoryIndex].tests[testIndex],
         status: 'failed',
-        responseTime: responseTime
+        responseTime: responseTime || 0
       };
     }
     
@@ -1737,6 +1737,19 @@ All UDF validations have passed:
         <p className="text-gray-600">
           Unified tracking for modules, user journeys, UI/UX development, and system validation
         </p>
+        
+        {/* Debug Test Button */}
+        <div className="mt-4">
+          <Button 
+            onClick={() => {
+              alert('✅ Button clicks are working! The UDD is responsive.');
+              console.log('🔧 UDD Test Button Clicked - UI is functional');
+            }}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            🔧 Test UDD Functionality
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="system-overview" className="w-full">
