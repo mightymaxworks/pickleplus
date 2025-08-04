@@ -36,8 +36,8 @@ export default function TestCoachProfile() {
   const { data: profile, isLoading, error } = useQuery<CoachProfile>({
     queryKey: ['/api/coach-public-profiles', 'test-coach'],
     queryFn: async () => {
-      // Get the profile by user ID since we know it's user ID 220
-      const response = await apiRequest('GET', '/api/coach-marketplace-profiles/220');
+      // Get the profile by user ID since we know it's user ID 218 (admin user)
+      const response = await apiRequest('GET', '/api/coach-marketplace-profiles/218');
       if (!response.ok) {
         throw new Error('Profile not found');
       }

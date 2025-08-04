@@ -219,6 +219,7 @@ export default function App() {
                   <Route path="/auth" component={LazyAuthPage} />
                   <Route path="/test-login" component={lazyLoad(() => import('./pages/TestLogin'))} />
                   <Route path="/test-coach-profile" component={lazyLoad(() => import('./pages/TestCoachProfile'))} />
+                  <Route path="/admin-coach-test" component={lazyLoad(() => import('./pages/AdminCoachTest'))} />
                   <Route path="/forgot-password" component={lazyLoad(() => import('./pages/ForgotPasswordPage'))} />
                   <Route path="/reset-password" component={lazyLoad(() => import('./pages/ResetPasswordPage'))} />
                   {/* DISABLED: Onboarding system disabled for all new users */}
