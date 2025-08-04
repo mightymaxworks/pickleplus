@@ -178,6 +178,7 @@ interface CoachPublicProfileProps {
 }
 
 const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug }) => {
+  console.log('*** COACH PUBLIC PROFILE COMPONENT HAS LOADED SUCCESSFULLY ***');
   console.log('[CoachProfile] Component started. PropSlug:', propSlug);
   const { slug: paramSlug } = useParams();
   const slug = propSlug || paramSlug;
@@ -206,6 +207,7 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
 
   // Log any errors or loading states
   console.log('[CoachProfile] Query state:', { isLoading, error, hasData: !!coach, slug });
+  console.log('[CoachProfile] About to render. isLoading:', isLoading, 'coach:', !!coach);
 
   if (error) {
     console.error('[CoachProfile] Error loading profile:', error);
@@ -224,6 +226,7 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
   }, [coach, slug]);
 
   if (isLoading) {
+    console.log('[CoachProfile] Rendering loading state');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -236,6 +239,7 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
   }
 
   if (!coach) {
+    console.log('[CoachProfile] Rendering not found state');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -248,9 +252,36 @@ const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug 
     );
   }
 
-  const featuredTestimonials = coach.testimonials.filter(t => t.isFeatured).slice(0, 3);
-  const activeServices = coach.services.filter(s => s.isActive);
+  console.log('[CoachProfile] Rendering main profile content for:', coach.displayName);
+  console.log('[CoachProfile] Coach data structure:', { 
+    hasTestimonials: !!coach.testimonials, 
+    testimonialCount: coach.testimonials?.length,
+    hasServices: !!coach.services,
+    serviceCount: coach.services?.length 
+  });
+  
+  console.log('[CoachProfile] Filtering testimonials and services...');
+  
+  let featuredTestimonials: ProfileTestimonial[] = [];
+  let activeServices: CoachService[] = [];
+  
+  try {
+    console.log('[CoachProfile] Processing testimonials...');
+    featuredTestimonials = (coach.testimonials || []).filter(t => t && t.isFeatured).slice(0, 3);
+    console.log('[CoachProfile] Testimonials filtered successfully');
+    
+    console.log('[CoachProfile] Processing services...');
+    activeServices = (coach.services || []).filter(s => s && s.isActive);
+    console.log('[CoachProfile] Services filtered successfully');
+    
+    console.log('[CoachProfile] Filtered data:', { featuredTestimonials: featuredTestimonials.length, activeServices: activeServices.length });
+  } catch (error) {
+    console.error('[CoachProfile] Error during filtering:', error);
+    featuredTestimonials = [];
+    activeServices = [];
+  }
 
+  console.log('[CoachProfile] About to return JSX...');
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}

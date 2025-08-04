@@ -741,12 +741,7 @@ export default function App() {
                   />
 
                   {/* Coach Public Profiles System - Phase 5C */}
-                  <Route path="/coach/:slug">
-                    {(params) => {
-                      const CoachPublicProfile = lazyLoad(() => import('./pages/CoachPublicProfile'));
-                      return <CoachPublicProfile slug={params.slug} />;
-                    }}
-                  </Route>
+                  <Route path="/coach/:slug" component={lazyLoad(() => import('./pages/CoachPublicProfile'))} />
                   <ProtectedRouteWithLayout 
                     path="/profile-editor"
                     component={lazyLoad(() => import('./pages/CoachProfileEditor'))}
