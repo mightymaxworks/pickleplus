@@ -16,7 +16,7 @@ interface LeaderboardEntry {
   points: number;
   matchesPlayed: number;
   winRate: number;
-  gender: 'male' | 'female' | 'other';
+  gender: 'male' | 'female';
   age: number;
   division: string;
   ranking: number;
@@ -28,7 +28,7 @@ interface EnhancedLeaderboardProps {
 
 export default function EnhancedLeaderboard({ formatType = "singles" }: EnhancedLeaderboardProps) {
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
-  const [selectedGender, setSelectedGender] = useState<string>("all");
+  const [selectedGender, setSelectedGender] = useState<string>("male");
 
   // Age divisions based on standard tournament rules
   const ageDivisions = [
@@ -40,10 +40,8 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
   ];
 
   const genderOptions = [
-    { value: "all", label: "All Players" },
-    { value: "male", label: "Men" },
-    { value: "female", label: "Women" },
-    { value: "other", label: "Other" }
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" }
   ];
 
   // Fetch leaderboard data with division and gender filters
@@ -81,9 +79,6 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
     const ageLabel = ageDivisions.find(d => d.value === division)?.label || division;
     const genderLabel = genderOptions.find(g => g.value === gender)?.label || "";
     
-    if (gender === "all") {
-      return ageLabel;
-    }
     return `${ageLabel} - ${genderLabel}`;
   };
 
@@ -196,7 +191,7 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                 
                 {/* Division Badge */}
                 <Badge variant="secondary">
-                  {player.division} {player.gender !== 'other' ? player.gender.charAt(0).toUpperCase() : ''}
+                  {player.division} {player.gender.charAt(0).toUpperCase()}
                 </Badge>
               </div>
             ))}
