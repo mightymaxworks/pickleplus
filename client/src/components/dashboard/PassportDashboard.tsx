@@ -24,6 +24,7 @@ import {
   Trophy, 
   TrendingUp, 
   Users,
+  User,
   Scan,
   Zap,
   Award,
