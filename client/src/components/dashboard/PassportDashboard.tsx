@@ -1532,27 +1532,94 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <Tabs defaultValue="coaching" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="coaching" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Coaching
-            </TabsTrigger>
-            <TabsTrigger value="matches" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Record
-            </TabsTrigger>
-            <TabsTrigger value="leaderboard" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
-              Rankings
-            </TabsTrigger>
-            <TabsTrigger value="performance">{t('dashboard.tabs.performance')}</TabsTrigger>
-            <TabsTrigger value="achievements">{t('dashboard.tabs.achievements')}</TabsTrigger>
-            <TabsTrigger value="social" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Social
-            </TabsTrigger>
-            <TabsTrigger value="community">{t('dashboard.tabs.community')}</TabsTrigger>
-          </TabsList>
+          {/* Mobile-Optimized Navigation Tabs */}
+          <div className="md:hidden mb-4">
+            <TabsList className="grid w-full grid-cols-4 h-12 bg-white/80 border border-orange-200 rounded-lg">
+              <TabsTrigger 
+                value="coaching" 
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="text-xs">Coach</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="matches" 
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Target className="w-4 h-4" />
+                <span className="text-xs">Match</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="leaderboard" 
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Trophy className="w-4 h-4" />
+                <span className="text-xs">Rank</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="performance" 
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Activity className="w-4 h-4" />
+                <span className="text-xs">Stats</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:block mb-4">
+            <TabsList className="grid w-full grid-cols-7 h-10 bg-white/80 border border-orange-200 rounded-lg">
+              <TabsTrigger 
+                value="coaching" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <BookOpen className="w-4 h-4" />
+                Coaching
+              </TabsTrigger>
+              <TabsTrigger 
+                value="matches" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Target className="w-4 h-4" />
+                Record
+              </TabsTrigger>
+              <TabsTrigger 
+                value="leaderboard" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Trophy className="w-4 h-4" />
+                Rankings
+              </TabsTrigger>
+              <TabsTrigger 
+                value="performance" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Activity className="w-4 h-4" />
+                Performance
+              </TabsTrigger>
+              <TabsTrigger 
+                value="achievements" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Award className="w-4 h-4" />
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="social" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Users className="w-4 h-4" />
+                Social
+              </TabsTrigger>
+              <TabsTrigger 
+                value="community" 
+                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+              >
+                <Users className="w-4 h-4" />
+                Community
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           {/* Coaching Tab - Primary Entry Point */}
           <TabsContent value="coaching" className="space-y-4 mt-6">
