@@ -1670,7 +1670,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
             </Card>
           </TabsContent>
 
-          {/* Leaderboard Tab - Enhanced Rankings */}
+          {/* Leaderboard Tab - Enhanced Rankings with Format Tabs */}
           <TabsContent value="leaderboard" className="space-y-4 mt-6">
             <Card>
               <CardHeader>
@@ -1679,11 +1679,38 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   Enhanced Leaderboard
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  View rankings across all age groups and genders
+                  View rankings across singles, doubles, mixed doubles, age groups and genders
                 </p>
               </CardHeader>
               <CardContent>
-                <EnhancedLeaderboard />
+                <Tabs defaultValue="singles" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="singles" className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Singles
+                    </TabsTrigger>
+                    <TabsTrigger value="doubles" className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Doubles
+                    </TabsTrigger>
+                    <TabsTrigger value="mixed" className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Mixed
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="singles" className="mt-4">
+                    <EnhancedLeaderboard formatType="singles" />
+                  </TabsContent>
+                  
+                  <TabsContent value="doubles" className="mt-4">
+                    <EnhancedLeaderboard formatType="doubles" />
+                  </TabsContent>
+                  
+                  <TabsContent value="mixed" className="mt-4">
+                    <EnhancedLeaderboard formatType="mixed" />
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </TabsContent>

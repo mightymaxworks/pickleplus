@@ -23,10 +23,10 @@ interface LeaderboardEntry {
 }
 
 interface EnhancedLeaderboardProps {
-  // Removed formatType - simplified to show all matches regardless of format
+  formatType?: "singles" | "doubles" | "mixed";
 }
 
-export default function EnhancedLeaderboard({}: EnhancedLeaderboardProps) {
+export default function EnhancedLeaderboard({ formatType = "singles" }: EnhancedLeaderboardProps) {
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
   const [selectedGender, setSelectedGender] = useState<string>("male");
 
@@ -44,16 +44,17 @@ export default function EnhancedLeaderboard({}: EnhancedLeaderboardProps) {
     { value: "female", label: "Female" }
   ];
 
-  // Fetch leaderboard data with division and gender filters (simplified - no format separation)
+  // Fetch leaderboard data with format, division and gender filters
   const { data: leaderboardData, isLoading } = useQuery({
-    queryKey: [`/api/leaderboard`, selectedDivision, selectedGender],
+    queryKey: [`/api/leaderboard/${formatType}`, selectedDivision, selectedGender],
     queryFn: async () => {
       const params = new URLSearchParams({
+        format: formatType,
         division: selectedDivision,
         gender: selectedGender
       });
       
-      const response = await fetch(`/api/leaderboard?${params}`);
+      const response = await fetch(`/api/leaderboard/${formatType}?${params}`);
       if (!response.ok) {
         throw new Error("Failed to fetch leaderboard data");
       }
@@ -85,8 +86,10 @@ export default function EnhancedLeaderboard({}: EnhancedLeaderboardProps) {
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          Enhanced Leaderboard
+          {formatType === "singles" ? <User className="h-5 w-5" /> : 
+           formatType === "mixed" ? <Users className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+          Enhanced Leaderboard - {formatType === "singles" ? "Singles" : 
+                                  formatType === "mixed" ? "Mixed Doubles" : "Doubles"}
         </CardTitle>
         
         {/* Filtering Controls */}
@@ -214,7 +217,7 @@ export default function EnhancedLeaderboard({}: EnhancedLeaderboardProps) {
           <div className="text-xs text-muted-foreground space-y-1">
             <p>• <strong>Open Division:</strong> Players of all ages compete together</p>
             <p>• <strong>Age Divisions:</strong> Based on oldest player in doubles, individual age in singles</p>
-            <p>• <strong>Gender Separation:</strong> Separate leaderboards for men, women, and mixed competitions</p>
+            <p>• <strong>Gender Separation:</strong> Separate leaderboards for men and women (mixed doubles shown under Mixed tab)</p>
             <p>• <strong>Points System:</strong> All matches count equally regardless of scoring format (traditional/rally/extended)</p>
           </div>
         </div>

@@ -93,8 +93,8 @@ router.get('/:format', async (req, res) => {
       gender?: string; 
     };
 
-    if (!['singles', 'doubles'].includes(format)) {
-      return res.status(400).json({ error: 'Invalid format. Must be singles or doubles.' });
+    if (!['singles', 'doubles', 'mixed'].includes(format)) {
+      return res.status(400).json({ error: 'Invalid format. Must be singles, doubles, or mixed.' });
     }
 
     // Generate demo data showing enhanced leaderboard with age group and gender separation
@@ -115,8 +115,8 @@ router.get('/:format/stats', async (req, res) => {
   try {
     const { format } = req.params;
 
-    if (!['singles', 'doubles'].includes(format)) {
-      return res.status(400).json({ error: 'Invalid format. Must be singles or doubles.' });
+    if (!['singles', 'doubles', 'mixed'].includes(format)) {
+      return res.status(400).json({ error: 'Invalid format. Must be singles, doubles, or mixed.' });
     }
 
     // Generate demo stats
