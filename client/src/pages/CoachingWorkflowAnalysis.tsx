@@ -1641,6 +1641,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
 
   // UDF Workflow Handler Functions
   const handleReviewAndBegin = (feature: any) => {
+    console.log('📋 Requirements review initiated for:', feature.name);
     setUdfWorkflowState(prev => ({
       ...prev,
       activeFeature: feature,
@@ -1657,6 +1658,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
 
   const proceedWithDevelopment = (feature: any) => {
     // Log the UDF workflow progression
+    console.log('🚀 UDF Development authorized for:', feature.name);
     setUdfWorkflowState(prev => ({
       ...prev,
       currentStep: 'development-start',
@@ -1675,7 +1677,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       requirements: featureRequirements[feature.name as keyof typeof featureRequirements],
       udfWorkflowId: `UDF-${Date.now()}`,
       timestamp: new Date().toISOString(),
-      estimatedDuration: feature.estimatedDuration,
+      estimatedDuration: feature.estimatedDuration || 'TBD',
       priority: feature.priority,
       dependencies: feature.dependencies || [],
       technicalRequirements: feature.technicalRequirements || []
@@ -1689,7 +1691,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
 
 **Development Request:** ${feature.name}
 **Priority:** ${feature.priority}
-**Estimated Duration:** ${feature.estimatedDuration}
+**Estimated Duration:** ${feature.estimatedDuration || 'TBD'}
 **UDF Workflow ID:** UDF-${Date.now()}
 
 **Requirements Summary:**
@@ -1702,7 +1704,19 @@ All UDF validations have passed:
 ✓ Requirements reviewed and approved
 ✓ Dependencies validated
 ✓ Sequential development order confirmed
-✓ Development authorization granted
+✓ Development authorization granted`;
+
+    // Copy to clipboard and show success message
+    try {
+      navigator.clipboard.writeText(agentMessage);
+      alert('✅ Development request copied to clipboard! Paste this message to the agent to begin development.');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Fallback: show the message in console
+      console.log('📋 DEVELOPMENT REQUEST MESSAGE:', agentMessage);
+      alert('⚠️ Could not copy to clipboard. Check console for the development request message.');
+    }
+  };
 
 Ready to proceed with implementation.`;
 
@@ -2000,14 +2014,16 @@ Begin implementation now.`;
                           <DialogTrigger asChild>
                             <Button 
                               className="bg-blue-600 hover:bg-blue-700"
-                              onClick={() => handleReviewAndBegin(item)}
                             >
                               Review Requirements & Begin Development
                             </Button>
                           </DialogTrigger>
                           <RequirementReviewDialog 
                             feature={item} 
-                            onProceed={() => proceedWithDevelopment(item)} 
+                            onProceed={() => {
+                              console.log('🚀 Development authorized for:', item.name);
+                              proceedWithDevelopment(item);
+                            }} 
                           />
                         </Dialog>
                       </div>
