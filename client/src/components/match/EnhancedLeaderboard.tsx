@@ -185,7 +185,7 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                 </div>
                 
                 <div className="text-center">
-                  <div className="font-medium">{(player.winRate * 100).toFixed(1)}%</div>
+                  <div className="font-medium">{player.winRate}%</div>
                   <div className="text-xs text-muted-foreground">win rate</div>
                 </div>
                 

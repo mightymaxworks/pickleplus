@@ -10,7 +10,7 @@ interface LeaderboardEntry {
   points: number;
   matchesPlayed: number;
   winRate: number;
-  gender: 'male' | 'female' | 'other';
+  gender: 'male' | 'female';
   age: number;
   division: string;
   ranking: number;
@@ -52,14 +52,15 @@ function generateDemoLeaderboardData(format: string, division: string, gender: s
       avatar: undefined,
       points: player.points,
       matchesPlayed: player.matches,
-      winRate: Math.round((player.wins / player.matches) * 1000) / 10, // Round to 1 decimal
-      gender: player.gender as 'male' | 'female' | 'other',
+      winRate: Math.round((player.wins / player.matches) * 100 * 10) / 10, // Convert to percentage with 1 decimal
+      gender: player.gender as 'male' | 'female',
       age: player.age,
       division: getAgeGroupFromAge(player.age),
       ranking: index + 1
     }))
     .filter(player => {
-      // Filter by gender
+      // Filter by gender - only male and female supported
+      if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
       if (gender !== 'all' && player.gender !== gender) return false;
       
       // Filter by division
