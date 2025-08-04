@@ -321,6 +321,38 @@ import {
   type VerificationLevelType
 } from './schema/coach-management';
 
+// Import Coach Marketplace Discovery system schema (UDF: Coach Marketplace Discovery)
+import {
+  coachMarketplaceProfiles,
+  coachSearchHistory,
+  coachMarketplaceReviews,
+  coachDiscoveryAnalytics,
+  coachFavoriteLists,
+  coachMarketplaceProfilesRelations,
+  coachSearchHistoryRelations,
+  coachMarketplaceReviewsRelations,
+  coachDiscoveryAnalyticsRelations,
+  coachFavoriteListsRelations,
+  insertCoachMarketplaceProfileSchema,
+  insertCoachSearchHistorySchema,
+  insertCoachMarketplaceReviewSchema,
+  insertCoachDiscoveryAnalyticsSchema,
+  insertCoachFavoriteListSchema,
+  coachSearchSchema,
+  type CoachMarketplaceProfile,
+  type InsertCoachMarketplaceProfile,
+  type CoachSearchHistory,
+  type InsertCoachSearchHistory,
+  type CoachMarketplaceReview,
+  type InsertCoachMarketplaceReview,
+  type CoachDiscoveryAnalytics,
+  type InsertCoachDiscoveryAnalytics,
+  type CoachFavoriteList,
+  type InsertCoachFavoriteList,
+  type CoachSearchParams,
+  type CoachWithMarketplaceData
+} from './schema/coach-marketplace';
+
 // Import Curriculum Management system schema (Sprint 1: Curriculum Management & Lesson Planning Foundation)
 import {
   drillLibrary,

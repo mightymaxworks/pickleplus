@@ -19,6 +19,7 @@ import { trainingCenterRoutes } from "./routes/training-center-routes";
 import { registerJournalRoutes } from "./routes/journal-routes";
 import pcpRoutes from "./routes/pcp-routes";
 import pcpEnforcementRoutes from "./routes/pcp-enforcement-routes";
+import coachMarketplaceRoutes from "./api/coach-marketplace";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
@@ -177,6 +178,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering PCP Sequential Enforcement routes...");
     app.use('/api/pcp', pcpEnforcementRoutes);
     console.log("[ROUTES] PCP Sequential Enforcement routes registered successfully");
+    
+    // Coach Marketplace Discovery System (UDF Development)
+    console.log("[ROUTES] Registering Coach Marketplace Discovery routes...");
+    app.use('/api/coaches', coachMarketplaceRoutes);
+    console.log("[ROUTES] Coach Marketplace Discovery routes registered successfully");
     
     console.log("[ROUTES] All modular route systems registered successfully");
     

@@ -522,6 +522,23 @@ export default function App() {
                     pageTitle="My Coach"
                   />
                   
+                  {/* Coach Marketplace Discovery System (UDF Development) */}
+                  <ProtectedRouteWithLayout
+                    path="/coaches"
+                    component={lazyLoad(() => import('./pages/CoachMarketplace'))}
+                    pageTitle="Coach Marketplace"
+                  />
+                  <Route path="/coaches/:coachId">
+                    {(params) => {
+                      const CoachProfilePage = lazyLoad(() => 
+                        import('./pages/CoachProfile').then(mod => ({
+                          default: (props: any) => <mod.default {...props} />
+                        }))
+                      );
+                      return <CoachProfilePage />;
+                    }}
+                  </Route>
+                  
                   {/* PKL-278651-JOUR-001 - PickleJourney™ */}
                   <ProtectedRouteWithLayout
                     path="/journey"
