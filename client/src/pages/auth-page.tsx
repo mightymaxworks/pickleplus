@@ -214,6 +214,9 @@ export default function AuthPage() {
         title: t('auth.loginSuccess', 'Login successful'),
         description: t('auth.loginSuccessDescription', 'Welcome back to Pickle+!'),
       });
+
+      // Redirect to dashboard after successful login
+      setLocation('/dashboard');
     } catch (error: any) {
       console.error('[Auth Page] Login error:', error);
       toast({
@@ -268,6 +271,9 @@ export default function AuthPage() {
         title: t('auth.registerSuccess', 'Registration successful'),
         description: t('auth.registerSuccessDescription', 'Welcome to Pickle+! Your account has been created.'),
       });
+
+      // Redirect to dashboard after successful registration
+      setLocation('/dashboard');
     } catch (error: any) {
       console.error("Registration error:", error);
       toast({
