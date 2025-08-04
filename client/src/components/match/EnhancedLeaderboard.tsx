@@ -23,10 +23,10 @@ interface LeaderboardEntry {
 }
 
 interface EnhancedLeaderboardProps {
-  formatType?: "singles" | "doubles";
+  // Removed formatType - simplified to show all matches regardless of format
 }
 
-export default function EnhancedLeaderboard({ formatType = "singles" }: EnhancedLeaderboardProps) {
+export default function EnhancedLeaderboard({}: EnhancedLeaderboardProps) {
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
   const [selectedGender, setSelectedGender] = useState<string>("male");
 
@@ -44,17 +44,16 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
     { value: "female", label: "Female" }
   ];
 
-  // Fetch leaderboard data with division and gender filters
+  // Fetch leaderboard data with division and gender filters (simplified - no format separation)
   const { data: leaderboardData, isLoading } = useQuery({
-    queryKey: [`/api/leaderboard/${formatType}`, selectedDivision, selectedGender],
+    queryKey: [`/api/leaderboard`, selectedDivision, selectedGender],
     queryFn: async () => {
       const params = new URLSearchParams({
-        format: formatType,
         division: selectedDivision,
         gender: selectedGender
       });
       
-      const response = await fetch(`/api/leaderboard/${formatType}?${params}`);
+      const response = await fetch(`/api/leaderboard?${params}`);
       if (!response.ok) {
         throw new Error("Failed to fetch leaderboard data");
       }
@@ -86,8 +85,8 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {formatType === "singles" ? <User className="h-5 w-5" /> : <Users className="h-5 w-5" />}
-          Enhanced Leaderboard - {formatType === "singles" ? "Singles" : "Doubles"}
+          <Trophy className="h-5 w-5" />
+          Enhanced Leaderboard
         </CardTitle>
         
         {/* Filtering Controls */}

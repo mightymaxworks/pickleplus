@@ -1679,7 +1679,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                   Enhanced Leaderboard
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  View rankings across all age groups, genders, and formats
+                  View rankings across all age groups and genders
                 </p>
               </CardHeader>
               <CardContent>
