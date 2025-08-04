@@ -173,25 +173,41 @@ const TestimonialCard: React.FC<{ testimonial: ProfileTestimonial }> = ({ testim
   </Card>
 );
 
-const CoachPublicProfile: React.FC = () => {
-  const { slug } = useParams();
+interface CoachPublicProfileProps {
+  slug?: string;
+}
+
+const CoachPublicProfile: React.FC<CoachPublicProfileProps> = ({ slug: propSlug }) => {
+  const { slug: paramSlug } = useParams();
+  const slug = propSlug || paramSlug;
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
   // Get coach profile by slug
-  const { data: coach, isLoading } = useQuery({
+  const { data: coach, isLoading, error } = useQuery({
     queryKey: ['/api/coach-public-profiles', slug],
     queryFn: async () => {
+      console.log('[CoachProfile] Fetching profile for slug:', slug);
       const response = await fetch(`/api/coach-public-profiles/${slug}`, {
         credentials: 'include'
       });
+      console.log('[CoachProfile] Response status:', response.status);
       if (!response.ok) throw new Error('Coach profile not found');
-      return response.json() as CoachPublicProfileWithRelations;
+      const data = await response.json();
+      console.log('[CoachProfile] Profile data received:', data);
+      return data as CoachPublicProfileWithRelations;
     },
     enabled: !!slug
   });
+
+  // Log any errors or loading states
+  console.log('[CoachProfile] Query state:', { isLoading, error, hasData: !!coach, slug });
+
+  if (error) {
+    console.error('[CoachProfile] Error loading profile:', error);
+  }
 
   // Track profile view
   useEffect(() => {
@@ -210,7 +226,8 @@ const CoachPublicProfile: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p>Loading coach profile...</p>
+          <p>Loading coach profile for {slug}...</p>
+          {error && <p className="text-red-500 mt-2">Error: {error.message}</p>}
         </div>
       </div>
     );
