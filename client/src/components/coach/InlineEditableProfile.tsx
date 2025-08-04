@@ -8,7 +8,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import type { CoachPublicProfileWithRelations } from '../../../shared/schema/coach-public-profiles';
+// Using the marketplace profile type since that's what we're working with
+interface CoachMarketplaceProfile {
+  id: number;
+  coach_id: number;
+  user_id: number;
+  display_name: string;
+  tagline: string;
+  specialties: string[] | null;
+  location: string;
+  hourly_rate: string;
+  average_rating: string;
+  total_reviews: number;
+  total_sessions: number;
+  teaching_style: any;
+  player_preferences: any;
+  response_time: number;
+  profileImageUrl?: string;
+  coverImageUrl?: string;
+}
 
 interface InlineEditableFieldProps {
   value: string;
@@ -82,7 +100,7 @@ const InlineEditableField: React.FC<InlineEditableFieldProps> = ({
 };
 
 interface InlineEditableProfileProps {
-  profile: CoachPublicProfileWithRelations;
+  profile: CoachMarketplaceProfile;
   isOwner: boolean;
 }
 
@@ -98,8 +116,8 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
 
   // Profile update mutation
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: Partial<CoachPublicProfileWithRelations>) => {
-      const response = await fetch(`/api/coach-public-profiles/${profile.slug}`, {
+    mutationFn: async (updates: Partial<CoachMarketplaceProfile>) => {
+      const response = await fetch(`/api/coach-marketplace-profiles/${profile.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -112,7 +130,7 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
       return response.json();
     },
     onSuccess: (updatedProfile) => {
-      queryClient.setQueryData([`/api/coach-public-profiles/${profile.slug}`], updatedProfile);
+      queryClient.setQueryData([`/api/coach-marketplace-profiles/${profile.id}`], updatedProfile);
       toast({ title: 'Profile updated successfully!' });
       setEditingField(null);
     },
@@ -132,7 +150,7 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
       formData.append('image', file);
       formData.append('type', type);
       
-      const response = await fetch(`/api/coach-public-profiles/${profile.slug}/upload-image`, {
+      const response = await fetch(`/api/coach-marketplace-profiles/${profile.id}/upload-image`, {
         method: 'POST',
         credentials: 'include',
         body: formData
@@ -179,8 +197,9 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
     input.click();
   };
 
-  const featuredTestimonials = profile.testimonials?.filter(t => t.isFeatured).slice(0, 3) || [];
-  const activeServices = profile.services?.filter(s => s.isActive) || [];
+  // For now, using only properties that exist in our marketplace profile
+  const featuredTestimonials: any[] = [];
+  const activeServices: any[] = [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -215,7 +234,7 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
                 <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
                   <AvatarImage src={profileImage} />
                   <AvatarFallback className="text-2xl">
-                    {profile.displayName.split(' ').map(n => n[0]).join('')}
+                    {profile.display_name.split(' ').map((n: string) => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 {isOwner && (
@@ -237,15 +256,15 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
                     <h1 className="text-3xl font-bold">
                       {isOwner ? (
                         <InlineEditableField
-                          value={profile.displayName}
-                          onSave={(value) => handleFieldSave('displayName', value)}
-                          isEditing={editingField === 'displayName'}
-                          onEdit={() => setEditingField('displayName')}
+                          value={profile.display_name}
+                          onSave={(value) => handleFieldSave('display_name', value)}
+                          isEditing={editingField === 'display_name'}
+                          onEdit={() => setEditingField('display_name')}
                           onCancel={() => setEditingField(null)}
                           placeholder="Your professional name"
                         />
                       ) : (
-                        profile.displayName
+                        profile.display_name
                       )}
                     </h1>
                     
@@ -331,17 +350,17 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
                 <div className="prose max-w-none">
                   {isOwner ? (
                     <InlineEditableField
-                      value={profile.bio || ''}
-                      onSave={(value) => handleFieldSave('bio', value)}
-                      isEditing={editingField === 'bio'}
-                      onEdit={() => setEditingField('bio')}
+                      value={profile.tagline || ''}
+                      onSave={(value) => handleFieldSave('tagline', value)}
+                      isEditing={editingField === 'tagline'}
+                      onEdit={() => setEditingField('tagline')}
                       onCancel={() => setEditingField(null)}
                       multiline
                       placeholder="Tell potential clients about yourself..."
                     />
                   ) : (
                     <p className="text-gray-700 leading-relaxed">
-                      {profile.bio || 'No bio available'}
+                      {profile.tagline || 'No description available'}
                     </p>
                   )}
                 </div>
@@ -414,12 +433,12 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Specializations */}
-            {profile.specializations && profile.specializations.length > 0 && (
+            {profile.specialties && profile.specialties.length > 0 && (
               <Card>
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-3">Specializations</h3>
                   <div className="flex flex-wrap gap-2">
-                    {profile.specializations.map((spec, index) => (
+                    {profile.specialties.map((spec: string, index: number) => (
                       <Badge key={index} variant="secondary">{spec}</Badge>
                     ))}
                   </div>
@@ -427,57 +446,33 @@ export const InlineEditableProfile: React.FC<InlineEditableProfileProps> = ({
               </Card>
             )}
 
-            {/* Certifications */}
-            {profile.certifications && profile.certifications.length > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-3">Certifications</h3>
-                  <div className="space-y-2">
-                    {profile.certifications.map((cert, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Badge variant="outline">{cert}</Badge>
-                      </div>
-                    ))}
+            {/* Stats Card */}
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-3">Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Rating</span>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="font-medium">{profile.average_rating}</span>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Contact Information */}
-            {(profile.contactEmail || profile.phoneNumber || profile.website) && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-3">Contact</h3>
-                  <div className="space-y-3">
-                    {profile.contactEmail && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span>{profile.contactEmail}</span>
-                      </div>
-                    )}
-                    {profile.phoneNumber && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span>{profile.phoneNumber}</span>
-                      </div>
-                    )}
-                    {profile.website && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Globe className="w-4 h-4 text-gray-400" />
-                        <a 
-                          href={profile.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Visit Website
-                        </a>
-                      </div>
-                    )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Sessions</span>
+                    <span className="font-medium">{profile.total_sessions}</span>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Reviews</span>
+                    <span className="font-medium">{profile.total_reviews}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Hourly Rate</span>
+                    <span className="font-medium">${profile.hourly_rate}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
