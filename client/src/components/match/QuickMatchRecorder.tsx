@@ -114,7 +114,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   
   // Match state
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
-  const [matchType, setMatchType] = useState<"tournament" | "league" | "casual">("casual");
+  const matchType = "casual"; // Players can only record casual matches
   const [scoringSystem, setScoringSystem] = useState<"traditional" | "rally">("traditional");
   const [pointsToWin, setPointsToWin] = useState<11 | 15 | 21>(11);
   const [totalGames, setTotalGames] = useState(1);
@@ -524,9 +524,9 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         </p>
       </CardHeader>
       
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Match Configuration */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4">
           {/* Format Selection */}
           <div className="space-y-3">
             <div className="text-sm font-medium flex items-center gap-2">
@@ -601,41 +601,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           </div>
         </div>
 
-        {/* Match Type Selection for Hybrid Point System */}
-        <div className="space-y-4">
-          <div className="text-sm font-medium">Match Type</div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Button
-              variant={matchType === "tournament" ? "default" : "outline"}
-              onClick={() => setMatchType("tournament")}
-              className="flex flex-col items-center p-4 h-auto"
-            >
-              <Trophy className="h-5 w-5 mb-2" />
-              <span className="font-medium">Tournament</span>
-              <Badge variant="secondary" className="text-xs mt-1">100% Points</Badge>
-            </Button>
-            <Button
-              variant={matchType === "league" ? "default" : "outline"}
-              onClick={() => setMatchType("league")}
-              className="flex flex-col items-center p-4 h-auto"
-            >
-              <Award className="h-5 w-5 mb-2" />
-              <span className="font-medium">League</span>
-              <Badge variant="secondary" className="text-xs mt-1">67% Points</Badge>
-            </Button>
-            <Button
-              variant={matchType === "casual" ? "default" : "outline"}
-              onClick={() => setMatchType("casual")}
-              className="flex flex-col items-center p-4 h-auto"
-            >
-              <Users className="h-5 w-5 mb-2" />
-              <span className="font-medium">Casual</span>
-              <Badge variant="secondary" className="text-xs mt-1">50% Points</Badge>
-            </Button>
-          </div>
-        </div>
-        
-        <Separator />
+
         
         {/* Player Selection */}
         <div className="space-y-4">
@@ -644,11 +610,11 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             <span className="text-sm font-medium">Player Selection</span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Player One Side */}
             <Card className="border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-blue-500"></div>
                   Player One
                   {isAdmin && (
@@ -656,7 +622,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="py-2 px-3 sm:px-4">
+              <CardContent className="py-2 px-3">
                 {/* Player One Selection */}
                 {isAdmin ? (
                   <DialogPlayerSelect
@@ -714,13 +680,13 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             
             {/* Opponent Side */}
             <Card className="border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-red-500"></div>
                   Opponent
                 </CardTitle>
               </CardHeader>
-              <CardContent className="py-2 px-3 sm:px-4">
+              <CardContent className="py-2 px-3">
                 {/* Opponent Selection */}
                 <div className="mb-3">
                   <DialogPlayerSelect
@@ -768,45 +734,49 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         <Separator />
         
         {/* Game Format */}
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm font-medium">Match Format</span>
+            <span className="text-xs font-medium">Match Format</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <Button 
               variant={totalGames === 1 ? "default" : "outline"} 
               onClick={() => handleTotalGamesChange(1)}
-              className="flex flex-col items-center p-4 h-auto"
+              className="flex flex-col items-center p-2 h-auto"
+              size="sm"
             >
-              <span className="font-medium">Single Set</span>
-              <span className="text-xs text-muted-foreground mt-1">First to win</span>
+              <span className="text-sm font-medium">Single Set</span>
+              <span className="text-xs text-muted-foreground">First to win</span>
             </Button>
             <Button 
               variant={totalGames === 3 ? "default" : "outline"} 
               onClick={() => handleTotalGamesChange(3)}
-              className="flex flex-col items-center p-4 h-auto"
+              className="flex flex-col items-center p-2 h-auto"
+              size="sm"
             >
-              <span className="font-medium">Best of 3</span>
-              <span className="text-xs text-muted-foreground mt-1">First to 2 sets</span>
+              <span className="text-sm font-medium">Best of 3</span>
+              <span className="text-xs text-muted-foreground">First to 2 sets</span>
             </Button>
             <Button 
               variant={totalGames === 5 ? "default" : "outline"} 
               onClick={() => handleTotalGamesChange(5)}
-              className="flex flex-col items-center p-4 h-auto"
+              className="flex flex-col items-center p-2 h-auto"
+              size="sm"
             >
-              <span className="font-medium">Best of 5</span>
-              <span className="text-xs text-muted-foreground mt-1">First to 3 sets</span>
+              <span className="text-sm font-medium">Best of 5</span>
+              <span className="text-xs text-muted-foreground">First to 3 sets</span>
             </Button>
           </div>
           
           <div className="space-y-2">
-            <div className="text-xs text-muted-foreground">Scoring System</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="text-xs text-muted-foreground">Scoring & Points</div>
+            <div className="flex flex-wrap gap-1">
               <Button 
                 variant={scoringSystem === "traditional" ? "default" : "outline"} 
                 onClick={() => setScoringSystem("traditional")}
                 size="sm"
+                className="text-xs px-2 py-1 h-7"
               >
                 Traditional
               </Button>
@@ -814,54 +784,37 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 variant={scoringSystem === "rally" ? "default" : "outline"} 
                 onClick={() => setScoringSystem("rally")}
                 size="sm"
+                className="text-xs px-2 py-1 h-7"
               >
                 Rally
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {scoringSystem === "traditional" 
-                ? "Points only on serve (side-out scoring)"
-                : "Points scored on every rally"}
-            </div>
             
-            {/* Points to Win */}
-            <div className="mt-3">
-              <div className="text-xs text-muted-foreground">Points to Win</div>
-              <div className="flex flex-wrap gap-2 mt-1">
-                <Button 
-                  variant={pointsToWin === 11 ? "default" : "outline"} 
-                  onClick={() => setPointsToWin(11)}
-                  size="sm"
-                >
-                  11
-                </Button>
-                <Button 
-                  variant={pointsToWin === 15 ? "default" : "outline"} 
-                  onClick={() => setPointsToWin(15)}
-                  size="sm"
-                >
-                  15
-                </Button>
-                <Button 
-                  variant={pointsToWin === 21 ? "default" : "outline"} 
-                  onClick={() => setPointsToWin(21)}
-                  size="sm"
-                >
-                  21
-                </Button>
-                <div className="flex items-center ml-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">The number of points needed to win a game. Traditional scoring typically uses 11 points, while rally scoring commonly uses 15 or 21 points.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              <Button 
+                variant={pointsToWin === 11 ? "default" : "outline"} 
+                onClick={() => setPointsToWin(11)}
+                size="sm"
+                className="text-xs px-2 py-1 h-7"
+              >
+                11pt
+              </Button>
+              <Button 
+                variant={pointsToWin === 15 ? "default" : "outline"} 
+                onClick={() => setPointsToWin(15)}
+                size="sm"
+                className="text-xs px-2 py-1 h-7"
+              >
+                15pt
+              </Button>
+              <Button 
+                variant={pointsToWin === 21 ? "default" : "outline"} 
+                onClick={() => setPointsToWin(21)}
+                size="sm"
+                className="text-xs px-2 py-1 h-7"
+              >
+                21pt
+              </Button>
             </div>
           </div>
           
@@ -885,13 +838,11 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         
         <Separator />
         
-        <Separator />
-        
         {/* Score Entry */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-sm font-medium">Score Entry</span>
+            <span className="text-xs font-medium">Score Entry</span>
           </div>
           
           {/* Single Game Score Entry */}
@@ -965,17 +916,17 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         <Separator />
         
         {/* Notes Field */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            <span className="text-sm font-medium">Match Notes</span>
+            <span className="text-xs font-medium">Match Notes</span>
             <Badge variant="secondary" className="text-xs">Optional</Badge>
           </div>
           <Form {...form}>
             <form>
               <textarea
-                className="w-full min-h-[80px] p-4 rounded-lg border border-input bg-background focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                placeholder="Add any notes about this match (weather conditions, court surface, notable plays, etc.)..."
+                className="w-full min-h-[60px] p-3 text-sm rounded-lg border border-input bg-background focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                placeholder="Add any notes about this match..."
                 {...form.register("notes")}
               />
             </form>
@@ -983,12 +934,12 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         </div>
       </CardContent>
       
-      <CardFooter className="pt-6 border-t">
-        <div className="w-full space-y-4">
+      <CardFooter className="pt-4 border-t">
+        <div className="w-full space-y-3">
           <Button 
             onClick={handleSubmit}
             disabled={isSubmitting || !isMatchComplete() || !playerTwoData}
-            className="w-full h-12 font-medium text-base bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+            className="w-full h-10 font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
