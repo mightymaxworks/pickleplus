@@ -59,7 +59,7 @@ const RequirementReviewDialog = ({ feature, onProceed }: { feature: any, onProce
     }
     
     if (currentPhase === 'Phase 6') {
-      const isPhase5Complete = false; // Marketplace Discovery not yet complete
+      const isPhase5Complete = true; // Phase 5 ALL COMPONENTS NOW COMPLETE
       if (!isPhase5Complete) {
         return {
           allowed: false,
@@ -816,7 +816,7 @@ const CoachingWorkflowAnalysis: React.FC = () => {
       id: 'coach-reputation-system',
       name: 'Coach Reputation System', 
       phase: 'Phase 6A',
-      status: 'blocked',
+      status: 'ready-to-develop',
       progress: 0,
       priority: 'HIGH',
       category: 'Trust & Safety',
