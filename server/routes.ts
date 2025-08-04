@@ -20,6 +20,7 @@ import { registerJournalRoutes } from "./routes/journal-routes";
 import pcpRoutes from "./routes/pcp-routes";
 import pcpEnforcementRoutes from "./routes/pcp-enforcement-routes";
 import coachMarketplaceRoutes from "./api/coach-marketplace";
+import { registerCoachPublicProfilesRoutes } from "./api/coach-public-profiles";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
@@ -183,6 +184,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Coach Marketplace Discovery routes...");
     app.use('/api/coaches', coachMarketplaceRoutes);
     console.log("[ROUTES] Coach Marketplace Discovery routes registered successfully");
+
+    // Coach Public Profiles System - Phase 5C (UDF Development)
+    console.log("[ROUTES] Registering Coach Public Profiles routes...");
+    registerCoachPublicProfilesRoutes(app);
+    console.log("[ROUTES] Coach Public Profiles routes registered successfully");
     
     // Player-Coach Direct Booking System - Phase 5B (UDF Development)
     console.log("[ROUTES] Registering Player-Coach Direct Booking System routes...");

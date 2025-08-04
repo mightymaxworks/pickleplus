@@ -124,6 +124,20 @@ export interface IStorage extends CommunityStorage {
   // Coach operations
   getCoaches(): Promise<User[]>;
   
+  // Coach Public Profiles operations
+  getCoachPublicProfileBySlug(slug: string): Promise<any | null>;
+  getCoachPublicProfileByUserId(userId: number): Promise<any | null>;
+  createCoachPublicProfile(data: any): Promise<any>;
+  updateCoachPublicProfile(profileId: number, data: any): Promise<any>;
+  trackProfileAnalytics(data: any): Promise<void>;
+  incrementProfileViewCount(profileId: number): Promise<void>;
+  sendCoachContactMessage(data: any): Promise<void>;
+  getCoachServices(profileId: number): Promise<any[]>;
+  createCoachService(data: any): Promise<any>;
+  updateCoachService(serviceId: number, data: any): Promise<any>;
+  deleteCoachService(serviceId: number): Promise<void>;
+  getProfileAnalytics(profileId: number): Promise<any>;
+  
   // Phase 2: Coach Business Analytics
   getCoachRevenueAnalytics(coachId: number): Promise<any>;
   getCoachClientMetrics(coachId: number): Promise<any>;
@@ -6024,6 +6038,226 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       }
     ];
+  }
+
+  // ======= COACH PUBLIC PROFILES SYSTEM =======
+  async getCoachPublicProfileBySlug(slug: string): Promise<any | null> {
+    console.log('[STORAGE] Getting coach public profile by slug:', slug);
+    // Mock implementation with comprehensive coach profile data
+    const mockProfiles = {
+      'sarah-johnson': {
+        id: 1,
+        userId: 2,
+        slug: 'sarah-johnson',
+        displayName: 'Sarah Johnson',
+        tagline: 'PCP Level 3 Certified Coach - Transforming Your Game',
+        bio: 'With over 8 years of pickleball coaching experience, I specialize in helping players of all levels reach their full potential. My approach combines technical precision with mental game development.',
+        profileImageUrl: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400',
+        coverImageUrl: 'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800',
+        location: 'Austin, TX',
+        timezone: 'America/Chicago',
+        languages: ['English', 'Spanish'],
+        yearsExperience: 8,
+        specializations: ['Advanced Strategy', 'Mental Game', 'Tournament Prep', 'Doubles Play'],
+        certifications: ['PCP Level 3', 'USAPA Certified', 'Mental Performance Coach'],
+        playingLevel: 'Professional',
+        coachingPhilosophy: 'I believe every player has unique strengths that can be developed. My coaching focuses on building confidence while perfecting technique and strategy.',
+        hourlyRate: 9500, // $95 in cents
+        contactEmail: 'sarah@picklecoaching.com',
+        phoneNumber: '(512) 555-0123',
+        website: 'https://sarahjohnsoncoaching.com',
+        isPublic: true,
+        acceptingNewClients: true,
+        showContactInfo: true,
+        showPricing: true,
+        showReviews: true,
+        viewCount: 247,
+        lastActive: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        services: [
+          {
+            id: 1,
+            profileId: 1,
+            title: 'Individual Coaching Session',
+            description: 'One-on-one personalized coaching focused on your specific needs and goals.',
+            duration: 60,
+            price: 9500,
+            sessionType: 'individual',
+            maxParticipants: 1,
+            isActive: true
+          },
+          {
+            id: 2,
+            profileId: 1,
+            title: 'Doubles Strategy Clinic',
+            description: 'Small group sessions focusing on doubles positioning, communication, and strategy.',
+            duration: 90,
+            price: 6500,
+            sessionType: 'group',
+            maxParticipants: 4,
+            isActive: true
+          },
+          {
+            id: 3,
+            profileId: 1,
+            title: 'Tournament Preparation',
+            description: 'Intensive preparation sessions for upcoming tournaments with match simulation.',
+            duration: 120,
+            price: 15000,
+            sessionType: 'individual',
+            maxParticipants: 1,
+            isActive: true
+          }
+        ],
+        testimonials: [
+          {
+            id: 1,
+            profileId: 1,
+            clientName: 'Mike Thompson',
+            clientTitle: 'Competitive Player',
+            content: 'Sarah transformed my doubles game completely. Her strategic insights and mental game coaching helped me win my first tournament!',
+            rating: 5,
+            sessionType: 'doubles',
+            isVerified: true,
+            isFeatured: true,
+            displayOrder: 1,
+            createdAt: new Date()
+          },
+          {
+            id: 2,
+            profileId: 1,
+            clientName: 'Lisa Chen',
+            clientTitle: 'Recreational Player',
+            content: 'Patient, knowledgeable, and encouraging. Sarah helped me build confidence and improve my consistency dramatically.',
+            rating: 5,
+            sessionType: 'individual',
+            isVerified: true,
+            isFeatured: true,
+            displayOrder: 2,
+            createdAt: new Date()
+          },
+          {
+            id: 3,
+            profileId: 1,
+            clientName: 'David Rodriguez',
+            clientTitle: 'Intermediate Player',
+            content: 'The best investment I made in my pickleball journey. Sarah\'s coaching philosophy and methods are truly exceptional.',
+            rating: 5,
+            sessionType: 'individual',
+            isVerified: true,
+            isFeatured: true,
+            displayOrder: 3,
+            createdAt: new Date()
+          }
+        ],
+        sections: [],
+        analytics: []
+      }
+    };
+
+    return mockProfiles[slug] || null;
+  }
+
+  async getCoachPublicProfileByUserId(userId: number): Promise<any | null> {
+    console.log('[STORAGE] Getting coach public profile by user ID:', userId);
+    // Mock implementation - in real app, query by userId
+    if (userId === 2) {
+      return await this.getCoachPublicProfileBySlug('sarah-johnson');
+    }
+    return null;
+  }
+
+  async createCoachPublicProfile(data: any): Promise<any> {
+    console.log('[STORAGE] Creating coach public profile:', data);
+    // Mock implementation
+    return {
+      id: Math.floor(Math.random() * 10000),
+      ...data,
+      viewCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      services: [],
+      testimonials: [],
+      sections: [],
+      analytics: []
+    };
+  }
+
+  async updateCoachPublicProfile(profileId: number, data: any): Promise<any> {
+    console.log('[STORAGE] Updating coach public profile:', profileId, data);
+    // Mock implementation
+    const existing = await this.getCoachPublicProfileBySlug('sarah-johnson');
+    return {
+      ...existing,
+      ...data,
+      updatedAt: new Date()
+    };
+  }
+
+  async trackProfileAnalytics(data: any): Promise<void> {
+    console.log('[STORAGE] Tracking profile analytics:', data);
+    // Mock implementation - in real app, insert analytics record
+  }
+
+  async incrementProfileViewCount(profileId: number): Promise<void> {
+    console.log('[STORAGE] Incrementing view count for profile:', profileId);
+    // Mock implementation - in real app, increment view count
+  }
+
+  async sendCoachContactMessage(data: any): Promise<void> {
+    console.log('[STORAGE] Sending coach contact message:', data);
+    // Mock implementation - in real app, send email/notification
+  }
+
+  async getCoachServices(profileId: number): Promise<any[]> {
+    console.log('[STORAGE] Getting coach services for profile:', profileId);
+    const profile = await this.getCoachPublicProfileBySlug('sarah-johnson');
+    return profile?.services || [];
+  }
+
+  async createCoachService(data: any): Promise<any> {
+    console.log('[STORAGE] Creating coach service:', data);
+    // Mock implementation
+    return {
+      id: Math.floor(Math.random() * 10000),
+      ...data,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
+  async updateCoachService(serviceId: number, data: any): Promise<any> {
+    console.log('[STORAGE] Updating coach service:', serviceId, data);
+    // Mock implementation
+    return {
+      id: serviceId,
+      ...data,
+      updatedAt: new Date()
+    };
+  }
+
+  async deleteCoachService(serviceId: number): Promise<void> {
+    console.log('[STORAGE] Deleting coach service:', serviceId);
+    // Mock implementation
+  }
+
+  async getProfileAnalytics(profileId: number): Promise<any> {
+    console.log('[STORAGE] Getting profile analytics for:', profileId);
+    // Mock implementation
+    return {
+      totalViews: 247,
+      viewsThisMonth: 42,
+      contactClicks: 18,
+      profileShares: 7,
+      bookingStarts: 12,
+      topReferrers: [
+        'Google Search',
+        'Coach Directory',
+        'Direct Traffic'
+      ]
+    };
   }
 }
 

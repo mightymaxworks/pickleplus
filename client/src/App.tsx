@@ -740,6 +740,19 @@ export default function App() {
                     pageTitle="My Coach"
                   />
 
+                  {/* Coach Public Profiles System - Phase 5C */}
+                  <Route path="/coach/:slug">
+                    {(params) => {
+                      const CoachPublicProfile = lazyLoad(() => import('./pages/CoachPublicProfile'));
+                      return <CoachPublicProfile slug={params.slug} />;
+                    }}
+                  </Route>
+                  <ProtectedRouteWithLayout 
+                    path="/profile-editor"
+                    component={lazyLoad(() => import('./pages/CoachProfileEditor'))}
+                    pageTitle="Profile Editor"
+                  />
+
                   {/* PCP Coach Onboarding & Dashboard (PKL-278651-PCP-BASIC-TIER) */}
                   <ProtectedRouteWithLayout 
                     path="/pcp-coach/onboarding"
