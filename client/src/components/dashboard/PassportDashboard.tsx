@@ -1534,31 +1534,31 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
         <Tabs defaultValue="coaching" className="w-full">
           {/* Mobile-Optimized Navigation Tabs */}
           <div className="md:hidden mb-4">
-            <TabsList className="grid w-full grid-cols-4 h-12 bg-white/80 border border-orange-200 rounded-lg">
+            <TabsList className="grid w-full grid-cols-4 h-12 bg-white/80 border border-orange-200 rounded-lg p-1">
               <TabsTrigger 
                 value="coaching" 
-                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <BookOpen className="w-4 h-4" />
                 <span className="text-xs">Coach</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="matches" 
-                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Target className="w-4 h-4" />
                 <span className="text-xs">Match</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="leaderboard" 
-                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Trophy className="w-4 h-4" />
                 <span className="text-xs">Rank</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="performance" 
-                className="flex flex-col items-center justify-center gap-1 text-xs p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex flex-col items-center justify-center gap-1 text-xs p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Activity className="w-4 h-4" />
                 <span className="text-xs">Stats</span>
@@ -1568,52 +1568,52 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
           
           {/* Desktop Navigation */}
           <div className="hidden md:block mb-4">
-            <TabsList className="grid w-full grid-cols-7 h-10 bg-white/80 border border-orange-200 rounded-lg">
+            <TabsList className="grid w-full grid-cols-7 h-10 bg-white/80 border border-orange-200 rounded-lg p-1">
               <TabsTrigger 
                 value="coaching" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <BookOpen className="w-4 h-4" />
                 Coaching
               </TabsTrigger>
               <TabsTrigger 
                 value="matches" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Target className="w-4 h-4" />
                 Record
               </TabsTrigger>
               <TabsTrigger 
                 value="leaderboard" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Trophy className="w-4 h-4" />
                 Rankings
               </TabsTrigger>
               <TabsTrigger 
                 value="performance" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Activity className="w-4 h-4" />
                 Performance
               </TabsTrigger>
               <TabsTrigger 
                 value="achievements" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Award className="w-4 h-4" />
                 Achievements
               </TabsTrigger>
               <TabsTrigger 
                 value="social" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Users className="w-4 h-4" />
                 Social
               </TabsTrigger>
               <TabsTrigger 
                 value="community" 
-                className="flex items-center justify-center gap-2 text-sm p-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                className="flex items-center justify-center gap-2 text-sm p-2 rounded-md data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800 data-[state=active]:shadow-sm"
               >
                 <Users className="w-4 h-4" />
                 Community

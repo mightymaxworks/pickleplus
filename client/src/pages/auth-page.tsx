@@ -409,7 +409,7 @@ export default function AuthPage() {
                             )}
                           />
 
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-start">
                             <FormField
                               control={loginForm.control}
                               name="rememberMe"
@@ -431,14 +431,6 @@ export default function AuthPage() {
                                 </FormItem>
                               )}
                             />
-                            <Button 
-                              variant="link" 
-                              size="sm" 
-                              className="p-0 h-auto text-sm text-orange-600 hover:text-orange-800 font-semibold"
-                              onClick={() => setLocation("/forgot-password")}
-                            >
-                              {t('auth.forgotPassword', 'Forgot password?')}
-                            </Button>
                           </div>
 
                           <Button 
@@ -806,11 +798,17 @@ export default function AuthPage() {
             <div className="max-w-lg">
               <div className="mb-8 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-full blur-3xl scale-110"></div>
-                <img 
-                  src={pickleLogoPath} 
-                  alt="Pickle+ Logo" 
-                  className="relative h-72 w-auto mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
-                />
+                <div className="relative h-72 w-auto mx-auto flex items-center justify-center">
+                  {/* Modern SVG Logo */}
+                  <div className="text-center">
+                    <div className="text-8xl font-bold bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent mb-4 transform hover:scale-105 transition-transform duration-500 drop-shadow-2xl">
+                      Pickle+
+                    </div>
+                    <div className="text-2xl font-semibold text-orange-600/80">
+                      Global Pickleball Network
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="text-center">
                 <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent mb-6 leading-tight">
