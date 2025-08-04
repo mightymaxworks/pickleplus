@@ -69,7 +69,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Users, UserCircle, CheckCircle2, Info, CheckCircle } from "lucide-react";
+import { Users, UserCircle, CheckCircle2, Info, CheckCircle, Trophy, Award, FileText } from "lucide-react";
 
 // Match form schema with match type for hybrid point system
 const matchFormSchema = z.object({
@@ -513,138 +513,146 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const playerTwoWins = games.filter(g => g.playerTwoScore > g.playerOneScore).length;
   
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="md:flex-row md:items-center px-4 sm:px-6 py-3 sm:py-4">
-        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-base sm:text-lg">
-          <span>Quick Match Recorder</span>
-          <div className="text-xs sm:text-sm font-normal text-muted-foreground mt-1 sm:mt-0">
-            Record a casual match in just a few clicks
-          </div>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CheckCircle className="h-5 w-5" />
+          Match Recorder
         </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Record matches with automatic age group calculations and comprehensive scoring options
+        </p>
       </CardHeader>
       
-      <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
-        {/* Format Selection */}
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Match Format</div>
-          <ToggleGroup 
-            type="single" 
-            value={formatType}
-            onValueChange={handleFormatTypeChange}
-            className="justify-start flex w-full"
-          >
-            <ToggleGroupItem value="singles" className="gap-2 flex-1 h-10 sm:h-auto">
-              <UserCircle className="h-4 w-4" />
-              <span className="text-sm">Singles</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="doubles" className="gap-2 flex-1 h-10 sm:h-auto">
+      <CardContent className="space-y-6">
+        {/* Match Configuration */}
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Format Selection */}
+          <div className="space-y-3">
+            <div className="text-sm font-medium flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span className="text-sm">Doubles</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        {/* Scoring System Selection */}
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Scoring System</div>
-          <ToggleGroup 
-            type="single" 
-            value={scoringSystem}
-            onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}
-            className="justify-start flex w-full"
-          >
-            <ToggleGroupItem value="traditional" className="gap-2 flex-1 h-10 sm:h-auto">
-              <span className="text-sm">Traditional</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="rally" className="gap-2 flex-1 h-10 sm:h-auto">
-              <span className="text-sm">Rally</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <div className="text-xs text-muted-foreground">
-            {scoringSystem === "traditional" ? "11, 15, or 21 points with serve changes" : "15 or 21 points with no serve changes"}
+              Match Format
+            </div>
+            <ToggleGroup 
+              type="single" 
+              value={formatType}
+              onValueChange={handleFormatTypeChange}
+              className="flex flex-col gap-2"
+            >
+              <ToggleGroupItem value="singles" className="w-full justify-start gap-2">
+                <UserCircle className="h-4 w-4" />
+                Singles
+              </ToggleGroupItem>
+              <ToggleGroupItem value="doubles" className="w-full justify-start gap-2">
+                <Users className="h-4 w-4" />
+                Doubles
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
-        </div>
 
-        {/* Points to Win Selection */}
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Points to Win</div>
-          <ToggleGroup 
-            type="single" 
-            value={String(pointsToWin)}
-            onValueChange={(value) => {
-              if (value) {
-                const points = parseInt(value) as 11 | 15 | 21;
-                setPointsToWin(points);
-              }
-            }}
-            className="justify-start flex w-full"
-          >
-            {scoringSystem === "traditional" ? (
-              <>
-                <ToggleGroupItem value="11" className="gap-2 flex-1 h-10 sm:h-auto">
-                  <span className="text-sm">11</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="15" className="gap-2 flex-1 h-10 sm:h-auto">
-                  <span className="text-sm">15</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="21" className="gap-2 flex-1 h-10 sm:h-auto">
-                  <span className="text-sm">21</span>
-                </ToggleGroupItem>
-              </>
-            ) : (
-              <>
-                <ToggleGroupItem value="15" className="gap-2 flex-1 h-10 sm:h-auto">
-                  <span className="text-sm">15</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="21" className="gap-2 flex-1 h-10 sm:h-auto">
-                  <span className="text-sm">21</span>
-                </ToggleGroupItem>
-              </>
-            )}
-          </ToggleGroup>
+          {/* Scoring System Selection */}
+          <div className="space-y-3">
+            <div className="text-sm font-medium">Scoring System</div>
+            <ToggleGroup 
+              type="single" 
+              value={scoringSystem}
+              onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}
+              className="flex flex-col gap-2"
+            >
+              <ToggleGroupItem value="traditional" className="w-full justify-start">
+                Traditional
+              </ToggleGroupItem>
+              <ToggleGroupItem value="rally" className="w-full justify-start">
+                Rally
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <div className="text-xs text-muted-foreground">
+              {scoringSystem === "traditional" ? "Side-out scoring" : "Rally scoring"}
+            </div>
+          </div>
+
+          {/* Points to Win Selection */}
+          <div className="space-y-3">
+            <div className="text-sm font-medium">Points to Win</div>
+            <ToggleGroup 
+              type="single" 
+              value={String(pointsToWin)}
+              onValueChange={(value) => {
+                if (value) {
+                  const points = parseInt(value) as 11 | 15 | 21;
+                  setPointsToWin(points);
+                }
+              }}
+              className="flex flex-col gap-2"
+            >
+              {scoringSystem === "traditional" ? (
+                <>
+                  <ToggleGroupItem value="11" className="w-full justify-center">11 Points</ToggleGroupItem>
+                  <ToggleGroupItem value="15" className="w-full justify-center">15 Points</ToggleGroupItem>
+                  <ToggleGroupItem value="21" className="w-full justify-center">21 Points</ToggleGroupItem>
+                </>
+              ) : (
+                <>
+                  <ToggleGroupItem value="15" className="w-full justify-center">15 Points</ToggleGroupItem>
+                  <ToggleGroupItem value="21" className="w-full justify-center">21 Points</ToggleGroupItem>
+                </>
+              )}
+            </ToggleGroup>
+          </div>
         </div>
 
         {/* Match Type Selection for Hybrid Point System */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="text-sm font-medium">Match Type</div>
-          <ToggleGroup 
-            type="single" 
-            value={matchType}
-            onValueChange={(value) => value && setMatchType(value as "tournament" | "league" | "casual")}
-            className="justify-start flex w-full"
-          >
-            <ToggleGroupItem value="tournament" className="gap-2 flex-1 h-10 sm:h-auto">
-              <span className="text-sm">Tournament</span>
-              <Badge variant="secondary" className="text-xs">100%</Badge>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="league" className="gap-2 flex-1 h-10 sm:h-auto">
-              <span className="text-sm">League</span>
-              <Badge variant="secondary" className="text-xs">67%</Badge>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="casual" className="gap-2 flex-1 h-10 sm:h-auto">
-              <span className="text-sm">Casual</span>
-              <Badge variant="secondary" className="text-xs">50%</Badge>
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <div className="text-xs text-muted-foreground">
-            Point values: Tournament matches earn full points, League matches earn 67%, Casual matches earn 50%
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Button
+              variant={matchType === "tournament" ? "default" : "outline"}
+              onClick={() => setMatchType("tournament")}
+              className="flex flex-col items-center p-4 h-auto"
+            >
+              <Trophy className="h-5 w-5 mb-2" />
+              <span className="font-medium">Tournament</span>
+              <Badge variant="secondary" className="text-xs mt-1">100% Points</Badge>
+            </Button>
+            <Button
+              variant={matchType === "league" ? "default" : "outline"}
+              onClick={() => setMatchType("league")}
+              className="flex flex-col items-center p-4 h-auto"
+            >
+              <Award className="h-5 w-5 mb-2" />
+              <span className="font-medium">League</span>
+              <Badge variant="secondary" className="text-xs mt-1">67% Points</Badge>
+            </Button>
+            <Button
+              variant={matchType === "casual" ? "default" : "outline"}
+              onClick={() => setMatchType("casual")}
+              className="flex flex-col items-center p-4 h-auto"
+            >
+              <Users className="h-5 w-5 mb-2" />
+              <span className="font-medium">Casual</span>
+              <Badge variant="secondary" className="text-xs mt-1">50% Points</Badge>
+            </Button>
           </div>
         </div>
         
         <Separator />
         
         {/* Player Selection */}
-        <div className="space-y-3">
-          <div className="text-sm font-medium">Players</div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <UserCircle className="h-4 w-4" />
+            <span className="text-sm font-medium">Player Selection</span>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Player One Side */}
-            <Card className="border-dashed">
-              <CardHeader className="py-2 sm:py-3 px-3 sm:px-4">
+            <Card className="border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
                   Player One
                   {isAdmin && (
-                    <Badge variant="secondary" className="text-xs">Admin Recording</Badge>
+                    <Badge variant="secondary" className="text-xs">Admin</Badge>
                   )}
                 </CardTitle>
               </CardHeader>
@@ -705,9 +713,12 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             </Card>
             
             {/* Opponent Side */}
-            <Card className="border-dashed">
-              <CardHeader className="py-2 sm:py-3 px-3 sm:px-4">
-                <CardTitle className="text-sm font-medium">Opponent Side</CardTitle>
+            <Card className="border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                  Opponent
+                </CardTitle>
               </CardHeader>
               <CardContent className="py-2 px-3 sm:px-4">
                 {/* Opponent Selection */}
@@ -757,35 +768,37 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         <Separator />
         
         {/* Game Format */}
-        <div className="space-y-3">
-          <div className="text-sm font-medium">Game Format</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground">Sets (Best of)</div>
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  variant={totalGames === 1 ? "default" : "outline"} 
-                  onClick={() => handleTotalGamesChange(1)}
-                  size="sm"
-                >
-                  Single Set
-                </Button>
-                <Button 
-                  variant={totalGames === 3 ? "default" : "outline"} 
-                  onClick={() => handleTotalGamesChange(3)}
-                  size="sm"
-                >
-                  Best of 3
-                </Button>
-                <Button 
-                  variant={totalGames === 5 ? "default" : "outline"} 
-                  onClick={() => handleTotalGamesChange(5)}
-                  size="sm"
-                >
-                  Best of 5
-                </Button>
-              </div>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-sm font-medium">Match Format</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Button 
+              variant={totalGames === 1 ? "default" : "outline"} 
+              onClick={() => handleTotalGamesChange(1)}
+              className="flex flex-col items-center p-4 h-auto"
+            >
+              <span className="font-medium">Single Set</span>
+              <span className="text-xs text-muted-foreground mt-1">First to win</span>
+            </Button>
+            <Button 
+              variant={totalGames === 3 ? "default" : "outline"} 
+              onClick={() => handleTotalGamesChange(3)}
+              className="flex flex-col items-center p-4 h-auto"
+            >
+              <span className="font-medium">Best of 3</span>
+              <span className="text-xs text-muted-foreground mt-1">First to 2 sets</span>
+            </Button>
+            <Button 
+              variant={totalGames === 5 ? "default" : "outline"} 
+              onClick={() => handleTotalGamesChange(5)}
+              className="flex flex-col items-center p-4 h-auto"
+            >
+              <span className="font-medium">Best of 5</span>
+              <span className="text-xs text-muted-foreground mt-1">First to 3 sets</span>
+            </Button>
+          </div>
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground">Scoring System</div>
               <div className="flex flex-wrap gap-2">
@@ -873,8 +886,11 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         <Separator />
         
         {/* Score Entry */}
-        <div className="space-y-3">
-          <div className="text-sm font-medium">Score</div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-sm font-medium">Score Entry</span>
+          </div>
           
           {/* Single Game Score Entry */}
           {totalGames === 1 ? (
@@ -927,28 +943,37 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           )}
         </div>
         
+        <Separator />
+        
         {/* VALMAT Validation Information */}
-        <div className="mt-4">
-          <Alert className="text-xs sm:text-sm">
-            <CheckCircle className="h-4 w-4 mt-0.5" />
-            <AlertTitle className="ml-2">Match will be validated automatically</AlertTitle>
-            <AlertDescription className="ml-2">
-              Your match will be auto-validated for you, but other players will need to confirm it.
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-sm font-medium">Match Validation</span>
+          </div>
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-800">Auto-Validation Enabled</AlertTitle>
+            <AlertDescription className="text-green-700">
+              Your match will be validated automatically, but other players will need to confirm their participation.
             </AlertDescription>
           </Alert>
         </div>
         
+        <Separator />
+        
         {/* Notes Field */}
-        <div className="space-y-3">
-          <div className="text-sm font-medium flex items-center">
-            <span>Notes</span>
-            <span className="text-xs text-muted-foreground ml-2">(Optional)</span>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="text-sm font-medium">Match Notes</span>
+            <Badge variant="secondary" className="text-xs">Optional</Badge>
           </div>
           <Form {...form}>
             <form>
               <textarea
-                className="w-full min-h-[80px] p-3 rounded-md border focus:border-primary border-input bg-background focus:outline-none"
-                placeholder="Add any notes about this match..."
+                className="w-full min-h-[80px] p-4 rounded-lg border border-input bg-background focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                placeholder="Add any notes about this match (weather conditions, court surface, notable plays, etc.)..."
                 {...form.register("notes")}
               />
             </form>
@@ -956,25 +981,42 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         </div>
       </CardContent>
       
-      <CardFooter className="px-4 sm:px-6 py-3 sm:py-4 flex flex-row-reverse justify-between">
-        <Button 
-          onClick={handleSubmit}
-          disabled={isSubmitting || !isMatchComplete() || !playerTwoData}
-          className="gap-2 h-10 min-w-28 sm:h-auto sm:text-base"
-          size="sm"
-        >
-          <CheckCircle2 className="h-4 w-4" />
-          Submit
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={resetForm}
-          disabled={isSubmitting}
-          className="gap-1 h-10 sm:h-auto"
-          size="sm"
-        >
-          Reset
-        </Button>
+      <CardFooter className="pt-6 border-t">
+        <div className="w-full space-y-4">
+          <Button 
+            onClick={handleSubmit}
+            disabled={isSubmitting || !isMatchComplete() || !playerTwoData}
+            className="w-full h-12 font-medium text-base bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                Recording Match...
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Record Match & Update Rankings
+              </div>
+            )}
+          </Button>
+          
+          {(!playerTwoData || !isMatchComplete()) && (
+            <div className="text-sm text-muted-foreground text-center p-3 bg-muted/30 rounded-lg">
+              <Info className="h-4 w-4 inline mr-2" />
+              {!playerTwoData ? "Please select an opponent to record the match" : "Please complete all game scores"}
+            </div>
+          )}
+          
+          <Button 
+            variant="outline" 
+            onClick={resetForm}
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            Reset Form
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
