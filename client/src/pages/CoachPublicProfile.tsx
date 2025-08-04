@@ -52,7 +52,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ coach, isOpen, onClose }) =
 
   const sendContactMessage = useMutation({
     mutationFn: async (data: { message: string }) => {
-      const response = await fetch(`/api/coach-profiles/${coach.slug}/contact`, {
+      const response = await fetch(`/api/coach-public-profiles/${coach.slug}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -182,9 +182,9 @@ const CoachPublicProfile: React.FC = () => {
 
   // Get coach profile by slug
   const { data: coach, isLoading } = useQuery({
-    queryKey: ['/api/coach-profiles', slug],
+    queryKey: ['/api/coach-public-profiles', slug],
     queryFn: async () => {
-      const response = await fetch(`/api/coach-profiles/${slug}`, {
+      const response = await fetch(`/api/coach-public-profiles/${slug}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Coach profile not found');
@@ -196,7 +196,7 @@ const CoachPublicProfile: React.FC = () => {
   // Track profile view
   useEffect(() => {
     if (coach) {
-      fetch(`/api/coach-profiles/${slug}/analytics`, {
+      fetch(`/api/coach-public-profiles/${slug}/analytics`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

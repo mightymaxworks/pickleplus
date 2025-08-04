@@ -7,7 +7,7 @@ export function registerCoachPublicProfilesRoutes(app: Express) {
   console.log("[API] Registering Coach Public Profiles routes");
 
   // Get public profile by slug
-  app.get('/api/coach-profiles/:slug', async (req: Request, res: Response) => {
+  app.get('/api/coach-public-profiles/:slug', async (req: Request, res: Response) => {
     try {
       const { slug } = req.params;
       
@@ -36,7 +36,7 @@ export function registerCoachPublicProfilesRoutes(app: Express) {
   });
 
   // Track profile analytics
-  app.post('/api/coach-profiles/:slug/analytics', async (req: Request, res: Response) => {
+  app.post('/api/coach-public-profiles/:slug/analytics', async (req: Request, res: Response) => {
     try {
       const { slug } = req.params;
       const { eventType } = req.body;
@@ -69,7 +69,7 @@ export function registerCoachPublicProfilesRoutes(app: Express) {
   });
 
   // Send contact message to coach
-  app.post('/api/coach-profiles/:slug/contact', isAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/coach-public-profiles/:slug/contact', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { slug } = req.params;
       const { message } = req.body;

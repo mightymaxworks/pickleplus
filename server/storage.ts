@@ -6153,6 +6153,115 @@ export class DatabaseStorage implements IStorage {
         ],
         sections: [],
         analytics: []
+      },
+      'mike-thompson': {
+        id: 2,
+        userId: 3,
+        slug: 'mike-thompson',
+        displayName: 'Mike Thompson',
+        tagline: 'PCP Level 2 Certified Coach - Power & Precision Specialist',
+        bio: 'Former competitive tennis player turned pickleball expert. With 6 years of coaching experience, I focus on developing powerful yet controlled shots and aggressive net play. Perfect for intermediate to advanced players looking to take their game to the next level.',
+        profileImageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+        coverImageUrl: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800',
+        location: 'Phoenix, AZ',
+        timezone: 'America/Phoenix',
+        languages: ['English'],
+        yearsExperience: 6,
+        specializations: ['Power Shots', 'Net Play', 'Aggressive Strategy', 'Singles Play'],
+        certifications: ['PCP Level 2', 'USAPA Certified', 'Former Tennis Pro'],
+        playingLevel: 'Advanced',
+        coachingPhilosophy: 'Aggressive play wins games. I teach players to be fearless at the net while maintaining shot control and tactical awareness.',
+        hourlyRate: 8500, // $85 in cents
+        contactEmail: 'mike@powerplaycoaching.com',
+        phoneNumber: '(602) 555-0187',
+        website: 'https://mikethompsoncoaching.com',
+        isPublic: true,
+        acceptingNewClients: true,
+        showContactInfo: true,
+        showPricing: true,
+        showReviews: true,
+        viewCount: 189,
+        lastActive: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        services: [
+          {
+            id: 4,
+            profileId: 2,
+            title: 'Power Shot Development',
+            description: 'Learn to hit with power while maintaining control. Focus on drive shots, overheads, and aggressive returns.',
+            duration: 60,
+            price: 8500,
+            sessionType: 'individual',
+            maxParticipants: 1,
+            isActive: true
+          },
+          {
+            id: 5,
+            profileId: 2,
+            title: 'Net Game Mastery',
+            description: 'Dominate at the net with aggressive volleys, drop shots, and positioning strategies.',
+            duration: 75,
+            price: 10000,
+            sessionType: 'individual',
+            maxParticipants: 1,
+            isActive: true
+          },
+          {
+            id: 6,
+            profileId: 2,
+            title: 'Tournament Strategy Session',
+            description: 'Match tactics, mental preparation, and competitive strategy for tournament play.',
+            duration: 90,
+            price: 12500,
+            sessionType: 'group',
+            maxParticipants: 2,
+            isActive: true
+          }
+        ],
+        testimonials: [
+          {
+            id: 4,
+            profileId: 2,
+            clientName: 'Jennifer Martinez',
+            clientTitle: 'Advanced Player',
+            content: 'Mike helped me develop the power game I never thought I could have. My drives are now my strongest weapon!',
+            rating: 5,
+            sessionType: 'individual',
+            isVerified: true,
+            isFeatured: true,
+            displayOrder: 1,
+            createdAt: new Date()
+          },
+          {
+            id: 5,
+            profileId: 2,
+            clientName: 'Robert Kim',
+            clientTitle: 'Tournament Player',
+            content: 'The net game strategies Mike taught me completely changed my doubles performance. Highly recommended!',
+            rating: 5,
+            sessionType: 'group',
+            isVerified: true,
+            isFeatured: true,
+            displayOrder: 2,
+            createdAt: new Date()
+          },
+          {
+            id: 6,
+            profileId: 2,
+            clientName: 'Amanda Foster',
+            clientTitle: 'Competitive Player',
+            content: 'Mike\'s tournament preparation sessions gave me the mental edge I needed. Won my division championship!',
+            rating: 5,
+            sessionType: 'individual',
+            isVerified: true,
+            isFeatured: false,
+            displayOrder: 3,
+            createdAt: new Date()
+          }
+        ],
+        sections: [],
+        analytics: []
       }
     };
 
