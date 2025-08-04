@@ -119,11 +119,11 @@ export function DialogPlayerSelect({
           <div className="flex items-center space-x-2 py-4">
             <div className="grid flex-1 gap-2">
               <Input
-                placeholder="Search by name or username..."
+                placeholder="Search by name, username, or passport ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full"
-                aria-label="Search players"
+                aria-label="Search players by name, username, or passport ID"
               />
             </div>
           </div>
@@ -167,7 +167,12 @@ export function DialogPlayerSelect({
                       </Avatar>
                       <div className="flex flex-col text-left">
                         <span className="font-medium">{player.displayName || player.username}</span>
-                        <span className="text-xs text-muted-foreground">@{player.username}</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>@{player.username}</span>
+                          {('passportId' in player && player.passportId) && (
+                            <span>• ID: {player.passportId}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     

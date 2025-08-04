@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Users, User, Clock, MapPin, Award, TrendingUp, Target, Zap } from "lucide-react";
+import QuickMatchRecorder from "@/components/match/QuickMatchRecorder";
+import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
 
 type MatchType = 'singles' | 'doubles';
 type EventType = 'recreational' | 'competitive' | 'tournament';
@@ -75,13 +77,18 @@ export default function MatchRecordingDemo() {
       </div>
 
       <div className="max-w-6xl mx-auto">
-        <Tabs defaultValue="recording" className="space-y-6">
+        <Tabs defaultValue="recorder" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="recording">Match Recording</TabsTrigger>
+            <TabsTrigger value="recorder">Quick Recorder</TabsTrigger>
+            <TabsTrigger value="recording">Demo Recording</TabsTrigger>
             <TabsTrigger value="ranking">Ranking System</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-            <TabsTrigger value="admin">Admin Dashboard</TabsTrigger>
+            <TabsTrigger value="leaderboard">Enhanced Leaderboard</TabsTrigger>
           </TabsList>
+
+          {/* Quick Recorder Tab */}
+          <TabsContent value="recorder" className="space-y-6">
+            <QuickMatchRecorder />
+          </TabsContent>
 
           {/* Match Recording Tab */}
           <TabsContent value="recording" className="space-y-6">
@@ -378,6 +385,31 @@ export default function MatchRecordingDemo() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Enhanced Leaderboard Tab */}
+          <TabsContent value="leaderboard" className="space-y-6">
+            <div className="grid lg:grid-cols-1 gap-6">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold mb-2">Enhanced Leaderboard System</h2>
+                <p className="text-muted-foreground">
+                  Separate rankings by age group (Open, 35+, 50+) AND gender as requested.
+                  Real-time ranking updates based on match recordings.
+                </p>
+              </div>
+              
+              {/* Singles Leaderboard */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">Singles Leaderboard</h3>
+                <EnhancedLeaderboard formatType="singles" />
+              </div>
+              
+              {/* Doubles Leaderboard */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">Doubles Leaderboard</h3>
+                <EnhancedLeaderboard formatType="doubles" />
+              </div>
+            </div>
           </TabsContent>
 
           {/* Admin Dashboard Tab */}

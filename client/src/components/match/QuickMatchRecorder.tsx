@@ -8,6 +8,48 @@ import { useAuth } from "@/lib/auth";
 import { matchSDK } from "@/lib/sdk/matchSDK";
 import { useLocation } from "wouter";
 
+// Age multiplier constants for automatic calculation based on player ages
+const AGE_MULTIPLIERS = {
+  '18-34': 1.0,
+  '35-49': 1.1,
+  '50-59': 1.3,
+  '60+': 1.5
+};
+
+// Automatic age group detection based on birth date
+const getAgeGroup = (dateOfBirth: string): string => {
+  const birthDate = new Date(dateOfBirth);
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  // Adjust for birthday not yet passed this year
+  const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+  
+  if (actualAge >= 60) return '60+';
+  if (actualAge >= 50) return '50-59';
+  if (actualAge >= 35) return '35-49';
+  return '18-34';
+};
+
+// Calculate age multiplier automatically from player data
+const calculateAgeMultiplier = (playerOneData: any, playerTwoData: any): number => {
+  const ages = [];
+  
+  if (playerOneData?.dateOfBirth) {
+    const ageGroup = getAgeGroup(playerOneData.dateOfBirth);
+    ages.push(AGE_MULTIPLIERS[ageGroup as keyof typeof AGE_MULTIPLIERS]);
+  }
+  
+  if (playerTwoData?.dateOfBirth) {
+    const ageGroup = getAgeGroup(playerTwoData.dateOfBirth);
+    ages.push(AGE_MULTIPLIERS[ageGroup as keyof typeof AGE_MULTIPLIERS]);
+  }
+  
+  // Use average multiplier of all players, or default to 1.0
+  return ages.length > 0 ? ages.reduce((sum, mult) => sum + mult, 0) / ages.length : 1.0;
+};
+
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +92,8 @@ interface UserSearchResult {
   passportId?: string | null;
   avatarUrl?: string | undefined;
   avatarInitials?: string | undefined;
+  dateOfBirth?: string | null;
+  gender?: string | null;
 }
 
 interface QuickMatchRecorderProps {
@@ -309,18 +353,47 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     console.log("Game scores:", games);
     
     try {
-      // Calculate age division based on user birthyear
-      let division = "open";
-      if (user.yearOfBirth) {
-        const today = new Date();
-        const age = today.getFullYear() - user.yearOfBirth;
-        
-        if (age >= 70) division = "70+";
-        else if (age >= 60) division = "60+";
-        else if (age >= 50) division = "50+";
-        else if (age >= 35) division = "35+";
-        else if (age >= 19) division = "19+";
+      // Calculate age division based on oldest player's date of birth for automatic division assignment
+      let division = "open"; // Default to open division
+      
+      // Collect all player ages to determine the appropriate division
+      const playerAges = [];
+      
+      if (playerOneData?.dateOfBirth) {
+        const age = new Date().getFullYear() - new Date(playerOneData.dateOfBirth).getFullYear();
+        playerAges.push(age);
       }
+      
+      if (playerTwoData?.dateOfBirth) {
+        const age = new Date().getFullYear() - new Date(playerTwoData.dateOfBirth).getFullYear();
+        playerAges.push(age);
+      }
+      
+      // If we have partner data for doubles
+      if (formatType === "doubles") {
+        if (playerOnePartnerData?.dateOfBirth) {
+          const age = new Date().getFullYear() - new Date(playerOnePartnerData.dateOfBirth).getFullYear();
+          playerAges.push(age);
+        }
+        
+        if (playerTwoPartnerData?.dateOfBirth) {
+          const age = new Date().getFullYear() - new Date(playerTwoPartnerData.dateOfBirth).getFullYear();
+          playerAges.push(age);
+        }
+      }
+      
+      // Determine division based on oldest player (standard tournament rules)
+      if (playerAges.length > 0) {
+        const oldestAge = Math.max(...playerAges);
+        
+        if (oldestAge >= 70) division = "70+";
+        else if (oldestAge >= 60) division = "60+";
+        else if (oldestAge >= 50) division = "50+";
+        else if (oldestAge >= 35) division = "35+";
+        else division = "open";
+      }
+      
+      console.log("Age division calculation:", { playerAges, division });
       
       // Create match data object
       const matchData = {
@@ -338,6 +411,13 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         })),
         notes: form.getValues("notes"),
       };
+      
+      // Calculate automatic age multiplier based on player ages
+      const ageMultiplier = calculateAgeMultiplier(playerOneData, playerTwoData);
+      console.log("Calculated age multiplier:", ageMultiplier);
+      
+      // Add age multiplier to match data
+      matchData.ageMultiplier = ageMultiplier;
       
       console.log("Submitting match data:", JSON.stringify(matchData, null, 2));
       
@@ -461,6 +541,66 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
               <Users className="h-4 w-4" />
               <span className="text-sm">Doubles</span>
             </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
+        {/* Scoring System Selection */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Scoring System</div>
+          <ToggleGroup 
+            type="single" 
+            value={scoringSystem}
+            onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}
+            className="justify-start flex w-full"
+          >
+            <ToggleGroupItem value="traditional" className="gap-2 flex-1 h-10 sm:h-auto">
+              <span className="text-sm">Traditional</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="rally" className="gap-2 flex-1 h-10 sm:h-auto">
+              <span className="text-sm">Rally</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <div className="text-xs text-muted-foreground">
+            {scoringSystem === "traditional" ? "11, 15, or 21 points with serve changes" : "15 or 21 points with no serve changes"}
+          </div>
+        </div>
+
+        {/* Points to Win Selection */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Points to Win</div>
+          <ToggleGroup 
+            type="single" 
+            value={String(pointsToWin)}
+            onValueChange={(value) => {
+              if (value) {
+                const points = parseInt(value) as 11 | 15 | 21;
+                setPointsToWin(points);
+              }
+            }}
+            className="justify-start flex w-full"
+          >
+            {scoringSystem === "traditional" ? (
+              <>
+                <ToggleGroupItem value="11" className="gap-2 flex-1 h-10 sm:h-auto">
+                  <span className="text-sm">11</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="15" className="gap-2 flex-1 h-10 sm:h-auto">
+                  <span className="text-sm">15</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="21" className="gap-2 flex-1 h-10 sm:h-auto">
+                  <span className="text-sm">21</span>
+                </ToggleGroupItem>
+              </>
+            ) : (
+              <>
+                <ToggleGroupItem value="15" className="gap-2 flex-1 h-10 sm:h-auto">
+                  <span className="text-sm">15</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="21" className="gap-2 flex-1 h-10 sm:h-auto">
+                  <span className="text-sm">21</span>
+                </ToggleGroupItem>
+              </>
+            )}
           </ToggleGroup>
         </div>
 
@@ -621,14 +761,14 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           <div className="text-sm font-medium">Game Format</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
-              <div className="text-xs text-muted-foreground">Games</div>
+              <div className="text-xs text-muted-foreground">Sets (Best of)</div>
               <div className="flex flex-wrap gap-2">
                 <Button 
                   variant={totalGames === 1 ? "default" : "outline"} 
                   onClick={() => handleTotalGamesChange(1)}
                   size="sm"
                 >
-                  Single Game
+                  Single Set
                 </Button>
                 <Button 
                   variant={totalGames === 3 ? "default" : "outline"} 

@@ -142,6 +142,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     console.log("[ROUTES] Registering SAGE API routes...");
     app.use('/api/sage', sageApiRoutes);
+
+    // Enhanced Leaderboard Routes for age group and gender separation
+    console.log("[ROUTES] Registering Enhanced Leaderboard routes...");
+    const enhancedLeaderboardRoutes = await import('./routes/enhanced-leaderboard');
+    app.use('/api/leaderboard', enhancedLeaderboardRoutes.default);
+    console.log("[ROUTES] Enhanced leaderboard routes registered successfully");
     
     // PCP Certification System
     console.log("[ROUTES] Registering PCP Certification routes...");
