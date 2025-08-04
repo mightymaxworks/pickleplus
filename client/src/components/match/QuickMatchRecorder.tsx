@@ -885,6 +885,8 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         
         <Separator />
         
+        <Separator />
+        
         {/* Score Entry */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
