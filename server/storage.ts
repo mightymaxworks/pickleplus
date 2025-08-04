@@ -124,6 +124,10 @@ export interface IStorage extends CommunityStorage {
   // Coach operations
   getCoaches(): Promise<User[]>;
   
+  // Coach Marketplace Profiles operations
+  getCoachMarketplaceProfileByUserId(userId: number): Promise<any | null>;
+  updateCoachMarketplaceProfile(userId: number, data: any): Promise<any>;
+  
   // Coach Public Profiles operations
   getCoachPublicProfileBySlug(slug: string): Promise<any | null>;
   getCoachPublicProfileByUserId(userId: number): Promise<any | null>;
@@ -1444,6 +1448,41 @@ export class DatabaseStorage implements IStorage {
       return result.rows[0] as any;
     } catch (error) {
       console.error('Error updating coach profile:', error);
+      throw error;
+    }
+  }
+
+  // Coach Marketplace Profiles operations
+  async getCoachMarketplaceProfileByUserId(userId: number): Promise<any | null> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM coach_marketplace_profiles 
+        WHERE user_id = ${userId}
+        LIMIT 1
+      `);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error fetching coach marketplace profile:', error);
+      return null;
+    }
+  }
+
+  async updateCoachMarketplaceProfile(userId: number, data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        UPDATE coach_marketplace_profiles 
+        SET 
+          display_name = ${data.display_name || sql`display_name`},
+          tagline = ${data.tagline || sql`tagline`},
+          location = ${data.location || sql`location`},
+          hourly_rate = ${data.hourly_rate || sql`hourly_rate`},
+          updated_at = NOW()
+        WHERE user_id = ${userId}
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating coach marketplace profile:', error);
       throw error;
     }
   }
