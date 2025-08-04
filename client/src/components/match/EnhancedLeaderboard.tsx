@@ -215,7 +215,7 @@ export default function EnhancedLeaderboard({}: EnhancedLeaderboardProps) {
             <p>• <strong>Open Division:</strong> Players of all ages compete together</p>
             <p>• <strong>Age Divisions:</strong> Based on oldest player in doubles, individual age in singles</p>
             <p>• <strong>Gender Separation:</strong> Separate leaderboards for men, women, and mixed competitions</p>
-            <p>• <strong>Points System:</strong> Tournament matches (100%), League matches (67%), Casual matches (50%)</p>
+            <p>• <strong>Points System:</strong> All matches count equally regardless of scoring format (traditional/rally/extended)</p>
           </div>
         </div>
       </CardContent>
