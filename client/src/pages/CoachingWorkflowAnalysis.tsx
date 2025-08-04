@@ -1716,30 +1716,6 @@ All UDF validations have passed:
       console.log('📋 DEVELOPMENT REQUEST MESSAGE:', agentMessage);
       alert('⚠️ Could not copy to clipboard. Check console for the development request message.');
     }
-  };
-
-Ready to proceed with implementation.`;
-
-    // Show comprehensive development request
-    const userMessage = `Please begin development of "${feature.name}" following UDF protocol.
-
-UDF Validation Complete:
-✓ Requirements reviewed and approved  
-✓ Dependencies validated (${feature.dependencies?.join(', ') || 'none'})
-✓ Sequential development order confirmed
-✓ Development authorization granted
-
-Priority: ${feature.priority}
-Estimated Duration: ${feature.estimatedDuration}
-
-Begin implementation now.`;
-
-    // Copy to clipboard and show instructions
-    navigator.clipboard.writeText(userMessage).then(() => {
-      alert(`✅ UDF Development Request Ready!\n\nThe development message has been copied to your clipboard.\n\nNext Step: Paste and send this message to trigger actual development of "${feature.name}"\n\nThe agent will then begin implementing the feature following UDF sequential protocol.`);
-    }).catch(() => {
-      alert(`✅ UDF Development Request Ready!\n\nCopy this message and send it to the agent:\n\n"${userMessage}"\n\nThis will trigger actual development of "${feature.name}".`);
-    });
     
     // Update UI to show development ready
     setTimeout(() => {
@@ -2345,7 +2321,7 @@ Begin implementation now.`;
                       <div className="space-y-4">
                         <div>
                           <h4 className="font-medium text-sm mb-2">Technical Scope:</h4>
-                          <p className="text-sm text-gray-600">{item.technicalScope}</p>
+                          <p className="text-sm text-gray-600">{item.businessImpact}</p>
                         </div>
                         
                         <div>
