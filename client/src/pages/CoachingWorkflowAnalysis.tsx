@@ -682,6 +682,42 @@ const CoachingWorkflowAnalysis: React.FC = () => {
         verification: 'User successfully authenticated (ID: 218), database tables created, system operational'
       }
     },
+    {
+      id: 'match-recording-system',
+      name: 'Modern Match Recording & Ranking System',
+      phase: 'Phase 4D',
+      status: 'ready-to-develop',
+      progress: 75,
+      lastUpdated: '2025-08-04',
+      priority: 'CRITICAL',
+      category: 'Core Match Features',
+      features: ['Singles/Doubles Recording', 'Auto Ranking Points', 'Age Group Multipliers', 'Pickle Points Logic', 'Admin Dashboard'],
+      routes: ['/match-recording-demo', '/matches/record', '/admin/matches'],
+      apiEndpoints: ['/api/matches/record', '/api/matches/ranking-points', '/api/admin/matches'],
+      businessImpact: 'Core match functionality with automatic ranking point calculation',
+      testPages: ['/match-recording-demo'],
+      dependencies: ['authentication-system', 'database-infrastructure'],
+      readyForDevelopment: true,
+      developmentNotes: 'Demo pages created with comprehensive point logic, ready for backend integration'
+    },
+    {
+      id: 'enhanced-passport-display',
+      name: 'Modern User Passport Enhancement',
+      phase: 'Phase 4E',
+      status: 'ready-to-develop',
+      progress: 80,
+      lastUpdated: '2025-08-04',
+      priority: 'HIGH',
+      category: 'User Experience',
+      features: ['Multi-View Modes', 'Quick Actions', 'Real-time Stats', 'QR Integration', 'Mobile Optimization'],
+      routes: ['/passport-demo', '/passport', '/passport/facility'],
+      apiEndpoints: ['/api/user/passport', '/api/user/stats', '/api/user/achievements'],
+      businessImpact: 'Enhanced user engagement and facility integration',
+      testPages: ['/passport-demo'],
+      dependencies: ['authentication-system', 'match-recording-system'],
+      readyForDevelopment: true,
+      developmentNotes: 'Enhanced passport views created with modern UI/UX and multiple display modes'
+    },
     
     // 🚀 READY TO DEVELOP FEATURES
     {
