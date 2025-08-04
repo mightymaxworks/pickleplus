@@ -768,7 +768,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         <Separator />
         
         {/* Game Format */}
-        <div className="space-y-4">
+        <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4" />
             <span className="text-sm font-medium">Match Format</span>
@@ -881,7 +881,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
               </div>
             </div>
           )}
-        </div>
+        </CardContent>
         
         <Separator />
         
