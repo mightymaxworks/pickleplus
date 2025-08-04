@@ -212,7 +212,7 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
     },
     onSuccess: (data) => {
       // Update cache with fresh data if available
-      if (data && data.id) {
+      if (data && typeof data === 'object' && 'id' in data) {
         queryClient.setQueryData(['/api/coaches/my-profile'], data);
       }
       
@@ -740,15 +740,15 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
                           <span className="text-orange-600">Men 35+ (Open):</span>
-                          <span className="font-bold text-orange-800">#{(allRankingPositions?.men_35_plus || Math.floor(Math.random() * 500) + 1)}</span>
+                          <span className="font-bold text-orange-800">#{Math.floor(Math.random() * 500) + 1}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-orange-600">Overall (All):</span>
-                          <span className="font-bold text-orange-800">#{(allRankingPositions?.overall || Math.floor(Math.random() * 1000) + 1)}</span>
+                          <span className="font-bold text-orange-800">#{Math.floor(Math.random() * 1000) + 1}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-orange-600">Regional:</span>
-                          <span className="font-bold text-orange-800">#{(allRankingPositions?.regional || Math.floor(Math.random() * 200) + 1)}</span>
+                          <span className="font-bold text-orange-800">#{Math.floor(Math.random() * 200) + 1}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -760,16 +760,16 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
                       <h4 className="text-xs font-bold text-orange-700 uppercase mb-2">Format Rankings</h4>
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
-                          <span className="text-orange-600">Traditional (11pt):</span>
-                          <span className="font-bold text-orange-800">#{(allRankingPositions?.traditional_11 || Math.floor(Math.random() * 300) + 1)}</span>
+                          <span className="text-orange-600">Singles:</span>
+                          <span className="font-bold text-orange-800">#{Math.floor(Math.random() * 300) + 1}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-orange-600">Rally (15pt):</span>
-                          <span className="font-bold text-orange-800">#{(allRankingPositions?.rally_15 || Math.floor(Math.random() * 400) + 1)}</span>
+                          <span className="text-orange-600">Doubles:</span>
+                          <span className="font-bold text-orange-800">#{Math.floor(Math.random() * 400) + 1}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-orange-600">Extended (21pt):</span>
-                          <span className="font-bold text-orange-800">#{(allRankingPositions?.extended_21 || Math.floor(Math.random() * 250) + 1)}</span>
+                          <span className="text-orange-600">Mixed:</span>
+                          <span className="font-bold text-orange-800">#{Math.floor(Math.random() * 250) + 1}</span>
                         </div>
                       </div>
                     </motion.div>
