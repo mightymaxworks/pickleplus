@@ -979,3 +979,5 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     </Card>
   );
 }
+
+export default QuickMatchRecorder;
