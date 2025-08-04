@@ -1671,49 +1671,59 @@ export default function PassportDashboard({ onShowOnboarding }: PassportDashboar
             </Card>
           </TabsContent>
 
-          {/* Leaderboard Tab - Enhanced Rankings with Format Tabs */}
-          <TabsContent value="leaderboard" className="space-y-4 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+          {/* Leaderboard Tab - Mobile-Optimized Rankings */}
+          <TabsContent value="leaderboard" className="space-y-3 mt-4">
+            <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl border border-orange-200">
+              {/* Mobile-First Header */}
+              <div className="p-4 pb-2">
+                <div className="flex items-center gap-2 mb-1">
                   <Trophy className="w-5 h-5 text-orange-600" />
-                  Enhanced Leaderboard
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  View rankings across singles, doubles, mixed doubles, age groups and genders
+                  <h2 className="text-lg font-bold text-orange-800">Rankings</h2>
+                </div>
+                <p className="text-xs text-orange-600 mb-3">
+                  Global leaderboards across all formats
                 </p>
-              </CardHeader>
-              <CardContent>
+                
+                {/* Clean Format Selector */}
                 <Tabs defaultValue="singles" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="singles" className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
+                  <TabsList className="grid w-full grid-cols-3 h-10 bg-white/60 border border-orange-200">
+                    <TabsTrigger 
+                      value="singles" 
+                      className="text-xs font-medium data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                    >
+                      <User className="w-3 h-3 mr-1" />
                       Singles
                     </TabsTrigger>
-                    <TabsTrigger value="doubles" className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
+                    <TabsTrigger 
+                      value="doubles" 
+                      className="text-xs font-medium data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                    >
+                      <Users className="w-3 h-3 mr-1" />
                       Doubles
                     </TabsTrigger>
-                    <TabsTrigger value="mixed" className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
+                    <TabsTrigger 
+                      value="mixed" 
+                      className="text-xs font-medium data-[state=active]:bg-orange-100 data-[state=active]:text-orange-800"
+                    >
+                      <Users className="w-3 h-3 mr-1" />
                       Mixed
                     </TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="singles" className="mt-4">
+                  <TabsContent value="singles" className="mt-3">
                     <EnhancedLeaderboard formatType="singles" />
                   </TabsContent>
                   
-                  <TabsContent value="doubles" className="mt-4">
+                  <TabsContent value="doubles" className="mt-3">
                     <EnhancedLeaderboard formatType="doubles" />
                   </TabsContent>
                   
-                  <TabsContent value="mixed" className="mt-4">
+                  <TabsContent value="mixed" className="mt-3">
                     <EnhancedLeaderboard formatType="mixed" />
                   </TabsContent>
                 </Tabs>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-4 mt-6">

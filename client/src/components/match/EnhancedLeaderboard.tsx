@@ -83,25 +83,24 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {formatType === "singles" ? <User className="h-5 w-5" /> : 
-           formatType === "mixed" ? <Users className="h-5 w-5" /> : <Users className="h-5 w-5" />}
-          Enhanced Leaderboard - {formatType === "singles" ? "Singles" : 
-                                  formatType === "mixed" ? "Mixed Doubles" : "Doubles"}
-        </CardTitle>
-        
-        {/* Filtering Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Age Division</label>
-            <div className="flex flex-wrap gap-2">
+    <div className="w-full">
+      {/* Mobile-First Filters */}
+      <div className="mb-4">
+        {/* Compact Filter Controls */}
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-orange-700 mb-2 block">Age Group</label>
+            <div className="flex flex-wrap gap-1">
               {ageDivisions.map((division) => (
                 <Button
                   key={division.value}
                   variant={selectedDivision === division.value ? "default" : "outline"}
                   size="sm"
+                  className={`h-7 text-xs px-2 ${
+                    selectedDivision === division.value 
+                      ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                      : "border-orange-200 text-orange-700 hover:bg-orange-50"
+                  }`}
                   onClick={() => setSelectedDivision(division.value)}
                 >
                   {division.label}
@@ -110,14 +109,19 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
             </div>
           </div>
           
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Gender</label>
-            <div className="flex flex-wrap gap-2">
+          <div>
+            <label className="text-xs font-medium text-orange-700 mb-2 block">Gender</label>
+            <div className="flex gap-1">
               {genderOptions.map((gender) => (
                 <Button
                   key={gender.value}
                   variant={selectedGender === gender.value ? "default" : "outline"}
                   size="sm"
+                  className={`h-7 text-xs px-3 flex-1 ${
+                    selectedGender === gender.value 
+                      ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                      : "border-orange-200 text-orange-700 hover:bg-orange-50"
+                  }`}
                   onClick={() => setSelectedGender(gender.value)}
                 >
                   {gender.label}
@@ -127,101 +131,98 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
           </div>
         </div>
         
-        <div className="text-sm text-muted-foreground">
-          Showing: {getAgeGroupLabel(selectedDivision, selectedGender)}
+        <div className="text-xs text-orange-600 mt-2 text-center bg-orange-50 rounded px-2 py-1">
+          {getAgeGroupLabel(selectedDivision, selectedGender)} • {formatType === "singles" ? "Singles" : 
+                                  formatType === "mixed" ? "Mixed Doubles" : "Doubles"}
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent>
+      {/* Mobile-Optimized Rankings Display */}
+      <div className="bg-white rounded-lg border border-orange-100">
         {isLoading ? (
-          <div className="space-y-4">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 border rounded-lg animate-pulse">
-                <div className="w-12 h-12 bg-gray-200 rounded-full" />
+          <div className="space-y-2 p-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg animate-pulse">
+                <div className="w-8 h-8 bg-gray-200 rounded-full" />
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                  <div className="h-3 bg-gray-200 rounded w-1/4" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3 mb-1" />
+                  <div className="h-2 bg-gray-200 rounded w-1/3" />
                 </div>
-                <div className="h-6 bg-gray-200 rounded w-16" />
+                <div className="text-right">
+                  <div className="h-3 bg-gray-200 rounded w-8 mb-1" />
+                  <div className="h-2 bg-gray-200 rounded w-6" />
+                </div>
               </div>
             ))}
           </div>
         ) : leaderboardData && leaderboardData.length > 0 ? (
-          <div className="space-y-2">
+          <div className="divide-y divide-orange-100">
             {leaderboardData.map((player, index) => (
               <div
                 key={player.id}
-                className={`flex items-center gap-4 p-4 border rounded-lg transition-colors hover:bg-accent/50 ${
-                  index < 3 ? "bg-gradient-to-r from-accent/30 to-transparent" : ""
+                className={`flex items-center gap-3 p-3 transition-colors hover:bg-orange-50/50 ${
+                  index < 3 ? "bg-gradient-to-r from-yellow-50 to-orange-50" : ""
                 }`}
               >
-                {/* Rank */}
-                <div className="flex items-center justify-center w-8">
-                  {getRankIcon(index + 1)}
+                {/* Mobile-Optimized Rank */}
+                <div className="flex items-center justify-center w-8 h-8">
+                  {index < 3 ? (
+                    getRankIcon(index + 1)
+                  ) : (
+                    <span className="text-xs font-bold text-orange-600">#{index + 1}</span>
+                  )}
                 </div>
                 
-                {/* Player Info */}
-                <Avatar className="h-10 w-10">
+                {/* Compact Player Info */}
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={player.avatar} alt={player.displayName} />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-xs bg-orange-100 text-orange-700">
                     {player.displayName?.charAt(0) || player.username.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 
-                <div className="flex-1">
-                  <div className="font-medium">{player.displayName || player.username}</div>
-                  <div className="text-sm text-muted-foreground">
-                    @{player.username} • Age {player.age} • {player.division}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">{player.displayName || player.username}</div>
+                  <div className="text-xs text-orange-600 truncate">
+                    Age {player.age} • {player.winRate}% wins • {player.matchesPlayed} matches
                   </div>
                 </div>
                 
-                {/* Stats */}
-                <div className="text-center">
-                  <div className="font-bold text-lg">{player.points}</div>
-                  <div className="text-xs text-muted-foreground">points</div>
+                {/* Mobile-Optimized Points Display */}
+                <div className="text-right">
+                  <div className="font-bold text-sm text-orange-800">{player.points}</div>
+                  <div className="text-xs text-orange-600">pts</div>
                 </div>
-                
-                <div className="text-center">
-                  <div className="font-medium">{player.winRate}%</div>
-                  <div className="text-xs text-muted-foreground">win rate</div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="font-medium">{player.matchesPlayed}</div>
-                  <div className="text-xs text-muted-foreground">matches</div>
-                </div>
-                
-                {/* Division Badge */}
-                <Badge variant="secondary">
-                  {player.division} {player.gender.charAt(0).toUpperCase()}
-                </Badge>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No Rankings Yet</h3>
-            <p className="text-muted-foreground">
-              No players found for {getAgeGroupLabel(selectedDivision, selectedGender)} division.
+          <div className="text-center py-8 px-4">
+            <Trophy className="h-10 w-10 text-orange-300 mx-auto mb-3" />
+            <h3 className="text-sm font-medium mb-1 text-orange-800">No Rankings Yet</h3>
+            <p className="text-xs text-orange-600 mb-2">
+              No players in {getAgeGroupLabel(selectedDivision, selectedGender)}
             </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Start recording matches to populate the leaderboard!
+            <p className="text-xs text-orange-500">
+              Start recording matches to populate rankings!
             </p>
           </div>
         )}
         
-        {/* Legend */}
-        <div className="mt-6 p-4 bg-accent/20 rounded-lg">
-          <h4 className="text-sm font-medium mb-2">Division Rules</h4>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>• <strong>Open Division:</strong> Players of all ages compete together</p>
-            <p>• <strong>Age Divisions:</strong> Based on oldest player in doubles, individual age in singles</p>
-            <p>• <strong>Gender Separation:</strong> Separate leaderboards for men and women (mixed doubles shown under Mixed tab)</p>
-            <p>• <strong>Points System:</strong> All matches count equally regardless of scoring format (traditional/rally/extended)</p>
+        {/* Compact Legend */}
+        <div className="p-3 bg-orange-50/50 border-t border-orange-100">
+          <div className="text-xs text-orange-600 space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Scoring:</span>
+              <span>All formats count equally</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Age Groups:</span>
+              <span>Based on oldest player</span>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
