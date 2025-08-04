@@ -31,12 +31,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   console.log("[AUTH] Authentication setup complete");
 
+  // Register basic API routes
+  console.log("[ROUTES] Registering basic API routes...");
+  const { registerMatchRoutes } = await import('./routes/match-routes');
+  registerMatchRoutes(app);
+  console.log("[ROUTES] Match routes registered successfully");
+
   // === AUTHENTICATION ROUTES ===
   app.post('/api/register', async (req: Request, res: Response) => {
     try {
       const { username, password, email, firstName, lastName } = req.body;
       
       console.log(`[API][Registration] Attempting to register user: ${username}`);
+      console.log(`[API][Registration] Raw password: "${password}" (length: ${password.length})`);
       
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
@@ -47,13 +54,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate passport code
       const passportCode = `PKL-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
       
-      // Create new user
+      // Hash the password before creating user
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(password);
+      console.log(`[API][Registration] Password hashed from "${password}" to "${hashedPassword}"`);
+      console.log(`[API][Registration] Hash length: ${hashedPassword.length}`);
+      
+      // Create new user with proper defaults
       const newUser = await storage.createUser({
         username,
         email: email || `${username}@pickle.com`,
-        password, // This will be hashed by storage layer
+        password: hashedPassword, // Password is now properly hashed
         firstName,
         lastName,
+        displayName: `${firstName} ${lastName}` || username,
+        avatarInitials: `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}` || username.charAt(0).toUpperCase(),
         passportCode,
         duprRating: "3.0",
         createdAt: new Date(),

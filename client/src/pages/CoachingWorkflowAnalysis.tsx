@@ -952,9 +952,39 @@ const CoachingWorkflowAnalysis: React.FC = () => {
 
   const [criticalBlockers, setCriticalBlockers] = useState([
     {
+      id: 'authentication-session-persistence',
+      title: 'Authentication Session Persistence Failure',
+      impact: 'CRITICAL',
+      description: 'Session persistence broken - users lose authentication between requests, API endpoints returning HTML instead of JSON',
+      affectedSystems: ['User Authentication', 'API Routing', 'Session Management', 'All Protected Endpoints'],
+      solution: 'Fix session middleware, cookie handling, and API routing to ensure JSON responses',
+      estimatedEffort: '1-2 days',
+      status: 'deployment-blocker'
+    },
+    {
+      id: 'match-recording-verification-system',
+      title: 'Match Recording & Verification System Failure',
+      impact: 'CRITICAL', 
+      description: 'Match verification broken (all matches unverified), ranking points not calculated/distributed, ranking tables empty',
+      affectedSystems: ['Match Recording', 'Ranking Points', 'Player Rankings', 'Competition System'],
+      solution: 'Fix match verification process, implement ranking points calculation, populate ranking tables',
+      estimatedEffort: '2-3 days',
+      status: 'deployment-blocker'
+    },
+    {
+      id: 'api-routing-json-responses',
+      title: 'API Endpoints Returning HTML Instead of JSON',
+      impact: 'CRITICAL',
+      description: 'Critical API endpoints (/api/matches, /api/rankings/leaderboard, /api/coach-marketplace-profiles) returning HTML',
+      affectedSystems: ['API Architecture', 'Frontend Data Loading', 'Match Display', 'Ranking Display'],
+      solution: 'Fix middleware routing to ensure proper JSON responses from all API endpoints',
+      estimatedEffort: '1 day',
+      status: 'deployment-blocker'
+    },
+    {
       id: 'pcp-sequential-violation',
       title: 'PCP Certification Sequential Enforcement',
-      impact: 'CRITICAL',
+      impact: 'HIGH',
       description: 'Coaches can potentially skip certification levels, violating PCP business model',
       affectedSystems: ['Coach Certification', 'Business Model Integrity', 'Platform Credibility'],
       solution: 'Implement Level 1→2→3→4→5 enforcement with dynamic validation',
@@ -964,30 +994,24 @@ const CoachingWorkflowAnalysis: React.FC = () => {
     {
       id: 'marketplace-revenue-block',
       title: 'Coach Discovery & Marketplace Revenue',
-      impact: 'HIGH',
+      impact: 'MEDIUM',
       description: 'Players cannot discover and book coaches independently, blocking marketplace revenue',
       affectedSystems: ['Revenue Generation', 'Coach Visibility', 'Player Experience'],
       solution: 'Build coach directory, search, and direct booking system',
-      estimatedEffort: '2-3 weeks',
-      status: 'identified'
-    },
-    {
-      id: 'quality-assurance-gap',
-      title: 'Coach Quality & Trust Validation',
-      impact: 'MEDIUM',
-      description: 'No way to verify coach competency or player satisfaction',
-      affectedSystems: ['Quality Assurance', 'Legal/Liability', 'Coach Reputation'],
-      solution: 'Implement rating, review, and reputation management system',
       estimatedEffort: '2-3 weeks',
       status: 'identified'
     }
   ]);
 
   const [deploymentReadiness, setDeploymentReadiness] = useState({
+    authenticationSystem: { status: 'deployment-blocker', progress: 40, critical: true },
+    apiRoutingSystem: { status: 'deployment-blocker', progress: 30, critical: true },
+    matchRecordingSystem: { status: 'deployment-blocker', progress: 20, critical: true },
+    rankingPointsSystem: { status: 'deployment-blocker', progress: 10, critical: true },
     coreInfrastructure: { status: 'operational', progress: 100, critical: true },
     advancedAnalytics: { status: 'operational', progress: 100, critical: false },
     paymentProcessing: { status: 'operational', progress: 100, critical: true },
-    sessionBooking: { status: 'operational', progress: 95, critical: true },
+    sessionBooking: { status: 'needs-verification', progress: 75, critical: true },
     coachApplications: { status: 'operational', progress: 90, critical: true },
     pcpEnforcement: { status: 'critical-gap', progress: 10, critical: true },
     coachMarketplace: { status: 'critical-gap', progress: 25, critical: true },

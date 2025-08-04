@@ -340,8 +340,11 @@ export function setupAuth(app: Express) {
         }
         
         console.log(`[Auth] User found: ${username} (ID: ${user.id}), validating password...`);
+        console.log(`[Auth] Supplied password: "${password}" (length: ${password.length})`);
+        console.log(`[Auth] Stored hash: "${user.password}" (length: ${user.password.length})`);
         
         const passwordValid = await comparePasswords(password, user.password);
+        console.log(`[Auth] Password validation result: ${passwordValid}`);
         
         if (!passwordValid) {
           console.log(`[Auth] Password validation failed for user: ${username}`);
