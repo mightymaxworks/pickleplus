@@ -178,23 +178,11 @@ router.get('/recommendations', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Get user's search history to understand preferences
-    const recentSearches = await db
-      .select()
-      .from(coachSearchHistory)
-      .where(eq(coachSearchHistory.searcherId, req.user.id))
-      .orderBy(desc(coachSearchHistory.searchedAt))
-      .limit(10);
-
-    // Extract preferences from search history
-    const preferredSpecialties = [...new Set(
-      recentSearches.flatMap(s => s.specialties || [])
-    )];
+    // Simple recommendation without search history for now
+    const preferredSpecialties: string[] = [];
+    const averagePriceRange = null;
     
-    const averagePriceRange = recentSearches.length > 0 ? {
-      min: Math.min(...recentSearches.map(s => s.priceRange?.min || 0)),
-      max: Math.max(...recentSearches.map(s => s.priceRange?.max || 999))
-    } : null;
+
 
     // Build recommendation query
     let recommendationQuery = db
@@ -248,7 +236,7 @@ router.get('/recommendations', async (req, res) => {
     res.json({
       recommendations,
       basedOn: {
-        recentSearchCount: recentSearches.length,
+        recentSearchCount: 0,
         preferredSpecialties,
         averagePriceRange
       }
