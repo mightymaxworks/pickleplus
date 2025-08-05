@@ -275,6 +275,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // === PROFILE UPDATE ENDPOINTS ===
+  // Update user profile data
+  app.patch('/api/profile/update', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      console.log(`[API] Profile update request for user ${userId}:`, req.body);
+
+      // Update user profile with the provided data
+      const updatedUser = await storage.updateUserProfile(userId, req.body);
+      
+      console.log(`[API] Profile updated successfully for user ${userId}`);
+      res.json({
+        success: true,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('[API] Profile update error:', error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  });
+
+  // Update specific profile field
+  app.patch('/api/profile/field', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { field, value } = req.body;
+      if (!field) {
+        return res.status(400).json({ error: 'Field name is required' });
+      }
+
+      console.log(`[API] Field update request for user ${userId}: ${field} = ${value}`);
+
+      // Map frontend field names to database column names
+      const fieldMapping = {
+        'banner_url': 'bannerUrl',
+        'profilePicture': 'avatarUrl',
+        'playingSince': 'playingSince',
+        'playing_since': 'playingSince',
+        'displayName': 'displayName',
+        'bio': 'bio',
+        'location': 'location',
+        'skillLevel': 'skillLevel',
+        'preferredPosition': 'preferredPosition'
+      };
+
+      const dbField = fieldMapping[field as keyof typeof fieldMapping] || field;
+      const updateData = { [dbField]: value };
+
+      const updatedUser = await storage.updateUserProfile(userId, updateData);
+      
+      console.log(`[API] Field ${field} updated successfully for user ${userId}`);
+      res.json({
+        success: true,
+        user: updatedUser,
+        field: field,
+        value: value
+      });
+    } catch (error) {
+      console.error('[API] Field update error:', error);
+      res.status(500).json({ error: 'Failed to update field' });
+    }
+  });
+
   // === NOTIFICATIONS UNREAD COUNT ===
   app.get('/api/notifications/unread-count', isAuthenticated, async (req: Request, res: Response) => {
     try {

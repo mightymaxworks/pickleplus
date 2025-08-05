@@ -44,9 +44,43 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
   const [isPassportExpanded, setIsPassportExpanded] = useState(false);
   const [showPassportCode, setShowPassportCode] = useState(false);
 
-  const handleFieldChange = useCallback((field: string, value: any) => {
-    onFieldChange(field, value);
-  }, [onFieldChange]);
+  const handleFieldChange = useCallback(async (field: string, value: any) => {
+    console.log('Field changed:', field, value);
+    
+    try {
+      // Call the API to save the changes
+      const response = await fetch('/api/profile/field', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ field, value })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update ${field}`);
+      }
+
+      const result = await response.json();
+      console.log('Field update successful:', result);
+
+      // Call the parent callback for local state updates
+      onFieldChange(field, value);
+
+      toast({
+        title: "Profile Updated",
+        description: `${field} has been saved successfully`,
+      });
+    } catch (error) {
+      console.error('Field update error:', error);
+      toast({
+        title: "Update Failed", 
+        description: `Failed to save ${field}. Please try again.`,
+        variant: "destructive"
+      });
+    }
+  }, [onFieldChange, toast]);
 
   // Safety check for user object
   if (!user) {
