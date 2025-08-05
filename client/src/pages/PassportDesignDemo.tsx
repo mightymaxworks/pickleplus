@@ -318,6 +318,14 @@ function EditableField({
   multiline = false,
   options = [],
   className = ""
+}: {
+  value: any;
+  onSave: (value: any) => void;
+  type?: string;
+  placeholder?: string;
+  multiline?: boolean;
+  options?: string[];
+  className?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -394,7 +402,7 @@ function UnifiedPassportDemo() {
   
   const currentData = viewMode === "player" ? mockPlayerData : mockCoachData;
   
-  const handleFieldSave = (field, value) => {
+  const handleFieldSave = (field: string, value: any) => {
     console.log(`Saving ${field}:`, value);
     // In real implementation, this would make an API call
   };
@@ -536,72 +544,144 @@ function UnifiedPassportDemo() {
               {/* Bio Section */}
               <div className="mb-4">
                 {isOwner ? (
-                  <EditableField
-                    value={currentData.bio}
-                    onSave={(value) => handleFieldSave('bio', value)}
-                    placeholder="Tell others about yourself..."
-                    multiline={true}
-                    className="text-sm text-muted-foreground"
-                  />
+                  <div className="text-sm text-muted-foreground">
+                    <EditableField
+                      value={currentData.bio}
+                      onSave={(value) => handleFieldSave('bio', value)}
+                      placeholder="Tell others about yourself..."
+                      multiline={true}
+                    />
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">{currentData.bio}</p>
                 )}
               </div>
               
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                 {viewMode === "player" ? (
                   <>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-orange-600">#{currentData.currentRanking}</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-orange-600">#{currentData.currentRanking}</div>
                       <div className="text-xs text-muted-foreground">Current Rank</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-blue-600">{currentData.skillLevel}</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-blue-600">{currentData.skillLevel}</div>
                       <div className="text-xs text-muted-foreground">Skill Rating</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-green-600">{currentData.winRate}%</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-green-600">{currentData.winRate}%</div>
                       <div className="text-xs text-muted-foreground">Win Rate</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-purple-600">{currentData.picklePoints}</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-purple-600">{currentData.picklePoints}</div>
                       <div className="text-xs text-muted-foreground">Pickle Points</div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-green-600">{currentData.totalStudents}</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-green-600">{currentData.totalStudents}</div>
                       <div className="text-xs text-muted-foreground">Total Students</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-blue-600">{currentData.sessionsCompleted}</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-blue-600">{currentData.sessionsCompleted}</div>
                       <div className="text-xs text-muted-foreground">Sessions</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-yellow-600">{currentData.averageRating}⭐</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-yellow-600">{currentData.averageRating}⭐</div>
                       <div className="text-xs text-muted-foreground">Average Rating</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border">
-                      <div className="text-xl font-bold text-purple-600">${currentData.hourlyRate}</div>
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="text-lg md:text-xl font-bold text-purple-600">${currentData.hourlyRate}</div>
                       <div className="text-xs text-muted-foreground">Per Hour</div>
                     </div>
                   </>
                 )}
               </div>
+
+              {/* Rankings Display for Players */}
+              {viewMode === "player" && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
+                  <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                    <Trophy className="h-4 w-4" />
+                    Rankings Across Divisions
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                    <div className="bg-white p-3 rounded-md border">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Singles 19+</span>
+                        <Badge variant="outline" className="text-orange-600 border-orange-200">#12</Badge>
+                      </div>
+                    </div>
+                    <div className="bg-white p-3 rounded-md border">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Doubles 19+</span>
+                        <Badge variant="outline" className="text-blue-600 border-blue-200">#8</Badge>
+                      </div>
+                    </div>
+                    <div className="bg-white p-3 rounded-md border">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Mixed 19+</span>
+                        <Badge variant="outline" className="text-green-600 border-green-200">#15</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Tabbed Content */}
+      {/* Quick Access to Full Rankings - Player Mode */}
+      {viewMode === "player" && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
+              <div>
+                <h3 className="font-semibold text-lg">Complete Rankings Profile</h3>
+                <p className="text-sm text-muted-foreground">View full rankings, leaderboards, and performance analytics</p>
+              </div>
+              <Button className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                View Rankings
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabbed Content - Mobile Optimized */}
       <Tabs defaultValue="about" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="about">About</TabsTrigger>
-          <TabsTrigger value="stats">{viewMode === "player" ? "Match Stats" : "Teaching"}</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="contact">Connect</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+          <TabsTrigger value="about" className="text-xs sm:text-sm px-2 py-2">
+            <div className="flex flex-col items-center gap-1">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">About</span>
+              <span className="sm:hidden">Info</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-2">
+            <div className="flex flex-col items-center gap-1">
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">{viewMode === "player" ? "Stats" : "Teaching"}</span>
+              <span className="sm:hidden">{viewMode === "player" ? "Stats" : "Coach"}</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="text-xs sm:text-sm px-2 py-2">
+            <div className="flex flex-col items-center gap-1">
+              <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Achievements</span>
+              <span className="sm:hidden">Awards</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="contact" className="text-xs sm:text-sm px-2 py-2">
+            <div className="flex flex-col items-center gap-1">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Connect</span>
+            </div>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="about" className="space-y-4">
