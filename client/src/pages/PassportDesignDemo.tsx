@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
+import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
 
 interface DemoVariant {
   id: string;
@@ -851,113 +852,36 @@ function ModernPassportDemo() {
             </Card>
           </div>
 
-          {/* Full Rankings Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-indigo-600" />
-                Complete Leaderboard - Age Group 35-44 Male
-              </CardTitle>
-              <CardDescription>
-                Your competitive standing among peers in the same age and gender category
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b text-left">
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Rank</th>
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Player</th>
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Rating</th>
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Matches</th>
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Win Rate</th>
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Change</th>
-                      <th className="pb-3 text-sm font-medium text-muted-foreground">Last Active</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {/* Top players */}
-                    {[
-                      { rank: 1, name: "Mike Chen", rating: 4.8, matches: 189, winRate: 74, change: "+1", lastActive: "Today" },
-                      { rank: 2, name: "David Kim", rating: 4.7, matches: 167, winRate: 72, change: "-1", lastActive: "Yesterday" },
-                      { rank: 3, name: "Tom Rodriguez", rating: 4.6, matches: 156, winRate: 71, change: "0", lastActive: "2 days ago" },
-                      { rank: 4, name: "James Wilson", rating: 4.5, matches: 134, winRate: 69, change: "+2", lastActive: "Today" },
-                      { rank: 5, name: "Ryan Martinez", rating: 4.5, matches: 142, winRate: 68, change: "-1", lastActive: "3 days ago" }
-                    ].map((player) => (
-                      <tr key={player.rank} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-2 font-medium">#{player.rank}</td>
-                        <td className="py-3 px-2">{player.name}</td>
-                        <td className="py-3 px-2 font-medium">{player.rating}</td>
-                        <td className="py-3 px-2">{player.matches}</td>
-                        <td className="py-3 px-2">{player.winRate}%</td>
-                        <td className="py-3 px-2">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            player.change.startsWith('+') 
-                              ? 'bg-green-100 text-green-600' 
-                              : player.change.startsWith('-')
-                              ? 'bg-red-100 text-red-600'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {player.change}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-muted-foreground">{player.lastActive}</td>
-                      </tr>
-                    ))}
-                    
-                    {/* Current user highlighted */}
-                    <tr className="bg-orange-50 border border-orange-200">
-                      <td className="py-3 px-2 font-bold text-orange-600">#{Math.floor(Math.random() * 10) + 8}</td>
-                      <td className="py-3 px-2 font-bold">{currentData.firstName} {currentData.lastName} (You)</td>
-                      <td className="py-3 px-2 font-bold text-orange-600">{currentData.currentRating}</td>
-                      <td className="py-3 px-2">{currentData.totalMatches}</td>
-                      <td className="py-3 px-2">{currentData.winRate}%</td>
-                      <td className="py-3 px-2">
-                        <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-600">+2</span>
-                      </td>
-                      <td className="py-3 px-2 text-muted-foreground">Active now</td>
-                    </tr>
-
-                    {/* Players below */}
-                    {[
-                      { rank: Math.floor(Math.random() * 10) + 15, name: "Steve Anderson", rating: 4.1, matches: 98, winRate: 64, change: "-1", lastActive: "1 week ago" },
-                      { rank: Math.floor(Math.random() * 10) + 16, name: "Mark Thompson", rating: 4.0, matches: 87, winRate: 62, change: "0", lastActive: "4 days ago" }
-                    ].map((player) => (
-                      <tr key={player.rank} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-2 font-medium">#{player.rank}</td>
-                        <td className="py-3 px-2">{player.name}</td>
-                        <td className="py-3 px-2 font-medium">{player.rating}</td>
-                        <td className="py-3 px-2">{player.matches}</td>
-                        <td className="py-3 px-2">{player.winRate}%</td>
-                        <td className="py-3 px-2">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            player.change.startsWith('+') 
-                              ? 'bg-green-100 text-green-600' 
-                              : player.change.startsWith('-')
-                              ? 'bg-red-100 text-red-600'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {player.change}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-muted-foreground">{player.lastActive}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Enhanced Leaderboard with Format Filters */}
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="font-semibold text-lg mb-2">Complete Leaderboards</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Filter by age group, gender, and event type - rankings update in real-time
+              </p>
+            </div>
+            
+            {/* Event Type Tabs */}
+            <Tabs defaultValue="singles" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="singles">Singles</TabsTrigger>
+                <TabsTrigger value="doubles">Doubles</TabsTrigger>
+                <TabsTrigger value="mixed">Mixed Doubles</TabsTrigger>
+              </TabsList>
               
-              <div className="mt-6 text-center">
-                <Button variant="outline" size="sm" className="mr-2">
-                  View All Categories
-                </Button>
-                <Button variant="outline" size="sm">
-                  Export Rankings
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <TabsContent value="singles" className="space-y-0">
+                <EnhancedLeaderboard formatType="singles" />
+              </TabsContent>
+              
+              <TabsContent value="doubles" className="space-y-0">
+                <EnhancedLeaderboard formatType="doubles" />
+              </TabsContent>
+              
+              <TabsContent value="mixed" className="space-y-0">
+                <EnhancedLeaderboard formatType="mixed" />
+              </TabsContent>
+            </Tabs>
+          </div>
         </TabsContent>
 
         {userRoles.isCoach && (
