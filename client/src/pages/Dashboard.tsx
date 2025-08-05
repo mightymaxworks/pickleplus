@@ -51,7 +51,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen w-full">
+    <>
       <PassportDashboard 
         user={user} 
         onFieldChange={handleFieldChange}
@@ -63,6 +63,6 @@ export default function Dashboard() {
           forceShow={true}
         />
       )}
-    </div>
+    </>
   );
 }
