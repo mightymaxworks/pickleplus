@@ -150,7 +150,16 @@ export default function EnhancedMatchRecorder() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
+    // Validation - Date is required
+    if (!matchData.matchDate) {
+      toast({
+        title: 'Validation Error',
+        description: 'Match date is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     if (!matchData.player1Id || !matchData.player2Id) {
       toast({
         title: 'Validation Error',
@@ -389,37 +398,26 @@ export default function EnhancedMatchRecorder() {
                     <Label className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
                       Time (Optional)
+                      <span className="text-xs text-muted-foreground">- defaults to tournament time if linked</span>
                     </Label>
                     <Input 
                       type="time"
                       value={matchData.scheduledTime || ''}
                       onChange={(e) => setMatchData(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                      placeholder="Will use tournament time if not specified"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
+                {/* Competition Venue Display (if linked to competition) */}
+                {isAdmin && matchData.competitionId && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
-                      Venue (Optional)
-                    </Label>
-                    <Input 
-                      placeholder="Tennis center, court name..."
-                      value={matchData.venue || ''}
-                      onChange={(e) => setMatchData(prev => ({ ...prev, venue: e.target.value }))}
-                    />
+                      <span>Venue and court details will be set from the selected competition</span>
+                    </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label>Court (Optional)</Label>
-                    <Input 
-                      placeholder="Court 1, Court A..."
-                      value={matchData.court || ''}
-                      onChange={(e) => setMatchData(prev => ({ ...prev, court: e.target.value }))}
-                    />
-                  </div>
-                </div>
+                )}
 
                 {/* Competition Linking (Admin Only) */}
                 {isAdmin && competitions.length > 0 && (

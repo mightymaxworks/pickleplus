@@ -9,6 +9,11 @@ Coach workflow preferences:
 - Coaches should access training facilities to apply as facility coaches
 - Profile management should use inline editing rather than separate page navigation
 - Use "Coaching Bio" for coaching profile sections (not "PCP Coaching Certification Programme")
+Match Recording System preferences:
+- Scheduled date is required, time is optional and should default to tournament date
+- Court location should be created at tournament creation stage, not per match
+- Court number is not required for matches
+- **UDF Standardization**: Always reuse existing components instead of creating new ones - make admin functions enhanced versions of player components
 
 ## Development Guidelines
 - Keep things simple - avoid unnecessary complex naming like "Enhanced" prefixes
