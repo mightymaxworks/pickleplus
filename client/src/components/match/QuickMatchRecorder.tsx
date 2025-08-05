@@ -139,7 +139,8 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   // Admin-specific state for competition linking and manual points
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | null>(null);
   const [useManualPointsOverride, setUseManualPointsOverride] = useState(false);
-  const [manualPointsValue, setManualPointsValue] = useState<number>(0);
+  const [manualPointsWinner, setManualPointsWinner] = useState<number>(0);
+  const [manualPointsLoser, setManualPointsLoser] = useState<number>(0);
   
   // Mock competitions data (in real app this would come from API)
   const [competitions] = useState([
@@ -190,7 +191,8 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     if (isAdmin) {
       setSelectedCompetitionId(null);
       setUseManualPointsOverride(false);
-      setManualPointsValue(0);
+      setManualPointsWinner(0);
+      setManualPointsLoser(0);
     }
     
     form.reset({
@@ -437,7 +439,10 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         // Admin-specific enhancements
         ...(isAdmin && {
           competitionId: selectedCompetitionId,
-          manualPointsOverride: useManualPointsOverride ? manualPointsValue : undefined,
+          manualPointsOverride: useManualPointsOverride ? {
+            winner: manualPointsWinner,
+            loser: manualPointsLoser
+          } : undefined,
           isAdminRecorded: true,
         }),
       };
@@ -500,7 +505,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       // Show success toast with admin-specific messaging
       const successMessage = isAdmin 
         ? useManualPointsOverride 
-          ? `Match recorded with manual points override (${manualPointsValue} points)${selectedCompetitionId ? ' and linked to competition' : ''}`
+          ? `Match recorded with manual points override (Winner: ${manualPointsWinner}, Loser: ${manualPointsLoser})${selectedCompetitionId ? ' and linked to competition' : ''}`
           : `Match recorded with ${selectedCompetitionId ? 'competition linking and ' : ''}enhanced admin capabilities`
         : "Your match has been recorded and auto-validated. Other players still need to validate this match.";
         
@@ -933,7 +938,10 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                     checked={useManualPointsOverride}
                     onCheckedChange={(checked) => {
                       setUseManualPointsOverride(checked as boolean);
-                      if (!checked) setManualPointsValue(0);
+                      if (!checked) {
+                        setManualPointsWinner(0);
+                        setManualPointsLoser(0);
+                      }
                     }}
                   />
                   <Label htmlFor="manual-points-override" className="text-xs cursor-pointer">
@@ -942,24 +950,44 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 </div>
                 
                 {useManualPointsOverride && (
-                  <div className="space-y-2">
-                    <Label htmlFor="manual-points" className="text-xs text-muted-foreground">
-                      Manual ranking points to award
-                    </Label>
-                    <Input
-                      id="manual-points"
-                      type="number"
-                      min="0"
-                      max="1000"
-                      step="1"
-                      value={manualPointsValue}
-                      onChange={(e) => setManualPointsValue(parseInt(e.target.value) || 0)}
-                      className="h-9 text-sm"
-                      placeholder="Enter points (0-1000)"
-                    />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="manual-points-winner" className="text-xs text-muted-foreground">
+                          Winner points
+                        </Label>
+                        <Input
+                          id="manual-points-winner"
+                          type="number"
+                          min="0"
+                          max="1000"
+                          step="1"
+                          value={manualPointsWinner}
+                          onChange={(e) => setManualPointsWinner(parseInt(e.target.value) || 0)}
+                          className="h-9 text-sm"
+                          placeholder="Winner points"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="manual-points-loser" className="text-xs text-muted-foreground">
+                          Loser points
+                        </Label>
+                        <Input
+                          id="manual-points-loser"
+                          type="number"
+                          min="0"
+                          max="1000"
+                          step="1"
+                          value={manualPointsLoser}
+                          onChange={(e) => setManualPointsLoser(parseInt(e.target.value) || 0)}
+                          className="h-9 text-sm"
+                          placeholder="Loser points"
+                        />
+                      </div>
+                    </div>
                     <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded border">
                       <Info className="h-3 w-3 inline mr-1" />
-                      Manual override will replace automatic point calculations. Use with caution.
+                      Manual override will replace automatic point calculations for both winner and loser. Use with caution.
                     </div>
                   </div>
                 )}
