@@ -127,6 +127,7 @@ export default function ModernPassportProfile({
               {isOwner ? (
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                   <EditableField
+                    label=""
                     fieldName="firstName"
                     value={user?.firstName || ''}
                     onSave={async (fieldName: string, value: string) => {
@@ -136,6 +137,7 @@ export default function ModernPassportProfile({
                     className="text-2xl md:text-3xl font-bold text-gray-900"
                   />
                   <EditableField
+                    label=""
                     fieldName="lastName"
                     value={user?.lastName || ''}
                     onSave={async (fieldName: string, value: string) => {
