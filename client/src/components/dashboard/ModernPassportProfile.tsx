@@ -246,6 +246,7 @@ export default function ModernPassportProfile({
                 </div>
               </div>
             </div>
+          </div>
         </div>
       
       {/* Tabbed Content - Full Screen */}
