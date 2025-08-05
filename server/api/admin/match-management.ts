@@ -229,13 +229,9 @@ router.get('/players/available', requireAuth, requireAdmin, async (req, res) => 
     .from(users)
     .where(eq(users.isActive, true));
 
-    // Apply filters
-    const conditions = [eq(users.isActive, true)];
-    if (gender) conditions.push(eq(users.gender, gender as string));
-    if (ageGroup) conditions.push(eq(ageGroupMappings.ageGroup, ageGroup as any));
-
-    if (conditions.length > 1) {
-      query = query.where(and(...conditions));
+    // Apply additional filters if needed
+    if (gender) {
+      query = query.where(and(eq(users.isActive, true), eq(users.gender, gender as string)));
     }
 
     const players = await query
