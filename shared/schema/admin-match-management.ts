@@ -31,13 +31,12 @@ export const competitions = pgTable('competitions', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Matches table - individual matches within competitions
-export const matches = pgTable('matches', {
+// Admin matches table - individual matches within competitions
+export const adminMatches = pgTable('admin_matches', {
   id: serial('id').primaryKey(),
   competitionId: integer('competition_id').notNull(),
   matchNumber: integer('match_number').notNull(),
   format: matchFormatEnum('format').notNull(),
-  ageGroup: ageGroupEnum('age_group').notNull(),
   
   // Player assignments
   player1Id: integer('player1_id').notNull(),
@@ -57,8 +56,6 @@ export const matches = pgTable('matches', {
   
   // Results
   winnerId: integer('winner_id'),
-  winnerPoints: integer('winner_points'),
-  loserPoints: integer('loser_points'),
   
   // Venue
   venue: varchar('venue', { length: 255 }),
@@ -67,6 +64,19 @@ export const matches = pgTable('matches', {
   // Metadata
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Individual player results table - each player gets their own record with age-appropriate points
+export const playerMatchResults = pgTable('player_match_results', {
+  id: serial('id').primaryKey(),
+  matchId: integer('match_id').notNull(),
+  playerId: integer('player_id').notNull(),
+  isWinner: boolean('is_winner').notNull(),
+  pointsAwarded: integer('points_awarded').notNull(),
+  ageGroupAtMatch: ageGroupEnum('age_group_at_match').notNull(),
+  ageGroupMultiplier: decimal('age_group_multiplier', { precision: 3, scale: 2 }).default('1.00'),
+  basePoints: integer('base_points').notNull(), // Points before age multiplier
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // Point allocation rules table
@@ -90,19 +100,23 @@ export const ageGroupMappings = pgTable('age_group_mappings', {
 });
 
 // Relations
-export const competitionsRelations = relations(competitions, ({ many, one }) => ({
-  matches: many(matches),
-  creator: one(competitions, {
-    fields: [competitions.createdBy],
-    references: [competitions.id],
-  }),
+export const competitionsRelations = relations(competitions, ({ many }) => ({
+  matches: many(adminMatches)
 }));
 
-export const matchesRelations = relations(matches, ({ one }) => ({
+export const adminMatchesRelations = relations(adminMatches, ({ one, many }) => ({
   competition: one(competitions, {
-    fields: [matches.competitionId],
-    references: [competitions.id],
+    fields: [adminMatches.competitionId],
+    references: [competitions.id]
   }),
+  playerResults: many(playerMatchResults)
+}));
+
+export const playerMatchResultsRelations = relations(playerMatchResults, ({ one }) => ({
+  match: one(adminMatches, {
+    fields: [playerMatchResults.matchId],
+    references: [adminMatches.id]
+  })
 }));
 
 export const ageGroupMappingsRelations = relations(ageGroupMappings, ({ one }) => ({
@@ -119,10 +133,15 @@ export const createCompetitionSchema = createInsertSchema(competitions).omit({
   updatedAt: true,
 });
 
-export const createMatchSchema = createInsertSchema(matches).omit({
+export const createMatchSchema = createInsertSchema(adminMatches).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const createPlayerResultSchema = createInsertSchema(playerMatchResults).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const allocatePointsSchema = z.object({
@@ -134,8 +153,10 @@ export const allocatePointsSchema = z.object({
 // Types
 export type Competition = typeof competitions.$inferSelect;
 export type InsertCompetition = typeof competitions.$inferInsert;
-export type Match = typeof matches.$inferSelect;
-export type InsertMatch = typeof matches.$inferInsert;
+export type Match = typeof adminMatches.$inferSelect;
+export type InsertMatch = typeof adminMatches.$inferInsert;
+export type PlayerMatchResult = typeof playerMatchResults.$inferSelect;
+export type InsertPlayerMatchResult = typeof playerMatchResults.$inferInsert;
 export type PointAllocationRule = typeof pointAllocationRules.$inferSelect;
 export type InsertPointAllocationRule = typeof pointAllocationRules.$inferInsert;
 export type AgeGroupMapping = typeof ageGroupMappings.$inferSelect;

@@ -52,14 +52,17 @@ import { events, eventCheckIns, eventRegistrations, passportVerifications } from
 // Import admin match management schema - Admin system for competitions and matches
 import {
   competitions,
-  matches as adminMatches,
+  adminMatches,
+  playerMatchResults,
   pointAllocationRules,
   ageGroupMappings,
   competitionsRelations,
-  matchesRelations as adminMatchesRelations,
+  adminMatchesRelations,
+  playerMatchResultsRelations,
   ageGroupMappingsRelations,
   createCompetitionSchema,
   createMatchSchema,
+  createPlayerResultSchema,
   allocatePointsSchema,
   calculateAgeGroup,
   POINT_ALLOCATION_RULES,
@@ -67,6 +70,8 @@ import {
   type InsertCompetition,
   type Match,
   type InsertMatch,
+  type PlayerMatchResult,
+  type InsertPlayerMatchResult,
   type MatchWithPlayers,
   type CompetitionWithMatches,
   type PointAllocationRule,
@@ -1726,10 +1731,18 @@ export {
   type InsertPointAllocationRule,
   type AgeGroupMapping,
   type InsertAgeGroupMapping
-};
+} from './schema/admin-match-management';
 
 // Admin matches are exported separately to avoid naming conflicts
-export { adminMatches as adminMatches };
+export { 
+  adminMatches, 
+  playerMatchResults,
+  adminMatchesRelations as matchesRelations,
+  playerMatchResultsRelations,
+  createPlayerResultSchema,
+  type PlayerMatchResult,
+  type InsertPlayerMatchResult
+};
 
 // Match type is now exported from admin match management re-export above
 
