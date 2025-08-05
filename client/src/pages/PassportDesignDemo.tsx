@@ -236,30 +236,31 @@ function ModernPassportDemo() {
     <div className="space-y-6">
       {/* Hero Section with Background Image */}
       <Card className="overflow-hidden relative">
-        {/* Background Image Section */}
-        <div className="h-32 bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 relative">
+        {/* Background Image Section - Larger and Mobile Optimized */}
+        <div className="h-48 md:h-56 lg:h-64 bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 relative">
           <div className="absolute inset-0 bg-black/10"></div>
           {isOwner && (
             <Button
               size="sm"
               variant="secondary"
-              className="absolute top-2 right-2 h-8 opacity-80 hover:opacity-100"
+              className="absolute top-3 right-3 h-8 text-xs opacity-80 hover:opacity-100"
             >
               <Camera className="h-3 w-3 mr-1" />
-              Change Cover
+              <span className="hidden sm:inline">Change Cover</span>
+              <span className="sm:hidden">Cover</span>
             </Button>
           )}
         </div>
         
-        <CardContent className="p-6 -mt-12 relative">
-          <div className="flex items-start gap-6">
+        <CardContent className="p-4 md:p-6 -mt-8 md:-mt-12 relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
             {/* Profile Photo with Edit Option */}
             <div className="relative">
-              <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+              <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-lg">
                 {currentData.profilePicture ? (
                   <AvatarImage src={currentData.profilePicture} />
                 ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-500 text-white text-xl font-bold">
+                  <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-500 text-white text-lg md:text-xl font-bold">
                     {currentData.firstName[0]}{currentData.lastName[0]}
                   </AvatarFallback>
                 )}
@@ -268,43 +269,43 @@ function ModernPassportDemo() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                  className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 h-7 w-7 md:h-8 md:w-8 rounded-full p-0"
                 >
                   <Camera className="h-3 w-3" />
                 </Button>
               )}
             </div>
             
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 {isOwner ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                     <EditableField
                       value={currentData.firstName}
                       onSave={(value) => setCurrentData({...currentData, firstName: value})}
                       placeholder="First Name"
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-2xl md:text-3xl font-bold text-gray-900"
                     />
                     <EditableField
                       value={currentData.lastName}
                       onSave={(value) => setCurrentData({...currentData, lastName: value})}
                       placeholder="Last Name"
-                      className="text-3xl font-bold text-gray-900"
+                      className="text-2xl md:text-3xl font-bold text-gray-900"
                     />
                   </div>
                 ) : (
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                     {currentData.firstName} {currentData.lastName}
                   </h1>
                 )}
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs md:text-sm w-fit mx-auto sm:mx-0">
                   Rank #{Math.floor(Math.random() * 50) + 1}
                 </Badge>
               </div>
               
-              <div className="flex items-center gap-4 text-muted-foreground mb-4">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-muted-foreground mb-4 text-sm">
                 <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
+                  <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                   {isOwner ? (
                     <EditableField
                       value={currentData.location}
@@ -316,7 +317,7 @@ function ModernPassportDemo() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-3 w-3 md:h-4 md:w-4" />
                   {isOwner ? (
                     <EditableField
                       value={currentData.playingSince}
@@ -346,23 +347,23 @@ function ModernPassportDemo() {
                 </div>
               )}
 
-              {/* Quick Stats */}
-              <div className="grid grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{currentData.currentRating}</div>
-                  <div className="text-xs text-muted-foreground">Current Rating</div>
+              {/* Quick Stats - Mobile Optimized */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                <div className="text-center p-3 bg-orange-50 rounded-lg">
+                  <div className="text-lg md:text-2xl font-bold text-orange-600">{currentData.currentRating}</div>
+                  <div className="text-xs text-muted-foreground">Rating</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{currentData.totalMatches}</div>
-                  <div className="text-xs text-muted-foreground">Total Matches</div>
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-lg md:text-2xl font-bold text-blue-600">{currentData.totalMatches}</div>
+                  <div className="text-xs text-muted-foreground">Matches</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{currentData.winRate}%</div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-lg md:text-2xl font-bold text-green-600">{currentData.winRate}%</div>
                   <div className="text-xs text-muted-foreground">Win Rate</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{currentData.picklePoints}</div>
-                  <div className="text-xs text-muted-foreground">Pickle Points</div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <div className="text-lg md:text-2xl font-bold text-purple-600">{currentData.picklePoints}</div>
+                  <div className="text-xs text-muted-foreground">Points</div>
                 </div>
               </div>
             </div>
@@ -370,14 +371,14 @@ function ModernPassportDemo() {
         </CardContent>
       </Card>
 
-      {/* Tabbed Content */}
+      {/* Tabbed Content - Mobile Optimized */}
       <Tabs defaultValue="about" className="w-full">
-        <TabsList className={`grid w-full ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
-          <TabsTrigger value="about">About</TabsTrigger>
-          <TabsTrigger value="stats">Stats</TabsTrigger>
-          <TabsTrigger value="rankings">Rankings</TabsTrigger>
-          {userRoles.isCoach && <TabsTrigger value="coaching">Coaching</TabsTrigger>}
-          <TabsTrigger value="connect">Connect</TabsTrigger>
+        <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">About</TabsTrigger>
+          <TabsTrigger value="stats" className="text-xs md:text-sm px-2 py-2">Stats</TabsTrigger>
+          <TabsTrigger value="rankings" className="text-xs md:text-sm px-2 py-2">Rankings</TabsTrigger>
+          {userRoles.isCoach && <TabsTrigger value="coaching" className="text-xs md:text-sm px-2 py-2">Coaching</TabsTrigger>}
+          <TabsTrigger value="connect" className="text-xs md:text-sm px-2 py-2">Connect</TabsTrigger>
         </TabsList>
 
         <TabsContent value="about" className="space-y-4">
@@ -1078,46 +1079,46 @@ export default function PassportDesignDemo() {
   };
 
   return (
-    <div className="container max-w-6xl py-6">
-      <div className="mb-6">
-        <Button variant="ghost" asChild className="mb-4">
+    <div className="container max-w-6xl px-2 md:px-4 py-3 md:py-6">
+      <div className="mb-4 md:mb-6">
+        <Button variant="ghost" asChild className="mb-3 md:mb-4">
           <Link to="/dashboard">
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back to Dashboard
           </Link>
         </Button>
         
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-4">
+        <div className="text-center mb-4 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-2 md:mb-4">
             Passport Design Variations
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Exploring standardized profile designs for consistent user experience across players and coaches
           </p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-3 md:gap-6">
         {/* Variant Selector */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 order-2 lg:order-1">
           <Card>
-            <CardHeader>
-              <CardTitle>Design Variations</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Design Variations</CardTitle>
+              <CardDescription className="text-sm">
                 Choose a variant to see how the standardized passport design would look
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 md:space-y-3">
               {demoVariants.map((variant) => (
                 <Button
                   key={variant.id}
                   variant={selectedVariant === variant.id ? "default" : "outline"}
-                  className="w-full text-left justify-start h-auto p-4"
+                  className="w-full text-left justify-start h-auto p-3 md:p-4"
                   onClick={() => setSelectedVariant(variant.id)}
                 >
                   <div>
-                    <div className="font-semibold">{variant.name}</div>
-                    <div className="text-sm text-muted-foreground mt-1">
+                    <div className="font-semibold text-sm md:text-base">{variant.name}</div>
+                    <div className="text-xs md:text-sm text-muted-foreground mt-1">
                       {variant.description}
                     </div>
                     <div className="text-xs text-orange-600 mt-1">
@@ -1129,25 +1130,25 @@ export default function PassportDesignDemo() {
             </CardContent>
           </Card>
 
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Design Goals</CardTitle>
+          <Card className="mt-3 md:mt-6">
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-base md:text-lg">Design Goals</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm space-y-2">
+            <CardContent className="text-xs md:text-sm space-y-2">
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-1 md:mt-2 flex-shrink-0"></div>
                 <div>Consistent visual language across all profile types</div>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-1 md:mt-2 flex-shrink-0"></div>
                 <div>Mobile-first responsive design</div>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-1 md:mt-2 flex-shrink-0"></div>
                 <div>Focus on key information and achievements</div>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-1 md:mt-2 flex-shrink-0"></div>
                 <div>Easy navigation and interaction patterns</div>
               </div>
             </CardContent>
@@ -1155,18 +1156,19 @@ export default function PassportDesignDemo() {
         </div>
 
         {/* Live Preview */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 order-1 lg:order-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Live Preview: {demoVariants.find(v => v.id === selectedVariant)?.name}
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Activity className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="hidden sm:inline">Live Preview: </span>
+                {demoVariants.find(v => v.id === selectedVariant)?.name}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Interactive preview of the selected passport design variation
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 md:p-6">
               {renderVariant()}
             </CardContent>
           </Card>
