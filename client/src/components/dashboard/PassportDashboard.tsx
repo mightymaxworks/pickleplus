@@ -71,10 +71,12 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
   const matchStats = { totalMatches: 42 };
 
   return (
-    <ModernPassportProfile 
-      user={user}
-      isOwner={true}
-      onProfileUpdate={handleFieldChange}
-    />
+    <div className="w-full min-h-screen">
+      <ModernPassportProfile 
+        user={user}
+        isOwner={true}
+        onProfileUpdate={handleFieldChange}
+      />
+    </div>
   );
 }

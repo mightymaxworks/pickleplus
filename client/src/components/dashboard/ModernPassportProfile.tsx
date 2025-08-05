@@ -72,8 +72,8 @@ export default function ModernPassportProfile({
   });
 
   return (
-    <div className="w-full">
-      <div className="overflow-hidden relative w-full">
+    <div className="w-full min-h-screen">
+      <div className="w-full">
         {/* Background Image Section - Larger and Mobile Optimized */}
         <div 
           className="h-48 md:h-56 lg:h-64 relative"
@@ -104,7 +104,7 @@ export default function ModernPassportProfile({
         )}
       </div>
       
-        <div className="p-4 md:p-6 -mt-8 md:-mt-12 relative bg-white">
+        <div className="w-full p-4 md:p-6 -mt-8 md:-mt-12 relative bg-white">
           <div className="flex items-start justify-between gap-2 sm:gap-4">
           {/* Left Section: Profile Photo */}
           <div className="relative">
@@ -258,7 +258,7 @@ export default function ModernPassportProfile({
         </div>
       
       {/* Tabbed Content - Full Screen */}
-      <div className="p-0">
+      <div className="w-full p-0">
         <Tabs defaultValue="about" className="w-full">
           <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">About</TabsTrigger>
