@@ -12,9 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Calendar, QrCode } from "lucide-react";
+import { Camera, MapPin, Calendar, QrCode, GraduationCap, BookOpen, Star } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { EditableField } from "@/components/profile/EditableField";
+import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
 
 interface ModernPassportProfileProps {
   user: any;
@@ -57,7 +58,10 @@ export default function ModernPassportProfile({
 
   // Generate QR code data
   const qrCodeData = `${window.location.origin}/profile/${user?.id || 'demo'}`;
-  const userRoles = { isCoach: user?.isCoach, isPlayer: true };
+  const userRoles = { 
+    isCoach: user?.isAdmin || user?.isCoach || false, // Admin can see coaching features
+    isPlayer: true 
+  };
 
   return (
     <div className="w-full max-w-none p-0">
@@ -334,9 +338,10 @@ export default function ModernPassportProfile({
           </TabsContent>
           
           <TabsContent value="rankings" className="space-y-4">
+            {/* Achievements Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Rankings & Achievements</CardTitle>
+                <CardTitle>Recent Achievements</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -358,7 +363,135 @@ export default function ModernPassportProfile({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Enhanced Leaderboard with Format Filters */}
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-lg mb-2">Complete Leaderboards</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Filter by age group, gender, and event type - rankings update in real-time
+                </p>
+              </div>
+              
+              {/* Event Type Tabs */}
+              <Tabs defaultValue="singles" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="singles">Singles</TabsTrigger>
+                  <TabsTrigger value="doubles">Doubles</TabsTrigger>
+                  <TabsTrigger value="mixed">Mixed Doubles</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="singles" className="space-y-0">
+                  <EnhancedLeaderboard formatType="singles" />
+                </TabsContent>
+                
+                <TabsContent value="doubles" className="space-y-0">
+                  <EnhancedLeaderboard formatType="doubles" />
+                </TabsContent>
+                
+                <TabsContent value="mixed" className="space-y-0">
+                  <EnhancedLeaderboard formatType="mixed" />
+                </TabsContent>
+              </Tabs>
+            </div>
           </TabsContent>
+          
+          {userRoles.isCoach && (
+            <TabsContent value="coaching" className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Coaching Stats */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-blue-600" />
+                      Coaching Statistics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="text-xl font-bold text-blue-600">32</div>
+                        <div className="text-xs text-muted-foreground">Total Students</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-xl font-bold text-green-600">147</div>
+                        <div className="text-xs text-muted-foreground">Sessions</div>
+                      </div>
+                      <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                        <div className="text-xl font-bold text-yellow-600">4.8</div>
+                        <div className="text-xs text-muted-foreground">Avg Rating</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <div className="text-xl font-bold text-purple-600">$75</div>
+                        <div className="text-xs text-muted-foreground">Hourly Rate</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Sessions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-green-600" />
+                      Recent Sessions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {[
+                        { student: "Sarah Chen", focus: "Third Shot Drop", rating: 5, date: "Dec 15" },
+                        { student: "Mike Rodriguez", focus: "Dinking Strategy", rating: 4, date: "Dec 12" },
+                        { student: "Lisa Thompson", focus: "Serve & Return", rating: 5, date: "Dec 10" }
+                      ].map((session, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                          <div>
+                            <div className="font-medium">{session.student}</div>
+                            <div className="text-sm text-muted-foreground">{session.focus}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3 w-3 ${
+                                    i < session.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{session.date}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Coaching Certifications */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>PCP Certifications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { level: "Level 1", status: "Certified", color: "bg-green-50 text-green-700" },
+                      { level: "Level 2", status: "In Progress", color: "bg-yellow-50 text-yellow-700" },
+                      { level: "Level 3", status: "Available", color: "bg-gray-50 text-gray-700" },
+                      { level: "Level 4", status: "Locked", color: "bg-gray-100 text-gray-500" }
+                    ].map((cert, index) => (
+                      <div key={index} className={`p-4 rounded-lg text-center ${cert.color}`}>
+                        <div className="font-semibold">{cert.level}</div>
+                        <div className="text-sm mt-1">{cert.status}</div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
           
           <TabsContent value="connect" className="space-y-4">
             <Card>
