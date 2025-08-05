@@ -47,7 +47,7 @@ export default function ModernPassportProfile({
             onProfileUpdate?.('profilePicture', result || null);
           } else {
             setCoverImage(result);
-            onProfileUpdate?.('coverImage', result);
+            onProfileUpdate?.('banner_url', result);
           }
         };
         reader.readAsDataURL(file);
@@ -65,15 +65,15 @@ export default function ModernPassportProfile({
 
   return (
     <div className="w-full">
-      <Card className="overflow-hidden relative w-full border-0 rounded-none shadow-none">
+      <div className="overflow-hidden relative w-full">
         {/* Background Image Section - Larger and Mobile Optimized */}
         <div 
           className="h-48 md:h-56 lg:h-64 relative"
           style={{
             backgroundImage: coverImage 
               ? `url(${coverImage})` 
-              : user?.coverImage 
-                ? `url(${user.coverImage})`
+              : user?.banner_url 
+                ? `url(${user.banner_url})`
                 : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -96,7 +96,7 @@ export default function ModernPassportProfile({
         )}
       </div>
       
-        <CardContent className="p-4 md:p-6 -mt-8 md:-mt-12 relative">
+        <div className="p-4 md:p-6 -mt-8 md:-mt-12 relative bg-white">
           <div className="flex items-start justify-between gap-2 sm:gap-4">
           {/* Left Section: Profile Photo */}
           <div className="relative">
@@ -127,30 +127,26 @@ export default function ModernPassportProfile({
               {isOwner ? (
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                   <EditableField
-                    label="First Name"
                     fieldName="firstName"
                     value={user?.firstName || ''}
                     onSave={async (fieldName: string, value: string) => {
                       onProfileUpdate?.('firstName', value);
                     }}
                     placeholder="First Name"
-                    className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg"
-                    style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
+                    className="text-2xl md:text-3xl font-bold text-gray-900"
                   />
                   <EditableField
-                    label="Last Name"
                     fieldName="lastName"
                     value={user?.lastName || ''}
                     onSave={async (fieldName: string, value: string) => {
                       onProfileUpdate?.('lastName', value);
                     }}
                     placeholder="Last Name"
-                    className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg"
-                    style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
+                    className="text-2xl md:text-3xl font-bold text-gray-900"
                   />
                 </div>
               ) : (
-                <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                   {user?.firstName || user?.username || 'Player'} {user?.lastName || ''}
                 </h1>
               )}
