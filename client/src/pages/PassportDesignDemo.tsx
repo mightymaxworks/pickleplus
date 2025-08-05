@@ -45,7 +45,13 @@ import {
   BookMarked,
   GraduationCap,
   Building,
-  UserCheck
+  UserCheck,
+  UserX,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
+  Edit
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -397,11 +403,30 @@ function EditableField({
 }
 
 function UnifiedPassportDemo() {
-  const [viewMode, setViewMode] = useState("player"); // "player" or "coach"
   const [isOwner, setIsOwner] = useState(true); // Toggle between owner view and visitor view
   const [showDetailedRankings, setShowDetailedRankings] = useState(false);
   
-  const currentData = viewMode === "player" ? mockPlayerData : mockCoachData;
+  // Simulate user with both player and coach roles
+  const userRoles = {
+    isPlayer: true,
+    isCoach: true,
+    isPCPCertified: true,
+    certificationLevel: "Level 2"
+  };
+  
+  // Use player data as primary with coach data merged in
+  const currentData = {
+    ...mockPlayerData,
+    // Add coach-specific data when user is a coach
+    ...(userRoles.isCoach && {
+      coachingBio: mockCoachData.coachingBio,
+      certifications: mockCoachData.certifications,
+      specialties: mockCoachData.specialties,
+      sessionRate: mockCoachData.sessionRate,
+      availability: mockCoachData.availability,
+      coachingStats: mockCoachData.coachingStats
+    })
+  };
   
   const handleFieldSave = (field: string, value: any) => {
     console.log(`Saving ${field}:`, value);
@@ -410,43 +435,32 @@ function UnifiedPassportDemo() {
 
   return (
     <div className="space-y-6">
-      {/* View Mode Toggles */}
+      {/* Demo Controls */}
       <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
-        <div className="flex gap-2">
-          <Button 
-            variant={viewMode === "player" ? "default" : "outline"}
-            onClick={() => setViewMode("player")}
-            size="sm"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Player View
-          </Button>
-          <Button 
-            variant={viewMode === "coach" ? "default" : "outline"}
-            onClick={() => setViewMode("coach")}
-            size="sm"
-          >
-            <GraduationCap className="h-4 w-4 mr-2" />
-            Coach View
-          </Button>
-        </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <span className="text-sm font-medium text-muted-foreground">Demo Mode:</span>
           <Button 
             variant={isOwner ? "default" : "outline"}
             onClick={() => setIsOwner(true)}
             size="sm"
           >
             <UserCheck className="h-4 w-4 mr-2" />
-            Owner View
+            My Profile
           </Button>
           <Button 
             variant={!isOwner ? "default" : "outline"}
             onClick={() => setIsOwner(false)}
             size="sm"
           >
-            <Users className="h-4 w-4 mr-2" />
+            <UserX className="h-4 w-4 mr-2" />
             Visitor View
           </Button>
+        </div>
+        <div className="flex gap-2 items-center text-sm">
+          <span className="text-muted-foreground">User Roles:</span>
+          <Badge variant="secondary" className="text-xs">Player</Badge>
+          {userRoles.isCoach && <Badge variant="secondary" className="text-xs">Coach</Badge>}
+          {userRoles.isPCPCertified && <Badge variant="outline" className="text-xs">PCP {userRoles.certificationLevel}</Badge>}
         </div>
       </div>
 
@@ -602,7 +616,7 @@ function UnifiedPassportDemo() {
               </div>
 
               {/* Enhanced Rankings Display for Players */}
-              {viewMode === "player" && (
+              {userRoles.isPlayer && (
                 <div className="mt-4 space-y-4">
                   {/* Current Division Rankings */}
                   <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
@@ -861,7 +875,7 @@ function UnifiedPassportDemo() {
 
       {/* Tabbed Content - Mobile Optimized */}
       <Tabs defaultValue="about" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+        <TabsList className={`grid w-full ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'} h-auto p-1`}>
           <TabsTrigger value="about" className="text-xs sm:text-sm px-2 py-2">
             <div className="flex flex-col items-center gap-1">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -872,10 +886,19 @@ function UnifiedPassportDemo() {
           <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-2">
             <div className="flex flex-col items-center gap-1">
               <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">{viewMode === "player" ? "Stats" : "Teaching"}</span>
-              <span className="sm:hidden">{viewMode === "player" ? "Stats" : "Coach"}</span>
+              <span className="hidden sm:inline">Performance</span>
+              <span className="sm:hidden">Stats</span>
             </div>
           </TabsTrigger>
+          {userRoles.isCoach && (
+            <TabsTrigger value="coaching" className="text-xs sm:text-sm px-2 py-2">
+              <div className="flex flex-col items-center gap-1">
+                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Coaching</span>
+                <span className="sm:hidden">Coach</span>
+              </div>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="achievements" className="text-xs sm:text-sm px-2 py-2">
             <div className="flex flex-col items-center gap-1">
               <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -883,9 +906,9 @@ function UnifiedPassportDemo() {
               <span className="sm:hidden">Awards</span>
             </div>
           </TabsTrigger>
-          <TabsTrigger value="contact" className="text-xs sm:text-sm px-2 py-2">
+          <TabsTrigger value="connect" className="text-xs sm:text-sm px-2 py-2">
             <div className="flex flex-col items-center gap-1">
-              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Connect</span>
             </div>
           </TabsTrigger>
@@ -893,69 +916,92 @@ function UnifiedPassportDemo() {
 
         <TabsContent value="about" className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Left Column */}
+            {/* Left Column - Player Information */}
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    {viewMode === "player" ? "Playing Information" : "Coaching Information"}
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="h-5 w-5 text-orange-600" />
+                    Player Profile
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {viewMode === "player" ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Playing Since:</span>
-                        <span>{currentData.playingSince}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Playing Style:</span>
-                        {isOwner ? (
-                          <EditableField
-                            value={currentData.playingStyle}
-                            onSave={(value) => handleFieldSave('playingStyle', value)}
-                            placeholder="Describe your style"
-                          />
-                        ) : (
-                          <span>{currentData.playingStyle}</span>
-                        )}
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Availability:</span>
-                        {isOwner ? (
-                          <EditableField
-                            value={currentData.availability}
-                            onSave={(value) => handleFieldSave('availability', value)}
-                            placeholder="When do you play?"
-                          />
-                        ) : (
-                          <span>{currentData.availability}</span>
-                        )}
-                      </div>
-                    </>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Playing Since:</span>
+                    <span>{currentData.playingSince}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Playing Style:</span>
+                    {isOwner ? (
+                      <EditableField
+                        value={currentData.playingStyle}
+                        onSave={(value) => handleFieldSave('playingStyle', value)}
+                        placeholder="Describe your style"
+                      />
+                    ) : (
+                      <span>{currentData.playingStyle}</span>
+                    )}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Availability:</span>
+                    {isOwner ? (
+                      <EditableField
+                        value={currentData.availability}
+                        onSave={(value) => handleFieldSave('availability', value)}
+                        placeholder="When do you play?"
+                      />
+                    ) : (
+                      <span>{currentData.availability}</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Coach Basic Info (if coach) */}
+              {userRoles.isCoach && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-blue-600" />
+                      Coaching Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Certification:</span>
+                      <Badge variant="outline" className="text-blue-600">
+                        PCP {userRoles.certificationLevel}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Session Rate:</span>
+                      <span>{currentData.sessionRate}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Students:</span>
+                      <span>{currentData.coachingStats?.totalStudents || 'N/A'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Right Column - Bio and Personal */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">About Me</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isOwner ? (
+                    <EditableField
+                      value={currentData.bio}
+                      onSave={(value) => handleFieldSave('bio', value)}
+                      placeholder="Tell others about yourself..."
+                      className="min-h-[100px]"
+                    />
                   ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Coaching Since:</span>
-                        <span>{currentData.coachingSince}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">PCP Level:</span>
-                        <Badge variant="outline">Level {currentData.pcpLevel}</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Hourly Rate:</span>
-                        {isOwner ? (
-                          <EditableField
-                            value={`$${currentData.hourlyRate}`}
-                            onSave={(value) => handleFieldSave('hourlyRate', value.replace('$', ''))}
-                            placeholder="$0"
-                          />
-                        ) : (
-                          <span>${currentData.hourlyRate}</span>
-                        )}
-                      </div>
-                    </>
+                    <p className="text-muted-foreground">{currentData.bio}</p>
                   )}
                 </CardContent>
               </Card>
@@ -994,17 +1040,18 @@ function UnifiedPassportDemo() {
               </Card>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4">
-              {viewMode === "player" ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Favorite Shots</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+              {/* Skills & Specialties */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Skills & Specialties</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Favorite Shots */}
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Favorite Shots</h4>
                     <div className="flex flex-wrap gap-2">
                       {currentData.favoriteShots?.map((shot, index) => (
-                        <Badge key={index} variant="outline">{shot}</Badge>
+                        <Badge key={index} variant="outline" className="text-orange-600 border-orange-300">{shot}</Badge>
                       ))}
                       {isOwner && (
                         <Button variant="outline" size="sm" className="h-6">
@@ -1013,18 +1060,15 @@ function UnifiedPassportDemo() {
                         </Button>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Specialties</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                  </div>
+                  
+                  {/* Coach Specialties (if coach) */}
+                  {userRoles.isCoach && (
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">Coaching Specialties</h4>
                       <div className="flex flex-wrap gap-2">
                         {currentData.specialties?.map((specialty, index) => (
-                          <Badge key={index} variant="secondary">{specialty}</Badge>
+                          <Badge key={index} variant="secondary" className="text-blue-600 bg-blue-50">{specialty}</Badge>
                         ))}
                         {isOwner && (
                           <Button variant="outline" size="sm" className="h-6">
@@ -1033,61 +1077,39 @@ function UnifiedPassportDemo() {
                           </Button>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Teaching Philosophy</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {isOwner ? (
-                        <EditableField
-                          value={currentData.teachingPhilosophy}
-                          onSave={(value) => handleFieldSave('teachingPhilosophy', value)}
-                          placeholder="Share your teaching philosophy..."
-                          multiline={true}
-                        />
-                      ) : (
-                        <p className="text-sm">{currentData.teachingPhilosophy}</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </>
-              )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
+            {/* Recent Matches */}
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {viewMode === "player" ? "Recent Matches" : "Recent Sessions"}
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-orange-600" />
+                  Recent Matches
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {(viewMode === "player" ? currentData.recentMatches : currentData.recentSessions)?.map((item, index) => (
+                  {currentData.recentMatches?.map((match, index) => (
                     <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
                       <div>
-                        <div className="font-medium">
-                          {viewMode === "player" ? item.opponent : item.student}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {viewMode === "player" ? item.score : item.type}
-                        </div>
+                        <div className="font-medium">{match.opponent}</div>
+                        <div className="text-sm text-muted-foreground">{match.score}</div>
                       </div>
                       <div className="text-right">
                         <div className={`font-bold ${
-                          viewMode === "player" 
-                            ? (item.result === 'W' ? 'text-green-600' : 'text-red-600')
-                            : 'text-yellow-600'
+                          match.result === 'W' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {viewMode === "player" ? item.result : `${item.rating}⭐`}
+                          {match.result}
                         </div>
-                        <div className="text-xs text-muted-foreground">{item.date}</div>
+                        <div className="text-xs text-muted-foreground">{match.date}</div>
                       </div>
                     </div>
                   ))}
@@ -1095,44 +1117,42 @@ function UnifiedPassportDemo() {
               </CardContent>
             </Card>
 
+            {/* Performance Insights */}
             <Card>
               <CardHeader>
-                <CardTitle>Performance Insights</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  Performance Insights
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {viewMode === "player" ? (
+                  <div className="flex justify-between">
+                    <span>Total Matches</span>
+                    <span className="font-bold">{currentData.totalMatches}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Wins</span>
+                    <span className="font-bold text-green-600">{currentData.wins}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Losses</span>
+                    <span className="font-bold text-red-600">{currentData.losses}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Peak Ranking</span>
+                    <span className="font-bold">#{currentData.peakRanking}</span>
+                  </div>
+                  {userRoles.isCoach && (
                     <>
+                      <hr className="my-3" />
                       <div className="flex justify-between">
-                        <span>Total Matches</span>
-                        <span className="font-bold">{currentData.totalMatches}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Wins</span>
-                        <span className="font-bold text-green-600">{currentData.wins}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Losses</span>
-                        <span className="font-bold text-red-600">{currentData.losses}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Peak Ranking</span>
-                        <span className="font-bold">#{currentData.peakRanking}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Total Students</span>
-                        <span className="font-bold">{currentData.totalStudents}</span>
+                        <span>Students Taught</span>
+                        <span className="font-bold text-blue-600">{currentData.coachingStats?.totalStudents || 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Sessions Completed</span>
-                        <span className="font-bold">{currentData.sessionsCompleted}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Average Rating</span>
-                        <span className="font-bold text-yellow-600">{currentData.averageRating}⭐</span>
+                        <span className="font-bold text-blue-600">{currentData.coachingStats?.sessionsCompleted || 0}</span>
                       </div>
                     </>
                   )}
@@ -1141,6 +1161,157 @@ function UnifiedPassportDemo() {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Dedicated Coaching Tab - Only shown if user is a coach */}
+        {userRoles.isCoach && (
+          <TabsContent value="coaching" className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Coaching Biography */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5 text-blue-600" />
+                    Coaching Biography
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isOwner ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Teaching Philosophy</label>
+                        <EditableField
+                          value={currentData.teachingPhilosophy}
+                          onSave={(value) => handleFieldSave('teachingPhilosophy', value)}
+                          placeholder="Share your coaching philosophy..."
+                          multiline={true}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Coaching Since</label>
+                        <EditableField
+                          value={currentData.coachingSince}
+                          onSave={(value) => handleFieldSave('coachingSince', value)}
+                          placeholder="When did you start coaching?"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium text-sm">Teaching Philosophy</h4>
+                        <p className="text-muted-foreground text-sm">{currentData.teachingPhilosophy}</p>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Coaching Since:</span>
+                        <span>{currentData.coachingSince}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Coaching Services */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-green-600" />
+                    Coaching Services
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>Session Rate:</span>
+                    <span className="font-bold text-green-600">{currentData.sessionRate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>PCP Level:</span>
+                    <Badge variant="outline" className="text-blue-600">
+                      Level {userRoles.certificationLevel}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Specialties</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {currentData.specialties?.map((specialty, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {specialty}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  {!isOwner && (
+                    <Button className="w-full mt-4">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Book Coaching Session
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recent Coaching Sessions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-orange-600" />
+                    Recent Sessions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {currentData.recentSessions?.map((session, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{session.student}</div>
+                          <div className="text-sm text-muted-foreground">{session.type}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-yellow-600">
+                            {session.rating}⭐
+                          </div>
+                          <div className="text-xs text-muted-foreground">{session.date}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Coaching Stats */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
+                    Coaching Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Total Students:</span>
+                      <span className="font-bold">{currentData.coachingStats?.totalStudents || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Sessions Completed:</span>
+                      <span className="font-bold">{currentData.coachingStats?.sessionsCompleted || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Average Rating:</span>
+                      <span className="font-bold text-yellow-600">
+                        {currentData.coachingStats?.averageRating || 'N/A'}⭐
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Student Improvement:</span>
+                      <span className="font-bold text-green-600">
+                        +{currentData.coachingStats?.avgSkillImprovement || 0}% avg
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
 
         <TabsContent value="achievements" className="space-y-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1156,7 +1327,7 @@ function UnifiedPassportDemo() {
           </div>
         </TabsContent>
 
-        <TabsContent value="contact" className="space-y-4">
+        <TabsContent value="connect" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Connect with {currentData.firstName}</CardTitle>
@@ -1169,24 +1340,29 @@ function UnifiedPassportDemo() {
                     Send Message
                   </Button>
                   <Button variant="outline" className="w-full">
-                    {viewMode === "player" ? (
-                      <>
-                        <Users className="h-4 w-4 mr-2" />
-                        Request Match
-                      </>
-                    ) : (
-                      <>
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Book Session
-                      </>
-                    )}
+                    <Users className="h-4 w-4 mr-2" />
+                    Request Match
                   </Button>
+                  {userRoles.isCoach && (
+                    <Button variant="outline" className="w-full">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Book Coaching Session
+                    </Button>
+                  )}
                 </div>
               )}
               
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">Availability</h4>
                 <p className="text-sm text-muted-foreground">{currentData.availability}</p>
+                {userRoles.isCoach && (
+                  <div className="mt-3">
+                    <h4 className="font-medium mb-2">Coaching Hours</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Available for coaching sessions weekdays 6-8 PM, weekends 9 AM - 5 PM
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
