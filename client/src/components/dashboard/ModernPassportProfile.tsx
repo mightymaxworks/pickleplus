@@ -61,7 +61,7 @@ export default function ModernPassportProfile({
 
   return (
     <div className="w-full max-w-full px-2 py-4 sm:px-4 sm:py-6 lg:px-6">
-      <Card className="overflow-hidden relative w-full max-w-none shadow-2xl border-0">
+      <Card className="overflow-hidden relative w-full max-w-none shadow-lg border border-gray-200 dark:border-gray-700">
       {/* Background Image Section - Larger and Mobile Optimized */}
       <div 
         className="h-48 md:h-56 lg:h-64 relative"
@@ -219,15 +219,15 @@ export default function ModernPassportProfile({
             </div>
           </div>
 
-          {/* Right Section: QR Code */}
-          <div className="flex-shrink-0">
+          {/* Right Section: QR Code - Responsive */}
+          <div className="flex-shrink-0 flex justify-center sm:justify-end">
             <div className="flex flex-col items-center gap-2">
               <div className="bg-white p-2 rounded-lg shadow-md">
                 <QRCodeSVG
                   value={qrCodeData}
                   size={64}
                   level="M"
-                  className="block"
+                  className="block w-14 h-14 sm:w-16 sm:h-16"
                 />
               </div>
               <div className="text-xs text-center text-muted-foreground max-w-[80px]">
@@ -236,6 +236,103 @@ export default function ModernPassportProfile({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Tabs Section - Mobile Optimized */}
+        <div className="mt-6">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="stats" className="text-xs sm:text-sm">Statistics</TabsTrigger>
+              <TabsTrigger value="achievements" className="text-xs sm:text-sm">Achievements</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Recent Activity */}
+                <div className="bg-white p-4 rounded-lg border">
+                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Recent Activity</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Tournament Match</span>
+                      <span className="text-green-600">Won</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Practice Session</span>
+                      <span className="text-blue-600">Completed</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Rating Update</span>
+                      <span className="text-orange-600">+0.2</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upcoming Events */}
+                <div className="bg-white p-4 rounded-lg border">
+                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Upcoming Events</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Weekly Tournament</span>
+                      <span className="text-muted-foreground">Tomorrow</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Coaching Session</span>
+                      <span className="text-muted-foreground">Thursday</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="stats" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Performance Chart */}
+                <div className="bg-white p-4 rounded-lg border">
+                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Performance Trend</h3>
+                  <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
+                    Performance chart would go here
+                  </div>
+                </div>
+
+                {/* Match History */}
+                <div className="bg-white p-4 rounded-lg border">
+                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Recent Matches</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>vs. Player A</span>
+                      <span className="text-green-600">11-9, 11-7</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>vs. Player B</span>
+                      <span className="text-red-600">9-11, 8-11</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="achievements" className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Achievement Cards */}
+                <div className="bg-white p-4 rounded-lg border text-center">
+                  <div className="text-2xl mb-2">🏆</div>
+                  <h4 className="font-semibold text-sm">First Win</h4>
+                  <p className="text-xs text-muted-foreground">Won your first match</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border text-center">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <h4 className="font-semibold text-sm">Accuracy Pro</h4>
+                  <p className="text-xs text-muted-foreground">90% shot accuracy</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border text-center">
+                  <div className="text-2xl mb-2">🔥</div>
+                  <h4 className="font-semibold text-sm">Win Streak</h4>
+                  <p className="text-xs text-muted-foreground">5 wins in a row</p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </CardContent>
     </Card>
