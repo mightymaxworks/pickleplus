@@ -247,6 +247,7 @@ export default function App() {
                   <Route path="/ui-ux-demo" component={lazyLoad(() => import('./pages/UIUXDemo'))} />
                   <Route path="/passport-demo" component={lazyLoad(() => import('./pages/PassportDemo'))} />
                   <Route path="/passport-design-demo" component={lazyLoad(() => import('./pages/PassportDesignDemo'))} />
+                  <Route path="/full-rankings-demo" component={lazyLoad(() => import('./pages/FullRankingsDemo'))} />
                   <Route path="/component-showcase" component={lazyLoad(() => import('./pages/ComponentShowcase'))} />
                   <Route path="/match-recording-demo" component={lazyLoad(() => import('./pages/MatchRecordingDemo'))} />
                   <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} />

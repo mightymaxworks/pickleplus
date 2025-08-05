@@ -795,6 +795,59 @@ function UnifiedPassportDemo() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Access Full Rankings Tables */}
+                      <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
+                        <h5 className="font-medium text-sm text-orange-800 mb-3 flex items-center gap-2">
+                          <Trophy className="h-4 w-4" />
+                          Complete Rankings & Leaderboards
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="justify-start text-xs hover:bg-orange-100 border-orange-300"
+                            onClick={() => window.open('/full-rankings-demo', '_blank')}
+                          >
+                            <TrendingUp className="h-3 w-3 mr-2" />
+                            Full Leaderboards
+                            <span className="ml-auto text-orange-600">→</span>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="justify-start text-xs hover:bg-blue-100 border-blue-300"
+                            onClick={() => {/* Navigate to /rankings/my-performance */}}
+                          >
+                            <Activity className="h-3 w-3 mr-2" />
+                            My Analytics
+                            <span className="ml-auto text-blue-600">→</span>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="justify-start text-xs hover:bg-green-100 border-green-300"
+                            onClick={() => {/* Navigate to /rankings/tournaments */}}
+                          >
+                            <Award className="h-3 w-3 mr-2" />
+                            Tournament Results
+                            <span className="ml-auto text-green-600">→</span>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="justify-start text-xs hover:bg-purple-100 border-purple-300"
+                            onClick={() => {/* Navigate to /rankings/history */}}
+                          >
+                            <BookOpen className="h-3 w-3 mr-2" />
+                            Ranking History
+                            <span className="ml-auto text-purple-600">→</span>
+                          </Button>
+                        </div>
+                        <div className="mt-3 text-xs text-muted-foreground text-center">
+                          Access comprehensive ranking tables, match history, and detailed performance analytics
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
