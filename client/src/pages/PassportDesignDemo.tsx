@@ -250,7 +250,7 @@ function ModernPassportDemo() {
           const result = e.target?.result as string;
           if (type === 'profile') {
             setProfileImage(result);
-            setCurrentData({...currentData, profilePicture: result});
+            setCurrentData({...currentData, profilePicture: result || null});
           } else {
             setCoverImage(result);
           }
@@ -293,7 +293,7 @@ function ModernPassportDemo() {
           )}
         </div>
         
-        <CardContent className="p-4 md:p-6 -mt-4 md:-mt-6 relative">
+        <CardContent className="p-4 md:p-6 -mt-8 md:-mt-12 relative">
           <div className="flex items-start justify-between gap-4">
             {/* Left Section: Profile Photo */}
             <div className="relative">
@@ -318,28 +318,9 @@ function ModernPassportDemo() {
               )}
             </div>
 
-            {/* Right Section: QR Code */}
-            <div className="flex-shrink-0">
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-white p-2 rounded-lg shadow-md">
-                  <QRCodeSVG
-                    value={qrCodeData}
-                    size={64}
-                    level="M"
-                    className="block"
-                  />
-                </div>
-                <div className="text-xs text-center text-muted-foreground max-w-[80px]">
-                  <QrCode className="h-3 w-3 mx-auto mb-1" />
-                  <span className="block">Connect</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Name and Info Section - Now below the profile photo */}
-          <div className="mt-4 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+            {/* Center Section: Name and Info */}
+            <div className="flex-1 mx-4 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 {isOwner ? (
                   <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                     <EditableField
@@ -429,8 +410,25 @@ function ModernPassportDemo() {
                 </div>
               </div>
             </div>
+
+            {/* Right Section: QR Code */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <div className="bg-white p-2 rounded-lg shadow-md">
+                  <QRCodeSVG
+                    value={qrCodeData}
+                    size={64}
+                    level="M"
+                    className="block"
+                  />
+                </div>
+                <div className="text-xs text-center text-muted-foreground max-w-[80px]">
+                  <QrCode className="h-3 w-3 mx-auto mb-1" />
+                  <span className="block">Connect</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
         </CardContent>
       </Card>
 
