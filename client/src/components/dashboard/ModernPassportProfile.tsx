@@ -68,11 +68,14 @@ export default function ModernPassportProfile({
       <Card className="overflow-hidden relative w-full max-w-none shadow-none border-0 rounded-none min-h-screen">
         {/* Background Image Section - Larger and Mobile Optimized */}
         <div 
-          className="h-48 md:h-56 lg:h-64 relative"
+          className="h-48 md:h-56 lg:h-64 relative w-full"
           style={{
-            backgroundImage: coverImage ? `url(${coverImage})` : 'linear-gradient(to bottom right, rgb(254 215 170), rgb(253 240 207), rgb(254 215 170))',
+            backgroundImage: coverImage 
+              ? `url(${coverImage})` 
+              : 'url("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80")',
             backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
           }}
         >
         <div className="absolute inset-0 bg-black/10"></div>
@@ -267,9 +270,9 @@ export default function ModernPassportProfile({
                 <EditableField
                   label=""
                   value={user?.bio || "I'm passionate about pickleball and always looking to improve my game. I enjoy playing both recreationally and competitively, and love meeting new players on the court!"}
-                  onSave={(value) => onProfileUpdate?.('bio', value)}
-                  isOwner={isOwner}
-                  type="textarea"
+                  fieldName="bio"
+                  fieldType="textarea"
+                  onSave={async (fieldName, value) => onProfileUpdate?.('bio', value)}
                   placeholder="Tell others about your pickleball journey..."
                 />
               </CardContent>
@@ -286,26 +289,24 @@ export default function ModernPassportProfile({
                     <EditableField
                       label="Location"
                       value={user?.location || "San Francisco, CA"}
-                      onSave={(value) => onProfileUpdate?.('location', value)}
-                      isOwner={isOwner}
+                      fieldName="location"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('location', value)}
                       placeholder="Your city, state"
-                      icon={<MapPin className="h-4 w-4" />}
                     />
                     
                     <EditableField
                       label="Playing Since"
                       value={user?.playingSince || "2020"}
-                      onSave={(value) => onProfileUpdate?.('playingSince', value)}
-                      isOwner={isOwner}
+                      fieldName="playingSince"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('playingSince', value)}
                       placeholder="Year you started playing"
-                      icon={<Calendar className="h-4 w-4" />}
                     />
 
                     <EditableField
                       label="Preferred Playing Style"
                       value={user?.playingStyle || "Aggressive Baseline"}
-                      onSave={(value) => onProfileUpdate?.('playingStyle', value)}
-                      isOwner={isOwner}
+                      fieldName="playingStyle"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('playingStyle', value)}
                       placeholder="e.g., Aggressive Baseline, Finesse Player"
                     />
                   </div>
@@ -314,24 +315,24 @@ export default function ModernPassportProfile({
                     <EditableField
                       label="Favorite Shot"
                       value={user?.favoriteShot || "Third Shot Drop"}
-                      onSave={(value) => onProfileUpdate?.('favoriteShot', value)}
-                      isOwner={isOwner}
+                      fieldName="favoriteShot"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('favoriteShot', value)}
                       placeholder="Your signature shot"
                     />
 
                     <EditableField
                       label="Home Court"
                       value={user?.homeCourt || "Golden Gate Park Courts"}
-                      onSave={(value) => onProfileUpdate?.('homeCourt', value)}
-                      isOwner={isOwner}
+                      fieldName="homeCourt"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('homeCourt', value)}
                       placeholder="Where do you usually play?"
                     />
 
                     <EditableField
                       label="Availability"
                       value={user?.availability || "Weekends & Evenings"}
-                      onSave={(value) => onProfileUpdate?.('availability', value)}
-                      isOwner={isOwner}
+                      fieldName="availability"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('availability', value)}
                       placeholder="When are you available to play?"
                     />
                   </div>
@@ -351,8 +352,8 @@ export default function ModernPassportProfile({
                     <EditableField
                       label=""
                       value={user?.preferredFormat || "Doubles"}
-                      onSave={(value) => onProfileUpdate?.('preferredFormat', value)}
-                      isOwner={isOwner}
+                      fieldName="preferredFormat"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('preferredFormat', value)}
                       placeholder="Singles/Doubles/Mixed"
                       className="text-center"
                     />
@@ -363,8 +364,8 @@ export default function ModernPassportProfile({
                     <EditableField
                       label=""
                       value={user?.skillFocus || "Strategy & Positioning"}
-                      onSave={(value) => onProfileUpdate?.('skillFocus', value)}
-                      isOwner={isOwner}
+                      fieldName="skillFocus"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('skillFocus', value)}
                       placeholder="What are you working on?"
                       className="text-center"
                     />
@@ -375,8 +376,8 @@ export default function ModernPassportProfile({
                     <EditableField
                       label=""
                       value={user?.goals || "Reach 4.5 Rating"}
-                      onSave={(value) => onProfileUpdate?.('goals', value)}
-                      isOwner={isOwner}
+                      fieldName="goals"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('goals', value)}
                       placeholder="Your pickleball goals"
                       className="text-center"
                     />
