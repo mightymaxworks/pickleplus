@@ -22,6 +22,7 @@ import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-
 import AdminCoachNavItem from '../components/coach/AdminCoachNavItem'; // PKL-278651-COACH-ADMIN-001
 import TrainingCenterAdminNavItem from '../components/training-center/TrainingCenterAdminNavItem'; // PKL-278651-TRAINING-CENTER-ADMIN-001
 import { ChargeCardAdminNavItem } from '../components/charge-cards/ChargeCardAdminNavItem'; // PKL-278651-CHARGE-CARD-ADMIN
+import AdminMatchManagementNavItem from '../components/match-management/MatchManagementNavItem'; // Match Management Admin
 // Import settings module to register its components
 import '../components/settings';
 
@@ -141,6 +142,17 @@ export function registerChargeCardComponents() {
 }
 
 /**
+ * Register match management components
+ * Admin system for managing competitions, matches, and ranking points
+ */
+export function registerMatchManagementComponents() {
+  // Register match management nav item
+  adminComponentRegistry.registerNavItem('matches', AdminMatchManagementNavItem);
+  
+  console.log('[Admin] Match management components registered');
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -156,6 +168,7 @@ export function registerAllAdminComponents() {
   registerBounceComponents(); // Added Bounce Testing System
   registerCoachComponents(); // Added Coach Management
   registerTrainingCenterComponents(); // Added Training Center Management
+  registerMatchManagementComponents(); // Added Match Management System
   registerSystemToolsComponents(); // Added System Tools
   // registerChargeCardComponents(); // Hidden for coaching features focus
   

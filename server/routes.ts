@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
-    registerAdminRoutes(app);
+    await registerAdminRoutes(app);
     
     // Phase 3: Advanced Coach Analytics
     console.log("[ROUTES] Registering Advanced Coach Analytics routes...");
