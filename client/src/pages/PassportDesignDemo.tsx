@@ -36,7 +36,9 @@ import {
   ChevronDown,
   ChevronUp,
   BarChart3,
-  Edit
+  Edit,
+  QrCode,
+  Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +50,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
+import { QRCodeSVG } from "qrcode.react";
 
 interface DemoVariant {
   id: string;
@@ -229,21 +232,59 @@ function EditableField({
 
 function ModernPassportDemo() {
   const [currentData, setCurrentData] = useState(mockPlayerData);
+  const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
+  const [coverImage, setCoverImage] = useState<string | undefined>(undefined);
   const isOwner = true; // Demo purposes
   const userRoles = { isCoach: currentData.isCoach, isPlayer: true };
+
+  // Handle file upload for images
+  const handleImageUpload = (type: 'profile' | 'cover') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (type === 'profile') {
+            setProfileImage(result);
+            setCurrentData({...currentData, profilePicture: result || null});
+          } else {
+            setCoverImage(result);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  // Generate QR code data
+  const qrCodeData = `${window.location.origin}/profile/${currentData.id || 'demo'}`;
+  const playerName = `${currentData.firstName} ${currentData.lastName}`;
 
   return (
     <div className="space-y-6">
       {/* Hero Section with Background Image */}
       <Card className="overflow-hidden relative">
         {/* Background Image Section - Larger and Mobile Optimized */}
-        <div className="h-48 md:h-56 lg:h-64 bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 relative">
+        <div 
+          className="h-48 md:h-56 lg:h-64 relative"
+          style={{
+            backgroundImage: coverImage ? `url(${coverImage})` : 'linear-gradient(to bottom right, rgb(254 215 170), rgb(253 240 207), rgb(254 215 170))',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
           <div className="absolute inset-0 bg-black/10"></div>
           {isOwner && (
             <Button
               size="sm"
               variant="secondary"
               className="absolute top-3 right-3 h-8 text-xs opacity-80 hover:opacity-100"
+              onClick={() => handleImageUpload('cover')}
             >
               <Camera className="h-3 w-3 mr-1" />
               <span className="hidden sm:inline">Change Cover</span>
@@ -253,12 +294,12 @@ function ModernPassportDemo() {
         </div>
         
         <CardContent className="p-4 md:p-6 -mt-8 md:-mt-12 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
-            {/* Profile Photo with Edit Option */}
+          <div className="flex items-start justify-between gap-4">
+            {/* Left Section: Profile Photo */}
             <div className="relative">
               <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-lg">
-                {currentData.profilePicture ? (
-                  <AvatarImage src={currentData.profilePicture} />
+                {profileImage || currentData.profilePicture ? (
+                  <AvatarImage src={profileImage || currentData.profilePicture || undefined} />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-500 text-white text-lg md:text-xl font-bold">
                     {currentData.firstName[0]}{currentData.lastName[0]}
@@ -270,13 +311,15 @@ function ModernPassportDemo() {
                   size="sm"
                   variant="secondary"
                   className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 h-7 w-7 md:h-8 md:w-8 rounded-full p-0"
+                  onClick={() => handleImageUpload('profile')}
                 >
                   <Camera className="h-3 w-3" />
                 </Button>
               )}
             </div>
-            
-            <div className="flex-1 text-center sm:text-left">
+
+            {/* Center Section: Name and Info */}
+            <div className="flex-1 mx-4 text-center sm:text-left">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 {isOwner ? (
                   <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
@@ -364,6 +407,24 @@ function ModernPassportDemo() {
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
                   <div className="text-lg md:text-2xl font-bold text-purple-600">{currentData.picklePoints}</div>
                   <div className="text-xs text-muted-foreground">Points</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Section: QR Code */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <div className="bg-white p-2 rounded-lg shadow-md">
+                  <QRCodeSVG
+                    value={qrCodeData}
+                    size={64}
+                    level="M"
+                    className="block"
+                  />
+                </div>
+                <div className="text-xs text-center text-muted-foreground max-w-[80px]">
+                  <QrCode className="h-3 w-3 mx-auto mb-1" />
+                  <span className="block">Connect</span>
                 </div>
               </div>
             </div>
