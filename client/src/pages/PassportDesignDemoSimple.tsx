@@ -1,10 +1,19 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Camera, MapPin, Calendar } from "lucide-react";
+import { 
+  QrCode, Camera, MapPin, Calendar, Edit2, Check, X, 
+  Activity, ChevronLeft, Trophy, Target, Users, BookOpen,
+  Medal, TrendingUp, Star, Zap, Clock
+} from "lucide-react";
+import { Link } from "wouter";
 
 export default function PassportDesignDemoSimple() {
   const [coverImage, setCoverImage] = useState<string | null>(null);
