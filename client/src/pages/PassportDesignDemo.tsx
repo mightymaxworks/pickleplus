@@ -29,13 +29,32 @@ import {
   Activity,
   TrendingUp,
   Zap,
-  Shield
+  Shield,
+  Edit2,
+  Check,
+  X,
+  Phone,
+  Mail,
+  Globe,
+  Instagram,
+  Camera,
+  Plus,
+  Heart,
+  ThumbsUp,
+  Coffee,
+  BookMarked,
+  GraduationCap,
+  Building,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
 
 interface DemoVariant {
@@ -72,7 +91,7 @@ const demoVariants: DemoVariant[] = [
   }
 ];
 
-// Mock player data for demo purposes
+// Mock data for demo purposes
 const mockPlayerData = {
   id: "218",
   username: "admin",
@@ -91,16 +110,67 @@ const mockPlayerData = {
   currentRanking: 12,
   peakRanking: 8,
   picklePoints: 2547,
+  bio: "Passionate pickleball player focused on continuous improvement and competitive excellence. Love playing doubles and helping newcomers learn the game.",
+  phone: "+1 (555) 123-4567",
+  socialMedia: {
+    instagram: "@alex_pickleball",
+    website: "www.alexpickleball.com"
+  },
   achievements: [
     { name: "Tournament Winner", icon: "🏆", date: "2024-07-15" },
     { name: "100 Matches", icon: "💯", date: "2024-06-20" },
-    { name: "Rising Star", icon: "⭐", date: "2024-05-10" }
+    { name: "Rising Star", icon: "⭐", date: "2024-05-10" },
+    { name: "Community Champion", icon: "🤝", date: "2024-04-12" }
   ],
   recentMatches: [
     { opponent: "Sarah Chen", result: "W", score: "11-7, 11-9", date: "2024-08-01" },
     { opponent: "Mike Johnson", result: "L", score: "9-11, 11-6, 8-11", date: "2024-07-28" },
     { opponent: "Lisa Park", result: "W", score: "11-4, 11-8", date: "2024-07-25" }
-  ]
+  ],
+  favoriteShots: ["Third Shot Drop", "Dink Cross-Court", "Overhead Smash"],
+  playingStyle: "Aggressive baseline with strong net game",
+  availability: "Weekday evenings, Weekend mornings"
+};
+
+const mockCoachData = {
+  id: "219",
+  username: "coachsarah",
+  firstName: "Sarah",
+  lastName: "Wilson",
+  email: "sarah@coachpickle.com",
+  profilePicture: null,
+  location: "Austin, TX",
+  yearOfBirth: 1978,
+  coachingSince: "2018",
+  pcpLevel: 3,
+  specialties: ["Beginner Development", "Strategy & Tactics", "Mental Game"],
+  totalStudents: 84,
+  sessionsCompleted: 247,
+  averageRating: 4.8,
+  hourlyRate: 85,
+  bio: "Certified PCP Level 3 coach specializing in player development and strategic gameplay. Former competitive player with 12+ years coaching experience.",
+  phone: "+1 (555) 987-6543",
+  socialMedia: {
+    instagram: "@coach_sarah_pb",
+    website: "www.sarahpickleballcoaching.com"
+  },
+  certifications: [
+    { name: "PCP Level 3", issuer: "Pickleball Coaching Program", date: "2023-08-15" },
+    { name: "Sport Psychology", issuer: "AASP", date: "2022-03-20" },
+    { name: "First Aid/CPR", issuer: "Red Cross", date: "2024-01-10" }
+  ],
+  achievements: [
+    { name: "Coach of the Year", icon: "🏆", date: "2023-12-01" },
+    { name: "100 Students Milestone", icon: "💯", date: "2023-09-15" },
+    { name: "Perfect Rating Month", icon: "⭐", date: "2023-07-20" }
+  ],
+  recentSessions: [
+    { student: "Mike Chen", type: "Strategy Session", date: "2024-08-03", rating: 5 },
+    { student: "Emma Davis", type: "Beginner Basics", date: "2024-08-02", rating: 5 },
+    { student: "John Smith", type: "Advanced Drills", date: "2024-08-01", rating: 4 }
+  ],
+  teachingPhilosophy: "Every player has unique potential. My job is to unlock it through personalized instruction and positive reinforcement.",
+  availability: "Monday-Friday 9 AM - 6 PM, Saturday mornings"
 };
 
 function ModernPassportDemo() {
@@ -239,57 +309,602 @@ function CoachStyledPassportDemo() {
   );
 }
 
+// Inline editing component
+function EditableField({ 
+  value, 
+  onSave, 
+  type = "text", 
+  placeholder = "", 
+  multiline = false,
+  options = [],
+  className = ""
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = () => {
+    onSave(editValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(value);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        {multiline ? (
+          <Textarea
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            placeholder={placeholder}
+            className="flex-1"
+            rows={3}
+          />
+        ) : type === "select" ? (
+          <Select value={editValue} onValueChange={setEditValue}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            placeholder={placeholder}
+            type={type}
+            className="flex-1"
+          />
+        )}
+        <Button size="sm" onClick={handleSave} className="h-8 w-8 p-0">
+          <Check className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="outline" onClick={handleCancel} className="h-8 w-8 p-0">
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`group flex items-center gap-2 ${className}`}>
+      <span className="flex-1">{value || placeholder}</span>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => setIsEditing(true)}
+        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <Edit2 className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
+
 function UnifiedPassportDemo() {
+  const [viewMode, setViewMode] = useState("player"); // "player" or "coach"
+  const [isOwner, setIsOwner] = useState(true); // Toggle between owner view and visitor view
+  
+  const currentData = viewMode === "player" ? mockPlayerData : mockCoachData;
+  
+  const handleFieldSave = (field, value) => {
+    console.log(`Saving ${field}:`, value);
+    // In real implementation, this would make an API call
+  };
+
   return (
     <div className="space-y-6">
+      {/* View Mode Toggles */}
+      <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="flex gap-2">
+          <Button 
+            variant={viewMode === "player" ? "default" : "outline"}
+            onClick={() => setViewMode("player")}
+            size="sm"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Player View
+          </Button>
+          <Button 
+            variant={viewMode === "coach" ? "default" : "outline"}
+            onClick={() => setViewMode("coach")}
+            size="sm"
+          >
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Coach View
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant={isOwner ? "default" : "outline"}
+            onClick={() => setIsOwner(true)}
+            size="sm"
+          >
+            <UserCheck className="h-4 w-4 mr-2" />
+            Owner View
+          </Button>
+          <Button 
+            variant={!isOwner ? "default" : "outline"}
+            onClick={() => setIsOwner(false)}
+            size="sm"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Visitor View
+          </Button>
+        </div>
+      </div>
+
       {/* Universal Hero Section */}
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 p-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center md:items-start">
-              <Avatar className="h-20 w-20 mb-4 border-2 border-orange-200">
-                <AvatarFallback className="bg-orange-100 text-orange-800 text-lg font-bold">AR</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                <Badge className="bg-orange-600">Player Profile</Badge>
+              <div className="relative">
+                <Avatar className="h-24 w-24 mb-4 border-2 border-orange-200">
+                  <AvatarFallback className="bg-orange-100 text-orange-800 text-lg font-bold">
+                    {currentData.firstName?.[0]}{currentData.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                {isOwner && (
+                  <Button 
+                    size="sm" 
+                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                    onClick={() => console.log("Upload photo")}
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
+                <Badge className={viewMode === "player" ? "bg-blue-600" : "bg-green-600"}>
+                  {viewMode === "player" ? "Player Profile" : "Coach Profile"}
+                </Badge>
                 <Badge variant="outline">
                   <Shield className="h-3 w-3 mr-1" />
                   Verified
                 </Badge>
+                {viewMode === "coach" && (
+                  <Badge variant="outline" className="bg-orange-50">
+                    <Award className="h-3 w-3 mr-1" />
+                    PCP Level {currentData.pcpLevel}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Contact Info */}
+              <div className="text-sm space-y-1 text-center md:text-left">
+                <div className="flex items-center gap-2 justify-center md:justify-start">
+                  <Phone className="h-3 w-3" />
+                  {isOwner ? (
+                    <EditableField
+                      value={currentData.phone}
+                      onSave={(value) => handleFieldSave('phone', value)}
+                      placeholder="Add phone number"
+                    />
+                  ) : (
+                    <span>{currentData.phone}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 justify-center md:justify-start">
+                  <Mail className="h-3 w-3" />
+                  <span>{currentData.email}</span>
+                </div>
               </div>
             </div>
             
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Alex Rodriguez
-              </h1>
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                  {isOwner ? (
+                    <EditableField
+                      value={`${currentData.firstName} ${currentData.lastName}`}
+                      onSave={(value) => {
+                        const [first, ...last] = value.split(' ');
+                        handleFieldSave('firstName', first);
+                        handleFieldSave('lastName', last.join(' '));
+                      }}
+                      placeholder="Enter full name"
+                      className="text-3xl font-bold"
+                    />
+                  ) : (
+                    `${currentData.firstName} ${currentData.lastName}`
+                  )}
+                </h1>
+              </div>
+              
               <p className="text-muted-foreground mb-4 flex items-center justify-center md:justify-start gap-2">
                 <MapPin className="h-4 w-4" />
-                {mockPlayerData.location}
+                {isOwner ? (
+                  <EditableField
+                    value={currentData.location}
+                    onSave={(value) => handleFieldSave('location', value)}
+                    placeholder="Add location"
+                  />
+                ) : (
+                  currentData.location
+                )}
               </p>
+
+              {/* Bio Section */}
+              <div className="mb-4">
+                {isOwner ? (
+                  <EditableField
+                    value={currentData.bio}
+                    onSave={(value) => handleFieldSave('bio', value)}
+                    placeholder="Tell others about yourself..."
+                    multiline={true}
+                    className="text-sm text-muted-foreground"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">{currentData.bio}</p>
+                )}
+              </div>
               
+              {/* Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div className="bg-white rounded-lg p-3 border">
-                  <div className="text-xl font-bold text-orange-600">{mockPlayerData.currentRanking}</div>
-                  <div className="text-xs text-muted-foreground">Current Rank</div>
-                </div>
-                <div className="bg-white rounded-lg p-3 border">
-                  <div className="text-xl font-bold text-blue-600">{mockPlayerData.skillLevel}</div>
-                  <div className="text-xs text-muted-foreground">Skill Rating</div>
-                </div>
-                <div className="bg-white rounded-lg p-3 border">
-                  <div className="text-xl font-bold text-green-600">{mockPlayerData.winRate}%</div>
-                  <div className="text-xs text-muted-foreground">Win Rate</div>
-                </div>
-                <div className="bg-white rounded-lg p-3 border">
-                  <div className="text-xl font-bold text-purple-600">{mockPlayerData.picklePoints}</div>
-                  <div className="text-xs text-muted-foreground">Points</div>
-                </div>
+                {viewMode === "player" ? (
+                  <>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-orange-600">#{currentData.currentRanking}</div>
+                      <div className="text-xs text-muted-foreground">Current Rank</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-blue-600">{currentData.skillLevel}</div>
+                      <div className="text-xs text-muted-foreground">Skill Rating</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-green-600">{currentData.winRate}%</div>
+                      <div className="text-xs text-muted-foreground">Win Rate</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-purple-600">{currentData.picklePoints}</div>
+                      <div className="text-xs text-muted-foreground">Pickle Points</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-green-600">{currentData.totalStudents}</div>
+                      <div className="text-xs text-muted-foreground">Total Students</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-blue-600">{currentData.sessionsCompleted}</div>
+                      <div className="text-xs text-muted-foreground">Sessions</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-yellow-600">{currentData.averageRating}⭐</div>
+                      <div className="text-xs text-muted-foreground">Average Rating</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border">
+                      <div className="text-xl font-bold text-purple-600">${currentData.hourlyRate}</div>
+                      <div className="text-xs text-muted-foreground">Per Hour</div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </Card>
+
+      {/* Tabbed Content */}
+      <Tabs defaultValue="about" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="about">About</TabsTrigger>
+          <TabsTrigger value="stats">{viewMode === "player" ? "Match Stats" : "Teaching"}</TabsTrigger>
+          <TabsTrigger value="achievements">Achievements</TabsTrigger>
+          <TabsTrigger value="contact">Connect</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="about" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {viewMode === "player" ? "Playing Information" : "Coaching Information"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {viewMode === "player" ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Playing Since:</span>
+                        <span>{currentData.playingSince}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Playing Style:</span>
+                        {isOwner ? (
+                          <EditableField
+                            value={currentData.playingStyle}
+                            onSave={(value) => handleFieldSave('playingStyle', value)}
+                            placeholder="Describe your style"
+                          />
+                        ) : (
+                          <span>{currentData.playingStyle}</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Availability:</span>
+                        {isOwner ? (
+                          <EditableField
+                            value={currentData.availability}
+                            onSave={(value) => handleFieldSave('availability', value)}
+                            placeholder="When do you play?"
+                          />
+                        ) : (
+                          <span>{currentData.availability}</span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Coaching Since:</span>
+                        <span>{currentData.coachingSince}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">PCP Level:</span>
+                        <Badge variant="outline">Level {currentData.pcpLevel}</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Hourly Rate:</span>
+                        {isOwner ? (
+                          <EditableField
+                            value={`$${currentData.hourlyRate}`}
+                            onSave={(value) => handleFieldSave('hourlyRate', value.replace('$', ''))}
+                            placeholder="$0"
+                          />
+                        ) : (
+                          <span>${currentData.hourlyRate}</span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Social Media */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Social Media</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Instagram className="h-4 w-4" />
+                    {isOwner ? (
+                      <EditableField
+                        value={currentData.socialMedia?.instagram}
+                        onSave={(value) => handleFieldSave('instagram', value)}
+                        placeholder="@username"
+                      />
+                    ) : (
+                      <span>{currentData.socialMedia?.instagram}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    {isOwner ? (
+                      <EditableField
+                        value={currentData.socialMedia?.website}
+                        onSave={(value) => handleFieldSave('website', value)}
+                        placeholder="www.example.com"
+                      />
+                    ) : (
+                      <span>{currentData.socialMedia?.website}</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              {viewMode === "player" ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Favorite Shots</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {currentData.favoriteShots?.map((shot, index) => (
+                        <Badge key={index} variant="outline">{shot}</Badge>
+                      ))}
+                      {isOwner && (
+                        <Button variant="outline" size="sm" className="h-6">
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Shot
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Specialties</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {currentData.specialties?.map((specialty, index) => (
+                          <Badge key={index} variant="secondary">{specialty}</Badge>
+                        ))}
+                        {isOwner && (
+                          <Button variant="outline" size="sm" className="h-6">
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add Specialty
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Teaching Philosophy</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {isOwner ? (
+                        <EditableField
+                          value={currentData.teachingPhilosophy}
+                          onSave={(value) => handleFieldSave('teachingPhilosophy', value)}
+                          placeholder="Share your teaching philosophy..."
+                          multiline={true}
+                        />
+                      ) : (
+                        <p className="text-sm">{currentData.teachingPhilosophy}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="stats" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {viewMode === "player" ? "Recent Matches" : "Recent Sessions"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {(viewMode === "player" ? currentData.recentMatches : currentData.recentSessions)?.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">
+                          {viewMode === "player" ? item.opponent : item.student}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {viewMode === "player" ? item.score : item.type}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-bold ${
+                          viewMode === "player" 
+                            ? (item.result === 'W' ? 'text-green-600' : 'text-red-600')
+                            : 'text-yellow-600'
+                        }`}>
+                          {viewMode === "player" ? item.result : `${item.rating}⭐`}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{item.date}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Insights</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {viewMode === "player" ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Total Matches</span>
+                        <span className="font-bold">{currentData.totalMatches}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Wins</span>
+                        <span className="font-bold text-green-600">{currentData.wins}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Losses</span>
+                        <span className="font-bold text-red-600">{currentData.losses}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Peak Ranking</span>
+                        <span className="font-bold">#{currentData.peakRanking}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Total Students</span>
+                        <span className="font-bold">{currentData.totalStudents}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Sessions Completed</span>
+                        <span className="font-bold">{currentData.sessionsCompleted}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Average Rating</span>
+                        <span className="font-bold text-yellow-600">{currentData.averageRating}⭐</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="achievements" className="space-y-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {currentData.achievements?.map((achievement, index) => (
+              <Card key={index}>
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl mb-2">{achievement.icon}</div>
+                  <h3 className="font-semibold">{achievement.name}</h3>
+                  <p className="text-sm text-muted-foreground">{achievement.date}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="contact" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Connect with {currentData.firstName}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!isOwner && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Button className="w-full">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Send Message
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    {viewMode === "player" ? (
+                      <>
+                        <Users className="h-4 w-4 mr-2" />
+                        Request Match
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Book Session
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+              
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Availability</h4>
+                <p className="text-sm text-muted-foreground">{currentData.availability}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
