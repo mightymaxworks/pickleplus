@@ -60,7 +60,8 @@ export default function ModernPassportProfile({
   const userRoles = { isCoach: user?.isCoach, isPlayer: true };
 
   return (
-    <Card className="overflow-hidden relative">
+    <div className="w-full max-w-full px-2 py-4 sm:px-4 sm:py-6 lg:px-6">
+      <Card className="overflow-hidden relative w-full max-w-none shadow-2xl border-0">
       {/* Background Image Section - Larger and Mobile Optimized */}
       <div 
         className="h-48 md:h-56 lg:h-64 relative"
@@ -238,5 +239,6 @@ export default function ModernPassportProfile({
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }

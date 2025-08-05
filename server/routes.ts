@@ -275,6 +275,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // === NOTIFICATIONS UNREAD COUNT ===
+  app.get('/api/notifications/unread-count', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // For now, return a simple count - can be enhanced later with actual notification system
+      res.json({
+        success: true,
+        data: {
+          unreadCount: 0,
+          hasNotifications: false
+        }
+      });
+    } catch (error) {
+      console.error('[API] Notifications unread count error:', error);
+      res.status(500).json({ error: 'Failed to get notification count' });
+    }
+  });
+
   // === FALLBACK API STATUS ENDPOINTS ===
   // These provide basic status for any unregistered endpoints
   const basicEndpoints = [

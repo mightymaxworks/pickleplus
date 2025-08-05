@@ -71,7 +71,7 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
   const matchStats = { totalMatches: 42 };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-50 to-red-100 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-orange-100 via-yellow-50 to-red-100 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Floating elements */}
