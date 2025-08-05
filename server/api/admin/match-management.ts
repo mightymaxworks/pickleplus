@@ -218,7 +218,8 @@ router.get('/players/available', requireAuth, requireAdmin, async (req, res) => 
   try {
     const { gender, ageGroup, format } = req.query;
 
-    let query = db.select({
+    // Simple query without complex filtering for now
+    const players = await db.select({
       id: users.id,
       firstName: users.firstName,
       lastName: users.lastName,
@@ -227,15 +228,7 @@ router.get('/players/available', requireAuth, requireAdmin, async (req, res) => 
       yearOfBirth: users.yearOfBirth
     })
     .from(users)
-    .where(eq(users.isActive, true));
-
-    // Apply additional filters if needed
-    if (gender) {
-      query = query.where(and(eq(users.isActive, true), eq(users.gender, gender as string)));
-    }
-
-    const players = await query
-      .orderBy(asc(users.firstName), asc(users.lastName));
+    .limit(50);
 
     // Calculate age groups based on birth year
     const playersWithAge = players.map(player => ({
