@@ -64,8 +64,8 @@ export default function ModernPassportProfile({
   };
 
   return (
-    <div className="w-full max-w-none p-0">
-      <Card className="overflow-hidden relative w-full max-w-none shadow-lg border-0 rounded-none sm:rounded-lg sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:m-4">
+    <div className="w-full max-w-none p-0 min-h-screen">
+      <Card className="overflow-hidden relative w-full max-w-none shadow-none border-0 rounded-none min-h-screen">
         {/* Background Image Section - Larger and Mobile Optimized */}
         <div 
           className="h-48 md:h-56 lg:h-64 relative"
@@ -245,8 +245,8 @@ export default function ModernPassportProfile({
         </CardContent>
       </Card>
       
-      {/* Tabbed Content - Mobile Optimized */}
-      <div className="sm:m-4 sm:mt-2">
+      {/* Tabbed Content - Full Screen */}
+      <div className="p-0">
         <Tabs defaultValue="about" className="w-full">
           <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">About</TabsTrigger>
@@ -257,51 +257,154 @@ export default function ModernPassportProfile({
           </TabsList>
             
           
-          <TabsContent value="about" className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Player Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Player Profile</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Playing Style</h4>
-                    <p className="text-sm">Aggressive baseline play with strong net presence</p>
+          <TabsContent value="about" className="space-y-4 p-4">
+            {/* Bio Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>About Me</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EditableField
+                  label=""
+                  value={user?.bio || "I'm passionate about pickleball and always looking to improve my game. I enjoy playing both recreationally and competitively, and love meeting new players on the court!"}
+                  onSave={(value) => onProfileUpdate?.('bio', value)}
+                  isOwner={isOwner}
+                  type="textarea"
+                  placeholder="Tell others about your pickleball journey..."
+                />
+              </CardContent>
+            </Card>
+
+            {/* Personal Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Location"
+                      value={user?.location || "San Francisco, CA"}
+                      onSave={(value) => onProfileUpdate?.('location', value)}
+                      isOwner={isOwner}
+                      placeholder="Your city, state"
+                      icon={<MapPin className="h-4 w-4" />}
+                    />
+                    
+                    <EditableField
+                      label="Playing Since"
+                      value={user?.playingSince || "2020"}
+                      onSave={(value) => onProfileUpdate?.('playingSince', value)}
+                      isOwner={isOwner}
+                      placeholder="Year you started playing"
+                      icon={<Calendar className="h-4 w-4" />}
+                    />
+
+                    <EditableField
+                      label="Preferred Playing Style"
+                      value={user?.playingStyle || "Aggressive Baseline"}
+                      onSave={(value) => onProfileUpdate?.('playingStyle', value)}
+                      isOwner={isOwner}
+                      placeholder="e.g., Aggressive Baseline, Finesse Player"
+                    />
                   </div>
                   
-                  <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Favorite Shots</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">Cross-court dink</Badge>
-                      <Badge variant="outline">Third shot drop</Badge>
-                      <Badge variant="outline">Lob</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Favorite Shot"
+                      value={user?.favoriteShot || "Third Shot Drop"}
+                      onSave={(value) => onProfileUpdate?.('favoriteShot', value)}
+                      isOwner={isOwner}
+                      placeholder="Your signature shot"
+                    />
 
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Tournament Match</span>
-                    <span className="text-green-600">Won</span>
+                    <EditableField
+                      label="Home Court"
+                      value={user?.homeCourt || "Golden Gate Park Courts"}
+                      onSave={(value) => onProfileUpdate?.('homeCourt', value)}
+                      isOwner={isOwner}
+                      placeholder="Where do you usually play?"
+                    />
+
+                    <EditableField
+                      label="Availability"
+                      value={user?.availability || "Weekends & Evenings"}
+                      onSave={(value) => onProfileUpdate?.('availability', value)}
+                      isOwner={isOwner}
+                      placeholder="When are you available to play?"
+                    />
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Practice Session</span>
-                    <span className="text-blue-600">Completed</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Playing Preferences */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Playing Preferences</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-sm font-medium text-orange-800 mb-2">Preferred Format</div>
+                    <EditableField
+                      label=""
+                      value={user?.preferredFormat || "Doubles"}
+                      onSave={(value) => onProfileUpdate?.('preferredFormat', value)}
+                      isOwner={isOwner}
+                      placeholder="Singles/Doubles/Mixed"
+                      className="text-center"
+                    />
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Rating Update</span>
-                    <span className="text-orange-600">+0.2</span>
+                  
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-sm font-medium text-blue-800 mb-2">Skill Focus</div>
+                    <EditableField
+                      label=""
+                      value={user?.skillFocus || "Strategy & Positioning"}
+                      onSave={(value) => onProfileUpdate?.('skillFocus', value)}
+                      isOwner={isOwner}
+                      placeholder="What are you working on?"
+                      className="text-center"
+                    />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-sm font-medium text-green-800 mb-2">Goals</div>
+                    <EditableField
+                      label=""
+                      value={user?.goals || "Reach 4.5 Rating"}
+                      onSave={(value) => onProfileUpdate?.('goals', value)}
+                      isOwner={isOwner}
+                      placeholder="Your pickleball goals"
+                      className="text-center"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span>Tournament Match</span>
+                  <span className="text-green-600">Won</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span>Practice Session</span>
+                  <span className="text-blue-600">Completed</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span>Rating Update</span>
+                  <span className="text-orange-600">+0.2</span>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="stats" className="space-y-4">

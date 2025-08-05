@@ -51,20 +51,18 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-purple-900/20">
-      <div className="w-full h-full">
-        <PassportDashboard 
-          user={user} 
-          onFieldChange={handleFieldChange}
+    <div className="min-h-screen w-full">
+      <PassportDashboard 
+        user={user} 
+        onFieldChange={handleFieldChange}
+      />
+      {showOnboarding && (
+        <WelcomeOnboarding 
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+          forceShow={true}
         />
-        {showOnboarding && (
-          <WelcomeOnboarding 
-            onComplete={handleOnboardingComplete}
-            onSkip={handleOnboardingSkip}
-            forceShow={true}
-          />
-        )}
-      </div>
+      )}
     </div>
   );
 }

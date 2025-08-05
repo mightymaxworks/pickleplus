@@ -71,15 +71,12 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
   const matchStats = { totalMatches: 42 };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900 p-0 m-0">
-      {/* Modern Player Passport - Full Screen */}
-      <div className="w-full max-w-none">
-        <ModernPassportProfile 
-          user={user}
-          isOwner={true}
-          onProfileUpdate={handleFieldChange}
-        />
-      </div>
+    <div className="min-h-screen w-full">
+      <ModernPassportProfile 
+        user={user}
+        isOwner={true}
+        onProfileUpdate={handleFieldChange}
+      />
 
       {/* Photo Upload Modal - Temporarily disabled */}
       {/* 
