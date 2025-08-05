@@ -71,29 +71,10 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
   const matchStats = { totalMatches: 42 };
 
   return (
-    <div className="min-h-screen w-full">
-      <ModernPassportProfile 
-        user={user}
-        isOwner={true}
-        onProfileUpdate={handleFieldChange}
-      />
-
-      {/* Photo Upload Modal - Temporarily disabled */}
-      {/* 
-      <ImageUploadModal
-        isOpen={isPhotoUploadOpen}
-        onClose={() => setIsPhotoUploadOpen(false)}
-        onImageSelect={(imageData: string) => {
-          handleFieldChange('avatarUrl', imageData);
-          setIsPhotoUploadOpen(false);
-          toast({
-            title: t('dashboard.photo.uploaded'),
-            description: t('dashboard.photo.success'),
-          });
-        }}
-        currentImage={user.avatarUrl}
-      />
-      */}
-    </div>
+    <ModernPassportProfile 
+      user={user}
+      isOwner={true}
+      onProfileUpdate={handleFieldChange}
+    />
   );
 }

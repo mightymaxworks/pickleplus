@@ -64,15 +64,17 @@ export default function ModernPassportProfile({
   };
 
   return (
-    <div className="w-full max-w-none p-0 min-h-screen">
-      <Card className="overflow-hidden relative w-full max-w-none shadow-none border-0 rounded-none min-h-screen">
+    <div className="space-y-6">
+      <Card className="overflow-hidden relative">
         {/* Background Image Section - Larger and Mobile Optimized */}
         <div 
-          className="h-48 md:h-56 lg:h-64 relative w-full"
+          className="h-48 md:h-56 lg:h-64 relative"
           style={{
             backgroundImage: coverImage 
               ? `url(${coverImage})` 
-              : 'url("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80")',
+              : user?.backgroundImageUrl 
+                ? `url(${user.backgroundImageUrl})`
+                : 'url("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
