@@ -7,7 +7,7 @@ import { db } from '../../db';
 import { requireAuth, requireAdmin } from '../../middleware/auth';
 import {
   competitions,
-  matches,
+  adminMatches as matches,
   pointAllocationRules,
   ageGroupMappings,
   users,
@@ -27,24 +27,27 @@ const router = Router();
 // Helper function to calculate and update user age groups
 async function updateUserAgeGroup(userId: number) {
   const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user[0] || !user[0].birthDate) {
+  if (!user[0] || !user[0].yearOfBirth) {
     return null;
   }
 
-  const ageGroup = calculateAgeGroup(new Date(user[0].birthDate));
+  // Convert year of birth to birth date (assume January 1st)
+  const birthDate = new Date(user[0].yearOfBirth, 0, 1);
+  const ageGroup = calculateAgeGroup(birthDate);
   
   // Upsert age group mapping
   await db.insert(ageGroupMappings)
     .values({
       userId,
       ageGroup: ageGroup as any,
-      birthDate: user[0].birthDate,
+      birthDate: birthDate,
       calculatedAt: new Date()
     })
     .onConflictDoUpdate({
       target: ageGroupMappings.userId,
       set: {
         ageGroup: ageGroup as any,
+        birthDate: birthDate,
         calculatedAt: new Date()
       }
     });

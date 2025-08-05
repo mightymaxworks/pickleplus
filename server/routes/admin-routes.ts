@@ -20,7 +20,8 @@ export async function registerAdminRoutes(app: express.Express): Promise<void> {
   
   // Register Admin Match Management routes
   try {
-    const { default: adminMatchManagementRoutes } = await import('../api/admin/match-management.js');
+    const adminMatchManagementModule = await import('../api/admin/match-management');
+    const adminMatchManagementRoutes = adminMatchManagementModule.default || adminMatchManagementModule;
     app.use('/api/admin/match-management', adminMatchManagementRoutes);
     console.log("[API] Admin Match Management routes registered successfully");
   } catch (error) {

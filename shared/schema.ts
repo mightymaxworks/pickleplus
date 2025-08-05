@@ -49,6 +49,32 @@ import { events, eventCheckIns, eventRegistrations, passportVerifications } from
 
 // Import event templates schema (PKL-278651-COMM-0035-EVENT - Enhanced Event Display and Management)
 
+// Import admin match management schema - Admin system for competitions and matches
+import {
+  competitions,
+  matches as adminMatches,
+  pointAllocationRules,
+  ageGroupMappings,
+  competitionsRelations,
+  matchesRelations as adminMatchesRelations,
+  ageGroupMappingsRelations,
+  createCompetitionSchema,
+  createMatchSchema,
+  allocatePointsSchema,
+  calculateAgeGroup,
+  POINT_ALLOCATION_RULES,
+  type Competition,
+  type InsertCompetition,
+  type Match,
+  type InsertMatch,
+  type MatchWithPlayers,
+  type CompetitionWithMatches,
+  type PointAllocationRule,
+  type InsertPointAllocationRule,
+  type AgeGroupMapping,
+  type InsertAgeGroupMapping
+} from './schema/admin-match-management';
+
 // Import Bounce achievements schema (PKL-278651-BOUNCE-0004-GAME - Bounce Gamification)
 import {
   bounceAchievements,
@@ -1680,8 +1706,32 @@ export type InsertRedemptionCode = z.infer<typeof insertRedemptionCodeSchema>;
 export type UserRedemption = typeof userRedemptions.$inferSelect;
 export type InsertUserRedemption = z.infer<typeof insertUserRedemptionSchema>;
 
-export type Match = typeof matches.$inferSelect;
-export type InsertMatch = z.infer<typeof insertMatchSchema>;
+// Re-export admin match management components
+export {
+  competitions,
+  pointAllocationRules, 
+  ageGroupMappings,
+  competitionsRelations,
+  ageGroupMappingsRelations,
+  createCompetitionSchema,
+  createMatchSchema,
+  allocatePointsSchema,
+  calculateAgeGroup,
+  POINT_ALLOCATION_RULES,
+  type Competition,
+  type InsertCompetition,
+  type MatchWithPlayers,
+  type CompetitionWithMatches,
+  type PointAllocationRule,
+  type InsertPointAllocationRule,
+  type AgeGroupMapping,
+  type InsertAgeGroupMapping
+};
+
+// Admin matches are exported separately to avoid naming conflicts
+export { adminMatches as adminMatches };
+
+// Match type is now exported from admin match management re-export above
 
 export type RankingHistory = typeof rankingHistory.$inferSelect;
 export type InsertRankingHistory = z.infer<typeof insertRankingHistorySchema>;
