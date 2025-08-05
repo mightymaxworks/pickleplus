@@ -233,21 +233,69 @@ function ModernPassportDemo() {
 
   return (
     <div className="space-y-6">
-      {/* Hero Section */}
-      <Card className="overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50">
-        <CardContent className="p-6">
+      {/* Hero Section with Background Image */}
+      <Card className="overflow-hidden relative">
+        {/* Background Image Section */}
+        <div className="h-32 bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 relative">
+          <div className="absolute inset-0 bg-black/10"></div>
+          {isOwner && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute top-2 right-2 h-8 opacity-80 hover:opacity-100"
+            >
+              <Camera className="h-3 w-3 mr-1" />
+              Change Cover
+            </Button>
+          )}
+        </div>
+        
+        <CardContent className="p-6 -mt-12 relative">
           <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-500 text-white text-xl font-bold">
-                {currentData.firstName[0]}{currentData.lastName[0]}
-              </AvatarFallback>
-            </Avatar>
+            {/* Profile Photo with Edit Option */}
+            <div className="relative">
+              <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                {currentData.profilePicture ? (
+                  <AvatarImage src={currentData.profilePicture} />
+                ) : (
+                  <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-500 text-white text-xl font-bold">
+                    {currentData.firstName[0]}{currentData.lastName[0]}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              {isOwner && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                >
+                  <Camera className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
             
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {currentData.firstName} {currentData.lastName}
-                </h1>
+                {isOwner ? (
+                  <div className="flex items-center gap-2">
+                    <EditableField
+                      value={currentData.firstName}
+                      onSave={(value) => setCurrentData({...currentData, firstName: value})}
+                      placeholder="First Name"
+                      className="text-3xl font-bold text-gray-900"
+                    />
+                    <EditableField
+                      value={currentData.lastName}
+                      onSave={(value) => setCurrentData({...currentData, lastName: value})}
+                      placeholder="Last Name"
+                      className="text-3xl font-bold text-gray-900"
+                    />
+                  </div>
+                ) : (
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {currentData.firstName} {currentData.lastName}
+                  </h1>
+                )}
                 <Badge variant="secondary" className="bg-orange-100 text-orange-800">
                   Rank #{Math.floor(Math.random() * 50) + 1}
                 </Badge>
@@ -256,13 +304,46 @@ function ModernPassportDemo() {
               <div className="flex items-center gap-4 text-muted-foreground mb-4">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  <span>{currentData.location}</span>
+                  {isOwner ? (
+                    <EditableField
+                      value={currentData.location}
+                      onSave={(value) => setCurrentData({...currentData, location: value})}
+                      placeholder="Add your location"
+                    />
+                  ) : (
+                    <span>{currentData.location}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>Playing since {currentData.playingSince}</span>
+                  {isOwner ? (
+                    <EditableField
+                      value={currentData.playingSince}
+                      onSave={(value) => setCurrentData({...currentData, playingSince: value})}
+                      placeholder="Playing since year"
+                      type="number"
+                    />
+                  ) : (
+                    <span>Playing since {currentData.playingSince}</span>
+                  )}
                 </div>
               </div>
+
+              {/* Profile Completion Indicator (only for owners) */}
+              {isOwner && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-900">Profile Completion</span>
+                    <span className="text-sm text-blue-600">85%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full" style={{width: '85%'}}></div>
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Add profile photo and background image to reach 100%
+                  </div>
+                </div>
+              )}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-4 gap-4">
@@ -308,27 +389,133 @@ function ModernPassportDemo() {
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-medium text-sm text-muted-foreground mb-2">Playing Style</h4>
-                  <p className="text-sm">{currentData.playingStyle}</p>
+                  {isOwner ? (
+                    <EditableField
+                      value={currentData.playingStyle}
+                      onSave={(value) => setCurrentData({...currentData, playingStyle: value})}
+                      placeholder="Describe your playing style"
+                      multiline={true}
+                      className="text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{currentData.playingStyle}</p>
+                  )}
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-sm text-muted-foreground mb-2">Favorite Shots</h4>
                   <div className="flex flex-wrap gap-2">
                     {currentData.favoriteShots.map((shot, index) => (
-                      <Badge key={index} variant="outline">{shot}</Badge>
+                      <Badge key={index} variant="outline" className="relative group">
+                        {shot}
+                        {isOwner && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-1 h-4 w-4 p-0 opacity-0 group-hover:opacity-100"
+                            onClick={() => {
+                              const newShots = currentData.favoriteShots.filter((_, i) => i !== index);
+                              setCurrentData({...currentData, favoriteShots: newShots});
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </Badge>
                     ))}
+                    {isOwner && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-xs"
+                        onClick={() => {
+                          const newShot = prompt("Add new favorite shot:");
+                          if (newShot) {
+                            setCurrentData({...currentData, favoriteShots: [...currentData.favoriteShots, newShot]});
+                          }
+                        }}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Shot
+                      </Button>
+                    )}
                   </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Availability</h4>
+                  {isOwner ? (
+                    <EditableField
+                      value={currentData.availability}
+                      onSave={(value) => setCurrentData({...currentData, availability: value})}
+                      placeholder="When are you available to play?"
+                      multiline={true}
+                      className="text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{currentData.availability}</p>
+                  )}
                 </div>
 
                 {/* Coach Information (if coach) */}
                 {userRoles.isCoach && (
                   <div className="border-t pt-4">
                     <h4 className="font-medium text-sm text-muted-foreground mb-2">Coaching Bio</h4>
-                    <p className="text-sm">{currentData.coachingBio}</p>
+                    {isOwner ? (
+                      <EditableField
+                        value={currentData.coachingBio}
+                        onSave={(value) => setCurrentData({...currentData, coachingBio: value})}
+                        placeholder="Tell potential students about your coaching approach"
+                        multiline={true}
+                        className="text-sm"
+                      />
+                    ) : (
+                      <p className="text-sm">{currentData.coachingBio}</p>
+                    )}
                     
                     <div className="mt-3">
                       <h4 className="font-medium text-sm text-muted-foreground mb-2">Coaching Since</h4>
-                      <p className="text-sm">{currentData.coachingSince}</p>
+                      {isOwner ? (
+                        <EditableField
+                          value={currentData.coachingSince}
+                          onSave={(value) => setCurrentData({...currentData, coachingSince: value})}
+                          placeholder="Year you started coaching"
+                          type="number"
+                          className="text-sm"
+                        />
+                      ) : (
+                        <p className="text-sm">{currentData.coachingSince}</p>
+                      )}
+                    </div>
+
+                    <div className="mt-3">
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">Teaching Philosophy</h4>
+                      {isOwner ? (
+                        <EditableField
+                          value={currentData.teachingPhilosophy}
+                          onSave={(value) => setCurrentData({...currentData, teachingPhilosophy: value})}
+                          placeholder="Your approach to teaching pickleball"
+                          multiline={true}
+                          className="text-sm"
+                        />
+                      ) : (
+                        <p className="text-sm">{currentData.teachingPhilosophy}</p>
+                      )}
+                    </div>
+
+                    <div className="mt-3">
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">Hourly Rate</h4>
+                      {isOwner ? (
+                        <EditableField
+                          value={currentData.hourlyRate}
+                          onSave={(value) => setCurrentData({...currentData, hourlyRate: parseInt(value)})}
+                          placeholder="Your coaching rate per hour"
+                          type="number"
+                          className="text-sm"
+                        />
+                      ) : (
+                        <p className="text-sm">${currentData.hourlyRate}/hour</p>
+                      )}
                     </div>
                   </div>
                 )}
