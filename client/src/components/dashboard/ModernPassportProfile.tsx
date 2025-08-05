@@ -72,12 +72,13 @@ export default function ModernPassportProfile({
           style={{
             backgroundImage: coverImage 
               ? `url(${coverImage})` 
-              : user?.backgroundImageUrl 
-                ? `url(${user.backgroundImageUrl})`
-                : 'url("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80")',
+              : user?.coverImage 
+                ? `url(${user.coverImage})`
+                : 'url(https://images.unsplash.com/photo-1554068865-24cecd4e34b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#059669'
           }}
         >
         <div className="absolute inset-0 bg-black/10"></div>
