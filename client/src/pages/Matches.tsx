@@ -92,7 +92,7 @@ export default function Matches() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20">
       <StandardLayout>
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl mt-[-66px] mb-[-66px]">
           {/* Modern Header Section */}
           <div className="mb-8 backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 rounded-2xl p-8 border border-white/20 shadow-xl">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
