@@ -63,6 +63,14 @@ export default function ModernPassportProfile({
     isPlayer: true 
   };
 
+  // Debug banner image
+  console.log('Banner image debug:', {
+    hasBannerUrl: !!user?.banner_url,
+    bannerUrlLength: user?.banner_url?.length,
+    bannerUrlStart: user?.banner_url?.substring(0, 50),
+    hasCoverImage: !!coverImage
+  });
+
   return (
     <div className="w-full">
       <div className="overflow-hidden relative w-full">
@@ -71,9 +79,9 @@ export default function ModernPassportProfile({
           className="h-48 md:h-56 lg:h-64 relative"
           style={{
             backgroundImage: coverImage 
-              ? `url(${coverImage})` 
+              ? `url("${coverImage}")` 
               : user?.banner_url 
-                ? `url(${user.banner_url})`
+                ? `url("${user.banner_url}")`
                 : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
