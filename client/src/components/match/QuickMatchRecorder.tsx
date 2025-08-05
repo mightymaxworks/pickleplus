@@ -54,6 +54,10 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
 import { VisualScoreInput } from "./VisualScoreInput";
 import { 
@@ -71,7 +75,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Users, UserCircle, CheckCircle2, Info, CheckCircle, Trophy, Award, FileText } from "lucide-react";
 
-// Match form schema with match type for hybrid point system
+// Admin-enhanced match form schema with competition linking and manual points override
 const matchFormSchema = z.object({
   playerOneId: z.number().int().positive().optional(),
   playerTwoId: z.number().int().positive(),
@@ -132,6 +136,18 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   // Check if user is admin or tournament director
   const isAdmin = user?.isAdmin;
   
+  // Admin-specific state for competition linking and manual points
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | null>(null);
+  const [useManualPointsOverride, setUseManualPointsOverride] = useState(false);
+  const [manualPointsValue, setManualPointsValue] = useState<number>(0);
+  
+  // Mock competitions data (in real app this would come from API)
+  const [competitions] = useState([
+    { id: 1, name: "Summer Championship 2025", type: "tournament", pointsMultiplier: 2.0, venue: "Central Courts" },
+    { id: 2, name: "Weekly League", type: "league", pointsMultiplier: 1.5, venue: "Local Club" },
+    { id: 3, name: "Masters Tournament", type: "tournament", pointsMultiplier: 3.0, venue: "Elite Center" }
+  ]);
+  
   // Initialize player one data based on admin status
   const initialPlayerOneData = user && !isAdmin ? {
     id: user.id,
@@ -159,7 +175,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     },
   });
   
-  // Reset form to initial state
+  // Reset form to initial state including admin fields
   const resetForm = () => {
     setPlayerTwoData(null);
     setPlayerOnePartnerData(null);
@@ -169,6 +185,14 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     setPointsToWin(11);
     setTotalGames(1);
     setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
+    
+    // Reset admin-specific fields
+    if (isAdmin) {
+      setSelectedCompetitionId(null);
+      setUseManualPointsOverride(false);
+      setManualPointsValue(0);
+    }
+    
     form.reset({
       playerTwoId: 0,
       formatType: "singles",
@@ -395,13 +419,13 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       
       console.log("Age division calculation:", { playerAges, division });
       
-      // Create match data object
+      // Create match data object with admin enhancements
       const matchData = {
         formatType,
         scoringSystem,
         pointsToWin,
         division,
-        matchType: "casual" as const, // Players only record casual matches (50% points)
+        matchType: isAdmin ? "tournament" as const : "casual" as const, // Admins can record tournament matches
         eventTier: "local",
         players,
         // Ensure gameScores is properly formatted for database storage
@@ -410,6 +434,12 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           playerTwoScore: game.playerTwoScore
         })),
         notes: form.getValues("notes"),
+        // Admin-specific enhancements
+        ...(isAdmin && {
+          competitionId: selectedCompetitionId,
+          manualPointsOverride: useManualPointsOverride ? manualPointsValue : undefined,
+          isAdminRecorded: true,
+        }),
       };
       
       // Calculate automatic age multiplier based on player ages
@@ -467,10 +497,16 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       queryClient.invalidateQueries({ queryKey: ["/api/match/recent"] });
       queryClient.invalidateQueries({ queryKey: ["/api/match/stats"] });
       
-      // Show success toast
+      // Show success toast with admin-specific messaging
+      const successMessage = isAdmin 
+        ? useManualPointsOverride 
+          ? `Match recorded with manual points override (${manualPointsValue} points)${selectedCompetitionId ? ' and linked to competition' : ''}`
+          : `Match recorded with ${selectedCompetitionId ? 'competition linking and ' : ''}enhanced admin capabilities`
+        : "Your match has been recorded and auto-validated. Other players still need to validate this match.";
+        
       toast({
-        title: "Match recorded!",
-        description: "Your match has been recorded and auto-validated. Other players still need to validate this match.",
+        title: isAdmin ? "Admin Match Recorded!" : "Match recorded!",
+        description: successMessage,
       });
       
       // Reset form
@@ -831,6 +867,106 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             </form>
           </Form>
         </div>
+
+        {/* Admin-Only Enhanced Features */}
+        {isAdmin && (
+          <>
+            <Separator />
+            
+            {/* Competition Linking Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-orange-500" />
+                <span className="text-xs font-medium">Competition Linking</span>
+                <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">Admin Only</Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="competition-select" className="text-xs text-muted-foreground">
+                  Link this match to a specific competition (optional)
+                </Label>
+                <Select
+                  value={selectedCompetitionId?.toString() || "none"}
+                  onValueChange={(value) => setSelectedCompetitionId(value !== "none" ? parseInt(value) : null)}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select competition..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Competition</SelectItem>
+                    {competitions.map((comp) => (
+                      <SelectItem key={comp.id} value={comp.id.toString()}>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex flex-col">
+                            <span className="font-medium">{comp.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {comp.type} • {comp.pointsMultiplier}x points • {comp.venue}
+                            </span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {selectedCompetitionId && (
+                  <div className="text-xs text-muted-foreground bg-blue-50 p-2 rounded border">
+                    <Info className="h-3 w-3 inline mr-1" />
+                    Match will be linked to this competition with enhanced point multipliers applied
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Manual Ranking Points Override Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-purple-500" />
+                <span className="text-xs font-medium">Manual Ranking Points Override</span>
+                <Badge variant="outline" className="text-xs text-purple-600 border-purple-200">Admin Only</Badge>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="manual-points-override"
+                    checked={useManualPointsOverride}
+                    onCheckedChange={(checked) => {
+                      setUseManualPointsOverride(checked as boolean);
+                      if (!checked) setManualPointsValue(0);
+                    }}
+                  />
+                  <Label htmlFor="manual-points-override" className="text-xs cursor-pointer">
+                    Override automatic ranking points calculation
+                  </Label>
+                </div>
+                
+                {useManualPointsOverride && (
+                  <div className="space-y-2">
+                    <Label htmlFor="manual-points" className="text-xs text-muted-foreground">
+                      Manual ranking points to award
+                    </Label>
+                    <Input
+                      id="manual-points"
+                      type="number"
+                      min="0"
+                      max="1000"
+                      step="1"
+                      value={manualPointsValue}
+                      onChange={(e) => setManualPointsValue(parseInt(e.target.value) || 0)}
+                      className="h-9 text-sm"
+                      placeholder="Enter points (0-1000)"
+                    />
+                    <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded border">
+                      <Info className="h-3 w-3 inline mr-1" />
+                      Manual override will replace automatic point calculations. Use with caution.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
       
       <CardFooter className="pt-3 border-t">
