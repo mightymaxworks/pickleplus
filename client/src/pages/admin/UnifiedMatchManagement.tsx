@@ -519,11 +519,11 @@ export default function UnifiedMatchManagement() {
                         <SelectValue placeholder="Select player" />
                       </SelectTrigger>
                       <SelectContent>
-                        {players?.map((player) => (
+                        {players && Array.isArray(players) ? players.map((player) => (
                           <SelectItem key={player.id} value={player.id.toString()}>
                             {player.firstName} {player.lastName} (@{player.username})
                           </SelectItem>
-                        ))}
+                        )) : null}
                       </SelectContent>
                     </Select>
                   </div>
@@ -537,11 +537,11 @@ export default function UnifiedMatchManagement() {
                         <SelectValue placeholder="Select player" />
                       </SelectTrigger>
                       <SelectContent>
-                        {players?.map((player) => (
+                        {players && Array.isArray(players) ? players.map((player) => (
                           <SelectItem key={player.id} value={player.id.toString()}>
                             {player.firstName} {player.lastName} (@{player.username})
                           </SelectItem>
-                        ))}
+                        )) : null}
                       </SelectContent>
                     </Select>
                   </div>
@@ -559,11 +559,11 @@ export default function UnifiedMatchManagement() {
                           <SelectValue placeholder="Select partner" />
                         </SelectTrigger>
                         <SelectContent>
-                          {players?.map((player) => (
+                          {players && Array.isArray(players) ? players.map((player) => (
                             <SelectItem key={player.id} value={player.id.toString()}>
                               {player.firstName} {player.lastName} (@{player.username})
                             </SelectItem>
-                          ))}
+                          )) : null}
                         </SelectContent>
                       </Select>
                     </div>
@@ -577,11 +577,11 @@ export default function UnifiedMatchManagement() {
                           <SelectValue placeholder="Select partner" />
                         </SelectTrigger>
                         <SelectContent>
-                          {players?.map((player) => (
+                          {players && Array.isArray(players) ? players.map((player) => (
                             <SelectItem key={player.id} value={player.id.toString()}>
                               {player.firstName} {player.lastName} (@{player.username})
                             </SelectItem>
-                          ))}
+                          )) : null}
                         </SelectContent>
                       </Select>
                     </div>
