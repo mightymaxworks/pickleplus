@@ -237,16 +237,15 @@ router.get('/players/available', requireAuth, requireAdmin, async (req, res) => 
     const players = await query
       .orderBy(asc(users.firstName), asc(users.lastName));
 
-    // Update age groups for players without them
-    for (const player of players) {
-      if (!player.ageGroup && player.birthDate) {
-        await updateUserAgeGroup(player.id);
-      }
-    }
+    // Calculate age groups based on birth year
+    const playersWithAge = players.map(player => ({
+      ...player,
+      ageGroup: player.yearOfBirth ? calculateAgeGroup(new Date().getFullYear() - player.yearOfBirth) : null
+    }));
 
     res.json({
       success: true,
-      data: players
+      data: playersWithAge
     });
   } catch (error) {
     console.error('Error fetching available players:', error);
