@@ -14,7 +14,6 @@ import {
   createCompetitionSchema,
   createMatchSchema,
   allocatePointsSchema,
-  calculateAgeGroup,
   POINT_ALLOCATION_RULES,
   type Competition,
   type Match,
@@ -31,9 +30,16 @@ async function updateUserAgeGroup(userId: number) {
     return null;
   }
 
-  // Convert year of birth to birth date (assume January 1st)
-  const birthDate = new Date(user[0].yearOfBirth, 0, 1);
-  const ageGroup = calculateAgeGroup(birthDate);
+  // Calculate age group from year of birth
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - user[0].yearOfBirth;
+  
+  const ageGroup = age < 19 ? '18U' :
+                  age < 30 ? '19-29' :
+                  age < 40 ? '30-39' :
+                  age < 50 ? '40-49' :
+                  age < 60 ? '50-59' :
+                  age < 70 ? '60-69' : '70+';
   
   // Upsert age group mapping
   await db.insert(ageGroupMappings)
@@ -230,11 +236,27 @@ router.get('/players/available', requireAuth, requireAdmin, async (req, res) => 
     .from(users)
     .limit(50);
 
-    // Calculate age groups based on birth year
-    const playersWithAge = players.map(player => ({
-      ...player,
-      ageGroup: player.yearOfBirth ? calculateAgeGroup(new Date().getFullYear() - player.yearOfBirth) : null
-    }));
+    // Calculate age groups based on birth year  
+    const playersWithAge = players.map(player => {
+      let ageGroup = null;
+      if (player.yearOfBirth && typeof player.yearOfBirth === 'number') {
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - player.yearOfBirth;
+        
+        if (age < 19) ageGroup = '18U';
+        else if (age < 30) ageGroup = '19-29';
+        else if (age < 40) ageGroup = '30-39';
+        else if (age < 50) ageGroup = '40-49';
+        else if (age < 60) ageGroup = '50-59';
+        else if (age < 70) ageGroup = '60-69';
+        else ageGroup = '70+';
+      }
+      
+      return {
+        ...player,
+        ageGroup
+      };
+    });
 
     res.json({
       success: true,

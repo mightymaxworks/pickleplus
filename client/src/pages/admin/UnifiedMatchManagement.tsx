@@ -479,11 +479,11 @@ export default function UnifiedMatchManagement() {
                       <SelectValue placeholder="Select competition" />
                     </SelectTrigger>
                     <SelectContent>
-                      {competitions?.map((comp) => (
+                      {competitions && Array.isArray(competitions) ? competitions.map((comp) => (
                         <SelectItem key={comp.id} value={comp.id.toString()}>
                           {comp.name}
                         </SelectItem>
-                      ))}
+                      )) : null}
                     </SelectContent>
                   </Select>
                 </div>
