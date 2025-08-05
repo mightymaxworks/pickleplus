@@ -66,6 +66,7 @@ export default function ModernPassportProfile({
   // Debug banner image and user data
   console.log('Banner image debug:', {
     hasBannerUrl: !!user?.banner_url,
+    hasBannerUrlCamel: !!user?.bannerUrl,
     bannerUrlLength: user?.banner_url?.length,
     bannerUrlStart: user?.banner_url?.substring(0, 50),
     hasCoverImage: !!coverImage
@@ -74,7 +75,14 @@ export default function ModernPassportProfile({
   console.log('User data debug:', {
     playingSince: user?.playingSince,
     userId: user?.id,
-    displayName: user?.displayName
+    displayName: user?.displayName,
+    avatarUrl: user?.avatarUrl,
+    avatar_url: user?.avatar_url,
+    bannerUrl: user?.bannerUrl,
+    banner_url: user?.banner_url,
+    hasAvatarUrl: !!user?.avatar_url,
+    hasAvatarUrlCamel: !!user?.avatarUrl,
+    userKeys: user ? Object.keys(user) : 'no user'
   });
 
   return (
@@ -86,9 +94,11 @@ export default function ModernPassportProfile({
           style={{
             backgroundImage: coverImage 
               ? `url("${coverImage}")` 
-              : user?.banner_url 
-                ? `url("${user.banner_url}")`
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              : user?.bannerUrl 
+                ? `url("${user.bannerUrl}")`
+                : user?.banner_url 
+                  ? `url("${user.banner_url}")`
+                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -115,8 +125,8 @@ export default function ModernPassportProfile({
           {/* Left Section: Profile Photo */}
           <div className="relative">
             <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-lg">
-              {profileImage || user?.profilePicture ? (
-                <AvatarImage src={profileImage || user?.profilePicture || undefined} />
+              {profileImage || user?.avatarUrl || user?.avatar_url ? (
+                <AvatarImage src={profileImage || user?.avatarUrl || user?.avatar_url || undefined} />
               ) : (
                 <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-500 text-white text-lg md:text-xl font-bold">
                   {user?.firstName?.[0] || user?.username?.[0] || 'U'}{user?.lastName?.[0] || ''}

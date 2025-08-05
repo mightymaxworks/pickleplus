@@ -1121,6 +1121,20 @@ export function setupAuth(app: Express) {
         console.log("[API] Mapped last_name to lastName:", transformedUserData.lastName);
       }
       
+      // Process and transform avatar_url to avatarUrl (for profile images)
+      if (transformedUserData.avatar_url !== undefined) {
+        transformedUserData.avatarUrl = transformedUserData.avatar_url;
+        // Keep both for compatibility
+        console.log("[API] Mapped avatar_url to avatarUrl:", !!transformedUserData.avatarUrl);
+      }
+      
+      // Process and transform banner_url to bannerUrl (for cover images)
+      if (transformedUserData.banner_url !== undefined) {
+        transformedUserData.bannerUrl = transformedUserData.banner_url;
+        // Keep both for compatibility
+        console.log("[API] Mapped banner_url to bannerUrl:", !!transformedUserData.bannerUrl);
+      }
+      
       res.json(transformedUserData);
     } catch (error) {
       console.error("Error fetching current user:", error);
