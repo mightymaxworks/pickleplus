@@ -116,14 +116,22 @@ export default function ModernPassportProfile({
               {isOwner ? (
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
                   <EditableField
+                    label="First Name"
+                    fieldName="firstName"
                     value={user?.firstName || ''}
-                    onSave={(value: string) => onProfileUpdate?.('firstName', value)}
+                    onSave={async (fieldName: string, value: string) => {
+                      onProfileUpdate?.('firstName', value);
+                    }}
                     placeholder="First Name"
                     className="text-2xl md:text-3xl font-bold text-gray-900"
                   />
                   <EditableField
+                    label="Last Name"
+                    fieldName="lastName"
                     value={user?.lastName || ''}
-                    onSave={(value: string) => onProfileUpdate?.('lastName', value)}
+                    onSave={async (fieldName: string, value: string) => {
+                      onProfileUpdate?.('lastName', value);
+                    }}
                     placeholder="Last Name"
                     className="text-2xl md:text-3xl font-bold text-gray-900"
                   />
@@ -143,8 +151,12 @@ export default function ModernPassportProfile({
                 <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                 {isOwner ? (
                   <EditableField
+                    label="Location"
+                    fieldName="location"
                     value={user?.location || ''}
-                    onSave={(value: string) => onProfileUpdate?.('location', value)}
+                    onSave={async (fieldName: string, value: string) => {
+                      onProfileUpdate?.('location', value);
+                    }}
                     placeholder="Add your location"
                   />
                 ) : (
@@ -155,10 +167,13 @@ export default function ModernPassportProfile({
                 <Calendar className="h-3 w-3 md:h-4 md:w-4" />
                 {isOwner ? (
                   <EditableField
+                    label="Playing Since"
+                    fieldName="playingSince"
                     value={user?.playingSince || user?.yearOfBirth?.toString() || ''}
-                    onSave={(value: string) => onProfileUpdate?.('playingSince', value)}
+                    onSave={async (fieldName: string, value: string) => {
+                      onProfileUpdate?.('playingSince', value);
+                    }}
                     placeholder="Playing since year"
-                    type="number"
                   />
                 ) : (
                   <span>Playing since {user?.playingSince || user?.yearOfBirth || 'Unknown'}</span>
