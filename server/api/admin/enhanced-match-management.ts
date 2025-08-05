@@ -39,30 +39,61 @@ async function getUserAgeGroup(userId: number): Promise<string | null> {
   return calculateAgeGroup(birthDate);
 }
 
-// Helper function to calculate points for a player based on their age group
+// Helper function to calculate points based on player's gender and age group
 async function calculatePlayerPoints(
   playerId: number,
   isWinner: boolean,
   competitionType: string,
   matchFormat: string,
   ageGroupOverride?: string
-): Promise<{ basePoints: number; ageGroup: string; multiplier: number; finalPoints: number }> {
+): Promise<{ basePoints: number; ageGroup: string; multiplier: number; finalPoints: number; gender: string }> {
   
-  // Get player's age group
-  const ageGroup = ageGroupOverride || await getUserAgeGroup(playerId);
-  if (!ageGroup) {
-    throw new Error(`Cannot determine age group for player ${playerId}`);
+  // Get player info
+  const user = await db.select({
+    yearOfBirth: users.yearOfBirth,
+    gender: users.gender
+  }).from(users).where(eq(users.id, playerId)).limit(1);
+  
+  if (!user[0]?.yearOfBirth) {
+    throw new Error(`Cannot determine age group for player ${playerId} - missing birth year`);
   }
+  
+  const birthDate = new Date(user[0].yearOfBirth, 0, 1);
+  const ageGroup = ageGroupOverride || calculateAgeGroup(birthDate);
+  const gender = user[0].gender || 'unspecified';
+  
+  // Determine the effective match format based on gender for point calculation
+  let effectiveFormat = matchFormat;
+  if (matchFormat === 'doubles') {
+    // For doubles, points are awarded based on player's gender
+    effectiveFormat = gender === 'female' ? 'womens_doubles' : 'mens_doubles';
+  } else if (matchFormat === 'singles') {
+    // For singles, points are awarded based on player's gender  
+    effectiveFormat = gender === 'female' ? 'singles_female' : 'singles_male';
+  }
+  // mixed_doubles stays as is - all players get mixed doubles points
   
   // Find matching point allocation rule
   const rule = POINT_ALLOCATION_RULES.find(r => 
     r.competitionType === competitionType &&
-    r.matchFormat === matchFormat &&
+    r.matchFormat === effectiveFormat &&
     r.ageGroup === ageGroup
   );
   
   if (!rule) {
-    throw new Error(`No point allocation rule found for ${competitionType}/${matchFormat}/${ageGroup}`);
+    // Fallback to default points if no specific rule found
+    console.warn(`No point allocation rule found for ${competitionType}/${effectiveFormat}/${ageGroup}, using defaults`);
+    const basePoints = isWinner ? 50 : 25; // Default points
+    const multiplier = 1.0;
+    const finalPoints = Math.round(basePoints * multiplier);
+    
+    return {
+      basePoints,
+      ageGroup,
+      multiplier,
+      finalPoints,
+      gender
+    };
   }
   
   const basePoints = isWinner ? rule.winnerPoints : rule.loserPoints;
@@ -73,7 +104,8 @@ async function calculatePlayerPoints(
     basePoints,
     ageGroup,
     multiplier,
-    finalPoints
+    finalPoints,
+    gender
   };
 }
 

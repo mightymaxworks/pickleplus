@@ -224,12 +224,9 @@ router.get('/players/available', requireAuth, requireAdmin, async (req, res) => 
       lastName: users.lastName,
       username: users.username,
       gender: users.gender,
-      birthDate: users.birthDate,
-      currentRating: users.currentRating,
-      ageGroup: ageGroupMappings.ageGroup
+      yearOfBirth: users.yearOfBirth
     })
     .from(users)
-    .leftJoin(ageGroupMappings, eq(users.id, ageGroupMappings.userId))
     .where(eq(users.isActive, true));
 
     // Apply filters
@@ -493,29 +490,28 @@ router.get('/matches', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { competitionId, status, format, limit = 50, offset = 0 } = req.query;
 
-    // Build the query with all player joins
+    // Build the query with flattened columns to avoid nested object issues
     let query = db.select({
       id: matches.id,
       competitionId: matches.competitionId,
       matchNumber: matches.matchNumber,
       format: matches.format,
-      ageGroup: matches.ageGroup,
       status: matches.status,
       scheduledTime: matches.scheduledTime,
       player1Score: matches.player1Score,
       player2Score: matches.player2Score,
       team1Score: matches.team1Score,
       team2Score: matches.team2Score,
-      winnerPoints: matches.winnerPoints,
-      loserPoints: matches.loserPoints,
       venue: matches.venue,
       court: matches.court,
       createdAt: matches.createdAt,
-      competition: {
-        id: competitions.id,
-        name: competitions.name,
-        type: competitions.type
-      }
+      player1Id: matches.player1Id,
+      player2Id: matches.player2Id,
+      player1PartnerId: matches.player1PartnerId,
+      player2PartnerId: matches.player2PartnerId,
+      winnerId: matches.winnerId,
+      competitionName: competitions.name,
+      competitionType: competitions.type
     })
     .from(matches)
     .leftJoin(competitions, eq(matches.competitionId, competitions.id));
