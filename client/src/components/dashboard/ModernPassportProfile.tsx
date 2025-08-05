@@ -245,9 +245,6 @@ export default function ModernPassportProfile({
               </div>
             </div>
         </div>
-
-        </CardContent>
-      </Card>
       
       {/* Tabbed Content - Full Screen */}
       <div className="p-0">
