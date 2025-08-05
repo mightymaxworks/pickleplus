@@ -399,6 +399,7 @@ function EditableField({
 function UnifiedPassportDemo() {
   const [viewMode, setViewMode] = useState("player"); // "player" or "coach"
   const [isOwner, setIsOwner] = useState(true); // Toggle between owner view and visitor view
+  const [showDetailedRankings, setShowDetailedRankings] = useState(false);
   
   const currentData = viewMode === "player" ? mockPlayerData : mockCoachData;
   
@@ -600,33 +601,202 @@ function UnifiedPassportDemo() {
                 )}
               </div>
 
-              {/* Rankings Display for Players */}
+              {/* Enhanced Rankings Display for Players */}
               {viewMode === "player" && (
-                <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
-                  <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-2">
-                    <Trophy className="h-4 w-4" />
-                    Rankings Across Divisions
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                    <div className="bg-white p-3 rounded-md border">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Singles 19+</span>
-                        <Badge variant="outline" className="text-orange-600 border-orange-200">#12</Badge>
+                <div className="mt-4 space-y-4">
+                  {/* Current Division Rankings */}
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
+                    <h3 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                      <Trophy className="h-4 w-4" />
+                      Current Rankings & Performance
+                    </h3>
+                    
+                    {/* Division Rankings Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                      <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-3 rounded-lg border border-orange-200">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-orange-800">Singles 19+</span>
+                          <Badge className="bg-orange-600 text-white">#12</Badge>
+                        </div>
+                        <div className="text-xs text-orange-700 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Points: 1,247</span>
+                            <span className="text-green-600 font-medium">↗ +23</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Matches: 8W-3L</span>
+                            <span className="text-blue-600">73% WR</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-blue-800">Doubles 19+</span>
+                          <Badge className="bg-blue-600 text-white">#8</Badge>
+                        </div>
+                        <div className="text-xs text-blue-700 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Points: 1,456</span>
+                            <span className="text-red-600 font-medium">↘ -5</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Matches: 12W-4L</span>
+                            <span className="text-blue-600">75% WR</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-green-800">Mixed 19+</span>
+                          <Badge className="bg-green-600 text-white">#15</Badge>
+                        </div>
+                        <div className="text-xs text-green-700 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Points: 952</span>
+                            <span className="text-green-600 font-medium">↗ +12</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Matches: 6W-4L</span>
+                            <span className="text-blue-600">60% WR</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-white p-3 rounded-md border">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Doubles 19+</span>
-                        <Badge variant="outline" className="text-blue-600 border-blue-200">#8</Badge>
-                      </div>
-                    </div>
-                    <div className="bg-white p-3 rounded-md border">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Mixed 19+</span>
-                        <Badge variant="outline" className="text-green-600 border-green-200">#15</Badge>
+
+                    {/* Quick Performance Stats */}
+                    <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-xs">
+                        <div>
+                          <div className="font-semibold text-green-600 text-lg">26</div>
+                          <div className="text-muted-foreground">Total Wins</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-red-600 text-lg">11</div>
+                          <div className="text-muted-foreground">Total Losses</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-blue-600 text-lg">70%</div>
+                          <div className="text-muted-foreground">Overall WR</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-purple-600 text-lg">+47</div>
+                          <div className="text-muted-foreground">Points Trend</div>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Quick Rankings Expansion */}
+                  <div className="text-center">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs text-muted-foreground hover:text-blue-600 border-dashed"
+                      onClick={() => setShowDetailedRankings(!showDetailedRankings)}
+                    >
+                      {showDetailedRankings ? "Hide" : "View"} All Age Groups & Detailed Analytics
+                      <ChevronLeft className={`h-3 w-3 ml-1 transition-transform ${showDetailedRankings ? "rotate-90" : "rotate-180"}`} />
+                    </Button>
+                  </div>
+
+                  {/* Expandable Detailed Rankings */}
+                  {showDetailedRankings && (
+                    <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                      <h4 className="font-semibold text-sm text-gray-800 mb-3 flex items-center gap-2">
+                        <Trophy className="h-4 w-4 text-yellow-600" />
+                        Complete Rankings Across All Divisions
+                      </h4>
+                      
+                      {/* All Age Group Rankings */}
+                      <div className="space-y-3">
+                        {/* 19+ Division (Current) */}
+                        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3">
+                          <div className="font-medium text-sm text-blue-800 mb-2">19+ Division (Your Age Group)</div>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-orange-600">#12</div>
+                              <div className="text-muted-foreground">Singles</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-blue-600">#8</div>
+                              <div className="text-muted-foreground">Doubles</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-green-600">#15</div>
+                              <div className="text-muted-foreground">Mixed</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Open Division */}
+                        <div className="border border-gray-200 bg-gray-50 rounded-lg p-3">
+                          <div className="font-medium text-sm text-gray-800 mb-2">Open Division (All Ages)</div>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-orange-600">#47</div>
+                              <div className="text-muted-foreground">Singles</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-blue-600">#32</div>
+                              <div className="text-muted-foreground">Doubles</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-green-600">#58</div>
+                              <div className="text-muted-foreground">Mixed</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Regional/City Rankings */}
+                        <div className="border border-purple-200 bg-purple-50 rounded-lg p-3">
+                          <div className="font-medium text-sm text-purple-800 mb-2">Regional Rankings (New York)</div>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-orange-600">#3</div>
+                              <div className="text-muted-foreground">Singles</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-blue-600">#2</div>
+                              <div className="text-muted-foreground">Doubles</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border">
+                              <div className="font-semibold text-green-600">#5</div>
+                              <div className="text-muted-foreground">Mixed</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Performance Trends */}
+                      <div className="bg-gradient-to-r from-indigo-50 to-cyan-50 p-3 rounded-lg border border-indigo-200">
+                        <h5 className="font-medium text-sm text-indigo-800 mb-2">Performance Trends (Last 3 Months)</h5>
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <span>Best Rank Ever:</span>
+                              <span className="font-semibold text-green-600">#6 (Doubles)</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Biggest Jump:</span>
+                              <span className="font-semibold text-blue-600">+15 (Singles)</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <span>Matches This Month:</span>
+                              <span className="font-semibold">23</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Points Gained:</span>
+                              <span className="font-semibold text-green-600">+156</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -634,23 +804,7 @@ function UnifiedPassportDemo() {
         </div>
       </Card>
 
-      {/* Quick Access to Full Rankings - Player Mode */}
-      {viewMode === "player" && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
-              <div>
-                <h3 className="font-semibold text-lg">Complete Rankings Profile</h3>
-                <p className="text-sm text-muted-foreground">View full rankings, leaderboards, and performance analytics</p>
-              </div>
-              <Button className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                View Rankings
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Tabbed Content - Mobile Optimized */}
       <Tabs defaultValue="about" className="w-full">
