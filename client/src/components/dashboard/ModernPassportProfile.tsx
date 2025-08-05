@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, MapPin, Calendar, QrCode } from "lucide-react";
@@ -60,17 +60,17 @@ export default function ModernPassportProfile({
   const userRoles = { isCoach: user?.isCoach, isPlayer: true };
 
   return (
-    <div className="w-full max-w-full px-2 py-4 sm:px-4 sm:py-6 lg:px-6">
-      <Card className="overflow-hidden relative w-full max-w-none shadow-lg border border-gray-200 dark:border-gray-700">
-      {/* Background Image Section - Larger and Mobile Optimized */}
-      <div 
-        className="h-48 md:h-56 lg:h-64 relative"
-        style={{
-          backgroundImage: coverImage ? `url(${coverImage})` : 'linear-gradient(to bottom right, rgb(254 215 170), rgb(253 240 207), rgb(254 215 170))',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
+    <div className="w-full max-w-none p-0">
+      <Card className="overflow-hidden relative w-full max-w-none shadow-lg border-0 rounded-none sm:rounded-lg sm:border sm:border-gray-200 dark:sm:border-gray-700 sm:m-4">
+        {/* Background Image Section - Larger and Mobile Optimized */}
+        <div 
+          className="h-48 md:h-56 lg:h-64 relative"
+          style={{
+            backgroundImage: coverImage ? `url(${coverImage})` : 'linear-gradient(to bottom right, rgb(254 215 170), rgb(253 240 207), rgb(254 215 170))',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
         <div className="absolute inset-0 bg-black/10"></div>
         {isOwner && (
           <Button
@@ -86,8 +86,8 @@ export default function ModernPassportProfile({
         )}
       </div>
       
-      <CardContent className="p-4 md:p-6 -mt-8 md:-mt-12 relative">
-        <div className="flex items-start justify-between gap-4">
+        <CardContent className="p-4 md:p-6 -mt-8 md:-mt-12 relative">
+          <div className="flex items-start justify-between gap-2 sm:gap-4">
           {/* Left Section: Profile Photo */}
           <div className="relative">
             <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-lg">
@@ -219,123 +219,171 @@ export default function ModernPassportProfile({
             </div>
           </div>
 
-          {/* Right Section: QR Code - Responsive */}
-          <div className="flex-shrink-0 flex justify-center sm:justify-end">
-            <div className="flex flex-col items-center gap-2">
-              <div className="bg-white p-2 rounded-lg shadow-md">
-                <QRCodeSVG
-                  value={qrCodeData}
-                  size={64}
-                  level="M"
-                  className="block w-14 h-14 sm:w-16 sm:h-16"
-                />
-              </div>
-              <div className="text-xs text-center text-muted-foreground max-w-[80px]">
-                <QrCode className="h-3 w-3 mx-auto mb-1" />
-                <span className="block">Connect</span>
+            {/* Right Section: QR Code */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <div className="bg-white p-2 rounded-lg shadow-md">
+                  <QRCodeSVG
+                    value={qrCodeData}
+                    size={64}
+                    level="M"
+                    className="block"
+                  />
+                </div>
+                <div className="text-xs text-center text-muted-foreground max-w-[80px]">
+                  <QrCode className="h-3 w-3 mx-auto mb-1" />
+                  <span className="block">Connect</span>
+                </div>
               </div>
             </div>
-          </div>
         </div>
 
-        {/* Tabs Section - Mobile Optimized */}
-        <div className="mt-6">
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-              <TabsTrigger value="stats" className="text-xs sm:text-sm">Statistics</TabsTrigger>
-              <TabsTrigger value="achievements" className="text-xs sm:text-sm">Achievements</TabsTrigger>
-            </TabsList>
+        </CardContent>
+      </Card>
+      
+      {/* Tabbed Content - Mobile Optimized */}
+      <div className="sm:m-4 sm:mt-2">
+        <Tabs defaultValue="about" className="w-full">
+          <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
+            <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">About</TabsTrigger>
+            <TabsTrigger value="stats" className="text-xs md:text-sm px-2 py-2">Stats</TabsTrigger>
+            <TabsTrigger value="rankings" className="text-xs md:text-sm px-2 py-2">Rankings</TabsTrigger>
+            {userRoles.isCoach && <TabsTrigger value="coaching" className="text-xs md:text-sm px-2 py-2">Coaching</TabsTrigger>}
+            <TabsTrigger value="connect" className="text-xs md:text-sm px-2 py-2">Connect</TabsTrigger>
+          </TabsList>
             
-            <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Recent Activity */}
-                <div className="bg-white p-4 rounded-lg border">
-                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Recent Activity</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Tournament Match</span>
-                      <span className="text-green-600">Won</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Practice Session</span>
-                      <span className="text-blue-600">Completed</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Rating Update</span>
-                      <span className="text-orange-600">+0.2</span>
+          
+          <TabsContent value="about" className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Player Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Player Profile</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Playing Style</h4>
+                    <p className="text-sm">Aggressive baseline play with strong net presence</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Favorite Shots</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline">Cross-court dink</Badge>
+                      <Badge variant="outline">Third shot drop</Badge>
+                      <Badge variant="outline">Lob</Badge>
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* Upcoming Events */}
-                <div className="bg-white p-4 rounded-lg border">
-                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Upcoming Events</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Weekly Tournament</span>
-                      <span className="text-muted-foreground">Tomorrow</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Coaching Session</span>
-                      <span className="text-muted-foreground">Thursday</span>
-                    </div>
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Tournament Match</span>
+                    <span className="text-green-600">Won</span>
                   </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="stats" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Performance Chart */}
-                <div className="bg-white p-4 rounded-lg border">
-                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Performance Trend</h3>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Practice Session</span>
+                    <span className="text-blue-600">Completed</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Rating Update</span>
+                    <span className="text-orange-600">+0.2</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="stats" className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Performance Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Trend</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
                     Performance chart would go here
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* Match History */}
-                <div className="bg-white p-4 rounded-lg border">
-                  <h3 className="font-semibold mb-3 text-sm sm:text-base">Recent Matches</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span>vs. Player A</span>
-                      <span className="text-green-600">11-9, 11-7</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>vs. Player B</span>
-                      <span className="text-red-600">9-11, 8-11</span>
-                    </div>
+              {/* Match History */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Matches</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>vs. Player A</span>
+                    <span className="text-green-600">11-9, 11-7</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>vs. Player B</span>
+                    <span className="text-red-600">9-11, 8-11</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="rankings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Rankings & Achievements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                    <div className="text-2xl mb-2">🏆</div>
+                    <h4 className="font-semibold text-sm">First Win</h4>
+                    <p className="text-xs text-muted-foreground">Won your first match</p>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl mb-2">🎯</div>
+                    <h4 className="font-semibold text-sm">Accuracy Pro</h4>
+                    <p className="text-xs text-muted-foreground">90% shot accuracy</p>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-2xl mb-2">🔥</div>
+                    <h4 className="font-semibold text-sm">Win Streak</h4>
+                    <p className="text-xs text-muted-foreground">5 wins in a row</p>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="achievements" className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Achievement Cards */}
-                <div className="bg-white p-4 rounded-lg border text-center">
-                  <div className="text-2xl mb-2">🏆</div>
-                  <h4 className="font-semibold text-sm">First Win</h4>
-                  <p className="text-xs text-muted-foreground">Won your first match</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="connect" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Connect & Network</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <div className="bg-white p-4 rounded-lg shadow-md inline-block mb-4">
+                    <QRCodeSVG
+                      value={qrCodeData}
+                      size={128}
+                      level="M"
+                      className="block"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Scan to connect and view full profile
+                  </p>
                 </div>
-                <div className="bg-white p-4 rounded-lg border text-center">
-                  <div className="text-2xl mb-2">🎯</div>
-                  <h4 className="font-semibold text-sm">Accuracy Pro</h4>
-                  <p className="text-xs text-muted-foreground">90% shot accuracy</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border text-center">
-                  <div className="text-2xl mb-2">🔥</div>
-                  <h4 className="font-semibold text-sm">Win Streak</h4>
-                  <p className="text-xs text-muted-foreground">5 wins in a row</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </CardContent>
-    </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
