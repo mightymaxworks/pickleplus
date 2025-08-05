@@ -64,8 +64,8 @@ export default function ModernPassportProfile({
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden relative">
+    <div className="w-full">
+      <Card className="overflow-hidden relative w-full border-0 rounded-none shadow-none">
         {/* Background Image Section - Larger and Mobile Optimized */}
         <div 
           className="h-48 md:h-56 lg:h-64 relative"
@@ -134,7 +134,8 @@ export default function ModernPassportProfile({
                       onProfileUpdate?.('firstName', value);
                     }}
                     placeholder="First Name"
-                    className="text-2xl md:text-3xl font-bold text-gray-900"
+                    className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg"
+                    style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
                   />
                   <EditableField
                     label="Last Name"
@@ -144,11 +145,12 @@ export default function ModernPassportProfile({
                       onProfileUpdate?.('lastName', value);
                     }}
                     placeholder="Last Name"
-                    className="text-2xl md:text-3xl font-bold text-gray-900"
+                    className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg"
+                    style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
                   />
                 </div>
               ) : (
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
                   {user?.firstName || user?.username || 'Player'} {user?.lastName || ''}
                 </h1>
               )}
