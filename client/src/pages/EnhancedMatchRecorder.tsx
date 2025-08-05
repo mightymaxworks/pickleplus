@@ -144,6 +144,46 @@ export default function EnhancedMatchRecorder() {
     });
   };
 
+  // Competition form state
+  const [competitionData, setCompetitionData] = useState({
+    name: '',
+    type: 'tournament' as 'tournament' | 'league',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week later
+    venue: '',
+    pointsMultiplier: 1.0
+  });
+
+  // Create competition mutation
+  const createCompetitionMutation = useMutation({
+    mutationFn: async (data: typeof competitionData) => {
+      const response = await apiRequest('POST', '/api/admin/match-management/competitions', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Competition Created',
+        description: 'New competition created successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/match-management/competitions'] });
+      setCompetitionData({
+        name: '',
+        type: 'tournament',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        venue: '',
+        pointsMultiplier: 1.0
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create competition',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -212,8 +252,8 @@ export default function EnhancedMatchRecorder() {
       </div>
 
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="create">Create Match</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="create">Record Match</TabsTrigger>
           <TabsTrigger value="verify">
             {isAdmin ? 'Manage' : 'Verify'}
             {!isAdmin && (pendingVerifications.data as any)?.data?.length > 0 && (
@@ -223,6 +263,7 @@ export default function EnhancedMatchRecorder() {
             )}
           </TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
+          {isAdmin && <TabsTrigger value="competitions">Competitions</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="create" className="space-y-6">
@@ -436,6 +477,132 @@ export default function EnhancedMatchRecorder() {
                   </div>
                 )}
 
+                {/* Score Recording */}
+                <div className="space-y-4 p-4 border border-dashed border-muted-foreground/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="h-5 w-5 text-orange-600" />
+                    <Label className="font-semibold">Match Score Recording</Label>
+                  </div>
+                  
+                  {matchData.format === 'singles' ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Player 1 Score</Label>
+                        <Input 
+                          type="number"
+                          min="0"
+                          max="21"
+                          placeholder="Score"
+                          value={matchData.player1Score || ''}
+                          onChange={(e) => setMatchData(prev => ({ 
+                            ...prev, 
+                            player1Score: e.target.value ? parseInt(e.target.value) : undefined 
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Player 2 Score</Label>
+                        <Input 
+                          type="number"
+                          min="0"
+                          max="21"
+                          placeholder="Score"
+                          value={matchData.player2Score || ''}
+                          onChange={(e) => setMatchData(prev => ({ 
+                            ...prev, 
+                            player2Score: e.target.value ? parseInt(e.target.value) : undefined 
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Team 1 Score</Label>
+                        <Input 
+                          type="number"
+                          min="0"
+                          max="21"
+                          placeholder="Score"
+                          value={matchData.team1Score || ''}
+                          onChange={(e) => setMatchData(prev => ({ 
+                            ...prev, 
+                            team1Score: e.target.value ? parseInt(e.target.value) : undefined 
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Team 2 Score</Label>
+                        <Input 
+                          type="number"
+                          min="0"
+                          max="21"
+                          placeholder="Score"
+                          value={matchData.team2Score || ''}
+                          onChange={(e) => setMatchData(prev => ({ 
+                            ...prev, 
+                            team2Score: e.target.value ? parseInt(e.target.value) : undefined 
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Winner Selection */}
+                  {((matchData.format === 'singles' && matchData.player1Score !== undefined && matchData.player2Score !== undefined) ||
+                    (matchData.format === 'doubles' && matchData.team1Score !== undefined && matchData.team2Score !== undefined)) && (
+                    <div className="space-y-2">
+                      <Label>Winner</Label>
+                      <Select 
+                        value={matchData.winnerId?.toString() || ''} 
+                        onValueChange={(value) => {
+                          if (value) {
+                            const winnerId = parseInt(value);
+                            setMatchData(prev => ({ 
+                              ...prev, 
+                              winnerId,
+                              // Set winning team for doubles
+                              winningTeamPlayer1Id: matchData.format === 'doubles' && winnerId === matchData.player1Id 
+                                ? matchData.player1Id 
+                                : undefined,
+                              winningTeamPlayer2Id: matchData.format === 'doubles' && winnerId === matchData.player1Id 
+                                ? matchData.player1PartnerId 
+                                : (matchData.format === 'doubles' && winnerId === matchData.player2Id 
+                                  ? matchData.player2PartnerId 
+                                  : undefined)
+                            }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select winner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {matchData.format === 'singles' ? (
+                            <>
+                              <SelectItem value={matchData.player1Id.toString()}>
+                                {players.find(p => p.id === matchData.player1Id)?.firstName} {players.find(p => p.id === matchData.player1Id)?.lastName}
+                              </SelectItem>
+                              <SelectItem value={matchData.player2Id.toString()}>
+                                {players.find(p => p.id === matchData.player2Id)?.firstName} {players.find(p => p.id === matchData.player2Id)?.lastName}
+                              </SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value={matchData.player1Id.toString()}>
+                                Team 1: {players.find(p => p.id === matchData.player1Id)?.firstName} & {players.find(p => p.id === matchData.player1PartnerId)?.firstName}
+                              </SelectItem>
+                              <SelectItem value={matchData.player2Id.toString()}>
+                                Team 2: {players.find(p => p.id === matchData.player2Id)?.firstName} & {players.find(p => p.id === matchData.player2PartnerId)?.firstName}
+                              </SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
                 {/* Notes */}
                 <div className="space-y-2">
                   <Label>Notes (Optional)</Label>
@@ -452,8 +619,7 @@ export default function EnhancedMatchRecorder() {
                   className="w-full" 
                   disabled={createMatchMutation.isPending}
                 >
-                  {createMatchMutation.isPending ? 'Creating...' : 
-                   isAdmin ? 'Create Match' : 'Record Match'}
+                  {createMatchMutation.isPending ? 'Recording...' : 'Record Match & Score'}
                 </Button>
               </form>
             </CardContent>
@@ -565,6 +731,162 @@ export default function EnhancedMatchRecorder() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Competition Management Tab (Admin Only) */}
+        {isAdmin && (
+          <TabsContent value="competitions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  Create New Competition
+                </CardTitle>
+                <CardDescription>
+                  Create tournaments and competitions for linking to matches
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  createCompetitionMutation.mutate(competitionData);
+                }} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Competition Name</Label>
+                      <Input 
+                        placeholder="e.g., Summer Championship 2025"
+                        value={competitionData.name}
+                        onChange={(e) => setCompetitionData(prev => ({ ...prev, name: e.target.value }))}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select 
+                        value={competitionData.type} 
+                        onValueChange={(value: 'tournament' | 'league') => 
+                          setCompetitionData(prev => ({ ...prev, type: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tournament">Tournament</SelectItem>
+                          <SelectItem value="league">League</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Start Date</Label>
+                      <Input 
+                        type="date"
+                        value={competitionData.startDate}
+                        onChange={(e) => setCompetitionData(prev => ({ ...prev, startDate: e.target.value }))}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>End Date</Label>
+                      <Input 
+                        type="date"
+                        value={competitionData.endDate}
+                        onChange={(e) => setCompetitionData(prev => ({ ...prev, endDate: e.target.value }))}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Venue (Optional)</Label>
+                      <Input 
+                        placeholder="e.g., Central Sports Complex"
+                        value={competitionData.venue}
+                        onChange={(e) => setCompetitionData(prev => ({ ...prev, venue: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Points Multiplier</Label>
+                      <Select 
+                        value={competitionData.pointsMultiplier.toString()} 
+                        onValueChange={(value) => 
+                          setCompetitionData(prev => ({ ...prev, pointsMultiplier: parseFloat(value) }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1.0">1.0x (Standard)</SelectItem>
+                          <SelectItem value="1.5">1.5x (Premium)</SelectItem>
+                          <SelectItem value="2.0">2.0x (Championship)</SelectItem>
+                          <SelectItem value="3.0">3.0x (Major Tournament)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={createCompetitionMutation.isPending}
+                  >
+                    {createCompetitionMutation.isPending ? 'Creating...' : 'Create Competition'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Existing Competitions</CardTitle>
+                <CardDescription>
+                  Manage your current competitions and tournaments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {competitions.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">
+                    No competitions created yet. Create your first competition above.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {competitions.map((comp: Competition) => (
+                      <Card key={comp.id} className="border-l-4 border-l-orange-500">
+                        <CardContent className="pt-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">{comp.name}</h3>
+                              <p className="text-sm text-muted-foreground capitalize">{comp.type}</p>
+                              <div className="flex gap-2 mt-2">
+                                <Badge variant="secondary">
+                                  {comp.pointsMultiplier}x Points
+                                </Badge>
+                                {comp.venue && (
+                                  <Badge variant="outline">
+                                    📍 {comp.venue}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(comp.startDate).toLocaleDateString()} - {new Date(comp.endDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
