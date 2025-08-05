@@ -68,6 +68,11 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
       // Call the parent callback for local state updates
       onFieldChange(field, value);
 
+      // Refresh the page to show updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+
       toast({
         title: "Profile Updated",
         description: `${field} has been saved successfully`,

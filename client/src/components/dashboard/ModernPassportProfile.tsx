@@ -63,12 +63,18 @@ export default function ModernPassportProfile({
     isPlayer: true 
   };
 
-  // Debug banner image
+  // Debug banner image and user data
   console.log('Banner image debug:', {
     hasBannerUrl: !!user?.banner_url,
     bannerUrlLength: user?.banner_url?.length,
     bannerUrlStart: user?.banner_url?.substring(0, 50),
     hasCoverImage: !!coverImage
+  });
+  
+  console.log('User data debug:', {
+    playingSince: user?.playingSince,
+    userId: user?.id,
+    displayName: user?.displayName
   });
 
   return (
@@ -188,14 +194,14 @@ export default function ModernPassportProfile({
                   <EditableField
                     label="Playing Since"
                     fieldName="playingSince"
-                    value={user?.playingSince || user?.yearOfBirth?.toString() || ''}
+                    value={user?.playingSince || ''}
                     onSave={async (fieldName: string, value: string) => {
                       onProfileUpdate?.('playingSince', value);
                     }}
                     placeholder="Playing since year"
                   />
                 ) : (
-                  <span>Playing since {user?.playingSince || user?.yearOfBirth || 'Unknown'}</span>
+                  <span>Playing since {user?.playingSince || 'Unknown'}</span>
                 )}
               </div>
             </div>
@@ -305,7 +311,7 @@ export default function ModernPassportProfile({
                     
                     <EditableField
                       label="Playing Since"
-                      value={user?.playingSince || "2020"}
+                      value={user?.playingSince || ''}
                       fieldName="playingSince"
                       onSave={async (fieldName, value) => onProfileUpdate?.('playingSince', value)}
                       placeholder="Year you started playing"
