@@ -177,7 +177,7 @@ export default function ModernPassportProfile({
                 </h1>
               )}
               <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs md:text-sm w-fit mx-auto sm:mx-0">
-                Rank #{Math.floor(Math.random() * 50) + 1}
+                Rank #{user?.rankingPoints ? Math.max(1, Math.floor(user.rankingPoints / 100)) : 'Unranked'}
               </Badge>
             </div>
             
