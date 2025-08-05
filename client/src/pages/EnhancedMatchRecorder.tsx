@@ -9,8 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, MapPin, Users, Trophy, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { Calendar, MapPin, Users, Trophy, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -38,9 +38,6 @@ interface MatchData {
   player2PartnerId?: number;
   format: 'singles' | 'doubles';
   matchDate: string;
-  scheduledTime?: string;
-  venue?: string;
-  court?: string;
   notes?: string;
   competitionId?: number;
   // Score data
@@ -83,13 +80,13 @@ export default function EnhancedMatchRecorder() {
   });
 
   // Fetch pending verifications (player only)
-  const { data: pendingVerifications } = useQuery({
+  const pendingVerifications = useQuery({
     queryKey: ['/api/player-match-verification/matches/pending-verification'],
     enabled: !isAdmin
   });
 
-  const players = playersData?.data || [];
-  const competitions = competitionsData?.data || [];
+  const players: Player[] = (playersData as any)?.data || [];
+  const competitions: Competition[] = (competitionsData as any)?.data || [];
 
   // Create match mutation
   const createMatchMutation = useMutation({
@@ -219,9 +216,9 @@ export default function EnhancedMatchRecorder() {
           <TabsTrigger value="create">Create Match</TabsTrigger>
           <TabsTrigger value="verify">
             {isAdmin ? 'Manage' : 'Verify'}
-            {!isAdmin && pendingVerifications?.data?.length > 0 && (
+            {!isAdmin && (pendingVerifications.data as any)?.data?.length > 0 && (
               <Badge variant="destructive" className="ml-2">
-                {pendingVerifications.data.length}
+                {(pendingVerifications.data as any).data.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -380,33 +377,17 @@ export default function EnhancedMatchRecorder() {
                 </div>
 
                 {/* Match Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Match Date
-                    </Label>
-                    <Input 
-                      type="date"
-                      value={matchData.matchDate}
-                      onChange={(e) => setMatchData(prev => ({ ...prev, matchDate: e.target.value }))}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Time (Optional)
-                      <span className="text-xs text-muted-foreground">- defaults to tournament time if linked</span>
-                    </Label>
-                    <Input 
-                      type="time"
-                      value={matchData.scheduledTime || ''}
-                      onChange={(e) => setMatchData(prev => ({ ...prev, scheduledTime: e.target.value }))}
-                      placeholder="Will use tournament time if not specified"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Match Date (Required)
+                  </Label>
+                  <Input 
+                    type="date"
+                    value={matchData.matchDate}
+                    onChange={(e) => setMatchData(prev => ({ ...prev, matchDate: e.target.value }))}
+                    required
+                  />
                 </div>
 
                 {/* Competition Venue Display (if linked to competition) */}
@@ -492,13 +473,13 @@ export default function EnhancedMatchRecorder() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {pendingVerifications?.data?.length === 0 && (
+                {(pendingVerifications.data as any)?.data?.length === 0 && (
                   <p className="text-muted-foreground text-center py-4">
                     No matches pending your verification
                   </p>
                 )}
                 
-                {pendingVerifications?.data?.map((verification: any) => (
+                {(pendingVerifications.data as any)?.data?.map((verification: any) => (
                   <Card key={verification.matchId} className="mb-4">
                     <CardContent className="pt-4">
                       <div className="flex justify-between items-start mb-4">
