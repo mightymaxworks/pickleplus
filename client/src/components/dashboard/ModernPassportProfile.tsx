@@ -74,7 +74,7 @@ export default function ModernPassportProfile({
               ? `url(${coverImage})` 
               : user?.coverImage 
                 ? `url(${user.coverImage})`
-                : 'url(https://images.unsplash.com/photo-1554068865-24cecd4e34b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80)',
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
