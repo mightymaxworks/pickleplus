@@ -71,8 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarInitials: `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}` || username.charAt(0).toUpperCase(),
         passportCode,
         duprRating: "3.0",
-        createdAt: new Date(),
-        updatedAt: new Date()
+
       });
       
       console.log(`[API][Registration] User ${username} registered successfully with passport code ${passportCode}`);
@@ -235,6 +234,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error("[ROUTES] Error registering modular routes:", error);
     console.error("[ROUTES] Continuing with basic functionality...");
   }
+
+  // === USER PROFILE COMPLETION STATUS ===
+  app.get('/api/user/profile-completion-status', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Calculate profile completion percentage
+      const requiredFields = ['firstName', 'lastName', 'email'];
+      const optionalFields = ['location', 'bio', 'avatarUrl'];
+      
+      const completedRequired = requiredFields.filter(field => user[field as keyof typeof user]).length;
+      const completedOptional = optionalFields.filter(field => user[field as keyof typeof user]).length;
+      
+      const completionPercentage = Math.round(
+        ((completedRequired / requiredFields.length) * 70) + 
+        ((completedOptional / optionalFields.length) * 30)
+      );
+
+      res.json({
+        success: true,
+        data: {
+          completionPercentage,
+          missingRequired: requiredFields.filter(field => !user[field as keyof typeof user]),
+          missingOptional: optionalFields.filter(field => !user[field as keyof typeof user]),
+          isComplete: completionPercentage >= 90
+        }
+      });
+    } catch (error) {
+      console.error('[API] Profile completion status error:', error);
+      res.status(500).json({ error: 'Failed to get profile completion status' });
+    }
+  });
 
   // === FALLBACK API STATUS ENDPOINTS ===
   // These provide basic status for any unregistered endpoints
