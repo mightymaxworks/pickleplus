@@ -290,9 +290,10 @@ function ModernPassportDemo() {
 
       {/* Tabbed Content */}
       <Tabs defaultValue="about" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={`grid w-full ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
           <TabsTrigger value="about">About</TabsTrigger>
           <TabsTrigger value="stats">Stats</TabsTrigger>
+          <TabsTrigger value="rankings">Rankings</TabsTrigger>
           {userRoles.isCoach && <TabsTrigger value="coaching">Coaching</TabsTrigger>}
           <TabsTrigger value="connect">Connect</TabsTrigger>
         </TabsList>
@@ -357,7 +358,57 @@ function ModernPassportDemo() {
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Rankings Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-yellow-600" />
+                  Current Rankings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Overall Rank */}
+                  <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg border-2 border-orange-200">
+                    <div className="text-3xl font-bold text-orange-600">#{Math.floor(Math.random() * 50) + 1}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Overall Rank</div>
+                    <div className="text-xs text-muted-foreground mt-1">Regional Leaderboard</div>
+                  </div>
+                  
+                  {/* Age Group & Gender Rankings */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-xl font-bold text-blue-600">#{Math.floor(Math.random() * 20) + 1}</div>
+                      <div className="text-xs text-muted-foreground">Age Group</div>
+                      <div className="text-xs text-blue-600 font-medium">35-44 M</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-xl font-bold text-green-600">#{Math.floor(Math.random() * 15) + 1}</div>
+                      <div className="text-xs text-muted-foreground">Gender</div>
+                      <div className="text-xs text-green-600 font-medium">Male</div>
+                    </div>
+                  </div>
+
+                  {/* Rating Progress */}
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Rating Progress</span>
+                      <span className="text-sm text-purple-600">+0.1 this month</span>
+                    </div>
+                    <div className="w-full bg-purple-200 rounded-full h-2">
+                      <div className="bg-purple-600 h-2 rounded-full" style={{width: `${(currentData.currentRating / 5) * 100}%`}}></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>3.0</span>
+                      <span className="font-medium">{currentData.currentRating}</span>
+                      <span>5.0</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Recent Matches */}
             <Card>
               <CardHeader>
@@ -418,6 +469,308 @@ function ModernPassportDemo() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Condensed Rankings Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-indigo-600" />
+                Local Leaderboard
+              </CardTitle>
+              <CardDescription>
+                Top players in your area and age group
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="pb-2 text-xs font-medium text-muted-foreground">Rank</th>
+                      <th className="pb-2 text-xs font-medium text-muted-foreground">Player</th>
+                      <th className="pb-2 text-xs font-medium text-muted-foreground">Rating</th>
+                      <th className="pb-2 text-xs font-medium text-muted-foreground">Matches</th>
+                      <th className="pb-2 text-xs font-medium text-muted-foreground">Win Rate</th>
+                      <th className="pb-2 text-xs font-medium text-muted-foreground">Age Group</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {/* Current user highlighted */}
+                    <tr className="bg-orange-50 border border-orange-200 rounded">
+                      <td className="py-2 px-2 font-bold text-orange-600">#{Math.floor(Math.random() * 10) + 8}</td>
+                      <td className="py-2 px-2 font-bold">{currentData.firstName} {currentData.lastName} (You)</td>
+                      <td className="py-2 px-2 font-bold text-orange-600">{currentData.currentRating}</td>
+                      <td className="py-2 px-2">{currentData.totalMatches}</td>
+                      <td className="py-2 px-2">{currentData.winRate}%</td>
+                      <td className="py-2 px-2">35-44 M</td>
+                    </tr>
+                    
+                    {/* Other players */}
+                    {[
+                      { rank: 1, name: "Sarah Wilson", rating: 4.8, matches: 203, winRate: 78, ageGroup: "35-44 F" },
+                      { rank: 2, name: "Mike Chen", rating: 4.7, matches: 189, winRate: 74, ageGroup: "35-44 M" },
+                      { rank: 3, name: "Lisa Rodriguez", rating: 4.6, matches: 156, winRate: 71, ageGroup: "35-44 F" },
+                      { rank: 4, name: "David Kim", rating: 4.5, matches: 167, winRate: 69, ageGroup: "35-44 M" },
+                      { rank: 5, name: "Emma Thompson", rating: 4.4, matches: 134, winRate: 68, ageGroup: "35-44 F" }
+                    ].map((player) => (
+                      <tr key={player.rank} className="border-b hover:bg-gray-50">
+                        <td className="py-2 px-2 font-medium">#{player.rank}</td>
+                        <td className="py-2 px-2">{player.name}</td>
+                        <td className="py-2 px-2 font-medium">{player.rating}</td>
+                        <td className="py-2 px-2">{player.matches}</td>
+                        <td className="py-2 px-2">{player.winRate}%</td>
+                        <td className="py-2 px-2">{player.ageGroup}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-4 text-center">
+                <Button variant="outline" size="sm">
+                  View Full Rankings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="rankings" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Personal Rankings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-yellow-600" />
+                  Your Rankings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Overall Rank - Large Display */}
+                  <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg border-2 border-orange-200">
+                    <div className="text-4xl font-bold text-orange-600 mb-2">#{Math.floor(Math.random() * 50) + 1}</div>
+                    <div className="text-lg font-medium text-gray-900">Overall Rank</div>
+                    <div className="text-sm text-muted-foreground">Regional Leaderboard</div>
+                    <div className="text-xs text-orange-600 font-medium mt-2">San Francisco Bay Area</div>
+                  </div>
+                  
+                  {/* Category Rankings */}
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-blue-900">Age Group (35-44 M)</div>
+                        <div className="text-sm text-blue-600">Most competitive category</div>
+                      </div>
+                      <div className="text-xl font-bold text-blue-600">#{Math.floor(Math.random() * 20) + 1}</div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-green-900">Gender (Male)</div>
+                        <div className="text-sm text-green-600">All ages combined</div>
+                      </div>
+                      <div className="text-xl font-bold text-green-600">#{Math.floor(Math.random() * 15) + 1}</div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-purple-900">Facility (Local Courts)</div>
+                        <div className="text-sm text-purple-600">Home court advantage</div>
+                      </div>
+                      <div className="text-xl font-bold text-purple-600">#{Math.floor(Math.random() * 10) + 1}</div>
+                    </div>
+                  </div>
+
+                  {/* Rating Progress Indicator */}
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-medium">Rating Progress</span>
+                      <span className="text-sm text-green-600 font-medium">+0.1 this month</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="bg-gradient-to-r from-orange-500 to-amber-500 h-3 rounded-full transition-all duration-300" style={{width: `${(currentData.currentRating / 5) * 100}%`}}></div>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                      <span>3.0 Beginner</span>
+                      <span className="font-medium text-gray-900">{currentData.currentRating}</span>
+                      <span>5.0 Pro</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ranking History & Trends */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  Ranking Trends
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Monthly Progress */}
+                  <div>
+                    <h4 className="font-medium mb-3">6-Month Progress</h4>
+                    <div className="space-y-2">
+                      {[
+                        { month: "January", rank: Math.floor(Math.random() * 50) + 1, change: "+2" },
+                        { month: "December", rank: Math.floor(Math.random() * 50) + 3, change: "+1" },
+                        { month: "November", rank: Math.floor(Math.random() * 50) + 5, change: "-1" },
+                        { month: "October", rank: Math.floor(Math.random() * 50) + 7, change: "+3" },
+                        { month: "September", rank: Math.floor(Math.random() * 50) + 10, change: "+2" }
+                      ].map((entry, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                          <span className="text-sm">{entry.month}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">#{entry.rank}</span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              entry.change.startsWith('+') 
+                                ? 'bg-green-100 text-green-600' 
+                                : 'bg-red-100 text-red-600'
+                            }`}>
+                              {entry.change}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Achievement Milestones */}
+                  <div>
+                    <h4 className="font-medium mb-3">Recent Milestones</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 p-2 bg-yellow-50 rounded-lg">
+                        <Trophy className="h-4 w-4 text-yellow-600" />
+                        <div className="text-sm">
+                          <div className="font-medium">Top 50 Regional</div>
+                          <div className="text-muted-foreground">Achieved Dec 2024</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-2 bg-blue-50 rounded-lg">
+                        <Target className="h-4 w-4 text-blue-600" />
+                        <div className="text-sm">
+                          <div className="font-medium">4.0+ Rating</div>
+                          <div className="text-muted-foreground">Achieved Nov 2024</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Full Rankings Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-indigo-600" />
+                Complete Leaderboard - Age Group 35-44 Male
+              </CardTitle>
+              <CardDescription>
+                Your competitive standing among peers in the same age and gender category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Rank</th>
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Player</th>
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Rating</th>
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Matches</th>
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Win Rate</th>
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Change</th>
+                      <th className="pb-3 text-sm font-medium text-muted-foreground">Last Active</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {/* Top players */}
+                    {[
+                      { rank: 1, name: "Mike Chen", rating: 4.8, matches: 189, winRate: 74, change: "+1", lastActive: "Today" },
+                      { rank: 2, name: "David Kim", rating: 4.7, matches: 167, winRate: 72, change: "-1", lastActive: "Yesterday" },
+                      { rank: 3, name: "Tom Rodriguez", rating: 4.6, matches: 156, winRate: 71, change: "0", lastActive: "2 days ago" },
+                      { rank: 4, name: "James Wilson", rating: 4.5, matches: 134, winRate: 69, change: "+2", lastActive: "Today" },
+                      { rank: 5, name: "Ryan Martinez", rating: 4.5, matches: 142, winRate: 68, change: "-1", lastActive: "3 days ago" }
+                    ].map((player) => (
+                      <tr key={player.rank} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-2 font-medium">#{player.rank}</td>
+                        <td className="py-3 px-2">{player.name}</td>
+                        <td className="py-3 px-2 font-medium">{player.rating}</td>
+                        <td className="py-3 px-2">{player.matches}</td>
+                        <td className="py-3 px-2">{player.winRate}%</td>
+                        <td className="py-3 px-2">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            player.change.startsWith('+') 
+                              ? 'bg-green-100 text-green-600' 
+                              : player.change.startsWith('-')
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {player.change}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-muted-foreground">{player.lastActive}</td>
+                      </tr>
+                    ))}
+                    
+                    {/* Current user highlighted */}
+                    <tr className="bg-orange-50 border border-orange-200">
+                      <td className="py-3 px-2 font-bold text-orange-600">#{Math.floor(Math.random() * 10) + 8}</td>
+                      <td className="py-3 px-2 font-bold">{currentData.firstName} {currentData.lastName} (You)</td>
+                      <td className="py-3 px-2 font-bold text-orange-600">{currentData.currentRating}</td>
+                      <td className="py-3 px-2">{currentData.totalMatches}</td>
+                      <td className="py-3 px-2">{currentData.winRate}%</td>
+                      <td className="py-3 px-2">
+                        <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-600">+2</span>
+                      </td>
+                      <td className="py-3 px-2 text-muted-foreground">Active now</td>
+                    </tr>
+
+                    {/* Players below */}
+                    {[
+                      { rank: Math.floor(Math.random() * 10) + 15, name: "Steve Anderson", rating: 4.1, matches: 98, winRate: 64, change: "-1", lastActive: "1 week ago" },
+                      { rank: Math.floor(Math.random() * 10) + 16, name: "Mark Thompson", rating: 4.0, matches: 87, winRate: 62, change: "0", lastActive: "4 days ago" }
+                    ].map((player) => (
+                      <tr key={player.rank} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-2 font-medium">#{player.rank}</td>
+                        <td className="py-3 px-2">{player.name}</td>
+                        <td className="py-3 px-2 font-medium">{player.rating}</td>
+                        <td className="py-3 px-2">{player.matches}</td>
+                        <td className="py-3 px-2">{player.winRate}%</td>
+                        <td className="py-3 px-2">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            player.change.startsWith('+') 
+                              ? 'bg-green-100 text-green-600' 
+                              : player.change.startsWith('-')
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {player.change}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-muted-foreground">{player.lastActive}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-6 text-center">
+                <Button variant="outline" size="sm" className="mr-2">
+                  View All Categories
+                </Button>
+                <Button variant="outline" size="sm">
+                  Export Rankings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {userRoles.isCoach && (
