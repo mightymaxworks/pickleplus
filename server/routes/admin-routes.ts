@@ -27,6 +27,16 @@ export async function registerAdminRoutes(app: express.Express): Promise<void> {
   } catch (error) {
     console.error('[API] Error registering Admin Match Management routes:', error);
   }
+
+  // Register Enhanced Match Management routes
+  try {
+    const enhancedMatchManagementModule = await import('../api/admin/enhanced-match-management');
+    const enhancedMatchManagementRoutes = enhancedMatchManagementModule.enhancedMatchManagementRouter;
+    app.use('/api/admin/enhanced-match-management', enhancedMatchManagementRoutes);
+    console.log("[API] Enhanced Match Management routes registered successfully");
+  } catch (error) {
+    console.error('[API] Error registering Enhanced Match Management routes:', error);
+  }
   
   // Add specific admin routes here (non-dashboard)
 }
