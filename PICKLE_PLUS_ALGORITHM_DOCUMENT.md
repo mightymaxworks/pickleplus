@@ -687,12 +687,17 @@ The system includes comprehensive validation to ensure calculation consistency:
 - **Professional Players (1800+ pts):** 7.0% weekly (maximum competitive pressure)
 - **Rationale:** Higher tiers require increasingly active maintenance to reflect current skill level
 
-**B. Activity-Responsive Decay**
-- **High Activity (4+ matches/month):** No decay
-- **Moderate Activity (2-3 matches/month):** 1% weekly  
-- **Low Activity (1 match/month):** 1.5% weekly
-- **Inactive (no matches):** 2% weekly
-- **Benefits:** Rewards consistent participation, gentler on casual players
+**B. Activity-Responsive Decay** ✅ **FINALIZED WITH TOURNAMENT WEIGHTING**
+- **Match Weighting System:**
+  - Tournament matches: 2x weight for decay protection
+  - League/sanctioned matches: 1.5x weight
+  - Casual matches: 1x weight
+- **Activity Levels (weighted matches/month):**
+  - **High Activity (4+ weighted matches):** No decay
+  - **Moderate Activity (2-3 weighted matches):** 1% weekly
+  - **Low Activity (1 weighted match):** 1.5% weekly
+  - **Inactive (no matches):** Full tier-based decay rate
+- **Benefits:** Encourages competitive play while remaining accessible to casual players
 
 **C. Seasonal Adjustments** ✅ **FINALIZED**
 - **Major Holidays (Christmas, New Year, Easter):** No decay for Recreational/Competitive tiers
