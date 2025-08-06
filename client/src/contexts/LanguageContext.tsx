@@ -345,6 +345,18 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.passport.feature3': 'Milestone reward system',
     'landing.passport.feature4': 'Cross-platform compatibility',
     'landing.passport.createButton': 'Create Your Passport',
+    'landing.passport.learnMore': 'Learn More About Rankings',
+
+    // Community Section
+    'landing.community.title': 'Built by the Community',
+    'landing.community.subtitle': 'Developed with input from players, coaches, and tournament directors to create the ranking system pickleball deserves.',
+    'landing.community.stat1': 'Platform Ready',
+    'landing.community.stat2': 'Classification System',
+    'landing.community.stat3': 'Age & Gender Balance',
+    'landing.community.joinButton': 'Join the Revolution',
+
+    // Footer
+    'landing.footer.copyright': '© 2025 Pickle+. The future of pickleball ranking systems.',
     'landing.hero.description': 'Join thousands of players using advanced analytics, coaching tools, and community features to elevate their pickleball performance.',
     'landing.hero.startFree': 'Start Free Today',
     'landing.hero.watchDemo': 'Watch Demo',
@@ -939,6 +951,18 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.passport.feature3': '里程碑奖励系统',
     'landing.passport.feature4': '跨平台兼容性',
     'landing.passport.createButton': '创建您的护照',
+    'landing.passport.learnMore': '了解更多关于排名',
+
+    // Community Section
+    'landing.community.title': '由社区打造',
+    'landing.community.subtitle': '在球员、教练和锦标赛总监的意见参与下开发，创造匹克球应得的排名系统。',
+    'landing.community.stat1': '平台就绪',
+    'landing.community.stat2': '分级系统',
+    'landing.community.stat3': '年龄与性别平衡',
+    'landing.community.joinButton': '加入革命',
+
+    // Footer
+    'landing.footer.copyright': '© 2025 Pickle+. 匹克球排名系统的未来。',
     'landing.sport': '匹克球',
     'landing.hero.description': '加入数千名球员，使用先进的分析、教练工具和社区功能来提升您的匹克球表现。',
     'landing.hero.startFree': '今天免费开始',

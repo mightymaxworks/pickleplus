@@ -446,7 +446,7 @@ export default function NewLandingPage() {
                     className="border-2 border-cyan-200 text-cyan-700 hover:bg-cyan-50 px-8 py-4 text-lg font-medium rounded-full transition-all duration-300"
                     onClick={scrollToRanking}
                   >
-                    Learn More About Rankings
+{safeT('landing.passport.learnMore', 'Learn More About Rankings')}
                   </Button>
                 </motion.div>
               </motion.div>
@@ -472,15 +472,14 @@ export default function NewLandingPage() {
               variants={fadeInUp}
               className="text-3xl md:text-4xl font-bold text-gray-900 mb-6"
             >
-              Built by the Community
+              {safeT('landing.community.title', 'Built by the Community')}
             </motion.h2>
             
             <motion.p 
               variants={fadeInUp}
               className="text-xl text-gray-600 mb-12"
             >
-              Developed with input from players, coaches, and tournament directors 
-              to create the ranking system pickleball deserves.
+              {safeT('landing.community.subtitle', 'Developed with input from players, coaches, and tournament directors to create the ranking system pickleball deserves.')}
             </motion.p>
 
             <motion.div 
@@ -489,15 +488,15 @@ export default function NewLandingPage() {
             >
               <motion.div variants={fadeInUp} className="text-center">
                 <div className="text-4xl font-bold text-orange-500 mb-2">100%</div>
-                <div className="text-gray-600">Platform Ready</div>
+                <div className="text-gray-600">{safeT('landing.community.stat1', 'Platform Ready')}</div>
               </motion.div>
               <motion.div variants={fadeInUp} className="text-center">
                 <div className="text-4xl font-bold text-cyan-500 mb-2">4-Tier</div>
-                <div className="text-gray-600">Classification System</div>
+                <div className="text-gray-600">{safeT('landing.community.stat2', 'Classification System')}</div>
               </motion.div>
               <motion.div variants={fadeInUp} className="text-center">
                 <div className="text-4xl font-bold text-purple-500 mb-2">Fair</div>
-                <div className="text-gray-600">Age & Gender Balance</div>
+                <div className="text-gray-600">{safeT('landing.community.stat3', 'Age & Gender Balance')}</div>
               </motion.div>
             </motion.div>
 
@@ -507,7 +506,7 @@ export default function NewLandingPage() {
                 className="bg-gradient-to-r from-orange-500 to-cyan-500 hover:from-orange-600 hover:to-cyan-600 text-white px-12 py-4 text-lg font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 onClick={() => setLocation('/register')}
               >
-                Join the Revolution
+{safeT('landing.community.joinButton', 'Join the Revolution')}
                 <Star className="ml-2 w-5 h-5" />
               </Button>
             </motion.div>
@@ -524,7 +523,7 @@ export default function NewLandingPage() {
             className="h-8 mx-auto mb-4 opacity-80"
           />
           <p className="text-gray-400 text-sm">
-            © 2025 Pickle+. The future of pickleball ranking systems.
+            {safeT('landing.footer.copyright', '© 2025 Pickle+. The future of pickleball ranking systems.')}
           </p>
         </div>
       </footer>
