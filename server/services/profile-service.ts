@@ -81,12 +81,12 @@ export const PROFILE_FIELDS: ProfileFields = {
   fitnessLevel: { weight: 4, category: 'health' }
 };
 
-// XP Awards by profile completion percentage thresholds
-const XP_REWARD_TIERS = [
-  { threshold: 25, reward: 25 },
-  { threshold: 50, reward: 50 },
-  { threshold: 75, reward: 75 },
-  { threshold: 100, reward: 100 }
+// Pickle Points Awards by profile completion percentage thresholds
+const PICKLE_POINTS_REWARD_TIERS = [
+  { threshold: 25, reward: 50 },
+  { threshold: 50, reward: 100 },
+  { threshold: 75, reward: 150 },
+  { threshold: 100, reward: 250 }
 ];
 
 export class ProfileService implements IProfileService {
@@ -165,11 +165,25 @@ export class ProfileService implements IProfileService {
     
     // Update the profile completion percentage if it changed
     if (newCompletion !== previousCompletion) {
+      // Check if we should award Pickle Points for crossing milestones
+      let picklePointsAwarded = 0;
+      if (this.shouldAwardPicklePoints(previousCompletion, newCompletion)) {
+        picklePointsAwarded = this.calculatePicklePointsAward(previousCompletion, newCompletion);
+      }
+
+      // Update user with new completion percentage and award Pickle Points
+      const updateData: any = { profileCompletionPct: newCompletion };
+      
+      if (picklePointsAwarded > 0) {
+        const currentPicklePoints = currentUser.picklePoints || 0;
+        updateData.picklePoints = currentPicklePoints + picklePointsAwarded;
+        
+        console.log(`[PROFILE-COMPLETION] User ${userId} earned ${picklePointsAwarded} Pickle Points for reaching ${newCompletion}% profile completion`);
+      }
+
       const [finalUser] = await db
         .update(users)
-        .set({
-          profileCompletionPct: newCompletion
-        })
+        .set(updateData)
         .where(eq(users.id, userId))
         .returning();
         
@@ -180,15 +194,12 @@ export class ProfileService implements IProfileService {
   }
   
   /**
-   * Determine if a profile update should award XP
+   * Determine if a profile update should award Pickle Points
    * This happens when the user crosses a completion tier threshold
    */
-  shouldAwardXP(oldUser: User, newUser: User): boolean {
-    const oldCompletion = oldUser.profileCompletionPct || 0;
-    const newCompletion = newUser.profileCompletionPct || 0;
-    
+  shouldAwardPicklePoints(oldCompletion: number, newCompletion: number): boolean {
     // Check if the user crossed any threshold
-    for (const tier of XP_REWARD_TIERS) {
+    for (const tier of PICKLE_POINTS_REWARD_TIERS) {
       if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
         return true;
       }
@@ -198,22 +209,19 @@ export class ProfileService implements IProfileService {
   }
   
   /**
-   * Calculate the XP award for a profile update
+   * Calculate the Pickle Points award for a profile update
    */
-  calculateXPAward(oldUser: User, newUser: User): number {
-    const oldCompletion = oldUser.profileCompletionPct || 0;
-    const newCompletion = newUser.profileCompletionPct || 0;
-    
-    let totalXpReward = 0;
+  calculatePicklePointsAward(oldCompletion: number, newCompletion: number): number {
+    let totalPicklePointsReward = 0;
     
     // Find all the tiers crossed in this update
-    for (const tier of XP_REWARD_TIERS) {
+    for (const tier of PICKLE_POINTS_REWARD_TIERS) {
       if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
-        totalXpReward += tier.reward;
+        totalPicklePointsReward += tier.reward;
       }
     }
     
-    return totalXpReward;
+    return totalPicklePointsReward;
   }
   
   /**

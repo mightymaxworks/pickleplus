@@ -9,11 +9,19 @@ export interface IProfileService {
   // Update user profile
   updateProfile(userId: number, profileData: ProfileUpdateFormData): Promise<User>;
   
-  // Check if a profile update should award XP
-  shouldAwardXP(oldUser: User, newUser: User): boolean;
+  // Check if a profile update should award Pickle Points
+  shouldAwardPicklePoints(oldCompletion: number, newCompletion: number): boolean;
   
-  // Calculate how much XP to award for a profile update
-  calculateXPAward(oldUser: User, newUser: User): number;
+  // Calculate how many Pickle Points to award for a profile update
+  calculatePicklePointsAward(oldCompletion: number, newCompletion: number): number;
+  
+  // Get breakdown of profile fields
+  getFieldBreakdown(user: User): {
+    completedFields: string[];
+    incompleteFields: string[];
+    completedCategories: Record<string, number>;
+    comingSoonFields?: string[];
+  };
 }
 
 // Interface for the XP Service
