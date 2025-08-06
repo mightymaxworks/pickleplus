@@ -249,14 +249,14 @@ export function CommunityList({
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Skill Level</h4>
                   <Select 
-                    value={tempFilter.skillLevel || ''} 
-                    onValueChange={(value) => setTempFilter({...tempFilter, skillLevel: value || undefined})}
+                    value={tempFilter.skillLevel || 'any'} 
+                    onValueChange={(value) => setTempFilter({...tempFilter, skillLevel: value === 'any' ? undefined : value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Any skill level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any skill level</SelectItem>
+                      <SelectItem value="any">Any skill level</SelectItem>
                       <SelectItem value="Beginner">Beginner</SelectItem>
                       <SelectItem value="Intermediate">Intermediate</SelectItem>
                       <SelectItem value="Advanced">Advanced</SelectItem>

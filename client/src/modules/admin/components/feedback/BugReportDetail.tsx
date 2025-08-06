@@ -353,14 +353,14 @@ const BugReportDetail: React.FC<BugReportDetailProps> = ({
                 <div>
                   <Label htmlFor="assignee">Assign To</Label>
                   <Select
-                    value={assigneeId?.toString() || ''}
-                    onValueChange={(value) => handleAssignmentUpdate(value ? parseInt(value) : null)}
+                    value={assigneeId?.toString() || 'unassigned'}
+                    onValueChange={(value) => handleAssignmentUpdate(value === 'unassigned' ? null : parseInt(value))}
                   >
                     <SelectTrigger id="assignee" className="mt-2">
                       <SelectValue placeholder="Unassigned" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       <SelectItem value="1">Admin User</SelectItem>
                       <SelectItem value="2">Developer 1</SelectItem>
                       <SelectItem value="3">Developer 2</SelectItem>

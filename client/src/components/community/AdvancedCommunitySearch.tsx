@@ -338,7 +338,7 @@ export function AdvancedCommunitySearch({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Any location</SelectItem>
+                              <SelectItem value="any">Any location</SelectItem>
                               {POPULAR_LOCATIONS.map(location => (
                                 <SelectItem key={location} value={location}>
                                   {location}
@@ -367,7 +367,7 @@ export function AdvancedCommunitySearch({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Any skill level</SelectItem>
+                              <SelectItem value="any">Any skill level</SelectItem>
                               {SKILL_LEVELS.map(level => (
                                 <SelectItem key={level.value} value={level.value}>
                                   {level.label}
@@ -397,7 +397,7 @@ export function AdvancedCommunitySearch({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">Any event type</SelectItem>
+                            <SelectItem value="any">Any event type</SelectItem>
                             {EVENT_TYPES.map(type => (
                               <SelectItem key={type.value} value={type.value}>
                                 {type.label}

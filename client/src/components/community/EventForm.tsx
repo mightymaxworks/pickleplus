@@ -405,7 +405,7 @@ export function EventForm({
                 <FormLabel>Minimum Skill Level</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value || ""}
+                  value={field.value || "none"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -413,7 +413,7 @@ export function EventForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No minimum</SelectItem>
+                    <SelectItem value="none">No minimum</SelectItem>
                     {SKILL_LEVEL_OPTIONS.map((level) => (
                       <SelectItem key={level.value} value={level.value}>
                         {level.label}
@@ -437,7 +437,7 @@ export function EventForm({
                 <FormLabel>Maximum Skill Level</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value || ""}
+                  value={field.value || "none"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -445,7 +445,7 @@ export function EventForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No maximum</SelectItem>
+                    <SelectItem value="none">No maximum</SelectItem>
                     {SKILL_LEVEL_OPTIONS.map((level) => (
                       <SelectItem key={level.value} value={level.value}>
                         {level.label}

@@ -272,7 +272,7 @@ const PassportVerificationDashboard: React.FC = () => {
                         <SelectValue placeholder="Select an event" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any Event</SelectItem>
+                        <SelectItem value="any">Any Event</SelectItem>
                         {events?.map((event) => (
                           <SelectItem key={event.id} value={event.id.toString()}>
                             {event.name}
@@ -325,7 +325,7 @@ const PassportVerificationDashboard: React.FC = () => {
                       <SelectValue placeholder="Select an event" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any Event</SelectItem>
+                      <SelectItem value="any">Any Event</SelectItem>
                       {events?.map((event) => (
                         <SelectItem key={event.id} value={event.id.toString()}>
                           {event.name}

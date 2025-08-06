@@ -439,13 +439,15 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
               <div className="space-y-2">
                 <Label className="text-base font-medium">Tournament/Competition</Label>
                 <Select 
-                  value={selectedTournamentId?.toString() || ""} 
+                  value={selectedTournamentId?.toString() || "none"} 
                   onValueChange={(value) => {
-                    setSelectedTournamentId(value ? parseInt(value) : null);
+                    setSelectedTournamentId(value === "none" ? null : parseInt(value));
                     // Set tournament date as default when tournament is selected
-                    const tournament = tournaments.find((t: any) => t.id === parseInt(value));
-                    if (tournament && tournament.startDate) {
-                      setMatchDate(tournament.startDate);
+                    if (value !== "none") {
+                      const tournament = tournaments.find((t: any) => t.id === parseInt(value));
+                      if (tournament && tournament.startDate) {
+                        setMatchDate(tournament.startDate);
+                      }
                     }
                   }}
                 >
@@ -453,7 +455,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                     <SelectValue placeholder="Select tournament/competition (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No tournament (casual match)</SelectItem>
+                    <SelectItem value="none">No tournament (casual match)</SelectItem>
                     {tournaments.map((tournament: any) => (
                       <SelectItem key={tournament.id} value={tournament.id.toString()}>
                         {tournament.name} - {tournament.type}
