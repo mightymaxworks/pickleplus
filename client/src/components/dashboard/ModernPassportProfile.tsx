@@ -338,16 +338,32 @@ export default function ModernPassportProfile({
                       label="Skill Level"
                       value={user?.skillLevel || ''}
                       fieldName="skillLevel"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Beginner", label: "Beginner" },
+                        { value: "Intermediate", label: "Intermediate" },
+                        { value: "Advanced", label: "Advanced" },
+                        { value: "Expert", label: "Expert" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('skillLevel', value)}
-                      placeholder="e.g., Beginner, Intermediate, Advanced"
+                      placeholder="Select your skill level"
                     />
 
                     <EditableField
                       label="Playing Style"
                       value={user?.playingStyle || ''}
                       fieldName="playingStyle"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Aggressive Baseline", label: "Aggressive Baseline" },
+                        { value: "Finesse Player", label: "Finesse Player" },
+                        { value: "Power Player", label: "Power Player" },
+                        { value: "All Court", label: "All Court" },
+                        { value: "Defensive Counter-Puncher", label: "Defensive Counter-Puncher" },
+                        { value: "Net Rusher", label: "Net Rusher" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('playingStyle', value)}
-                      placeholder="e.g., Aggressive Baseline, Finesse Player"
+                      placeholder="Select your playing style"
                     />
                   </div>
                   
@@ -356,16 +372,27 @@ export default function ModernPassportProfile({
                       label="Dominant Hand"
                       value={user?.dominantHand || ''}
                       fieldName="dominantHand"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Right", label: "Right" },
+                        { value: "Left", label: "Left" },
+                        { value: "Ambidextrous", label: "Ambidextrous" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('dominantHand', value)}
-                      placeholder="Right, Left, or Ambidextrous"
+                      placeholder="Select dominant hand"
                     />
 
                     <EditableField
                       label="Gender"
                       value={user?.gender || ''}
                       fieldName="gender"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Male", label: "Male" },
+                        { value: "Female", label: "Female" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('gender', value)}
-                      placeholder="Your gender identity"
+                      placeholder="Select gender"
                     />
 
                     <EditableField
@@ -393,8 +420,14 @@ export default function ModernPassportProfile({
                       label=""
                       value={user?.preferredFormat || ''}
                       fieldName="preferredFormat"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Singles", label: "Singles" },
+                        { value: "Doubles", label: "Doubles" },
+                        { value: "Mixed Doubles", label: "Mixed Doubles" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('preferredFormat', value)}
-                      placeholder="Singles/Doubles/Mixed"
+                      placeholder="Select format"
                       className="text-center"
                     />
                   </div>
@@ -405,8 +438,15 @@ export default function ModernPassportProfile({
                       label=""
                       value={user?.preferredSurface || ''}
                       fieldName="preferredSurface"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Hard Court", label: "Hard Court" },
+                        { value: "Indoor", label: "Indoor" },
+                        { value: "Outdoor", label: "Outdoor" },
+                        { value: "No Preference", label: "No Preference" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('preferredSurface', value)}
-                      placeholder="Hard, Clay, Indoor, etc."
+                      placeholder="Select surface"
                       className="text-center"
                     />
                   </div>
@@ -456,8 +496,21 @@ export default function ModernPassportProfile({
                       label="Paddle Brand"
                       value={user?.paddleBrand || ''}
                       fieldName="paddleBrand"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Selkirk", label: "Selkirk" },
+                        { value: "JOOLA", label: "JOOLA" },
+                        { value: "Paddletek", label: "Paddletek" },
+                        { value: "Engage", label: "Engage" },
+                        { value: "Head", label: "Head" },
+                        { value: "Babolat", label: "Babolat" },
+                        { value: "Wilson", label: "Wilson" },
+                        { value: "Yonex", label: "Yonex" },
+                        { value: "SHOT3", label: "SHOT3" },
+                        { value: "Other", label: "Other" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('paddleBrand', value)}
-                      placeholder="e.g., Selkirk, JOOLA, Paddletek"
+                      placeholder="Select paddle brand"
                     />
                     <EditableField
                       label="Paddle Model"
@@ -470,8 +523,20 @@ export default function ModernPassportProfile({
                       label="Shoes Brand"
                       value={user?.shoesBrand || ''}
                       fieldName="shoesBrand"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "K-Swiss", label: "K-Swiss" },
+                        { value: "Asics", label: "Asics" },
+                        { value: "New Balance", label: "New Balance" },
+                        { value: "Nike", label: "Nike" },
+                        { value: "Adidas", label: "Adidas" },
+                        { value: "Fila", label: "Fila" },
+                        { value: "Wilson", label: "Wilson" },
+                        { value: "Head", label: "Head" },
+                        { value: "Other", label: "Other" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('shoesBrand', value)}
-                      placeholder="e.g., K-Swiss, Asics, New Balance"
+                      placeholder="Select shoes brand"
                     />
                   </div>
                   <div className="space-y-4">
@@ -486,8 +551,20 @@ export default function ModernPassportProfile({
                       label="Apparel Brand"
                       value={user?.apparelBrand || ''}
                       fieldName="apparelBrand"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Nike", label: "Nike" },
+                        { value: "Adidas", label: "Adidas" },
+                        { value: "Under Armour", label: "Under Armour" },
+                        { value: "SHOT3", label: "SHOT3" },
+                        { value: "Lululemon", label: "Lululemon" },
+                        { value: "Wilson", label: "Wilson" },
+                        { value: "Head", label: "Head" },
+                        { value: "Fila", label: "Fila" },
+                        { value: "Other", label: "Other" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('apparelBrand', value)}
-                      placeholder="e.g., Nike, Adidas, Lululemon"
+                      placeholder="Select apparel brand"
                     />
                     <EditableField
                       label="Other Equipment"
@@ -637,8 +714,16 @@ export default function ModernPassportProfile({
                       label="Fitness Level"
                       value={user?.fitnessLevel || ''}
                       fieldName="fitnessLevel"
+                      fieldType="select"
+                      selectOptions={[
+                        { value: "Excellent", label: "Excellent" },
+                        { value: "Very Good", label: "Very Good" },
+                        { value: "Good", label: "Good" },
+                        { value: "Fair", label: "Fair" },
+                        { value: "Needs Improvement", label: "Needs Improvement" }
+                      ]}
                       onSave={async (fieldName, value) => onProfileUpdate?.('fitnessLevel', value)}
-                      placeholder="e.g., Excellent, Good, Fair"
+                      placeholder="Select fitness level"
                     />
                   </div>
                   <div className="space-y-4">
