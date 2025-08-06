@@ -38,6 +38,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerMatchRoutes(app);
   console.log("[ROUTES] Match routes registered successfully");
 
+  // === PLAYER SEARCH AND RECENT OPPONENTS ROUTES ===
+  
+  // Player search endpoint for enhanced match recorder
+  app.get('/api/players/search', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.length < 1) {
+        return res.json({ players: [] });
+      }
+
+      const users = await storage.searchUsers(query);
+      const players = users.map(user => ({
+        id: user.id,
+        displayName: user.displayName,
+        username: user.username,
+        avatarInitials: user.avatarInitials,
+        currentRating: user.currentRating || 0,
+      }));
+
+      res.json({ players });
+    } catch (error) {
+      console.error('Player search error:', error);
+      res.status(500).json({ error: 'Failed to search players' });
+    }
+  });
+
+  // Recent opponents endpoint for enhanced match recorder
+  app.get('/api/players/recent-opponents', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      const recentOpponents = await storage.getRecentOpponents(user.id);
+      
+      const opponents = recentOpponents.map(opponent => ({
+        id: opponent.id,
+        displayName: opponent.displayName,
+        username: opponent.username,
+        avatarInitials: opponent.avatarInitials,
+        currentRating: opponent.currentRating || 0,
+      }));
+
+      res.json({ opponents });
+    } catch (error) {
+      console.error('Recent opponents error:', error);
+      res.status(500).json({ error: 'Failed to get recent opponents' });
+    }
+  });
+
   // === AUTHENTICATION ROUTES ===
   app.post('/api/register', async (req: Request, res: Response) => {
     try {

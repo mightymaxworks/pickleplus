@@ -108,6 +108,8 @@ export interface IStorage extends CommunityStorage {
   updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
   updateUserPassword(id: number, hashedPassword: string): Promise<void>;
   searchPlayers(query: string): Promise<User[]>;
+  searchUsers(query: string): Promise<User[]>;
+  getRecentOpponents(userId: number): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
@@ -718,6 +720,49 @@ export class DatabaseStorage implements IStorage {
       .orderBy(users.firstName, users.lastName);
     
     return results;
+  }
+
+  async getRecentOpponents(userId: number): Promise<User[]> {
+    try {
+      // Get recent opponents from matches where the user was either player one or two
+      const recentOpponentIds = await db
+        .select({
+          opponentId: sql<number>`CASE 
+            WHEN ${matches.playerOneId} = ${userId} THEN ${matches.playerTwoId}
+            WHEN ${matches.playerTwoId} = ${userId} THEN ${matches.playerOneId}
+            ELSE NULL
+          END`.as('opponentId')
+        })
+        .from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId)
+          )
+        )
+        .groupBy(sql`opponentId`)
+        .orderBy(desc(sql`MAX(${matches.createdAt})`))
+        .limit(5);
+
+      // Get user details for these opponent IDs
+      const opponentIds = recentOpponentIds
+        .map(row => row.opponentId)
+        .filter(id => id !== null) as number[];
+
+      if (opponentIds.length === 0) {
+        return [];
+      }
+
+      const opponents = await db
+        .select()
+        .from(users)
+        .where(sql`${users.id} IN (${opponentIds.join(', ')})`);
+
+      return opponents;
+    } catch (error) {
+      console.error('Error getting recent opponents:', error);
+      return [];
+    }
   }
 
 

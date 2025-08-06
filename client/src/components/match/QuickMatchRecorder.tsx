@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,6 +7,54 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { matchSDK } from "@/lib/sdk/matchSDK";
 import { useLocation } from "wouter";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  ToggleGroup, 
+  ToggleGroupItem 
+} from "@/components/ui/toggle-group";
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { 
+  Users, 
+  UserCircle, 
+  Trophy, 
+  Clock, 
+  MapPin, 
+  Settings, 
+  Plus, 
+  Minus, 
+  ChevronDown, 
+  ChevronUp,
+  Zap,
+  Target,
+  Award,
+  RotateCcw,
+  Sparkles,
+  AlertCircle,
+  Info,
+  Search
+} from "lucide-react";
+
+// Import existing components
+import { Form } from "@/components/ui/form";
 
 // Age multiplier constants - FINALIZED ALGORITHM (Option B - Open Age Group)
 const AGE_MULTIPLIERS = {
@@ -53,32 +101,126 @@ const calculateAgeMultiplier = (playerOneData: any, playerTwoData: any): number 
   return ages.length > 0 ? ages.reduce((sum, mult) => sum + mult, 0) / ages.length : 1.0;
 };
 
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
-import { VisualScoreInput } from "./VisualScoreInput";
-import { 
-  ToggleGroup, 
-  ToggleGroupItem 
-} from "@/components/ui/toggle-group";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Users, UserCircle, CheckCircle2, Info, CheckCircle, Trophy, Award, FileText } from "lucide-react";
+// Enhanced OpponentSelector Component with Real Database Integration
+const OpponentSelector = ({ onSelectOpponent, recentOpponents }: { 
+  onSelectOpponent: (opponent: any) => void, 
+  recentOpponents: any[] 
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showRecent, setShowRecent] = useState(true);
 
-// Admin-enhanced match form schema with competition linking and manual points override
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    if (term.length > 0) {
+      setIsSearching(true);
+      setShowRecent(false);
+      
+      try {
+        // Use real API search - implement actual player search
+        const response = await fetch(`/api/players/search?q=${encodeURIComponent(term)}`, {
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setSearchResults(data.players || []);
+        } else {
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      }
+      
+      setIsSearching(false);
+    } else {
+      setShowRecent(true);
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search for any player..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* Search Results or Recent Opponents */}
+      {showRecent ? (
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">Recent opponents:</p>
+          <div className="grid gap-2">
+            {recentOpponents.map((opponent) => (
+              <Button
+                key={opponent.id}
+                variant="outline"
+                onClick={() => onSelectOpponent(opponent)}
+                className="justify-start h-auto p-3"
+              >
+                <Avatar className="h-8 w-8 mr-3">
+                  <AvatarFallback>{opponent.avatarInitials}</AvatarFallback>
+                </Avatar>
+                <div className="text-left">
+                  <p className="font-medium">{opponent.displayName}</p>
+                  <p className="text-xs text-muted-foreground">@{opponent.username}</p>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div>
+          {isSearching ? (
+            <p className="text-sm text-muted-foreground p-4 text-center">Searching...</p>
+          ) : searchResults.length > 0 ? (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Found {searchResults.length} player{searchResults.length !== 1 ? 's' : ''}:
+              </p>
+              <div className="grid gap-2 max-h-40 overflow-y-auto">
+                {searchResults.map((player) => (
+                  <Button
+                    key={player.id}
+                    variant="outline"
+                    onClick={() => onSelectOpponent(player)}
+                    className="justify-start h-auto p-3"
+                  >
+                    <Avatar className="h-8 w-8 mr-3">
+                      <AvatarFallback>{player.avatarInitials || player.displayName?.substring(0, 2) || player.username.substring(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <div className="text-left">
+                      <p className="font-medium">{player.displayName || player.username}</p>
+                      <p className="text-xs text-muted-foreground">
+                        @{player.username}
+                        {player.currentRating && ` • ${player.currentRating} pts`}
+                      </p>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground p-4 text-center">
+              No players found. Try a different search term.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Match form schema
 const matchFormSchema = z.object({
   playerOneId: z.number().int().positive().optional(),
   playerTwoId: z.number().int().positive(),
@@ -91,7 +233,7 @@ const matchFormSchema = z.object({
 
 type MatchFormValues = z.infer<typeof matchFormSchema>;
 
-// Define a type for user search results
+// User search result interface
 interface UserSearchResult {
   id: number;
   displayName: string | null;
@@ -101,6 +243,7 @@ interface UserSearchResult {
   avatarInitials?: string | undefined;
   dateOfBirth?: string | null;
   gender?: string | null;
+  currentRating?: number;
 }
 
 interface QuickMatchRecorderProps {
@@ -121,7 +264,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   
   // Match state
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
-  const matchType = "casual"; // Players can only record casual matches
+  const matchType = "casual"; // Players can only record casual matches unless admin
   const [scoringSystem, setScoringSystem] = useState<"traditional" | "rally">("traditional");
   const [pointsToWin, setPointsToWin] = useState<11 | 15 | 21>(11);
   const [totalGames, setTotalGames] = useState(1);
@@ -136,9 +279,12 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const [playerOnePartnerData, setPlayerOnePartnerData] = useState<UserSearchResult | null>(null);
   const [playerTwoPartnerData, setPlayerTwoPartnerData] = useState<UserSearchResult | null>(null);
   
-  // Check if user is admin or tournament director
-  const isAdmin = user?.isAdmin;
+  // Recent opponents state - loaded from API
+  const [recentOpponents, setRecentOpponents] = useState<UserSearchResult[]>([]);
   
+  // Check if user is admin
+  const isAdmin = user?.isAdmin;
+
   // Admin-specific state for competition linking and manual points
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | null>(null);
   const [useManualPointsOverride, setUseManualPointsOverride] = useState(false);
@@ -151,7 +297,31 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     { id: 2, name: "Weekly League", type: "league", pointsMultiplier: 1.5, venue: "Local Club" },
     { id: 3, name: "Masters Tournament", type: "tournament", pointsMultiplier: 3.0, venue: "Elite Center" }
   ]);
-  
+
+  // Load recent opponents from API
+  useEffect(() => {
+    const loadRecentOpponents = async () => {
+      try {
+        const response = await fetch('/api/players/recent-opponents', {
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setRecentOpponents(data.opponents || []);
+        }
+      } catch (error) {
+        console.error('Failed to load recent opponents:', error);
+        // Use empty array if API fails
+        setRecentOpponents([]);
+      }
+    };
+
+    if (user) {
+      loadRecentOpponents();
+    }
+  }, [user]);
+
   // Initialize player one data based on admin status
   const initialPlayerOneData = user && !isAdmin ? {
     id: user.id,
@@ -178,8 +348,100 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       formatType: "singles",
     },
   });
-  
-  // Reset form to initial state including admin fields
+
+  // Calculate match winner based on games
+  const calculateMatchWinner = (): 1 | 2 | null => {
+    const playerOneWins = games.filter(game => game.playerOneScore > game.playerTwoScore).length;
+    const playerTwoWins = games.filter(game => game.playerTwoScore > game.playerOneScore).length;
+    
+    const requiredWins = Math.ceil(totalGames / 2);
+    
+    if (playerOneWins >= requiredWins) return 1;
+    if (playerTwoWins >= requiredWins) return 2;
+    return null;
+  };
+
+  // Submit match
+  const handleSubmit = async (values: MatchFormValues) => {
+    const winner = calculateMatchWinner();
+    if (!winner) {
+      toast({
+        title: "Incomplete Match",
+        description: "Please complete all games before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!playerOneData || !playerTwoData) {
+      toast({
+        title: "Missing Players",
+        description: "Please select both players",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const matchData = {
+        playerOneId: playerOneData.id,
+        playerTwoId: playerTwoData.id,
+        playerOnePartnerId: formatType === "doubles" ? playerOnePartnerData?.id : null,
+        playerTwoPartnerId: formatType === "doubles" ? playerTwoPartnerData?.id : null,
+        formatType,
+        matchType: isAdmin ? (selectedCompetitionId ? "tournament" : "casual") : "casual",
+        competitionId: selectedCompetitionId,
+        winnerId: winner === 1 ? playerOneData.id : playerTwoData.id,
+        games: games.map((game, index) => ({
+          gameNumber: index + 1,
+          playerOneScore: game.playerOneScore,
+          playerTwoScore: game.playerTwoScore,
+          winnerId: game.playerOneScore > game.playerTwoScore ? playerOneData.id : playerTwoData.id
+        })),
+        ageMultiplier: calculateAgeMultiplier(playerOneData, playerTwoData),
+        notes: values.notes,
+        // Admin manual points override
+        manualPoints: useManualPointsOverride ? {
+          winnerId: winner === 1 ? playerOneData.id : playerTwoData.id,
+          winnerPoints: winner === 1 ? manualPointsWinner : manualPointsLoser,
+          loserPoints: winner === 1 ? manualPointsLoser : manualPointsWinner,
+        } : undefined,
+      };
+
+      const result = await matchSDK.recordMatch(matchData);
+
+      toast({
+        title: "Match Recorded!",
+        description: `Match between ${playerOneData.displayName || playerOneData.username} and ${playerTwoData.displayName || playerTwoData.username} recorded successfully`,
+        variant: "default",
+      });
+
+      // Refresh relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/leaderboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players/recent-opponents'] });
+
+      // Reset form
+      resetForm();
+
+      // Call success callback
+      onSuccess?.(result);
+
+    } catch (error) {
+      console.error('Match submission error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to record match. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset form to initial state
   const resetForm = () => {
     setPlayerTwoData(null);
     setPlayerOnePartnerData(null);
@@ -204,841 +466,481 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       notes: "",
     });
   };
-  
-  // Initialize with pre-filled player data from QR scan
-  useEffect(() => {
-    if (prefilledPlayer) {
-      const playerData = {
-        id: prefilledPlayer.id,
-        displayName: prefilledPlayer.displayName,
-        username: prefilledPlayer.username,
-        avatarInitials: prefilledPlayer.displayName?.substring(0, 2).toUpperCase() || prefilledPlayer.username.substring(0, 2).toUpperCase()
-      };
-      
-      setPlayerTwoData(playerData);
-      form.setValue("playerTwoId", playerData.id);
-      
-      toast({
-        title: "Opponent Pre-filled",
-        description: `Ready to record match with ${playerData.displayName}`,
-        variant: "default",
-      });
-    }
-  }, [prefilledPlayer, form, toast]);
 
-  // Listen for player selection events from DialogPlayerSelect
-  useEffect(() => {
-    const handlePlayerSelected = (event: CustomEvent) => {
-      const { field, player } = event.detail;
-      console.log("Player selected event received:", field, player);
-      
-      if (field === "playerOneData") {
-        setPlayerOneData(player);
-        form.setValue("playerOneId", player.id);
-      } else if (field === "playerTwoData") {
-        setPlayerTwoData(player);
-        form.setValue("playerTwoId", player.id);
-      } else if (field === "playerOnePartnerData") {
-        setPlayerOnePartnerData(player);
-        form.setValue("playerOnePartnerId", player.id);
-      } else if (field === "playerTwoPartnerData") {
-        setPlayerTwoPartnerData(player);
-        form.setValue("playerTwoPartnerId", player.id);
-      }
-    };
-    
-    window.addEventListener('player-selected', handlePlayerSelected as EventListener);
-    
-    return () => {
-      window.removeEventListener('player-selected', handlePlayerSelected as EventListener);
-    };
-  }, [form]);
-  
-  // Update game format type
-  const handleFormatTypeChange = (value: string) => {
-    if (value === "singles" || value === "doubles") {
-      setFormatType(value);
-      form.setValue("formatType", value);
-      
-      // Clear partner selections when switching to singles
-      if (value === "singles") {
-        setPlayerOnePartnerData(null);
-        setPlayerTwoPartnerData(null);
-        form.setValue("playerOnePartnerId", undefined);
-        form.setValue("playerTwoPartnerId", undefined);
-      }
-    }
-  };
-  
-  // Update total games and initialize game scores
-  const handleTotalGamesChange = (newTotalGames: number) => {
-    setTotalGames(newTotalGames);
-    
-    // Ensure we have enough game objects
-    const newGames = [...games];
-    while (newGames.length < newTotalGames) {
-      newGames.push({ playerOneScore: 0, playerTwoScore: 0 });
-    }
-    
-    setGames(newGames);
-  };
-  
-  // Calculate match winner based on game scores
-  const calculateWinner = () => {
-    if (totalGames === 1) {
-      // Single game - compare scores directly
-      return games[0].playerOneScore > games[0].playerTwoScore 
-        ? playerOneData?.id 
-        : playerTwoData?.id;
-    } else {
-      // Multi-game - count wins
-      const playerOneWins = games.filter(g => g.playerOneScore > g.playerTwoScore).length;
-      const playerTwoWins = games.filter(g => g.playerTwoScore > g.playerOneScore).length;
-      
-      return playerOneWins > playerTwoWins 
-        ? playerOneData?.id 
-        : playerTwoData?.id;
-    }
-  };
-  
-  // Calculate if match is complete and ready to submit
-  const isMatchComplete = () => {
-    // First, check if all players are selected
-    if (!playerTwoData) return false;
-    if (formatType === "doubles" && (!playerOnePartnerData || !playerTwoPartnerData)) return false;
-    
-    // Then check if scores are entered
-    if (totalGames === 1) {
-      const game = games[0];
-      if (!game) return false;
-      
-      // Just check if any score was entered
-      const maxScore = Math.max(game.playerOneScore, game.playerTwoScore);
-      return maxScore > 0;
-    } else {
-      // In multi-game format, just verify that some games have scores
-      const gamesWithScores = games.filter(g => 
-        g && (g.playerOneScore > 0 || g.playerTwoScore > 0)
-      ).length;
-      return gamesWithScores > 0;
-    }
-  };
-  
-  // Form submission handler
-  const handleSubmit = async () => {
-    if (!user || !playerOneData || !playerTwoData) {
-      toast({
-        title: "Missing players",
-        description: "Please select all required players",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // For doubles, validate partner selections
-    if (formatType === "doubles" && (!playerOnePartnerData || !playerTwoPartnerData)) {
-      toast({
-        title: "Missing players",
-        description: "Please select all required partner players for doubles",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check if scores are entered
-    const hasScores = games.some(game => game.playerOneScore > 0 || game.playerTwoScore > 0);
-    if (!hasScores) {
-      toast({
-        title: "No scores entered",
-        description: "Please enter the match scores",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Determine winner
-    const winnerId = calculateWinner();
-    console.log("Calculated winner ID:", winnerId);
-    
-    // Prepare players array
-    const players = [
-      {
-        userId: playerOneData.id,
-        partnerId: formatType === "doubles" ? playerOnePartnerData?.id : undefined,
-        score: String(totalGames === 1 ? games[0].playerOneScore : games.filter(g => g.playerOneScore > g.playerTwoScore).length),
-        isWinner: winnerId === playerOneData.id
-      },
-      {
-        userId: playerTwoData.id,
-        partnerId: formatType === "doubles" ? playerTwoPartnerData?.id : undefined,
-        score: String(totalGames === 1 ? games[0].playerTwoScore : games.filter(g => g.playerTwoScore > g.playerOneScore).length),
-        isWinner: winnerId === playerTwoData.id
-      }
-    ];
-    
-    console.log("Match players:", players);
-    console.log("Game scores:", games);
-    
-    try {
-      // Calculate age division based on oldest player's date of birth for automatic division assignment
-      let division = "open"; // Default to open division
-      
-      // Collect all player ages to determine the appropriate division
-      const playerAges = [];
-      
-      if (playerOneData?.dateOfBirth) {
-        const age = new Date().getFullYear() - new Date(playerOneData.dateOfBirth).getFullYear();
-        playerAges.push(age);
-      }
-      
-      if (playerTwoData?.dateOfBirth) {
-        const age = new Date().getFullYear() - new Date(playerTwoData.dateOfBirth).getFullYear();
-        playerAges.push(age);
-      }
-      
-      // If we have partner data for doubles
-      if (formatType === "doubles") {
-        if (playerOnePartnerData?.dateOfBirth) {
-          const age = new Date().getFullYear() - new Date(playerOnePartnerData.dateOfBirth).getFullYear();
-          playerAges.push(age);
-        }
-        
-        if (playerTwoPartnerData?.dateOfBirth) {
-          const age = new Date().getFullYear() - new Date(playerTwoPartnerData.dateOfBirth).getFullYear();
-          playerAges.push(age);
-        }
-      }
-      
-      // Determine division based on oldest player (standard tournament rules)
-      if (playerAges.length > 0) {
-        const oldestAge = Math.max(...playerAges);
-        
-        if (oldestAge >= 70) division = "70+";
-        else if (oldestAge >= 60) division = "60+";
-        else if (oldestAge >= 50) division = "50+";
-        else if (oldestAge >= 35) division = "35+";
-        else division = "open";
-      }
-      
-      console.log("Age division calculation:", { playerAges, division });
-      
-      // Create match data object with admin enhancements
-      const matchData = {
-        formatType,
-        scoringSystem,
-        pointsToWin,
-        division,
-        matchType: isAdmin ? "tournament" as const : "casual" as const, // Admins can record tournament matches
-        eventTier: "local",
-        players,
-        // Ensure gameScores is properly formatted for database storage
-        gameScores: games.map(game => ({
-          playerOneScore: game.playerOneScore,
-          playerTwoScore: game.playerTwoScore
-        })),
-        notes: form.getValues("notes"),
-        // Admin-specific enhancements
-        ...(isAdmin && {
-          competitionId: selectedCompetitionId,
-          manualPointsOverride: useManualPointsOverride ? {
-            winner: manualPointsWinner,
-            loser: manualPointsLoser
-          } : undefined,
-          isAdminRecorded: true,
-        }),
-      };
-      
-      // Calculate automatic age multiplier based on player ages
-      const ageMultiplier = calculateAgeMultiplier(playerOneData, playerTwoData);
-      console.log("Calculated age multiplier:", ageMultiplier);
-      
-      // Add age multiplier to match data
-      (matchData as any).ageMultiplier = ageMultiplier;
-      
-      console.log("Submitting match data:", JSON.stringify(matchData, null, 2));
-      
-      // Record match via SDK
-      console.log("Calling matchSDK.recordMatch...");
-      
-      let response;
-      try {
-        response = await matchSDK.recordMatch(matchData);
-        console.log("Match recorded successfully:", response);
-        
-        // Check if response is valid
-        if (!response || !response.id) {
-          console.error("Invalid response from matchSDK:", response);
-          throw new Error("Failed to get a valid response when recording match");
-        }
-      } catch (matchRecordError) {
-        console.error("Inner try/catch - Error in matchSDK.recordMatch:", matchRecordError);
-        throw matchRecordError;
-      }
-      
-      // Auto-validate the match for the submitter
-      try {
-        console.log("Auto-validating match for submitter...");
-        
-        // The match should be auto-validated on the server side, but we'll log that it should have happened
-        console.log("Match should be auto-validated by the server, ID:", response.id);
-        
-        // Response should already include auto-validation status, but we'll manually 
-        // mark it as such for the user for a better UX experience
-        response.validationStatus = 'confirmed';
-        
-        console.log("Match auto-validated successfully (server-side)");
-      } catch (validationError) {
-        console.error("Error auto-validating match:", validationError);
-        // Don't prevent the match from being recorded if auto-validation fails
-      }
-      
-      // Invalidate relevant queries
-      console.log("Invalidating related queries...");
-      queryClient.invalidateQueries({ queryKey: ["/api/user/ranking-history"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/ranking-leaderboard"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/activities"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/xp-tier"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/match/recent"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/match/stats"] });
-      
-      // Show success toast with admin-specific messaging
-      const successMessage = isAdmin 
-        ? useManualPointsOverride 
-          ? `Match recorded with manual points override (Winner: ${manualPointsWinner}, Loser: ${manualPointsLoser})${selectedCompetitionId ? ' and linked to competition' : ''}`
-          : `Match recorded with ${selectedCompetitionId ? 'competition linking and ' : ''}enhanced admin capabilities`
-        : "Your match has been recorded and auto-validated. Other players still need to validate this match.";
-        
-      toast({
-        title: isAdmin ? "Admin Match Recorded!" : "Match recorded!",
-        description: successMessage,
-      });
-      
-      // Reset form
-      resetForm();
-      
-      // Call success callback with response data instead of navigating directly
-      // This allows the parent component to handle navigation and success UI
-      if (onSuccess) {
-        onSuccess(response);
-      } else {
-        // Fallback navigation if no success handler
-        navigate("/matches");
-      }
-    } catch (error) {
-      console.error("Error recording match:", error);
-      
-      // Try to extract more error details
-      let errorMessage = "There was an error recording your match.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        errorMessage = JSON.stringify(error);
-      }
-      
-      toast({
-        title: "Error recording match",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Calculate games needed to win
-  const gamesToWin = Math.ceil(totalGames / 2);
-  
-  // Calculate wins for each player
-  const playerOneWins = games.filter(g => g.playerOneScore > g.playerTwoScore).length;
-  const playerTwoWins = games.filter(g => g.playerTwoScore > g.playerOneScore).length;
-  
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          Match Recorder
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Record matches with automatic age group calculations and comprehensive scoring options
-        </p>
-      </CardHeader>
-      
-      <CardContent className="space-y-3">
-        {/* Compact Match Setup */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* Format */}
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
+      {/* Header */}
+      <Card>
+        <CardHeader className="text-center pb-3">
+          <CardTitle className="text-2xl flex items-center justify-center gap-2">
+            <Trophy className="h-6 w-6 text-orange-500" />
+            Enhanced Match Recorder
+          </CardTitle>
+          <p className="text-muted-foreground">
+            {isAdmin ? "Admin Match Recording System" : "Record Your Casual Matches"}
+          </p>
+        </CardHeader>
+      </Card>
+
+      {/* Match Configuration */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Settings className="h-5 w-5 text-blue-500" />
+            Match Setup
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Format Selection */}
           <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground">Format</div>
-            <ToggleGroup 
-              type="single" 
-              value={formatType}
-              onValueChange={handleFormatTypeChange}
-              className="flex flex-col gap-1"
-            >
-              <ToggleGroupItem value="singles" className="w-full justify-center text-xs h-8">
+            <Label>Match Format</Label>
+            <ToggleGroup type="single" value={formatType} onValueChange={(value) => value && setFormatType(value as "singles" | "doubles")}>
+              <ToggleGroupItem value="singles" className="flex items-center gap-2">
+                <UserCircle className="h-4 w-4" />
                 Singles
               </ToggleGroupItem>
-              <ToggleGroupItem value="doubles" className="w-full justify-center text-xs h-8">
+              <ToggleGroupItem value="doubles" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
                 Doubles
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
-          {/* Scoring */}
+          {/* Scoring System */}
           <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground">Scoring</div>
-            <ToggleGroup 
-              type="single" 
-              value={scoringSystem}
-              onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}
-              className="flex flex-col gap-1"
-            >
-              <ToggleGroupItem value="traditional" className="w-full justify-center text-xs h-8">
-                Traditional
-              </ToggleGroupItem>
-              <ToggleGroupItem value="rally" className="w-full justify-center text-xs h-8">
-                Rally
-              </ToggleGroupItem>
+            <Label>Scoring System</Label>
+            <ToggleGroup type="single" value={scoringSystem} onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}>
+              <ToggleGroupItem value="traditional">Traditional</ToggleGroupItem>
+              <ToggleGroupItem value="rally">Rally</ToggleGroupItem>
             </ToggleGroup>
           </div>
 
-          {/* Points */}
+          {/* Points to Win */}
           <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground">Points</div>
-            <ToggleGroup 
-              type="single" 
-              value={String(pointsToWin)}
-              onValueChange={(value) => {
-                if (value) {
-                  const points = parseInt(value) as 11 | 15 | 21;
-                  setPointsToWin(points);
-                }
-              }}
-              className="flex flex-col gap-1"
-            >
-              {scoringSystem === "traditional" ? (
-                <>
-                  <ToggleGroupItem value="11" className="w-full justify-center text-xs h-8">11</ToggleGroupItem>
-                  <ToggleGroupItem value="15" className="w-full justify-center text-xs h-8">15</ToggleGroupItem>
-                  <ToggleGroupItem value="21" className="w-full justify-center text-xs h-8">21</ToggleGroupItem>
-                </>
-              ) : (
-                <>
-                  <ToggleGroupItem value="15" className="w-full justify-center text-xs h-8">15</ToggleGroupItem>
-                  <ToggleGroupItem value="21" className="w-full justify-center text-xs h-8">21</ToggleGroupItem>
-                </>
-              )}
+            <Label>Points to Win</Label>
+            <ToggleGroup type="single" value={pointsToWin.toString()} onValueChange={(value) => value && setPointsToWin(parseInt(value) as 11 | 15 | 21)}>
+              <ToggleGroupItem value="11">11 Points</ToggleGroupItem>
+              <ToggleGroupItem value="15">15 Points</ToggleGroupItem>
+              <ToggleGroupItem value="21">21 Points</ToggleGroupItem>
             </ToggleGroup>
           </div>
 
-          {/* Sets */}
+          {/* Number of Games */}
           <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground">Sets</div>
-            <ToggleGroup 
-              type="single" 
-              value={String(totalGames)}
-              onValueChange={(value) => {
-                if (value) {
-                  handleTotalGamesChange(parseInt(value) as 1 | 3 | 5);
-                }
-              }}
-              className="flex flex-col gap-1"
-            >
-              <ToggleGroupItem value="1" className="w-full justify-center text-xs h-8">1</ToggleGroupItem>
-              <ToggleGroupItem value="3" className="w-full justify-center text-xs h-8">3</ToggleGroupItem>
-              <ToggleGroupItem value="5" className="w-full justify-center text-xs h-8">5</ToggleGroupItem>
-            </ToggleGroup>
+            <Label>Number of Games</Label>
+            <Select value={totalGames.toString()} onValueChange={(value) => {
+              const newTotal = parseInt(value);
+              setTotalGames(newTotal);
+              // Adjust games array
+              const newGames = Array.from({ length: newTotal }, (_, i) => 
+                games[i] || { playerOneScore: 0, playerTwoScore: 0 }
+              );
+              setGames(newGames);
+            }}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Best of 1</SelectItem>
+                <SelectItem value="3">Best of 3</SelectItem>
+                <SelectItem value="5">Best of 5</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
 
-
-        
-        {/* Player Selection */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <UserCircle className="h-4 w-4" />
-            <span className="text-xs font-medium">Players</span>
+          {/* Match Type Constraint */}
+          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <span className="text-sm text-blue-700">
+              {isAdmin ? "Admin can record tournament matches" : "Players can only record casual matches"}
+            </span>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Player One Side */}
-            <div className="border border-dashed border-muted-foreground/30 rounded-lg p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                <span className="text-xs font-medium">Player One</span>
+        </CardContent>
+      </Card>
+
+      {/* Player Selection */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <UserCircle className="h-5 w-5 text-blue-500" />
+            Players
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Player One */}
+          <div className="space-y-2">
+            <Label>Player One {!isAdmin && "(You)"}</Label>
+            {playerOneData ? (
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{playerOneData.avatarInitials}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{playerOneData.displayName || playerOneData.username}</p>
+                    <p className="text-sm text-muted-foreground">@{playerOneData.username}</p>
+                  </div>
+                </div>
                 {isAdmin && (
-                  <Badge variant="secondary" className="text-xs">Admin</Badge>
-                )}
-              </div>
-                {/* Player One Selection */}
-                {isAdmin ? (
                   <DialogPlayerSelect
-                    buttonLabel={playerOneData 
-                      ? playerOneData.displayName || playerOneData.username
-                      : "Select Player One"
-                    }
-                    buttonVariant="outline"
-                    selectedUserId={playerOneData?.id}
-                    onSelect={(player) => {
-                      const event = new CustomEvent('player-selected', {
-                        detail: { field: 'playerOneData', player }
-                      });
-                      window.dispatchEvent(event);
-                    }}
+                    trigger={<Button variant="ghost" size="sm">Change</Button>}
+                    onPlayerSelect={(player) => setPlayerOneData(player)}
+                    excludePlayerIds={[playerTwoData?.id].filter(Boolean) as number[]}
                   />
-                ) : (
-                  <div className="flex items-center gap-2 sm:gap-3 mb-3">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
-                      {playerOneData?.avatarInitials || playerOneData?.displayName?.charAt(0) || "Y"}
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm sm:text-base">
-                        {playerOneData?.displayName || "You"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        @{playerOneData?.username || "you"}
-                      </div>
-                    </div>
-                  </div>
                 )}
-                
-                {/* Partner Selection (Doubles Only) */}
-                {formatType === "doubles" && (
-                  <div className="mt-3">
-                    <DialogPlayerSelect
-                      buttonLabel={playerOnePartnerData 
-                        ? playerOnePartnerData.displayName || playerOnePartnerData.username
-                        : "Select Your Partner"
-                      }
-                      buttonVariant="outline"
-                      selectedUserId={playerOnePartnerData?.id}
-                      onSelect={(player) => {
-                        const event = new CustomEvent('player-selected', {
-                          detail: { field: 'playerOnePartnerData', player }
-                        });
-                        window.dispatchEvent(event);
-                      }}
-                      excludeUserIds={[user?.id, playerTwoData?.id, playerTwoPartnerData?.id].filter(Boolean) as number[]}
-                    />
-                  </div>
-                )}
-            </div>
-            
-            {/* Opponent Side */}
-            <div className="border border-dashed border-muted-foreground/30 rounded-lg p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                <span className="text-xs font-medium">Opponent</span>
-              </div>
-                {/* Opponent Selection */}
-                <div className="mb-3">
-                  <DialogPlayerSelect
-                    buttonLabel={playerTwoData 
-                      ? playerTwoData.displayName || playerTwoData.username
-                      : "Select Opponent"
-                    }
-                    buttonVariant={playerTwoData ? "default" : "outline"}
-                    selectedUserId={playerTwoData?.id}
-                    onSelect={(player) => {
-                      const event = new CustomEvent('player-selected', {
-                        detail: { field: 'playerTwoData', player }
-                      });
-                      window.dispatchEvent(event);
-                    }}
-                    excludeUserIds={[user?.id, playerOnePartnerData?.id, playerTwoPartnerData?.id].filter(Boolean) as number[]}
-                  />
-                </div>
-                
-                {/* Partner Selection (Doubles Only) */}
-                {formatType === "doubles" && playerTwoData && (
-                  <div className="mt-3">
-                    <DialogPlayerSelect
-                      buttonLabel={playerTwoPartnerData 
-                        ? playerTwoPartnerData.displayName || playerTwoPartnerData.username
-                        : "Select Opponent's Partner"
-                      }
-                      buttonVariant="outline"
-                      selectedUserId={playerTwoPartnerData?.id}
-                      onSelect={(player) => {
-                        const event = new CustomEvent('player-selected', {
-                          detail: { field: 'playerTwoPartnerData', player }
-                        });
-                        window.dispatchEvent(event);
-                      }}
-                      excludeUserIds={[user?.id, playerTwoData?.id, playerOnePartnerData?.id].filter(Boolean) as number[]}
-                    />
-                  </div>
-                )}
-            </div>
-          </div>
-        </div>
-        
-        
-        {/* Match Status for Multi-Set Matches */}
-        {totalGames > 1 && (
-          <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
-            <div className="flex items-center gap-2">
-              <Badge variant={playerOneWins >= gamesToWin ? "default" : "outline"} className="text-xs">
-                You: {playerOneWins}
-              </Badge>
-              <Badge variant={playerTwoWins >= gamesToWin ? "default" : "outline"} className="text-xs">
-                Opp: {playerTwoWins}
-              </Badge>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              First to {gamesToWin}
-            </div>
-          </div>
-        )}
-
-        <Separator />
-        
-        {/* Score Entry */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            <span className="text-xs font-medium">Scores</span>
-          </div>
-          
-          {/* Single Game Score Entry */}
-          {totalGames === 1 ? (
-            <VisualScoreInput
-              value={games[0]}
-              onChange={(newScore) => {
-                const updatedGames = [...games];
-                updatedGames[0] = newScore;
-                setGames(updatedGames);
-              }}
-              playerOneName={playerOneData?.displayName || "You"}
-              playerTwoName={playerTwoData?.displayName || "Opponent"}
-              playerOneInitials={playerOneData?.avatarInitials}
-              playerTwoInitials={playerTwoData?.avatarInitials}
-              pointsToWin={pointsToWin}
-            />
-          ) : (
-            /* Multi-game score entry */
-            <Tabs defaultValue="1" className="space-y-4">
-              <TabsList className="grid grid-cols-5 h-auto p-1">
-                {Array.from({ length: totalGames }).map((_, i) => (
-                  <TabsTrigger
-                    key={i + 1}
-                    value={(i + 1).toString()}
-                    className="text-xs py-1"
-                  >
-                    Game {i + 1}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              
-              {Array.from({ length: totalGames }).map((_, i) => (
-                <TabsContent key={i + 1} value={(i + 1).toString()}>
-                  <VisualScoreInput
-                    value={games[i] || { playerOneScore: 0, playerTwoScore: 0 }}
-                    onChange={(newScore) => {
-                      const updatedGames = [...games];
-                      updatedGames[i] = newScore;
-                      setGames(updatedGames);
-                    }}
-                    playerOneName={playerOneData?.displayName || "You"}
-                    playerTwoName={playerTwoData?.displayName || "Opponent"}
-                    playerOneInitials={playerOneData?.avatarInitials}
-                    playerTwoInitials={playerTwoData?.avatarInitials}
-                    pointsToWin={pointsToWin}
-                  />
-                </TabsContent>
-              ))}
-            </Tabs>
-          )}
-        </div>
-        
-        <Separator />
-        
-        {/* Notes Field */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="text-xs font-medium">Notes</span>
-            <Badge variant="secondary" className="text-xs">Optional</Badge>
-          </div>
-          <Form {...form}>
-            <form>
-              <textarea
-                className="w-full min-h-[50px] p-2 text-sm rounded-lg border border-input bg-background focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
-                placeholder="Add notes about this match..."
-                {...form.register("notes")}
-              />
-            </form>
-          </Form>
-        </div>
-
-        {/* Admin-Only Enhanced Features */}
-        {isAdmin && (
-          <>
-            <Separator />
-            
-            {/* Competition Linking Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-orange-500" />
-                <span className="text-xs font-medium">Competition Linking</span>
-                <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">Admin Only</Badge>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="competition-select" className="text-xs text-muted-foreground">
-                  Link this match to a specific competition (optional)
-                </Label>
-                <Select
-                  value={selectedCompetitionId?.toString() || "none"}
-                  onValueChange={(value) => setSelectedCompetitionId(value !== "none" ? parseInt(value) : null)}
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="Select competition..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No Competition</SelectItem>
-                    {competitions.map((comp) => (
-                      <SelectItem key={comp.id} value={comp.id.toString()}>
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{comp.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {comp.type} • {comp.pointsMultiplier}x points • {comp.venue}
-                            </span>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {selectedCompetitionId && (
-                  <div className="text-xs text-muted-foreground bg-blue-50 p-2 rounded border">
-                    <Info className="h-3 w-3 inline mr-1" />
-                    Match will be linked to this competition with enhanced point multipliers applied
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Manual Ranking Points Override Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-purple-500" />
-                <span className="text-xs font-medium">Manual Ranking Points Override</span>
-                <Badge variant="outline" className="text-xs text-purple-600 border-purple-200">Admin Only</Badge>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="manual-points-override"
-                    checked={useManualPointsOverride}
-                    onCheckedChange={(checked) => {
-                      setUseManualPointsOverride(checked as boolean);
-                      if (!checked) {
-                        setManualPointsWinner(0);
-                        setManualPointsLoser(0);
-                      }
-                    }}
-                  />
-                  <Label htmlFor="manual-points-override" className="text-xs cursor-pointer">
-                    Override automatic ranking points calculation
-                  </Label>
-                </div>
-                
-                {useManualPointsOverride && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="manual-points-winner" className="text-xs text-muted-foreground">
-                          Winner points
-                        </Label>
-                        <Input
-                          id="manual-points-winner"
-                          type="number"
-                          min="0"
-                          max="1000"
-                          step="1"
-                          value={manualPointsWinner}
-                          onChange={(e) => setManualPointsWinner(parseInt(e.target.value) || 0)}
-                          className="h-9 text-sm"
-                          placeholder="Winner points"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="manual-points-loser" className="text-xs text-muted-foreground">
-                          Loser points
-                        </Label>
-                        <Input
-                          id="manual-points-loser"
-                          type="number"
-                          min="0"
-                          max="1000"
-                          step="1"
-                          value={manualPointsLoser}
-                          onChange={(e) => setManualPointsLoser(parseInt(e.target.value) || 0)}
-                          className="h-9 text-sm"
-                          placeholder="Loser points"
-                        />
-                      </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded border">
-                      <Info className="h-3 w-3 inline mr-1" />
-                      Manual override will replace automatic point calculations for both winner and loser. Use with caution.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </CardContent>
-      
-      <CardFooter className="pt-3 border-t">
-        <div className="w-full space-y-2">
-          <Button 
-            onClick={handleSubmit}
-            disabled={isSubmitting || !isMatchComplete() || !playerTwoData}
-            className="w-full h-9 font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                Recording Match...
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Record Match & Update Rankings
+              <div className="text-sm text-muted-foreground p-3 border rounded-lg">
+                {isAdmin ? (
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      // For admin, implement player selection later
+                      toast({
+                        title: "Feature Coming Soon",
+                        description: "Admin player selection will be available soon",
+                        variant: "default",
+                      });
+                    }}
+                  >
+                    Select Player One
+                  </Button>
+                ) : "Loading your profile..."}
               </div>
             )}
-          </Button>
-          
-          {(!playerTwoData || !isMatchComplete()) && (
-            <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20 rounded">
-              <Info className="h-3 w-3 inline mr-1" />
-              {!playerTwoData ? "Select an opponent to record the match" : "Complete all game scores"}
-            </div>
+          </div>
+
+          {/* Player Two (Opponent) */}
+          <div className="space-y-2">
+            <Label>Player Two (Opponent)</Label>
+            {playerTwoData ? (
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{playerTwoData.avatarInitials || playerTwoData.displayName?.substring(0, 2) || playerTwoData.username.substring(0, 2)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
+                    <p className="text-sm text-muted-foreground">@{playerTwoData.username}</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setPlayerTwoData(null)}>
+                  Change
+                </Button>
+              </div>
+            ) : (
+              <OpponentSelector 
+                onSelectOpponent={setPlayerTwoData}
+                recentOpponents={recentOpponents}
+              />
+            )}
+          </div>
+
+          {/* Doubles Partners */}
+          {formatType === "doubles" && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Doubles Partners</h4>
+                
+                {/* Player One Partner */}
+                <div className="space-y-2">
+                  <Label>Player One Partner</Label>
+                  {playerOnePartnerData ? (
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{playerOnePartnerData.avatarInitials}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{playerOnePartnerData.displayName || playerOnePartnerData.username}</p>
+                          <p className="text-sm text-muted-foreground">@{playerOnePartnerData.username}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setPlayerOnePartnerData(null)}>
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Partner selection will be available soon",
+                          variant: "default",
+                        });
+                      }}
+                    >
+                      Select Partner
+                    </Button>
+                  )}
+                </div>
+
+                {/* Player Two Partner */}
+                <div className="space-y-2">
+                  <Label>Player Two Partner</Label>
+                  {playerTwoPartnerData ? (
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{playerTwoPartnerData.avatarInitials}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{playerTwoPartnerData.displayName || playerTwoPartnerData.username}</p>
+                          <p className="text-sm text-muted-foreground">@{playerTwoPartnerData.username}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setPlayerTwoPartnerData(null)}>
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Partner selection will be available soon",
+                          variant: "default",
+                        });
+                      }}
+                    >
+                      Select Partner
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
           )}
-          
-          <Button 
-            variant="outline" 
-            onClick={resetForm}
-            disabled={isSubmitting}
-            className="w-full h-8 text-xs"
-          >
-            Reset Form
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Score Input */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Target className="h-5 w-5 text-green-500" />
+            Score Entry
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {games.map((game, index) => (
+            <div key={index} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Game {index + 1}</h4>
+                <Badge variant="outline" className="text-xs">
+                  {game.playerOneScore > game.playerTwoScore 
+                    ? `${playerOneData?.displayName || playerOneData?.username || 'Player 1'} wins`
+                    : game.playerTwoScore > game.playerOneScore
+                    ? `${playerTwoData?.displayName || playerTwoData?.username || 'Player 2'} wins`
+                    : 'In Progress'
+                  }
+                </Badge>
+              </div>
+              
+              {/* Score Input UI */}
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    {playerOneData?.displayName || playerOneData?.username || 'Player 1'}
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newGames = [...games];
+                        newGames[index] = { 
+                          ...newGames[index], 
+                          playerOneScore: Math.max(0, newGames[index].playerOneScore - 1) 
+                        };
+                        setGames(newGames);
+                      }}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-2xl font-bold w-12 text-center">
+                      {game.playerOneScore}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newGames = [...games];
+                        newGames[index] = { 
+                          ...newGames[index], 
+                          playerOneScore: newGames[index].playerOneScore + 1 
+                        };
+                        setGames(newGames);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-lg font-bold text-muted-foreground">VS</div>
+                </div>
+                
+                <div className="text-center">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    {playerTwoData?.displayName || playerTwoData?.username || 'Player 2'}
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newGames = [...games];
+                        newGames[index] = { 
+                          ...newGames[index], 
+                          playerTwoScore: Math.max(0, newGames[index].playerTwoScore - 1) 
+                        };
+                        setGames(newGames);
+                      }}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-2xl font-bold w-12 text-center">
+                      {game.playerTwoScore}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newGames = [...games];
+                        newGames[index] = { 
+                          ...newGames[index], 
+                          playerTwoScore: newGames[index].playerTwoScore + 1 
+                        };
+                        setGames(newGames);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Match Winner Display */}
+          {(() => {
+            const winner = calculateMatchWinner();
+            if (winner) {
+              const winnerName = winner === 1 
+                ? playerOneData?.displayName || playerOneData?.username || 'Player 1'
+                : playerTwoData?.displayName || playerTwoData?.username || 'Player 2';
+              
+              return (
+                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border">
+                  <Trophy className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-800">
+                    Match Winner: {winnerName}
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </CardContent>
+      </Card>
+
+      {/* Admin-only Competition Selection */}
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Award className="h-5 w-5 text-purple-500" />
+              Admin Options
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Competition Selection */}
+            <div className="space-y-2">
+              <Label>Link to Competition (Optional)</Label>
+              <Select value={selectedCompetitionId?.toString() || ""} onValueChange={(value) => setSelectedCompetitionId(value ? parseInt(value) : null)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a competition..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Competition (Casual Match)</SelectItem>
+                  {competitions.map((comp) => (
+                    <SelectItem key={comp.id} value={comp.id.toString()}>
+                      {comp.name} ({comp.type}) - {comp.pointsMultiplier}x points
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Manual Points Override */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="manualPoints"
+                  checked={useManualPointsOverride}
+                  onChange={(e) => setUseManualPointsOverride(e.target.checked)}
+                  className="rounded"
+                />
+                <Label htmlFor="manualPoints">Manual Points Override</Label>
+              </div>
+              
+              {useManualPointsOverride && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Winner Points</Label>
+                    <Input
+                      type="number"
+                      value={manualPointsWinner}
+                      onChange={(e) => setManualPointsWinner(parseInt(e.target.value) || 0)}
+                      placeholder="Points for winner"
+                    />
+                  </div>
+                  <div>
+                    <Label>Loser Points</Label>
+                    <Input
+                      type="number"
+                      value={manualPointsLoser}
+                      onChange={(e) => setManualPointsLoser(parseInt(e.target.value) || 0)}
+                      placeholder="Points for loser"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Submit Button */}
+      <div className="flex gap-3">
+        <Button 
+          onClick={() => handleSubmit(form.getValues())}
+          disabled={isSubmitting || !calculateMatchWinner() || !playerOneData || !playerTwoData}
+          className="flex-1"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Recording Match...
+            </>
+          ) : (
+            <>
+              <Trophy className="h-4 w-4 mr-2" />
+              Record Match
+            </>
+          )}
+        </Button>
+        
+        <Button variant="outline" onClick={resetForm} disabled={isSubmitting}>
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset
+        </Button>
+      </div>
+    </div>
   );
 }
-
-export default QuickMatchRecorder;
