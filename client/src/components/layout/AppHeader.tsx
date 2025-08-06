@@ -162,6 +162,7 @@ export function AppHeader({
     { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/record-match' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/leaderboard' },
+    { label: 'Pickle Points', icon: <Ticket size={18} />, path: '/pickle-points' },
     // Coming soon features - show popup instead of navigation
     { 
       label: 'Communities', 

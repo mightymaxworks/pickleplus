@@ -915,6 +915,11 @@ export default function App() {
                     pageTitle="Rankings"
                   />
                   <ProtectedRouteWithLayout
+                    path="/pickle-points"
+                    component={React.lazy(() => import('./pages/PicklePointsPage'))}
+                    pageTitle="Pickle Points"
+                  />
+                  <ProtectedRouteWithLayout
                     path="/mastery-paths"
                     component={LazyMasteryPathsPage}
                     pageTitle="Mastery Paths"
