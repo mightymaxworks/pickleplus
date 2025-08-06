@@ -13,7 +13,7 @@ export interface Player {
   id: number;
   gender: 'male' | 'female';
   name: string;
-  rankingPoints?: number;
+  rankingPoints: number; // Required for skill-based logic
 }
 
 export interface Team {
@@ -34,7 +34,12 @@ export interface GenderBalanceResult {
 export class GenderBalanceService {
   
   /**
-   * Base gender multipliers - only applied in cross-gender competition
+   * Elite threshold for gender bonus eligibility
+   */
+  private static readonly ELITE_THRESHOLD = 1000;
+  
+  /**
+   * Base gender multipliers - only applied in cross-gender competition for players <1000 points
    */
   private static readonly GENDER_MULTIPLIERS = {
     male: 1.0,
@@ -69,15 +74,34 @@ export class GenderBalanceService {
   }
 
   /**
-   * Calculate team gender multiplier based on player composition
+   * Check if any player in team meets elite threshold
    */
-  static calculateTeamGenderMultiplier(team: Team, isCrossGender: boolean): number {
+  static hasElitePlayer(team: Team): boolean {
+    return team.players.some(player => player.rankingPoints >= this.ELITE_THRESHOLD);
+  }
+
+  /**
+   * Check if match has any elite players (which disables all gender bonuses)
+   */
+  static matchHasElitePlayer(team1: Team, team2: Team): boolean {
+    return this.hasElitePlayer(team1) || this.hasElitePlayer(team2);
+  }
+
+  /**
+   * Calculate team gender multiplier based on player composition and skill level
+   */
+  static calculateTeamGenderMultiplier(team: Team, isCrossGender: boolean, hasElitePlayer: boolean): number {
     // Same-gender matches always use 1.0x multiplier
     if (!isCrossGender) {
       return 1.0;
     }
 
-    // Cross-gender matches use gender-specific multipliers
+    // Elite players present - no gender bonuses for anyone
+    if (hasElitePlayer) {
+      return 1.0;
+    }
+
+    // Cross-gender matches at development level use gender-specific multipliers
     const totalMultiplier = team.players.reduce((sum, player) => {
       return sum + this.GENDER_MULTIPLIERS[player.gender];
     }, 0);
@@ -86,7 +110,7 @@ export class GenderBalanceService {
   }
 
   /**
-   * Comprehensive gender balance calculation for match
+   * Comprehensive gender balance calculation for match with skill-based logic
    */
   static calculateGenderBalance(
     team1: Team,
@@ -105,8 +129,10 @@ export class GenderBalanceService {
     }
 
     const isCrossGender = this.isCrossGenderMatch(team1, team2);
-    const team1Multiplier = this.calculateTeamGenderMultiplier(team1, isCrossGender);
-    const team2Multiplier = this.calculateTeamGenderMultiplier(team2, isCrossGender);
+    const hasElitePlayer = this.matchHasElitePlayer(team1, team2);
+    
+    const team1Multiplier = this.calculateTeamGenderMultiplier(team1, isCrossGender, hasElitePlayer);
+    const team2Multiplier = this.calculateTeamGenderMultiplier(team2, isCrossGender, hasElitePlayer);
 
     let competitionType: 'same-gender' | 'cross-gender' | 'mixed-competition';
     let explanation: string;
@@ -114,11 +140,16 @@ export class GenderBalanceService {
     if (!isCrossGender) {
       competitionType = 'same-gender';
       explanation = 'Same-gender match - standard 1.0x multipliers applied';
+    } else if (hasElitePlayer) {
+      competitionType = 'cross-gender';
+      const team1Type = this.determineTeamGenderType(team1);
+      const team2Type = this.determineTeamGenderType(team2);
+      explanation = `Cross-gender match (${team1Type} vs ${team2Type}) with elite player(s) ≥${this.ELITE_THRESHOLD} points - no gender bonuses applied`;
     } else {
       competitionType = 'cross-gender';
       const team1Type = this.determineTeamGenderType(team1);
       const team2Type = this.determineTeamGenderType(team2);
-      explanation = `Cross-gender match (${team1Type} vs ${team2Type}) - gender balance multipliers applied`;
+      explanation = `Cross-gender match (${team1Type} vs ${team2Type}) at development level - gender balance multipliers applied`;
     }
 
     return {
@@ -165,7 +196,7 @@ export class GenderBalanceService {
   }
 
   /**
-   * Get detailed gender balance explanation for UI display
+   * Get detailed gender balance explanation for UI display with skill analysis
    */
   static getGenderBalanceExplanation(team1: Team, team2: Team): {
     summary: string;
@@ -175,23 +206,38 @@ export class GenderBalanceService {
     const result = this.calculateGenderBalance(team1, team2);
     const team1Type = this.determineTeamGenderType(team1);
     const team2Type = this.determineTeamGenderType(team2);
+    const hasElitePlayer = this.matchHasElitePlayer(team1, team2);
 
     const details: string[] = [];
     const recommendations: string[] = [];
 
+    // Add player skill level information
+    const team1Points = team1.players.map(p => p.rankingPoints);
+    const team2Points = team2.players.map(p => p.rankingPoints);
+    details.push(`Team 1 points: [${team1Points.join(', ')}]`);
+    details.push(`Team 2 points: [${team2Points.join(', ')}]`);
+
     if (result.isCrossGenderMatch) {
       details.push(`Cross-gender competition detected: ${team1Type} vs ${team2Type}`);
-      details.push(`Team 1 gender multiplier: ${result.genderMultipliers.team1.toFixed(3)}x`);
-      details.push(`Team 2 gender multiplier: ${result.genderMultipliers.team2.toFixed(3)}x`);
       
-      if (team1Type === 'womens') {
-        recommendations.push('Women\'s team receives 15% bonus points for cross-gender competition');
-      } else if (team2Type === 'womens') {
-        recommendations.push('Women\'s team receives 15% bonus points for cross-gender competition');
-      }
-      
-      if (team1Type === 'mixed' || team2Type === 'mixed') {
-        recommendations.push('Mixed team receives balanced multiplier based on gender composition');
+      if (hasElitePlayer) {
+        details.push(`Elite player(s) ≥${this.ELITE_THRESHOLD} points present - gender bonuses disabled`);
+        details.push(`Both teams: 1.0x multiplier (elite override)`);
+        recommendations.push('Elite-level competition uses skill-based scoring without gender adjustments');
+      } else {
+        details.push(`All players <${this.ELITE_THRESHOLD} points - gender bonuses active`);
+        details.push(`Team 1 gender multiplier: ${result.genderMultipliers.team1.toFixed(3)}x`);
+        details.push(`Team 2 gender multiplier: ${result.genderMultipliers.team2.toFixed(3)}x`);
+        
+        if (team1Type === 'womens' && result.genderMultipliers.team1 > 1.0) {
+          recommendations.push('Women\'s team receives 15% bonus points for development-level cross-gender competition');
+        } else if (team2Type === 'womens' && result.genderMultipliers.team2 > 1.0) {
+          recommendations.push('Women\'s team receives 15% bonus points for development-level cross-gender competition');
+        }
+        
+        if ((team1Type === 'mixed' || team2Type === 'mixed') && (result.genderMultipliers.team1 > 1.0 || result.genderMultipliers.team2 > 1.0)) {
+          recommendations.push('Mixed team receives balanced multiplier based on gender composition');
+        }
       }
     } else {
       details.push(`Same-gender competition: ${team1Type} vs ${team2Type}`);

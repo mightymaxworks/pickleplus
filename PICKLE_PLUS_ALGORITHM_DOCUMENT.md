@@ -1,13 +1,13 @@
 # PicklePlus Algorithm Document
-**Version:** 4.0 - COMPREHENSIVE GENDER BALANCE  
+**Version:** 4.0 - SKILL-BASED GENDER BALANCE SYSTEM  
 **Last Updated:** August 6, 2025  
-**System:** System B Standardized with Points Decay and Cross-Gender Fairness
+**System:** System B Standardized with Points Decay and Elite-Threshold Gender Balance
 
 ---
 
 ## 🎯 **EXECUTIVE SUMMARY**
 
-The PicklePlus algorithm uses **System B standardization** with conservative base points (3/1), comprehensive 7-tier tournament structure, age group multipliers, cross-gender balance system, Professional Tier Enhanced Weighting for decay protection, and standalone Pickle Points rewards. The system includes sophisticated points decay mechanism and gender fairness protocols to maintain competitive balance across all demographics.
+The PicklePlus algorithm uses **System B standardization** with conservative base points (3/1), comprehensive 7-tier tournament structure, age group multipliers, skill-based cross-gender balance system (1000-point elite threshold), Professional Tier Enhanced Weighting for decay protection, and standalone Pickle Points rewards. The system includes sophisticated points decay mechanism and intelligent gender fairness protocols that adapt to player skill levels while maintaining competitive balance across all demographics.
 
 ---
 
@@ -131,45 +131,50 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 
 Cross-gender competition requires careful balance between competitive fairness and participation incentives. The PicklePlus algorithm addresses physical performance differences while maintaining meaningful competition across all gender combinations.
 
-### **Gender-Specific Multipliers** ⚖️ **NEW SYSTEM**
+### **Skill-Based Gender Balance System** ⚖️ **ELITE THRESHOLD LOGIC**
 
-| Gender | Base Multiplier | Reasoning |
-|--------|----------------|-----------|
-| **Men** | 1.0x | Baseline competitive standard |
-| **Women** | 1.15x | Compensation for average physical differences |
-| **Mixed Teams** | 1.075x | Average of team gender composition |
+| Gender | Base Multiplier | Elite Threshold | Reasoning |
+|--------|----------------|-----------------|-----------|
+| **Men** | 1.0x | N/A | Baseline competitive standard |
+| **Women** | 1.15x | <1000 points only | Compensation for physical differences at development levels |
+| **Mixed Teams** | 1.075x | <1000 points only | Average composition, skill-dependent |
 
-> **IMPORTANT:** Gender multipliers only apply in **cross-gender competition**. Same-gender matches use standard 1.0x for all participants.
+> **CRITICAL LOGIC:** Gender multipliers only apply in **cross-gender competition** for players **below 1000 ranking points**. Elite players (1000+ points) have proven competitive ability and receive no gender bonuses.
+
+#### **Elite Threshold Justification**
+- **Elite+ players (1000+ pts):** Demonstrated competitive parity through achievement
+- **Development players (<1000 pts):** Benefit from gender balance to encourage participation
+- **Team Rule:** If ANY player ≥1000 points, no team receives gender bonuses
 
 ### **Cross-Gender Match Scenarios**
 
-#### **Scenario 1: Men's vs Women's Singles**
-**Match:** Male player vs Female player, Tournament
+#### **Scenario 1: Development Level Cross-Gender Singles**
+**Match:** 800-point male vs 750-point female, Tournament (both <1000 points)
 
 **Point Calculation:**
 - **Male Winner:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
-- **Female Winner:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points**
+- **Female Winner:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points** (bonus applied)
 - **Male Loser:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points**  
-- **Female Loser:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points**
+- **Female Loser:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points** (bonus applied)
 
-*Result: Female player receives 15% bonus points, providing competitive incentive*
+*Result: Female player receives 15% bonus for cross-gender development competition*
 
-#### **Scenario 2: Men's vs Women's Doubles**
-**Match:** Men's doubles team vs Women's doubles team, League
+#### **Scenario 2: Elite Level Cross-Gender Singles - No Bonus**
+**Match:** 1200-point male vs 1100-point female, Tournament (both ≥1000 points)
 
 **Point Calculation:**
-- **Men's Team Winners:** 3 × 1.0 × 0.75 × 1.0 = **2.25 points each**
-- **Women's Team Winners:** 3 × 1.15 × 0.75 × 1.0 = **2.59 points each**
-- **Men's Team Losers:** 1 × 1.0 × 0.75 × 1.0 = **0.75 points each**
-- **Women's Team Losers:** 1 × 1.15 × 0.75 × 1.0 = **0.86 points each**
+- **Male Winner:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
+- **Female Winner:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points** (no bonus - elite level)
+- **Male Loser:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points**  
+- **Female Loser:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points** (no bonus - elite level)
 
-*Result: Women's team receives proportional advantage in cross-gender doubles*
+*Result: Elite players receive equal treatment regardless of gender*
 
-#### **Scenario 3: Mixed Doubles vs Gender-Specific Doubles**
-**Match:** Mixed doubles vs Men's doubles, Tournament
+#### **Scenario 3: Development Mixed Doubles vs Men's Doubles**
+**Match:** Mixed team (850M + 900F) vs Men's team (800M + 780M), Tournament (all <1000 points)
 
 **Mixed Team Gender Calculation:**
-- Mixed Doubles (1 M + 1 F): (1.0 + 1.15) ÷ 2 = **1.075x multiplier**
+- Mixed Doubles: (1.0 + 1.15) ÷ 2 = **1.075x multiplier** (both players <1000)
 
 **Point Calculation:**
 - **Mixed Team Winners:** 3 × 1.075 × 1.0 × 1.5 = **4.84 points each**
@@ -177,18 +182,21 @@ Cross-gender competition requires careful balance between competitive fairness a
 - **Mixed Team Losers:** 1 × 1.075 × 1.0 × 1.5 = **1.61 points each**
 - **Men's Team Losers:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points each**
 
-*Result: Mixed team receives slight advantage to balance gender composition*
+*Result: Development-level mixed team receives gender composition advantage*
 
-#### **Scenario 4: Mixed Doubles vs Women's Doubles**
-**Match:** Mixed doubles vs Women's doubles, Tournament
+#### **Scenario 4: Elite Mixed Team vs Development Women's Team**
+**Match:** Mixed team (1200M + 950F) vs Women's team (850F + 780F), Tournament
+
+**Elite Override Logic:**
+- Mixed team has 1200-point player → **No gender bonus** (elite override)
+- Women's team all <1000 points → **Would get bonus, BUT elite override applies**
 
 **Point Calculation:**
-- **Mixed Team Winners:** 3 × 1.075 × 1.0 × 1.5 = **4.84 points each**
-- **Women's Team Winners:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points each**
-- **Mixed Team Losers:** 1 × 1.075 × 1.0 × 1.5 = **1.61 points each**
-- **Women's Team Losers:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points each**
+- **Mixed Team Winners:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points each** (elite override)
+- **Women's Team Winners:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points each** (elite override)
+- **Both Losers:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points each**
 
-*Result: Women's doubles maintains advantage over mixed teams*
+*Result: Elite player presence removes all gender bonuses for both teams*
 
 ### **Same-Gender Competition - Standard Scoring**
 
@@ -235,11 +243,13 @@ Examples:
 - Mixed Doubles (M+F): (1.0 + 1.15) ÷ 2 = 1.075x
 ```
 
-#### **Gender Balance Validation Rules**
+#### **Gender Balance Validation Rules - SKILL-BASED SYSTEM**
 1. **Cross-Gender Detection:** System automatically identifies gender mismatches
-2. **Multiplier Application:** Applies appropriate bonuses only when needed
-3. **Division Override:** Respects tournament division restrictions
-4. **Fair Play Protection:** Prevents gender manipulation for point advantage
+2. **Elite Threshold Check:** Validates all players are <1000 points for bonus eligibility  
+3. **Team Elite Override:** If ANY player ≥1000 points, no team receives bonuses
+4. **Multiplier Application:** Applies bonuses only for development-level cross-gender matches
+5. **Division Override:** Respects tournament division restrictions
+6. **Fair Play Protection:** Prevents gaming through strategic skill misrepresentation
 
 ### **Updated Final Calculation Formula**
 

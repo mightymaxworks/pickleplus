@@ -24,13 +24,16 @@ const Sidebar = ({ user }: SidebarProps) => {
     }
   };
 
+  // LAUNCH VERSION: Simplified navigation for core player features only
   const navItems = [
     { path: "/", label: "Dashboard", icon: "fas fa-home" },
+    { path: "/record-match", label: "Record Match", icon: "fas fa-plus-circle" },
+    { path: "/leaderboard", label: "Rankings", icon: "fas fa-chart-line" },
     { path: "/profile", label: "My Profile", icon: "fas fa-user" },
-    { path: "/tournaments", label: "Tournaments", icon: "fas fa-trophy" },
-    { path: "/achievements", label: "Achievements", icon: "fas fa-medal" },
-    { path: "/leaderboard", label: "Leaderboard", icon: "fas fa-users" },
-    { path: "/connections", label: "Community", icon: "fas fa-users" },
+    // DISABLED FOR LAUNCH: Advanced features removed
+    // { path: "/tournaments", label: "Tournaments", icon: "fas fa-trophy" },
+    // { path: "/achievements", label: "Achievements", icon: "fas fa-medal" }, 
+    // { path: "/connections", label: "Community", icon: "fas fa-users" },
   ];
 
   return (
@@ -62,6 +65,30 @@ const Sidebar = ({ user }: SidebarProps) => {
         ))}
       </nav>
       
+      {/* PCP Coach Application - Only show if not already a coach */}
+      {user && !user.isCoach && (
+        <div className="px-4 py-2 border-t border-gray-200">
+          <Link href="/coach-application">
+            <div className="bg-orange-50 hover:bg-orange-100 rounded-lg px-3 py-2 cursor-pointer transition-colors">
+              <div className="text-sm font-medium text-orange-700">Become a Coach</div>
+              <div className="text-xs text-orange-600">Apply for PCP Certification</div>
+            </div>
+          </Link>
+        </div>
+      )}
+
+      {/* Find Coaches - Only show if there are certified coaches */}
+      {user && (
+        <div className="px-4 py-2">
+          <Link href="/find-coaches">
+            <div className="text-gray-600 hover:text-gray-800 cursor-pointer transition-colors">
+              <div className="text-sm font-medium">Find Coaches</div>
+              <div className="text-xs text-gray-500">Browse certified coaches</div>
+            </div>
+          </Link>
+        </div>
+      )}
+
       {/* Profile Summary */}
       {user && (
         <div className="p-4 border-t border-gray-200">
@@ -71,7 +98,9 @@ const Sidebar = ({ user }: SidebarProps) => {
             </div>
             <div className="flex-1">
               <div className="font-medium text-sm">{user.displayName}</div>
-              <div className="text-xs text-gray-500">Level {user.level}</div>
+              <div className="text-xs text-gray-500">
+                {user.rankingPoints ? `${user.rankingPoints} pts` : 'New Player'}
+              </div>
             </div>
             <div onClick={handleLogout} className="cursor-pointer">
               <i className="fas fa-sign-out-alt text-gray-500"></i>

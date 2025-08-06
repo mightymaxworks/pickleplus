@@ -181,30 +181,26 @@ export default function App() {
                     <SageDataProvider>
                       <DerivedDataProvider>
                         <Suspense fallback={<LazyLoadingFallback />}>
-                          {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) - Only for authenticated users */}
-                          <AuthenticationWrapper>
-                            <SimpleBugReportButton position="bottom-right" />
-                          </AuthenticationWrapper>
+                          {/* LAUNCH VERSION: Simplified UI - only essential features */}
                           
-                          {/* PKL-278651-BOUNCE-0008-ASSIST - Add Bounce Floating Widget */}
-                          <BounceFloatingWidget />
-                          
-                          {/* Match Recording Button - Only shown when user is authenticated */}
+                          {/* Match Recording Button - Core feature for launch */}
                           <AuthenticationWrapper>
                             <QuickMatchFAB />
                           </AuthenticationWrapper>
                           
-                          {/* Smart Feature Discovery Guide - Context-aware feature onboarding */}
-                          <AuthenticationWrapper>
+                          {/* DISABLED FOR LAUNCH: Advanced UI features */}
+                          {/* <AuthenticationWrapper>
+                            <SimpleBugReportButton position="bottom-right" />
+                          </AuthenticationWrapper> */}
+                          {/* <BounceFloatingWidget /> */}
+                          {/* <AuthenticationWrapper>
                             <SmartFeatureGuide />
-                          </AuthenticationWrapper>
-                          
-                          {/* Profile Completion System - Helps users complete missing first/last names */}
-                          <AuthenticationWrapper>
+                          </AuthenticationWrapper> */}
+                          {/* <AuthenticationWrapper>
                             <ProfileCompletionWrapper>
                               <></>
                             </ProfileCompletionWrapper>
-                          </AuthenticationWrapper>
+                          </AuthenticationWrapper> */}
                     
                     {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
                     {/* Removed to focus on launch priorities */}
@@ -226,69 +222,66 @@ export default function App() {
                   {/* Onboarding routes completely removed - system disabled */}
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/features" component={LazyFeatureShowcasePage} />
-                  {/* Removed test/demo routes - files deleted */}
-                  <Route path="/mobile-test" component={lazyLoad(() => import('./pages/MobileTestPage'))} />
-                  <Route path="/wise-payment-demo" component={lazyLoad(() => import('./pages/WisePaymentDemo'))} />
-                  <Route path="/sprint4-demo" component={lazyLoad(() => import('./pages/Sprint4DemoPage'))} />
-                  <Route path="/session-management-demo" component={lazyLoad(() => import('./pages/SessionManagementDemoPage'))} />
-                  <Route path="/complete-flow-demo" component={lazyLoad(() => import('./pages/CompleteFlowDemoPage'))} />
-                  <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} />
-                  <Route path="/mobile-ux-showcase" component={lazyLoad(() => import('./pages/mobile-ux-showcase'))} />
-                  <Route path="/enhanced-community-demo" component={lazyLoad(() => import('./pages/enhanced-community-demo'))} />
-                  <Route path="/migration-control-center" component={lazyLoad(() => import('./pages/migration-control-center'))} />
-                  <Route path="/curriculum-management-demo" component={lazyLoad(() => import('./pages/curriculum-management-demo'))} />
-                  <Route path="/coach/progress-tracking-integration" component={lazyLoad(() => import('./pages/coach/progress-tracking-integration'))} />
-                  <Route path="/coach/advanced-analytics-dashboard" component={lazyLoad(() => import('./pages/coach/advanced-analytics-dashboard'))} />
-                  <Route path="/coach/phase3-advanced-features-demo" component={lazyLoad(() => import('./pages/coach/Phase3AdvancedFeaturesDemo'))} />
-                  <Route path="/coach/automated-workflows" component={lazyLoad(() => import('./pages/coach/automated-workflows'))} />
-                  <Route path="/coach/comprehensive-guided-journey" component={lazyLoad(() => import('./pages/coach/comprehensive-guided-journey'))} />
+                  {/* DISABLED FOR LAUNCH: Demo and test routes - not needed for core launch */}
+                  {/* <Route path="/mobile-test" component={lazyLoad(() => import('./pages/MobileTestPage'))} /> */}
+                  {/* <Route path="/wise-payment-demo" component={lazyLoad(() => import('./pages/WisePaymentDemo'))} /> */}
+                  {/* <Route path="/sprint4-demo" component={lazyLoad(() => import('./pages/Sprint4DemoPage'))} /> */}
+                  {/* <Route path="/session-management-demo" component={lazyLoad(() => import('./pages/SessionManagementDemoPage'))} /> */}
+                  {/* <Route path="/complete-flow-demo" component={lazyLoad(() => import('./pages/CompleteFlowDemoPage'))} /> */}
+                  {/* <Route path="/passport-preview" component={lazyLoad(() => import('./components/dashboard/PassportDashboardPreview'))} /> */}
+                  {/* <Route path="/mobile-ux-showcase" component={lazyLoad(() => import('./pages/mobile-ux-showcase'))} /> */}
+                  {/* <Route path="/enhanced-community-demo" component={lazyLoad(() => import('./pages/enhanced-community-demo'))} /> */}
+                  {/* <Route path="/migration-control-center" component={lazyLoad(() => import('./pages/migration-control-center'))} /> */}
+                  {/* <Route path="/curriculum-management-demo" component={lazyLoad(() => import('./pages/curriculum-management-demo'))} /> */}
+                  {/* <Route path="/coach/progress-tracking-integration" component={lazyLoad(() => import('./pages/coach/progress-tracking-integration'))} /> */}
+                  {/* <Route path="/coach/advanced-analytics-dashboard" component={lazyLoad(() => import('./pages/coach/advanced-analytics-dashboard'))} /> */}
+                  {/* <Route path="/coach/phase3-advanced-features-demo" component={lazyLoad(() => import('./pages/coach/Phase3AdvancedFeaturesDemo'))} /> */}
+                  {/* <Route path="/coach/automated-workflows" component={lazyLoad(() => import('./pages/coach/automated-workflows'))} /> */}
+                  {/* <Route path="/coach/comprehensive-guided-journey" component={lazyLoad(() => import('./pages/coach/comprehensive-guided-journey'))} /> */}
                   
-                  {/* UI/UX Demo Pages */}
-                  <Route path="/ui-ux-demo" component={lazyLoad(() => import('./pages/UIUXDemo'))} />
-                  <Route path="/passport-demo" component={lazyLoad(() => import('./pages/PassportDemo'))} />
-                  <Route path="/passport-design-demo" component={lazyLoad(() => import('./pages/PassportDesignDemo'))} />
-                  <Route path="/full-rankings-demo" component={lazyLoad(() => import('./pages/FullRankingsDemo'))} />
-                  <Route path="/component-showcase" component={lazyLoad(() => import('./pages/ComponentShowcase'))} />
-                  <Route path="/match-recording-demo" component={lazyLoad(() => import('./pages/MatchRecordingDemo'))} />
-                  <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} />
-                  <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} />
-                  <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} />
-                  <Route path="/wise-integration-demo" component={lazyLoad(() => import('./pages/WiseIntegrationDemo'))} />
-                  <Route path="/apple-style-demo" component={lazyLoad(() => import('./pages/AppleStyleDemo'))} />
-                  <Route path="/clean-passport-demo" component={lazyLoad(() => import('./pages/CleanPassportDemo'))} />
+                  {/* LAUNCH VERSION: Demo and advanced features disabled */}
+                  {/* DISABLED: UI/UX Demo Pages - not needed for core launch */}
+                  {/* <Route path="/ui-ux-demo" component={lazyLoad(() => import('./pages/UIUXDemo'))} /> */}
+                  {/* <Route path="/passport-demo" component={lazyLoad(() => import('./pages/PassportDemo'))} /> */}
+                  {/* <Route path="/passport-design-demo" component={lazyLoad(() => import('./pages/PassportDesignDemo'))} /> */}
+                  {/* <Route path="/full-rankings-demo" component={lazyLoad(() => import('./pages/FullRankingsDemo'))} /> */}
+                  {/* <Route path="/component-showcase" component={lazyLoad(() => import('./pages/ComponentShowcase'))} /> */}
+                  {/* <Route path="/match-recording-demo" component={lazyLoad(() => import('./pages/MatchRecordingDemo'))} /> */}
+                  {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
+                  {/* <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} /> */}
+                  {/* <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} /> */}
+                  {/* <Route path="/wise-integration-demo" component={lazyLoad(() => import('./pages/WiseIntegrationDemo'))} /> */}
+                  {/* <Route path="/apple-style-demo" component={lazyLoad(() => import('./pages/AppleStyleDemo'))} /> */}
+                  {/* <Route path="/clean-passport-demo" component={lazyLoad(() => import('./pages/CleanPassportDemo'))} /> */}
                   
-                  {/* PCP Level Validation Test Page */}
-                  <Route path="/pcp-level-validation-test" component={lazyLoad(() => import('./pages/PCPLevelValidationTestPage'))} />
+                  {/* DISABLED: Test and validation pages - not needed for core launch */}
+                  {/* <Route path="/pcp-level-validation-test" component={lazyLoad(() => import('./pages/PCPLevelValidationTestPage'))} /> */}
+                  {/* <Route path="/complete-coaching-flow" component={lazyLoad(() => import('./pages/CompleteCoachingFlowDemo'))} /> */}
                   
-                  {/* Complete Coaching Flow Demo */}
-                  <Route path="/complete-coaching-flow" component={lazyLoad(() => import('./pages/CompleteCoachingFlowDemo'))} />
+                  {/* DISABLED: Advanced development and analytics tools */}
+                  {/* <Route path="/udd" component={LazyCoachingWorkflowAnalysis} /> */}
+                  {/* <Route path="/advanced-coach-analytics" component={lazyLoad(() => import('./pages/AdvancedCoachAnalyticsTest'))} /> */}
+                  {/* <Route path="/phase1-testing" component={LazyCoachingWorkflowAnalysis} /> */}
+                  {/* <Route path="/coach-business-dashboard" component={LazyCoachBusinessDashboard} /> */}
+                  {/* <Route path="/student-progress-analytics" component={LazyStudentProgressAnalytics} /> */}
                   
-                  {/* Coaching Workflow Analysis */}
-                  <Route path="/udd" component={LazyCoachingWorkflowAnalysis} />
-        <Route path="/advanced-coach-analytics" component={lazyLoad(() => import('./pages/AdvancedCoachAnalyticsTest'))} />
-                  <Route path="/phase1-testing" component={LazyCoachingWorkflowAnalysis} />
+                  {/* DISABLED: Course Module System - advanced feature */}
+                  {/* <Route path="/course-modules" component={lazyLoad(() => import('./pages/CourseModulesPage'))} /> */}
                   
-                  {/* Phase 2: Advanced Coaching Analytics */}
-                  <Route path="/coach-business-dashboard" component={LazyCoachBusinessDashboard} />
-                  <Route path="/student-progress-analytics" component={LazyStudentProgressAnalytics} />
+                  {/* DISABLED: Assessment & Testing System - advanced feature */}
+                  {/* <Route path="/assessment" component={lazyLoad(() => import('./pages/AssessmentPage'))} /> */}
                   
-                  {/* Course Module System - DAF Level 3 Frontend Implementation */}
-                  <Route path="/course-modules" component={lazyLoad(() => import('./pages/CourseModulesPage'))} />
-                  
-                  {/* Assessment & Testing System */}
-                  <Route path="/assessment" component={lazyLoad(() => import('./pages/AssessmentPage'))} />
-                  
-                  {/* QR Code Scanning Pages */}
-                  <ProtectedRouteWithLayout 
+                  {/* DISABLED FOR LAUNCH: QR Code Scanning - advanced feature */}
+                  {/* <ProtectedRouteWithLayout 
                     path="/scan" 
                     component={lazyLoad(() => import('./pages/ScanPage'))} 
                     pageTitle="QR Scanner"
-                  />
-                  <ProtectedRouteWithLayout 
+                  /> */}
+                  {/* <ProtectedRouteWithLayout 
                     path="/qr-test" 
                     component={lazyLoad(() => import('./pages/QRScannerTestPage'))} 
                     pageTitle="QR Scanner Test"
-                  />
+                  /> */}
                 
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 

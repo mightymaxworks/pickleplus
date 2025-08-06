@@ -5,7 +5,15 @@ Pickle+ is a comprehensive ecosystem platform designed as the central operating 
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
-Coach workflow preferences:
+
+**LAUNCH VERSION FOCUS (V1.0):**
+- Streamlined platform focused on core player functionality only
+- Features: player registration, authentication, match recording, ranking/pickle points, leaderboards, PCP coach applications (L1-5)
+- Advanced features disabled: coaching analytics, community features, tournament management, training centers, advanced coaching tools
+- Navigation simplified to 4 core items: Dashboard, Record Match, Rankings, My Profile
+- Disabled features temporarily removed from navigation menu
+
+Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches
 - Profile management should use inline editing rather than separate page navigation
 - Use "Coaching Bio" for coaching profile sections (not "PCP Coaching Certification Programme")
@@ -70,7 +78,7 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **Relationships**: Normalized structure with foreign key constraints.
 
 ### Core Features and Design Decisions
-The platform is developed in phases, with current focus on core coaching marketplace and advanced analytics.
+**LAUNCH VERSION V1.0 STATUS:** Platform streamlined for core player functionality only. Advanced features disabled for focused launch experience.
 - **Authentication System**: Secure user registration with email validation, bcrypt hashing, and session management.
 - **Training Center Management**: QR code-based facility access, class scheduling, real-time capacity management.
 - **PickleJourney™ System**: Multi-role support, journaling with AI sentiment analysis, XP system, and emotional intelligence tracking.
@@ -92,7 +100,7 @@ The platform is developed in phases, with current focus on core coaching marketp
 - **PCP Coach Onboarding System**: 4-step onboarding flow for coaches, supporting sequential level progression with tiered commission structures.
 - **Payment Architecture**: Revenue from PCP Certifications, Coaching Sessions (tiered commission), and optional Premium Coach Subscriptions ($19.99/month) for advanced business tools.
 - **Design System Standards (PKL-278651 Framework)**: Mandatory mobile-first design, gesture navigation, 44px+ touch targets, micro-animations, voice-ready architecture, progressive disclosure. Color scheme includes Primary Orange, Secondary Blue, with Inter and Roboto Mono fonts.
-- **PicklePlus Ranking Algorithm**: FINALIZED implementation using System B (3/1 base points), Option B age multipliers (18-34: 1.0, 35-49: 1.2, 50-59: 1.3, 60-69: 1.5, 70+: 1.6), cross-gender balance system (Women 1.15x, Mixed 1.075x in cross-gender matches), dual ranking architecture (Open Rankings for cross-generational competition, Age Group Rankings for peer comparison), 7-tier tournament structure, sophisticated 4-tier decay system with Professional tier enhanced weighting (Tournament 3x, League 2x, Casual 0.75x vs standard 2x/1.5x/1x), and standardized point calculations via StandardizedRankingService with DecayProtectionService and GenderBalanceService integration.
+- **PicklePlus Ranking Algorithm**: FINALIZED implementation using System B (3/1 base points), Option B age multipliers (18-34: 1.0, 35-49: 1.2, 50-59: 1.3, 60-69: 1.5, 70+: 1.6), skill-based cross-gender balance system (Women 1.15x, Mixed 1.075x in cross-gender matches for players <1000 points; no bonuses for Elite+ players ≥1000 points), dual ranking architecture (Open Rankings for cross-generational competition, Age Group Rankings for peer comparison), 7-tier tournament structure, sophisticated 4-tier decay system with Professional tier enhanced weighting (Tournament 3x, League 2x, Casual 0.75x vs standard 2x/1.5x/1x), and standardized point calculations via StandardizedRankingService with DecayProtectionService and GenderBalanceService integration.
 - **Critical Gaps Analysis System**: Comprehensive deployment readiness assessment with identified critical gaps: PCP Sequential Enforcement (100% complete), Coach Marketplace Discovery (100% complete), Player-Coach Direct Booking System (100% complete), Coach Reputation System (0% complete - next priority), Enhanced Admin Match Recording System (100% complete - exact QuickMatchRecorder integration), PicklePlus Ranking Algorithm Migration (100% complete - all components now use StandardizedRankingService), and Professional Tier Enhanced Decay Protection System (100% complete - full tier-specific weighting implementation).
 - **Universal Development Dashboard (UDD)**: Integrated at `/udd` route as part of the unified development framework. Features a unified Development Ledger that combines gaps and development phases into a complete tracking system with four categories: Completed Features (live and deployed), Ready to Develop (dependencies met), Blocked Features (dependency waiting), and Planned Features (future roadmap). Includes sequential validation system that prevents premature development and platform disruption by enforcing proper dependency sequencing.
 

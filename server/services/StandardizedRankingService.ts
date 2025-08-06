@@ -19,6 +19,7 @@ import { db } from "../db";
 import { users, matches, rankingTransactions, type User } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { DecayProtectionService } from "./DecayProtectionService";
+import { GenderBalanceService, Player, Team } from "./GenderBalanceService";
 
 // Define Match type inline since it may not be exported
 interface Match {
@@ -38,11 +39,15 @@ export interface RankingPointsCalculation {
   tournamentTier?: string;
   tierMultiplier: number;
   ageMultiplier: number;
+  genderMultiplier: number; // NEW: Gender balance multiplier
   playerAge?: number;
+  playerGender?: 'male' | 'female';
+  playerRankingPoints?: number;
   isWinner: boolean;
   breakdown: {
     baseCalculation: string;
     ageMultiplier: string;
+    genderMultiplier: string; // NEW: Gender balance breakdown
     weightApplied: string;
     tierMultiplier: string;
     dualRankingResult: string;
@@ -123,12 +128,15 @@ export class StandardizedRankingService {
   }
 
   /**
-   * Calculate ranking points - FINALIZED ALGORITHM WITH DUAL RANKING SYSTEM
+   * Calculate ranking points - FINALIZED ALGORITHM WITH DUAL RANKING SYSTEM + GENDER BALANCE
    */
   static calculateRankingPoints(
     isWinner: boolean,
     matchType: 'casual' | 'league' | 'tournament',
     playerDateOfBirth: string,
+    playerGender: 'male' | 'female',
+    playerRankingPoints: number,
+    genderMultiplier: number, // Pre-calculated from GenderBalanceService
     tournamentTier?: keyof TierMultipliers
   ): RankingPointsCalculation {
     
@@ -140,14 +148,17 @@ export class StandardizedRankingService {
     const ageMultiplier = this.AGE_MULTIPLIERS[ageGroup];
     const ageMultipliedPoints = Math.round(basePoints * ageMultiplier * 10) / 10;
     
-    // Step 3: Apply match type weighting
-    const weightFactor = this.WEIGHT_FACTORS[matchType] || 1.0;
-    const weightedPoints = Math.round(ageMultipliedPoints * weightFactor * 10) / 10;
+    // Step 3: Apply gender balance multiplier (skill-based)
+    const genderBalancedPoints = Math.round(ageMultipliedPoints * genderMultiplier * 10) / 10;
     
-    // Step 4: Apply tournament tier multiplier
+    // Step 4: Apply match type weighting
+    const weightFactor = this.WEIGHT_FACTORS[matchType] || 1.0;
+    const weightedPoints = Math.round(genderBalancedPoints * weightFactor * 10) / 10;
+    
+    // Step 5: Apply tournament tier multiplier
     let tierMultiplier = 1.0;
     let openRankingPoints = weightedPoints;
-    let ageGroupRankingPoints = Math.round(basePoints * weightFactor * 10) / 10; // Base points without age multiplier
+    let ageGroupRankingPoints = Math.round(basePoints * genderMultiplier * weightFactor * 10) / 10; // Base points without age multiplier but with gender balance
     
     if (matchType === 'tournament' && tournamentTier) {
       tierMultiplier = this.TIER_MULTIPLIERS[tournamentTier] || 1.0;
