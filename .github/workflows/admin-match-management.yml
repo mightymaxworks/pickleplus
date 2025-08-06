@@ -1,0 +1,153 @@
+name: Admin Enhanced Match Management CI/CD
+
+on:
+  push:
+    branches: [ main, development ]
+    paths:
+      - 'client/src/pages/admin/EnhancedMatchManagement.tsx'
+      - 'client/src/components/match/QuickMatchRecorderStreamlined.tsx'
+      - 'client/src/modules/admin/components/AdminLayout.tsx'
+      - 'server/routes/**'
+      - 'server/api/admin/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client/src/pages/admin/**'
+      - 'client/src/modules/admin/**'
+
+jobs:
+  validate-admin-match-management:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pickle_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm install --save-dev puppeteer axios
+
+    - name: Setup environment
+      run: |
+        cp .env.example .env
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pickle_test" >> .env
+        echo "SESSION_SECRET=test_secret_key_for_ci_cd" >> .env
+        echo "PORT=5000" >> .env
+
+    - name: Setup database
+      run: |
+        npm run db:push
+        # Add any seed data if needed
+        
+    - name: Build application
+      run: npm run build
+
+    - name: Start application
+      run: |
+        npm run dev &
+        sleep 15
+        # Wait for server to be ready
+        curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:5000
+
+    - name: Run CI/CD validation
+      run: |
+        chmod +x scripts/run-ci-cd.sh
+        ./scripts/run-ci-cd.sh
+
+    - name: Run component validation
+      run: node scripts/ci-cd-validation.js
+
+    - name: Run automated tests
+      run: node scripts/automated-testing.js
+
+    - name: Upload test reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-reports
+        path: |
+          ci-cd-validation-report.json
+          automated-test-report.json
+
+    - name: Validate deployment readiness
+      run: |
+        echo "🎯 Validating deployment readiness..."
+        
+        # Check that all critical files exist
+        test -f client/src/pages/admin/EnhancedMatchManagement.tsx
+        test -f client/src/components/match/QuickMatchRecorderStreamlined.tsx
+        test -f client/src/modules/admin/components/AdminLayout.tsx
+        
+        # Verify no empty SelectItem values
+        ! grep -r 'SelectItem value=""' client/src/ || (echo "❌ Empty SelectItem values found" && exit 1)
+        
+        # Test admin route accessibility
+        response=$(curl -s -w "%{http_code}" -o /dev/null "http://localhost:5000/admin/enhanced-match-management")
+        if [ "$response" != "200" ] && [ "$response" != "302" ]; then
+          echo "❌ Admin route not accessible: $response"
+          exit 1
+        fi
+        
+        echo "✅ All deployment readiness checks passed"
+
+    - name: Generate deployment summary
+      if: success()
+      run: |
+        echo "🚀 DEPLOYMENT READY - Admin Enhanced Match Management" >> $GITHUB_STEP_SUMMARY
+        echo "=============================================" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Static Analysis**: All components validated" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **API Endpoints**: All admin endpoints operational" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Component Testing**: UI components functional" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Select Components**: All empty values fixed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Performance**: Load testing passed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Route Accessibility**: /admin/enhanced-match-management accessible" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🎯 **Status**: 100% OPERATIONAL" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📊 Test reports available in artifacts" >> $GITHUB_STEP_SUMMARY
+
+    - name: Deployment failure summary
+      if: failure()
+      run: |
+        echo "❌ DEPLOYMENT BLOCKED - Issues Detected" >> $GITHUB_STEP_SUMMARY
+        echo "=======================================" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🔧 Check the following:" >> $GITHUB_STEP_SUMMARY
+        echo "- Build logs for compilation errors" >> $GITHUB_STEP_SUMMARY
+        echo "- Test reports for failing tests" >> $GITHUB_STEP_SUMMARY
+        echo "- Component validation for runtime errors" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📋 Review test artifacts for detailed information" >> $GITHUB_STEP_SUMMARY
+
+  notify-success:
+    needs: validate-admin-match-management
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+    - name: Success notification
+      run: |
+        echo "🎉 Admin Enhanced Match Management validation completed successfully!"
+        echo "✅ Ready for deployment to production"
+        echo "🚀 Route: /admin/enhanced-match-management"

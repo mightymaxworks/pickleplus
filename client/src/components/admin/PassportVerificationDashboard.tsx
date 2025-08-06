@@ -267,7 +267,7 @@ const PassportVerificationDashboard: React.FC = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="eventId" className="text-sm font-medium">Event (Optional)</Label>
-                    <Select value={eventId} onValueChange={setEventId}>
+                    <Select value={eventId || "any"} onValueChange={setEventId}>
                       <SelectTrigger id="eventId">
                         <SelectValue placeholder="Select an event" />
                       </SelectTrigger>
@@ -320,7 +320,7 @@ const PassportVerificationDashboard: React.FC = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="scannerEventId" className="text-sm font-medium">Event (Optional)</Label>
-                  <Select value={eventId} onValueChange={setEventId}>
+                  <Select value={eventId || "any"} onValueChange={setEventId}>
                     <SelectTrigger id="scannerEventId">
                       <SelectValue placeholder="Select an event" />
                     </SelectTrigger>
@@ -426,7 +426,7 @@ const PassportVerificationDashboard: React.FC = () => {
                               <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">All Statuses</SelectItem>
+                              <SelectItem value="all">All Statuses</SelectItem>
                               <SelectItem value="valid">Valid</SelectItem>
                               <SelectItem value="invalid">Invalid</SelectItem>
                             </SelectContent>

@@ -1,0 +1,69 @@
+{
+  "authentication": false,
+  "apiEndpoints": {
+    "/api/admin/match-management/players/available": {
+      "status": 401,
+      "success": false,
+      "error": "Request failed with status code 401"
+    },
+    "/api/admin/match-management/matches": {
+      "status": 401,
+      "success": false,
+      "error": "Request failed with status code 401"
+    },
+    "/api/admin/match-management/competitions": {
+      "status": 401,
+      "success": false,
+      "error": "Request failed with status code 401"
+    },
+    "/api/admin/enhanced-match-management/age-groups": {
+      "status": 401,
+      "success": false,
+      "error": "Request failed with status code 401"
+    },
+    "/api/admin/enhanced-match-management/analytics/mixed-age-matches": {
+      "status": 401,
+      "success": false,
+      "error": "Request failed with status code 401"
+    },
+    "/api/admin/tournaments": {
+      "status": 200,
+      "success": true,
+      "responseTime": 1754464345227
+    }
+  },
+  "componentLoading": {
+    "client/src/pages/admin/EnhancedMatchManagement.tsx": {
+      "exists": false,
+      "error": "ENOENT: no such file or directory, open 'client/src/pages/admin/EnhancedMatchManagement.tsx'"
+    },
+    "client/src/components/match/QuickMatchRecorderStreamlined.tsx": {
+      "exists": false,
+      "error": "ENOENT: no such file or directory, open 'client/src/components/match/QuickMatchRecorderStreamlined.tsx'"
+    },
+    "client/src/modules/admin/components/AdminLayout.tsx": {
+      "exists": false,
+      "error": "ENOENT: no such file or directory, open 'client/src/modules/admin/components/AdminLayout.tsx'"
+    }
+  },
+  "dataIntegrity": {},
+  "userInterface": {
+    "Select components fixed": {
+      "passed": 0,
+      "total": 6,
+      "success": false
+    },
+    "Admin layout functional": {
+      "passed": 0,
+      "total": 1,
+      "success": false
+    }
+  },
+  "timestamp": "2025-08-06T07:12:24.969Z",
+  "summary": {
+    "totalChecks": 12,
+    "passedChecks": 1,
+    "overallSuccess": false,
+    "successRate": 8
+  }
+}
