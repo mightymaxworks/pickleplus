@@ -1,0 +1,223 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Trophy, Medal, Crown, Star, TrendingUp, Users, Filter, Search } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import EnhancedLeaderboard from '@/components/match/EnhancedLeaderboard';
+
+export default function RankingsPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterAge, setFilterAge] = useState('all');
+  const [filterSkill, setFilterSkill] = useState('all');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Global Rankings
+              </h1>
+              <p className="text-gray-600">
+                PicklePlus ranking system with skill-based competition
+              </p>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  <div>
+                    <div className="text-2xl font-bold">1,247</div>
+                    <div className="text-sm text-gray-600">Active Players</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                  <div>
+                    <div className="text-2xl font-bold">12</div>
+                    <div className="text-sm text-gray-600">Elite Players</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                  <div>
+                    <div className="text-2xl font-bold">834</div>
+                    <div className="text-sm text-gray-600">Matches Today</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-purple-500" />
+                  <div>
+                    <div className="text-2xl font-bold">2,156</div>
+                    <div className="text-sm text-gray-600">Avg. Points</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+
+        {/* Filters and Search */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Filters & Search
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search players..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={filterAge} onValueChange={setFilterAge}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Age Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ages</SelectItem>
+                  <SelectItem value="18-34">18-34</SelectItem>
+                  <SelectItem value="35-49">35-49</SelectItem>
+                  <SelectItem value="50-59">50-59</SelectItem>
+                  <SelectItem value="60-69">60-69</SelectItem>
+                  <SelectItem value="70+">70+</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterSkill} onValueChange={setFilterSkill}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Skill Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="beginner">Beginner (0-499)</SelectItem>
+                  <SelectItem value="intermediate">Intermediate (500-999)</SelectItem>
+                  <SelectItem value="advanced">Advanced (1000-1499)</SelectItem>
+                  <SelectItem value="expert">Expert (1500-1999)</SelectItem>
+                  <SelectItem value="elite">Elite (2000+)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterAge('all');
+                  setFilterSkill('all');
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Rankings Tabs */}
+        <Tabs defaultValue="overall" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overall">Overall Rankings</TabsTrigger>
+            <TabsTrigger value="age-group">Age Group</TabsTrigger>
+            <TabsTrigger value="recent">Recent Activity</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overall" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5" />
+                  Overall Player Rankings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EnhancedLeaderboard />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="age-group" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Age Group Rankings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Medal className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    Age Group Rankings - Coming Soon!
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    Compare your performance against players in your age group
+                  </p>
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                    Phase 2 Feature
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recent" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    Activity Feed - Coming Soon!
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    See recent matches, ranking changes, and achievements
+                  </p>
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                    Phase 2 Feature
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
