@@ -1,78 +1,131 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Award, Star, Clock, DollarSign, MapPin } from "lucide-react";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-
-interface Coach {
-  id: number;
-  userId: number;
-  name: string;
-  bio: string;
-  specialties: string[];
-  certifications: string[];
-  experienceYears: number;
-  rating: number;
-  totalReviews: number;
-  hourlyRate: number;
-  profileImageUrl: string | null;
-  isVerified: boolean;
-}
+import { Users, Award, Clock, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function FindCoachesPage() {
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
-
-  const { data: coaches, isLoading } = useQuery({
-    queryKey: ['/api/coaches/available'],
-    queryFn: () => apiRequest('GET', '/api/coaches/available').then(res => res.json())
-  });
-
-  const specialties = [
-    'Singles Strategy',
-    'Doubles Strategy', 
-    'Technical Skills',
-    'Mental Game',
-    'Beginner Development',
-    'Advanced Tactics',
-    'Fitness & Conditioning',
-    'PCP Assessment'
-  ];
-
-  const filteredCoaches = coaches?.filter((coach: Coach) => 
-    !selectedSpecialty || (coach.specialties && Array.isArray(coach.specialties) && coach.specialties.includes(selectedSpecialty))
-  ) || [];
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 mt-[56px] mb-[56px]">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-gray-900">Find Your Perfect Coach</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Connect with expert coaches who will transform your skills and elevate your performance on the court
+        <motion.div 
+          className="text-center space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full mb-6">
+              <Users className="h-10 w-10 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Advanced Coach Discovery
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Coming Soon in Phase 2! We're building an enhanced coach marketplace with advanced filtering, 
+            detailed profiles, booking system, and direct messaging.
           </p>
-        </div>
+        </motion.div>
+
+        {/* Coming Soon Features */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Card className="bg-white/80 backdrop-blur-sm border-orange-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-orange-700">
+                <Award className="h-6 w-6" />
+                Enhanced Coach Profiles
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Detailed coach profiles with certifications, specialties, reviews, 
+                pricing, and availability calendars.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-orange-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-orange-700">
+                <Calendar className="h-6 w-6" />
+                Direct Booking System
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Book coaching sessions directly through the platform with 
+                automated scheduling and payment processing.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-orange-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-orange-700">
+                <Users className="h-6 w-6" />
+                Smart Matching
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                AI-powered coach recommendations based on your skill level, 
+                goals, and playing style preferences.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-orange-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-orange-700">
+                <Clock className="h-6 w-6" />
+                Session Tracking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Track your coaching progress, session history, and 
+                skill development over time.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Current V1.0 Action */}
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+            <CardContent className="p-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Ready to Get Certified?
+              </h3>
+              <p className="text-gray-600 mb-6">
+                In the meantime, you can apply to become a PCP certified coach yourself!
+              </p>
+              <Button 
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                onClick={() => window.location.href = '/coach-application'}
+              >
+                Apply for PCP Certification
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
 
         {/* Specialty Filter */}
         <Card>
