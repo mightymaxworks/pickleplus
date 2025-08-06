@@ -38,7 +38,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Users, Trophy, Target, TrendingUp, Calendar, Award } from 'lucide-react';
+import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus } from 'lucide-react';
+import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 
 interface PlayerResult {
   id: number;
@@ -150,13 +151,31 @@ export default function EnhancedMatchManagement() {
         </div>
       </div>
 
-      <Tabs defaultValue="leaderboards" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="record-match" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="record-match">Record Match</TabsTrigger>
           <TabsTrigger value="leaderboards">Age Group Leaderboards</TabsTrigger>
           <TabsTrigger value="overview">Age Group Overview</TabsTrigger>
           <TabsTrigger value="mixed-age">Mixed-Age Analytics</TabsTrigger>
           <TabsTrigger value="match-results">Match Results</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="record-match" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Admin Match Recorder
+              </CardTitle>
+              <CardDescription>
+                Record matches for any players with admin privileges
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <QuickMatchRecorderStreamlined />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="leaderboards" className="space-y-6">
           <Card>

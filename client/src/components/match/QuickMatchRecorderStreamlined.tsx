@@ -125,11 +125,11 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
     if (user && !playerOneData && !isAdmin) {
       setPlayerOneData({
         id: user.id,
-        displayName: user.displayName || undefined,
+        displayName: user.displayName || null,
         username: user.username,
         passportId: user.passportCode || undefined,
-        avatarUrl: user.avatarUrl,
-        avatarInitials: user.avatarInitials,
+        avatarUrl: user.avatarUrl || undefined,
+        avatarInitials: user.avatarInitials || undefined,
         dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
         gender: user.gender || null,
         currentRating: user.rankingPoints || 0,
@@ -493,11 +493,11 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
                       if (user) {
                         setPlayerOneData({
                           id: user.id,
-                          displayName: user.displayName || undefined,
+                          displayName: user.displayName || null,
                           username: user.username,
                           passportId: user.passportCode || undefined,
-                          avatarUrl: user.avatarUrl,
-                          avatarInitials: user.avatarInitials,
+                          avatarUrl: user.avatarUrl || undefined,
+                          avatarInitials: user.avatarInitials || undefined,
                           dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
                           gender: user.gender || null,
                           currentRating: user.rankingPoints || 0,
