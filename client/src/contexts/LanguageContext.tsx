@@ -905,13 +905,7 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signUp': '注册',
     'auth.signIn': '登录',
     
-    // Complete auth translations
-    'auth.loginTab': '登录',
-    'auth.registerTab': '注册',
-    'auth.signInTitle': '登录您的账户',
-    'auth.signInDescription': '输入您的凭据来访问您的 Pickle+ 账户。',
-    'auth.createAccountTitle': '创建您的账户',
-    'auth.createAccountDescription': '加入成千上万的球员，提升您的匹克球之旅。',
+    // Complete auth translations - removing duplicates
     'auth.firstNameLabel': '名字',
     'auth.firstNamePlaceholder': '输入您的名字',
     'auth.lastNameLabel': '姓氏',
@@ -1052,7 +1046,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Coaching
     'coaching.pcpProgramme': '教练简介',
     
-    // Authentication
+    // Authentication (cleaned - no duplicates)
     'auth.backToHome': '返回首页',
     'auth.welcomeTitle': '欢迎来到Pickle+',
     'auth.welcomeSubtitle': '加入发展最快的匹克球社区',
