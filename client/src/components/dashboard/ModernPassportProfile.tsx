@@ -335,8 +335,16 @@ export default function ModernPassportProfile({
                     />
 
                     <EditableField
-                      label="Preferred Playing Style"
-                      value={user?.playingStyle || "Aggressive Baseline"}
+                      label="Skill Level"
+                      value={user?.skillLevel || ''}
+                      fieldName="skillLevel"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('skillLevel', value)}
+                      placeholder="e.g., Beginner, Intermediate, Advanced"
+                    />
+
+                    <EditableField
+                      label="Playing Style"
+                      value={user?.playingStyle || ''}
                       fieldName="playingStyle"
                       onSave={async (fieldName, value) => onProfileUpdate?.('playingStyle', value)}
                       placeholder="e.g., Aggressive Baseline, Finesse Player"
@@ -345,27 +353,27 @@ export default function ModernPassportProfile({
                   
                   <div className="space-y-4">
                     <EditableField
-                      label="Favorite Shot"
-                      value={user?.favoriteShot || "Third Shot Drop"}
-                      fieldName="favoriteShot"
-                      onSave={async (fieldName, value) => onProfileUpdate?.('favoriteShot', value)}
-                      placeholder="Your signature shot"
+                      label="Dominant Hand"
+                      value={user?.dominantHand || ''}
+                      fieldName="dominantHand"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('dominantHand', value)}
+                      placeholder="Right, Left, or Ambidextrous"
                     />
 
                     <EditableField
-                      label="Home Court"
-                      value={user?.homeCourt || "Golden Gate Park Courts"}
-                      fieldName="homeCourt"
-                      onSave={async (fieldName, value) => onProfileUpdate?.('homeCourt', value)}
-                      placeholder="Where do you usually play?"
+                      label="Gender"
+                      value={user?.gender || ''}
+                      fieldName="gender"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('gender', value)}
+                      placeholder="Your gender identity"
                     />
 
                     <EditableField
-                      label="Availability"
-                      value={user?.availability || "Weekends & Evenings"}
-                      fieldName="availability"
-                      onSave={async (fieldName, value) => onProfileUpdate?.('availability', value)}
-                      placeholder="When are you available to play?"
+                      label="Home Courts"
+                      value={user?.homeCourtLocations || ''}
+                      fieldName="homeCourtLocations"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('homeCourtLocations', value)}
+                      placeholder="Your regular playing venues"
                     />
                   </div>
                 </div>
@@ -383,7 +391,7 @@ export default function ModernPassportProfile({
                     <div className="text-sm font-medium text-orange-800 mb-2">Preferred Format</div>
                     <EditableField
                       label=""
-                      value={user?.preferredFormat || "Doubles"}
+                      value={user?.preferredFormat || ''}
                       fieldName="preferredFormat"
                       onSave={async (fieldName, value) => onProfileUpdate?.('preferredFormat', value)}
                       placeholder="Singles/Doubles/Mixed"
@@ -392,49 +400,264 @@ export default function ModernPassportProfile({
                   </div>
                   
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-sm font-medium text-blue-800 mb-2">Skill Focus</div>
+                    <div className="text-sm font-medium text-blue-800 mb-2">Preferred Surface</div>
                     <EditableField
                       label=""
-                      value={user?.skillFocus || "Strategy & Positioning"}
-                      fieldName="skillFocus"
-                      onSave={async (fieldName, value) => onProfileUpdate?.('skillFocus', value)}
-                      placeholder="What are you working on?"
+                      value={user?.preferredSurface || ''}
+                      fieldName="preferredSurface"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('preferredSurface', value)}
+                      placeholder="Hard, Clay, Indoor, etc."
                       className="text-center"
                     />
                   </div>
                   
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-sm font-medium text-green-800 mb-2">Goals</div>
+                    <div className="text-sm font-medium text-green-800 mb-2">Looking for Partners</div>
                     <EditableField
                       label=""
-                      value={user?.goals || "Reach 4.5 Rating"}
-                      fieldName="goals"
-                      onSave={async (fieldName, value) => onProfileUpdate?.('goals', value)}
-                      placeholder="Your pickleball goals"
+                      value={user?.lookingForPartners ? "Yes" : "No"}
+                      fieldName="lookingForPartners"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('lookingForPartners', value === "Yes")}
+                      placeholder="Yes/No"
                       className="text-center"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <EditableField
+                    label="Player Goals"
+                    value={user?.playerGoals || ''}
+                    fieldName="playerGoals"
+                    fieldType="textarea"
+                    onSave={async (fieldName, value) => onProfileUpdate?.('playerGoals', value)}
+                    placeholder="What are your pickleball goals this year?"
+                  />
+                  <EditableField
+                    label="Travel Radius (km)"
+                    value={user?.travelRadiusKm?.toString() || ''}
+                    fieldName="travelRadiusKm"
+                    onSave={async (fieldName, value) => onProfileUpdate?.('travelRadiusKm', parseInt(value) || null)}
+                    placeholder="How far will you travel to play?"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Equipment Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Equipment & Gear</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Paddle Brand"
+                      value={user?.paddleBrand || ''}
+                      fieldName="paddleBrand"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('paddleBrand', value)}
+                      placeholder="e.g., Selkirk, JOOLA, Paddletek"
+                    />
+                    <EditableField
+                      label="Paddle Model"
+                      value={user?.paddleModel || ''}
+                      fieldName="paddleModel"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('paddleModel', value)}
+                      placeholder="e.g., Amped Invikta, Ben Johns Hyperion"
+                    />
+                    <EditableField
+                      label="Shoes Brand"
+                      value={user?.shoesBrand || ''}
+                      fieldName="shoesBrand"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('shoesBrand', value)}
+                      placeholder="e.g., K-Swiss, Asics, New Balance"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Backup Paddle Brand"
+                      value={user?.backupPaddleBrand || ''}
+                      fieldName="backupPaddleBrand"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('backupPaddleBrand', value)}
+                      placeholder="Your backup paddle brand"
+                    />
+                    <EditableField
+                      label="Apparel Brand"
+                      value={user?.apparelBrand || ''}
+                      fieldName="apparelBrand"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('apparelBrand', value)}
+                      placeholder="e.g., Nike, Adidas, Lululemon"
+                    />
+                    <EditableField
+                      label="Other Equipment"
+                      value={user?.otherEquipment || ''}
+                      fieldName="otherEquipment"
+                      fieldType="textarea"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('otherEquipment', value)}
+                      placeholder="Bags, grips, accessories, etc."
                     />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
+            {/* External Ratings */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>External Ratings & Profiles</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span>Tournament Match</span>
-                  <span className="text-green-600">Won</span>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <EditableField
+                      label="DUPR Rating"
+                      value={user?.duprRating || ''}
+                      fieldName="duprRating"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('duprRating', value)}
+                      placeholder="e.g., 4.25"
+                    />
+                    <EditableField
+                      label="UTPR Rating"
+                      value={user?.utprRating || ''}
+                      fieldName="utprRating"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('utprRating', value)}
+                      placeholder="e.g., 4.0"
+                    />
+                    <EditableField
+                      label="WPR Rating"
+                      value={user?.wprRating || ''}
+                      fieldName="wprRating"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('wprRating', value)}
+                      placeholder="e.g., 4.5"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <EditableField
+                      label="IFP Rating"
+                      value={user?.ifpRating || ''}
+                      fieldName="ifpRating"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('ifpRating', value)}
+                      placeholder="e.g., 4.25"
+                    />
+                    <EditableField
+                      label="IPTPA Rating"
+                      value={user?.iptpaRating || ''}
+                      fieldName="iptpaRating"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('iptpaRating', value)}
+                      placeholder="e.g., 4.0"
+                    />
+                  </div>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span>Practice Session</span>
-                  <span className="text-blue-600">Completed</span>
+              </CardContent>
+            </Card>
+
+            {/* Performance Self-Assessment */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Self-Assessment (1-10 Scale)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Forehand Strength"
+                      value={user?.forehandStrength?.toString() || ''}
+                      fieldName="forehandStrength"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('forehandStrength', parseInt(value) || null)}
+                      placeholder="1-10 rating"
+                    />
+                    <EditableField
+                      label="Backhand Strength"
+                      value={user?.backhandStrength?.toString() || ''}
+                      fieldName="backhandStrength"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('backhandStrength', parseInt(value) || null)}
+                      placeholder="1-10 rating"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Serve Power"
+                      value={user?.servePower?.toString() || ''}
+                      fieldName="servePower"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('servePower', parseInt(value) || null)}
+                      placeholder="1-10 rating"
+                    />
+                    <EditableField
+                      label="Dink Accuracy"
+                      value={user?.dinkAccuracy?.toString() || ''}
+                      fieldName="dinkAccuracy"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('dinkAccuracy', parseInt(value) || null)}
+                      placeholder="1-10 rating"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Third Shot Consistency"
+                      value={user?.thirdShotConsistency?.toString() || ''}
+                      fieldName="thirdShotConsistency"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('thirdShotConsistency', parseInt(value) || null)}
+                      placeholder="1-10 rating"
+                    />
+                    <EditableField
+                      label="Court Coverage"
+                      value={user?.courtCoverage?.toString() || ''}
+                      fieldName="courtCoverage"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('courtCoverage', parseInt(value) || null)}
+                      placeholder="1-10 rating"
+                    />
+                  </div>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span>Rating Update</span>
-                  <span className="text-orange-600">+0.2</span>
+              </CardContent>
+            </Card>
+
+            {/* Physical & Fitness */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Physical Attributes & Fitness</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Height (cm)"
+                      value={user?.height?.toString() || ''}
+                      fieldName="height"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('height', parseInt(value) || null)}
+                      placeholder="e.g., 175"
+                    />
+                    <EditableField
+                      label="Reach (cm)"
+                      value={user?.reach?.toString() || ''}
+                      fieldName="reach"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('reach', parseInt(value) || null)}
+                      placeholder="e.g., 185"
+                    />
+                    <EditableField
+                      label="Fitness Level"
+                      value={user?.fitnessLevel || ''}
+                      fieldName="fitnessLevel"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('fitnessLevel', value)}
+                      placeholder="e.g., Excellent, Good, Fair"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <EditableField
+                      label="Competitive Intensity (1-10)"
+                      value={user?.competitiveIntensity?.toString() || ''}
+                      fieldName="competitiveIntensity"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('competitiveIntensity', parseInt(value) || null)}
+                      placeholder="How competitive are you?"
+                    />
+                    <EditableField
+                      label="Mobility Limitations"
+                      value={user?.mobilityLimitations || ''}
+                      fieldName="mobilityLimitations"
+                      fieldType="textarea"
+                      onSave={async (fieldName, value) => onProfileUpdate?.('mobilityLimitations', value)}
+                      placeholder="Any physical limitations to note"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
