@@ -11,7 +11,7 @@
  * @lastModified 2025-06-03
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import PassportDashboard from '@/components/dashboard/PassportDashboard';
 import { StandardLayout } from '@/components/layout/StandardLayout';
 import { WelcomeOnboarding } from '@/components/onboarding/WelcomeOnboarding';
@@ -20,6 +20,12 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function Dashboard() {
   const { user } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [localUser, setLocalUser] = useState(user);
+
+  // Update local user when auth user changes
+  React.useEffect(() => {
+    setLocalUser(user);
+  }, [user]);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
@@ -33,13 +39,26 @@ export default function Dashboard() {
     setShowOnboarding(true);
   };
 
-  const handleFieldChange = (field: string, value: any) => {
-    // Handle field changes - could update user context or make API calls
+  const handleFieldChange = useCallback(async (field: string, value: any) => {
     console.log('Field changed:', field, value);
-  };
+    
+    // Handle full user update from API response
+    if (field === '_fullUserUpdate') {
+      setLocalUser(value);
+      return;
+    }
+    
+    // For individual field updates, update local state immediately
+    if (localUser) {
+      setLocalUser({
+        ...localUser,
+        [field]: value
+      });
+    }
+  }, [localUser]);
 
   // Show loading state if user is not available
-  if (!user) {
+  if (!localUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-purple-900/20 flex items-center justify-center">
         <div className="text-center">
@@ -53,7 +72,7 @@ export default function Dashboard() {
   return (
     <div className="w-full min-h-screen">
       <PassportDashboard 
-        user={user} 
+        user={localUser} 
         onFieldChange={handleFieldChange}
       />
       {showOnboarding && (

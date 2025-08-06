@@ -66,13 +66,13 @@ export default function PassportDashboard({ user, onFieldChange, initialTab }: P
       const result = await response.json();
       console.log('Field update successful:', result);
 
-      // Call the parent callback for local state updates
+      // Update local state immediately for instant UI feedback
       onFieldChange(field, value);
 
-      // Refresh the page to show updated data
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // If the result includes updated user data, use it to update state
+      if (result && result.user) {
+        onFieldChange('_fullUserUpdate', result.user);
+      }
 
       toast({
         title: "Profile Updated",
