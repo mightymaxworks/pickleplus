@@ -247,6 +247,9 @@ export default function App() {
                   {/* <Route path="/full-rankings-demo" component={lazyLoad(() => import('./pages/FullRankingsDemo'))} /> */}
                   {/* <Route path="/component-showcase" component={lazyLoad(() => import('./pages/ComponentShowcase'))} /> */}
                   {/* <Route path="/match-recording-demo" component={lazyLoad(() => import('./pages/MatchRecordingDemo'))} /> */}
+                  
+                  {/* UDF Demo - Streamlined Match Recording */}
+                  <Route path="/streamlined-match-demo" component={lazyLoad(() => import('./pages/StreamlinedMatchDemo'))} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
                   {/* <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} /> */}
                   {/* <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} /> */}
