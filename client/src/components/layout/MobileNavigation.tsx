@@ -27,31 +27,35 @@ export function MobileNavigation() {
   // Don't render on desktop
   if (!isMobile) return null;
 
+  // LAUNCH VERSION V1.0: Simplified mobile navigation for core player features only
   const navItems = [
     { 
       icon: <Home size={20} />, 
-      label: 'Home', 
+      label: 'Dashboard', 
       path: '/dashboard',
-      id: 'home'
+      id: 'dashboard'
     },
     { 
       icon: <Calendar size={20} />, 
-      label: 'Play', 
-      path: '/matches',
-      id: 'play'
-    },
-    { 
-      icon: <Users size={20} />, 
-      label: 'Community', 
-      path: '/communities',
-      id: 'community'
+      label: 'Record Match', 
+      path: '/record-match',
+      id: 'record-match'
     },
     { 
       icon: <Award size={20} />, 
-      label: 'Coaching', 
-      path: '/coach',
-      id: 'coaching'
+      label: 'Rankings', 
+      path: '/leaderboard',
+      id: 'rankings'
+    },
+    { 
+      icon: <User size={20} />, 
+      label: 'Profile', 
+      path: '/profile',
+      id: 'profile'
     }
+    // DISABLED FOR LAUNCH: Advanced features removed
+    // { icon: <Users size={20} />, label: 'Community', path: '/communities', id: 'community' },
+    // { icon: <Trophy size={20} />, label: 'Coaching', path: '/coach', id: 'coaching' }
   ];
 
   const isActive = (path: string) => {
