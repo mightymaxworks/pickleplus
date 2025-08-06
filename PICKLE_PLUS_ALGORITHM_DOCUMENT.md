@@ -687,17 +687,31 @@ The system includes comprehensive validation to ensure calculation consistency:
 - **Professional Players (1800+ pts):** 7.0% weekly (maximum competitive pressure)
 - **Rationale:** Higher tiers require increasingly active maintenance to reflect current skill level
 
-**B. Activity-Responsive Decay** ✅ **FINALIZED WITH TOURNAMENT WEIGHTING**
-- **Match Weighting System:**
-  - Tournament matches: 2x weight for decay protection
-  - League/sanctioned matches: 1.5x weight
-  - Casual matches: 1x weight
-- **Activity Levels (weighted matches/month):**
-  - **High Activity (4+ weighted matches):** No decay
-  - **Moderate Activity (2-3 weighted matches):** 1% weekly
-  - **Low Activity (1 weighted match):** 1.5% weekly
-  - **Inactive (no matches):** Full tier-based decay rate
-- **Benefits:** Encourages competitive play while remaining accessible to casual players
+**B. Activity-Responsive Decay** ✅ **FINALIZED WITH TIER-SPECIFIC TOURNAMENT WEIGHTING**
+
+**Standard Tiers (Recreational/Competitive/Elite) Weighting:**
+- Tournament matches: 2x weight for decay protection
+- League/sanctioned matches: 1.5x weight  
+- Casual matches: 1x weight
+
+**Professional Tier Enhanced Weighting:**
+- Tournament matches: 3x weight for decay protection
+- League/sanctioned matches: 2x weight
+- Casual matches: 0.75x weight (reduced but not zero)
+
+**Activity Levels (weighted matches/month):**
+- **High Activity (4+ weighted matches):** No decay
+- **Moderate Activity (2-3 weighted matches):** 1% weekly
+- **Low Activity (1 weighted match):** 1.5% weekly
+- **Inactive (no matches):** Full tier-based decay rate
+
+**Professional Tier Examples:**
+- 2 tournaments/month = 6 weighted matches → No decay
+- 1 tournament + 2 casual = 4.5 weighted matches → No decay
+- 3 league matches + 2 casual = 7.5 weighted matches → No decay
+- 8 casual matches = 6 weighted matches → No decay (requires high volume)
+
+**Benefits:** Heavily incentivizes competitive play for professionals while maintaining accessibility
 
 **C. Seasonal Adjustments** ✅ **FINALIZED**
 - **Major Holidays (Christmas, New Year, Easter):** No decay for Recreational/Competitive tiers

@@ -8,7 +8,7 @@
  * - Age multipliers always applied (18-34: 1.0x to 70+: 1.6x)
  * - Dual Rankings: Open Rankings (age-multiplied) + Age Group Rankings (base points)
  * - Tournament tiers: Club (1.0x) to International (4.0x)
- * - Points decay: 2% weekly after 30-day grace
+ * - Points decay: Tier-based (1%/2%/5%/7% weekly) with activity-responsive adjustments
  * 
  * @framework Framework5.3
  * @version 2.0.0 - FINALIZED ALGORITHM
@@ -18,6 +18,7 @@
 import { db } from "../db";
 import { users, matches, rankingTransactions, type User } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { DecayProtectionService } from "./DecayProtectionService";
 
 // Define Match type inline since it may not be exported
 interface Match {
@@ -328,6 +329,27 @@ export class StandardizedRankingService {
         ...data
       }))
     };
+  }
+
+  /**
+   * Get decay protection status for a user
+   */
+  static async getDecayProtectionStatus(userId: number) {
+    return await DecayProtectionService.getProtectionStatus(userId);
+  }
+
+  /**
+   * Calculate weighted activity for decay protection
+   */
+  static async getWeightedActivity(userId: number, daysBack: number = 30) {
+    return await DecayProtectionService.calculateWeightedActivity(userId, daysBack);
+  }
+
+  /**
+   * Process weekly decay for all eligible players
+   */
+  static async processWeeklyDecay() {
+    return await DecayProtectionService.processWeeklyDecay();
   }
 
   /**

@@ -23,6 +23,7 @@ import coachMarketplaceRoutes from "./api/coach-marketplace";
 import { registerCoachPublicProfilesRoutes } from "./api/coach-public-profiles";
 import coachPublicProfilesEditRoutes from "./api/coach-public-profiles-edit";
 import coachMarketplaceProfilesRouter from './api/coach-marketplace-profiles';
+import decayProtectionRoutes from './routes/decay-protection';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
@@ -227,6 +228,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const bookingApiRoutes = await import('./api/booking-api');
     app.use('/api/booking', bookingApiRoutes.default);
     console.log("[ROUTES] Player-Coach Direct Booking System routes registered successfully");
+
+    // Decay Protection System routes
+    console.log("[ROUTES] Registering Decay Protection routes...");
+    app.use('/api/decay-protection', decayProtectionRoutes);
+    console.log("[ROUTES] Decay Protection routes registered successfully");
     
     console.log("[ROUTES] All modular route systems registered successfully");
     
