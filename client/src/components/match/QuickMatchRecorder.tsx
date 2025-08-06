@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Select, 
@@ -50,7 +51,10 @@ import {
   Sparkles,
   AlertCircle,
   Info,
-  Search
+  Search,
+  CheckCircle2,
+  Timer,
+  TrendingUp
 } from "lucide-react";
 
 // Import existing components
@@ -716,137 +720,325 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         </CardContent>
       </Card>
 
-      {/* Score Input */}
+      {/* Enhanced Score Input */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-green-500" />
+              Score Entry
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Timer className="h-4 w-4" />
+              {(() => {
+                const completedGames = games.filter(game => 
+                  game.playerOneScore >= pointsToWin || game.playerTwoScore >= pointsToWin
+                ).length;
+                return `${completedGames}/${totalGames} Games`;
+              })()}
+            </div>
+          </CardTitle>
+          {/* Match Progress Bar */}
+          <Progress 
+            value={(games.filter(game => 
+              game.playerOneScore >= pointsToWin || game.playerTwoScore >= pointsToWin
+            ).length / totalGames) * 100} 
+            className="w-full h-2 mt-2"
+          />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {games.map((game, index) => {
+            const isGameComplete = game.playerOneScore >= pointsToWin || game.playerTwoScore >= pointsToWin;
+            const gameWinner = game.playerOneScore > game.playerTwoScore ? 1 : 
+                             game.playerTwoScore > game.playerOneScore ? 2 : null;
+            
+            return (
+              <div key={index} className={`space-y-4 p-4 rounded-xl border transition-all duration-200 ${
+                isGameComplete ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    Game {index + 1}
+                    {isGameComplete && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                  </h4>
+                  <Badge variant={isGameComplete ? "default" : "outline"} className="text-xs">
+                    {gameWinner === 1 
+                      ? `${playerOneData?.displayName || playerOneData?.username || 'Player 1'} wins`
+                      : gameWinner === 2
+                      ? `${playerTwoData?.displayName || playerTwoData?.username || 'Player 2'} wins`
+                      : 'In Progress'
+                    }
+                  </Badge>
+                </div>
+                
+                {/* Enhanced Score Display */}
+                <div className="grid grid-cols-3 gap-6 items-center">
+                  {/* Player One Score */}
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs">
+                          {playerOneData?.avatarInitials || 'P1'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">
+                          {playerOneData?.displayName || playerOneData?.username || 'Player 1'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-12 w-12 rounded-full"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { 
+                            ...newGames[index], 
+                            playerOneScore: Math.max(0, newGames[index].playerOneScore - 1) 
+                          };
+                          setGames(newGames);
+                        }}
+                      >
+                        <Minus className="h-5 w-5" />
+                      </Button>
+                      
+                      <div className={`text-4xl font-bold w-16 text-center py-2 px-3 rounded-lg transition-colors ${
+                        gameWinner === 1 ? 'bg-green-600 text-white' : 'bg-white border-2'
+                      }`}>
+                        {game.playerOneScore}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-12 w-12 rounded-full"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { 
+                            ...newGames[index], 
+                            playerOneScore: newGames[index].playerOneScore + 1 
+                          };
+                          setGames(newGames);
+                        }}
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* VS Separator */}
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-muted-foreground bg-white rounded-full w-12 h-12 flex items-center justify-center mx-auto border-2">
+                      VS
+                    </div>
+                  </div>
+                  
+                  {/* Player Two Score */}
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs">
+                          {playerTwoData?.avatarInitials || 'P2'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">
+                          {playerTwoData?.displayName || playerTwoData?.username || 'Player 2'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-12 w-12 rounded-full"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { 
+                            ...newGames[index], 
+                            playerTwoScore: Math.max(0, newGames[index].playerTwoScore - 1) 
+                          };
+                          setGames(newGames);
+                        }}
+                      >
+                        <Minus className="h-5 w-5" />
+                      </Button>
+                      
+                      <div className={`text-4xl font-bold w-16 text-center py-2 px-3 rounded-lg transition-colors ${
+                        gameWinner === 2 ? 'bg-green-600 text-white' : 'bg-white border-2'
+                      }`}>
+                        {game.playerTwoScore}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-12 w-12 rounded-full"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { 
+                            ...newGames[index], 
+                            playerTwoScore: newGames[index].playerTwoScore + 1 
+                          };
+                          setGames(newGames);
+                        }}
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Quick Score Actions */}
+                {!isGameComplete && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs text-muted-foreground mb-2 text-center">Quick Actions</p>
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { ...newGames[index], playerOneScore: pointsToWin, playerTwoScore: 0 };
+                          setGames(newGames);
+                        }}
+                      >
+                        <Zap className="h-3 w-3 mr-1" />
+                        P1 {pointsToWin}-0
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { ...newGames[index], playerOneScore: pointsToWin, playerTwoScore: pointsToWin - 2 };
+                          setGames(newGames);
+                        }}
+                      >
+                        P1 {pointsToWin}-{pointsToWin - 2}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { ...newGames[index], playerOneScore: pointsToWin - 2, playerTwoScore: pointsToWin };
+                          setGames(newGames);
+                        }}
+                      >
+                        P2 {pointsToWin}-{pointsToWin - 2}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          const newGames = [...games];
+                          newGames[index] = { ...newGames[index], playerOneScore: 0, playerTwoScore: pointsToWin };
+                          setGames(newGames);
+                        }}
+                      >
+                        <Zap className="h-3 w-3 mr-1" />
+                        P2 {pointsToWin}-0
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Match Summary */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="h-5 w-5 text-green-500" />
-            Score Entry
+            <TrendingUp className="h-5 w-5 text-blue-500" />
+            Match Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {games.map((game, index) => (
-            <div key={index} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">Game {index + 1}</h4>
-                <Badge variant="outline" className="text-xs">
-                  {game.playerOneScore > game.playerTwoScore 
-                    ? `${playerOneData?.displayName || playerOneData?.username || 'Player 1'} wins`
-                    : game.playerTwoScore > game.playerOneScore
-                    ? `${playerTwoData?.displayName || playerTwoData?.username || 'Player 2'} wins`
-                    : 'In Progress'
-                  }
-                </Badge>
-              </div>
-              
-              {/* Score Input UI */}
-              <div className="grid grid-cols-3 gap-4 items-center">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    {playerOneData?.displayName || playerOneData?.username || 'Player 1'}
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const newGames = [...games];
-                        newGames[index] = { 
-                          ...newGames[index], 
-                          playerOneScore: Math.max(0, newGames[index].playerOneScore - 1) 
-                        };
-                        setGames(newGames);
-                      }}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="text-2xl font-bold w-12 text-center">
-                      {game.playerOneScore}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const newGames = [...games];
-                        newGames[index] = { 
-                          ...newGames[index], 
-                          playerOneScore: newGames[index].playerOneScore + 1 
-                        };
-                        setGames(newGames);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-lg font-bold text-muted-foreground">VS</div>
-                </div>
-                
-                <div className="text-center">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    {playerTwoData?.displayName || playerTwoData?.username || 'Player 2'}
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const newGames = [...games];
-                        newGames[index] = { 
-                          ...newGames[index], 
-                          playerTwoScore: Math.max(0, newGames[index].playerTwoScore - 1) 
-                        };
-                        setGames(newGames);
-                      }}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="text-2xl font-bold w-12 text-center">
-                      {game.playerTwoScore}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const newGames = [...games];
-                        newGames[index] = { 
-                          ...newGames[index], 
-                          playerTwoScore: newGames[index].playerTwoScore + 1 
-                        };
-                        setGames(newGames);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Match Winner Display */}
           {(() => {
             const winner = calculateMatchWinner();
-            if (winner) {
-              const winnerName = winner === 1 
-                ? playerOneData?.displayName || playerOneData?.username || 'Player 1'
-                : playerTwoData?.displayName || playerTwoData?.username || 'Player 2';
-              
-              return (
-                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border">
-                  <Trophy className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-green-800">
-                    Match Winner: {winnerName}
-                  </span>
+            const playerOneWins = games.filter(game => game.playerOneScore > game.playerTwoScore).length;
+            const playerTwoWins = games.filter(game => game.playerTwoScore > game.playerOneScore).length;
+            const completedGames = games.filter(game => 
+              game.playerOneScore >= pointsToWin || game.playerTwoScore >= pointsToWin
+            ).length;
+            
+            return (
+              <div className="space-y-4">
+                {/* Game Results Grid */}
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      {playerOneData?.displayName || playerOneData?.username || 'Player 1'}
+                    </p>
+                    <p className="text-2xl font-bold text-blue-600">{playerOneWins}</p>
+                    <p className="text-xs text-muted-foreground">Games Won</p>
+                  </div>
+                  
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Progress</p>
+                    <p className="text-2xl font-bold">{completedGames}/{totalGames}</p>
+                    <p className="text-xs text-muted-foreground">Games</p>
+                  </div>
+                  
+                  <div className="p-3 bg-orange-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      {playerTwoData?.displayName || playerTwoData?.username || 'Player 2'}
+                    </p>
+                    <p className="text-2xl font-bold text-orange-600">{playerTwoWins}</p>
+                    <p className="text-xs text-muted-foreground">Games Won</p>
+                  </div>
                 </div>
-              );
-            }
-            return null;
+
+                {/* Winner Announcement */}
+                {winner && (
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-600 rounded-full">
+                        <Trophy className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-green-800">Match Winner</p>
+                        <p className="text-lg font-bold text-green-900">
+                          {winner === 1 
+                            ? playerOneData?.displayName || playerOneData?.username || 'Player 1'
+                            : playerTwoData?.displayName || playerTwoData?.username || 'Player 2'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Match Stats */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex justify-between p-2 bg-gray-50 rounded">
+                    <span>Format:</span>
+                    <span className="font-medium capitalize">{formatType}</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-gray-50 rounded">
+                    <span>Scoring:</span>
+                    <span className="font-medium">{pointsToWin} Points</span>
+                  </div>
+                </div>
+              </div>
+            );
           })()}
         </CardContent>
       </Card>
+
+
 
       {/* Admin-only Competition Selection */}
       {isAdmin && (
