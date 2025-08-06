@@ -40,7 +40,8 @@ import {
   RotateCcw,
   Sparkles,
   AlertCircle,
-  Info
+  Info,
+  Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
@@ -49,6 +50,125 @@ interface DemoProps {
   userRole?: 'player' | 'admin';
   onClose?: () => void;
 }
+
+// OpponentSelector Component - Enhanced with search functionality
+const OpponentSelector = ({ onSelectOpponent, recentOpponents }: { 
+  onSelectOpponent: (opponent: any) => void, 
+  recentOpponents: any[] 
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showRecent, setShowRecent] = useState(true);
+
+  // Mock additional players beyond recent opponents
+  const ALL_PLAYERS = [
+    ...recentOpponents,
+    { id: 5, displayName: "Jake Wilson", username: "jakew", avatarInitials: "JW", rating: 980 },
+    { id: 6, displayName: "Emma Rodriguez", username: "emmar", avatarInitials: "ER", rating: 1420 },
+    { id: 7, displayName: "Tom Anderson", username: "toma", avatarInitials: "TA", rating: 1150 },
+    { id: 8, displayName: "Lisa Park", username: "lisap", avatarInitials: "LP", rating: 1300 },
+    { id: 9, displayName: "Mark Davis", username: "markd", avatarInitials: "MD", rating: 890 },
+    { id: 10, displayName: "Nina Torres", username: "ninat", avatarInitials: "NT", rating: 1480 },
+  ];
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    if (term.length > 0) {
+      setIsSearching(true);
+      setShowRecent(false);
+      // Simulate search
+      setTimeout(() => {
+        const filtered = ALL_PLAYERS.filter(player =>
+          player.displayName.toLowerCase().includes(term.toLowerCase()) ||
+          player.username.toLowerCase().includes(term.toLowerCase())
+        );
+        setSearchResults(filtered);
+        setIsSearching(false);
+      }, 300);
+    } else {
+      setShowRecent(true);
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search for any player..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* Search Results or Recent Opponents */}
+      {showRecent ? (
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">Recent opponents:</p>
+          <div className="grid gap-2">
+            {recentOpponents.map((opponent) => (
+              <Button
+                key={opponent.id}
+                variant="outline"
+                onClick={() => onSelectOpponent(opponent)}
+                className="justify-start h-auto p-3"
+              >
+                <Avatar className="h-8 w-8 mr-3">
+                  <AvatarFallback>{opponent.avatarInitials}</AvatarFallback>
+                </Avatar>
+                <div className="text-left">
+                  <p className="font-medium">{opponent.displayName}</p>
+                  <p className="text-xs text-muted-foreground">@{opponent.username}</p>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div>
+          {isSearching ? (
+            <p className="text-sm text-muted-foreground p-4 text-center">Searching...</p>
+          ) : searchResults.length > 0 ? (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Found {searchResults.length} player{searchResults.length !== 1 ? 's' : ''}:
+              </p>
+              <div className="grid gap-2 max-h-40 overflow-y-auto">
+                {searchResults.map((player) => (
+                  <Button
+                    key={player.id}
+                    variant="outline"
+                    onClick={() => onSelectOpponent(player)}
+                    className="justify-start h-auto p-3"
+                  >
+                    <Avatar className="h-8 w-8 mr-3">
+                      <AvatarFallback>{player.avatarInitials}</AvatarFallback>
+                    </Avatar>
+                    <div className="text-left">
+                      <p className="font-medium">{player.displayName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        @{player.username} • {player.rating} pts
+                      </p>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground p-4 text-center">
+              No players found. Try a different search term.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Mock data based on actual QuickMatchRecorder behavior
 const RECENT_OPPONENTS = [
@@ -368,27 +488,10 @@ export default function StreamlinedMatchRecorderDemo({ userRole = 'player', onCl
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Select from recent opponents:</p>
-                <div className="grid gap-2">
-                  {RECENT_OPPONENTS.map((opponent) => (
-                    <Button
-                      key={opponent.id}
-                      variant="outline"
-                      onClick={() => setPlayerTwoData(opponent)}
-                      className="justify-start h-auto p-3"
-                    >
-                      <Avatar className="h-8 w-8 mr-3">
-                        <AvatarFallback>{opponent.avatarInitials}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <p className="font-medium">{opponent.displayName}</p>
-                        <p className="text-xs text-muted-foreground">@{opponent.username}</p>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <OpponentSelector 
+                onSelectOpponent={setPlayerTwoData}
+                recentOpponents={RECENT_OPPONENTS}
+              />
             )}
           </div>
 
