@@ -45,22 +45,24 @@ import { UpcomingTournamentsCard } from "@/components/profile/UpcomingTournament
 import { RatingCard, CourtIQDashboard } from "@/core/design-system";
 
 // Helper function to calculate profile completion percentage
+// Note: This is now handled server-side and returned as user.profileCompletion
+// This function is kept for backward compatibility but should use server value
 function calculateProfileCompletion(user: any): number {
+  // Use server-calculated completion if available
+  if (user?.profileCompletion !== undefined) {
+    return user.profileCompletion;
+  }
+  
+  // Fallback calculation (should rarely be used)
   const requiredFields = [
-    'location',
-    'playingSince',
-    'skillLevel',
-    'bio',
-    'paddleBrand',
-    'paddleModel',
-    'preferredPosition',
-    'dominantHand',
-    'playingStyle'
+    'location', 'playingSince', 'skillLevel', 'bio', 'paddleBrand',
+    'paddleModel', 'preferredPosition', 'dominantHand', 'playingStyle',
+    'avatarUrl', 'banner_url' // Include image fields
   ];
   
   let filledFields = 0;
   requiredFields.forEach(field => {
-    if (user[field]) filledFields++;
+    if (user[field] && user[field] !== '') filledFields++;
   });
   
   return Math.round((filledFields / requiredFields.length) * 100);

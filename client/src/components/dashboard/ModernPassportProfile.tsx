@@ -221,13 +221,16 @@ export default function ModernPassportProfile({
               <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-blue-900">Profile Completion</span>
-                  <span className="text-sm text-blue-600">85%</span>
+                  <span className="text-sm text-blue-600">{user?.profileCompletion || '0'}%</span>
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{width: '85%'}}></div>
+                  <div className="bg-blue-600 h-2 rounded-full" style={{width: `${user?.profileCompletion || 0}%`}}></div>
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
-                  Add profile photo and background image to reach 100%
+                  {(user?.profileCompletion || 0) < 100 
+                    ? `Complete ${Math.ceil((100 - (user?.profileCompletion || 0)) / 5)} more fields to reach 100%`
+                    : "Profile complete! You're maximizing your visibility."
+                  }
                 </div>
               </div>
             )}
@@ -276,10 +279,11 @@ export default function ModernPassportProfile({
       {/* Tabbed Content - Full Screen */}
       <div className="w-full p-0">
         <Tabs defaultValue="about" className="w-full">
-          <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">About</TabsTrigger>
             <TabsTrigger value="stats" className="text-xs md:text-sm px-2 py-2">Stats</TabsTrigger>
             <TabsTrigger value="rankings" className="text-xs md:text-sm px-2 py-2">Rankings</TabsTrigger>
+            <TabsTrigger value="points" className="text-xs md:text-sm px-2 py-2">Points</TabsTrigger>
             {userRoles.isCoach && <TabsTrigger value="coaching" className="text-xs md:text-sm px-2 py-2">Coaching</TabsTrigger>}
             <TabsTrigger value="connect" className="text-xs md:text-sm px-2 py-2">Connect</TabsTrigger>
           </TabsList>
@@ -523,6 +527,104 @@ export default function ModernPassportProfile({
                 </TabsContent>
               </Tabs>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="points" className="space-y-4 p-4">
+            {/* Pickle Points Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-2xl">🎯</span>
+                  Pickle Points Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">{user?.picklePoints || '0'}</div>
+                    <div className="text-sm text-muted-foreground">Total Points</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">#{user?.pointsRank || 'Unranked'}</div>
+                    <div className="text-sm text-muted-foreground">Points Rank</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{user?.recentStreak || '0'}</div>
+                    <div className="text-sm text-muted-foreground">Win Streak</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{user?.weeklyBonus || '0'}</div>
+                    <div className="text-sm text-muted-foreground">Weekly Bonus</div>
+                  </div>
+                </div>
+
+                {/* Recent Points Activity */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm">Recent Points Activity</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 text-lg">+45</span>
+                        <span className="text-sm">Tournament Win vs Elite Player</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">2 days ago</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-blue-600 text-lg">+15</span>
+                        <span className="text-sm">League Match Victory</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">5 days ago</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-orange-600 text-lg">+10</span>
+                        <span className="text-sm">Streak Bonus (3 wins)</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">1 week ago</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Algorithm Summary */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-semibold text-sm mb-2">How Points Are Calculated</h4>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>• Tournament: 15 points (+50% win bonus)</p>
+                    <p>• League: 10 points (+50% win bonus)</p>
+                    <p>• Casual: 6 points (+50% win bonus)</p>
+                    <p>• Tier bonuses: Professional +30%, Elite +20%, Competitive +10%</p>
+                    <p>• Streak bonuses: 3+ wins (+10%), 5+ wins (+20%), 10+ wins (+30%)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Point Earning Opportunities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button variant="outline" className="h-auto p-4 flex-col gap-2">
+                    <span className="text-lg">🏆</span>
+                    <span className="font-medium">Join Tournament</span>
+                    <span className="text-xs text-muted-foreground">Earn 15-22 points</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto p-4 flex-col gap-2">
+                    <span className="text-lg">🎯</span>
+                    <span className="font-medium">League Match</span>
+                    <span className="text-xs text-muted-foreground">Earn 10-15 points</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto p-4 flex-col gap-2">
+                    <span className="text-lg">⭐</span>
+                    <span className="font-medium">Daily Bonus</span>
+                    <span className="text-xs text-muted-foreground">+2 points daily</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {userRoles.isCoach && (

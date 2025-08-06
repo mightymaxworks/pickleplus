@@ -24,6 +24,10 @@ interface UserWithIndexSignature extends User {
 // Define the fields that contribute to profile completion
 // with their respective weights (total should be 100)
 export const PROFILE_FIELDS: ProfileFields = {
+  // Profile Images (10%)
+  avatarUrl: { weight: 5, category: 'images' },
+  banner_url: { weight: 5, category: 'images' },
+  
   // Basic fields (25%)
   bio: { weight: 3, category: 'basic' },
   location: { weight: 3, category: 'basic' },

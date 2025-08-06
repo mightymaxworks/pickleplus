@@ -126,8 +126,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Current user endpoint
-  app.get('/api/auth/current-user', isAuthenticated, (req: Request, res: Response) => {
-    res.json(req.user);
+  app.get('/api/auth/current-user', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      
+      // Import profile service to calculate completion
+      const { ProfileService } = await import('./services/profile-service');
+      const profileService = new ProfileService();
+      
+      // Calculate profile completion percentage
+      const profileCompletion = profileService.calculateProfileCompletion(user);
+      
+      // Return user with profile completion included
+      res.json({
+        ...user,
+        profileCompletion
+      });
+    } catch (error) {
+      console.error('Current user endpoint error:', error);
+      // Fallback to basic user data if calculation fails
+      res.json(req.user);
+    }
   });
 
   console.log("[AUTH] Authentication routes registered");
