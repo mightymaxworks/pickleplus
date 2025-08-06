@@ -494,69 +494,140 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             Match Setup
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Format Selection */}
-          <div className="space-y-2">
-            <Label>Match Format</Label>
-            <ToggleGroup type="single" value={formatType} onValueChange={(value) => value && setFormatType(value as "singles" | "doubles")}>
-              <ToggleGroupItem value="singles" className="flex items-center gap-2">
-                <UserCircle className="h-4 w-4" />
-                Singles
-              </ToggleGroupItem>
-              <ToggleGroupItem value="doubles" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Doubles
-              </ToggleGroupItem>
-            </ToggleGroup>
+        <CardContent>
+          {/* Organized in a clean grid layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Left Column - Match Format */}
+            <div className="space-y-4">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide border-b pb-2">
+                Match Format
+              </div>
+              
+              {/* Format Selection */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-base font-medium">Player Format</Label>
+                </div>
+                <ToggleGroup 
+                  type="single" 
+                  value={formatType} 
+                  onValueChange={(value) => value && setFormatType(value as "singles" | "doubles")}
+                  className="justify-start w-full"
+                >
+                  <ToggleGroupItem value="singles" className="flex items-center gap-2 px-6 py-3 flex-1">
+                    <UserCircle className="h-4 w-4" />
+                    Singles
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="doubles" className="flex items-center gap-2 px-6 py-3 flex-1">
+                    <Users className="h-4 w-4" />
+                    Doubles
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              {/* Number of Games */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-base font-medium">Match Length</Label>
+                </div>
+                <Select value={totalGames.toString()} onValueChange={(value) => {
+                  const newTotal = parseInt(value);
+                  setTotalGames(newTotal);
+                  // Adjust games array
+                  const newGames = Array.from({ length: newTotal }, (_, i) => 
+                    games[i] || { playerOneScore: 0, playerTwoScore: 0 }
+                  );
+                  setGames(newGames);
+                }}>
+                  <SelectTrigger className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Single Game</SelectItem>
+                    <SelectItem value="3">Best of 3 Games</SelectItem>
+                    <SelectItem value="5">Best of 5 Games</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Right Column - Scoring Rules */}
+            <div className="space-y-4">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide border-b pb-2">
+                Scoring Rules
+              </div>
+              
+              {/* Scoring System */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-base font-medium">Scoring Type</Label>
+                </div>
+                <ToggleGroup 
+                  type="single" 
+                  value={scoringSystem} 
+                  onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}
+                  className="justify-start w-full"
+                >
+                  <ToggleGroupItem value="traditional" className="px-6 py-3 flex-1">Traditional</ToggleGroupItem>
+                  <ToggleGroupItem value="rally" className="px-6 py-3 flex-1">Rally Point</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              {/* Points to Win */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-base font-medium">Points to Win</Label>
+                </div>
+                <ToggleGroup 
+                  type="single" 
+                  value={pointsToWin.toString()} 
+                  onValueChange={(value) => value && setPointsToWin(parseInt(value) as 11 | 15 | 21)}
+                  className="justify-start w-full"
+                >
+                  <ToggleGroupItem value="11" className="px-4 py-3 flex-1">11</ToggleGroupItem>
+                  <ToggleGroupItem value="15" className="px-4 py-3 flex-1">15</ToggleGroupItem>
+                  <ToggleGroupItem value="21" className="px-4 py-3 flex-1">21</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
           </div>
 
-          {/* Scoring System */}
-          <div className="space-y-2">
-            <Label>Scoring System</Label>
-            <ToggleGroup type="single" value={scoringSystem} onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}>
-              <ToggleGroupItem value="traditional">Traditional</ToggleGroupItem>
-              <ToggleGroupItem value="rally">Rally</ToggleGroupItem>
-            </ToggleGroup>
+          {/* Match Configuration Summary */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Info className="h-5 w-5 text-blue-600" />
+              <span className="text-base font-semibold text-blue-900">Match Configuration</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center">
+                <div className="font-medium text-blue-900">Format</div>
+                <div className="text-blue-700 capitalize">{formatType}</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-blue-900">Games</div>
+                <div className="text-blue-700">{totalGames === 1 ? "Single" : `Best of ${totalGames}`}</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-blue-900">Points</div>
+                <div className="text-blue-700">{pointsToWin} to win</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-blue-900">Scoring</div>
+                <div className="text-blue-700 capitalize">{scoringSystem}</div>
+              </div>
+            </div>
           </div>
 
-          {/* Points to Win */}
-          <div className="space-y-2">
-            <Label>Points to Win</Label>
-            <ToggleGroup type="single" value={pointsToWin.toString()} onValueChange={(value) => value && setPointsToWin(parseInt(value) as 11 | 15 | 21)}>
-              <ToggleGroupItem value="11">11 Points</ToggleGroupItem>
-              <ToggleGroupItem value="15">15 Points</ToggleGroupItem>
-              <ToggleGroupItem value="21">21 Points</ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-
-          {/* Number of Games */}
-          <div className="space-y-2">
-            <Label>Number of Games</Label>
-            <Select value={totalGames.toString()} onValueChange={(value) => {
-              const newTotal = parseInt(value);
-              setTotalGames(newTotal);
-              // Adjust games array
-              const newGames = Array.from({ length: newTotal }, (_, i) => 
-                games[i] || { playerOneScore: 0, playerTwoScore: 0 }
-              );
-              setGames(newGames);
-            }}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Best of 1</SelectItem>
-                <SelectItem value="3">Best of 3</SelectItem>
-                <SelectItem value="5">Best of 5</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Match Type Constraint */}
-          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <span className="text-sm text-blue-700">
-              {isAdmin ? "Admin can record tournament matches" : "Players can only record casual matches"}
+          {/* Match Type Information */}
+          <div className="mt-4 flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <span className="text-sm text-amber-800">
+              {isAdmin ? "Admin can record tournament and casual matches" : "Players can record casual matches only"}
             </span>
           </div>
         </CardContent>
