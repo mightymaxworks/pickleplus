@@ -1,5 +1,5 @@
 import React from 'react';
-import { PassportDashboard } from '@/components/dashboard/PassportDashboard';
+import PassportDashboard from '@/components/dashboard/PassportDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function PassportRankingsPage() {

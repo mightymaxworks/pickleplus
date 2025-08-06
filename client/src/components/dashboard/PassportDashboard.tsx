@@ -35,9 +35,10 @@ import ModernPassportProfile from '@/components/dashboard/ModernPassportProfile'
 interface PassportDashboardProps {
   user: any;
   onFieldChange: (field: string, value: any) => void;
+  initialTab?: string;
 }
 
-export default function PassportDashboard({ user, onFieldChange }: PassportDashboardProps) {
+export default function PassportDashboard({ user, onFieldChange, initialTab }: PassportDashboardProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [isPhotoUploadOpen, setIsPhotoUploadOpen] = useState(false);
@@ -115,6 +116,7 @@ export default function PassportDashboard({ user, onFieldChange }: PassportDashb
         user={user}
         isOwner={true}
         onProfileUpdate={handleFieldChange}
+        initialTab={initialTab}
       />
     </div>
   );
