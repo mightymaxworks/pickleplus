@@ -119,7 +119,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
       const response = await fetch('/api/admin/tournaments');
       return response.json();
     },
-    enabled: isAdminMode && isAdmin,
+    enabled: !!(isAdminMode && isAdmin),
   });
 
   // Admin-specific state
@@ -282,7 +282,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
     // Admin users can select any players, so reset player one as well
     if (isAdmin) {
       setPlayerOneData(null);
-      setSelectedCompetitionId(null);
+      setSelectedTournamentId(null);
       setUseManualPointsOverride(false);
       setManualPointsWinner(0);
       setManualPointsLoser(0);
