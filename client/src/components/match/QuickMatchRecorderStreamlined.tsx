@@ -406,19 +406,6 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
             </ToggleGroup>
           </div>
 
-          {/* Smart Scoring Information */}
-          <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="h-5 w-5 text-green-600" />
-              <span className="text-base font-semibold text-green-900">Smart Match Recording</span>
-            </div>
-            <div className="text-sm text-green-800 space-y-1">
-              <div>• <strong>Dynamic Length:</strong> Add games as you play - no need to pre-select match length</div>
-              <div>• <strong>Smart Scoring:</strong> Automatically detects standard endpoints (11, 15, 21 points)</div>
-              <div>• <strong>Score Validation:</strong> Warns about unusual scores and asks for confirmation</div>
-            </div>
-          </div>
-
           {/* Match Type Information */}
           <div className="mt-4 flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
             <AlertCircle className="h-4 w-4 text-amber-600" />
