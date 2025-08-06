@@ -22,6 +22,9 @@ export interface IProfileService {
     completedCategories: Record<string, number>;
     comingSoonFields?: string[];
   };
+  
+  // Sync profile completion and award missing milestones
+  syncProfileCompletionAndMilestones(userId: number): Promise<User>;
 }
 
 // Interface for the XP Service

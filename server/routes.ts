@@ -371,6 +371,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync profile completion and milestones - recalculates and awards missing points
+  app.post('/api/profile/sync-milestones', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      console.log(`[API] Profile milestone sync request for user ${userId}`);
+
+      // Import profile service to sync profile completion and milestones
+      const { ProfileService } = await import('./services/profile-service');
+      const profileService = new ProfileService();
+      
+      const updatedUser = await profileService.syncProfileCompletionAndMilestones(userId);
+      
+      console.log(`[API] Profile milestone sync completed for user ${userId}`);
+      res.json({
+        success: true,
+        user: updatedUser,
+        message: 'Profile completion and milestones synced successfully'
+      });
+    } catch (error) {
+      console.error('[API] Profile milestone sync error:', error);
+      res.status(500).json({ error: 'Failed to sync profile milestones' });
+    }
+  });
+
   // === NOTIFICATIONS UNREAD COUNT ===
   app.get('/api/notifications/unread-count', isAuthenticated, async (req: Request, res: Response) => {
     try {

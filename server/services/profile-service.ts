@@ -330,4 +330,59 @@ export class ProfileService implements IProfileService {
       comingSoonFields
     };
   }
+  
+  /**
+   * Recalculate profile completion for a user and award any missing milestone points
+   * This is useful for syncing existing users who may have missed milestone rewards
+   */
+  async syncProfileCompletionAndMilestones(userId: number): Promise<User> {
+    // Get current user data
+    const [currentUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
+      
+    if (!currentUser) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    // Recalculate actual profile completion percentage
+    const actualCompletion = this.calculateProfileCompletion(currentUser);
+    const storedCompletion = currentUser.profileCompletionPct || 0;
+    const currentMilestones = currentUser.profileMilestonesAwarded || [];
+    
+    console.log(`[PROFILE-SYNC] User ${userId} (${currentUser.username}): actual=${actualCompletion}%, stored=${storedCompletion}%, milestones=${JSON.stringify(currentMilestones)}`);
+    
+    // Calculate missing milestone rewards
+    let picklePointsToAward = 0;
+    const newMilestones = [...currentMilestones];
+    
+    for (const tier of PICKLE_POINTS_REWARD_TIERS) {
+      if (actualCompletion >= tier.threshold && !currentMilestones.includes(tier.threshold)) {
+        picklePointsToAward += tier.reward;
+        newMilestones.push(tier.threshold);
+        console.log(`[PROFILE-SYNC] User ${userId} earned ${tier.reward} points for ${tier.threshold}% milestone`);
+      }
+    }
+    
+    // Update user with corrected values
+    const updateData: any = { 
+      profileCompletionPct: actualCompletion,
+      profileMilestonesAwarded: newMilestones
+    };
+    
+    if (picklePointsToAward > 0) {
+      const currentPicklePoints = currentUser.picklePoints || 0;
+      updateData.picklePoints = currentPicklePoints + picklePointsToAward;
+      console.log(`[PROFILE-SYNC] User ${userId} awarded ${picklePointsToAward} total Pickle Points (${currentPicklePoints} -> ${updateData.picklePoints})`);
+    }
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+      
+    return updatedUser;
+  }
 }
