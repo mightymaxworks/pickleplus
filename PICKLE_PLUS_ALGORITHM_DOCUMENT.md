@@ -514,20 +514,26 @@ The system includes comprehensive validation to ensure calculation consistency:
 5. **Points Decay Algorithm:** Weekly 2% decay with protections implemented
 6. **Manual Override Limits:** 0-1000 points acceptable for current needs
 
-### **🔥 CRITICAL DECISION NEEDED**
-**Ranking Table Architecture:**
-- Single ranking pool vs dual ranking system (Master + Age Group tables)
-- This determines how age-multiplied points affect overall rankings
+### **✅ FINALIZED ALGORITHM SPECIFICATIONS**
 
-### **📋 NEXT STEPS**
-1. **✅ RESOLVED: Option B (Open Age Group) multipliers**
-2. **Finalize ranking table architecture** (Single vs Dual system)
-3. **Finalize Pickle Points conversion rate** (10x, 20x, or 25x?)
-4. **Review anti-exploitation controls** strength
-5. **Implement unified StandardizedRankingService with dual rankings** 
-6. **Deploy points decay algorithm**
+**All Critical Decisions Resolved:**
+
+1. **✅ System B Standardized:** 3/1 base points
+2. **✅ Option B (Open Age Group) multipliers:** Players always get their age multiplier
+3. **✅ Dual Ranking System:** Open Rankings + Age Group Rankings
+4. **✅ 7-Tier Tournament Structure:** Club (1.0x) to International (4.0x)
+5. **✅ Points Decay:** 2% weekly after 30-day grace period
+6. **✅ Pickle Points:** 10x conversion rate + action rewards with anti-exploitation
+
+### **📋 IMPLEMENTATION STEPS**
+1. **Update StandardizedRankingService** with dual ranking system
+2. **Update all match recording components** to use System B
+3. **Implement age multiplier application** (Option B)
+4. **Deploy points decay algorithm**
+5. **Update Pickle Points conversion**
+6. **Update all admin components** for dual ranking display
 7. **Create comprehensive test coverage**
 
 ---
 
-**Status:** 85% Complete - One critical decision and minor refinements needed before full deployment.
+**Status:** 100% Complete Algorithm Design - Ready for Full Implementation

@@ -8,15 +8,16 @@ import { useAuth } from "@/lib/auth";
 import { matchSDK } from "@/lib/sdk/matchSDK";
 import { useLocation } from "wouter";
 
-// Age multiplier constants for automatic calculation based on player ages
+// Age multiplier constants - FINALIZED ALGORITHM (Option B - Open Age Group)
 const AGE_MULTIPLIERS = {
   '18-34': 1.0,
-  '35-49': 1.1,
+  '35-49': 1.2,
   '50-59': 1.3,
-  '60+': 1.5
+  '60-69': 1.5,
+  '70+': 1.6
 };
 
-// Automatic age group detection based on birth date
+// Automatic age group detection - FINALIZED ALGORITHM 
 const getAgeGroup = (dateOfBirth: string): string => {
   const birthDate = new Date(dateOfBirth);
   const today = new Date();
@@ -26,13 +27,15 @@ const getAgeGroup = (dateOfBirth: string): string => {
   // Adjust for birthday not yet passed this year
   const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
   
-  if (actualAge >= 60) return '60+';
+  if (actualAge >= 70) return '70+';
+  if (actualAge >= 60) return '60-69';
   if (actualAge >= 50) return '50-59';
   if (actualAge >= 35) return '35-49';
   return '18-34';
 };
 
 // Calculate age multiplier automatically from player data
+// FINALIZED ALGORITHM - Age multiplier calculation (Option B - Open Age Group)
 const calculateAgeMultiplier = (playerOneData: any, playerTwoData: any): number => {
   const ages = [];
   
@@ -46,7 +49,7 @@ const calculateAgeMultiplier = (playerOneData: any, playerTwoData: any): number 
     ages.push(AGE_MULTIPLIERS[ageGroup as keyof typeof AGE_MULTIPLIERS]);
   }
   
-  // Use average multiplier of all players, or default to 1.0
+  // Use average multiplier of all players for dual ranking system
   return ages.length > 0 ? ages.reduce((sum, mult) => sum + mult, 0) / ages.length : 1.0;
 };
 

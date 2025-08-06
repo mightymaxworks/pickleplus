@@ -1,10 +1,10 @@
 /**
- * Match Reward Service
+ * Match Reward Service - Updated for FINALIZED ALGORITHM
  * 
- * This service handles the calculation of XP and ranking points
- * awarded after match completion. It implements the complex
- * business logic for rewards including diminishing returns,
- * cooldowns, tournament multipliers, and various bonuses.
+ * This service handles XP calculation and delegates ranking points 
+ * to StandardizedRankingService for consistent point allocation.
+ * 
+ * Updated to work with System B + Option B + Dual Rankings
  */
 
 import { db } from "../db";
@@ -17,6 +17,7 @@ import {
   type User
 } from "@shared/schema";
 import { eq, and, gt, lt, desc, sql } from "drizzle-orm";
+import { StandardizedRankingService } from "./StandardizedRankingService";
 
 /**
  * Result of XP calculation that includes a detailed breakdown
@@ -227,17 +228,22 @@ export class MatchRewardService {
   }
   
   /**
-   * Calculate ranking points for a match
+   * Calculate ranking points using FINALIZED ALGORITHM
+   * Delegates to StandardizedRankingService for consistency
    * 
    * @param match The match data
-   * @param user The user to calculate points for
+   * @param user The user to calculate ranking points for
    * @returns Ranking calculation result
    */
   async calculateRankingPoints(match: Match, user: User): Promise<RankingCalculationResult> {
+    if (!user.dateOfBirth) {
+      throw new Error('User date of birth required for age multiplier calculation');
+    }
+
     const userId = user.id;
     const isWinner = match.winnerId === userId;
     
-    // Get current ranking points
+    // Get current ranking points for tier calculation
     const userRanking = await db.query.users.findFirst({
       where: eq(users.id, userId),
       columns: {
@@ -248,67 +254,16 @@ export class MatchRewardService {
     const currentPoints = userRanking?.rankingPoints || 0;
     const currentTier = this.getTierForPoints(currentPoints);
     
-    // Initialize points
-    let pointsAwarded = 0;
+    // Use StandardizedRankingService for consistent point calculation
+    const calculation = StandardizedRankingService.calculateRankingPoints(
+      isWinner,
+      match.matchType as 'casual' | 'league' | 'tournament',
+      user.dateOfBirth,
+      match.eventTier as any
+    );
     
-    // Base points for match type
-    if (isWinner) {
-      if (match.matchType === 'casual') {
-        // Random 3-5 points for casual win
-        pointsAwarded = Math.floor(Math.random() * 3) + 3;
-      } else if (match.matchType === 'tournament') {
-        // Random 8-12 points for tournament win
-        pointsAwarded = Math.floor(Math.random() * 5) + 8;
-        
-        // Apply tournament tier multiplier
-        switch (match.eventTier) {
-          case 'club':
-            pointsAwarded *= 1.0; // No change
-            break;
-          case 'regional':
-            pointsAwarded *= 1.5;
-            break;
-          case 'national':
-            pointsAwarded *= 2.0;
-            break;
-          case 'international':
-            pointsAwarded *= 3.0;
-            break;
-        }
-      }
-    } else {
-      // Loser gets a percentage of what the winner earned
-      // This encourages participation even in losing efforts
-      
-      // Calculate what the winner would get
-      let winnerPoints = 0;
-      if (match.matchType === 'casual') {
-        winnerPoints = Math.floor(Math.random() * 3) + 3;
-      } else if (match.matchType === 'tournament') {
-        winnerPoints = Math.floor(Math.random() * 5) + 8;
-        
-        // Apply tournament tier multiplier
-        switch (match.eventTier) {
-          case 'club':
-            winnerPoints *= 1.0;
-            break;
-          case 'regional':
-            winnerPoints *= 1.5;
-            break;
-          case 'national':
-            winnerPoints *= 2.0;
-            break;
-          case 'international':
-            winnerPoints *= 3.0;
-            break;
-        }
-      }
-      
-      // Loser gets 25% of winner points
-      pointsAwarded = Math.round(winnerPoints * 0.25);
-    }
-    
-    // Calculate new total and tier
+    // Calculate new total using Open Rankings points (age-adjusted)
+    const pointsAwarded = calculation.openRankingPoints;
     const newTotal = currentPoints + pointsAwarded;
     const newTier = this.getTierForPoints(newTotal);
     

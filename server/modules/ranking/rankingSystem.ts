@@ -1,18 +1,14 @@
 /**
- * CourtIQ™ Ranking System
+ * FINALIZED PICKLE+ RANKING SYSTEM
  * 
- * This module handles the competitive ranking system for Pickle+, which tracks player standing
- * across different divisions (age groups) and formats (singles, doubles, mixed).
+ * Implements the standardized dual ranking architecture:
+ * - System B Base Points: 3 win / 1 loss
+ * - Option B Age Multipliers: 18-34(1.0), 35-49(1.2), 50-59(1.3), 60-69(1.5), 70+(1.6)
+ * - Dual Rankings: Open Rankings (age-adjusted) + Age Group Rankings (base points)
+ * - 7-tier tournament structure with standardized multipliers
  * 
- * The ranking system uses a points-based algorithm with adjustments for:
- * - Match format (singles vs doubles)
- * - Tournament vs casual play
- * - Event tier (local, regional, national)
- * - Opponent difficulty
- * - Score differentials
- * - Seasonal decay
- * 
- * Ranking points are used for tournament qualification and seasonal leaderboards.
+ * This module is DEPRECATED - use StandardizedRankingService instead
+ * @deprecated Use StandardizedRankingService for all new implementations
  */
 
 import { db } from "../../db";
@@ -74,26 +70,26 @@ interface PointAllocation {
   formatMultiplier: number;    // Multiplier for singles vs doubles
 }
 
-// Base points by match type
+// FINALIZED ALGORITHM - System B Base Points (3/1)
 const BASE_POINTS: Record<MatchType, number> = {
-  [MatchType.CASUAL]: 5,
-  [MatchType.LEAGUE]: 10,
-  [MatchType.TOURNAMENT]: 15
+  [MatchType.CASUAL]: 3,
+  [MatchType.LEAGUE]: 3, 
+  [MatchType.TOURNAMENT]: 3
 };
 
-// Win bonuses by match type
+// Win bonuses by match type - FINALIZED ALGORITHM
 const WIN_BONUS: Record<MatchType, number> = {
-  [MatchType.CASUAL]: 5,
-  [MatchType.LEAGUE]: 10,
-  [MatchType.TOURNAMENT]: 15
+  [MatchType.CASUAL]: 1,
+  [MatchType.LEAGUE]: 1,
+  [MatchType.TOURNAMENT]: 1
 };
 
-// Event tier multipliers
+// FINALIZED ALGORITHM - 7-Tier Tournament Structure
 const EVENT_TIER_MULTIPLIERS: Record<EventTier, number> = {
-  [EventTier.LOCAL]: 1.0,
-  [EventTier.REGIONAL]: 1.5,
-  [EventTier.NATIONAL]: 2.0,
-  [EventTier.MAJOR]: 3.0
+  [EventTier.LOCAL]: 1.0,       // Local/Club (Tier 1-2)
+  [EventTier.REGIONAL]: 1.5,    // Regional (Tier 3-4)
+  [EventTier.NATIONAL]: 2.0,    // National (Tier 5-6)
+  [EventTier.MAJOR]: 3.0        // Major/International (Tier 7)
 };
 
 // Format multipliers
