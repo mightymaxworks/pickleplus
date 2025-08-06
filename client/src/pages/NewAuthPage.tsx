@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Import brand assets
 import pickleLogoPath from '@assets/Pickle (2).png';
@@ -73,6 +74,7 @@ export default function NewAuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { login, register } = useAuth();
+  const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState("login");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -161,7 +163,7 @@ export default function NewAuthPage() {
       {/* Loading Overlay */}
       <MascotLoaderOverlay 
         isVisible={isLoading} 
-        message={activeTab === "login" ? "Signing you in..." : "Creating your player passport..."}
+        message={activeTab === "login" ? t('auth.signingIn', 'Signing you in...') : t('auth.creatingPassport', 'Creating your player passport...')}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
@@ -182,7 +184,7 @@ export default function NewAuthPage() {
                 onClick={() => setLocation("/")}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
+                {t('auth.backToHome', 'Back to Home')}
               </Button>
               
               <img 
@@ -192,13 +194,13 @@ export default function NewAuthPage() {
               />
               
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {activeTab === "login" ? "Welcome Back" : "Create Your Passport"}
+                {activeTab === "login" ? t('auth.welcomeBack', 'Welcome Back') : t('auth.createPassport', 'Create Your Passport')}
               </h1>
               
               <p className="text-gray-600">
                 {activeTab === "login" 
-                  ? "Sign in to access your player dashboard"
-                  : "Join the transparent ranking revolution"
+                  ? t('auth.signInDescription', 'Sign in to access your player dashboard')
+                  : t('auth.joinRevolution', 'Join the transparent ranking revolution')
                 }
               </p>
             </div>
@@ -208,8 +210,8 @@ export default function NewAuthPage() {
               <CardHeader className="pb-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login" className="text-sm">Sign In</TabsTrigger>
-                    <TabsTrigger value="register" className="text-sm">Create Account</TabsTrigger>
+                    <TabsTrigger value="login" className="text-sm">{t('auth.signIn', 'Sign In')}</TabsTrigger>
+                    <TabsTrigger value="register" className="text-sm">{t('auth.createAccount', 'Create Account')}</TabsTrigger>
                   </TabsList>
                   
                   {/* Login Tab */}
@@ -221,13 +223,13 @@ export default function NewAuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username or Email</FormLabel>
+                              <FormLabel>{t('auth.usernameOrEmail', 'Username or Email')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
-                                    placeholder="Enter your username or email"
+                                    placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -242,14 +244,14 @@ export default function NewAuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Password</FormLabel>
+                              <FormLabel>{t('auth.password', 'Password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
                                     type="password"
-                                    placeholder="Enter your password"
+                                    placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -271,7 +273,7 @@ export default function NewAuthPage() {
                                 />
                               </FormControl>
                               <FormLabel className="text-sm font-normal">
-                                Remember me for 30 days
+                                {t('auth.rememberMe', 'Remember me for 30 days')}
                               </FormLabel>
                             </FormItem>
                           )}
@@ -282,7 +284,7 @@ export default function NewAuthPage() {
                           className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                           disabled={isLoading}
                         >
-                          {isLoading ? "Signing In..." : "Sign In to Dashboard"}
+                          {isLoading ? t('auth.loggingIn', 'Signing In...') : t('auth.signInToDashboard', 'Sign In to Dashboard')}
                         </Button>
                       </form>
                     </Form>
@@ -298,9 +300,9 @@ export default function NewAuthPage() {
                             name="firstName"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>First Name</FormLabel>
+                                <FormLabel>{t('auth.firstName', 'First Name')}</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="John" />
+                                  <Input {...field} placeholder={t('auth.firstNamePlaceholder', 'John')} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -312,9 +314,9 @@ export default function NewAuthPage() {
                             name="lastName"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Last Name</FormLabel>
+                                <FormLabel>{t('auth.lastName', 'Last Name')}</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Doe" />
+                                  <Input {...field} placeholder={t('auth.lastNamePlaceholder', 'Doe')} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -327,13 +329,13 @@ export default function NewAuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username</FormLabel>
+                              <FormLabel>{t('auth.username', 'Username')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
-                                    placeholder="Choose a unique username"
+                                    placeholder={t('auth.usernamePlaceholderRegister', 'Choose a unique username')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -348,14 +350,14 @@ export default function NewAuthPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email</FormLabel>
+                              <FormLabel>{t('auth.email', 'Email')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
                                     type="email"
-                                    placeholder="your.email@example.com"
+                                    placeholder={t('auth.emailPlaceholder', 'your.email@example.com')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -370,14 +372,14 @@ export default function NewAuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Password</FormLabel>
+                              <FormLabel>{t('auth.password', 'Password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
                                     type="password"
-                                    placeholder="Create a strong password"
+                                    placeholder={t('auth.createPassword', 'Create a strong password')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -392,14 +394,14 @@ export default function NewAuthPage() {
                           name="confirmPassword"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Confirm Password</FormLabel>
+                              <FormLabel>{t('auth.confirmPassword', 'Confirm Password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
                                     type="password"
-                                    placeholder="Confirm your password"
+                                    placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm your password')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -415,14 +417,14 @@ export default function NewAuthPage() {
                             name="yearOfBirth"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Birth Year</FormLabel>
+                                <FormLabel>{t('auth.birthYear', 'Birth Year')}</FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                     <Input 
                                       {...field} 
                                       type="number"
-                                      placeholder="1990"
+                                      placeholder={t('auth.birthYearPlaceholder', '1990')}
                                       className="pl-10"
                                       onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                                     />
@@ -438,18 +440,18 @@ export default function NewAuthPage() {
                             name="skillLevel"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Skill Level</FormLabel>
+                                <FormLabel>{t('auth.skillLevel', 'Skill Level')}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select level" />
+                                      <SelectValue placeholder={t('auth.selectLevel', 'Select level')} />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="beginner">Beginner</SelectItem>
-                                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="advanced">Advanced</SelectItem>
-                                    <SelectItem value="expert">Expert</SelectItem>
+                                    <SelectItem value="beginner">{t('auth.beginner', 'Beginner')}</SelectItem>
+                                    <SelectItem value="intermediate">{t('auth.intermediate', 'Intermediate')}</SelectItem>
+                                    <SelectItem value="advanced">{t('auth.advanced', 'Advanced')}</SelectItem>
+                                    <SelectItem value="expert">{t('auth.expert', 'Expert')}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -463,13 +465,13 @@ export default function NewAuthPage() {
                           name="location"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Location (Optional)</FormLabel>
+                              <FormLabel>{t('auth.location', 'Location (Optional)')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
-                                    placeholder="City, State/Country"
+                                    placeholder={t('auth.locationPlaceholder', 'City, State/Country')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -491,7 +493,7 @@ export default function NewAuthPage() {
                                 />
                               </FormControl>
                               <FormLabel className="text-sm font-normal">
-                                I agree to the Terms of Service and Privacy Policy
+                                {t('auth.agreeToTerms', 'I agree to the Terms of Service and Privacy Policy')}
                               </FormLabel>
                               <FormMessage />
                             </FormItem>
@@ -503,7 +505,7 @@ export default function NewAuthPage() {
                           className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                           disabled={isLoading}
                         >
-                          {isLoading ? "Creating Account..." : "Create My Player Passport"}
+                          {isLoading ? t('auth.creatingAccount', 'Creating Account...') : t('auth.createPassportButton', 'Create My Player Passport')}
                         </Button>
                       </form>
                     </Form>
