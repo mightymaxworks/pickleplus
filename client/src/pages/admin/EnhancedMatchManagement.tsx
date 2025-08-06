@@ -39,7 +39,8 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus } from 'lucide-react';
-import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
+import AdminMatchCreation from './AdminMatchCreation';
+import MatchManagement from './MatchManagement';
 
 interface PlayerResult {
   id: number;
@@ -152,8 +153,9 @@ export default function EnhancedMatchManagement() {
       </div>
 
       <Tabs defaultValue="record-match" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="record-match">Record Match</TabsTrigger>
+          <TabsTrigger value="competitions">Competitions & Leagues</TabsTrigger>
           <TabsTrigger value="leaderboards">Age Group Leaderboards</TabsTrigger>
           <TabsTrigger value="overview">Age Group Overview</TabsTrigger>
           <TabsTrigger value="mixed-age">Mixed-Age Analytics</TabsTrigger>
@@ -168,11 +170,28 @@ export default function EnhancedMatchManagement() {
                 Admin Match Recorder
               </CardTitle>
               <CardDescription>
-                Record matches for any players with admin privileges
+                Create matches, tournaments, competitions, and leagues with comprehensive administrative controls
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <QuickMatchRecorderStreamlined />
+              <AdminMatchCreation />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="competitions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Competition & League Management
+              </CardTitle>
+              <CardDescription>
+                Create and manage tournaments, competitions, leagues, and attach matches
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MatchManagement />
             </CardContent>
           </Card>
         </TabsContent>
