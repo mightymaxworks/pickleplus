@@ -95,7 +95,10 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
   const [playerOnePartnerData, setPlayerOnePartnerData] = useState<UserSearchResult | null>(null);
   const [playerTwoPartnerData, setPlayerTwoPartnerData] = useState<UserSearchResult | null>(null);
 
-  // Recent opponents state
+  // Player search state
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [playerSearchResults, setPlayerSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [recentOpponents, setRecentOpponents] = useState<UserSearchResult[]>([]);
 
   // Check if user is admin
@@ -116,6 +119,54 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
       notes: "",
     },
   });
+
+  // Initialize player one as current user
+  useEffect(() => {
+    if (user && !playerOneData) {
+      setPlayerOneData({
+        id: user.id,
+        displayName: user.displayName || null,
+        username: user.username,
+        passportId: user.passportCode || null,
+        avatarUrl: user.avatarUrl,
+        avatarInitials: user.avatarInitials,
+        dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
+        gender: user.gender || null,
+        currentRating: user.rankingPoints || 0,
+      });
+    }
+  }, [user, playerOneData]);
+
+  // Player search function
+  const searchPlayers = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setPlayerSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/players/search?q=${encodeURIComponent(searchTerm)}&limit=10`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPlayerSearchResults(data.players || []);
+      }
+    } catch (error) {
+      console.error('Player search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchPlayers(playerSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [playerSearch]);
 
   // Smart score validation - detect standard endpoints and validate unusual scores
   const isStandardEndpoint = (score1: number, score2: number): boolean => {
@@ -364,6 +415,167 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
               {isAdmin ? "Admin can record tournament and casual matches" : "Players can record casual matches only"}
             </span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Player Selection */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <UserCircle className="h-5 w-5 text-purple-500" />
+            Player Selection
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Player One (Current User) */}
+          <div className="space-y-2">
+            <Label>Player 1 (You)</Label>
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback>
+                  {playerOneData?.avatarInitials || user?.avatarInitials || 'P1'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">
+                  {playerOneData?.displayName || user?.displayName || user?.username}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  @{playerOneData?.username || user?.username} • {playerOneData?.currentRating || 0} pts
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Player Two Search */}
+          <div className="space-y-2">
+            <Label>
+              {formatType === "singles" ? "Opponent" : "Opponent Team Player 1"}
+            </Label>
+            <div className="space-y-2">
+              <Input
+                placeholder="Search for player by name or username..."
+                value={playerSearch}
+                onChange={(e) => setPlayerSearch(e.target.value)}
+                className="w-full"
+              />
+              
+              {/* Search Results */}
+              {playerSearch && (
+                <div className="border rounded-lg max-h-40 overflow-y-auto">
+                  {isSearching ? (
+                    <div className="p-3 text-center text-muted-foreground">
+                      Searching players...
+                    </div>
+                  ) : playerSearchResults.length > 0 ? (
+                    playerSearchResults.map((player) => (
+                      <button
+                        key={player.id}
+                        type="button"
+                        className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                        onClick={() => {
+                          setPlayerTwoData(player);
+                          setPlayerSearch("");
+                          setPlayerSearchResults([]);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback>
+                              {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">
+                              {player.displayName || player.username}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              @{player.username} • {player.currentRating || 0} pts
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-muted-foreground">
+                      No players found
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Selected Player Two */}
+              {playerTwoData && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback>
+                      {playerTwoData.avatarInitials || playerTwoData.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      {playerTwoData.displayName || playerTwoData.username}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      @{playerTwoData.username} • {playerTwoData.currentRating || 0} pts
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPlayerTwoData(null)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Doubles Partners (if doubles selected) */}
+          {formatType === "doubles" && (
+            <>
+              <div className="space-y-2">
+                <Label>Your Partner (Optional)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start text-muted-foreground"
+                  onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Partner selection will be available soon",
+                      variant: "default",
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Select Partner
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Opponent Team Partner (Optional)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start text-muted-foreground"
+                  onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Partner selection will be available soon",
+                      variant: "default",
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Select Partner
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
