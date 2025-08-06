@@ -266,7 +266,8 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                   <div className="text-xs text-orange-600">pts</div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-8 px-4">
