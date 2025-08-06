@@ -683,8 +683,9 @@ The system includes comprehensive validation to ensure calculation consistency:
 **A. Tier-Based Decay Rates** ✅ **FINALIZED**
 - **Recreational Players (0-300 pts):** 1.0% weekly (gentle pressure)
 - **Competitive Players (300-1000 pts):** 2.0% weekly (standard)
-- **Elite Players (1000+ pts):** 5.0% weekly (high maintenance requirement)
-- **Rationale:** Elite rankings require significant active maintenance to reflect current skill
+- **Elite Players (1000-1800 pts):** 5.0% weekly (high maintenance requirement)
+- **Professional Players (1800+ pts):** 7.0% weekly (maximum competitive pressure)
+- **Rationale:** Higher tiers require increasingly active maintenance to reflect current skill level
 
 **B. Activity-Responsive Decay**
 - **High Activity (4+ matches/month):** No decay
@@ -694,8 +695,9 @@ The system includes comprehensive validation to ensure calculation consistency:
 - **Benefits:** Rewards consistent participation, gentler on casual players
 
 **C. Seasonal Adjustments** ✅ **FINALIZED**
-- **Christmas Period:** No decay for Recreational/Competitive tiers
-- **Christmas Period (Elite):** Reduced to 2.5% weekly (still requires some maintenance)
+- **Major Holidays (Christmas, New Year, Easter):** No decay for Recreational/Competitive tiers
+- **Major Holidays (Elite):** Reduced to 2.5% weekly (from 5.0%)
+- **Major Holidays (Professional):** Reduced to 3.5% weekly (from 7.0%)
 - **Tournament Seasons:** Standard decay rates maintained
 - **Weather Considerations:** Regional adjustments for severe weather limitations
 
@@ -793,7 +795,7 @@ The system includes comprehensive validation to ensure calculation consistency:
 2. **✅ Option B (Open Age Group) multipliers:** Players always get their age multiplier
 3. **✅ Dual Ranking System:** Open Rankings + Age Group Rankings
 4. **✅ 7-Tier Tournament Structure:** Club (1.0x) to International (4.0x)
-5. **✅ Points Decay:** Tier-based (1%/2%/5% weekly) with activity-responsive adjustments and seasonal considerations
+5. **✅ Points Decay:** 4-tier system (1%/2%/5%/7% weekly) with activity-responsive adjustments and seasonal considerations
 6. **✅ Pickle Points:** 1.5x conversion rate + action rewards with anti-exploitation controls
 
 ### **📋 IMPLEMENTATION STEPS**
