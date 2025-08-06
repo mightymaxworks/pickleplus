@@ -430,7 +430,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               }
                             }}
                           >
-                            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                            {item.icon && <span className="mr-2 h-4 w-4 flex items-center justify-center">{item.icon}</span>}
                             {item.label}
                           </Button>
                         ))
@@ -460,7 +460,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               }
                             }}
                           >
-                            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                            {item.icon && <span className="mr-2 h-4 w-4 flex items-center justify-center">{item.icon}</span>}
                             {item.label}
                           </Button>
                         ))
@@ -488,7 +488,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                             }
                           }}
                         >
-                          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                          {item.icon && <span className="mr-2 h-4 w-4 flex items-center justify-center">{item.icon}</span>}
                           {item.label}
                         </Button>
                       ))}
@@ -515,7 +515,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                             }
                           }}
                         >
-                          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                          {item.icon && <span className="mr-2 h-4 w-4 flex items-center justify-center">{item.icon}</span>}
                           {item.label}
                         </Button>
                       ))}
@@ -542,7 +542,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                             }
                           }}
                         >
-                          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                          {item.icon && <span className="mr-2 h-4 w-4 flex items-center justify-center">{item.icon}</span>}
                           {item.label}
                         </Button>
                       ))}
