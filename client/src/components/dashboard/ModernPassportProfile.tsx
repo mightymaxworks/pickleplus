@@ -76,6 +76,9 @@ export default function ModernPassportProfile({
     playingSince: user?.playingSince,
     userId: user?.id,
     displayName: user?.displayName,
+    profileCompletionPct: user?.profileCompletionPct,
+    picklePoints: user?.picklePoints,
+    rankingPoints: user?.rankingPoints,
     avatarUrl: user?.avatarUrl,
     avatar_url: user?.avatar_url,
     bannerUrl: user?.bannerUrl,
@@ -221,14 +224,14 @@ export default function ModernPassportProfile({
               <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-blue-900">Profile Completion</span>
-                  <span className="text-sm text-blue-600">{user?.profileCompletion || '0'}%</span>
+                  <span className="text-sm text-blue-600">{user?.profileCompletionPct || user?.profile_completion_pct || '0'}%</span>
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{width: `${user?.profileCompletion || 0}%`}}></div>
+                  <div className="bg-blue-600 h-2 rounded-full" style={{width: `${user?.profileCompletionPct || user?.profile_completion_pct || 0}%`}}></div>
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
-                  {(user?.profileCompletion || 0) < 100 
-                    ? `Complete ${Math.ceil((100 - (user?.profileCompletion || 0)) / 5)} more fields to reach 100%`
+                  {(user?.profileCompletionPct || user?.profile_completion_pct || 0) < 100 
+                    ? `Complete ${Math.ceil((100 - (user?.profileCompletionPct || user?.profile_completion_pct || 0)) / 5)} more fields to reach 100%`
                     : "Profile complete! You're maximizing your visibility."
                   }
                 </div>
@@ -238,8 +241,8 @@ export default function ModernPassportProfile({
             {/* Quick Stats - Mobile Optimized */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
               <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <div className="text-lg md:text-2xl font-bold text-orange-600">{user?.currentRating || '4.2'}</div>
-                <div className="text-xs text-muted-foreground">Rating</div>
+                <div className="text-lg md:text-2xl font-bold text-orange-600">{user?.rankingPoints || user?.ranking_points || '0'}</div>
+                <div className="text-xs text-muted-foreground">Ranking Points</div>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-lg md:text-2xl font-bold text-blue-600">{user?.totalMatches || '0'}</div>
@@ -250,8 +253,8 @@ export default function ModernPassportProfile({
                 <div className="text-xs text-muted-foreground">Win Rate</div>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
-                <div className="text-lg md:text-2xl font-bold text-purple-600">{user?.picklePoints || '0'}</div>
-                <div className="text-xs text-muted-foreground">Points</div>
+                <div className="text-lg md:text-2xl font-bold text-purple-600">{user?.picklePoints || user?.pickle_points || '0'}</div>
+                <div className="text-xs text-muted-foreground">Pickle Points</div>
               </div>
             </div>
           </div>
