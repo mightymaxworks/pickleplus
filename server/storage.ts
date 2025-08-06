@@ -725,13 +725,11 @@ export class DatabaseStorage implements IStorage {
   async getRecentOpponents(userId: number): Promise<User[]> {
     try {
       // Get recent opponents from matches where the user was either player one or two
-      const recentOpponentIds = await db
+      const recentMatches = await db
         .select({
-          opponentId: sql<number>`CASE 
-            WHEN ${matches.playerOneId} = ${userId} THEN ${matches.playerTwoId}
-            WHEN ${matches.playerTwoId} = ${userId} THEN ${matches.playerOneId}
-            ELSE NULL
-          END`.as('opponentId')
+          playerOneId: matches.playerOneId,
+          playerTwoId: matches.playerTwoId,
+          createdAt: matches.createdAt
         })
         .from(matches)
         .where(
@@ -740,25 +738,30 @@ export class DatabaseStorage implements IStorage {
             eq(matches.playerTwoId, userId)
           )
         )
-        .groupBy(sql`opponentId`)
-        .orderBy(desc(sql`MAX(${matches.createdAt})`))
-        .limit(5);
+        .orderBy(desc(matches.createdAt))
+        .limit(20);
 
-      // Get user details for these opponent IDs
-      const opponentIds = recentOpponentIds
-        .map(row => row.opponentId)
-        .filter(id => id !== null) as number[];
+      // Extract opponent IDs
+      const opponentIds = new Set<number>();
+      recentMatches.forEach(match => {
+        if (match.playerOneId === userId && match.playerTwoId) {
+          opponentIds.add(match.playerTwoId);
+        } else if (match.playerTwoId === userId && match.playerOneId) {
+          opponentIds.add(match.playerOneId);
+        }
+      });
 
-      if (opponentIds.length === 0) {
+      if (opponentIds.size === 0) {
         return [];
       }
 
+      // Get user details for these opponent IDs
       const opponents = await db
         .select()
         .from(users)
-        .where(sql`${users.id} IN (${opponentIds.join(', ')})`);
+        .where(sql`${users.id} IN (${Array.from(opponentIds).join(', ')})`);
 
-      return opponents;
+      return opponents.slice(0, 5); // Limit to 5 recent opponents
     } catch (error) {
       console.error('Error getting recent opponents:', error);
       return [];

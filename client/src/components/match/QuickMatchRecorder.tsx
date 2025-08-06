@@ -861,12 +861,12 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             {/* Competition Selection */}
             <div className="space-y-2">
               <Label>Link to Competition (Optional)</Label>
-              <Select value={selectedCompetitionId?.toString() || ""} onValueChange={(value) => setSelectedCompetitionId(value ? parseInt(value) : null)}>
+              <Select value={selectedCompetitionId?.toString() || "none"} onValueChange={(value) => setSelectedCompetitionId(value !== "none" ? parseInt(value) : null)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a competition..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Competition (Casual Match)</SelectItem>
+                  <SelectItem value="none">No Competition (Casual Match)</SelectItem>
                   {competitions.map((comp) => (
                     <SelectItem key={comp.id} value={comp.id.toString()}>
                       {comp.name} ({comp.type}) - {comp.pointsMultiplier}x points
