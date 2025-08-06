@@ -120,9 +120,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
     },
   });
 
-  // Initialize player one as current user
+  // Initialize player one as current user (only for non-admin users)
   useEffect(() => {
-    if (user && !playerOneData) {
+    if (user && !playerOneData && !isAdmin) {
       setPlayerOneData({
         id: user.id,
         displayName: user.displayName || null,
@@ -135,7 +135,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
         currentRating: user.rankingPoints || 0,
       });
     }
-  }, [user, playerOneData]);
+  }, [user, playerOneData, isAdmin]);
 
   // Player search function
   const searchPlayers = async (searchTerm: string) => {
@@ -253,7 +253,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
     setFormatType("singles");
     setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
     
+    // Admin users can select any players, so reset player one as well
     if (isAdmin) {
+      setPlayerOneData(null);
       setSelectedCompetitionId(null);
       setUseManualPointsOverride(false);
       setManualPointsWinner(0);
@@ -269,10 +271,19 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
 
   // Submit match
   const handleSubmit = async (data: MatchFormValues) => {
-    if (!playerOneData || !playerTwoData) {
+    if (!playerOneData) {
       toast({
-        title: "Missing Players",
-        description: "Please select both players before submitting.",
+        title: "Missing Player 1",
+        description: isAdmin ? "Please select Player 1 for this match." : "Player 1 selection is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!playerTwoData) {
+      toast({
+        title: isAdmin ? "Missing Player 2" : "Missing Opponent",
+        description: isAdmin ? "Please select Player 2 for this match." : "Please select an opponent to play against.",
         variant: "destructive",
       });
       return;
@@ -427,34 +438,127 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Player One (Current User) */}
+          {/* Player One */}
           <div className="space-y-2">
-            <Label>Player 1 (You)</Label>
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback>
-                  {playerOneData?.avatarInitials || user?.avatarInitials || 'P1'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">
-                  {playerOneData?.displayName || user?.displayName || user?.username}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  @{playerOneData?.username || user?.username} • {playerOneData?.currentRating || 0} pts
-                </p>
+            <Label>
+              {isAdmin ? "Player 1" : "Player 1 (You)"}
+            </Label>
+            {isAdmin && !playerOneData ? (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Search for Player 1 by name or username..."
+                  value={playerSearch}
+                  onChange={(e) => setPlayerSearch(e.target.value)}
+                  className="w-full"
+                />
+                
+                {/* Player 1 Search Results */}
+                {playerSearch && (
+                  <div className="border rounded-lg max-h-40 overflow-y-auto">
+                    {isSearching ? (
+                      <div className="p-3 text-center text-muted-foreground">
+                        Searching players...
+                      </div>
+                    ) : playerSearchResults.length > 0 ? (
+                      playerSearchResults.map((player) => (
+                        <button
+                          key={player.id}
+                          type="button"
+                          className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                          onClick={() => {
+                            setPlayerOneData(player);
+                            setPlayerSearch("");
+                            setPlayerSearchResults([]);
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>
+                                {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">
+                                {player.displayName || player.username}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                @{player.username} • {player.currentRating || 0} pts
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-center text-muted-foreground">
+                        No players found
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Quick Self-Select for Admin */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    if (user) {
+                      setPlayerOneData({
+                        id: user.id,
+                        displayName: user.displayName || null,
+                        username: user.username,
+                        passportId: user.passportCode || null,
+                        avatarUrl: user.avatarUrl,
+                        avatarInitials: user.avatarInitials,
+                        dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
+                        gender: user.gender || null,
+                        currentRating: user.rankingPoints || 0,
+                      });
+                    }
+                  }}
+                >
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  Select Myself
+                </Button>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback>
+                    {playerOneData?.avatarInitials || user?.avatarInitials || 'P1'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-medium">
+                    {playerOneData?.displayName || user?.displayName || user?.username}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    @{playerOneData?.username || user?.username} • {playerOneData?.currentRating || 0} pts
+                  </p>
+                </div>
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPlayerOneData(null)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Player Two Search */}
           <div className="space-y-2">
             <Label>
-              {formatType === "singles" ? "Opponent" : "Opponent Team Player 1"}
+              {formatType === "singles" ? (isAdmin ? "Player 2" : "Opponent") : (isAdmin ? "Player 2" : "Opponent Team Player 1")}
             </Label>
             <div className="space-y-2">
               <Input
-                placeholder="Search for player by name or username..."
+                placeholder={`Search for ${formatType === "singles" ? (isAdmin ? "Player 2" : "opponent") : (isAdmin ? "Player 2" : "opponent team player 1")} by name or username...`}
                 value={playerSearch}
                 onChange={(e) => setPlayerSearch(e.target.value)}
                 className="w-full"
