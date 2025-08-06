@@ -1087,7 +1087,7 @@ const translations: Record<Language, Record<string, string>> = {
 const detectBrowserLanguage = (): Language => {
   const browserLang = navigator.language || navigator.languages[0];
   if (browserLang.startsWith('zh')) {
-    return 'zh-CN';
+    return 'zh';
   }
   return 'en';
 };
@@ -1095,7 +1095,7 @@ const detectBrowserLanguage = (): Language => {
 // Get stored language or detect from browser
 const getInitialLanguage = (): Language => {
   const stored = localStorage.getItem('pickle-plus-language') as Language;
-  if (stored && (stored === 'en' || stored === 'zh-CN')) {
+  if (stored && (stored === 'en' || stored === 'zh')) {
     return stored;
   }
   return detectBrowserLanguage();
