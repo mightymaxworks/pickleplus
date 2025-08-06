@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/lib/auth';
 import { useLocation } from 'wouter';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
