@@ -9,6 +9,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { 
   Check, 
   X, 
@@ -19,7 +20,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-type FieldType = "text" | "textarea" | "select";
+type FieldType = "text" | "textarea" | "select" | "slider" | "number-stepper";
 
 interface SelectOption {
   value: string;
@@ -38,6 +39,11 @@ interface EditableFieldProps {
   disabled?: boolean;
   tooltip?: string;
   placeholder?: string;
+  // For slider and number stepper
+  min?: number;
+  max?: number;
+  step?: number;
+  sliderLabels?: { [key: number]: string }; // For custom labels like "1 = Beginner"
 }
 
 export function EditableField({
@@ -51,7 +57,11 @@ export function EditableField({
   inputClassName,
   disabled = false,
   tooltip,
-  placeholder = "Not provided"
+  placeholder = "Not provided",
+  min = 1,
+  max = 10,
+  step = 1,
+  sliderLabels = {}
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || "");
@@ -124,6 +134,15 @@ export function EditableField({
       return option?.label || value;
     }
     
+    if ((fieldType === "slider" || fieldType === "number-stepper") && sliderLabels[parseInt(value)]) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{value}</span>
+          <span className="text-sm text-muted-foreground">({sliderLabels[parseInt(value)]})</span>
+        </div>
+      );
+    }
+    
     return value;
   };
 
@@ -172,6 +191,66 @@ export function EditableField({
                 ))}
               </SelectContent>
             </Select>
+          ) : fieldType === "slider" ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {sliderLabels[min] || min}
+                </span>
+                <span className="font-medium text-primary">
+                  {editValue} {sliderLabels[parseInt(editValue)] && `- ${sliderLabels[parseInt(editValue)]}`}
+                </span>
+                <span className="text-muted-foreground">
+                  {sliderLabels[max] || max}
+                </span>
+              </div>
+              <Slider
+                value={[parseInt(editValue) || min]}
+                onValueChange={(value) => setEditValue(value[0].toString())}
+                min={min}
+                max={max}
+                step={step}
+                className="w-full"
+                disabled={isSaving}
+              />
+            </div>
+          ) : fieldType === "number-stepper" ? (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const current = parseInt(editValue) || min;
+                  if (current > min) setEditValue((current - step).toString());
+                }}
+                disabled={isSaving || (parseInt(editValue) || min) <= min}
+                className="h-8 w-8 p-0"
+              >
+                -
+              </Button>
+              <div className="flex-1 text-center">
+                <div className="text-lg font-medium">{editValue}</div>
+                {sliderLabels[parseInt(editValue)] && (
+                  <div className="text-xs text-muted-foreground">
+                    {sliderLabels[parseInt(editValue)]}
+                  </div>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const current = parseInt(editValue) || min;
+                  if (current < max) setEditValue((current + step).toString());
+                }}
+                disabled={isSaving || (parseInt(editValue) || min) >= max}
+                className="h-8 w-8 p-0"
+              >
+                +
+              </Button>
+            </div>
           ) : (
             <Input
               ref={inputRef as React.RefObject<HTMLInputElement>}

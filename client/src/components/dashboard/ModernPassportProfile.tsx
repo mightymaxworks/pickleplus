@@ -639,49 +639,115 @@ export default function ModernPassportProfile({
                   <div className="space-y-4">
                     <EditableField
                       label="Forehand Strength"
-                      value={user?.forehandStrength?.toString() || ''}
+                      value={user?.forehandStrength?.toString() || '5'}
                       fieldName="forehandStrength"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Beginner",
+                        3: "Developing",
+                        5: "Average", 
+                        7: "Strong",
+                        10: "Elite"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('forehandStrength', parseInt(value) || null)}
-                      placeholder="1-10 rating"
+                      placeholder="Rate your forehand"
                     />
                     <EditableField
                       label="Backhand Strength"
-                      value={user?.backhandStrength?.toString() || ''}
+                      value={user?.backhandStrength?.toString() || '5'}
                       fieldName="backhandStrength"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Beginner",
+                        3: "Developing",
+                        5: "Average", 
+                        7: "Strong",
+                        10: "Elite"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('backhandStrength', parseInt(value) || null)}
-                      placeholder="1-10 rating"
+                      placeholder="Rate your backhand"
                     />
                   </div>
                   <div className="space-y-4">
                     <EditableField
                       label="Serve Power"
-                      value={user?.servePower?.toString() || ''}
+                      value={user?.servePower?.toString() || '5'}
                       fieldName="servePower"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Soft",
+                        3: "Light",
+                        5: "Moderate", 
+                        7: "Strong",
+                        10: "Power"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('servePower', parseInt(value) || null)}
-                      placeholder="1-10 rating"
+                      placeholder="Rate your serve power"
                     />
                     <EditableField
                       label="Dink Accuracy"
-                      value={user?.dinkAccuracy?.toString() || ''}
+                      value={user?.dinkAccuracy?.toString() || '5'}
                       fieldName="dinkAccuracy"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Learning",
+                        3: "Basic",
+                        5: "Good", 
+                        7: "Precise",
+                        10: "Perfect"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('dinkAccuracy', parseInt(value) || null)}
-                      placeholder="1-10 rating"
+                      placeholder="Rate your dink accuracy"
                     />
                   </div>
                   <div className="space-y-4">
                     <EditableField
                       label="Third Shot Consistency"
-                      value={user?.thirdShotConsistency?.toString() || ''}
+                      value={user?.thirdShotConsistency?.toString() || '5'}
                       fieldName="thirdShotConsistency"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Struggling",
+                        3: "Learning",
+                        5: "Reliable", 
+                        7: "Consistent",
+                        10: "Automatic"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('thirdShotConsistency', parseInt(value) || null)}
-                      placeholder="1-10 rating"
+                      placeholder="Rate your third shot consistency"
                     />
                     <EditableField
                       label="Court Coverage"
-                      value={user?.courtCoverage?.toString() || ''}
+                      value={user?.courtCoverage?.toString() || '5'}
                       fieldName="courtCoverage"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Limited",
+                        3: "Basic",
+                        5: "Good", 
+                        7: "Mobile",
+                        10: "Lightning"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('courtCoverage', parseInt(value) || null)}
-                      placeholder="1-10 rating"
+                      placeholder="Rate your court coverage"
                     />
                   </div>
                 </div>
@@ -729,8 +795,19 @@ export default function ModernPassportProfile({
                   <div className="space-y-4">
                     <EditableField
                       label="Competitive Intensity (1-10)"
-                      value={user?.competitiveIntensity?.toString() || ''}
+                      value={user?.competitiveIntensity?.toString() || '5'}
                       fieldName="competitiveIntensity"
+                      fieldType="slider"
+                      min={1}
+                      max={10}
+                      step={1}
+                      sliderLabels={{
+                        1: "Casual",
+                        3: "Recreational", 
+                        5: "Moderate",
+                        7: "Competitive",
+                        10: "Elite"
+                      }}
                       onSave={async (fieldName, value) => onProfileUpdate?.('competitiveIntensity', parseInt(value) || null)}
                       placeholder="How competitive are you?"
                     />
