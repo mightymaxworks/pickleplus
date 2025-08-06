@@ -46,7 +46,101 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 - 65-year-old gets 1.5x multiplier even when playing 25-year-old
 - Rewards senior participation in open play
 
-**QUESTION:** Which method should we implement? This significantly affects competitive balance.
+### **Detailed Scenarios Comparison**
+
+#### **Scenario 1: Senior vs Senior Match**
+**Match:** 65-year-old (1.5x) vs 67-year-old (1.5x), Tournament Singles, Club Event
+
+**Option A (Own Age Group):**
+- Both players competing in 60+ division
+- Winner: 3 × 1.5 × 1.0 × 1.0 = **4.5 points**
+- Loser: 1 × 1.5 × 1.0 × 1.0 = **1.5 points**
+- *Result: Age-appropriate competition with senior bonuses*
+
+**Option B (Open Age Group):**
+- Same calculation regardless of division
+- Winner: 3 × 1.5 × 1.0 × 1.0 = **4.5 points**
+- Loser: 1 × 1.5 × 1.0 × 1.0 = **1.5 points**
+- *Result: Identical to Option A*
+
+#### **Scenario 2: Senior vs Young Player Match**
+**Match:** 65-year-old (1.5x) vs 25-year-old (1.0x), Tournament Singles, Club Event
+
+**Option A (Own Age Group):**
+- Mixed-age match, no age multipliers applied
+- Senior Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
+- Young Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
+- Loser: 1 × 1.0 × 1.0 × 1.0 = **1.0 point**
+- *Result: Equal treatment, no age advantage*
+
+**Option B (Open Age Group):**
+- Players always get their age multiplier
+- Senior Winner: 3 × 1.5 × 1.0 × 1.0 = **4.5 points**
+- Senior Loser: 1 × 1.5 × 1.0 × 1.0 = **1.5 points**
+- Young Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
+- Young Loser: 1 × 1.0 × 1.0 × 1.0 = **1.0 point**
+- *Result: Senior gets 50% more points regardless of outcome*
+
+#### **Scenario 3: Masters Tournament (50+ Division)**
+**Match:** 55-year-old (1.3x) vs 52-year-old (1.3x), National Tournament
+
+**Option A (Own Age Group):**
+- Both compete in 50+ division
+- Winner: 3 × 1.3 × 1.0 × 3.0 = **11.7 points**
+- Loser: 1 × 1.3 × 1.0 × 3.0 = **3.9 points**
+- *Result: Proper masters division scoring*
+
+**Option B (Open Age Group):**
+- Same calculation (both get age multiplier)
+- Winner: 3 × 1.3 × 1.0 × 3.0 = **11.7 points**
+- Loser: 1 × 1.3 × 1.0 × 3.0 = **3.9 points**
+- *Result: Identical to Option A*
+
+#### **Scenario 4: Open Tournament Mixed Ages**
+**Match:** 45-year-old (1.2x) vs 28-year-old (1.0x), City Tournament
+
+**Option A (Own Age Group):**
+- Open tournament, no age divisions
+- Both players: Base multiplier 1.0x
+- Winner: 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
+- Loser: 1 × 1.0 × 1.0 × 1.5 = **1.5 points**
+- *Result: Age-neutral competition*
+
+**Option B (Open Age Group):**
+- Players keep their age multipliers
+- 45-year-old Winner: 3 × 1.2 × 1.0 × 1.5 = **5.4 points**
+- 45-year-old Loser: 1 × 1.2 × 1.0 × 1.5 = **1.8 points**
+- 28-year-old Winner: 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
+- 28-year-old Loser: 1 × 1.0 × 1.0 × 1.5 = **1.5 points**
+- *Result: Older player has systematic advantage*
+
+### **Impact Analysis**
+
+#### **Option A Implications:**
+- **Competitive Balance:** Equal points in mixed-age competition
+- **Age Division Integrity:** Seniors only get bonuses vs other seniors
+- **Tournament Structure:** Encourages age-appropriate divisions
+- **Ranking Fairness:** Age doesn't create artificial ranking inflation
+- **Potential Issue:** May discourage seniors from open play
+
+#### **Option B Implications:**
+- **Senior Participation:** Always rewarded regardless of opponent
+- **Ranking Inflation:** Seniors accumulate points faster than young players
+- **Competitive Imbalance:** Age becomes a ranking advantage
+- **Open Tournament Impact:** Creates unfair point distribution
+- **Potential Issue:** Young players disadvantaged in mixed-age competition
+
+### **Real-World Examples**
+
+**Club League Scenario (Option A):**
+- Senior division: 65-year-old vs 68-year-old → Both get 1.5x multiplier
+- Open division: 65-year-old vs 35-year-old → Both get 1.0x multiplier
+- *Result: Fair competition within divisions*
+
+**Club League Scenario (Option B):**
+- Senior plays anyone: Always gets 1.5x multiplier
+- Creates incentive for seniors to play weaker opponents for more points
+- *Result: Potential for point farming*
 
 ### **Match Type Weight Factors** 🎾
 
