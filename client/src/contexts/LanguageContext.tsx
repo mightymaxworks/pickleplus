@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type Language = 'en' | 'zh';
+export type Language = 'en' | 'zh-CN';
 
 interface LanguageContextType {
   language: Language;
@@ -1087,7 +1087,7 @@ const translations: Record<Language, Record<string, string>> = {
 const detectBrowserLanguage = (): Language => {
   const browserLang = navigator.language || navigator.languages[0];
   if (browserLang.startsWith('zh')) {
-    return 'zh';
+    return 'zh-CN';
   }
   return 'en';
 };
@@ -1095,7 +1095,7 @@ const detectBrowserLanguage = (): Language => {
 // Get stored language or detect from browser
 const getInitialLanguage = (): Language => {
   const stored = localStorage.getItem('pickle-plus-language') as Language;
-  if (stored && (stored === 'en' || stored === 'zh')) {
+  if (stored && (stored === 'en' || stored === 'zh-CN')) {
     return stored;
   }
   return detectBrowserLanguage();
@@ -1112,18 +1112,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Translation function with fallback
   const t = (key: string, fallback?: string): string => {
     try {
-      console.log(`[TRANSLATION DEBUG] Language: ${language}, Key: ${key}`);
-      console.log('[TRANSLATION DEBUG] Available languages:', Object.keys(translations));
-      
       const currentTranslations = translations[language];
       if (!currentTranslations) {
         console.warn(`No translations found for language: ${language}`);
-        console.log('[TRANSLATION DEBUG] translations object:', translations);
         return fallback || key;
       }
       
       const translation = currentTranslations[key];
-      console.log(`[TRANSLATION DEBUG] Found translation for ${key}:`, translation);
       
       if (translation && translation !== '') {
         return translation;
