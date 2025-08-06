@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type Language = 'en' | 'zh-CN';
+export type Language = 'en' | 'zh';
 
 interface LanguageContextType {
   language: Language;
@@ -10,7 +10,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Translation dictionaries
+// Translation dictionaries - Updated to include Mandarin (匹克球 = Pickleball)
 const translations: Record<Language, Record<string, string>> = {
   'en': {
     // Navigation & Common
@@ -289,14 +289,19 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.nav.dashboard': 'Dashboard',
     'landing.nav.getStarted': 'Get Started',
     'landing.hero.badge': 'New Platform Available',
-    'landing.hero.title': 'Transform Your Pickleball Game with ',
-    'landing.hero.titleHighlight': 'Smart Analytics',
+    'landing.hero.title': 'One Passport.',
+    'landing.hero.titleHighlight': 'Every Court.',
+    'landing.hero.titleEnd': 'Your True Ranking.',
+    'landing.hero.subtitle1': 'The first transparent ranking system built for players, by players.',
+    'landing.hero.subtitle2': 'No black boxes. No hidden algorithms.',
+    'landing.hero.getStarted': 'Start Your Player Journey',
     'landing.hero.description': 'Join thousands of players using advanced analytics, coaching tools, and community features to elevate their pickleball performance.',
     'landing.hero.startFree': 'Start Free Today',
     'landing.hero.watchDemo': 'Watch Demo',
     'landing.hero.goToDashboard': 'Go to Dashboard',
     'landing.hero.feature1': 'Free Forever',
     'landing.hero.feature2': 'Setup in 2 minutes',
+    'landing.sport': 'pickleball',
     'landing.hero.card.title': 'Player Stats',
     'landing.hero.card.rating': 'DUPR Rating',
     'landing.hero.card.matches': 'Matches',
@@ -828,8 +833,13 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.nav.dashboard': '仪表板',
     'landing.nav.getStarted': '开始使用',
     'landing.hero.badge': '新平台现已可用',
-    'landing.hero.title': '通过',
-    'landing.hero.titleHighlight': '智能分析改变您的匹克球运动项目',
+    'landing.hero.title': '一个护照。',
+    'landing.hero.titleHighlight': '每个球场。',
+    'landing.hero.titleEnd': '您的真实排名。',
+    'landing.hero.subtitle1': '第一个由球员为球员打造的透明排名系统。',
+    'landing.hero.subtitle2': '没有黑盒。没有隐藏算法。',
+    'landing.hero.getStarted': '开始您的球员之旅',
+    'landing.sport': '匹克球',
     'landing.hero.description': '加入数千名球员，使用先进的分析、教练工具和社区功能来提升您的匹克球表现。',
     'landing.hero.startFree': '今天免费开始',
     'landing.hero.watchDemo': '观看演示',

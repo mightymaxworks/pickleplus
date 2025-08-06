@@ -50,6 +50,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SimpleNotificationBell } from '@/components/notifications/SimpleNotificationBell';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -223,6 +224,9 @@ export function AppHeader({
         
         {/* Right side actions */}
         <div className="flex items-center justify-end gap-1 sm:gap-3">
+          {/* Language Toggle */}
+          <LanguageToggle />
+          
           {/* Notification Bell */}
           {!hideNotifications && (
             <SimpleNotificationBell />

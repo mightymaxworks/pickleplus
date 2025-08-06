@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useLocation } from 'wouter';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   ArrowRight, 
   QrCode, 
@@ -20,6 +21,7 @@ import { Card } from '@/components/ui/card';
 // Import brand assets
 import pickleLogoPath from '@assets/Pickle (2).png';
 import pickleCharacterPath from '@assets/Untitled design (51).png';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 // Animation variants
 const fadeInUp = {
@@ -132,6 +134,7 @@ export default function NewLandingPage() {
   const [, setLocation] = useLocation();
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
+  const { t } = useLanguage();
 
   const scrollToRanking = () => {
     const rankingSection = document.getElementById('ranking-explanation');
@@ -147,6 +150,11 @@ export default function NewLandingPage() {
         className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-gray-50 to-white"
         style={{ opacity }}
       >
+        {/* Language Toggle in top-right corner */}
+        <div className="absolute top-4 right-4">
+          <LanguageToggle />
+        </div>
+        
         <div className="max-w-6xl mx-auto text-center">
           <motion.div
             initial="hidden"
@@ -168,13 +176,13 @@ export default function NewLandingPage() {
               variants={fadeInUp}
               className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight"
             >
-              One Passport.
+              {t('landing.hero.title', 'One Passport.')}
               <br />
               <span className="bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent">
-                Every Court.
+                {t('landing.hero.titleHighlight', 'Every Court.')}
               </span>
               <br />
-              Your True Ranking.
+              {t('landing.hero.titleEnd', 'Your True Ranking.')}
             </motion.h1>
 
             {/* Subtitle */}
@@ -182,8 +190,8 @@ export default function NewLandingPage() {
               variants={fadeInUp}
               className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
             >
-              The first transparent ranking system built for players, by players.
-              No black boxes. No hidden algorithms.
+              {t('landing.hero.subtitle1', 'The first transparent ranking system built for players, by players.')}<br />
+              {t('landing.hero.subtitle2', 'No black boxes. No hidden algorithms.')}
             </motion.p>
 
             {/* Launch Badge */}
@@ -204,7 +212,7 @@ export default function NewLandingPage() {
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 text-lg font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 onClick={() => setLocation('/register')}
               >
-                Start Your Player Journey
+                {t('landing.hero.getStarted', 'Start Your Player Journey')}
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               
