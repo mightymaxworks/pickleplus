@@ -160,36 +160,36 @@ export function AppHeader({
 
   // V1.0 Launch Navigation - Streamlined core features only
   const defaultNavItems = [
-    { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
-    { label: 'Record Match', icon: <Calendar size={18} />, path: '/record-match' },
-    { label: 'Rankings', icon: <Award size={18} />, path: '/leaderboard' },
-    { label: 'Pickle Points', icon: <Ticket size={18} />, path: '/pickle-points' },
+    { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
+    { label: t('nav.recordMatch'), icon: <Calendar size={18} />, path: '/record-match' },
+    { label: t('nav.rankings'), icon: <Award size={18} />, path: '/leaderboard' },
+    { label: t('nav.picklePoints'), icon: <Ticket size={18} />, path: '/pickle-points' },
     // Coming soon features - show popup instead of navigation
     { 
-      label: 'Communities', 
+      label: t('nav.communities'), 
       icon: <Users size={18} />, 
       path: 'coming-soon',
       comingSoon: {
-        feature: 'Communities',
-        description: 'Connect with players worldwide, join local clubs, participate in discussions, and build your pickleball network.'
+        feature: t('nav.communities'),
+        description: t('comingSoon.communities.description')
       }
     },
     { 
-      label: 'Find Coaches', 
+      label: t('nav.findCoaches'), 
       icon: <GraduationCap size={18} />, 
       path: 'coming-soon',
       comingSoon: {
-        feature: 'Find Coaches',
-        description: 'Discover verified PCP coaches near you with advanced matching, instant booking, and detailed profiles.'
+        feature: t('nav.findCoaches'),
+        description: t('comingSoon.findCoaches.description')
       }
     },
     { 
-      label: 'Training Hub', 
+      label: t('nav.trainingHub'), 
       icon: <Building2 size={18} />, 
       path: 'coming-soon',
       comingSoon: {
-        feature: 'Training Hub',
-        description: 'Access training centers, book facilities, join classes, and enhance your skills with professional guidance.'
+        feature: t('nav.trainingHub'),
+        description: t('comingSoon.trainingHub.description')
       }
     }
   ];
@@ -391,7 +391,7 @@ export function AppHeader({
               <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                 ⏰
               </div>
-              {comingSoonDialog.feature} - Coming Soon!
+              {comingSoonDialog.feature} - {t('comingSoon.title')}!
             </DialogTitle>
             <DialogDescription className="text-gray-600 mt-4">
               {comingSoonDialog.description}
@@ -403,7 +403,7 @@ export function AppHeader({
               onClick={() => setComingSoonDialog({ ...comingSoonDialog, open: false })}
               className="flex-1"
             >
-              Close
+              {t('comingSoon.close')}
             </Button>
             <Button 
               className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"

@@ -16,9 +16,11 @@ import PassportDashboard from '@/components/dashboard/PassportDashboard';
 import { StandardLayout } from '@/components/layout/StandardLayout';
 import { WelcomeOnboarding } from '@/components/onboarding/WelcomeOnboarding';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [localUser, setLocalUser] = useState(user);
 
@@ -63,7 +65,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-purple-900/20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-muted-foreground">{t('action.loading')}</p>
         </div>
       </div>
     );

@@ -31,25 +31,25 @@ export function MobileNavigation() {
   const navItems = [
     { 
       icon: <Home size={20} />, 
-      label: 'Dashboard', 
+      label: t('nav.dashboard'), 
       path: '/dashboard',
       id: 'dashboard'
     },
     { 
       icon: <Calendar size={20} />, 
-      label: 'Record Match', 
+      label: t('nav.recordMatch'), 
       path: '/record-match',
       id: 'record-match'
     },
     { 
       icon: <Award size={20} />, 
-      label: 'Rankings', 
+      label: t('nav.rankings'), 
       path: '/leaderboard',
       id: 'rankings'
     },
     { 
       icon: <User size={20} />, 
-      label: 'Profile', 
+      label: t('nav.profile'), 
       path: '/profile',
       id: 'profile'
     }
