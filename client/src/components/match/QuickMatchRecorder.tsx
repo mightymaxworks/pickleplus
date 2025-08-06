@@ -266,16 +266,22 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   
-  // Match state
+  // Match state - Streamlined contextual approach
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
   const matchType = "casual"; // Players can only record casual matches unless admin
-  const [scoringSystem, setScoringSystem] = useState<"traditional" | "rally">("traditional");
-  const [pointsToWin, setPointsToWin] = useState<11 | 15 | 21>(11);
-  const [totalGames, setTotalGames] = useState(1);
   const [games, setGames] = useState<Array<{playerOneScore: number; playerTwoScore: number}>>([
     { playerOneScore: 0, playerTwoScore: 0 }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Score validation state
+  const [showScoreValidation, setShowScoreValidation] = useState(false);
+  const [pendingScore, setPendingScore] = useState<{
+    gameIndex: number;
+    playerOneScore: number;
+    playerTwoScore: number;
+    isUnusualScore: boolean;
+  } | null>(null);
   
   // Player selection state
   const [playerOneData, setPlayerOneData] = useState<UserSearchResult | null>(null);
@@ -445,15 +451,79 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     }
   };
 
+  // Smart score validation - detect standard endpoints and validate unusual scores
+  const isStandardEndpoint = (score1: number, score2: number): boolean => {
+    const winningScore = Math.max(score1, score2);
+    const losingScore = Math.min(score1, score2);
+    
+    // Standard endpoints: 11-x, 15-x, 21-x (where winner has 2+ point lead or special cases)
+    if (winningScore === 11 && losingScore <= 9) return true;
+    if (winningScore === 15 && losingScore <= 13) return true;
+    if (winningScore === 21 && losingScore <= 19) return true;
+    
+    // Deuce scenarios (must win by 2)
+    if (winningScore > 11 && winningScore - losingScore === 2 && losingScore >= 10) return true;
+    if (winningScore > 15 && winningScore - losingScore === 2 && losingScore >= 14) return true;
+    if (winningScore > 21 && winningScore - losingScore === 2 && losingScore >= 20) return true;
+    
+    return false;
+  };
+
+  const validateAndUpdateScore = (gameIndex: number, playerOneScore: number, playerTwoScore: number) => {
+    const isUnusual = !isStandardEndpoint(playerOneScore, playerTwoScore);
+    
+    if (isUnusual && (playerOneScore > 0 || playerTwoScore > 0)) {
+      // Show validation dialog for unusual scores
+      setPendingScore({
+        gameIndex,
+        playerOneScore,
+        playerTwoScore,
+        isUnusualScore: true
+      });
+      setShowScoreValidation(true);
+    } else {
+      // Standard score - update immediately
+      applyScoreUpdate(gameIndex, playerOneScore, playerTwoScore);
+    }
+  };
+
+  const applyScoreUpdate = (gameIndex: number, playerOneScore: number, playerTwoScore: number) => {
+    const newGames = [...games];
+    newGames[gameIndex] = { playerOneScore, playerTwoScore };
+    setGames(newGames);
+  };
+
+  const confirmUnusualScore = () => {
+    if (pendingScore) {
+      applyScoreUpdate(pendingScore.gameIndex, pendingScore.playerOneScore, pendingScore.playerTwoScore);
+    }
+    setShowScoreValidation(false);
+    setPendingScore(null);
+  };
+
+  const cancelUnusualScore = () => {
+    setShowScoreValidation(false);
+    setPendingScore(null);
+  };
+
+  // Add new game dynamically
+  const addNewGame = () => {
+    setGames([...games, { playerOneScore: 0, playerTwoScore: 0 }]);
+  };
+
+  // Remove last game
+  const removeLastGame = () => {
+    if (games.length > 1) {
+      setGames(games.slice(0, -1));
+    }
+  };
+
   // Reset form to initial state
   const resetForm = () => {
     setPlayerTwoData(null);
     setPlayerOnePartnerData(null);
     setPlayerTwoPartnerData(null);
     setFormatType("singles");
-    setScoringSystem("traditional");
-    setPointsToWin(11);
-    setTotalGames(1);
     setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
     
     // Reset admin-specific fields
@@ -481,7 +551,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             Enhanced Match Recorder
           </CardTitle>
           <p className="text-muted-foreground">
-            {isAdmin ? "Admin Match Recording System" : "Record Your Casual Matches"}
+            {isAdmin ? "Admin Match Recording System - Smart & Contextual" : "Smart Match Recording - Add Games as You Play"}
           </p>
         </CardHeader>
       </Card>
@@ -495,131 +565,39 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Organized in a clean grid layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Left Column - Match Format */}
-            <div className="space-y-4">
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide border-b pb-2">
-                Match Format
-              </div>
-              
-              {/* Format Selection */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-base font-medium">Player Format</Label>
-                </div>
-                <ToggleGroup 
-                  type="single" 
-                  value={formatType} 
-                  onValueChange={(value) => value && setFormatType(value as "singles" | "doubles")}
-                  className="justify-start w-full"
-                >
-                  <ToggleGroupItem value="singles" className="flex items-center gap-2 px-6 py-3 flex-1">
-                    <UserCircle className="h-4 w-4" />
-                    Singles
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="doubles" className="flex items-center gap-2 px-6 py-3 flex-1">
-                    <Users className="h-4 w-4" />
-                    Doubles
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-
-              {/* Number of Games */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-base font-medium">Match Length</Label>
-                </div>
-                <Select value={totalGames.toString()} onValueChange={(value) => {
-                  const newTotal = parseInt(value);
-                  setTotalGames(newTotal);
-                  // Adjust games array
-                  const newGames = Array.from({ length: newTotal }, (_, i) => 
-                    games[i] || { playerOneScore: 0, playerTwoScore: 0 }
-                  );
-                  setGames(newGames);
-                }}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Single Game</SelectItem>
-                    <SelectItem value="3">Best of 3 Games</SelectItem>
-                    <SelectItem value="5">Best of 5 Games</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Streamlined Format Selection Only */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-base font-medium">Match Format</Label>
             </div>
-
-            {/* Right Column - Scoring Rules */}
-            <div className="space-y-4">
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide border-b pb-2">
-                Scoring Rules
-              </div>
-              
-              {/* Scoring System */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-base font-medium">Scoring Type</Label>
-                </div>
-                <ToggleGroup 
-                  type="single" 
-                  value={scoringSystem} 
-                  onValueChange={(value) => value && setScoringSystem(value as "traditional" | "rally")}
-                  className="justify-start w-full"
-                >
-                  <ToggleGroupItem value="traditional" className="px-6 py-3 flex-1">Traditional</ToggleGroupItem>
-                  <ToggleGroupItem value="rally" className="px-6 py-3 flex-1">Rally Point</ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-
-              {/* Points to Win */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-base font-medium">Points to Win</Label>
-                </div>
-                <ToggleGroup 
-                  type="single" 
-                  value={pointsToWin.toString()} 
-                  onValueChange={(value) => value && setPointsToWin(parseInt(value) as 11 | 15 | 21)}
-                  className="justify-start w-full"
-                >
-                  <ToggleGroupItem value="11" className="px-4 py-3 flex-1">11</ToggleGroupItem>
-                  <ToggleGroupItem value="15" className="px-4 py-3 flex-1">15</ToggleGroupItem>
-                  <ToggleGroupItem value="21" className="px-4 py-3 flex-1">21</ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-            </div>
+            <ToggleGroup 
+              type="single" 
+              value={formatType} 
+              onValueChange={(value) => value && setFormatType(value as "singles" | "doubles")}
+              className="justify-start w-full"
+            >
+              <ToggleGroupItem value="singles" className="flex items-center gap-2 px-6 py-3 flex-1">
+                <UserCircle className="h-4 w-4" />
+                Singles (1v1)
+              </ToggleGroupItem>
+              <ToggleGroupItem value="doubles" className="flex items-center gap-2 px-6 py-3 flex-1">
+                <Users className="h-4 w-4" />
+                Doubles (2v2)
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
-          {/* Match Configuration Summary */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="h-5 w-5 text-blue-600" />
-              <span className="text-base font-semibold text-blue-900">Match Configuration</span>
+          {/* Smart Scoring Information */}
+          <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="h-5 w-5 text-green-600" />
+              <span className="text-base font-semibold text-green-900">Smart Match Recording</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center">
-                <div className="font-medium text-blue-900">Format</div>
-                <div className="text-blue-700 capitalize">{formatType}</div>
-              </div>
-              <div className="text-center">
-                <div className="font-medium text-blue-900">Games</div>
-                <div className="text-blue-700">{totalGames === 1 ? "Single" : `Best of ${totalGames}`}</div>
-              </div>
-              <div className="text-center">
-                <div className="font-medium text-blue-900">Points</div>
-                <div className="text-blue-700">{pointsToWin} to win</div>
-              </div>
-              <div className="text-center">
-                <div className="font-medium text-blue-900">Scoring</div>
-                <div className="text-blue-700 capitalize">{scoringSystem}</div>
-              </div>
+            <div className="text-sm text-green-800 space-y-1">
+              <div>• <strong>Dynamic Length:</strong> Add games as you play - no need to pre-select match length</div>
+              <div>• <strong>Smart Scoring:</strong> Automatically detects standard endpoints (11, 15, 21 points)</div>
+              <div>• <strong>Score Validation:</strong> Warns about unusual scores and asks for confirmation</div>
             </div>
           </div>
 
@@ -1100,7 +1078,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                   </div>
                   <div className="flex justify-between p-2 bg-gray-50 rounded">
                     <span>Scoring:</span>
-                    <span className="font-medium">{pointsToWin} Points</span>
+                    <span className="font-medium">Smart Detection</span>
                   </div>
                 </div>
               </div>

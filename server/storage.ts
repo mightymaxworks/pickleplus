@@ -759,7 +759,7 @@ export class DatabaseStorage implements IStorage {
       const opponents = await db
         .select()
         .from(users)
-        .where(sql`${users.id} = ANY(${sql.raw(`ARRAY[${Array.from(opponentIds).map(id => `'${id}'`).join(',')}]`)})`);
+        .where(sql`${users.id} = ANY(${sql.raw(`ARRAY[${Array.from(opponentIds).map(id => id).join(',')}]`)})`);
 
       return opponents.slice(0, 5); // Limit to 5 recent opponents
     } catch (error) {

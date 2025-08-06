@@ -1,8 +1,8 @@
 import React from 'react';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft,
@@ -43,8 +43,8 @@ export default function RecordMatchPage() {
           </p>
         </div>
         
-        {/* Main Match Recorder */}
-        <QuickMatchRecorder />
+        {/* Streamlined Smart Match Recorder */}
+        <QuickMatchRecorderStreamlined />
       </div>
     </DashboardLayout>
   );
