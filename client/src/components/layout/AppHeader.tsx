@@ -146,7 +146,6 @@ export function AppHeader({
     { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/record-match' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/leaderboard' },
-    { label: 'My Profile', icon: <UserIcon size={18} />, path: '/profile' },
     // Coming soon features - accessible but with coming soon pages
     { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
     { label: 'Find Coaches', icon: <GraduationCap size={18} />, path: '/find-coaches' },

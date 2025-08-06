@@ -12,7 +12,8 @@ Preferred communication style: Simple, everyday language.
 - Advanced features disabled: coaching analytics, community features, tournament management, training centers, advanced coaching tools
 - Navigation simplified to 4 core items: Dashboard, Record Match, Rankings, My Profile
 - **NAVIGATION AUDIT COMPLETE (Aug 6, 2025):** All navigation components cleaned and aligned - AppHeader mobile menu, Desktop sidebar, Mobile navigation all show only V1.0 features
-- **APPHEADER NAVIGATION FIXED:** Mobile sandwich menu now shows streamlined V1.0 navigation (7 items: Dashboard, Record Match, Rankings, My Profile, Communities, Find Coaches, Training Hub) - removed complex dropdowns and admin panel access
+- **APPHEADER NAVIGATION FIXED:** Mobile sandwich menu now shows streamlined V1.0 navigation (6 items: Dashboard, Record Match, Rankings, Communities, Find Coaches, Training Hub) - removed complex dropdowns, admin panel access, and "My Profile" (since inline editing works)
+- **FIND COACHES CRASH FIXED:** Completely recreated find-coaches.tsx as clean "Coming Soon" page - removed broken code causing syntax errors and crashes
 
 Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches
