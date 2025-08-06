@@ -358,10 +358,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedUser = await storage.updateUserProfile(userId, updateData);
       
+      // Import and use ProfileService to recalculate profile completion
+      const { ProfileService } = await import('./services/profile-service');
+      const profileService = new ProfileService();
+      
+      // Recalculate profile completion and sync milestones
+      const userWithUpdatedCompletion = await profileService.syncProfileCompletionAndMilestones(userId);
+      
       console.log(`[API] Field ${field} updated successfully for user ${userId}`);
       res.json({
         success: true,
-        user: updatedUser,
+        user: userWithUpdatedCompletion, // Return user with updated profile completion
         field: field,
         value: value
       });

@@ -74,9 +74,11 @@ export default function PassportDashboard({ user, onFieldChange, initialTab }: P
         onFieldChange('_fullUserUpdate', result.user);
       }
 
+      // Smaller, less intrusive notification
       toast({
-        title: "Profile Updated",
-        description: `${field} has been saved successfully`,
+        title: "Saved",
+        description: "",
+        duration: 2000, // Show for only 2 seconds
       });
     } catch (error) {
       console.error('Field update error:', error);
