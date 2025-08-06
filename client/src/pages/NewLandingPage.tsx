@@ -286,7 +286,7 @@ export default function NewLandingPage() {
             />
           </motion.div>
 
-          {/* Algorithm Details */}
+          {/* Algorithm Philosophy */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -295,58 +295,45 @@ export default function NewLandingPage() {
             className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-16"
           >
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">How Our Algorithm Works</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Ranking Philosophy</h3>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Built on proven mathematical principles with complete transparency. No hidden formulas or biased calculations.
+                Every player deserves a fair shot. Our algorithm recognizes that skill transcends age, gender, and playing frequency.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h4 className="font-bold text-lg text-gray-900">Base Point System</h4>
-                <div className="space-y-2 text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Tournament Win:</span>
-                    <span className="font-medium text-orange-500">3 points</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>League Match Win:</span>
-                    <span className="font-medium text-orange-500">1 point</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Casual Play Win:</span>
-                    <span className="font-medium text-orange-500">0.75 points</span>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <Trophy className="w-8 h-8 text-white" />
                 </div>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">Performance Weighted</h4>
+                <p className="text-gray-600">Tournament victories carry more weight than casual games, reflecting competitive achievement.</p>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="font-bold text-lg text-gray-900">Age Multipliers</h4>
-                <div className="space-y-2 text-gray-600">
-                  <div className="flex justify-between">
-                    <span>18-34 years:</span>
-                    <span className="font-medium text-cyan-500">1.0x</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>35-49 years:</span>
-                    <span className="font-medium text-cyan-500">1.2x</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>50-59 years:</span>
-                    <span className="font-medium text-cyan-500">1.3x</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>60+ years:</span>
-                    <span className="font-medium text-cyan-500">1.5x+</span>
-                  </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <Users className="w-8 h-8 text-white" />
                 </div>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">Age Balanced</h4>
+                <p className="text-gray-600">Thoughtful adjustments ensure players of all ages can compete meaningfully within their cohort.</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">Activity Protected</h4>
+                <p className="text-gray-600">Smart decay systems maintain your ranking even during busy life periods.</p>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-gradient-to-r from-orange-50 to-cyan-50 rounded-lg">
-              <p className="text-sm text-gray-700 text-center">
-                <strong>Example:</strong> A 45-year-old player winning a tournament match earns 3 × 1.2 = 3.6 ranking points
-              </p>
+            <div className="mt-8 p-6 bg-gradient-to-r from-orange-50 to-cyan-50 rounded-lg">
+              <div className="text-center">
+                <h4 className="font-bold text-gray-900 mb-3">The Result: True Competitive Balance</h4>
+                <p className="text-gray-700">
+                  A 25-year-old college athlete and a 55-year-old weekend warrior both earn rankings that reflect their skill within their respective competitive contexts.
+                </p>
+              </div>
             </div>
           </motion.div>
 
