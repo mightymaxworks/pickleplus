@@ -952,6 +952,7 @@ export const users = pgTable("users", {
   isCoach: boolean("is_coach").default(false),
   pointsMultiplier: integer("points_multiplier").default(100),
   profileCompletionPct: integer("profile_completion_pct").default(0),
+  profileMilestonesAwarded: integer("profile_milestones_awarded").array().default([]),
   rankingPoints: integer("ranking_points").default(0),
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   // Note: rankingTier is calculated at runtime based on ranking points

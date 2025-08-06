@@ -167,8 +167,8 @@ export class ProfileService implements IProfileService {
     if (newCompletion !== previousCompletion) {
       // Check if we should award Pickle Points for crossing milestones
       let picklePointsAwarded = 0;
-      if (this.shouldAwardPicklePoints(previousCompletion, newCompletion)) {
-        picklePointsAwarded = this.calculatePicklePointsAward(previousCompletion, newCompletion);
+      if (this.shouldAwardPicklePoints(previousCompletion, newCompletion, currentUser)) {
+        picklePointsAwarded = this.calculatePicklePointsAward(previousCompletion, newCompletion, currentUser);
       }
 
       // Update user with new completion percentage and award Pickle Points
@@ -177,6 +177,21 @@ export class ProfileService implements IProfileService {
       if (picklePointsAwarded > 0) {
         const currentPicklePoints = currentUser.picklePoints || 0;
         updateData.picklePoints = currentPicklePoints + picklePointsAwarded;
+        
+        // Track which milestones have been awarded to prevent duplicates
+        const currentMilestones = currentUser.profileMilestonesAwarded || [];
+        const newMilestones = [...currentMilestones];
+        
+        // Add newly achieved milestones
+        for (const tier of PICKLE_POINTS_REWARD_TIERS) {
+          if (previousCompletion < tier.threshold && newCompletion >= tier.threshold) {
+            if (!newMilestones.includes(tier.threshold)) {
+              newMilestones.push(tier.threshold);
+            }
+          }
+        }
+        
+        updateData.profileMilestonesAwarded = newMilestones;
         
         console.log(`[PROFILE-COMPLETION] User ${userId} earned ${picklePointsAwarded} Pickle Points for reaching ${newCompletion}% profile completion`);
       }
@@ -195,12 +210,16 @@ export class ProfileService implements IProfileService {
   
   /**
    * Determine if a profile update should award Pickle Points
-   * This happens when the user crosses a completion tier threshold
+   * This happens when the user crosses a completion tier threshold they haven't achieved before
    */
-  shouldAwardPicklePoints(oldCompletion: number, newCompletion: number): boolean {
-    // Check if the user crossed any threshold
+  shouldAwardPicklePoints(oldCompletion: number, newCompletion: number, currentUser?: User): boolean {
+    const milestonesAwarded = currentUser?.profileMilestonesAwarded || [];
+    
+    // Check if the user crossed any threshold they haven't been awarded for
     for (const tier of PICKLE_POINTS_REWARD_TIERS) {
-      if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
+      if (oldCompletion < tier.threshold && 
+          newCompletion >= tier.threshold && 
+          !milestonesAwarded.includes(tier.threshold)) {
         return true;
       }
     }
@@ -211,12 +230,15 @@ export class ProfileService implements IProfileService {
   /**
    * Calculate the Pickle Points award for a profile update
    */
-  calculatePicklePointsAward(oldCompletion: number, newCompletion: number): number {
+  calculatePicklePointsAward(oldCompletion: number, newCompletion: number, currentUser?: User): number {
+    const milestonesAwarded = currentUser?.profileMilestonesAwarded || [];
     let totalPicklePointsReward = 0;
     
-    // Find all the tiers crossed in this update
+    // Find all the tiers crossed in this update that haven't been awarded before
     for (const tier of PICKLE_POINTS_REWARD_TIERS) {
-      if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
+      if (oldCompletion < tier.threshold && 
+          newCompletion >= tier.threshold && 
+          !milestonesAwarded.includes(tier.threshold)) {
         totalPicklePointsReward += tier.reward;
       }
     }
