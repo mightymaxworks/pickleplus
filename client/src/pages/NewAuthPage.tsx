@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Import brand assets
 import pickleLogoPath from '@assets/Pickle (2).png';
 import pickleCharacterPath from '@assets/Untitled design (51).png';
+import MascotLoader, { MascotLoaderOverlay } from "@/components/ui/MascotLoader";
 
 // Form schemas
 const loginSchema = z.object({
@@ -154,8 +155,15 @@ export default function NewAuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
-      <div className="min-h-screen flex">
+    <>
+      {/* Loading Overlay */}
+      <MascotLoaderOverlay 
+        isVisible={isLoading} 
+        message={activeTab === "login" ? "Signing you in..." : "Creating your player passport..."}
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
+        <div className="min-h-screen flex">
         {/* Left Side - Form */}
         <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
           <motion.div 
@@ -565,5 +573,6 @@ export default function NewAuthPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

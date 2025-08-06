@@ -8,15 +8,12 @@
 
 import React, { Suspense } from 'react';
 
+import MascotLoader from '@/components/ui/MascotLoader';
+
 // Loading fallback component shown during lazy loading
 export const LazyLoadingFallback = () => (
   <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center">
-    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 border-t-4 border-b-4 border-primary rounded-full animate-spin"></div>
-      </div>
-      <p className="text-lg font-medium text-muted-foreground">Loading...</p>
-    </div>
+    <MascotLoader message="Loading component..." size="md" />
   </div>
 );
 
