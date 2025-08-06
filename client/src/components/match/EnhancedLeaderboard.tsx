@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Medal, Award, Filter, Users, User } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trophy, Medal, Award, Filter, Users, User, Search, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 // Enhanced leaderboard that separates by both age group AND gender
@@ -20,6 +21,19 @@ interface LeaderboardEntry {
   age: number;
   division: string;
   ranking: number;
+  isCurrentUser?: boolean;
+}
+
+interface LeaderboardResponse {
+  players: LeaderboardEntry[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  currentUserPosition?: {
+    ranking: number;
+    player: LeaderboardEntry;
+  };
+  searchTerm?: string;
 }
 
 // PicklePlus Tier System based on points
@@ -40,6 +54,18 @@ interface EnhancedLeaderboardProps {
 export default function EnhancedLeaderboard({ formatType = "singles" }: EnhancedLeaderboardProps) {
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
   const [selectedGender, setSelectedGender] = useState<string>("male");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+
+  // Debounce search input
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Age divisions based on standard tournament rules
   const ageDivisions = [
@@ -99,23 +125,29 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
     return playerTiers.find(tier => points >= tier.minPoints && points <= tier.maxPoints) || playerTiers[playerTiers.length - 1];
   };
 
-  // Fetch leaderboard data with format, division and gender filters
-  const { data: leaderboardData, isLoading } = useQuery({
-    queryKey: [`/api/leaderboard/${formatType}`, selectedDivision, selectedGender],
+  // Fetch leaderboard data with enhanced features
+  const { data: leaderboardResponse, isLoading } = useQuery({
+    queryKey: [`/api/leaderboard/${formatType}`, selectedDivision, selectedGender, debouncedSearch, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams({
         format: formatType,
         division: selectedDivision,
-        gender: selectedGender
+        gender: selectedGender,
+        page: currentPage.toString(),
+        limit: '10',
+        search: debouncedSearch
       });
       
       const response = await fetch(`/api/leaderboard/${formatType}?${params}`);
       if (!response.ok) {
         throw new Error("Failed to fetch leaderboard data");
       }
-      return await response.json() as LeaderboardEntry[];
+      return await response.json() as LeaderboardResponse;
     }
   });
+  
+  const leaderboardData = leaderboardResponse?.players || [];
+  const currentUserPosition = leaderboardResponse?.currentUserPosition;
 
   const getRankIcon = (position: number) => {
     switch (position) {
@@ -139,8 +171,33 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
 
   return (
     <div className="w-full">
-      {/* Mobile-First Filters */}
+      {/* Mobile-First Filters and Search */}
       <div className="mb-4">
+        {/* Search Bar */}
+        <div className="mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+            <Input
+              placeholder="Search players by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-9 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+            />
+          </div>
+        </div>
+
+        {/* Current User Position Display */}
+        {currentUserPosition && (
+          <div className="mb-3 p-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-green-600" />
+              <span className="font-medium text-green-700">
+                Your Position: #{currentUserPosition.ranking} ({currentUserPosition.player.points} pts)
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Compact Filter Controls */}
         <div className="space-y-3">
           <div>
@@ -156,7 +213,10 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                       ? "bg-orange-600 hover:bg-orange-700 text-white" 
                       : "border-orange-200 text-orange-700 hover:bg-orange-50"
                   }`}
-                  onClick={() => setSelectedDivision(division.value)}
+                  onClick={() => {
+                    setSelectedDivision(division.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   {division.label}
                 </Button>
@@ -177,7 +237,10 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                       ? "bg-orange-600 hover:bg-orange-700 text-white" 
                       : "border-orange-200 text-orange-700 hover:bg-orange-50"
                   }`}
-                  onClick={() => setSelectedGender(gender.value)}
+                  onClick={() => {
+                    setSelectedGender(gender.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   {gender.label}
                 </Button>
@@ -214,16 +277,19 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
           <div className="divide-y divide-orange-100">
             {leaderboardData.map((player, index) => {
               const tier = getPlayerTier(player.points);
+              const isCurrentUser = player.isCurrentUser;
               return (
                 <div
                   key={player.id}
-                  className={`flex items-center gap-3 p-3 transition-colors hover:bg-orange-50/50 ${
-                    index < 3 ? "bg-gradient-to-r from-yellow-50 to-orange-50" : ""
-                  } ${tier.bgColor} border-l-4 ${
-                    tier.name === "Professional" ? "border-purple-500" :
-                    tier.name === "Elite" ? "border-red-500" :
-                    tier.name === "Competitive" ? "border-orange-500" :
-                    "border-blue-500"
+                  className={`flex items-center gap-3 p-3 transition-colors ${
+                    isCurrentUser 
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm ring-1 ring-green-200 border-l-4 border-green-500' 
+                      : `hover:bg-orange-50/50 ${index < 3 ? "bg-gradient-to-r from-yellow-50 to-orange-50" : ""} ${tier.bgColor} border-l-4 ${
+                          tier.name === "Professional" ? "border-purple-500" :
+                          tier.name === "Elite" ? "border-red-500" :
+                          tier.name === "Competitive" ? "border-orange-500" :
+                          "border-blue-500"
+                        }`
                   }`}
                 >
                   {/* Mobile-Optimized Rank */}
@@ -282,6 +348,38 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
           </div>
         )}
         
+        {/* Pagination Controls */}
+        {leaderboardResponse && leaderboardResponse.totalPages > 1 && (
+          <div className="flex items-center justify-between p-3 bg-orange-50/50 border-t border-orange-100">
+            <div className="text-xs text-orange-600">
+              Page {leaderboardResponse.currentPage} of {leaderboardResponse.totalPages}
+              {leaderboardResponse.totalCount > 0 && (
+                <span className="ml-2">({leaderboardResponse.totalCount} total)</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 border-orange-200 text-orange-700 hover:bg-orange-50"
+                disabled={leaderboardResponse.currentPage <= 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm" 
+                variant="outline"
+                className="h-7 px-2 border-orange-200 text-orange-700 hover:bg-orange-50"
+                disabled={leaderboardResponse.currentPage >= leaderboardResponse.totalPages}
+                onClick={() => setCurrentPage(p => Math.min(leaderboardResponse.totalPages, p + 1))}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Compact Legend */}
         <div className="p-3 bg-orange-50/50 border-t border-orange-100">
           <div className="text-xs text-orange-600 space-y-1">

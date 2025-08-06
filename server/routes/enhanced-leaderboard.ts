@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { isAuthenticated } from '../auth';
 
 const router = Router();
 
@@ -14,6 +15,19 @@ interface LeaderboardEntry {
   age: number;
   division: string;
   ranking: number;
+  isCurrentUser?: boolean;
+}
+
+interface LeaderboardResponse {
+  players: LeaderboardEntry[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  currentUserPosition?: {
+    ranking: number;
+    player: LeaderboardEntry;
+  };
+  searchTerm?: string;
 }
 
 // Helper function to determine division from age
@@ -26,7 +40,13 @@ function getAgeGroupFromAge(age: number): string {
 }
 
 // Generate demo data for enhanced leaderboard showing age group and gender separation
-function generateDemoLeaderboardData(format: string, division: string, gender: string): LeaderboardEntry[] {
+function generateDemoLeaderboardData(
+  format: string, 
+  division: string, 
+  gender: string, 
+  searchTerm?: string,
+  currentUserId?: number
+): LeaderboardEntry[] {
   const demoPlayers = [
     { name: "Alex Johnson", gender: "male", age: 28, points: 1850, matches: 45, wins: 32 },
     { name: "Sarah Williams", gender: "female", age: 34, points: 1720, matches: 38, wins: 25 },
@@ -41,10 +61,26 @@ function generateDemoLeaderboardData(format: string, division: string, gender: s
     { name: "Steve Martinez", gender: "male", age: 67, points: 1320, matches: 36, wins: 20 },
     { name: "Rachel Taylor", gender: "female", age: 53, points: 1290, matches: 32, wins: 18 },
     { name: "Tom Wilson", gender: "male", age: 71, points: 1260, matches: 28, wins: 16 },
-    { name: "Maria Lopez", gender: "female", age: 59, points: 1230, matches: 35, wins: 19 }
+    { name: "Maria Lopez", gender: "female", age: 59, points: 1230, matches: 35, wins: 19 },
+    { name: "James Kim", gender: "male", age: 33, points: 1200, matches: 30, wins: 16 },
+    { name: "Anna Petrov", gender: "female", age: 27, points: 1180, matches: 26, wins: 14 },
+    { name: "Carlos Mendez", gender: "male", age: 58, points: 1150, matches: 34, wins: 18 },
+    { name: "Linda Park", gender: "female", age: 41, points: 1120, matches: 28, wins: 15 },
+    { name: "Daniel Singh", gender: "male", age: 45, points: 1090, matches: 32, wins: 17 },
+    { name: "Emma Watson", gender: "female", age: 36, points: 1060, matches: 25, wins: 13 },
+    { name: "Ryan O'Connor", gender: "male", age: 49, points: 1030, matches: 29, wins: 15 },
+    { name: "Sophie Miller", gender: "female", age: 52, points: 1000, matches: 31, wins: 16 },
+    { name: "Nathan Hayes", gender: "male", age: 39, points: 980, matches: 27, wins: 14 },
+    { name: "Grace Liu", gender: "female", age: 44, points: 950, matches: 24, wins: 12 },
+    { name: "Tyler Ross", gender: "male", age: 61, points: 920, matches: 33, wins: 17 },
+    { name: "Victoria Bell", gender: "female", age: 48, points: 890, matches: 26, wins: 13 },
+    { name: "Admin User", gender: "male", age: 35, points: 860, matches: 22, wins: 11 }, // Current user for testing
+    { name: "Oliver Stone", gender: "male", age: 32, points: 830, matches: 28, wins: 14 },
+    { name: "Zoe Clark", gender: "female", age: 56, points: 800, matches: 25, wins: 12 },
+    { name: "Ethan White", gender: "male", age: 43, points: 770, matches: 30, wins: 15 }
   ];
 
-  return demoPlayers
+  let processedPlayers = demoPlayers
     .map((player, index) => ({
       id: index + 1,
       displayName: player.name,
@@ -56,7 +92,8 @@ function generateDemoLeaderboardData(format: string, division: string, gender: s
       gender: player.gender as 'male' | 'female',
       age: player.age,
       division: getAgeGroupFromAge(player.age),
-      ranking: index + 1
+      ranking: index + 1,
+      isCurrentUser: currentUserId === 218 && player.name === "Admin User" // Mark current user
     }))
     .filter(player => {
       // Filter by gender - only male and female supported
@@ -82,27 +119,84 @@ function generateDemoLeaderboardData(format: string, division: string, gender: s
       return b.matchesPlayed - a.matchesPlayed;
     })
     .map((player, index) => ({ ...player, ranking: index + 1 }));
+
+  // Apply search filter if provided
+  if (searchTerm && searchTerm.trim()) {
+    const searchLower = searchTerm.toLowerCase().trim();
+    processedPlayers = processedPlayers.filter(player => 
+      player.displayName.toLowerCase().includes(searchLower) ||
+      player.username.toLowerCase().includes(searchLower)
+    );
+  }
+
+  return processedPlayers;
 }
 
-// Enhanced leaderboard endpoint with age group and gender separation
+// Enhanced leaderboard endpoint with age group, gender separation, search, and pagination
 router.get('/:format', async (req, res) => {
   try {
     const { format } = req.params;
-    const { division = 'open', gender = 'all' } = req.query as { 
+    const { 
+      division = 'open', 
+      gender = 'all',
+      page = '1',
+      limit = '20',
+      search = ''
+    } = req.query as { 
       division?: string; 
-      gender?: string; 
+      gender?: string;
+      page?: string;
+      limit?: string;
+      search?: string;
     };
 
     if (!['singles', 'doubles', 'mixed'].includes(format)) {
       return res.status(400).json({ error: 'Invalid format. Must be singles, doubles, or mixed.' });
     }
 
-    // Generate demo data showing enhanced leaderboard with age group and gender separation
-    const leaderboardData = generateDemoLeaderboardData(format, division, gender);
+    const currentUserId = req.user?.id;
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
 
-    console.log(`[Enhanced Leaderboard] Serving ${format} leaderboard for ${division} division, ${gender} gender - ${leaderboardData.length} players`);
+    // Generate full dataset
+    const fullLeaderboardData = generateDemoLeaderboardData(format, division, gender, search, currentUserId);
+    
+    // Find current user position in full dataset (before pagination)
+    let currentUserPosition = undefined;
+    if (currentUserId) {
+      const userIndex = fullLeaderboardData.findIndex(player => player.isCurrentUser);
+      if (userIndex !== -1) {
+        currentUserPosition = {
+          ranking: userIndex + 1,
+          player: fullLeaderboardData[userIndex]
+        };
+      }
+    }
 
-    res.json(leaderboardData);
+    // Calculate pagination
+    const totalCount = fullLeaderboardData.length;
+    const totalPages = Math.ceil(totalCount / limitNum);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    
+    // Get paginated results
+    const paginatedPlayers = fullLeaderboardData.slice(startIndex, endIndex);
+
+    const response: LeaderboardResponse = {
+      players: paginatedPlayers,
+      totalCount,
+      currentPage: pageNum,
+      totalPages,
+      currentUserPosition,
+      searchTerm: search || undefined
+    };
+
+    console.log(`[Enhanced Leaderboard] Serving ${format} leaderboard for ${division} division, ${gender} gender - ${totalCount} total players, page ${pageNum}/${totalPages}, search: "${search}"`);
+    if (currentUserPosition) {
+      console.log(`[Enhanced Leaderboard] Current user positioned at rank #${currentUserPosition.ranking}`);
+    }
+
+    res.json(response);
 
   } catch (error) {
     console.error('Error fetching enhanced leaderboard:', error);
