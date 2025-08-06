@@ -13,7 +13,7 @@ import MascotLoader from '@/components/ui/MascotLoader';
 // Loading fallback component shown during lazy loading
 export const LazyLoadingFallback = () => (
   <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center">
-    <MascotLoader message="Loading component..." size="md" />
+    <MascotLoader message="Getting things ready..." size="md" />
   </div>
 );
 

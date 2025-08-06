@@ -23,7 +23,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.findPlayers': 'Find Players',
     'nav.trainingFacilities': 'Training Facilities',
     'nav.logout': 'Logout',
-    'common.loading': 'Loading...',
+    'common.loading': 'Getting ready...',
     'common.save': 'Save',
     'common.cancel': 'Cancel',
     'common.edit': 'Edit',

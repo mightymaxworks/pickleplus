@@ -29,7 +29,7 @@ interface MascotLoaderProps {
 }
 
 export default function MascotLoader({ 
-  message = "Loading your player passport...", 
+  message = "Getting things ready...", 
   size = 'md',
   showQuotes = true,
   className = ""

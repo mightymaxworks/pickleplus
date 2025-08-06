@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedUser } from "@/types/enhanced-user";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Loader2, User, Settings, Info, Award, History, Dumbbell } from "lucide-react";
+import MascotLoader from "@/components/ui/MascotLoader";
 
 // Import section components
 import { ProfileDetailsSection } from "@/components/profile/sections/ProfileDetailsSection";
@@ -187,7 +188,7 @@ export function OptimizedProfileTabs({
 function LoadingSection() {
   return (
     <div className="w-full h-64 flex items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
+      <MascotLoader message="Loading your profile..." size="sm" />
     </div>
   );
 }
