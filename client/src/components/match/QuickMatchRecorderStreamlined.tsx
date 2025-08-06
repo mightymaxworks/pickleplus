@@ -388,19 +388,6 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-orange-500" />
-            Quick Match Recorder
-          </CardTitle>
-          <p className="text-muted-foreground">
-            {isAdmin ? "Admin Match Recording System - Fast & Streamlined" : "Quick Match Recording - Add Games as You Play"}
-          </p>
-        </CardHeader>
-      </Card>
-
       {/* Streamlined Match Setup */}
       <Card>
         <CardHeader className="pb-3">
