@@ -133,6 +133,13 @@ export default function NewLandingPage() {
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
 
+  const scrollToRanking = () => {
+    const rankingSection = document.getElementById('ranking-explanation');
+    if (rankingSection) {
+      rankingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -205,6 +212,7 @@ export default function NewLandingPage() {
                 variant="outline" 
                 size="lg"
                 className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-medium rounded-full transition-all duration-300"
+                onClick={scrollToRanking}
               >
                 See How Ranking Works
               </Button>
@@ -224,7 +232,7 @@ export default function NewLandingPage() {
       </motion.section>
 
       {/* Algorithm Transparency Section */}
-      <section className="py-24 px-4 bg-gray-50">
+      <section id="ranking-explanation" className="py-24 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -276,6 +284,70 @@ export default function NewLandingPage() {
               color="bg-purple-500" 
               description="1800+ pts" 
             />
+          </motion.div>
+
+          {/* Algorithm Details */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-16"
+          >
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">How Our Algorithm Works</h3>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Built on proven mathematical principles with complete transparency. No hidden formulas or biased calculations.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h4 className="font-bold text-lg text-gray-900">Base Point System</h4>
+                <div className="space-y-2 text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Tournament Win:</span>
+                    <span className="font-medium text-orange-500">3 points</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>League Match Win:</span>
+                    <span className="font-medium text-orange-500">1 point</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Casual Play Win:</span>
+                    <span className="font-medium text-orange-500">0.75 points</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-bold text-lg text-gray-900">Age Multipliers</h4>
+                <div className="space-y-2 text-gray-600">
+                  <div className="flex justify-between">
+                    <span>18-34 years:</span>
+                    <span className="font-medium text-cyan-500">1.0x</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>35-49 years:</span>
+                    <span className="font-medium text-cyan-500">1.2x</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>50-59 years:</span>
+                    <span className="font-medium text-cyan-500">1.3x</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>60+ years:</span>
+                    <span className="font-medium text-cyan-500">1.5x+</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 p-4 bg-gradient-to-r from-orange-50 to-cyan-50 rounded-lg">
+              <p className="text-sm text-gray-700 text-center">
+                <strong>Example:</strong> A 45-year-old player winning a tournament match earns 3 × 1.2 = 3.6 ranking points
+              </p>
+            </div>
           </motion.div>
 
           {/* Key Features Grid */}
@@ -363,6 +435,17 @@ export default function NewLandingPage() {
                   Create Your Passport
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
+                
+                <motion.div variants={fadeInUp}>
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    className="border-2 border-cyan-200 text-cyan-700 hover:bg-cyan-50 px-8 py-4 text-lg font-medium rounded-full transition-all duration-300"
+                    onClick={scrollToRanking}
+                  >
+                    Learn More About Rankings
+                  </Button>
+                </motion.div>
               </motion.div>
             </div>
 
