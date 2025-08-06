@@ -111,6 +111,7 @@ export default function NewAuthPage() {
       toast({
         title: "Welcome back!",
         description: "Successfully logged in to your player passport.",
+        variant: "success",
       });
       setLocation("/dashboard");
     } catch (error: any) {
@@ -141,6 +142,7 @@ export default function NewAuthPage() {
       toast({
         title: "Welcome to Pickle+!",
         description: "Your player passport has been created successfully.",
+        variant: "success",
       });
       setLocation("/dashboard");
     } catch (error: any) {
