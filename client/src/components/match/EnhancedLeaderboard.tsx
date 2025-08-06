@@ -22,6 +22,17 @@ interface LeaderboardEntry {
   ranking: number;
 }
 
+// PicklePlus Tier System based on points
+interface PlayerTier {
+  name: string;
+  minPoints: number;
+  maxPoints: number;
+  color: string;
+  bgColor: string;
+  icon: string;
+  description: string;
+}
+
 interface EnhancedLeaderboardProps {
   formatType?: "singles" | "doubles" | "mixed";
 }
@@ -43,6 +54,77 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
     { value: "male", label: "Male" },
     { value: "female", label: "Female" }
   ];
+
+  // PicklePlus Tier System - 7 tiers based on algorithm
+  const playerTiers: PlayerTier[] = [
+    {
+      name: "Elite",
+      minPoints: 2000,
+      maxPoints: 9999,
+      color: "text-purple-700",
+      bgColor: "bg-gradient-to-r from-purple-100 to-indigo-100",
+      icon: "👑",
+      description: "Elite competitors"
+    },
+    {
+      name: "Expert",
+      minPoints: 1500,
+      maxPoints: 1999,
+      color: "text-red-700",
+      bgColor: "bg-gradient-to-r from-red-100 to-pink-100",
+      icon: "🔥",
+      description: "Expert level"
+    },
+    {
+      name: "Advanced",
+      minPoints: 1000,
+      maxPoints: 1499,
+      color: "text-orange-700",
+      bgColor: "bg-gradient-to-r from-orange-100 to-yellow-100",
+      icon: "⭐",
+      description: "Advanced players"
+    },
+    {
+      name: "Intermediate",
+      minPoints: 500,
+      maxPoints: 999,
+      color: "text-blue-700",
+      bgColor: "bg-gradient-to-r from-blue-100 to-cyan-100",
+      icon: "🎯",
+      description: "Intermediate skill"
+    },
+    {
+      name: "Developing",
+      minPoints: 200,
+      maxPoints: 499,
+      color: "text-green-700",
+      bgColor: "bg-gradient-to-r from-green-100 to-emerald-100",
+      icon: "📈",
+      description: "Developing skills"
+    },
+    {
+      name: "Beginner",
+      minPoints: 50,
+      maxPoints: 199,
+      color: "text-gray-700",
+      bgColor: "bg-gradient-to-r from-gray-100 to-slate-100",
+      icon: "🌱",
+      description: "New to the game"
+    },
+    {
+      name: "Rookie",
+      minPoints: 0,
+      maxPoints: 49,
+      color: "text-amber-700",
+      bgColor: "bg-gradient-to-r from-amber-50 to-yellow-50",
+      icon: "🎾",
+      description: "Just starting out"
+    }
+  ];
+
+  const getPlayerTier = (points: number): PlayerTier => {
+    return playerTiers.find(tier => points >= tier.minPoints && points <= tier.maxPoints) || playerTiers[playerTiers.length - 1];
+  };
 
   // Fetch leaderboard data with format, division and gender filters
   const { data: leaderboardData, isLoading } = useQuery({
@@ -157,21 +239,30 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
           </div>
         ) : leaderboardData && leaderboardData.length > 0 ? (
           <div className="divide-y divide-orange-100">
-            {leaderboardData.map((player, index) => (
-              <div
-                key={player.id}
-                className={`flex items-center gap-3 p-3 transition-colors hover:bg-orange-50/50 ${
-                  index < 3 ? "bg-gradient-to-r from-yellow-50 to-orange-50" : ""
-                }`}
-              >
-                {/* Mobile-Optimized Rank */}
-                <div className="flex items-center justify-center w-8 h-8">
-                  {index < 3 ? (
-                    getRankIcon(index + 1)
-                  ) : (
-                    <span className="text-xs font-bold text-orange-600">#{index + 1}</span>
-                  )}
-                </div>
+            {leaderboardData.map((player, index) => {
+              const tier = getPlayerTier(player.points);
+              return (
+                <div
+                  key={player.id}
+                  className={`flex items-center gap-3 p-3 transition-colors hover:bg-orange-50/50 ${
+                    index < 3 ? "bg-gradient-to-r from-yellow-50 to-orange-50" : ""
+                  } ${tier.bgColor} border-l-4 ${
+                    tier.name === "Elite" ? "border-purple-500" :
+                    tier.name === "Expert" ? "border-red-500" :
+                    tier.name === "Advanced" ? "border-orange-500" :
+                    tier.name === "Intermediate" ? "border-blue-500" :
+                    tier.name === "Developing" ? "border-green-500" :
+                    tier.name === "Beginner" ? "border-gray-500" : "border-amber-500"
+                  }`}
+                >
+                  {/* Mobile-Optimized Rank */}
+                  <div className="flex items-center justify-center w-8 h-8">
+                    {index < 3 ? (
+                      getRankIcon(index + 1)
+                    ) : (
+                      <span className="text-xs font-bold text-orange-600">#{index + 1}</span>
+                    )}
+                  </div>
                 
                 {/* Compact Player Info */}
                 <Avatar className="h-8 w-8">
@@ -182,7 +273,17 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                 </Avatar>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{player.displayName || player.username}</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="font-medium text-sm truncate">{player.displayName || player.username}</div>
+                    {/* Tier Badge */}
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs h-4 px-2 ${tier.color} ${tier.bgColor} border-0 font-semibold`}
+                    >
+                      <span className="mr-1">{tier.icon}</span>
+                      {tier.name}
+                    </Badge>
+                  </div>
                   <div className="text-xs text-orange-600 truncate">
                     Age {player.age} • {player.winRate}% wins • {player.matchesPlayed} matches
                   </div>
@@ -190,7 +291,7 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                 
                 {/* Mobile-Optimized Points Display */}
                 <div className="text-right">
-                  <div className="font-bold text-sm text-orange-800">{player.points}</div>
+                  <div className={`font-bold text-sm ${tier.color}`}>{player.points}</div>
                   <div className="text-xs text-orange-600">pts</div>
                 </div>
               </div>

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import EnhancedLeaderboard from '@/components/match/EnhancedLeaderboard';
+import TierLegend from '@/components/match/TierLegend';
 
 export default function RankingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,8 +148,9 @@ export default function RankingsPage() {
 
         {/* Rankings Tabs */}
         <Tabs defaultValue="overall" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overall">Overall Rankings</TabsTrigger>
+            <TabsTrigger value="tiers">Tier System</TabsTrigger>
             <TabsTrigger value="age-group">Age Group</TabsTrigger>
             <TabsTrigger value="recent">Recent Activity</TabsTrigger>
           </TabsList>
@@ -165,6 +167,10 @@ export default function RankingsPage() {
                 <EnhancedLeaderboard />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="tiers" className="mt-6">
+            <TierLegend />
           </TabsContent>
 
           <TabsContent value="age-group" className="mt-6">
