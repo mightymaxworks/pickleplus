@@ -154,7 +154,7 @@ With Option B (Open Age Group multipliers), we need to determine how points cont
 - Simpler system, but seniors may dominate overall rankings
 
 #### **Option B-2: Dual Ranking System**
-- **Open/Overall Rankings:** All players, age-multiplied points count
+- **Open Rankings:** All players, age-multiplied points count
 - **Age Group Rankings:** Separate tables for each age division, base points only
 - More complex but maintains competitive balance across both systems
 
@@ -176,7 +176,7 @@ With Option B (Open Age Group multipliers), we need to determine how points cont
 
 #### **Ranking Table Structure:**
 
-**1. Master/Open Rankings**
+**1. Open Rankings**
 - Includes all players with age-multiplied points
 - Used for overall platform rankings and cross-generational comparisons
 - Tournament seeding for open events
@@ -192,24 +192,31 @@ With Option B (Open Age Group multipliers), we need to determine how points cont
 
 **Case 1: 65-year-old plays in 60+ division**
 - Beats another 65-year-old: 4.5 points
-- **Master Rankings:** +4.5 points (with age multiplier)
+- **Open Rankings:** +4.5 points (with age multiplier)
 - **60+ Rankings:** +3.0 base points (peer comparison)
 
 **Case 2: 65-year-old plays in Open division**  
 - Beats 25-year-old: 4.5 points
-- **Master Rankings:** +4.5 points (age-compensated)
+- **Open Rankings:** +4.5 points (age-compensated)
 - **60+ Rankings:** +3.0 base points (peer comparison)
 - 25-year-old loses: 1.0 point
-- **Master Rankings:** +1.0 point
+- **Open Rankings:** +1.0 point
 - **18-34 Rankings:** +1.0 base point (peer comparison)
 
 ### **Benefits of Dual System:**
 
-1. **Fair Cross-Generational Comparison:** Master rankings account for physical differences
+1. **Fair Cross-Generational Comparison:** Open rankings account for physical differences
 2. **Peer Group Integrity:** Age group rankings maintain pure skill comparison
 3. **Tournament Flexibility:** Different seeding systems for different event types
 4. **Comprehensive Analytics:** Both adjusted and raw competitive data available
 5. **Player Choice Recognition:** Rewards challenging oneself across age groups
+
+### **Standardized Terminology:**
+
+- **Open Rankings:** Single table, all players, age-multiplied points (cross-generational comparison)
+- **Age Group Rankings:** Multiple tables by age division, base points only (peer comparison)
+- **Open Division:** Tournament category where all ages can compete
+- **Age Division:** Tournament category restricted to specific age groups (50+, 60+, etc.)
 
 ### **Competitive Reality Considerations**
 
