@@ -680,11 +680,11 @@ The system includes comprehensive validation to ensure calculation consistency:
 
 **Potential Refinements Under Discussion:**
 
-**A. Tier-Based Decay Rates**
-- **Recreational Players (0-300 pts):** 1.5% weekly (reduced pressure)
+**A. Tier-Based Decay Rates** ✅ **FINALIZED**
+- **Recreational Players (0-300 pts):** 1.0% weekly (gentle pressure)
 - **Competitive Players (300-1000 pts):** 2.0% weekly (standard)
-- **Elite Players (1000+ pts):** 2.5% weekly (higher maintenance requirement)
-- **Rationale:** Elite rankings should require more active maintenance
+- **Elite Players (1000+ pts):** 5.0% weekly (high maintenance requirement)
+- **Rationale:** Elite rankings require significant active maintenance to reflect current skill
 
 **B. Activity-Responsive Decay**
 - **High Activity (4+ matches/month):** No decay
@@ -693,18 +693,19 @@ The system includes comprehensive validation to ensure calculation consistency:
 - **Inactive (no matches):** 2% weekly
 - **Benefits:** Rewards consistent participation, gentler on casual players
 
-**C. Seasonal Adjustments**
-- **Tournament Seasons:** Reduced decay during major tournament periods
-- **Off-Season:** Standard decay rates
-- **Holiday Periods:** Extended grace periods for family time
-- **Weather Considerations:** Regional adjustments for outdoor play limitations
+**C. Seasonal Adjustments** ✅ **FINALIZED**
+- **Christmas Period:** No decay for Recreational/Competitive tiers
+- **Christmas Period (Elite):** Reduced to 2.5% weekly (still requires some maintenance)
+- **Tournament Seasons:** Standard decay rates maintained
+- **Weather Considerations:** Regional adjustments for severe weather limitations
 
 ### **3. Pickle Points Conversion & Economy Balance**
 
-**Current Rate Analysis:**
-- **10x Multiplier:** 3 ranking points = 30 Pickle Points
-- **User Psychology:** Provides satisfying numerical reward feeling
-- **Economic Impact:** Sustainable for redemption partner costs
+**Updated Rate Analysis:** ✅ **FINALIZED**
+- **1.5x Multiplier:** 3 ranking points = 4.5 Pickle Points (rounded to 5)
+- **User Psychology:** More conservative, prevents inflation
+- **Economic Impact:** Highly sustainable for redemption partner costs
+- **Rounding Rule:** Always round up to nearest whole number for user-friendly display
 
 **Alternative Conversion Strategies:**
 
@@ -792,8 +793,8 @@ The system includes comprehensive validation to ensure calculation consistency:
 2. **✅ Option B (Open Age Group) multipliers:** Players always get their age multiplier
 3. **✅ Dual Ranking System:** Open Rankings + Age Group Rankings
 4. **✅ 7-Tier Tournament Structure:** Club (1.0x) to International (4.0x)
-5. **✅ Points Decay:** 2% weekly after 30-day grace period
-6. **✅ Pickle Points:** 10x conversion rate + action rewards with anti-exploitation
+5. **✅ Points Decay:** Tier-based (1%/2%/5% weekly) with activity-responsive adjustments and seasonal considerations
+6. **✅ Pickle Points:** 1.5x conversion rate + action rewards with anti-exploitation controls
 
 ### **📋 IMPLEMENTATION STEPS**
 1. **Update StandardizedRankingService** with dual ranking system
