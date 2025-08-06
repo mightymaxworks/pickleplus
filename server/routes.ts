@@ -135,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profileService = new ProfileService();
       
       // Calculate profile completion percentage
-      const profileCompletion = profileService.calculateProfileCompletion(user);
+      const profileCompletion = user ? profileService.calculateProfileCompletion(user) : { percentage: 0, milestones: [] };
       
       // Return user with profile completion included
       res.json({
