@@ -50,6 +50,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SimpleNotificationBell } from '@/components/notifications/SimpleNotificationBell';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 // Import default avatar image
 import defaultAvatarPath from "@assets/Untitled design (51).png";
@@ -66,6 +68,10 @@ interface AppHeaderProps {
       label: string;
       path: string;
     }>;
+    comingSoon?: {
+      feature: string;
+      description: string;
+    };
   }>;
 }
 
@@ -85,6 +91,11 @@ export function AppHeader({
   const [notificationCount, setNotificationCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+  const [comingSoonDialog, setComingSoonDialog] = useState<{
+    open: boolean;
+    feature: string;
+    description: string;
+  }>({ open: false, feature: '', description: '' });
 
   // Get notification count
   const { data: notificationData } = useQuery({
@@ -141,15 +152,44 @@ export function AppHeader({
     }
   };
 
+  // Handle coming soon features
+  const showComingSoon = (feature: string, description: string) => {
+    setComingSoonDialog({ open: true, feature, description });
+  };
+
   // V1.0 Launch Navigation - Streamlined core features only
   const defaultNavItems = [
     { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/record-match' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/leaderboard' },
-    // Coming soon features - accessible but with coming soon pages
-    { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
-    { label: 'Find Coaches', icon: <GraduationCap size={18} />, path: '/find-coaches' },
-    { label: 'Training Hub', icon: <Building2 size={18} />, path: '/player-development-hub' }
+    // Coming soon features - show popup instead of navigation
+    { 
+      label: 'Communities', 
+      icon: <Users size={18} />, 
+      path: 'coming-soon',
+      comingSoon: {
+        feature: 'Communities',
+        description: 'Connect with players worldwide, join local clubs, participate in discussions, and build your pickleball network.'
+      }
+    },
+    { 
+      label: 'Find Coaches', 
+      icon: <GraduationCap size={18} />, 
+      path: 'coming-soon',
+      comingSoon: {
+        feature: 'Find Coaches',
+        description: 'Discover verified PCP coaches near you with advanced matching, instant booking, and detailed profiles.'
+      }
+    },
+    { 
+      label: 'Training Hub', 
+      icon: <Building2 size={18} />, 
+      path: 'coming-soon',
+      comingSoon: {
+        feature: 'Training Hub',
+        description: 'Access training centers, book facilities, join classes, and enhance your skills with professional guidance.'
+      }
+    }
   ];
 
   // Use custom nav items if provided, otherwise use default
@@ -245,12 +285,15 @@ export function AppHeader({
                           : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
                       } shadow-sm`}
                       onClick={() => {
-                        if (item.dropdown) {
+                        setMobileMenuOpen(false);
+                        
+                        // Check if this is a coming soon feature
+                        if (item.comingSoon) {
+                          showComingSoon(item.comingSoon.feature, item.comingSoon.description);
+                        } else if (item.dropdown) {
                           // For dropdown items, just navigate to main path
-                          setMobileMenuOpen(false);
                           setTimeout(() => navigate(item.path), 300);
                         } else {
-                          setMobileMenuOpen(false);
                           setTimeout(() => navigate(item.path), 300);
                         }
                       }}
@@ -334,6 +377,41 @@ export function AppHeader({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Coming Soon Dialog */}
+      <Dialog open={comingSoonDialog.open} onOpenChange={(open) => setComingSoonDialog({ ...comingSoonDialog, open })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-700">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                ⏰
+              </div>
+              {comingSoonDialog.feature} - Coming Soon!
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-4">
+              {comingSoonDialog.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-6 flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setComingSoonDialog({ ...comingSoonDialog, open: false })}
+              className="flex-1"
+            >
+              Close
+            </Button>
+            <Button 
+              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+              onClick={() => {
+                setComingSoonDialog({ ...comingSoonDialog, open: false });
+                navigate('/coach-application');
+              }}
+            >
+              Apply as Coach
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.header>
   );
 }
