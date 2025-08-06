@@ -125,9 +125,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
     if (user && !playerOneData && !isAdmin) {
       setPlayerOneData({
         id: user.id,
-        displayName: user.displayName || null,
+        displayName: user.displayName || undefined,
         username: user.username,
-        passportId: user.passportCode || null,
+        passportId: user.passportCode || undefined,
         avatarUrl: user.avatarUrl,
         avatarInitials: user.avatarInitials,
         dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
@@ -439,20 +439,159 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Player One */}
-          <div className="space-y-2">
-            <Label>
-              {isAdmin ? "Player 1" : "Player 1 (You)"}
-            </Label>
-            {isAdmin && !playerOneData ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>
+                {isAdmin ? "Player 1" : "Player 1 (You)"}
+              </Label>
+              {isAdmin && !playerOneData ? (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Search for Player 1 by name or username..."
+                    value={playerSearch}
+                    onChange={(e) => setPlayerSearch(e.target.value)}
+                    className="w-full"
+                  />
+                  
+                  {/* Player 1 Search Results */}
+                  {playerSearch && (
+                    <div className="border rounded-lg max-h-40 overflow-y-auto">
+                      {isSearching ? (
+                        <div className="p-3 text-center text-muted-foreground">
+                          Searching players...
+                        </div>
+                      ) : playerSearchResults.length > 0 ? (
+                        playerSearchResults.map((player) => (
+                          <button
+                            key={player.id}
+                            type="button"
+                            className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                            onClick={() => {
+                              setPlayerOneData(player);
+                              setPlayerSearch("");
+                              setPlayerSearchResults([]);
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback>
+                                  {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">
+                                  {player.displayName || player.username}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  @{player.username} • {player.currentRating || 0} pts
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-center text-muted-foreground">
+                          No players found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Quick Self-Select for Admin */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      if (user) {
+                        setPlayerOneData({
+                          id: user.id,
+                          displayName: user.displayName || undefined,
+                          username: user.username,
+                          passportId: user.passportCode || undefined,
+                          avatarUrl: user.avatarUrl,
+                          avatarInitials: user.avatarInitials,
+                          dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
+                          gender: user.gender || null,
+                          currentRating: user.rankingPoints || 0,
+                        });
+                      }
+                    }}
+                  >
+                    <UserCircle className="h-4 w-4 mr-2" />
+                    Select Myself
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback>
+                      {playerOneData?.avatarInitials || user?.avatarInitials || 'P1'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      {playerOneData?.displayName || user?.displayName || user?.username}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      @{playerOneData?.username || user?.username} • {playerOneData?.currentRating || 0} pts
+                    </p>
+                  </div>
+                  {isAdmin && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPlayerOneData(null)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Player 1 Partner (if doubles) */}
+            {formatType === "doubles" && (
+              <div className="space-y-2 ml-4 border-l-2 border-blue-200 pl-4">
+                <Label className="text-sm text-muted-foreground">
+                  {isAdmin ? "Player 1 Partner (Optional)" : "Your Partner (Optional)"}
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start text-muted-foreground"
+                  onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Partner selection will be available soon",
+                      variant: "default",
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Select Partner
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Player Two Search */}
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>
+                {formatType === "singles" ? (isAdmin ? "Player 2" : "Opponent") : (isAdmin ? "Player 2" : "Opponent Team Player 1")}
+              </Label>
               <div className="space-y-2">
                 <Input
-                  placeholder="Search for Player 1 by name or username..."
+                  placeholder={`Search for ${formatType === "singles" ? (isAdmin ? "Player 2" : "opponent") : (isAdmin ? "Player 2" : "opponent team player 1")} by name or username...`}
                   value={playerSearch}
                   onChange={(e) => setPlayerSearch(e.target.value)}
                   className="w-full"
                 />
                 
-                {/* Player 1 Search Results */}
+                {/* Search Results */}
                 {playerSearch && (
                   <div className="border rounded-lg max-h-40 overflow-y-auto">
                     {isSearching ? (
@@ -466,7 +605,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
                           type="button"
                           className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
                           onClick={() => {
-                            setPlayerOneData(player);
+                            setPlayerTwoData(player);
                             setPlayerSearch("");
                             setPlayerSearchResults([]);
                           }}
@@ -495,191 +634,61 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
                     )}
                   </div>
                 )}
-                
-                {/* Quick Self-Select for Admin */}
+
+                {/* Selected Player Two */}
+                {playerTwoData && (
+                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback>
+                        {playerTwoData.avatarInitials || playerTwoData.username.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {playerTwoData.displayName || playerTwoData.username}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        @{playerTwoData.username} • {playerTwoData.currentRating || 0} pts
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPlayerTwoData(null)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Player 2 Partner (if doubles) */}
+            {formatType === "doubles" && (
+              <div className="space-y-2 ml-4 border-l-2 border-green-200 pl-4">
+                <Label className="text-sm text-muted-foreground">
+                  {isAdmin ? "Player 2 Partner (Optional)" : "Opponent Team Partner (Optional)"}
+                </Label>
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-muted-foreground"
                   onClick={() => {
-                    if (user) {
-                      setPlayerOneData({
-                        id: user.id,
-                        displayName: user.displayName || null,
-                        username: user.username,
-                        passportId: user.passportCode || null,
-                        avatarUrl: user.avatarUrl,
-                        avatarInitials: user.avatarInitials,
-                        dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
-                        gender: user.gender || null,
-                        currentRating: user.rankingPoints || 0,
-                      });
-                    }
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Partner selection will be available soon",
+                      variant: "default",
+                    });
                   }}
                 >
-                  <UserCircle className="h-4 w-4 mr-2" />
-                  Select Myself
+                  <Plus className="h-4 w-4 mr-2" />
+                  Select Partner
                 </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <Avatar className="h-12 w-12">
-                  <AvatarFallback>
-                    {playerOneData?.avatarInitials || user?.avatarInitials || 'P1'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium">
-                    {playerOneData?.displayName || user?.displayName || user?.username}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    @{playerOneData?.username || user?.username} • {playerOneData?.currentRating || 0} pts
-                  </p>
-                </div>
-                {isAdmin && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPlayerOneData(null)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
             )}
           </div>
-
-          {/* Player Two Search */}
-          <div className="space-y-2">
-            <Label>
-              {formatType === "singles" ? (isAdmin ? "Player 2" : "Opponent") : (isAdmin ? "Player 2" : "Opponent Team Player 1")}
-            </Label>
-            <div className="space-y-2">
-              <Input
-                placeholder={`Search for ${formatType === "singles" ? (isAdmin ? "Player 2" : "opponent") : (isAdmin ? "Player 2" : "opponent team player 1")} by name or username...`}
-                value={playerSearch}
-                onChange={(e) => setPlayerSearch(e.target.value)}
-                className="w-full"
-              />
-              
-              {/* Search Results */}
-              {playerSearch && (
-                <div className="border rounded-lg max-h-40 overflow-y-auto">
-                  {isSearching ? (
-                    <div className="p-3 text-center text-muted-foreground">
-                      Searching players...
-                    </div>
-                  ) : playerSearchResults.length > 0 ? (
-                    playerSearchResults.map((player) => (
-                      <button
-                        key={player.id}
-                        type="button"
-                        className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
-                        onClick={() => {
-                          setPlayerTwoData(player);
-                          setPlayerSearch("");
-                          setPlayerSearchResults([]);
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback>
-                              {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">
-                              {player.displayName || player.username}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              @{player.username} • {player.currentRating || 0} pts
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="p-3 text-center text-muted-foreground">
-                      No players found
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Selected Player Two */}
-              {playerTwoData && (
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback>
-                      {playerTwoData.avatarInitials || playerTwoData.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {playerTwoData.displayName || playerTwoData.username}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      @{playerTwoData.username} • {playerTwoData.currentRating || 0} pts
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPlayerTwoData(null)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Doubles Partners (if doubles selected) */}
-          {formatType === "doubles" && (
-            <>
-              <div className="space-y-2">
-                <Label>Your Partner (Optional)</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start text-muted-foreground"
-                  onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "Partner selection will be available soon",
-                      variant: "default",
-                    });
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Select Partner
-                </Button>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Opponent Team Partner (Optional)</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start text-muted-foreground"
-                  onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "Partner selection will be available soon",
-                      variant: "default",
-                    });
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Select Partner
-                </Button>
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
 
@@ -738,7 +747,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     )}
                     {isCompleted && !isStandardScore && (
-                      <AlertCircle className="h-4 w-4 text-amber-500" title="Unusual score" />
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
                     )}
                   </h4>
                   {isCompleted && (
