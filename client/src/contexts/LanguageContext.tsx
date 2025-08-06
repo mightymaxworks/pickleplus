@@ -1111,17 +1111,41 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Translation function with fallback
   const t = (key: string, fallback?: string): string => {
-    const currentTranslations = translations[language];
-    const translation = currentTranslations[key];
-    if (translation) return translation;
-    
-    // Fallback to English if key doesn't exist in current language
-    const englishTranslations = translations['en'];
-    const englishTranslation = englishTranslations[key];
-    if (englishTranslation) return englishTranslation;
-    
-    // Return fallback or key if no translation found
-    return fallback || key;
+    try {
+      console.log(`[TRANSLATION DEBUG] Language: ${language}, Key: ${key}`);
+      console.log('[TRANSLATION DEBUG] Available languages:', Object.keys(translations));
+      
+      const currentTranslations = translations[language];
+      if (!currentTranslations) {
+        console.warn(`No translations found for language: ${language}`);
+        console.log('[TRANSLATION DEBUG] translations object:', translations);
+        return fallback || key;
+      }
+      
+      const translation = currentTranslations[key];
+      console.log(`[TRANSLATION DEBUG] Found translation for ${key}:`, translation);
+      
+      if (translation && translation !== '') {
+        return translation;
+      }
+      
+      // Fallback to English if key doesn't exist in current language
+      if (language !== 'en') {
+        const englishTranslations = translations['en'];
+        const englishTranslation = englishTranslations?.[key];
+        if (englishTranslation && englishTranslation !== '') {
+          console.warn(`Using English fallback for key: ${key}`);
+          return englishTranslation;
+        }
+      }
+      
+      // Return fallback or key if no translation found
+      console.warn(`No translation found for key: ${key}`);
+      return fallback || key;
+    } catch (error) {
+      console.error('Translation function error:', error);
+      return fallback || key;
+    }
   };
 
   return (
