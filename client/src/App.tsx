@@ -909,6 +909,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* Enhanced Match Management with Admin Match Recorder */}
+                  <Route path="/admin/enhanced-match-management">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./pages/admin/EnhancedMatchManagement')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   <Route path="/settings">
                     {(params) => <CentralProtectedRoute component={SettingsPage} path="/settings" />}
                   </Route>
