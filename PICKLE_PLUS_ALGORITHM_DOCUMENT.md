@@ -140,6 +140,77 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 4. **Realistic Balance:** Acknowledges that 65-year-old competing against 25-year-old faces inherent disadvantage
 5. **Tournament Inclusivity:** Promotes mixed-age competition rather than age segregation
 
+---
+
+## 🏆 **5. RANKING TABLE ARCHITECTURE WITH OPTION B**
+
+### **Critical Question: Dual Ranking Tables**
+
+With Option B (Open Age Group multipliers), we need to determine how points contribute to ranking tables:
+
+#### **Option B-1: Single Ranking Pool**
+- All points go into one master ranking table
+- Age multipliers affect overall ranking directly
+- Simpler system, but seniors may dominate overall rankings
+
+#### **Option B-2: Dual Ranking System**
+- **Open/Overall Rankings:** All players, age-multiplied points count
+- **Age Group Rankings:** Separate tables for each age division, base points only
+- More complex but maintains competitive balance across both systems
+
+### **Dual Ranking System Analysis**
+
+#### **Scenario: 65-year-old beats 25-year-old in Open Tournament**
+
+**Option B-1 (Single Pool):**
+- Senior gets 4.5 points → Goes into master ranking table
+- Young player gets 3.0 points → Goes into same master ranking table
+- Result: Senior gains ranking advantage over young player despite physical disadvantage
+
+**Option B-2 (Dual System):**
+- **Open Rankings:** Senior gets 4.5 points, Young player gets 3.0 points
+- **Age Group Rankings:** Senior gets 3.0 points in 60+ table, Young player gets 3.0 points in Open table
+- Result: Age compensation affects cross-generational comparison, equal treatment within age groups
+
+### **Recommended Approach: Option B-2 (Dual System)**
+
+#### **Ranking Table Structure:**
+
+**1. Master/Open Rankings**
+- Includes all players with age-multiplied points
+- Used for overall platform rankings and cross-generational comparisons
+- Tournament seeding for open events
+- Shows "adjusted competitive standing"
+
+**2. Age Group Rankings** 
+- Separate tables: 18-34, 35-49, 50-59, 60-69, 70+
+- Uses base points only (no age multipliers)
+- Tournament seeding for age-restricted events  
+- Shows "peer group competitive standing"
+
+#### **Implementation Examples:**
+
+**Case 1: 65-year-old plays in 60+ division**
+- Beats another 65-year-old: 4.5 points
+- **Master Rankings:** +4.5 points (with age multiplier)
+- **60+ Rankings:** +3.0 base points (peer comparison)
+
+**Case 2: 65-year-old plays in Open division**  
+- Beats 25-year-old: 4.5 points
+- **Master Rankings:** +4.5 points (age-compensated)
+- **60+ Rankings:** +3.0 base points (peer comparison)
+- 25-year-old loses: 1.0 point
+- **Master Rankings:** +1.0 point
+- **18-34 Rankings:** +1.0 base point (peer comparison)
+
+### **Benefits of Dual System:**
+
+1. **Fair Cross-Generational Comparison:** Master rankings account for physical differences
+2. **Peer Group Integrity:** Age group rankings maintain pure skill comparison
+3. **Tournament Flexibility:** Different seeding systems for different event types
+4. **Comprehensive Analytics:** Both adjusted and raw competitive data available
+5. **Player Choice Recognition:** Rewards challenging oneself across age groups
+
 ### **Competitive Reality Considerations**
 
 **Key Factors:**
@@ -437,17 +508,18 @@ The system includes comprehensive validation to ensure calculation consistency:
 6. **Manual Override Limits:** 0-1000 points acceptable for current needs
 
 ### **🔥 CRITICAL DECISION NEEDED**
-**Age Group Multiplier Application Method:**
-- Own age group vs open age group competition
-- This decision affects the entire competitive balance
+**Ranking Table Architecture:**
+- Single ranking pool vs dual ranking system (Master + Age Group tables)
+- This determines how age-multiplied points affect overall rankings
 
 ### **📋 NEXT STEPS**
-1. **Resolve age group multiplier application method**
-2. **Finalize Pickle Points conversion rate** (10x, 20x, or 25x?)
-3. **Review anti-exploitation controls** strength
-4. **Implement unified StandardizedRankingService** 
-5. **Deploy points decay algorithm**
-6. **Create comprehensive test coverage**
+1. **✅ RESOLVED: Option B (Open Age Group) multipliers**
+2. **Finalize ranking table architecture** (Single vs Dual system)
+3. **Finalize Pickle Points conversion rate** (10x, 20x, or 25x?)
+4. **Review anti-exploitation controls** strength
+5. **Implement unified StandardizedRankingService with dual rankings** 
+6. **Deploy points decay algorithm**
+7. **Create comprehensive test coverage**
 
 ---
 
