@@ -393,10 +393,10 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
         <CardHeader className="pb-3">
           <CardTitle className="text-xl flex items-center gap-2">
             <Trophy className="h-6 w-6 text-orange-500" />
-            Smart Match Recorder
+            Quick Match Recorder
           </CardTitle>
           <p className="text-muted-foreground">
-            {isAdmin ? "Admin Match Recording System - Smart & Contextual" : "Smart Match Recording - Add Games as You Play"}
+            {isAdmin ? "Admin Match Recording System - Fast & Streamlined" : "Quick Match Recording - Add Games as You Play"}
           </p>
         </CardHeader>
       </Card>

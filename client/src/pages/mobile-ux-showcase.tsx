@@ -111,7 +111,7 @@ export default function MobileUXShowcase() {
     },
     {
       id: 'match-recorder',
-      title: 'Smart Match Recorder',
+      title: 'Quick Match Recorder',
       description: 'Voice-enabled recording with celebration mode',
       icon: <Target className="w-5 h-5" />,
       improvements: [

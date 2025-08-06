@@ -43,7 +43,7 @@ export default function RecordMatchPage() {
           </p>
         </div>
         
-        {/* Streamlined Smart Match Recorder */}
+        {/* Streamlined Quick Match Recorder */}
         <QuickMatchRecorderStreamlined />
       </div>
     </DashboardLayout>
