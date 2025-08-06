@@ -295,6 +295,56 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.hero.subtitle1': 'The first transparent ranking system built for players, by players.',
     'landing.hero.subtitle2': 'No black boxes. No hidden algorithms.',
     'landing.hero.getStarted': 'Start Your Player Journey',
+    'landing.hero.achievementBadge': '100% Platform Capability Achieved',
+    'landing.hero.seeRanking': 'See How Ranking Works',
+
+    // Ranking Section
+    'landing.ranking.title': 'Fair. Transparent. Proven.',
+    'landing.ranking.subtitle': 'Age-adjusted rankings that actually make sense. Built with sophisticated algorithms that reward skill over demographics.',
+
+    // Tier System
+    'landing.tiers.recreational': 'Recreational',
+    'landing.tiers.recreationalPoints': '0-299 pts',
+    'landing.tiers.competitive': 'Competitive',
+    'landing.tiers.competitivePoints': '300-999 pts',
+    'landing.tiers.elite': 'Elite',
+    'landing.tiers.elitePoints': '1000-1799 pts',
+    'landing.tiers.professional': 'Professional',
+    'landing.tiers.professionalPoints': '1800+ pts',
+
+    // Philosophy Section
+    'landing.philosophy.title': 'Our Ranking Philosophy',
+    'landing.philosophy.subtitle': 'Every player deserves a fair shot. Our algorithm recognizes that skill transcends age, gender, and playing frequency.',
+
+    // Features
+    'landing.features.performanceTitle': 'Performance Weighted',
+    'landing.features.performanceDesc': 'Tournament victories carry more weight than casual games, reflecting competitive achievement.',
+    'landing.features.ageTitle': 'Age Balanced',
+    'landing.features.ageDesc': 'Thoughtful adjustments ensure players of all ages can compete meaningfully within their cohort.',
+    'landing.features.activityTitle': 'Activity Protected',
+    'landing.features.activityDesc': 'Smart decay systems maintain your ranking even during busy life periods.',
+
+    // Result Section
+    'landing.result.title': 'The Result: True Competitive Balance',
+    'landing.result.description': 'A 25-year-old college athlete and a 55-year-old weekend warrior both earn rankings that reflect their skill within their respective competitive contexts.',
+
+    // Additional Features
+    'landing.features.ageGroupTitle': 'Age Group Fairness',
+    'landing.features.ageGroupDesc': 'Automatic age multipliers ensure fair competition across generations with proven mathematical balance.',
+    'landing.features.genderTitle': 'Gender Balance System',
+    'landing.features.genderDesc': 'Cross-gender bonus system for developing players, with elite-level competitive parity.',
+    'landing.features.decayTitle': 'Decay Protection',
+    'landing.features.decayDesc': 'Tier-specific activity requirements with enhanced professional weighting system.',
+
+    // Passport Section
+    'landing.passport.title1': 'Your Digital',
+    'landing.passport.title2': 'Player Passport',
+    'landing.passport.subtitle': 'From 0% to Champion Status. Track your journey with meaningful milestones, Pickle Points rewards, and complete profile progression.',
+    'landing.passport.feature1': 'QR Code court check-ins',
+    'landing.passport.feature2': 'Real-time ranking updates',
+    'landing.passport.feature3': 'Milestone reward system',
+    'landing.passport.feature4': 'Cross-platform compatibility',
+    'landing.passport.createButton': 'Create Your Passport',
     'landing.hero.description': 'Join thousands of players using advanced analytics, coaching tools, and community features to elevate their pickleball performance.',
     'landing.hero.startFree': 'Start Free Today',
     'landing.hero.watchDemo': 'Watch Demo',
@@ -839,6 +889,56 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.hero.subtitle1': '第一个由球员为球员打造的透明排名系统。',
     'landing.hero.subtitle2': '没有黑盒。没有隐藏算法。',
     'landing.hero.getStarted': '开始您的球员之旅',
+    'landing.hero.achievementBadge': '100%平台能力达成',
+    'landing.hero.seeRanking': '了解排名系统如何运作',
+
+    // Ranking Section
+    'landing.ranking.title': '公平·透明·经验证',
+    'landing.ranking.subtitle': '真正合理的年龄调整排名。采用精密算法，重视技能胜过人口统计。',
+
+    // Tier System  
+    'landing.tiers.recreational': '休闲级',
+    'landing.tiers.recreationalPoints': '0-299分',
+    'landing.tiers.competitive': '竞技级', 
+    'landing.tiers.competitivePoints': '300-999分',
+    'landing.tiers.elite': '精英级',
+    'landing.tiers.elitePoints': '1000-1799分',
+    'landing.tiers.professional': '职业级',
+    'landing.tiers.professionalPoints': '1800+分',
+
+    // Philosophy Section
+    'landing.philosophy.title': '我们的排名理念',
+    'landing.philosophy.subtitle': '每位球员都应该获得公平的机会。我们的算法认识到技能超越年龄、性别和比赛频率。',
+
+    // Features
+    'landing.features.performanceTitle': '表现权重',
+    'landing.features.performanceDesc': '锦标赛胜利比休闲比赛权重更大，反映竞技成就。',
+    'landing.features.ageTitle': '年龄平衡',
+    'landing.features.ageDesc': '周到的调整确保各年龄段球员都能在其同龄人中有意义地竞争。',
+    'landing.features.activityTitle': '活跃度保护',
+    'landing.features.activityDesc': '智能衰减系统即使在忙碌生活期间也能维护您的排名。',
+
+    // Result Section
+    'landing.result.title': '结果：真正的竞技平衡',
+    'landing.result.description': '25岁的大学运动员和55岁的周末勇士都能获得反映其在各自竞技背景下技能的排名。',
+
+    // Additional Features
+    'landing.features.ageGroupTitle': '年龄组公平性',
+    'landing.features.ageGroupDesc': '自动年龄倍数确保各代人之间的公平竞争，具有经过验证的数学平衡。',
+    'landing.features.genderTitle': '性别平衡系统',
+    'landing.features.genderDesc': '针对发展中球员的跨性别奖励系统，在精英级别具有竞技平等。',
+    'landing.features.decayTitle': '衰减保护',
+    'landing.features.decayDesc': '特定等级活动要求，增强职业加权系统。',
+
+    // Passport Section
+    'landing.passport.title1': '您的数字化',
+    'landing.passport.title2': '球员护照',
+    'landing.passport.subtitle': '从0%到冠军地位。通过有意义的里程碑、泡菜积分奖励和完整的档案进展来追踪您的旅程。',
+    'landing.passport.feature1': '二维码球场签到',
+    'landing.passport.feature2': '实时排名更新',
+    'landing.passport.feature3': '里程碑奖励系统',
+    'landing.passport.feature4': '跨平台兼容性',
+    'landing.passport.createButton': '创建您的护照',
     'landing.sport': '匹克球',
     'landing.hero.description': '加入数千名球员，使用先进的分析、教练工具和社区功能来提升您的匹克球表现。',
     'landing.hero.startFree': '今天免费开始',

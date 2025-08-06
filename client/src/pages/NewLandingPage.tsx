@@ -208,7 +208,7 @@ export default function NewLandingPage() {
             <motion.div variants={fadeInUp} className="flex justify-center">
               <Badge className="bg-green-100 text-green-700 px-6 py-2 text-sm font-medium">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                100% Platform Capability Achieved
+{safeT('landing.hero.achievementBadge', '100% Platform Capability Achieved')}
               </Badge>
             </motion.div>
 
@@ -232,7 +232,7 @@ export default function NewLandingPage() {
                 className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-medium rounded-full transition-all duration-300"
                 onClick={scrollToRanking}
               >
-                See How Ranking Works
+{safeT('landing.hero.seeRanking', 'See How Ranking Works')}
               </Button>
             </motion.div>
           </motion.div>
@@ -263,14 +263,13 @@ export default function NewLandingPage() {
               variants={fadeInUp}
               className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
             >
-              Fair. Transparent. Proven.
+{safeT('landing.ranking.title', 'Fair. Transparent. Proven.')}
             </motion.h2>
             <motion.p 
               variants={fadeInUp}
               className="text-xl text-gray-600 max-w-3xl mx-auto"
             >
-              Age-adjusted rankings that actually make sense. Built with sophisticated 
-              algorithms that reward skill over demographics.
+{safeT('landing.ranking.subtitle', 'Age-adjusted rankings that actually make sense. Built with sophisticated algorithms that reward skill over demographics.')}
             </motion.p>
           </motion.div>
 
@@ -283,24 +282,24 @@ export default function NewLandingPage() {
             className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16"
           >
             <TierBadge 
-              tier="Recreational" 
+              tier={safeT('landing.tiers.recreational', 'Recreational')} 
               color="bg-green-500" 
-              description="0-299 pts" 
+              description={safeT('landing.tiers.recreationalPoints', '0-299 pts')} 
             />
             <TierBadge 
-              tier="Competitive" 
+              tier={safeT('landing.tiers.competitive', 'Competitive')} 
               color="bg-blue-500" 
-              description="300-999 pts" 
+              description={safeT('landing.tiers.competitivePoints', '300-999 pts')} 
             />
             <TierBadge 
-              tier="Elite" 
+              tier={safeT('landing.tiers.elite', 'Elite')} 
               color="bg-orange-500" 
-              description="1000-1799 pts" 
+              description={safeT('landing.tiers.elitePoints', '1000-1799 pts')} 
             />
             <TierBadge 
-              tier="Professional" 
+              tier={safeT('landing.tiers.professional', 'Professional')} 
               color="bg-purple-500" 
-              description="1800+ pts" 
+              description={safeT('landing.tiers.professionalPoints', '1800+ pts')} 
             />
           </motion.div>
 
@@ -313,9 +312,9 @@ export default function NewLandingPage() {
             className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-16"
           >
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Ranking Philosophy</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{safeT('landing.philosophy.title', 'Our Ranking Philosophy')}</h3>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Every player deserves a fair shot. Our algorithm recognizes that skill transcends age, gender, and playing frequency.
+                {safeT('landing.philosophy.subtitle', 'Every player deserves a fair shot. Our algorithm recognizes that skill transcends age, gender, and playing frequency.')}
               </p>
             </div>
 
@@ -324,32 +323,32 @@ export default function NewLandingPage() {
                 <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Trophy className="w-8 h-8 text-white" />
                 </div>
-                <h4 className="font-bold text-lg text-gray-900 mb-2">Performance Weighted</h4>
-                <p className="text-gray-600">Tournament victories carry more weight than casual games, reflecting competitive achievement.</p>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">{safeT('landing.features.performanceTitle', 'Performance Weighted')}</h4>
+                <p className="text-gray-600">{safeT('landing.features.performanceDesc', 'Tournament victories carry more weight than casual games, reflecting competitive achievement.')}</p>
               </div>
 
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Users className="w-8 h-8 text-white" />
                 </div>
-                <h4 className="font-bold text-lg text-gray-900 mb-2">Age Balanced</h4>
-                <p className="text-gray-600">Thoughtful adjustments ensure players of all ages can compete meaningfully within their cohort.</p>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">{safeT('landing.features.ageTitle', 'Age Balanced')}</h4>
+                <p className="text-gray-600">{safeT('landing.features.ageDesc', 'Thoughtful adjustments ensure players of all ages can compete meaningfully within their cohort.')}</p>
               </div>
 
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
-                <h4 className="font-bold text-lg text-gray-900 mb-2">Activity Protected</h4>
-                <p className="text-gray-600">Smart decay systems maintain your ranking even during busy life periods.</p>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">{safeT('landing.features.activityTitle', 'Activity Protected')}</h4>
+                <p className="text-gray-600">{safeT('landing.features.activityDesc', 'Smart decay systems maintain your ranking even during busy life periods.')}</p>
               </div>
             </div>
 
             <div className="mt-8 p-6 bg-gradient-to-r from-orange-50 to-cyan-50 rounded-lg">
               <div className="text-center">
-                <h4 className="font-bold text-gray-900 mb-3">The Result: True Competitive Balance</h4>
+                <h4 className="font-bold text-gray-900 mb-3">{safeT('landing.result.title', 'The Result: True Competitive Balance')}</h4>
                 <p className="text-gray-700">
-                  A 25-year-old college athlete and a 55-year-old weekend warrior both earn rankings that reflect their skill within their respective competitive contexts.
+                  {safeT('landing.result.description', 'A 25-year-old college athlete and a 55-year-old weekend warrior both earn rankings that reflect their skill within their respective competitive contexts.')}
                 </p>
               </div>
             </div>
@@ -365,18 +364,18 @@ export default function NewLandingPage() {
           >
             <FeatureCard
               icon={<Shield className="w-8 h-8" />}
-              title="Age Group Fairness"
-              description="Automatic age multipliers ensure fair competition across generations with proven mathematical balance."
+              title={safeT('landing.features.ageGroupTitle', 'Age Group Fairness')}
+              description={safeT('landing.features.ageGroupDesc', 'Automatic age multipliers ensure fair competition across generations with proven mathematical balance.')}
             />
             <FeatureCard
               icon={<Target className="w-8 h-8" />}
-              title="Gender Balance System"
-              description="Cross-gender bonus system for developing players, with elite-level competitive parity."
+              title={safeT('landing.features.genderTitle', 'Gender Balance System')}
+              description={safeT('landing.features.genderDesc', 'Cross-gender bonus system for developing players, with elite-level competitive parity.')}
             />
             <FeatureCard
               icon={<Zap className="w-8 h-8" />}
-              title="Decay Protection"
-              description="Tier-specific activity requirements with enhanced professional weighting system."
+              title={safeT('landing.features.decayTitle', 'Decay Protection')}
+              description={safeT('landing.features.decayDesc', 'Tier-specific activity requirements with enhanced professional weighting system.')}
             />
           </motion.div>
         </div>
@@ -397,10 +396,10 @@ export default function NewLandingPage() {
                 variants={fadeInUp}
                 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
               >
-                Your Digital
+{safeT('landing.passport.title1', 'Your Digital')}
                 <br />
                 <span className="bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent">
-                  Player Passport
+                  {safeT('landing.passport.title2', 'Player Passport')}
                 </span>
               </motion.h2>
               
@@ -408,26 +407,25 @@ export default function NewLandingPage() {
                 variants={fadeInUp}
                 className="text-xl text-gray-600 mb-8 leading-relaxed"
               >
-                From 0% to Champion Status. Track your journey with meaningful 
-                milestones, Pickle Points rewards, and complete profile progression.
+{safeT('landing.passport.subtitle', 'From 0% to Champion Status. Track your journey with meaningful milestones, Pickle Points rewards, and complete profile progression.')}
               </motion.p>
 
               <motion.div variants={fadeInUp} className="space-y-4 mb-8">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-700">QR Code court check-ins</span>
+                  <span className="text-gray-700">{safeT('landing.passport.feature1', 'QR Code court check-ins')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-700">Real-time ranking updates</span>
+                  <span className="text-gray-700">{safeT('landing.passport.feature2', 'Real-time ranking updates')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-700">Milestone reward system</span>
+                  <span className="text-gray-700">{safeT('landing.passport.feature3', 'Milestone reward system')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-700">Cross-platform compatibility</span>
+                  <span className="text-gray-700">{safeT('landing.passport.feature4', 'Cross-platform compatibility')}</span>
                 </div>
               </motion.div>
 
@@ -437,7 +435,7 @@ export default function NewLandingPage() {
                   className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-8 py-4 text-lg font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                   onClick={() => setLocation('/register')}
                 >
-                  Create Your Passport
+{safeT('landing.passport.createButton', 'Create Your Passport')}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
                 
