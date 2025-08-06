@@ -40,6 +40,13 @@ const matchFormSchema = z.object({
   formatType: z.enum(["singles", "doubles"]).default("singles"),
   matchType: z.enum(["tournament", "league", "casual"]).default("casual"),
   notes: z.string().optional(),
+  tournamentId: z.number().optional(),
+  scheduledDate: z.string().optional(),
+  pointsOverride: z.object({
+    enabled: z.boolean().default(false),
+    winnerPoints: z.number().optional(),
+    loserPoints: z.number().optional(),
+  }).optional(),
 });
 
 type MatchFormValues = z.infer<typeof matchFormSchema>;
@@ -64,9 +71,10 @@ interface QuickMatchRecorderStreamlinedProps {
     username: string;
     rating?: number;
   } | null;
+  isAdminMode?: boolean;
 }
 
-export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: QuickMatchRecorderStreamlinedProps) {
+export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAdminMode = false }: QuickMatchRecorderStreamlinedProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -104,19 +112,37 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
   // Check if user is admin
   const isAdmin = user?.isAdmin;
 
+  // Fetch tournaments for admin users
+  const { data: tournaments = [] } = useQuery({
+    queryKey: ['/api/admin/tournaments'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/tournaments');
+      return response.json();
+    },
+    enabled: isAdminMode && isAdmin,
+  });
+
   // Admin-specific state
-  const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | null>(null);
+  const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(null);
   const [useManualPointsOverride, setUseManualPointsOverride] = useState(false);
   const [manualPointsWinner, setManualPointsWinner] = useState<number>(0);
   const [manualPointsLoser, setManualPointsLoser] = useState<number>(0);
+  const [matchDate, setMatchDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Form setup
   const form = useForm<MatchFormValues>({
     resolver: zodResolver(matchFormSchema),
     defaultValues: {
       formatType: "singles",
-      matchType: "casual",
+      matchType: isAdminMode ? "tournament" : "casual",
       notes: "",
+      scheduledDate: new Date().toISOString().split('T')[0],
+      tournamentId: undefined,
+      pointsOverride: {
+        enabled: false,
+        winnerPoints: undefined,
+        loserPoints: undefined,
+      },
     },
   });
 
@@ -318,10 +344,11 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
           matchType,
           games,
           winnerId: winner === 1 ? playerOneData.id : playerTwoData.id,
-          scheduledDate: new Date().toISOString(),
+          scheduledDate: isAdminMode ? matchDate : new Date().toISOString().split('T')[0],
           // Admin-specific fields
-          ...(isAdmin && {
-            competitionId: selectedCompetitionId,
+          ...(isAdminMode && isAdmin && {
+            tournamentId: selectedTournamentId,
+            matchType: selectedTournamentId ? "tournament" : "casual",
             useManualPointsOverride,
             manualPointsWinner: useManualPointsOverride ? manualPointsWinner : undefined,
             manualPointsLoser: useManualPointsOverride ? manualPointsLoser : undefined,
@@ -406,11 +433,93 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer }: Qu
             </ToggleGroup>
           </div>
 
+          {/* Admin Tournament Selection */}
+          {isAdminMode && isAdmin && (
+            <div className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Tournament/Competition</Label>
+                <Select 
+                  value={selectedTournamentId?.toString() || ""} 
+                  onValueChange={(value) => {
+                    setSelectedTournamentId(value ? parseInt(value) : null);
+                    // Set tournament date as default when tournament is selected
+                    const tournament = tournaments.find((t: any) => t.id === parseInt(value));
+                    if (tournament && tournament.startDate) {
+                      setMatchDate(tournament.startDate);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tournament/competition (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No tournament (casual match)</SelectItem>
+                    {tournaments.map((tournament: any) => (
+                      <SelectItem key={tournament.id} value={tournament.id.toString()}>
+                        {tournament.name} - {tournament.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Match Date</Label>
+                <Input
+                  type="date"
+                  value={matchDate}
+                  onChange={(e) => setMatchDate(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="pointsOverride"
+                    checked={useManualPointsOverride}
+                    onChange={(e) => setUseManualPointsOverride(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="pointsOverride" className="text-base font-medium">
+                    Override Ranking Points
+                  </Label>
+                </div>
+                
+                {useManualPointsOverride && (
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="space-y-1">
+                      <Label className="text-sm">Winner Points</Label>
+                      <Input
+                        type="number"
+                        placeholder="Winner points"
+                        value={manualPointsWinner}
+                        onChange={(e) => setManualPointsWinner(parseInt(e.target.value) || 0)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm">Loser Points</Label>
+                      <Input
+                        type="number"
+                        placeholder="Loser points"
+                        value={manualPointsLoser}
+                        onChange={(e) => setManualPointsLoser(parseInt(e.target.value) || 0)}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Match Type Information */}
           <div className="mt-4 flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <span className="text-sm text-amber-800">
-              {isAdmin ? "Admin can record tournament and casual matches" : "Players can record casual matches only"}
+              {isAdminMode ? "Admin can record tournament matches and override points" : "Players can record casual matches only"}
             </span>
           </div>
         </CardContent>

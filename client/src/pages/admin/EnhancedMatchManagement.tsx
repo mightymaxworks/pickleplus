@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus } from 'lucide-react';
-import AdminMatchCreation from './AdminMatchCreation';
+import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import MatchManagement from './MatchManagement';
 
 interface PlayerResult {
@@ -153,13 +153,13 @@ export default function EnhancedMatchManagement() {
       </div>
 
       <Tabs defaultValue="record-match" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="record-match">Record Match</TabsTrigger>
-          <TabsTrigger value="competitions">Competitions & Leagues</TabsTrigger>
-          <TabsTrigger value="leaderboards">Age Group Leaderboards</TabsTrigger>
-          <TabsTrigger value="overview">Age Group Overview</TabsTrigger>
-          <TabsTrigger value="mixed-age">Mixed-Age Analytics</TabsTrigger>
-          <TabsTrigger value="match-results">Match Results</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
+          <TabsTrigger value="record-match" className="text-xs md:text-sm">Record Match</TabsTrigger>
+          <TabsTrigger value="competitions" className="text-xs md:text-sm">Competitions</TabsTrigger>
+          <TabsTrigger value="leaderboards" className="text-xs md:text-sm hidden md:flex">Leaderboards</TabsTrigger>
+          <TabsTrigger value="overview" className="text-xs md:text-sm hidden md:flex">Overview</TabsTrigger>
+          <TabsTrigger value="mixed-age" className="text-xs md:text-sm hidden md:flex">Analytics</TabsTrigger>
+          <TabsTrigger value="match-results" className="text-xs md:text-sm hidden md:flex">Results</TabsTrigger>
         </TabsList>
 
         <TabsContent value="record-match" className="space-y-6">
@@ -174,7 +174,7 @@ export default function EnhancedMatchManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AdminMatchCreation />
+              <QuickMatchRecorderStreamlined isAdminMode={true} />
             </CardContent>
           </Card>
         </TabsContent>
