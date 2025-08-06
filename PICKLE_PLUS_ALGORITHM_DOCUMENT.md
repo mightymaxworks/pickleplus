@@ -1,13 +1,13 @@
 # PicklePlus Algorithm Document
-**Version:** 3.0 - STANDARDIZED  
-**Last Updated:** August 5, 2025  
-**System:** System B Standardized with Points Decay
+**Version:** 4.0 - COMPREHENSIVE GENDER BALANCE  
+**Last Updated:** August 6, 2025  
+**System:** System B Standardized with Points Decay and Cross-Gender Fairness
 
 ---
 
 ## 🎯 **EXECUTIVE SUMMARY**
 
-The PicklePlus algorithm uses **System B standardization** with conservative base points (3/1), comprehensive 7-tier tournament structure, age group multipliers, and standalone Pickle Points rewards. The system includes points decay mechanism to maintain competitive balance and prevent inflation over time.
+The PicklePlus algorithm uses **System B standardization** with conservative base points (3/1), comprehensive 7-tier tournament structure, age group multipliers, cross-gender balance system, Professional Tier Enhanced Weighting for decay protection, and standalone Pickle Points rewards. The system includes sophisticated points decay mechanism and gender fairness protocols to maintain competitive balance across all demographics.
 
 ---
 
@@ -122,6 +122,243 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 - **Senior Discouragement:** Penalizes seniors for playing challenging competition
 - **Competitive Unfairness:** No compensation for inherent physical disadvantages
 - **Tournament Impact:** Reduces cross-generational participation
+
+---
+
+## 👫 **4. GENDER BALANCE ALGORITHM - CROSS-GENDER MATCH FAIRNESS**
+
+### **Gender Balance Philosophy**
+
+Cross-gender competition requires careful balance between competitive fairness and participation incentives. The PicklePlus algorithm addresses physical performance differences while maintaining meaningful competition across all gender combinations.
+
+### **Gender-Specific Multipliers** ⚖️ **NEW SYSTEM**
+
+| Gender | Base Multiplier | Reasoning |
+|--------|----------------|-----------|
+| **Men** | 1.0x | Baseline competitive standard |
+| **Women** | 1.15x | Compensation for average physical differences |
+| **Mixed Teams** | 1.075x | Average of team gender composition |
+
+> **IMPORTANT:** Gender multipliers only apply in **cross-gender competition**. Same-gender matches use standard 1.0x for all participants.
+
+### **Cross-Gender Match Scenarios**
+
+#### **Scenario 1: Men's vs Women's Singles**
+**Match:** Male player vs Female player, Tournament
+
+**Point Calculation:**
+- **Male Winner:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
+- **Female Winner:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points**
+- **Male Loser:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points**  
+- **Female Loser:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points**
+
+*Result: Female player receives 15% bonus points, providing competitive incentive*
+
+#### **Scenario 2: Men's vs Women's Doubles**
+**Match:** Men's doubles team vs Women's doubles team, League
+
+**Point Calculation:**
+- **Men's Team Winners:** 3 × 1.0 × 0.75 × 1.0 = **2.25 points each**
+- **Women's Team Winners:** 3 × 1.15 × 0.75 × 1.0 = **2.59 points each**
+- **Men's Team Losers:** 1 × 1.0 × 0.75 × 1.0 = **0.75 points each**
+- **Women's Team Losers:** 1 × 1.15 × 0.75 × 1.0 = **0.86 points each**
+
+*Result: Women's team receives proportional advantage in cross-gender doubles*
+
+#### **Scenario 3: Mixed Doubles vs Gender-Specific Doubles**
+**Match:** Mixed doubles vs Men's doubles, Tournament
+
+**Mixed Team Gender Calculation:**
+- Mixed Doubles (1 M + 1 F): (1.0 + 1.15) ÷ 2 = **1.075x multiplier**
+
+**Point Calculation:**
+- **Mixed Team Winners:** 3 × 1.075 × 1.0 × 1.5 = **4.84 points each**
+- **Men's Team Winners:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points each**
+- **Mixed Team Losers:** 1 × 1.075 × 1.0 × 1.5 = **1.61 points each**
+- **Men's Team Losers:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points each**
+
+*Result: Mixed team receives slight advantage to balance gender composition*
+
+#### **Scenario 4: Mixed Doubles vs Women's Doubles**
+**Match:** Mixed doubles vs Women's doubles, Tournament
+
+**Point Calculation:**
+- **Mixed Team Winners:** 3 × 1.075 × 1.0 × 1.5 = **4.84 points each**
+- **Women's Team Winners:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points each**
+- **Mixed Team Losers:** 1 × 1.075 × 1.0 × 1.5 = **1.61 points each**
+- **Women's Team Losers:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points each**
+
+*Result: Women's doubles maintains advantage over mixed teams*
+
+### **Same-Gender Competition - Standard Scoring**
+
+All same-gender matches use **1.0x gender multiplier** for equal treatment:
+
+#### **Men's Singles vs Men's Singles**
+- Both players: **1.0x gender multiplier**
+- Standard point calculation applies
+
+#### **Women's Doubles vs Women's Doubles** 
+- Both teams: **1.0x gender multiplier**
+- Standard point calculation applies
+
+#### **Mixed Doubles vs Mixed Doubles**
+- Both teams: **1.0x gender multiplier** (not 1.075x)
+- Equal competition within format
+
+### **Tournament Division Considerations**
+
+#### **Open Divisions (All Genders Welcome)**
+- Gender multipliers **ACTIVE** for cross-gender matches
+- Encourages participation across gender lines
+- Maintains competitive balance
+
+#### **Gender-Specific Divisions (Men's Only / Women's Only)**
+- Gender multipliers **INACTIVE** (all 1.0x)
+- Pure performance-based competition
+- Division integrity maintained
+
+#### **Mixed Divisions (Mixed Doubles Only)**
+- Gender multipliers **INACTIVE** (all 1.0x) 
+- Format equality emphasis
+- Team composition strategic element
+
+### **Advanced Gender Balance Features**
+
+#### **Team Gender Composition Calculator**
+```
+Team Multiplier = (Sum of Individual Gender Multipliers) ÷ Team Size
+
+Examples:
+- Men's Doubles (M+M): (1.0 + 1.0) ÷ 2 = 1.0x
+- Women's Doubles (F+F): (1.15 + 1.15) ÷ 2 = 1.15x  
+- Mixed Doubles (M+F): (1.0 + 1.15) ÷ 2 = 1.075x
+```
+
+#### **Gender Balance Validation Rules**
+1. **Cross-Gender Detection:** System automatically identifies gender mismatches
+2. **Multiplier Application:** Applies appropriate bonuses only when needed
+3. **Division Override:** Respects tournament division restrictions
+4. **Fair Play Protection:** Prevents gender manipulation for point advantage
+
+### **Updated Final Calculation Formula**
+
+```
+Final Points = Base Points × Age Multiplier × Gender Multiplier × Match Type Weight × Tournament Tier Multiplier
+```
+
+#### **Complete Calculation Example:**
+
+**Example: 55-year-old woman beats 45-year-old man in Provincial Tournament**
+- Base Points: 3 (win)
+- Age Multiplier: 1.3 (50-59 age group)
+- Gender Multiplier: 1.15 (woman in cross-gender match)
+- Match Type Weight: 1.0 (tournament)
+- Tournament Tier: 2.0 (provincial)
+
+**Final Calculation:** 3 × 1.3 × 1.15 × 1.0 × 2.0 = **8.97 points**
+
+*This example shows the cumulative effect of age and gender bonuses for competitive fairness*
+
+---
+
+## 🛡️ **5. PROFESSIONAL TIER ENHANCED WEIGHTING - DECAY PROTECTION SYSTEM**
+
+### **Decay Protection Philosophy**
+
+The Professional Tier Enhanced Weighting system provides sophisticated activity-responsive decay protection that heavily incentivizes competitive play for professional players while maintaining accessibility across all skill levels.
+
+### **4-Tier Player Classification System**
+
+| Tier | Points Range | Weekly Decay Rate | Holiday Decay Rate | Activity Requirement |
+|------|--------------|-------------------|-------------------|---------------------|
+| **Recreational** | 0-300 pts | 1% | 0% | Low barrier to entry |
+| **Competitive** | 300-1000 pts | 2% | 0% | Moderate activity expected |
+| **Elite** | 1000-1800 pts | 5% | 2.5% | High activity required |
+| **Professional** | 1800+ pts | 7% | 3.5% | Maximum competitive expectation |
+
+### **Tier-Specific Match Weighting for Decay Protection**
+
+#### **Standard Tiers (Recreational/Competitive/Elite)**
+| Match Type | Weighting | Protection Value |
+|------------|-----------|------------------|
+| **Tournament** | 2.0x | High competitive value |
+| **League** | 1.5x | Moderate structured play |
+| **Casual** | 1.0x | Base recreational activity |
+
+#### **Professional Tier Enhanced Weighting** ⭐
+| Match Type | Weighting | Protection Value | Enhancement |
+|------------|-----------|------------------|-------------|
+| **Tournament** | **3.0x** | Maximum competitive value | **+50% vs Standard** |
+| **League** | **2.0x** | Strong structured play | **+33% vs Standard** |
+| **Casual** | **0.75x** | Reduced casual value | **-25% vs Standard** |
+
+> **Professional Strategy:** Enhanced tournament weighting heavily incentivizes competitive play while maintaining multiple pathways to decay protection.
+
+### **Activity Protection Thresholds**
+
+All tiers use the same activity-based protection system:
+
+| Activity Level | Weighted Matches/Month | Decay Reduction |
+|----------------|------------------------|-----------------|
+| **High Activity** | 4+ weighted matches | **No decay** (100% protection) |
+| **Moderate Activity** | 2-3 weighted matches | **1% weekly decay** (Tier decay ÷ 7) |
+| **Low Activity** | 1 weighted match | **1.5% weekly decay** (Tier decay ÷ 5) |
+| **Inactive** | 0 matches | **Full tier-based decay** (No protection) |
+
+### **Professional Tier Activity Examples**
+
+#### **Tournament-Focused Professional**
+- **2 tournaments/month:** 6.0 weighted matches → **Complete protection**
+- **1 tournament + 3 casual:** 3.0 + 2.25 = 5.25 weighted → **Complete protection**
+
+#### **League-Heavy Professional**
+- **3 league matches/month:** 6.0 weighted matches → **Complete protection**  
+- **2 league + 2 casual:** 4.0 + 1.5 = 5.5 weighted → **Complete protection**
+
+#### **Casual-Only Professional** 
+- **6 casual matches/month:** 4.5 weighted matches → **Complete protection**
+- **8 casual matches/month:** 6.0 weighted matches → **Complete protection**
+
+#### **Moderate Activity Professional**
+- **1 tournament + 1 casual:** 3.0 + 0.75 = 3.75 weighted → **1% decay** (vs 7% base)
+- **2 league matches:** 4.0 weighted → **Complete protection**
+
+### **Regional and Seasonal Considerations**
+
+#### **Holiday Decay Adjustments**
+- **Major Holidays (Christmas, New Year):** Elite/Professional players get reduced decay rates
+- **Summer Tournament Season:** Standard decay rates maintain competitive pressure
+- **Winter Off-Season:** Slight decay reduction to accommodate reduced tournament availability
+
+#### **Tournament Availability Accommodation**  
+- **High Tournament Regions:** Standard weighting system works optimally
+- **Low Tournament Regions:** Enhanced league weighting provides alternative pathways
+- **Remote Areas:** Casual match opportunities still provide meaningful protection
+
+### **Implementation Benefits**
+
+#### **For Professional Players (1800+ points)**
+1. **Tournament Incentive:** 3x weighting makes competitive play highly rewarding
+2. **Strategic Flexibility:** Multiple pathways prevent skill gatekeeping
+3. **Regional Fairness:** Works across varying tournament densities
+4. **Meaningful Stakes:** High decay creates urgency without being punitive
+
+#### **For All Other Tiers**
+1. **Graduated Challenge:** Progressive difficulty as skills develop
+2. **Accessible Protection:** Standard weighting remains achievable  
+3. **Growth Incentive:** Clear benefits to advancing tiers
+4. **Balanced Competition:** Appropriate activity expectations per skill level
+
+### **Decay Protection Status Tracking**
+
+Players receive comprehensive decay protection information including:
+
+- **Current Protection Status:** Protected/At Risk/Vulnerable
+- **Days Until Next Decay:** Weekly cycle countdown  
+- **Weighted Activity Summary:** Real-time activity calculation
+- **Tier-Specific Recommendations:** Personalized activity suggestions
+- **Protection History:** Track decay protection over time
 
 #### **Option B Implications (Reconsidered):**
 - **Physical Reality Recognition:** Compensates for age-related physical disadvantages
@@ -298,29 +535,31 @@ Tournament scale dramatically affects point values:
 
 > **CONFIRMED:** Comprehensive 7-tier structure maintained for detailed tournament classification.
 
-### **Final Ranking Points Calculation**
+### **Final Ranking Points Calculation** - UPDATED WITH GENDER BALANCE
 
 ```
-Final Points = Base Points × Age Multiplier × Match Type Weight × Tournament Tier Multiplier
+Final Points = Base Points × Age Multiplier × Gender Multiplier × Match Type Weight × Tournament Tier Multiplier
 ```
 
-#### **Calculation Examples:**
+> **NEW:** Gender Multiplier added for cross-gender competitive fairness
 
-**Example 1: Young Tournament Player**
-- Player: 25 years old, Tournament Singles Win, City Event
-- Calculation: 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
+#### **Calculation Examples** - UPDATED WITH GENDER MULTIPLIERS:
 
-**Example 2: Senior League Player**
-- Player: 65 years old, League Singles Win, Club Event
-- Calculation: 3 × 1.5 × 0.75 × 1.0 = **3.4 points**
+**Example 1: Young Male Tournament Player**
+- Player: 25-year-old male, Tournament Singles Win vs Male, City Event
+- Calculation: 3 × 1.0 × 1.0 × 1.0 × 1.5 = **4.5 points**
 
-**Example 3: Masters National Championship**
-- Player: 55 years old, Tournament Singles Win, National Event
-- Calculation: 3 × 1.3 × 1.0 × 3.0 = **11.7 points**
+**Example 2: Senior Female League Player (Cross-Gender)**
+- Player: 65-year-old female, League Singles Win vs Male, Club Event
+- Calculation: 3 × 1.5 × 1.15 × 0.75 × 1.0 = **3.91 points**
 
-**Example 4: International Tournament Win**
-- Player: 35 years old, Tournament Win, International Event
-- Calculation: 3 × 1.2 × 1.0 × 4.0 = **14.4 points**
+**Example 3: Masters Female National Championship**
+- Player: 55-year-old female, Tournament Singles Win vs Female, National Event
+- Calculation: 3 × 1.3 × 1.0 × 1.0 × 3.0 = **11.7 points** (same-gender, no bonus)
+
+**Example 4: International Mixed Doubles Win**
+- Mixed Team: 35-year-old players, Tournament Win vs Men's Team, International Event
+- Calculation: 3 × 1.2 × 1.075 × 1.0 × 4.0 = **15.48 points each**
 
 ---
 
