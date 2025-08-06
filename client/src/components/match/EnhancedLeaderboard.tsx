@@ -55,70 +55,43 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
     { value: "female", label: "Female" }
   ];
 
-  // PicklePlus Tier System - 7 tiers based on algorithm
+  // PicklePlus 4-Tier System - From Official Algorithm Document
   const playerTiers: PlayerTier[] = [
     {
-      name: "Elite",
-      minPoints: 2000,
+      name: "Professional",
+      minPoints: 1800,
       maxPoints: 9999,
       color: "text-purple-700",
       bgColor: "bg-gradient-to-r from-purple-100 to-indigo-100",
       icon: "👑",
-      description: "Elite competitors"
+      description: "Professional players - Maximum competitive expectation"
     },
     {
-      name: "Expert",
-      minPoints: 1500,
-      maxPoints: 1999,
+      name: "Elite",
+      minPoints: 1000,
+      maxPoints: 1799,
       color: "text-red-700",
       bgColor: "bg-gradient-to-r from-red-100 to-pink-100",
       icon: "🔥",
-      description: "Expert level"
+      description: "Elite players - High activity required"
     },
     {
-      name: "Advanced",
-      minPoints: 1000,
-      maxPoints: 1499,
+      name: "Competitive",
+      minPoints: 300,
+      maxPoints: 999,
       color: "text-orange-700",
       bgColor: "bg-gradient-to-r from-orange-100 to-yellow-100",
       icon: "⭐",
-      description: "Advanced players"
+      description: "Competitive players - Moderate activity expected"
     },
     {
-      name: "Intermediate",
-      minPoints: 500,
-      maxPoints: 999,
+      name: "Recreational",
+      minPoints: 0,
+      maxPoints: 299,
       color: "text-blue-700",
       bgColor: "bg-gradient-to-r from-blue-100 to-cyan-100",
       icon: "🎯",
-      description: "Intermediate skill"
-    },
-    {
-      name: "Developing",
-      minPoints: 200,
-      maxPoints: 499,
-      color: "text-green-700",
-      bgColor: "bg-gradient-to-r from-green-100 to-emerald-100",
-      icon: "📈",
-      description: "Developing skills"
-    },
-    {
-      name: "Beginner",
-      minPoints: 50,
-      maxPoints: 199,
-      color: "text-gray-700",
-      bgColor: "bg-gradient-to-r from-gray-100 to-slate-100",
-      icon: "🌱",
-      description: "New to the game"
-    },
-    {
-      name: "Rookie",
-      minPoints: 0,
-      maxPoints: 49,
-      color: "text-amber-700",
-      bgColor: "bg-gradient-to-r from-amber-50 to-yellow-50",
-      icon: "🎾",
-      description: "Just starting out"
+      description: "Recreational players - Low barrier to entry"
     }
   ];
 
@@ -247,12 +220,10 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
                   className={`flex items-center gap-3 p-3 transition-colors hover:bg-orange-50/50 ${
                     index < 3 ? "bg-gradient-to-r from-yellow-50 to-orange-50" : ""
                   } ${tier.bgColor} border-l-4 ${
-                    tier.name === "Elite" ? "border-purple-500" :
-                    tier.name === "Expert" ? "border-red-500" :
-                    tier.name === "Advanced" ? "border-orange-500" :
-                    tier.name === "Intermediate" ? "border-blue-500" :
-                    tier.name === "Developing" ? "border-green-500" :
-                    tier.name === "Beginner" ? "border-gray-500" : "border-amber-500"
+                    tier.name === "Professional" ? "border-purple-500" :
+                    tier.name === "Elite" ? "border-red-500" :
+                    tier.name === "Competitive" ? "border-orange-500" :
+                    "border-blue-500"
                   }`}
                 >
                   {/* Mobile-Optimized Rank */}
