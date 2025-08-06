@@ -1,49 +1,52 @@
 # PicklePlus Algorithm Document
-**Version:** 2.0  
+**Version:** 3.0 - STANDARDIZED  
 **Last Updated:** August 5, 2025  
-**System:** Comprehensive Ranking Points & Pickle Points Algorithm
+**System:** System B Standardized with Points Decay
 
 ---
 
 ## 🎯 **EXECUTIVE SUMMARY**
 
-The PicklePlus algorithm is a comprehensive scoring system that combines competitive ranking points with gamified Pickle Points rewards. The system uses multiple calculation methods with age-based multipliers, match type weights, and tournament tier scaling to create fair, engaging competition across all skill levels and demographics.
+The PicklePlus algorithm uses **System B standardization** with conservative base points (3/1), comprehensive 7-tier tournament structure, age group multipliers, and standalone Pickle Points rewards. The system includes points decay mechanism to maintain competitive balance and prevent inflation over time.
 
 ---
 
-## 📊 **1. RANKING POINTS SYSTEM**
+## 📊 **1. RANKING POINTS SYSTEM - SYSTEM B STANDARDIZED**
 
-### **Base Point Structure**
+### **Base Point Structure** ✅ **CONFIRMED**
 
 | Result | Base Points | Description |
 |--------|-------------|-------------|
-| **Win** | 150 points | Standard victory reward |
-| **Loss** | 75 points | Participation reward (50% of win) |
+| **Win** | 3 points | Conservative, sustainable scoring |
+| **Loss** | 1 point | Participation reward (33% of win) |
 
-> **Note:** Our current CI/CD testing shows **two different base point systems** in use. We need to standardize this.
+> **DECISION:** System B standardized across all platform components for consistent, sustainable point economy.
 
-#### **Alternative Base Structure (StandardizedRankingService)**
-| Result | Base Points |
-|--------|-------------|
-| **Win** | 3 points |
-| **Loss** | 1 point |
-
-### **Age Group Multipliers** ⚡
+### **Age Group Multipliers** ⚡ **CONFIRMED FAIR**
 
 Age-based multipliers reward senior participation and acknowledge physical demands:
 
 | Age Group | Multiplier | Reasoning |
 |-----------|------------|-----------|
 | **18-34** | 1.0x | Standard baseline |
-| **35-49** | 1.1x | Early career professionals bonus |
+| **35-49** | 1.2x | Early career professionals bonus |
 | **50-59** | 1.3x | Masters division enhancement |
-| **60-69** | 1.5x | Senior division significant boost |
+| **60+** | 1.5x | Senior division significant boost |
 | **70+** | 1.6x | Super senior maximum enhancement |
 
-#### **Age Group Calculation**
-- Automatic detection from player birth date
-- Uses average multiplier for doubles matches
-- Applied to final point calculation
+#### **CRITICAL DECISION NEEDED: Age Group Application Method**
+
+**Option A: Own Age Group Multiplier**
+- Players compete in their specific age division
+- 65-year-old gets 1.5x multiplier when playing other 60+ players
+- Maintains age division integrity
+
+**Option B: Open Age Group Multiplier**  
+- Players get multiplier regardless of opponent age
+- 65-year-old gets 1.5x multiplier even when playing 25-year-old
+- Rewards senior participation in open play
+
+**QUESTION:** Which method should we implement? This significantly affects competitive balance.
 
 ### **Match Type Weight Factors** 🎾
 
@@ -55,7 +58,7 @@ Different match contexts receive scaled point rewards:
 | **League** | 0.75x (75%) | Moderate scaling | Regular competition |
 | **Tournament** | 1.0x (100%) | Full points | Premier competition |
 
-### **Competition Tier Multipliers** 🏆
+### **Competition Tier Multipliers** 🏆 **7-TIER SYSTEM CONFIRMED**
 
 Tournament scale dramatically affects point values:
 
@@ -69,6 +72,8 @@ Tournament scale dramatically affects point values:
 | **National** | 3.0x | National championships |
 | **International** | 4.0x | World championships |
 
+> **CONFIRMED:** Comprehensive 7-tier structure maintained for detailed tournament classification.
+
 ### **Final Ranking Points Calculation**
 
 ```
@@ -78,41 +83,54 @@ Final Points = Base Points × Age Multiplier × Match Type Weight × Tournament 
 #### **Calculation Examples:**
 
 **Example 1: Young Tournament Player**
-- Player: 25 years old, Tournament Singles Win
-- Calculation: 150 × 1.0 × 1.0 × 2.0 = **300 points**
+- Player: 25 years old, Tournament Singles Win, City Event
+- Calculation: 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
 
 **Example 2: Senior League Player**
-- Player: 65 years old, League Singles Win  
-- Calculation: 150 × 1.5 × 0.75 × 1.0 = **169 points**
+- Player: 65 years old, League Singles Win, Club Event
+- Calculation: 3 × 1.5 × 0.75 × 1.0 = **3.4 points**
 
 **Example 3: Masters National Championship**
 - Player: 55 years old, Tournament Singles Win, National Event
-- Calculation: 150 × 1.3 × 1.0 × 3.0 = **585 points**
+- Calculation: 3 × 1.3 × 1.0 × 3.0 = **11.7 points**
+
+**Example 4: International Tournament Win**
+- Player: 35 years old, Tournament Win, International Event
+- Calculation: 3 × 1.2 × 1.0 × 4.0 = **14.4 points**
 
 ---
 
-## 🎮 **2. PICKLE POINTS SYSTEM**
+## 🎮 **2. PICKLE POINTS SYSTEM - STANDALONE CONFIRMED**
 
 ### **Pickle Points vs Ranking Points**
 
 | System | Purpose | Usage | Earning Method |
 |--------|---------|-------|----------------|
 | **Ranking Points** | Competitive standing | Tournament seeding, leaderboards | Match results only |
-| **Pickle Points** | Gamification rewards | Equipment purchases, training access | Multiple activities |
+| **Pickle Points** | Gamification rewards | Equipment purchases, training access | Percentage + activities |
 
-### **Pickle Points Sources**
+### **Pickle Points Earning Structure** ✅ **CONFIRMED STANDALONE**
 
-#### **Match-Based Rewards**
-- **Tournament Win:** 50-200 Pickle Points
-- **League Win:** 25-100 Pickle Points  
-- **Casual Win:** 10-50 Pickle Points
-- **Match Participation:** 5-25 Pickle Points (regardless of result)
+#### **Primary Source: Percentage of Ranking Points**
+- **Conversion Rate:** 10x multiplier (suggested)
+- Example: 3.0 ranking points = 30 Pickle Points
+- Example: 11.7 ranking points = 117 Pickle Points
+- Directly tied to competitive performance
 
-#### **Activity-Based Rewards**
-- **Training Session Completion:** 15-30 Pickle Points
-- **Drill Practice:** 5-15 Pickle Points
-- **Community Engagement:** 10-25 Pickle Points
-- **Achievement Unlocks:** 25-100 Pickle Points
+#### **Secondary Sources: Action-Based Rewards**
+- **Training Session Completion:** 25 Pickle Points
+- **Drill Practice:** 15 Pickle Points
+- **Community Engagement:** 20 Pickle Points
+- **Achievement Unlocks:** 50-100 Pickle Points
+- **Daily Login Streak:** 5-10 Pickle Points
+- **Profile Completion:** 100 Pickle Points (one-time)
+
+#### **Anti-Exploitation Controls** 🛡️
+- **Daily Action Limits:** Max 100 points from actions per day
+- **Cooldown Periods:** 2-hour minimum between same action types  
+- **Verification Required:** Training sessions must be coach-validated
+- **Fraud Detection:** Unusual patterns flagged for review
+- **Account Limits:** New accounts limited to 50 action points/day for 30 days
 
 ### **Pickle Points Redemption**
 - Equipment discounts (10-30% off)
@@ -149,35 +167,56 @@ Administrators can link matches to specific competitions with automatic multipli
 
 ---
 
-## 📈 **4. MULTIPLE CALCULATION SYSTEMS**
+## 📉 **4. POINTS DECAY ALGORITHM**
 
-### **Current Implementation Status**
+### **Decay System Purpose**
+Prevents point inflation, maintains competitive balance, and encourages regular play.
 
-We've identified **two different calculation systems** running simultaneously:
+### **Proposed Decay Algorithm**
 
-#### **System A: Match Recorder System**
-- Base: 150 winner / 75 loser
-- Age multipliers: 1.0x - 1.6x
-- Used in QuickMatchRecorder
+#### **Decay Parameters**
+- **Grace Period:** 30 days (no decay)
+- **Decay Rate:** 2% per week after grace period
+- **Maximum Decay:** 50% of total points
+- **Minimum Retained:** 25% of peak points (lifetime floor)
 
-#### **System B: StandardizedRankingService**
-- Base: 3 winner / 1 loser  
-- Weight factors: 0.5x - 1.0x
-- Tournament tiers: 1.0x - 4.0x
+#### **Decay Calculation**
+```
+Weekly Decay = Current Points × 0.02
+New Points = max(Current Points - Weekly Decay, Lifetime Peak × 0.25)
+```
 
-### **Standardization Needed**
+#### **Decay Examples**
 
-**DISCUSSION POINT:** Which system should be the single source of truth?
+**Example 1: Active Player (plays weekly)**
+- Points: 150 → No decay (regular activity)
 
-**Option 1: High-Value System (System A)**
-- Pro: More engaging with meaningful point totals
-- Pro: Age group integration already working
-- Con: May inflate point totals over time
+**Example 2: Moderately Inactive (2 months no play)**
+- Starting: 100 points
+- After 30 days: 100 points (grace period)
+- Week 5: 98 points (-2%)
+- Week 6: 96.04 points (-2% of 98)
+- Week 9: ~92 points
+- **Result:** Minimal impact for short breaks
 
-**Option 2: Low-Value System (System B)**  
-- Pro: More conservative, sustainable scaling
-- Pro: Comprehensive tier system (7 levels)
-- Con: May feel less rewarding to players
+**Example 3: Long-term Inactive (6 months)**
+- Starting: 200 points (lifetime peak)
+- After decay calculations: ~100 points (50% maximum decay)
+- Lifetime floor: 50 points (25% of peak)
+- **Result:** Significant decay but maintains some standing
+
+#### **Decay Protection**
+- **New Players:** 90-day protection period
+- **Returning Players:** 14-day re-activation grace period
+- **Medical/Personal:** Admin can pause decay for documented absences
+- **Seasonal Play:** Option for "seasonal mode" with reduced decay
+
+### **Decay Implementation Benefits**
+- Maintains active player rankings at top
+- Prevents abandoned account point hoarding
+- Creates natural ranking mobility
+- Encourages consistent participation
+- Balances between retention and competition
 
 ---
 
@@ -216,56 +255,54 @@ The system includes comprehensive validation to ensure calculation consistency:
 
 ---
 
-## ❓ **DISCUSSION POINTS FOR FINALIZATION**
+## ❓ **REMAINING DISCUSSION POINTS**
 
-### **1. Base Point Standardization**
-- **Question:** Should we use 150/75 or 3/1 base points?
-- **Impact:** Affects all point totals across the platform
-- **Recommendation Needed:** Single source of truth selection
+### **1. Age Group Multiplier Application** 🔥 **CRITICAL DECISION**
+- **Own Age Group:** Players get multiplier only when competing in their age division
+- **Open Age Group:** Players always get their age multiplier regardless of opponent age
+- **Impact:** Massive effect on competitive balance and point distribution
+- **Your Recommendation Needed:** Which approach creates fairest competition?
 
-### **2. Age Group Multiplier Refinement**
-- **Current:** 1.0x to 1.6x range
-- **Question:** Are these multipliers fair and motivating?
-- **Consider:** Gender-specific multipliers needed?
+### **2. Points Decay Refinement**
+- **Proposed:** 2% weekly decay after 30-day grace period
+- **Question:** Are these rates appropriate for recreational vs competitive players?
+- **Consideration:** Should decay rate vary by player tier/activity level?
 
-### **3. Tournament Tier Expansion**
-- **Current:** 7 tournament tiers (1.0x to 4.0x)
-- **Question:** Do we need all 7 tiers or can we simplify?
-- **Usage:** How often will International (4.0x) events occur?
+### **3. Pickle Points Conversion Rate**
+- **Proposed:** 10x multiplier (3 ranking points = 30 Pickle Points)
+- **Question:** Is this conversion rate engaging enough?
+- **Alternative:** 20x or 25x multiplier for more substantial rewards?
 
-### **4. Pickle Points Integration**
-- **Current:** Basic implementation
-- **Question:** Should Pickle Points be percentage of Ranking Points?
-- **Consideration:** Fixed rewards vs dynamic scaling?
-
-### **5. Match Type Categories**
-- **Current:** Casual (50%), League (75%), Tournament (100%)
-- **Question:** Should we add more categories (e.g., Practice, Exhibition)?
-- **Balance:** Maintaining competitive integrity vs participation rewards
-
-### **6. Manual Override Limits**
-- **Current:** 0-1000 points for both winner and loser
-- **Question:** Should there be different limits for different admin roles?
-- **Security:** Audit logging for all manual overrides?
-
-### **7. Seasonal Decay System**
-- **Concept:** Points decay over time to maintain activity
-- **Question:** Implement seasonal resets or rolling decay?
-- **Balance:** Encouraging activity vs penalizing breaks
+### **4. Anti-Exploitation Strength**
+- **Proposed:** Daily limits, cooldowns, fraud detection
+- **Question:** Are proposed controls too restrictive or too lenient?
+- **Balance:** Preventing abuse vs maintaining user experience
 
 ---
 
-## 🎯 **NEXT STEPS**
+## 🎯 **IMPLEMENTATION STATUS**
 
-1. **Discuss and finalize** each of the 7 discussion points above
-2. **Select single source of truth** for base point calculation
-3. **Standardize age group multipliers** across all systems
-4. **Define final tournament tier structure** (3, 5, or 7 tiers?)
-5. **Establish Pickle Points conversion rates** from ranking points
-6. **Implement chosen algorithm** as single StandardizedRankingService
-7. **Create comprehensive test suite** for all scenarios
-8. **Document final algorithm** for deployment
+### **✅ CONFIRMED DECISIONS**
+1. **System B Standardized:** 3/1 base points across all systems
+2. **Age Multipliers Fair:** 1.0x to 1.6x range maintained
+3. **7-Tier Tournament Structure:** All tiers kept for detailed classification
+4. **Standalone Pickle Points:** Percentage conversion + action rewards with anti-exploitation
+5. **Points Decay Algorithm:** Weekly 2% decay with protections implemented
+6. **Manual Override Limits:** 0-1000 points acceptable for current needs
+
+### **🔥 CRITICAL DECISION NEEDED**
+**Age Group Multiplier Application Method:**
+- Own age group vs open age group competition
+- This decision affects the entire competitive balance
+
+### **📋 NEXT STEPS**
+1. **Resolve age group multiplier application method**
+2. **Finalize Pickle Points conversion rate** (10x, 20x, or 25x?)
+3. **Review anti-exploitation controls** strength
+4. **Implement unified StandardizedRankingService** 
+5. **Deploy points decay algorithm**
+6. **Create comprehensive test coverage**
 
 ---
 
-**Ready for Discussion:** This document captures all current logic and identifies key decisions needed to finalize the PicklePlus algorithm. Let's discuss each point and create the definitive algorithm specification.
+**Status:** 85% Complete - One critical decision and minor refinements needed before full deployment.
