@@ -116,31 +116,83 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 
 ### **Impact Analysis**
 
-#### **Option A Implications:**
-- **Competitive Balance:** Equal points in mixed-age competition
-- **Age Division Integrity:** Seniors only get bonuses vs other seniors
-- **Tournament Structure:** Encourages age-appropriate divisions
-- **Ranking Fairness:** Age doesn't create artificial ranking inflation
-- **Potential Issue:** May discourage seniors from open play
+#### **Option A Implications (Reconsidered):**
+- **Equal Points:** Ignores physical reality of aging
+- **Division Segregation:** Forces age-based segregation
+- **Senior Discouragement:** Penalizes seniors for playing challenging competition
+- **Competitive Unfairness:** No compensation for inherent physical disadvantages
+- **Tournament Impact:** Reduces cross-generational participation
 
-#### **Option B Implications:**
-- **Senior Participation:** Always rewarded regardless of opponent
-- **Ranking Inflation:** Seniors accumulate points faster than young players
-- **Competitive Imbalance:** Age becomes a ranking advantage
-- **Open Tournament Impact:** Creates unfair point distribution
-- **Potential Issue:** Young players disadvantaged in mixed-age competition
+#### **Option B Implications (Reconsidered):**
+- **Physical Reality Recognition:** Compensates for age-related physical disadvantages
+- **Encouraging Challenge:** Rewards seniors for playing up in competition
+- **Cross-Generational Play:** Maintains incentives for mixed-age tournaments
+- **Balanced Competition:** Young players keep physical advantages, seniors get point compensation
+- **Tournament Diversity:** Encourages more inclusive tournament structures
 
-### **Real-World Examples**
+### **Recommendation Update: Option B**
 
-**Club League Scenario (Option A):**
-- Senior division: 65-year-old vs 68-year-old → Both get 1.5x multiplier
-- Open division: 65-year-old vs 35-year-old → Both get 1.0x multiplier
-- *Result: Fair competition within divisions*
+**Why Option B Makes More Sense:**
 
-**Club League Scenario (Option B):**
-- Senior plays anyone: Always gets 1.5x multiplier
-- Creates incentive for seniors to play weaker opponents for more points
-- *Result: Potential for point farming*
+1. **Asymmetric Access:** Seniors can play down (open), young players cannot play up (senior divisions)
+2. **Physical Compensation:** Age multipliers offset natural physical disadvantages
+3. **Participation Incentive:** Encourages seniors to challenge themselves against younger players
+4. **Realistic Balance:** Acknowledges that 65-year-old competing against 25-year-old faces inherent disadvantage
+5. **Tournament Inclusivity:** Promotes mixed-age competition rather than age segregation
+
+### **Competitive Reality Considerations**
+
+**Key Factors:**
+1. **Physical Advantage:** Younger players typically have speed, agility, and endurance advantages
+2. **Age Restrictions:** Younger players CANNOT compete in higher age categories (e.g., 25-year-old cannot play in 50+ division)
+3. **Open Division Access:** Older players CAN compete in open/younger divisions but face physical disadvantages
+4. **Skill vs Age:** Age multipliers should compensate for physical disadvantages, not create unfair advantages
+
+### **Revised Analysis with Competitive Reality**
+
+#### **Option A (Own Age Group) - Competitive Impact:**
+**Advantages:**
+- Maintains division integrity
+- Equal treatment in mixed-age competition
+- Prevents artificial ranking inflation
+
+**Critical Problem:**
+- 65-year-old competing in open division gets NO age compensation despite facing younger, physically superior opponents
+- Discourages seniors from challenging themselves in open play
+- Creates reverse discrimination - seniors penalized for playing up
+
+#### **Option B (Open Age Group) - Competitive Impact:**
+**Advantages:**
+- Seniors get appropriate compensation when facing younger opponents
+- Encourages cross-generational play
+- Recognizes physical realities of aging
+
+**Previous Concerns Addressed:**
+- "Point farming" concern is invalid - seniors face tougher competition in open play
+- Age advantage is compensation for physical disadvantage, not unfair bonus
+- Young players still have inherent physical advantages
+
+### **Real-World Tournament Examples Reconsidered**
+
+**Open City Tournament:**
+- 65-year-old vs 28-year-old (both skilled 4.0 players)
+- Physical reality: 28-year-old has significant speed/agility advantage
+- Current fitness: Younger player likely has better endurance, reaction time
+
+**Option A Result:**
+- Both get equal points (3.0 for win)
+- Senior gets no compensation for physical disadvantage
+- *Outcome: Discourages senior participation in challenging competition*
+
+**Option B Result:**
+- Senior winner: 4.5 points (1.5x age compensation)
+- Young winner: 3.0 points (natural physical advantage)
+- *Outcome: Fair compensation system recognizing different advantages*
+
+### **Age Restriction Reality Check**
+- 25-year-old CANNOT enter 50+ division for easy wins
+- 55-year-old CAN enter open division but faces physical disadvantage
+- Age multipliers should compensate for this asymmetric access
 
 ### **Match Type Weight Factors** 🎾
 
