@@ -106,7 +106,7 @@ export default function NewAuthPage() {
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await login(data.username, data.password);
+      await login({ username: data.username, password: data.password });
       toast({
         title: "Welcome back!",
         description: "Successfully logged in to your player passport.",
@@ -127,8 +127,15 @@ export default function NewAuthPage() {
     setIsLoading(true);
     try {
       await register({
-        ...data,
-        dateOfBirth: data.yearOfBirth ? `${data.yearOfBirth}-01-01` : undefined,
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        yearOfBirth: data.yearOfBirth,
+        location: data.location,
+        playingSince: data.playingSince,
+        skillLevel: data.skillLevel,
       });
       toast({
         title: "Welcome to Pickle+!",
