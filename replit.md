@@ -11,7 +11,8 @@ Preferred communication style: Simple, everyday language.
 - Features: player registration, authentication, match recording, ranking/pickle points, leaderboards, PCP coach applications (L1-5)
 - Advanced features disabled: coaching analytics, community features, tournament management, training centers, advanced coaching tools
 - Navigation simplified to 4 core items: Dashboard, Record Match, Rankings, My Profile
-- **NAVIGATION AUDIT COMPLETE (Aug 6, 2025):** All navigation components cleaned and aligned - Header dropdown, Desktop sidebar, Mobile navigation all show only V1.0 features
+- **NAVIGATION AUDIT COMPLETE (Aug 6, 2025):** All navigation components cleaned and aligned - AppHeader mobile menu, Desktop sidebar, Mobile navigation all show only V1.0 features
+- **APPHEADER NAVIGATION FIXED:** Mobile sandwich menu now shows streamlined V1.0 navigation (7 items: Dashboard, Record Match, Rankings, My Profile, Communities, Find Coaches, Training Hub) - removed complex dropdowns and admin panel access
 
 Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches

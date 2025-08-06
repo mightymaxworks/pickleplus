@@ -141,28 +141,16 @@ export function AppHeader({
     }
   };
 
-  // Streamlined navigation items - 5 core sections
+  // V1.0 Launch Navigation - Streamlined core features only
   const defaultNavItems = [
-    { label: 'Home', icon: <Home size={18} />, path: '/dashboard' },
-    { label: 'Play', icon: <Calendar size={18} />, path: '/matches' },
-    { label: 'Community', icon: <Users size={18} />, path: '/communities' },
-    { label: 'Coaching', icon: <GraduationCap size={18} />, path: '/coach', 
-      dropdown: [
-        { label: 'Coach Hub', path: '/coach' },
-        { label: 'Find Coaches', path: '/find-coaches' },
-        { label: 'PCP Certification', path: '/pcp-certification' },
-        { label: 'Player Development', path: '/player-development-hub' }
-      ]
-    },
-    { label: 'More', icon: <Settings size={18} />, path: '/settings',
-      dropdown: [
-        { label: 'Settings', path: '/settings' },
-        { label: 'Features', path: '/features' },
-        { label: 'Achievements', path: '/achievements' },
-        { label: 'Referrals', path: '/referrals' },
-        ...(user?.isAdmin ? [{ label: 'Admin Panel', path: '/admin' }] : [])
-      ]
-    }
+    { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
+    { label: 'Record Match', icon: <Calendar size={18} />, path: '/record-match' },
+    { label: 'Rankings', icon: <Award size={18} />, path: '/leaderboard' },
+    { label: 'My Profile', icon: <UserIcon size={18} />, path: '/profile' },
+    // Coming soon features - accessible but with coming soon pages
+    { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
+    { label: 'Find Coaches', icon: <GraduationCap size={18} />, path: '/find-coaches' },
+    { label: 'Training Hub', icon: <Building2 size={18} />, path: '/player-development-hub' }
   ];
 
   // Use custom nav items if provided, otherwise use default
