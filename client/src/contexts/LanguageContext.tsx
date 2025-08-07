@@ -1526,6 +1526,9 @@ const translations: Record<Language, Record<string, string>> = {
     'passport.emergencyContact': '紧急联系人',
     'passport.externalRatings': '外部评级与档案',
     'passport.performanceAssessment': '表现自我评估 (1-10 分)',
+    'passport.playingPreferences': '比赛偏好',
+    'passport.equipmentGear': '装备与用具',
+    'passport.physicalAttributesFitness': '身体素质与健康',
     
     // Passport Statistics
     'passport.overallRecord': '总体记录',
