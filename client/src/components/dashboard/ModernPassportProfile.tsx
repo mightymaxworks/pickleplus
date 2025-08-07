@@ -16,6 +16,7 @@ import { Camera, MapPin, Calendar, QrCode, GraduationCap, BookOpen, Star } from 
 import { QRCodeSVG } from "qrcode.react";
 import { EditableField } from "@/components/profile/EditableField";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ModernPassportProfileProps {
   user: any;
@@ -28,6 +29,7 @@ export default function ModernPassportProfile({
   isOwner = false, 
   onProfileUpdate 
 }: ModernPassportProfileProps) {
+  const { t } = useLanguage();
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
   const [coverImage, setCoverImage] = useState<string | undefined>(undefined);
 
@@ -223,7 +225,7 @@ export default function ModernPassportProfile({
             {isOwner && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-blue-900">Profile Completion</span>
+                  <span className="text-sm font-medium text-blue-900">{t('passport.completionPercentage')}</span>
                   <span className="text-sm text-blue-600">{user?.profileCompletionPct || user?.profile_completion_pct || '0'}%</span>
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-2">
@@ -242,19 +244,19 @@ export default function ModernPassportProfile({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
               <div className="text-center p-3 bg-orange-50 rounded-lg">
                 <div className="text-lg md:text-2xl font-bold text-orange-600">{user?.rankingPoints || user?.ranking_points || '0'}</div>
-                <div className="text-xs text-muted-foreground">Ranking Points</div>
+                <div className="text-xs text-muted-foreground">{t('leaderboard.rankingPoints')}</div>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-lg md:text-2xl font-bold text-blue-600">{user?.totalMatches || '0'}</div>
-                <div className="text-xs text-muted-foreground">Matches</div>
+                <div className="text-xs text-muted-foreground">{t('passport.matches')}</div>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <div className="text-lg md:text-2xl font-bold text-green-600">{user?.winRate || '0'}%</div>
-                <div className="text-xs text-muted-foreground">Win Rate</div>
+                <div className="text-xs text-muted-foreground">{t('passport.winRate')}</div>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
                 <div className="text-lg md:text-2xl font-bold text-purple-600">{user?.picklePoints || user?.pickle_points || '0'}</div>
-                <div className="text-xs text-muted-foreground">Pickle Points</div>
+                <div className="text-xs text-muted-foreground">{t('passport.picklePoints')}</div>
               </div>
             </div>
           </div>
@@ -283,12 +285,12 @@ export default function ModernPassportProfile({
       <div className="w-full p-0">
         <Tabs defaultValue="about" className="w-full">
           <TabsList className={`grid w-full h-auto p-1 ${userRoles.isCoach ? 'grid-cols-6' : 'grid-cols-5'}`}>
-            <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">About</TabsTrigger>
-            <TabsTrigger value="stats" className="text-xs md:text-sm px-2 py-2">Stats</TabsTrigger>
-            <TabsTrigger value="rankings" className="text-xs md:text-sm px-2 py-2">Rankings</TabsTrigger>
-            <TabsTrigger value="points" className="text-xs md:text-sm px-2 py-2">Points</TabsTrigger>
-            {userRoles.isCoach && <TabsTrigger value="coaching" className="text-xs md:text-sm px-2 py-2">Coaching</TabsTrigger>}
-            <TabsTrigger value="connect" className="text-xs md:text-sm px-2 py-2">Connect</TabsTrigger>
+            <TabsTrigger value="about" className="text-xs md:text-sm px-2 py-2">{t('tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="stats" className="text-xs md:text-sm px-2 py-2">{t('tabs.stats')}</TabsTrigger>
+            <TabsTrigger value="rankings" className="text-xs md:text-sm px-2 py-2">{t('nav.rankings')}</TabsTrigger>
+            <TabsTrigger value="points" className="text-xs md:text-sm px-2 py-2">{t('tabs.points')}</TabsTrigger>
+            {userRoles.isCoach && <TabsTrigger value="coaching" className="text-xs md:text-sm px-2 py-2">{t('nav.coaching')}</TabsTrigger>}
+            <TabsTrigger value="connect" className="text-xs md:text-sm px-2 py-2">{t('passport.qrCode')}</TabsTrigger>
           </TabsList>
             
           
@@ -296,7 +298,7 @@ export default function ModernPassportProfile({
             {/* Bio Section */}
             <Card>
               <CardHeader>
-                <CardTitle>About Me</CardTitle>
+                <CardTitle>{t('passport.bio')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <EditableField
@@ -313,7 +315,7 @@ export default function ModernPassportProfile({
             {/* Personal Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
+                <CardTitle>{t('passport.personalInfo')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -582,7 +584,7 @@ export default function ModernPassportProfile({
             {/* External Ratings */}
             <Card>
               <CardHeader>
-                <CardTitle>External Ratings & Profiles</CardTitle>
+                <CardTitle>{t('passport.externalRatings', 'External Ratings & Profiles')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -632,7 +634,7 @@ export default function ModernPassportProfile({
             {/* Performance Self-Assessment */}
             <Card>
               <CardHeader>
-                <CardTitle>Performance Self-Assessment (1-10 Scale)</CardTitle>
+                <CardTitle>{t('passport.performanceAssessment', 'Performance Self-Assessment (1-10 Scale)')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
