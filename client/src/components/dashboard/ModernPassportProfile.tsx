@@ -412,7 +412,7 @@ export default function ModernPassportProfile({
             {/* Playing Preferences */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('passport.playingPreferences', 'Playing Preferences')}</CardTitle>
+                <CardTitle>Playing Preferences</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -489,7 +489,7 @@ export default function ModernPassportProfile({
             {/* Equipment Section */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('passport.equipmentGear', 'Equipment & Gear')}</CardTitle>
+                <CardTitle>Equipment & Gear</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

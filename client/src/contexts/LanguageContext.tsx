@@ -734,8 +734,6 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Match Recording
     'match.record': 'Record Match',
-    'match.recordMatch': 'Record Match',
-    'match.quickMatchRecorder': 'Record your pickleball match results quickly and easily',
     'match.opponent': 'Opponent',
     'match.score': 'Score',
     'match.result': 'Result',
@@ -1387,8 +1385,6 @@ const translations: Record<Language, Record<string, string>> = {
     'match.notes': '比赛备注',
     'match.saveMatch': '保存比赛',
     'match.matchSaved': '比赛记录成功',
-    'match.recordMatch': '记录比赛',
-    'match.quickMatchRecorder': '快速比赛记录器',
     
     // Rankings & Leaderboard
     'ranking.leaderboard': '排行榜',
@@ -1530,13 +1526,6 @@ const translations: Record<Language, Record<string, string>> = {
     'passport.emergencyContact': '紧急联系人',
     'passport.externalRatings': '外部评级与档案',
     'passport.performanceAssessment': '表现自我评估 (1-10 分)',
-    'passport.playingPreferences': '比赛偏好',
-    'passport.equipmentGear': '装备器材',
-    'passport.physicalAttributes': '身体属性与健身',
-    
-    // Match recording
-    'match.recordMatch': '记录比赛',
-    'match.quickMatchRecorder': '快速轻松记录您的匹克球比赛结果',
     
     // Passport Statistics
     'passport.overallRecord': '总体记录',

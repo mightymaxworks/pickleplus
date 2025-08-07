@@ -149,17 +149,7 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, login, register, isLoading } = useAuth();
   const { toast } = useToast();
-  
-  // Safe language hook with fallback
-  let t;
-  try {
-    const { t: translate } = useLanguage();
-    t = translate;
-  } catch (error) {
-    // Fallback function if LanguageProvider is not available
-    t = (key: string, fallback?: string) => fallback || key;
-  }
-  
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("login");
 
   // Handle redirect using useEffect

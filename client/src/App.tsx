@@ -209,10 +209,10 @@ export default function App() {
                     
                     <Switch>
                     {/* Public Routes */}
-                  <Route path="/" component={LazyLandingPage} />
-                  <Route path="/login" component={LazyAuthPage} />
-                  <Route path="/register" component={LazyAuthPage} />
-                  <Route path="/auth" component={LazyAuthPage} />
+                  <Route path="/" component={lazyLoad(() => import('./pages/NewLandingPage'))} />
+                  <Route path="/login" component={lazyLoad(() => import('./pages/NewAuthPage'))} />
+                  <Route path="/register" component={lazyLoad(() => import('./pages/NewAuthPage'))} />
+                  <Route path="/auth" component={lazyLoad(() => import('./pages/NewAuthPage'))} />
                   <Route path="/test-login" component={lazyLoad(() => import('./pages/TestLogin'))} />
                   <Route path="/test-coach-profile" component={lazyLoad(() => import('./pages/TestCoachProfile'))} />
                   <Route path="/admin-coach-test" component={lazyLoad(() => import('./pages/AdminCoachTest'))} />
