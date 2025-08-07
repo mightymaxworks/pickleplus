@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/lib/auth';
 import { useLocation } from 'wouter';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import {
 export default function RecordMatchPage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
 
   return (
     <DashboardLayout>
@@ -24,7 +26,7 @@ export default function RecordMatchPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
             <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
               <ListChecks className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              <span>Record Match</span>
+              <span>{t('match.recordMatch', 'Record Match')}</span>
             </h1>
             
             <Button 
@@ -39,7 +41,7 @@ export default function RecordMatchPage() {
           </div>
           
           <p className="text-sm text-muted-foreground mt-1">
-            Record your pickleball match results quickly and easily
+            {t('match.quickMatchRecorder', 'Record your pickleball match results quickly and easily')}
           </p>
         </div>
         
