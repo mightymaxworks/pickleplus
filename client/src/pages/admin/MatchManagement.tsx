@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Users, Trophy, Calendar, Target } from 'lucide-react';
+import { Loader2, Plus, Users, Trophy, Calendar, Target, Edit, Trash2, Eye, RefreshCw, AlertCircle } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface Competition {
@@ -75,6 +75,15 @@ const MatchManagement: React.FC = () => {
   const [selectedCompetition, setSelectedCompetition] = useState<number | null>(null);
   const [showCreateCompetition, setShowCreateCompetition] = useState(false);
   const [showCreateMatch, setShowCreateMatch] = useState(false);
+  const [selectedMatchForEdit, setSelectedMatchForEdit] = useState<any>(null);
+  const [editMatchData, setEditMatchData] = useState({
+    player1Score: '',
+    player2Score: '',
+    team1Score: '',
+    team2Score: '',
+    winnerId: '',
+    notes: ''
+  });
 
   // Fetch competitions
   const { data: competitions, isLoading: competitionsLoading } = useQuery({
@@ -99,6 +108,15 @@ const MatchManagement: React.FC = () => {
     queryKey: ['/api/admin/match-management/players/available'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/match-management/players/available');
+      return response.json();
+    }
+  });
+
+  // Fetch completed matches for CRUD operations
+  const { data: completedMatches, isLoading: completedMatchesLoading, refetch: refetchCompletedMatches } = useQuery({
+    queryKey: ['/api/admin/enhanced-match-management/matches/completed'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/enhanced-match-management/matches/completed?limit=20');
       return response.json();
     }
   });
@@ -149,6 +167,51 @@ const MatchManagement: React.FC = () => {
     }
   });
 
+  // Update match mutation (CRUD)
+  const updateMatchMutation = useMutation({
+    mutationFn: async ({ matchId, updateData }: { matchId: number, updateData: any }) => {
+      const response = await apiRequest('PATCH', `/api/admin/enhanced-match-management/matches/${matchId}/update`, updateData);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      refetchCompletedMatches();
+      setSelectedMatchForEdit(null);
+      toast({
+        title: "Match Updated Successfully",
+        description: `${data.message} - Points automatically recalculated`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update match. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Delete match mutation (CRUD)
+  const deleteMatchMutation = useMutation({
+    mutationFn: async ({ matchId, reason }: { matchId: number, reason?: string }) => {
+      const response = await apiRequest('DELETE', `/api/admin/enhanced-match-management/matches/${matchId}`, { reason });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      refetchCompletedMatches();
+      toast({
+        title: "Match Deleted Successfully",
+        description: `${data.message} - ${data.pointsReversed} player results removed`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Deletion Failed",
+        description: "Failed to delete match. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleCreateCompetition = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -185,6 +248,60 @@ const MatchManagement: React.FC = () => {
     };
 
     createMatchMutation.mutate(matchData);
+  };
+
+  // Handle match update (CRUD)
+  const handleUpdateMatch = () => {
+    if (!selectedMatchForEdit) return;
+    
+    const payload = Object.fromEntries(
+      Object.entries(editMatchData).filter(([_, v]) => v !== '')
+    );
+    
+    // Convert string numbers to integers
+    if (payload.player1Score) payload.player1Score = parseInt(payload.player1Score);
+    if (payload.player2Score) payload.player2Score = parseInt(payload.player2Score);
+    if (payload.team1Score) payload.team1Score = parseInt(payload.team1Score);
+    if (payload.team2Score) payload.team2Score = parseInt(payload.team2Score);
+    if (payload.winnerId) payload.winnerId = parseInt(payload.winnerId);
+    
+    updateMatchMutation.mutate({ matchId: selectedMatchForEdit.id, updateData: payload });
+  };
+
+  // Handle match deletion (CRUD)
+  const handleDeleteMatch = (matchId: number) => {
+    if (!confirm('Are you sure you want to delete this match? This will reverse all ranking points.')) {
+      return;
+    }
+    
+    deleteMatchMutation.mutate({ 
+      matchId, 
+      reason: 'Deleted via admin match management interface' 
+    });
+  };
+
+  // Load match details for editing
+  const loadMatchForEdit = async (match: any) => {
+    try {
+      const response = await apiRequest('GET', `/api/admin/enhanced-match-management/matches/${match.id}/details`);
+      const data = await response.json();
+      
+      setSelectedMatchForEdit(data);
+      setEditMatchData({
+        player1Score: data.match?.player1Score?.toString() || '',
+        player2Score: data.match?.player2Score?.toString() || '',
+        team1Score: data.match?.team1Score?.toString() || '',
+        team2Score: data.match?.team2Score?.toString() || '',
+        winnerId: '',
+        notes: data.match?.notes || ''
+      });
+    } catch (error) {
+      toast({
+        title: "Error Loading Match",
+        description: "Failed to load match details for editing.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatCompetitionType = (type: string) => {
@@ -436,6 +553,7 @@ const MatchManagement: React.FC = () => {
         <TabsList>
           <TabsTrigger value="competitions">Competitions</TabsTrigger>
           <TabsTrigger value="matches">Matches</TabsTrigger>
+          <TabsTrigger value="completed">Completed Matches</TabsTrigger>
         </TabsList>
 
         <TabsContent value="competitions" className="space-y-4">
@@ -531,6 +649,237 @@ const MatchManagement: React.FC = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium">Completed Matches Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Edit scores, update winners, and manage completed match data with automatic point recalculation
+              </p>
+            </div>
+            <Button onClick={refetchCompletedMatches} disabled={completedMatchesLoading}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+
+          {completedMatchesLoading && (
+            <div className="flex items-center justify-center h-48">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+
+          {!completedMatchesLoading && (!completedMatches?.matches || completedMatches.matches.length === 0) && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Completed Matches</h3>
+                <p className="text-gray-500 text-center max-w-md">
+                  No completed matches found. Matches will appear here after they are recorded and finished.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {!completedMatchesLoading && completedMatches?.matches && completedMatches.matches.length > 0 && (
+            <div className="grid gap-4">
+              {completedMatches.matches.map((match: any) => (
+                <Card key={match.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base">Match #{match.id}</CardTitle>
+                        <CardDescription>
+                          {match.competitionName} • {formatMatchFormat(match.format || 'singles')} • {formatAgeGroup(match.ageGroup || '30_39')}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{match.status}</Badge>
+                        <div className="text-right">
+                          <div className="font-bold text-lg">
+                            {match.player1Score}-{match.player2Score}
+                          </div>
+                          {match.team1Score !== null && (
+                            <div className="text-sm text-gray-500">
+                              Teams: {match.team1Score}-{match.team2Score}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        <div>Updated: {new Date(match.updatedAt).toLocaleDateString()}</div>
+                        <div>Competition ID: {match.competitionId}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => loadMatchForEdit(match)}
+                          disabled={updateMatchMutation.isPending}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteMatch(match.id)}
+                          disabled={deleteMatchMutation.isPending}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Edit Match Dialog */}
+          <Dialog open={!!selectedMatchForEdit} onOpenChange={() => setSelectedMatchForEdit(null)}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit Match #{selectedMatchForEdit?.match?.id}</DialogTitle>
+                <DialogDescription>
+                  Update match scores and details. Points will be automatically recalculated.
+                </DialogDescription>
+              </DialogHeader>
+              
+              {selectedMatchForEdit && (
+                <div className="space-y-6">
+                  {/* Match Info Display */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Match Information</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>Competition: {selectedMatchForEdit.match?.competitionName}</div>
+                      <div>Status: <Badge>{selectedMatchForEdit.match?.status}</Badge></div>
+                      <div>Format: {formatMatchFormat(selectedMatchForEdit.match?.format || 'singles')}</div>
+                      <div>Age Group: {formatAgeGroup(selectedMatchForEdit.match?.ageGroup || '30_39')}</div>
+                    </div>
+                  </div>
+
+                  {/* Player Results Display */}
+                  {selectedMatchForEdit.playerResults && selectedMatchForEdit.playerResults.length > 0 && (
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Current Player Results ({selectedMatchForEdit.playerResults.length})</h4>
+                      <div className="space-y-1">
+                        {selectedMatchForEdit.playerResults.map((result: any) => (
+                          <div key={result.id} className="flex justify-between text-sm">
+                            <span>
+                              {result.playerName}
+                              {result.isWinner && <Badge className="ml-2" variant="default">Winner</Badge>}
+                            </span>
+                            <span className="font-medium">{result.pointsAwarded} points</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Edit Form */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Update Match Scores</h4>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Player 1 Score</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter score"
+                          value={editMatchData.player1Score}
+                          onChange={(e) => setEditMatchData(prev => ({...prev, player1Score: e.target.value}))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Player 2 Score</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter score"
+                          value={editMatchData.player2Score}
+                          onChange={(e) => setEditMatchData(prev => ({...prev, player2Score: e.target.value}))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Team 1 Score (if doubles)</Label>
+                        <Input
+                          type="number"
+                          placeholder="Leave empty if not doubles"
+                          value={editMatchData.team1Score}
+                          onChange={(e) => setEditMatchData(prev => ({...prev, team1Score: e.target.value}))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Team 2 Score (if doubles)</Label>
+                        <Input
+                          type="number"
+                          placeholder="Leave empty if not doubles"
+                          value={editMatchData.team2Score}
+                          onChange={(e) => setEditMatchData(prev => ({...prev, team2Score: e.target.value}))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Winner Player ID (optional)</Label>
+                      <Input
+                        type="number"
+                        placeholder="Enter player ID of the winner"
+                        value={editMatchData.winnerId}
+                        onChange={(e) => setEditMatchData(prev => ({...prev, winnerId: e.target.value}))}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Leave empty to auto-determine winner based on scores
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Notes</Label>
+                      <Textarea
+                        placeholder="Add notes about this match update (optional)"
+                        value={editMatchData.notes}
+                        onChange={(e) => setEditMatchData(prev => ({...prev, notes: e.target.value}))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedMatchForEdit(null)}
+                      disabled={updateMatchMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleUpdateMatch}
+                      disabled={updateMatchMutation.isPending}
+                    >
+                      {updateMatchMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Updating & Recalculating...
+                        </>
+                      ) : (
+                        'Update Match & Recalculate Points'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>
