@@ -279,7 +279,7 @@ export function AppHeader({
             <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
               {/* Navigation Items */}
               {navigationItems.map((item, i) => {
-                const isActive = location === item.path || (item.dropdown && item.dropdown.some(subItem => location === subItem.path));
+                const isActive = location === item.path || ((item as any).dropdown && (item as any).dropdown.some((subItem: any) => location === subItem.path));
                 
                 return (
                   <div key={item.label}>
@@ -295,7 +295,7 @@ export function AppHeader({
                         // Check if this is a coming soon feature
                         if (item.comingSoon) {
                           showComingSoon(item.comingSoon.feature, item.comingSoon.description);
-                        } else if (item.dropdown) {
+                        } else if ((item as any).dropdown) {
                           // For dropdown items, just navigate to main path
                           setTimeout(() => navigate(item.path), 300);
                         } else {
@@ -318,9 +318,9 @@ export function AppHeader({
                     </motion.button>
 
                     {/* Dropdown Items - Show as indented sub-items */}
-                    {item.dropdown && (
+                    {(item as any).dropdown && (
                       <div className="ml-4 mt-2 space-y-1">
-                        {item.dropdown.map((subItem) => {
+                        {(item as any).dropdown.map((subItem: any) => {
                           const subIsActive = location === subItem.path;
                           return (
                             <motion.button
@@ -349,6 +349,28 @@ export function AppHeader({
                   </div>
                 );
               })}
+              
+              {/* Admin Panel Button - Only show for admin users */}
+              {user?.isAdmin && (
+                <motion.button 
+                  className="flex items-center w-full py-3 px-4 mt-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 shadow-sm"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setTimeout(() => navigate('/admin'), 300);
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  whileHover={{ x: 5 }}
+                >
+                  <span className="mr-3 text-blue-500 dark:text-blue-400">
+                    <Settings size={18} />
+                  </span>
+                  <span className="font-medium text-blue-600 dark:text-blue-400">
+                    Admin Panel
+                  </span>
+                </motion.button>
+              )}
               
               {/* Logout Button */}
               <motion.button 
