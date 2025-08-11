@@ -14,12 +14,12 @@ import { ScanQRModal } from "./ScanQRModal";
  * @lastModified 2025-06-03
  */
 export default function QRScannerFAB() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [location] = useLocation();
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
-  // Don't show FAB on landing page or if not logged in
-  if (!user || location === '/') {
+  // Don't show FAB on landing page, if not logged in, or while loading auth state
+  if (!user || location === '/' || isLoading) {
     return null;
   }
 
