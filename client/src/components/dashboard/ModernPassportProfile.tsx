@@ -12,11 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Calendar, QrCode, GraduationCap, BookOpen, Star } from "lucide-react";
+import { Camera, MapPin, Calendar, QrCode, GraduationCap, BookOpen, Star, Copy, Check } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { EditableField } from "@/components/profile/EditableField";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface ModernPassportProfileProps {
   user: any;
@@ -30,8 +31,10 @@ export default function ModernPassportProfile({
   onProfileUpdate 
 }: ModernPassportProfileProps) {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
   const [coverImage, setCoverImage] = useState<string | undefined>(undefined);
+  const [copiedPassportId, setCopiedPassportId] = useState(false);
 
   // Handle file upload for images
   const handleImageUpload = (type: 'profile' | 'cover') => {
@@ -58,11 +61,32 @@ export default function ModernPassportProfile({
     input.click();
   };
 
-  // Generate QR code data
+  // Generate QR code data and passport ID
+  const passportId = `PKL-${user?.id?.toString().padStart(6, '0') || '000000'}`;
   const qrCodeData = `${window.location.origin}/profile/${user?.id || 'demo'}`;
   const userRoles = { 
     isCoach: user?.isAdmin || user?.isCoach || false, // Admin can see coaching features
     isPlayer: true 
+  };
+
+  // Handle passport ID copy
+  const handleCopyPassportId = async () => {
+    try {
+      await navigator.clipboard.writeText(passportId);
+      setCopiedPassportId(true);
+      toast({
+        title: "Copied!",
+        description: "Passport ID copied to clipboard",
+        duration: 2000,
+      });
+      setTimeout(() => setCopiedPassportId(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy passport ID",
+        variant: "destructive",
+      });
+    }
   };
 
   // Debug banner image and user data
@@ -1129,9 +1153,34 @@ export default function ModernPassportProfile({
                       className="block"
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-6">
                     Scan to connect and view full profile
                   </p>
+                  
+                  {/* Passport ID Section */}
+                  <div className="bg-gray-50 rounded-lg p-4 max-w-sm mx-auto">
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <p className="text-xs text-muted-foreground mb-1">Passport ID</p>
+                        <p className="font-mono text-lg font-semibold text-gray-900">{passportId}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyPassportId}
+                        className="ml-3"
+                      >
+                        {copiedPassportId ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Your unique player identifier
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
