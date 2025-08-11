@@ -18,6 +18,14 @@ export default function QRScannerFAB() {
   const [location] = useLocation();
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
+  // Debug logging to help identify the issue
+  console.log('QRScannerFAB - Debug info:', {
+    user: user ? 'User exists' : 'No user',
+    location,
+    isLoading,
+    shouldShow: !(!user || location === '/' || isLoading)
+  });
+
   // Don't show FAB on landing page, if not logged in, or while loading auth state
   if (!user || location === '/' || isLoading) {
     return null;
