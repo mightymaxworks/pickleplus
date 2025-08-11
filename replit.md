@@ -22,6 +22,7 @@ Preferred communication style: Simple, everyday language.
 - **PROFILE UX BREAKTHROUGH (Aug 6, 2025):** Interactive slider components implemented for all 1-10 rating fields - eliminates input errors, provides meaningful labels (Beginner→Elite, Casual→Elite, etc.)
 - **RUNTIME ERRORS ELIMINATED (Aug 6, 2025):** All SelectItem empty value errors resolved across entire platform - QuickMatchRecorderStreamlined, BugReportDetail, AdvancedCommunitySearch, CommunityList, EventForm, PassportVerificationDashboard all fixed
 - **CI/CD SYSTEM IMPLEMENTED (Aug 6, 2025):** Comprehensive automated testing suite with Puppeteer, GitHub Actions workflow, and operational validation - ensures 100% reliability for admin match management
+- **QR SCANNER FAB AUTHENTICATION FIXED (Aug 11, 2025):** Enhanced floating QR scanner button authentication logic to prevent display for non-logged-in users - added isLoading state check to QuickMatchFAB component
 
 Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches
