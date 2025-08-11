@@ -387,4 +387,293 @@ router.get('/age-groups', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// CRUD Operations for Completed Matches
+
+// Get completed match details with full player results
+router.get('/matches/:matchId/details', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const matchId = parseInt(req.params.matchId);
+    
+    // Get match basic info
+    const matchData = await db.select().from(adminMatches)
+      .where(eq(adminMatches.id, matchId)).limit(1);
+      
+    if (!matchData[0]) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
+    // Get all player results for this match
+    const playerResults = await db.select({
+      id: playerMatchResults.id,
+      playerId: playerMatchResults.playerId,
+      pointsAwarded: playerMatchResults.pointsAwarded,
+      isWinner: playerMatchResults.isWinner,
+      playerName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`.as('playerName'),
+      username: users.username
+    })
+    .from(playerMatchResults)
+    .leftJoin(users, eq(playerMatchResults.playerId, users.id))
+    .where(eq(playerMatchResults.matchId, matchId));
+    
+    res.json({
+      match: matchData[0],
+      playerResults,
+      message: 'Match details retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Error retrieving match details:', error);
+    res.status(500).json({ 
+      message: 'Failed to retrieve match details', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Update completed match scores and recalculate points
+router.patch('/matches/:matchId/update', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const matchId = parseInt(req.params.matchId);
+    const { 
+      player1Score, 
+      player2Score, 
+      team1Score, 
+      team2Score, 
+      winnerId,
+      notes,
+      recalculatePoints = true 
+    } = req.body;
+    
+    // Verify match exists and is completed
+    const existingMatch = await db.select().from(adminMatches)
+      .where(eq(adminMatches.id, matchId)).limit(1);
+      
+    if (!existingMatch[0]) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
+    if (existingMatch[0].status !== 'completed') {
+      return res.status(400).json({ message: 'Can only edit completed matches' });
+    }
+    
+    // Get existing player results to reverse previous points
+    const existingResults = await db.select()
+      .from(playerMatchResults)
+      .where(eq(playerMatchResults.matchId, matchId));
+    
+    // Reverse previous point allocations
+    for (const result of existingResults) {
+      await db.update(users)
+        .set({
+          rankingPoints: sql`${users.rankingPoints} - ${result.pointsAwarded}`
+        })
+        .where(eq(users.id, result.playerId));
+    }
+    
+    // Update match scores
+    const updateData: any = { updatedAt: new Date() };
+    if (player1Score !== undefined) updateData.player1Score = player1Score;
+    if (player2Score !== undefined) updateData.player2Score = player2Score;
+    if (team1Score !== undefined) updateData.team1Score = team1Score;
+    if (team2Score !== undefined) updateData.team2Score = team2Score;
+    if (notes !== undefined) updateData.notes = notes;
+    
+    const [updatedMatch] = await db.update(adminMatches)
+      .set(updateData)
+      .where(eq(adminMatches.id, matchId))
+      .returning();
+    
+    // Delete existing results for recalculation
+    await db.delete(playerMatchResults)
+      .where(eq(playerMatchResults.matchId, matchId));
+    
+    // Get competition details for recalculation
+    const competition = await db.select().from(competitions)
+      .where(eq(competitions.id, updatedMatch.competitionId)).limit(1);
+    
+    let pointAdjustments = [];
+    
+    if (competition[0] && winnerId) {
+      // Get all players in match for point recalculation
+      const playerIds = [
+        updatedMatch.player1Id,
+        updatedMatch.player2Id,
+        updatedMatch.team1Player1Id,
+        updatedMatch.team1Player2Id,
+        updatedMatch.team2Player1Id,
+        updatedMatch.team2Player2Id
+      ].filter(Boolean);
+      
+      const playersData = await db.select({
+        id: users.id,
+        gender: users.gender,
+        yearOfBirth: users.yearOfBirth
+      }).from(users).where(inArray(users.id, playerIds));
+      
+      // Recalculate points for each player
+      const newPlayerResults = [];
+      for (const player of playersData) {
+        const isWinner = player.id === winnerId;
+        const pointCalculation = calculatePlayerPoints(
+          player,
+          competition[0],
+          updatedMatch,
+          isWinner
+        );
+        
+        const resultData: InsertPlayerMatchResult = {
+          matchId: matchId,
+          playerId: player.id,
+          pointsAwarded: pointCalculation.finalPoints,
+          isWinner,
+          ageGroupAtMatch: pointCalculation.ageGroup as any,
+          ageGroupMultiplier: pointCalculation.multiplier.toString(),
+          basePoints: pointCalculation.basePoints
+        };
+        
+        newPlayerResults.push(resultData);
+        pointAdjustments.push({
+          playerId: player.id,
+          oldPoints: existingResults.find(r => r.playerId === player.id)?.pointsAwarded || 0,
+          newPoints: pointCalculation.finalPoints,
+          difference: pointCalculation.finalPoints - (existingResults.find(r => r.playerId === player.id)?.pointsAwarded || 0)
+        });
+      }
+      
+      // Insert new player results
+      await db.insert(playerMatchResults).values(newPlayerResults);
+      
+      // Apply new point allocations
+      for (const result of newPlayerResults) {
+        await db.update(users)
+          .set({
+            rankingPoints: sql`${users.rankingPoints} + ${result.pointsAwarded}`
+          })
+          .where(eq(users.id, result.playerId));
+      }
+    }
+    
+    res.json({
+      message: 'Match updated successfully - points recalculated',
+      match: updatedMatch,
+      pointAdjustments,
+      pointsRecalculated: true
+    });
+    
+  } catch (error) {
+    console.error('Error updating match:', error);
+    res.status(500).json({ 
+      message: 'Failed to update match', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Delete completed match (with point reversal)
+router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const matchId = parseInt(req.params.matchId);
+    const { reason } = req.body;
+    
+    // Verify match exists
+    const existingMatch = await db.select().from(adminMatches)
+      .where(eq(adminMatches.id, matchId)).limit(1);
+      
+    if (!existingMatch[0]) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
+    // Get player results to reverse points before deletion
+    const playerResults = await db.select()
+      .from(playerMatchResults)
+      .where(eq(playerMatchResults.matchId, matchId));
+    
+    // Reverse all point allocations
+    for (const result of playerResults) {
+      await db.update(users)
+        .set({
+          rankingPoints: sql`${users.rankingPoints} - ${result.pointsAwarded}`
+        })
+        .where(eq(users.id, result.playerId));
+    }
+    
+    // Delete player results first (foreign key constraint)
+    await db.delete(playerMatchResults)
+      .where(eq(playerMatchResults.matchId, matchId));
+    
+    // Delete the match
+    await db.delete(adminMatches)
+      .where(eq(adminMatches.id, matchId));
+    
+    res.json({
+      message: 'Match deleted successfully - all points reversed',
+      pointsReversed: playerResults.length,
+      deletionReason: reason || 'No reason provided'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting match:', error);
+    res.status(500).json({ 
+      message: 'Failed to delete match', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Get list of completed matches with pagination and filtering
+router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 20, 
+      competitionId, 
+      dateFrom, 
+      dateTo 
+    } = req.query;
+    
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    
+    const matches = await db.select({
+      id: adminMatches.id,
+      competitionId: adminMatches.competitionId,
+      player1Score: adminMatches.player1Score,
+      player2Score: adminMatches.player2Score,
+      team1Score: adminMatches.team1Score,
+      team2Score: adminMatches.team2Score,
+      status: adminMatches.status,
+      createdAt: adminMatches.createdAt,
+      updatedAt: adminMatches.updatedAt,
+      competitionName: competitions.name
+    })
+    .from(adminMatches)
+    .leftJoin(competitions, eq(adminMatches.competitionId, competitions.id))
+    .where(eq(adminMatches.status, 'completed'))
+    .orderBy(desc(adminMatches.updatedAt))
+    .limit(parseInt(limit as string))
+    .offset(offset);
+    
+    // Get total count for pagination
+    const totalCount = await db.select({ count: sql`count(*)` })
+      .from(adminMatches)
+      .where(eq(adminMatches.status, 'completed'));
+    
+    res.json({
+      matches,
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total: totalCount[0].count,
+        pages: Math.ceil(Number(totalCount[0].count) / parseInt(limit as string))
+      },
+      message: 'Completed matches retrieved successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error retrieving completed matches:', error);
+    res.status(500).json({ 
+      message: 'Failed to retrieve completed matches', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
 export { router as enhancedMatchManagementRouter };
