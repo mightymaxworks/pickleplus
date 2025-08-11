@@ -18,7 +18,6 @@ import {
   calculateAgeGroup,
   POINT_ALLOCATION_RULES,
   type Competition,
-  type Match,
   type PlayerMatchResult,
   type InsertPlayerMatchResult
 } from '../../../shared/schema';
@@ -73,17 +72,11 @@ async function calculatePlayerPoints(
   }
   // mixed_doubles stays as is - all players get mixed doubles points
   
-  // Find matching point allocation rule
-  const rule = POINT_ALLOCATION_RULES.find(r => 
-    r.competitionType === competitionType &&
-    r.matchFormat === effectiveFormat &&
-    r.ageGroup === ageGroup
-  );
-  
-  if (!rule) {
-    // Fallback to default points if no specific rule found
-    console.warn(`No point allocation rule found for ${competitionType}/${effectiveFormat}/${ageGroup}, using defaults`);
-    const basePoints = isWinner ? 50 : 25; // Default points
+  // Get point allocation rules for the competition type
+  const competitionRules = POINT_ALLOCATION_RULES[competitionType as keyof typeof POINT_ALLOCATION_RULES];
+  if (!competitionRules) {
+    console.warn(`No point allocation rules found for competition type: ${competitionType}, using defaults`);
+    const basePoints = isWinner ? 50 : 25;
     const multiplier = 1.0;
     const finalPoints = Math.round(basePoints * multiplier);
     
@@ -95,8 +88,25 @@ async function calculatePlayerPoints(
       gender
     };
   }
+
+  // Get base points for the effective format
+  const formatRules = competitionRules[effectiveFormat as keyof typeof competitionRules];
+  if (!formatRules) {
+    console.warn(`No rules found for format ${effectiveFormat} in ${competitionType}, using defaults`);
+    const basePoints = isWinner ? 50 : 25;
+    const multiplier = 1.0; 
+    const finalPoints = Math.round(basePoints * multiplier);
+    
+    return {
+      basePoints,
+      ageGroup,
+      multiplier,
+      finalPoints,
+      gender
+    };
+  }
   
-  const basePoints = isWinner ? rule.winnerPoints : rule.loserPoints;
+  const basePoints = isWinner ? (formatRules as any).winner : (formatRules as any).loser;
   const multiplier = 1.0; // Default multiplier, can be enhanced later
   const finalPoints = Math.round(basePoints * multiplier);
   
@@ -232,10 +242,20 @@ router.post('/matches/:matchId/complete', requireAuth, requireAdmin, async (req,
     // Insert all player results
     await db.insert(playerMatchResults).values(playerResults);
     
+    // ENHANCED: Automatically update user ranking points (eliminates manual admin step)
+    for (const result of playerResults) {
+      await db.update(users)
+        .set({
+          rankingPoints: sql`${users.rankingPoints} + ${result.pointsAwarded}`
+        })
+        .where(eq(users.id, result.playerId));
+    }
+    
     res.json({ 
-      message: 'Match completed successfully',
+      message: 'Match completed successfully - ranking points automatically updated',
       matchId,
-      playerResults: playerResults.length
+      playerResults: playerResults.length,
+      pointsUpdated: true
     });
     
   } catch (error) {

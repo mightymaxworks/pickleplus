@@ -323,6 +323,95 @@ router.patch('/matches/:id/scores', requireAuth, requireAdmin, async (req, res) 
       status: 'completed'
     };
 
+    // Add scores to update data
+    if (player1Score !== undefined) updateData.player1Score = player1Score;
+    if (player2Score !== undefined) updateData.player2Score = player2Score;
+    if (team1Score !== undefined) updateData.team1Score = team1Score;
+    if (team2Score !== undefined) updateData.team2Score = team2Score;
+    if (winnerId !== undefined) updateData.winnerId = winnerId;
+    if (winningTeamPlayer1Id !== undefined) updateData.winningTeamPlayer1Id = winningTeamPlayer1Id;
+    if (winningTeamPlayer2Id !== undefined) updateData.winningTeamPlayer2Id = winningTeamPlayer2Id;
+
+    // Update the match
+    const [updatedMatch] = await db.update(matches)
+      .set(updateData)
+      .where(eq(matches.id, matchId))
+      .returning();
+
+    if (!updatedMatch) {
+      return res.status(404).json({
+        success: false,
+        error: 'Match not found'
+      });
+    }
+
+    // ENHANCED: Automatically calculate and allocate ranking points 
+    // Get competition details for point calculation
+    const competition = await db.select().from(competitions)
+      .where(eq(competitions.id, updatedMatch.competitionId)).limit(1);
+    
+    if (competition[0]) {
+      const competitionData = competition[0];
+      const competitionType = competitionData.type || 'casual';
+      const rules = POINT_ALLOCATION_RULES[competitionType as keyof typeof POINT_ALLOCATION_RULES];
+      
+      if (rules) {
+        let winnerPoints = rules.winner_base;
+        let loserPoints = rules.loser_base;
+
+        // Apply competition multiplier
+        const multiplier = parseFloat(competitionData.pointsMultiplier || '1.0');
+        winnerPoints = Math.round(winnerPoints * multiplier);
+        loserPoints = Math.round(loserPoints * multiplier);
+
+        // Update match with allocated points
+        await db.update(matches)
+          .set({
+            winnerPoints,
+            loserPoints,
+            pointsAllocatedBy: req.user!.id,
+            pointsAllocatedAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(matches.id, matchId));
+
+        // Automatically update user ranking points
+        const finalWinnerId = winnerId || winningTeamPlayer1Id;
+        const finalLoserId = updatedMatch.player1Id === finalWinnerId ? updatedMatch.player2Id : updatedMatch.player1Id;
+
+        if (finalWinnerId) {
+          await db.update(users)
+            .set({
+              rankingPoints: sql`${users.rankingPoints} + ${winnerPoints}`
+            })
+            .where(eq(users.id, finalWinnerId));
+        }
+
+        if (finalLoserId) {
+          await db.update(users)
+            .set({
+              rankingPoints: sql`${users.rankingPoints} + ${loserPoints}`
+            })
+            .where(eq(users.id, finalLoserId));
+        }
+
+        // For doubles matches, update both team members
+        if (winningTeamPlayer2Id) {
+          await db.update(users)
+            .set({
+              rankingPoints: sql`${users.rankingPoints} + ${winnerPoints}`
+            })
+            .where(eq(users.id, winningTeamPlayer2Id));
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      data: updatedMatch,
+      message: 'Match completed successfully - ranking points automatically updated'
+    });
+
     // Handle singles match
     if (player1Score !== undefined && player2Score !== undefined) {
       updateData.player1Score = player1Score;
