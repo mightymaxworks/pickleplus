@@ -577,12 +577,12 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
           <div className="space-y-3">
             <div className="space-y-2">
               <Label>
-                {isAdmin ? "Player 1 (Search by name, username, or Passport ID)" : "Player 1 (You)"}
+                {isAdmin ? "Player 1 (Search by name, username, or passport code)" : "Player 1 (You)"}
               </Label>
               {isAdmin && !playerOneData ? (
                 <div className="space-y-2">
                   <Input
-                    placeholder="Search for Player 1 by name, username, or Passport ID (PKL-000168)..."
+                    placeholder="Search for Player 1 by name, username, or passport code..."
                     value={playerSearch}
                     onChange={(e) => setPlayerSearch(e.target.value)}
                     className="w-full"
@@ -697,7 +697,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 {!playerOnePartnerData ? (
                   <div className="space-y-2">
                     <Input
-                      placeholder="Search partner by name, username, or Passport ID (PKL-000168)..."
+                      placeholder="Search partner by name, username, or passport code..."
                       value={partnerOneSearch}
                       onChange={(e) => setPartnerOneSearch(e.target.value)}
                       className="w-full"
@@ -785,7 +785,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
               </Label>
               <div className="space-y-2">
                 <Input
-                  placeholder={`Search by name, username, or Passport ID (PKL-000168)...`}
+                  placeholder={`Search by name, username, or passport code...`}
                   value={playerSearch}
                   onChange={(e) => setPlayerSearch(e.target.value)}
                   className="w-full"
@@ -875,7 +875,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 {!playerTwoPartnerData ? (
                   <div className="space-y-2">
                     <Input
-                      placeholder="Search partner by name, username, or Passport ID (PKL-000168)..."
+                      placeholder="Search partner by name, username, or passport code..."
                       value={partnerTwoSearch}
                       onChange={(e) => setPartnerTwoSearch(e.target.value)}
                       className="w-full"
