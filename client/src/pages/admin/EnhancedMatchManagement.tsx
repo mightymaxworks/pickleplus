@@ -37,8 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { toast } from '@/hooks/use-toast';
-import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus, Upload } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus, Upload, Loader2 } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import MatchManagement from './MatchManagement';
 import BulkMatchUpload from '@/components/match/BulkMatchUpload';
@@ -304,7 +308,7 @@ export default function EnhancedMatchManagement() {
             Record Match
           </TabsTrigger>
           <TabsTrigger value="competitions" className="text-sm font-medium py-3 rounded-md">
-            Create Competition
+            Competitions
           </TabsTrigger>
           <TabsTrigger value="bulk-upload" className="text-sm font-medium py-3 rounded-md">
             Bulk Upload
@@ -337,10 +341,10 @@ export default function EnhancedMatchManagement() {
             <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
               <CardTitle className="flex items-center gap-2 text-gray-900">
                 <Trophy className="h-5 w-5 text-blue-600" />
-                Create Competition
+                Competition Management
               </CardTitle>
               <CardDescription>
-                Create tournaments, competitions, and leagues - no nested tabs, clean interface
+                Create tournaments, competitions, and leagues - clean interface
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
