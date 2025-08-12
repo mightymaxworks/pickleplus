@@ -125,20 +125,24 @@ const MatchManagement: React.FC = () => {
   const createCompetitionMutation = useMutation({
     mutationFn: async (competitionData: any) => {
       const response = await apiRequest('POST', '/api/admin/match-management/competitions', competitionData);
-      return response.json();
+      const data = await response.json();
+      console.log('[Admin] Competition creation response:', data);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[Admin] Competition created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/match-management/competitions'] });
       setShowCreateCompetition(false);
       toast({
         title: "Competition Created",
-        description: "New competition has been created successfully.",
+        description: `Competition "${data.data?.name || 'New Competition'}" has been created successfully.`,
       });
     },
     onError: (error: any) => {
+      console.error('[Admin] Competition creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create competition. Please try again.",
+        description: error.message || "Failed to create competition. Please try again.",
         variant: "destructive",
       });
     }
