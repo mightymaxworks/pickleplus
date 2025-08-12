@@ -635,8 +635,8 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     // UNIFIED APPROACH: Get matches from BOTH adminMatches and regular matches tables
     // This ensures matches created via both systems appear in completed matches tab
     
-    // Import regular matches table
-    const { matches } = await import('../../../shared/schema');
+    // Import regular matches table directly
+    const { matches } = require('../../../shared/schema');
     
     // Get admin matches (enhanced system)
     const adminMatchesData = await db.select({
