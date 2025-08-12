@@ -759,48 +759,5 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     });
   }
 });
-        
-        playerResults.push({
-          playerId: p2.id,
-          playerName: `${p2.firstName || ''} ${p2.lastName || ''}`.trim() || p2.username,
-          isWinner,
-          pointsAwarded: basePoints,
-          basePoints,
-          ageGroup,
-          ageGroupMultiplier: 1.0
-        });
-      }
-
-      return {
-        id: match.id,
-        format: match.category || 'singles',
-        player1Score: match.scorePlayerOne,
-        player2Score: match.scorePlayerTwo,
-        playerOneName: p1 ? (`${p1.firstName || ''} ${p1.lastName || ''}`.trim() || p1.username) : 'Unknown',
-        playerTwoName: p2 ? (`${p2.firstName || ''} ${p2.lastName || ''}`.trim() || p2.username) : 'Unknown',
-        playerOnePartnerName: pt1 ? (`${pt1.firstName || ''} ${pt1.lastName || ''}`.trim() || pt1.username) : null,
-        playerTwoPartnerName: pt2 ? (`${pt2.firstName || ''} ${pt2.lastName || ''}`.trim() || pt2.username) : null,
-        playerResults,
-        createdAt: match.createdAt,
-        updatedAt: match.updatedAt
-      };
-    });
-
-    res.json({
-      success: true,
-      data: enhancedMatches,
-      total: enhancedMatches.length,
-      message: 'Completed matches retrieved successfully'
-    });
-    
-  } catch (error) {
-    console.error('Error retrieving completed matches:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to retrieve completed matches', 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-  }
-});
 
 export { router as enhancedMatchManagementRouter };
