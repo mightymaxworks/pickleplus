@@ -620,11 +620,60 @@ router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) =
   }
 });
 
-// Get list of completed matches - simplified working version
+// Get list of completed matches with filtering support
 router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => {
   try {
-    // Get completed matches directly with a simpler query
-    const query = sql`
+    const limit = parseInt(req.query.limit as string) || 50;
+    const { playerName, eventName, dateFrom, dateTo, format } = req.query;
+
+    // Build dynamic WHERE conditions
+    let whereConditions = ['m.winner_id IS NOT NULL'];
+    const queryParams: any[] = [limit];
+    let paramIndex = 1;
+
+    // Filter by player name
+    if (playerName) {
+      paramIndex++;
+      whereConditions.push(`(
+        u1.username ILIKE $${paramIndex} OR u1.first_name ILIKE $${paramIndex} OR 
+        u2.username ILIKE $${paramIndex} OR u2.first_name ILIKE $${paramIndex} OR
+        u3.username ILIKE $${paramIndex} OR u3.first_name ILIKE $${paramIndex} OR
+        u4.username ILIKE $${paramIndex} OR u4.first_name ILIKE $${paramIndex}
+      )`);
+      queryParams.push(`%${playerName}%`);
+    }
+
+    // Filter by event name
+    if (eventName) {
+      paramIndex++;
+      whereConditions.push(`m.event_name ILIKE $${paramIndex}`);
+      queryParams.push(`%${eventName}%`);
+    }
+
+    // Filter by date range
+    if (dateFrom) {
+      paramIndex++;
+      whereConditions.push(`m.scheduled_date >= $${paramIndex}`);
+      queryParams.push(dateFrom);
+    }
+
+    if (dateTo) {
+      paramIndex++;
+      whereConditions.push(`m.scheduled_date <= $${paramIndex}`);
+      queryParams.push(dateTo);
+    }
+
+    // Filter by format
+    if (format && format !== 'all') {
+      paramIndex++;
+      whereConditions.push(`m.format = $${paramIndex}`);
+      queryParams.push(format);
+    }
+
+    const whereClause = whereConditions.join(' AND ');
+
+    // Execute query with parameters
+    const queryString = `
       SELECT 
         m.id,
         m.player_one_id,
@@ -635,6 +684,10 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         m.score_player_one,
         m.score_player_two, 
         m.category,
+        m.format,
+        m.event_name,
+        m.scheduled_date,
+        m.notes,
         m.created_at,
         m.updated_at,
         u1.username as player_one_name,
@@ -650,10 +703,12 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
       LEFT JOIN users u2 ON m.player_two_id = u2.id
       LEFT JOIN users u3 ON m.player_one_partner_id = u3.id
       LEFT JOIN users u4 ON m.player_two_partner_id = u4.id
-      WHERE m.winner_id IS NOT NULL
+      WHERE ${whereClause}
       ORDER BY m.created_at DESC
-      LIMIT 50
+      LIMIT $1
     `;
+
+    const query = sql.raw(queryString, queryParams);
     
     const result = await db.execute(query);
     const matches = result.rows;
@@ -759,5 +814,170 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     });
   }
 });
+
+// Update match with points recalculation
+router.put('/matches/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const matchId = parseInt(req.params.id);
+    const {
+      playerOneName,
+      playerTwoName,
+      playerOnePartnerName,
+      playerTwoPartnerName,
+      player1Score,
+      player2Score,
+      eventName,
+      format,
+      scheduledDate,
+      notes
+    } = req.body;
+
+    // Get the current match to identify original players for points adjustment
+    const currentMatch = await db.select()
+      .from(matches)
+      .where(eq(matches.id, matchId))
+      .limit(1);
+
+    if (!currentMatch.length) {
+      return res.status(404).json({ error: 'Match not found' });
+    }
+
+    // Determine winner based on scores
+    const winnerId = player1Score > player2Score ? currentMatch[0].playerOneId : currentMatch[0].playerTwoId;
+    const winner = player1Score > player2Score ? 'player_one' : 'player_two';
+
+    // Update the match
+    await db.update(matches)
+      .set({
+        scorePlayerOne: player1Score,
+        scorePlayerTwo: player2Score,
+        winnerId,
+        winner,
+        eventName: eventName || null,
+        format,
+        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        notes: notes || null,
+        updatedAt: new Date()
+      })
+      .where(eq(matches.id, matchId));
+
+    // Recalculate points for affected players using the official PICKLE_PLUS_ALGORITHM_DOCUMENT
+    const affectedPlayerIds = [
+      currentMatch[0].playerOneId,
+      currentMatch[0].playerTwoId,
+      currentMatch[0].playerOnePartnerId,
+      currentMatch[0].playerTwoPartnerId
+    ].filter(Boolean);
+
+    // Recalculate total pickle points for each affected player
+    for (const playerId of affectedPlayerIds) {
+      await recalculatePlayerPoints(playerId);
+    }
+
+    console.log(`Match ${matchId} updated successfully, points recalculated for ${affectedPlayerIds.length} players`);
+    res.json({ success: true, message: 'Match updated and points recalculated successfully' });
+  } catch (error) {
+    console.error('Error updating match:', error);
+    res.status(500).json({ error: 'Failed to update match' });
+  }
+});
+
+// Delete match with points recalculation
+router.delete('/matches/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const matchId = parseInt(req.params.id);
+
+    // Get the match to identify players for points adjustment
+    const matchToDelete = await db.select()
+      .from(matches)
+      .where(eq(matches.id, matchId))
+      .limit(1);
+
+    if (!matchToDelete.length) {
+      return res.status(404).json({ error: 'Match not found' });
+    }
+
+    const affectedPlayerIds = [
+      matchToDelete[0].playerOneId,
+      matchToDelete[0].playerTwoId,
+      matchToDelete[0].playerOnePartnerId,
+      matchToDelete[0].playerTwoPartnerId
+    ].filter(Boolean);
+
+    // Delete the match
+    await db.delete(matches)
+      .where(eq(matches.id, matchId));
+
+    // Recalculate points for affected players
+    for (const playerId of affectedPlayerIds) {
+      await recalculatePlayerPoints(playerId);
+    }
+
+    console.log(`Match ${matchId} deleted successfully, points recalculated for ${affectedPlayerIds.length} players`);
+    res.json({ success: true, message: 'Match deleted and points recalculated successfully' });
+  } catch (error) {
+    console.error('Error deleting match:', error);
+    res.status(500).json({ error: 'Failed to delete match' });
+  }
+});
+
+// Helper function to recalculate player points based on all their matches
+async function recalculatePlayerPoints(playerId: number) {
+  try {
+    // Get all completed matches for this player
+    const playerMatchesQuery = sql`
+      SELECT *
+      FROM matches
+      WHERE (player_one_id = ${playerId} OR player_two_id = ${playerId} 
+             OR player_one_partner_id = ${playerId} OR player_two_partner_id = ${playerId})
+        AND winner_id IS NOT NULL
+      ORDER BY scheduled_date
+    `;
+
+    const result = await db.execute(playerMatchesQuery);
+    const playerMatches = result.rows;
+
+    let totalPoints = 0;
+
+    // Calculate points for each match using PICKLE_PLUS_ALGORITHM_DOCUMENT standards (System B: 3 win, 1 loss)
+    for (const match of playerMatches) {
+      const isWinner = (
+        (match.winner_id === match.player_one_id && (playerId === match.player_one_id || playerId === match.player_one_partner_id)) ||
+        (match.winner_id === match.player_two_id && (playerId === match.player_two_id || playerId === match.player_two_partner_id))
+      );
+
+      // Base points: 3 for win, 1 for loss (System B from PICKLE_PLUS_ALGORITHM_DOCUMENT)
+      const basePoints = isWinner ? 3 : 1;
+
+      // Additional factors based on match type
+      let multiplier = 1.0;
+      
+      // Tournament matches get higher weighting
+      if (match.event_name && match.event_name.toLowerCase().includes('tournament')) {
+        multiplier = 1.5;
+      }
+      
+      // Format-based adjustments
+      if (match.format === 'doubles') {
+        multiplier *= 1.2; // Doubles slightly harder
+      }
+
+      const matchPoints = Math.round(basePoints * multiplier);
+      totalPoints += matchPoints;
+    }
+
+    // Update player's total pickle points
+    await db.update(users)
+      .set({ 
+        picklePoints: totalPoints,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, playerId));
+
+    console.log(`Player ${playerId} points recalculated: ${totalPoints} total points from ${playerMatches.length} matches`);
+  } catch (error) {
+    console.error(`Error recalculating points for player ${playerId}:`, error);
+  }
+}
 
 export { router as enhancedMatchManagementRouter };

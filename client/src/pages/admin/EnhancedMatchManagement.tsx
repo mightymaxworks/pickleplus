@@ -40,24 +40,94 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus, Upload, Loader2 } from 'lucide-react';
+import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus, Upload, Loader2, Edit, Trash2, Filter } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import MatchManagement from './MatchManagement';
 import BulkMatchUpload from '@/components/match/BulkMatchUpload';
 
-// Clean Apple-like Completed Matches Display
+// Enhanced Completed Matches Display with Filtering and CRUD
 function CompletedMatchesDisplay() {
+  const [filters, setFilters] = useState({
+    playerName: '',
+    eventName: '',
+    dateFrom: '',
+    dateTo: '',
+    format: ''
+  });
+  const [editingMatch, setEditingMatch] = useState<any>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: completedMatches, isLoading } = useQuery({
-    queryKey: ['/api/admin/enhanced-match-management/matches/completed'],
+    queryKey: ['/api/admin/enhanced-match-management/matches/completed', filters],
     queryFn: async () => {
-      const res = await fetch('/api/admin/enhanced-match-management/matches/completed?limit=50', {
+      const params = new URLSearchParams();
+      params.append('limit', '50');
+      if (filters.playerName) params.append('playerName', filters.playerName);
+      if (filters.eventName) params.append('eventName', filters.eventName);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+      if (filters.format) params.append('format', filters.format);
+
+      const res = await fetch(`/api/admin/enhanced-match-management/matches/completed?${params}`, {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Failed to fetch completed matches');
       return res.json();
     }
+  });
+
+  const deleteMatchMutation = useMutation({
+    mutationFn: async (matchId: number) => {
+      const res = await apiRequest('DELETE', `/api/admin/enhanced-match-management/matches/${matchId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Match deleted successfully",
+        description: "Points have been recalculated for affected players",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/enhanced-match-management/matches/completed'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete match",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMatchMutation = useMutation({
+    mutationFn: async (matchData: any) => {
+      const res = await apiRequest('PUT', `/api/admin/enhanced-match-management/matches/${matchData.id}`, matchData);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Match updated successfully",
+        description: "Points have been recalculated for affected players",
+      });
+      setEditingMatch(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/enhanced-match-management/matches/completed'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update match",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -86,6 +156,82 @@ function CompletedMatchesDisplay() {
 
   return (
     <div className="space-y-6">
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filter Matches
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="playerName">Player Name</Label>
+              <Input
+                id="playerName"
+                placeholder="Search by player..."
+                value={filters.playerName}
+                onChange={(e) => setFilters(prev => ({ ...prev, playerName: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="eventName">Event/Competition</Label>
+              <Input
+                id="eventName"
+                placeholder="Search by event..."
+                value={filters.eventName}
+                onChange={(e) => setFilters(prev => ({ ...prev, eventName: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dateFrom">Date From</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dateTo">Date To</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="format">Format</Label>
+              <Select value={filters.format || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, format: value === "all" ? "" : value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All formats" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All formats</SelectItem>
+                  <SelectItem value="singles">Singles</SelectItem>
+                  <SelectItem value="doubles">Doubles</SelectItem>
+                  <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilters({ playerName: '', eventName: '', dateFrom: '', dateTo: '', format: 'all' })}
+            >
+              Clear Filters
+            </Button>
+            <Badge variant="secondary" className="px-3 py-1">
+              {matches.length} matches found
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Completed Matches</h2>
         <Badge variant="secondary" className="px-3 py-1">
@@ -118,9 +264,33 @@ function CompletedMatchesDisplay() {
                     </p>
                   </div>
                 </div>
-                <Badge className="bg-green-100 text-green-800 border-green-200">
-                  Validated
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    Validated
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingMatch(match)}
+                    className="h-8 w-8 p-0"
+                    title="Edit match"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this match? This will recalculate points for all affected players.')) {
+                        deleteMatchMutation.mutate(match.id);
+                      }
+                    }}
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    title="Delete match"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -188,7 +358,196 @@ function CompletedMatchesDisplay() {
           </div>
         ))}
       </div>
+
+      {/* Edit Match Dialog */}
+      {editingMatch && (
+        <Dialog open={!!editingMatch} onOpenChange={(open) => !open && setEditingMatch(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Match #{editingMatch.id}</DialogTitle>
+              <DialogDescription>
+                Update match details. Points will be automatically recalculated for affected players.
+              </DialogDescription>
+            </DialogHeader>
+
+            <EditMatchForm
+              match={editingMatch}
+              onSave={(matchData) => updateMatchMutation.mutate(matchData)}
+              onCancel={() => setEditingMatch(null)}
+              isLoading={updateMatchMutation.isPending}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
+  );
+}
+
+// Edit Match Form Component
+function EditMatchForm({
+  match,
+  onSave,
+  onCancel,
+  isLoading
+}: {
+  match: any;
+  onSave: (data: any) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    playerOneName: match.playerOneName || '',
+    playerTwoName: match.playerTwoName || '',
+    playerOnePartnerName: match.playerOnePartnerName || '',
+    playerTwoPartnerName: match.playerTwoPartnerName || '',
+    player1Score: match.player1Score || match.scorePlayerOne || 0,
+    player2Score: match.player2Score || match.scorePlayerTwo || 0,
+    eventName: match.eventName || '',
+    format: match.format || 'singles',
+    scheduledDate: match.scheduledDate ? new Date(match.scheduledDate).toISOString().split('T')[0] : '',
+    notes: match.notes || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      id: match.id,
+      ...formData,
+      player1Score: parseInt(formData.player1Score.toString()),
+      player2Score: parseInt(formData.player2Score.toString())
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="playerOneName">Player 1 Name</Label>
+          <Input
+            id="playerOneName"
+            value={formData.playerOneName}
+            onChange={(e) => setFormData(prev => ({ ...prev, playerOneName: e.target.value }))}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="playerTwoName">Player 2 Name</Label>
+          <Input
+            id="playerTwoName"
+            value={formData.playerTwoName}
+            onChange={(e) => setFormData(prev => ({ ...prev, playerTwoName: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+
+      {formData.format === 'doubles' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="playerOnePartnerName">Player 1 Partner</Label>
+            <Input
+              id="playerOnePartnerName"
+              value={formData.playerOnePartnerName}
+              onChange={(e) => setFormData(prev => ({ ...prev, playerOnePartnerName: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="playerTwoPartnerName">Player 2 Partner</Label>
+            <Input
+              id="playerTwoPartnerName"
+              value={formData.playerTwoPartnerName}
+              onChange={(e) => setFormData(prev => ({ ...prev, playerTwoPartnerName: e.target.value }))}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="player1Score">Player 1 Score</Label>
+          <Input
+            id="player1Score"
+            type="number"
+            min="0"
+            value={formData.player1Score}
+            onChange={(e) => setFormData(prev => ({ ...prev, player1Score: parseInt(e.target.value) || 0 }))}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="player2Score">Player 2 Score</Label>
+          <Input
+            id="player2Score"
+            type="number"
+            min="0"
+            value={formData.player2Score}
+            onChange={(e) => setFormData(prev => ({ ...prev, player2Score: parseInt(e.target.value) || 0 }))}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="format">Match Format</Label>
+          <Select value={formData.format} onValueChange={(value) => setFormData(prev => ({ ...prev, format: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="singles">Singles</SelectItem>
+              <SelectItem value="doubles">Doubles</SelectItem>
+              <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="eventName">Event/Competition</Label>
+          <Input
+            id="eventName"
+            value={formData.eventName}
+            onChange={(e) => setFormData(prev => ({ ...prev, eventName: e.target.value }))}
+            placeholder="Tournament or event name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="scheduledDate">Match Date</Label>
+          <Input
+            id="scheduledDate"
+            type="date"
+            value={formData.scheduledDate}
+            onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+          placeholder="Additional notes about the match..."
+          rows={3}
+        />
+      </div>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save Changes'
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
 
