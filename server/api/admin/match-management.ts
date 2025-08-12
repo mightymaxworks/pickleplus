@@ -5,21 +5,17 @@ import { Router } from 'express';
 import { eq, desc, asc, and, or, sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { requireAuth, requireAdmin } from '../../middleware/auth';
+import { users } from '../../../shared/schema';
 import {
   competitions,
   adminMatches as matches,
   pointAllocationRules,
   ageGroupMappings,
-  users,
   createCompetitionSchema,
   createMatchSchema,
   allocatePointsSchema,
-  POINT_ALLOCATION_RULES,
-  type Competition,
-  type Match,
-  type MatchWithPlayers,
-  type CompetitionWithMatches
-} from '../../../shared/schema';
+  POINT_ALLOCATION_RULES
+} from '../../../shared/schema/admin-match-management';
 
 const router = Router();
 
@@ -40,6 +36,8 @@ async function updateUserAgeGroup(userId: number) {
                   age < 50 ? '40-49' :
                   age < 60 ? '50-59' :
                   age < 70 ? '60-69' : '70+';
+  
+  const birthDate = new Date(user[0].yearOfBirth, 0, 1);
   
   // Upsert age group mapping
   await db.insert(ageGroupMappings)
@@ -93,7 +91,7 @@ router.get('/competitions', requireAuth, requireAdmin, async (req, res) => {
     // Apply filters
     const conditions = [];
     if (type) conditions.push(eq(competitions.type, type as any));
-    if (status) conditions.push(eq(competitions.status, status as string));
+    if (status) conditions.push(eq(competitions.status, status as any));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
