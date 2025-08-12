@@ -22,7 +22,7 @@ import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-
 import AdminCoachNavItem from '../components/coach/AdminCoachNavItem'; // PKL-278651-COACH-ADMIN-001
 import TrainingCenterAdminNavItem from '../components/training-center/TrainingCenterAdminNavItem'; // PKL-278651-TRAINING-CENTER-ADMIN-001
 import { ChargeCardAdminNavItem } from '../components/charge-cards/ChargeCardAdminNavItem'; // PKL-278651-CHARGE-CARD-ADMIN
-import AdminMatchManagementNavItem from '../components/match-management/MatchManagementNavItem'; // Match Management Admin
+import { Trophy } from 'lucide-react';
 // Import settings module to register its components
 import '../components/settings';
 
@@ -147,7 +147,12 @@ export function registerChargeCardComponents() {
  */
 export function registerMatchManagementComponents() {
   // Register match management nav item
-  adminComponentRegistry.registerNavItem('matches', AdminMatchManagementNavItem);
+  adminComponentRegistry.registerNavItem('matches', {
+    label: 'Match Management',
+    path: '/admin/match-management',
+    icon: React.createElement(Trophy, { size: 18 }),
+    order: 4
+  });
   
   console.log('[Admin] Match management components registered');
 }
