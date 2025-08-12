@@ -65,13 +65,9 @@ export function registerMatchRoutes(app: express.Express): void {
         }
       }
 
-      // Calculate points awarded based on match type and format
-      let pointsAwarded = 0;
-      if (matchType === 'tournament') {
-        pointsAwarded = formatType === 'doubles' ? 5 : 3; // Tournament matches worth more
-      } else {
-        pointsAwarded = formatType === 'doubles' ? 3 : 1; // Casual matches
-      }
+      // Calculate points according to agreed system: 3 points for win, 1 point for loss
+      const winnerPoints = 3;
+      const loserPoints = 1;
 
       const newMatch = await storage.createMatch({
         playerOneId: playerOneId || (req.user as any)?.id,
@@ -87,15 +83,25 @@ export function registerMatchRoutes(app: express.Express): void {
         notes: notes || null,
         tournamentId: validTournamentId,
         scheduledDate: scheduledDate || null,
-        pointsAwarded: pointsAwarded
+        pointsAwarded: winnerPoints
       });
 
-      // Award points to winner
+      // Award points to both players: 3 for winner, 1 for loser
+      const allPlayerIds = [
+        playerOneId || (req.user as any)?.id,
+        playerTwoId,
+        playerOnePartnerId,
+        playerTwoPartnerId
+      ].filter(id => id); // Remove null/undefined values
+
       try {
-        await storage.updateUserPicklePoints(winnerId, pointsAwarded);
-        console.log(`[Match Creation] Awarded ${pointsAwarded} points to winner (User ID: ${winnerId})`);
+        for (const playerId of allPlayerIds) {
+          const points = playerId === winnerId ? winnerPoints : loserPoints;
+          await storage.updateUserPicklePoints(playerId, points);
+          console.log(`[Match Creation] Awarded ${points} points to ${playerId === winnerId ? 'winner' : 'loser'} (User ID: ${playerId})`);
+        }
       } catch (error) {
-        console.log(`[Match Creation] Warning: Could not award points to winner: ${(error as Error).message}`);
+        console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);
       }
 
       console.log('[Match Creation] Match created successfully:', newMatch.id);

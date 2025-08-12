@@ -70,18 +70,18 @@ interface PointAllocation {
   formatMultiplier: number;    // Multiplier for singles vs doubles
 }
 
-// FINALIZED ALGORITHM - System B Base Points (3/1)
+// FINALIZED ALGORITHM - System: 3 points for win, 1 point for loss
 const BASE_POINTS: Record<MatchType, number> = {
-  [MatchType.CASUAL]: 3,
-  [MatchType.LEAGUE]: 3, 
-  [MatchType.TOURNAMENT]: 3
+  [MatchType.CASUAL]: 1,   // Base 1 point for participation
+  [MatchType.LEAGUE]: 1,   // Base 1 point for participation
+  [MatchType.TOURNAMENT]: 1 // Base 1 point for participation
 };
 
 // Win bonuses by match type - FINALIZED ALGORITHM
 const WIN_BONUS: Record<MatchType, number> = {
-  [MatchType.CASUAL]: 1,
-  [MatchType.LEAGUE]: 1,
-  [MatchType.TOURNAMENT]: 1
+  [MatchType.CASUAL]: 2,   // +2 bonus for win = 3 total for winner
+  [MatchType.LEAGUE]: 2,   // +2 bonus for win = 3 total for winner
+  [MatchType.TOURNAMENT]: 2 // +2 bonus for win = 3 total for winner
 };
 
 // FINALIZED ALGORITHM - 7-Tier Tournament Structure
