@@ -252,27 +252,31 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
     // Allow any score if neither player has reached a winning threshold yet
     if (winningScore < 11) return true;
     
-    // Standard endpoints: 11-x, 15-x, 21-x (where winner has 2+ point lead or special cases)
-    if (winningScore === 11 && losingScore <= 9) return true;
-    if (winningScore === 15 && losingScore <= 13) return true;
-    if (winningScore === 21 && losingScore <= 19) return true;
-    
-    // Deuce scenarios (must win by 2)
-    if (winningScore > 11 && winningScore - losingScore === 2 && losingScore >= 10) return true;
-    if (winningScore > 15 && winningScore - losingScore === 2 && losingScore >= 14) return true;
-    if (winningScore > 21 && winningScore - losingScore === 2 && losingScore >= 20) return true;
-    
-    // Allow scores up to 11 for building games
-    if (winningScore <= 11) return true;
+    // For completed games (someone at 11+), check if it follows standard rules
+    if (winningScore >= 11) {
+      // Standard game to 11: must win by 2, minimum winning score is 11
+      if (winningScore === 11 && losingScore <= 9) return true;
+      
+      // Extended games (deuce scenarios): must win by 2
+      if (winningScore > 11 && winningScore - losingScore === 2) return true;
+      
+      // Special tournament formats (15 or 21 point games)
+      if (winningScore === 15 && losingScore <= 13) return true;
+      if (winningScore === 21 && losingScore <= 19) return true;
+      if (winningScore > 15 && winningScore - losingScore === 2 && losingScore >= 14) return true;
+      if (winningScore > 21 && winningScore - losingScore === 2 && losingScore >= 20) return true;
+    }
     
     return false;
   };
 
   const validateAndUpdateScore = (gameIndex: number, playerOneScore: number, playerTwoScore: number) => {
+    const maxScore = Math.max(playerOneScore, playerTwoScore);
+    const isGameComplete = maxScore >= 11; // Game appears complete when someone reaches 11+
     const isUnusual = !isStandardEndpoint(playerOneScore, playerTwoScore);
     
-    if (isUnusual && (playerOneScore > 0 || playerTwoScore > 0)) {
-      // Show validation dialog for unusual scores
+    if (isGameComplete && isUnusual) {
+      // Show validation dialog only for completed games with unusual endings
       setPendingScore({
         gameIndex,
         playerOneScore,
@@ -281,7 +285,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
       });
       setShowScoreValidation(true);
     } else {
-      // Standard score - update immediately
+      // Standard score or game in progress - update immediately
       applyScoreUpdate(gameIndex, playerOneScore, playerTwoScore);
     }
   };
