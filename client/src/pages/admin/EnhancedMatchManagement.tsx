@@ -1,211 +1,58 @@
-// Enhanced Admin Match Management with Proper Tab Structure
-// Competitions tab first, Matches tab second
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus, Upload, Loader2, Edit, Trash2, Filter, RefreshCw, AlertCircle } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 
-// Enhanced Completed Matches Display with Filtering and CRUD
-function CompletedMatchesDisplay() {
-  const [filters, setFilters] = useState({
-    playerName: '',
-    eventName: '',
-    dateFrom: '',
-    dateTo: '',
-    format: ''
-  });
-  const [editingMatch, setEditingMatch] = useState<any>(null);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const { data: completedMatches, isLoading } = useQuery({
-    queryKey: ['/api/admin/enhanced-match-management/matches/completed', filters],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append('limit', '50');
-      if (filters.playerName) params.append('playerName', filters.playerName);
-      if (filters.eventName) params.append('eventName', filters.eventName);
-      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
-      if (filters.dateTo) params.append('dateTo', filters.dateTo);
-      if (filters.format) params.append('format', filters.format);
-
-      const res = await fetch(`/api/admin/enhanced-match-management/matches/completed?${params}`, {
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Failed to fetch completed matches');
-      return res.json();
-    }
-  });
-
-  const deleteMatchMutation = useMutation({
-    mutationFn: async (matchId: number) => {
-      const res = await apiRequest('DELETE', `/api/admin/enhanced-match-management/matches/${matchId}`);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Match deleted successfully",
-        description: "Points have been recalculated for affected players",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/enhanced-match-management/matches/completed'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to delete match",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMatchMutation = useMutation({
-    mutationFn: async (matchData: any) => {
-      const res = await apiRequest('PUT', `/api/admin/enhanced-match-management/matches/${matchData.id}`, matchData);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Match updated successfully",
-        description: "Points have been recalculated for affected players",
-      });
-      setEditingMatch(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/enhanced-match-management/matches/completed'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to update match",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-medium">Completed Matches</h3>
-          <p className="text-sm text-muted-foreground">
-            View and manage all completed matches in the system
-          </p>
-        </div>
-      </div>
-
-      {/* Basic table display for now */}
-      {completedMatches?.data?.length ? (
-        <Card>
-          <CardContent className="p-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Match ID</TableHead>
-                  <TableHead>Players</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Format</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {completedMatches.data.slice(0, 10).map((match: any) => (
-                  <TableRow key={match.id}>
-                    <TableCell>#{match.id}</TableCell>
-                    <TableCell>{match.players || 'N/A'}</TableCell>
-                    <TableCell>{match.date || 'N/A'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{match.format || 'Unknown'}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => deleteMatchMutation.mutate(match.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Matches Found</h3>
-            <p className="text-gray-500 text-center max-w-md">
-              No completed matches found. Matches will appear here once they are recorded.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+interface Competition {
+  id: number;
+  name: string;
+  type: string;
+  description?: string;
+  startDate: string;
+  endDate?: string;
+  maxParticipants?: number;
+  entryFee?: number;
+  pointsMultiplier?: number;
+  prizePool?: number;
+  status?: string;
+  createdAt: string;
 }
 
-// Competition Management Tab Component
-function CompetitionManagementTab() {
+interface Player {
+  id: number;
+  firstName: string;
+  lastName: string;
+  username: string;
+  gender?: string;
+  birthDate?: string;
+  currentRating?: string;
+  ageGroup?: string;
+}
+
+const MatchManagement: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showCreateCompetition, setShowCreateCompetition] = useState(false);
+  const [showCreateMatch, setShowCreateMatch] = useState(false);
+  const [selectedMatchForEdit, setSelectedMatchForEdit] = useState<any>(null);
+  const [editMatchData, setEditMatchData] = useState({
+    player1Score: '',
+    player2Score: '',
+    team1Score: '',
+    team2Score: '',
+    winnerId: '',
+    notes: ''
+  });
 
   // Fetch competitions
   const { data: competitions, isLoading: competitionsLoading } = useQuery({
@@ -214,6 +61,15 @@ function CompetitionManagementTab() {
       const response = await apiRequest('GET', '/api/admin/match-management/competitions');
       const data = await response.json();
       return data;
+    }
+  });
+
+  // Fetch completed matches for CRUD operations
+  const { data: completedMatches, isLoading: completedMatchesLoading, refetch: refetchCompletedMatches } = useQuery({
+    queryKey: ['/api/admin/enhanced-match-management/matches/completed'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/enhanced-match-management/matches/completed?limit=20');
+      return response.json();
     }
   });
 
@@ -241,6 +97,59 @@ function CompetitionManagementTab() {
     }
   });
 
+  // Update match mutation (CRUD)
+  const updateMatchMutation = useMutation({
+    mutationFn: async ({ matchId, updateData }: { matchId: number; updateData: any }) => {
+      const response = await apiRequest('PUT', `/api/admin/enhanced-match-management/matches/${matchId}`, updateData);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Match Updated Successfully",
+        description: `Match #${data.matchId} has been updated and ranking points recalculated.`,
+      });
+      refetchCompletedMatches();
+      setSelectedMatchForEdit(null);
+      setEditMatchData({
+        player1Score: '',
+        player2Score: '',
+        team1Score: '',
+        team2Score: '',
+        winnerId: '',
+        notes: ''
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update match. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Delete match mutation (CRUD)
+  const deleteMatchMutation = useMutation({
+    mutationFn: async ({ matchId, reason }: { matchId: number; reason: string }) => {
+      const response = await apiRequest('DELETE', `/api/admin/enhanced-match-management/matches/${matchId}`, { reason });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Match Deleted",
+        description: `Match #${data.matchId} deleted and ranking points reversed.`,
+      });
+      refetchCompletedMatches();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed", 
+        description: "Failed to delete match. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Handle competition creation
   const handleCreateCompetition = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -248,30 +157,103 @@ function CompetitionManagementTab() {
     const competitionData = Object.fromEntries(formData.entries());
 
     // Convert numeric fields
-    if (competitionData.maxParticipants) {
-      competitionData.maxParticipants = parseInt(competitionData.maxParticipants as string);
+    const processedData = { ...competitionData };
+    if (processedData.maxParticipants) {
+      processedData.maxParticipants = parseInt(processedData.maxParticipants as string);
     }
-    if (competitionData.entryFee) {
-      competitionData.entryFee = parseFloat(competitionData.entryFee as string);
+    if (processedData.entryFee) {
+      processedData.entryFee = parseFloat(processedData.entryFee as string);
     }
-    if (competitionData.pointsMultiplier) {
-      competitionData.pointsMultiplier = parseFloat(competitionData.pointsMultiplier as string);
+    if (processedData.pointsMultiplier) {
+      processedData.pointsMultiplier = parseFloat(processedData.pointsMultiplier as string);
     }
 
-    createCompetitionMutation.mutate(competitionData);
+    createCompetitionMutation.mutate(processedData);
+  };
+
+  // Handle match update
+  const handleUpdateMatch = () => {
+    if (!selectedMatchForEdit?.id) return;
+    
+    const payload = Object.fromEntries(
+      Object.entries(editMatchData).filter(([_, v]) => v !== '')
+    );
+    
+    // Convert string numbers to integers  
+    if (payload.player1Score) payload.player1Score = parseInt(payload.player1Score as string);
+    if (payload.player2Score) payload.player2Score = parseInt(payload.player2Score as string);
+    if (payload.team1Score) payload.team1Score = parseInt(payload.team1Score as string);
+    if (payload.team2Score) payload.team2Score = parseInt(payload.team2Score as string);
+    if (payload.winnerId) payload.winnerId = parseInt(payload.winnerId as string);
+    
+    updateMatchMutation.mutate({ matchId: selectedMatchForEdit.id, updateData: payload });
+  };
+
+  // Handle match deletion (CRUD)
+  const handleDeleteMatch = (matchId: number) => {
+    if (!confirm('Are you sure you want to delete this match? This will reverse all ranking points.')) {
+      return;
+    }
+    
+    deleteMatchMutation.mutate({ 
+      matchId, 
+      reason: 'Deleted via admin match management interface' 
+    });
+  };
+
+  // Load match details for editing
+  const loadMatchForEdit = async (match: any) => {
+    try {
+      const response = await apiRequest('GET', `/api/admin/enhanced-match-management/matches/${match.id}/details`);
+      const data = await response.json();
+      
+      setSelectedMatchForEdit(data);
+      setEditMatchData({
+        player1Score: data.match?.player1Score?.toString() || '',
+        player2Score: data.match?.player2Score?.toString() || '',
+        team1Score: data.match?.team1Score?.toString() || '',
+        team2Score: data.match?.team2Score?.toString() || '',
+        winnerId: '',
+        notes: data.match?.notes || ''
+      });
+    } catch (error) {
+      toast({
+        title: "Error Loading Match",
+        description: "Failed to load match details for editing.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatCompetitionType = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
+  const formatMatchFormat = (format: string) => {
+    return format.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  const formatAgeGroup = (ageGroup: string) => {
+    return ageGroup.replace('_', '-');
+  };
+
+  if (competitionsLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">All Competitions</h3>
-          <p className="text-sm text-muted-foreground">
-            Create, edit, and manage all competitions in the system
+          <h1 className="text-3xl font-bold tracking-tight">Match Management</h1>
+          <p className="text-muted-foreground">
+            Manage competitions, leagues, tournaments, and ranking point allocation
           </p>
         </div>
         <div className="flex space-x-2">
@@ -353,123 +335,6 @@ function CompetitionManagementTab() {
               </form>
             </DialogContent>
           </Dialog>
-          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/match-management/competitions'] })} disabled={competitionsLoading}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {competitionsLoading && (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
-
-      {!competitionsLoading && (!competitions?.data || competitions.data.length === 0) && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Competitions Found</h3>
-            <p className="text-gray-500 text-center max-w-md">
-              No competitions have been created yet. Create your first competition to get started.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {!competitionsLoading && competitions?.data && competitions.data.length > 0 && (
-        <div className="grid gap-4">
-          {competitions.data.map((competition: any) => (
-            <Card key={competition.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{competition.name}</CardTitle>
-                    <CardDescription>
-                      {formatCompetitionType(competition.type)} • Created: {new Date(competition.createdAt).toLocaleDateString()}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={competition.status === 'active' ? 'default' : 'secondary'}>
-                      {competition.status || 'draft'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <div>Start: {competition.startDate ? new Date(competition.startDate).toLocaleDateString() : 'Not set'}</div>
-                    <div>End: {competition.endDate ? new Date(competition.endDate).toLocaleDateString() : 'Not set'}</div>
-                    <div>Participants: {competition.maxParticipants || 'Unlimited'}</div>
-                    <div>Entry Fee: ${competition.entryFee || '0.00'}</div>
-                    <div>Points Multiplier: {competition.pointsMultiplier || '1.0'}x</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => console.log('Edit competition:', competition.id)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-blue-600 hover:text-blue-700"
-                      onClick={() => console.log('View matches for competition:', competition.id)}
-                    >
-                      <Users className="h-3 w-3 mr-1" />
-                      View Matches
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => console.log('Delete competition:', competition.id)}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Match Management Tab Component
-function MatchManagementTab() {
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-medium">All Matches</h3>
-          <p className="text-sm text-muted-foreground">
-            View all scheduled, in-progress, and completed matches with full CRUD operations
-          </p>
-        </div>
-      </div>
-      <CompletedMatchesDisplay />
-    </div>
-  );
-}
-
-export default function EnhancedMatchManagement() {
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Match Management</h1>
-          <p className="text-muted-foreground">
-            Clean, streamlined match and competition management
-          </p>
         </div>
       </div>
 
@@ -480,13 +345,323 @@ export default function EnhancedMatchManagement() {
         </TabsList>
 
         <TabsContent value="competitions" className="space-y-4">
-          <CompetitionManagementTab />
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium">All Competitions</h3>
+              <p className="text-sm text-muted-foreground">
+                Create, edit, and manage all competitions in the system
+              </p>
+            </div>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/match-management/competitions'] })} disabled={competitionsLoading}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+
+          {competitionsLoading && (
+            <div className="flex items-center justify-center h-48">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+
+          {!competitionsLoading && (!competitions?.data || competitions.data.length === 0) && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Competitions Found</h3>
+                <p className="text-gray-500 text-center max-w-md">
+                  No competitions have been created yet. Create your first competition to get started.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {!competitionsLoading && competitions?.data && competitions.data.length > 0 && (
+            <div className="grid gap-4">
+              {competitions.data.map((competition: any) => (
+                <Card key={competition.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base">{competition.name}</CardTitle>
+                        <CardDescription>
+                          {formatCompetitionType(competition.type)} • Created: {new Date(competition.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={competition.status === 'active' ? 'default' : 'secondary'}>
+                          {competition.status || 'draft'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Start: {competition.startDate ? new Date(competition.startDate).toLocaleDateString() : 'Not set'}</div>
+                        <div>End: {competition.endDate ? new Date(competition.endDate).toLocaleDateString() : 'Not set'}</div>
+                        <div>Participants: {competition.maxParticipants || 'Unlimited'}</div>
+                        <div>Entry Fee: ${competition.entryFee || '0.00'}</div>
+                        <div>Points Multiplier: {competition.pointsMultiplier || '1.0'}x</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => console.log('Edit competition:', competition.id)}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 hover:text-blue-700"
+                          onClick={() => console.log('View matches for competition:', competition.id)}
+                        >
+                          <Users className="h-3 w-3 mr-1" />
+                          View Matches
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => console.log('Delete competition:', competition.id)}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="matches" className="space-y-4">
-          <MatchManagementTab />
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium">All Matches</h3>
+              <p className="text-sm text-muted-foreground">
+                View all scheduled, in-progress, and completed matches with full CRUD operations
+              </p>
+            </div>
+            <Button onClick={() => refetchCompletedMatches()} disabled={completedMatchesLoading}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+
+          {completedMatchesLoading && (
+            <div className="flex items-center justify-center h-48">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+
+          {!completedMatchesLoading && (!completedMatches?.matches || completedMatches.matches.length === 0) && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Matches Found</h3>
+                <p className="text-gray-500 text-center max-w-md">
+                  No matches found. Matches will appear here after they are created and scheduled.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {!completedMatchesLoading && completedMatches?.matches && completedMatches.matches.length > 0 && (
+            <div className="grid gap-4">
+              {completedMatches.matches.map((match: any) => (
+                <Card key={match.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base">Match #{match.id}</CardTitle>
+                        <CardDescription>
+                          {match.competitionName} • {formatMatchFormat(match.format || 'singles')} • {formatAgeGroup(match.ageGroup || '30_39')}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={match.status === 'completed' ? 'default' : 'secondary'}>{match.status}</Badge>
+                        <div className="text-right">
+                          <div className="font-bold text-lg">
+                            {match.player1Score}-{match.player2Score}
+                          </div>
+                          {match.team1Score !== null && (
+                            <div className="text-sm text-gray-500">
+                              Teams: {match.team1Score}-{match.team2Score}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        <div>Updated: {new Date(match.updatedAt).toLocaleDateString()}</div>
+                        <div>Competition ID: {match.competitionId}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => loadMatchForEdit(match)}
+                          disabled={updateMatchMutation.isPending}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteMatch(match.id)}
+                          disabled={deleteMatchMutation.isPending}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
+
+        {/* Edit Match Dialog */}
+        <Dialog open={!!selectedMatchForEdit} onOpenChange={() => setSelectedMatchForEdit(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Match #{selectedMatchForEdit?.match?.id}</DialogTitle>
+              <DialogDescription>
+                Update match scores and details. Points will be automatically recalculated.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedMatchForEdit && (
+              <div className="space-y-6">
+                {/* Match Info Display */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Match Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>Competition: {selectedMatchForEdit.match?.competitionName}</div>
+                    <div>Status: <Badge>{selectedMatchForEdit.match?.status}</Badge></div>
+                    <div>Format: {formatMatchFormat(selectedMatchForEdit.match?.format || 'singles')}</div>
+                    <div>Age Group: {formatAgeGroup(selectedMatchForEdit.match?.ageGroup || '30_39')}</div>
+                  </div>
+                </div>
+
+                {/* Player Results Display */}
+                {selectedMatchForEdit.playerResults && selectedMatchForEdit.playerResults.length > 0 && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Current Player Results ({selectedMatchForEdit.playerResults.length})</h4>
+                    <div className="space-y-1">
+                      {selectedMatchForEdit.playerResults.map((result: any) => (
+                        <div key={result.id} className="flex justify-between text-sm">
+                          <span>
+                            {result.playerName}
+                            {result.isWinner && <Badge className="ml-2" variant="default">Winner</Badge>}
+                          </span>
+                          <span className="font-medium">{result.pointsAwarded} points</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Form */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Update Match Scores</h4>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Player 1 Score</Label>
+                      <Input
+                        type="number"
+                        placeholder="Enter score"
+                        value={editMatchData.player1Score}
+                        onChange={(e) => setEditMatchData(prev => ({...prev, player1Score: e.target.value}))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Player 2 Score</Label>
+                      <Input
+                        type="number"
+                        placeholder="Enter score"
+                        value={editMatchData.player2Score}
+                        onChange={(e) => setEditMatchData(prev => ({...prev, player2Score: e.target.value}))}
+                      />
+                    </div>
+                  </div>
+
+                  {selectedMatchForEdit.match?.format?.includes('doubles') && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Team 1 Score</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter team score"
+                          value={editMatchData.team1Score}
+                          onChange={(e) => setEditMatchData(prev => ({...prev, team1Score: e.target.value}))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Team 2 Score</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter team score"
+                          value={editMatchData.team2Score}
+                          onChange={(e) => setEditMatchData(prev => ({...prev, team2Score: e.target.value}))}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Notes (Optional)</Label>
+                    <Textarea
+                      placeholder="Add any notes about the match update..."
+                      value={editMatchData.notes}
+                      onChange={(e) => setEditMatchData(prev => ({...prev, notes: e.target.value}))}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedMatchForEdit(null)}
+                    disabled={updateMatchMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpdateMatch}
+                    disabled={updateMatchMutation.isPending}
+                  >
+                    {updateMatchMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Updating & Recalculating...
+                      </>
+                    ) : (
+                      'Update Match & Recalculate Points'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </Tabs>
     </div>
   );
-}
+};
+
+export default MatchManagement;
