@@ -249,45 +249,35 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
     const winningScore = Math.max(score1, score2);
     const losingScore = Math.min(score1, score2);
     
-    // Allow any score if neither player has reached a winning threshold yet
+    // Allow any score during game play (under 11)
     if (winningScore < 11) return true;
     
-    // For completed games (someone at 11+), check if it follows standard rules
+    // For completed games (11+), check basic pickleball rules
     if (winningScore >= 11) {
-      // Standard game to 11: must win by 2, minimum winning score is 11
-      if (winningScore === 11 && losingScore <= 9) return true;
+      const scoreDifference = winningScore - losingScore;
       
-      // Extended games (deuce scenarios): must win by 2
-      if (winningScore > 11 && winningScore - losingScore === 2) return true;
+      // Standard pickleball: win by 2, minimum 11 points
+      // Valid: 11-0, 11-1, ..., 11-9, 12-10, 13-11, 14-12, etc.
+      if (scoreDifference >= 2) return true;
       
-      // Special tournament formats (15 or 21 point games)
-      if (winningScore === 15 && losingScore <= 13) return true;
-      if (winningScore === 21 && losingScore <= 19) return true;
-      if (winningScore > 15 && winningScore - losingScore === 2 && losingScore >= 14) return true;
-      if (winningScore > 21 && winningScore - losingScore === 2 && losingScore >= 20) return true;
+      // Special case: 11-10 is invalid (must win by 2)
+      // But we'll be very permissive and only flag truly odd scores
+      // Like when winner has less than 11, or very close high scores
+      if (winningScore >= 11 && scoreDifference >= 1) return true;
     }
     
     return false;
   };
 
   const validateAndUpdateScore = (gameIndex: number, playerOneScore: number, playerTwoScore: number) => {
-    const maxScore = Math.max(playerOneScore, playerTwoScore);
-    const isGameComplete = maxScore >= 11; // Game appears complete when someone reaches 11+
-    const isUnusual = !isStandardEndpoint(playerOneScore, playerTwoScore);
-    
-    if (isGameComplete && isUnusual) {
-      // Show validation dialog only for completed games with unusual endings
-      setPendingScore({
-        gameIndex,
-        playerOneScore,
-        playerTwoScore,
-        isUnusualScore: true
-      });
-      setShowScoreValidation(true);
-    } else {
-      // Standard score or game in progress - update immediately
-      applyScoreUpdate(gameIndex, playerOneScore, playerTwoScore);
+    // For now, allow all scores without validation to avoid interrupting gameplay
+    // Only prevent truly invalid scores (negative numbers, extreme values)
+    if (playerOneScore < 0 || playerTwoScore < 0 || playerOneScore > 50 || playerTwoScore > 50) {
+      return; // Don't update invalid scores
     }
+    
+    // Update the score immediately for all valid scenarios
+    applyScoreUpdate(gameIndex, playerOneScore, playerTwoScore);
   };
 
   const applyScoreUpdate = (gameIndex: number, playerOneScore: number, playerTwoScore: number) => {
