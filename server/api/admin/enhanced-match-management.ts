@@ -623,44 +623,46 @@ router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) =
 // Get list of completed matches - simplified version that works
 router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => {
   try {
-    // Just get the basic completed matches data from regular matches table
-    const completedMatches = await db.select({
-      id: matches.id,
-      playerOneId: matches.playerOneId,
-      playerTwoId: matches.playerTwoId,
-      playerOnePartnerId: matches.playerOnePartnerId,
-      playerTwoPartnerId: matches.playerTwoPartnerId,
-      winnerId: matches.winnerId,
-      scorePlayerOne: matches.scorePlayerOne,
-      scorePlayerTwo: matches.scorePlayerTwo,
-      category: matches.category,
-      createdAt: matches.createdAt,
-      updatedAt: matches.updatedAt
-    })
-    .from(matches)
-    .where(eq(matches.validationStatus, 'completed'))
-    .orderBy(desc(matches.createdAt))
-    .limit(20);
+    // Just get the basic completed matches data from regular matches table using correct column names
+    const completedMatches = await db.execute(sql`
+      SELECT 
+        id,
+        player_one_id as "playerOneId",
+        player_two_id as "playerTwoId", 
+        player_one_partner_id as "playerOnePartnerId",
+        player_two_partner_id as "playerTwoPartnerId",
+        winner_id as "winnerId",
+        score_player_one as "scorePlayerOne",
+        score_player_two as "scorePlayerTwo", 
+        category,
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM matches 
+      WHERE winner_id IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 20
+    `);
 
     // Get all unique user IDs from the matches
     const userIds = new Set();
-    completedMatches.forEach(match => {
+    completedMatches.rows.forEach(match => {
       if (match.playerOneId) userIds.add(match.playerOneId);
       if (match.playerTwoId) userIds.add(match.playerTwoId);
       if (match.playerOnePartnerId) userIds.add(match.playerOnePartnerId);
       if (match.playerTwoPartnerId) userIds.add(match.playerTwoPartnerId);
     });
 
-    // Get all users in one query
-    const allUsers = await db.select({
-      id: users.id,
-      username: users.username,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      yearOfBirth: users.yearOfBirth
-    })
-    .from(users)
-    .where(sql`${users.id} IN (${Array.from(userIds).join(',')})`);
+    // Get all users in one query if we have user IDs
+    let allUsers = [];
+    if (userIds.size > 0) {
+      const userIdArray = Array.from(userIds);
+      const userQueryResult = await db.execute(sql`
+        SELECT id, username, first_name as "firstName", last_name as "lastName", year_of_birth as "yearOfBirth"
+        FROM users 
+        WHERE id = ANY(${userIdArray})
+      `);
+      allUsers = userQueryResult.rows;
+    }
 
     // Create user lookup map
     const userMap = {};
@@ -669,7 +671,7 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     });
 
     // Enhanced matches with player names and points
-    const enhancedMatches = completedMatches.map(match => {
+    const enhancedMatches = completedMatches.rows.map(match => {
       const p1 = userMap[match.playerOneId];
       const p2 = userMap[match.playerTwoId];
       const pt1 = match.playerOnePartnerId ? userMap[match.playerOnePartnerId] : null;
