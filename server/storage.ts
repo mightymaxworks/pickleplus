@@ -240,6 +240,7 @@ export interface IStorage extends CommunityStorage {
   getUserCount(): Promise<number>;
   getMatchCount(): Promise<number>;
   getTournamentCount(): Promise<number>;
+  createMatch(matchData: InsertMatch): Promise<Match>;
   getMatchesByUser(userId: number): Promise<Match[]>;
   getMatchStats(userId: number, timeRange?: string): Promise<any>;
   getPicklePoints(userId: number): Promise<number>;
@@ -832,6 +833,11 @@ export class DatabaseStorage implements IStorage {
   async getTournamentCount(): Promise<number> {
     // Return placeholder count for tournaments
     return 0;
+  }
+
+  async createMatch(matchData: InsertMatch): Promise<Match> {
+    const [match] = await db.insert(matches).values(matchData).returning();
+    return match;
   }
 
   async getMatchesByUser(userId: number): Promise<Match[]> {
