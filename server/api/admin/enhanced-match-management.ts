@@ -706,19 +706,19 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         u1.username as player_one_name,
         u1.first_name as player_one_first_name,
         u1.gender as player_one_gender,
-        u1.age as player_one_age,
+        EXTRACT(YEAR FROM AGE(u1.birth_date)) as player_one_age,
         u2.username as player_two_name,
         u2.first_name as player_two_first_name,
         u2.gender as player_two_gender,
-        u2.age as player_two_age,
+        EXTRACT(YEAR FROM AGE(u2.birth_date)) as player_two_age,
         u3.username as partner_one_name,
         u3.first_name as partner_one_first_name,
         u3.gender as partner_one_gender,
-        u3.age as partner_one_age,
+        EXTRACT(YEAR FROM AGE(u3.birth_date)) as partner_one_age,
         u4.username as partner_two_name,
         u4.first_name as partner_two_first_name,
         u4.gender as partner_two_gender,
-        u4.age as partner_two_age
+        EXTRACT(YEAR FROM AGE(u4.birth_date)) as partner_two_age
       FROM matches m
       LEFT JOIN users u1 ON m.player_one_id = u1.id
       LEFT JOIN users u2 ON m.player_two_id = u2.id

@@ -274,6 +274,9 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Pickleball standard game scoring
+  const pointsToWin = 11;
+  
   // Score validation state
   const [showScoreValidation, setShowScoreValidation] = useState(false);
   const [pendingScore, setPendingScore] = useState<{
