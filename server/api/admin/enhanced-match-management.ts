@@ -626,53 +626,42 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     const limit = parseInt(req.query.limit as string) || 50;
     const { playerName, eventName, dateFrom, dateTo, format } = req.query;
 
-    // Build dynamic WHERE conditions
+    // Build WHERE conditions using simple string concatenation
     let whereConditions = ['m.winner_id IS NOT NULL'];
-    const queryParams: any[] = [limit];
-    let paramIndex = 1;
-
+    
     // Filter by player name
     if (playerName) {
-      paramIndex++;
-      whereConditions.push(`(
-        u1.username ILIKE $${paramIndex} OR u1.first_name ILIKE $${paramIndex} OR 
-        u2.username ILIKE $${paramIndex} OR u2.first_name ILIKE $${paramIndex} OR
-        u3.username ILIKE $${paramIndex} OR u3.first_name ILIKE $${paramIndex} OR
-        u4.username ILIKE $${paramIndex} OR u4.first_name ILIKE $${paramIndex}
-      )`);
-      queryParams.push(`%${playerName}%`);
+      const playerFilter = `(
+        u1.username ILIKE '%${playerName}%' OR u1.first_name ILIKE '%${playerName}%' OR 
+        u2.username ILIKE '%${playerName}%' OR u2.first_name ILIKE '%${playerName}%' OR
+        u3.username ILIKE '%${playerName}%' OR u3.first_name ILIKE '%${playerName}%' OR
+        u4.username ILIKE '%${playerName}%' OR u4.first_name ILIKE '%${playerName}%'
+      )`;
+      whereConditions.push(playerFilter);
     }
 
     // Filter by event name
     if (eventName) {
-      paramIndex++;
-      whereConditions.push(`m.match_type ILIKE $${paramIndex}`);
-      queryParams.push(`%${eventName}%`);
+      whereConditions.push(`m.match_type ILIKE '%${eventName}%'`);
     }
 
     // Filter by date range
     if (dateFrom) {
-      paramIndex++;
-      whereConditions.push(`m.match_date >= $${paramIndex}`);
-      queryParams.push(dateFrom);
+      whereConditions.push(`m.match_date >= '${dateFrom}'`);
     }
 
     if (dateTo) {
-      paramIndex++;
-      whereConditions.push(`m.match_date <= $${paramIndex}`);
-      queryParams.push(dateTo);
+      whereConditions.push(`m.match_date <= '${dateTo}'`);
     }
 
     // Filter by format
     if (format && format !== 'all') {
-      paramIndex++;
-      whereConditions.push(`m.format_type = $${paramIndex}`);
-      queryParams.push(format);
+      whereConditions.push(`m.format_type = '${format}'`);
     }
 
     const whereClause = whereConditions.join(' AND ');
 
-    // Execute query with parameters
+    // Execute query with direct SQL
     const queryString = `
       SELECT 
         m.id,
@@ -683,7 +672,6 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         m.winner_id,
         m.score_player_one,
         m.score_player_two, 
-        m.category,
         m.format_type as format,
         m.match_type as event_name,
         m.match_date as scheduled_date,
@@ -705,10 +693,10 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
       LEFT JOIN users u4 ON m.player_two_partner_id = u4.id
       WHERE ${whereClause}
       ORDER BY m.created_at DESC
-      LIMIT $1
+      LIMIT ${limit}
     `;
 
-    const query = sql.raw(queryString, queryParams);
+    const query = sql.raw(queryString);
     
     const result = await db.execute(query);
     const matches = result.rows;
