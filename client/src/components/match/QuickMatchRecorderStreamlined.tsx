@@ -112,15 +112,19 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
   // Check if user is admin
   const isAdmin = user?.isAdmin;
 
-  // Fetch tournaments for admin users
-  const { data: tournaments = [] } = useQuery({
-    queryKey: ['/api/admin/tournaments'],
+  // Fetch competitions/tournaments for admin users
+  const { data: tournamentsResponse } = useQuery({
+    queryKey: ['/api/admin/match-management/competitions'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/tournaments');
+      const response = await fetch('/api/admin/match-management/competitions', {
+        credentials: 'include',
+      });
       return response.json();
     },
     enabled: !!(isAdminMode && isAdmin),
   });
+  
+  const tournaments = tournamentsResponse?.data || [];
 
   // Admin-specific state
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(null);
