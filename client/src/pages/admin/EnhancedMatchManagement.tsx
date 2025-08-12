@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import QuickMatchRecorder from '@/components/match/QuickMatchRecorder';
 
 interface Competition {
   id: number;
@@ -367,9 +368,10 @@ const MatchManagement: React.FC = () => {
       </div>
 
       <Tabs defaultValue="competitions" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="competitions">Competitions</TabsTrigger>
-          <TabsTrigger value="matches">Matches</TabsTrigger>
+          <TabsTrigger value="record-match">Record Match</TabsTrigger>
+          <TabsTrigger value="matches">View Matches</TabsTrigger>
         </TabsList>
 
         <TabsContent value="competitions" className="space-y-4">
@@ -466,6 +468,32 @@ const MatchManagement: React.FC = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="record-match" className="space-y-4">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-lg font-medium">Record New Match</h3>
+              <p className="text-sm text-muted-foreground">
+                Use the same match recorder that players use, with enhanced admin capabilities for tournament linking and manual point overrides
+              </p>
+            </div>
+          </div>
+          
+          <Card>
+            <CardContent className="p-6">
+              <QuickMatchRecorder 
+                onSuccess={() => {
+                  toast({
+                    title: "Match Recorded Successfully",
+                    description: "The match has been recorded and points have been allocated.",
+                  });
+                  // Refresh the matches list
+                  refetchCompletedMatches();
+                }} 
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="matches" className="space-y-4">
