@@ -632,7 +632,14 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     
     const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
     
-    const matches = await db.select({
+    // UNIFIED APPROACH: Get matches from BOTH adminMatches and regular matches tables
+    // This ensures matches created via both systems appear in completed matches tab
+    
+    // Import regular matches table
+    const { matches } = await import('../../shared/schema');
+    
+    // Get admin matches (enhanced system)
+    const adminMatchesData = await db.select({
       id: adminMatches.id,
       competitionId: adminMatches.competitionId,
       player1Score: adminMatches.player1Score,
@@ -642,29 +649,57 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
       status: adminMatches.status,
       createdAt: adminMatches.createdAt,
       updatedAt: adminMatches.updatedAt,
-      competitionName: competitions.name
+      competitionName: competitions.name,
+      source: sql<string>`'admin'`.as('source')
     })
     .from(adminMatches)
     .leftJoin(competitions, eq(adminMatches.competitionId, competitions.id))
     .where(eq(adminMatches.status, 'completed'))
-    .orderBy(desc(adminMatches.updatedAt))
-    .limit(parseInt(limit as string))
-    .offset(offset);
+    .orderBy(desc(adminMatches.updatedAt));
     
-    // Get total count for pagination
-    const totalCount = await db.select({ count: sql`count(*)` })
+    // Get regular matches (player recording system)
+    const regularMatchesData = await db.select({
+      id: matches.id,
+      competitionId: matches.tournamentId,
+      player1Score: matches.scorePlayerOne,
+      player2Score: matches.scorePlayerTwo,
+      team1Score: sql<string>`NULL`.as('team1Score'),
+      team2Score: sql<string>`NULL`.as('team2Score'),
+      status: matches.validationStatus,
+      createdAt: matches.createdAt,
+      updatedAt: matches.updatedAt,
+      competitionName: sql<string>`'Tournament ' || COALESCE(${matches.tournamentId}::text, 'N/A')`.as('competitionName'),
+      source: sql<string>`'regular'`.as('source')
+    })
+    .from(matches)
+    .where(eq(matches.validationStatus, 'completed'))
+    .orderBy(desc(matches.updatedAt));
+    
+    // Combine and sort all matches
+    const allMatches = [...adminMatchesData, ...regularMatchesData]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(offset, offset + parseInt(limit as string));
+    
+    // Get total count from both tables
+    const adminCount = await db.select({ count: sql`count(*)` })
       .from(adminMatches)
       .where(eq(adminMatches.status, 'completed'));
+      
+    const regularCount = await db.select({ count: sql`count(*)` })
+      .from(matches)
+      .where(eq(matches.validationStatus, 'completed'));
+    
+    const totalCount = Number(adminCount[0].count) + Number(regularCount[0].count);
     
     res.json({
-      matches,
+      matches: allMatches,
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: totalCount[0].count,
-        pages: Math.ceil(Number(totalCount[0].count) / parseInt(limit as string))
+        total: totalCount,
+        pages: Math.ceil(totalCount / parseInt(limit as string))
       },
-      message: 'Completed matches retrieved successfully'
+      message: 'Completed matches retrieved successfully (unified from both systems)'
     });
     
   } catch (error) {
