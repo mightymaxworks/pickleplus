@@ -16,6 +16,7 @@ export function registerMatchRoutes(app: express.Express): void {
   app.post('/api/matches', isAuthenticated, async (req, res) => {
     try {
       console.log('[Match Creation] Recording new match with data:', req.body);
+      console.log(`[Match Creation] User: ${(req.user as any)?.username} (Admin: ${(req.user as any)?.isAdmin || false})`);
       
       const { 
         playerOneId, 
@@ -69,8 +70,12 @@ export function registerMatchRoutes(app: express.Express): void {
       const winnerPoints = 3;
       const loserPoints = 1;
 
+      // Check if user is admin - admins get auto-completed matches
+      const user = req.user as any;
+      const isAdmin = user?.isAdmin || false;
+      
       const newMatch = await storage.createMatch({
-        playerOneId: playerOneId || (req.user as any)?.id,
+        playerOneId: playerOneId || user?.id,
         playerTwoId,
         playerOnePartnerId: playerOnePartnerId || null,
         playerTwoPartnerId: playerTwoPartnerId || null,
@@ -79,11 +84,13 @@ export function registerMatchRoutes(app: express.Express): void {
         winnerId,
         matchType: matchType || 'casual',
         formatType: formatType || 'singles',
-        status: 'completed',
+        validationStatus: isAdmin ? 'completed' : 'pending', // Admin matches auto-complete
+        validationCompletedAt: isAdmin ? new Date() : null,
         notes: notes || null,
         tournamentId: validTournamentId,
         scheduledDate: scheduledDate || null,
-        pointsAwarded: winnerPoints
+        pointsAwarded: winnerPoints,
+        category: formatType || 'singles' // Fix category field
       });
 
       // Award points to both players: 3 for winner, 1 for loser
@@ -104,7 +111,7 @@ export function registerMatchRoutes(app: express.Express): void {
         console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);
       }
 
-      console.log('[Match Creation] Match created successfully:', newMatch.id);
+      console.log(`[Match Creation] Match created successfully: ${newMatch.id} (Status: ${isAdmin ? 'auto-completed (admin)' : 'pending validation'})`);
       res.status(201).json({ success: true, match: newMatch });
     } catch (error) {
       console.error('[Match Creation] Error:', error);
