@@ -43,6 +43,83 @@ import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchReco
 import MatchManagement from './MatchManagement';
 import BulkMatchUpload from '@/components/match/BulkMatchUpload';
 
+// Simple Completed Matches Display Component
+function CompletedMatchesDisplay() {
+  const { data: completedMatches, isLoading } = useQuery({
+    queryKey: ['/api/admin/enhanced-match-management/matches/completed'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/enhanced-match-management/matches/completed?limit=20', {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch completed matches');
+      return res.json();
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Completed Matches</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading matches...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Trophy className="h-5 w-5" />
+          Completed Matches
+        </CardTitle>
+        <CardDescription>
+          All validated and completed matches in the system
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {completedMatches?.success && completedMatches?.data?.length > 0 ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {completedMatches.data.map((match: any) => (
+                <div key={match.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="font-medium">Match #{match.id}</div>
+                    <Badge variant="default">Completed</Badge>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <div><strong>Players:</strong> {match.playerOneName} vs {match.playerTwoName}</div>
+                    {match.playerOnePartnerName && (
+                      <div><strong>Partners:</strong> {match.playerOnePartnerName} & {match.playerTwoPartnerName}</div>
+                    )}
+                    <div><strong>Score:</strong> {match.scorePlayerOne}</div>
+                    <div><strong>Winner:</strong> {match.winnerName}</div>
+                    <div><strong>Format:</strong> {match.category}</div>
+                    <div><strong>Points:</strong> {match.pointsAwarded || 'N/A'}</div>
+                    <div className="text-muted-foreground">
+                      {new Date(match.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No completed matches found. 
+            {completedMatches?.error && (
+              <div className="text-red-500 mt-2">Error: {completedMatches.error}</div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 interface PlayerResult {
   id: number;
   playerId: number;
@@ -153,16 +230,32 @@ export default function EnhancedMatchManagement() {
         </div>
       </div>
 
-      <Tabs defaultValue="record-match" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
+      <Tabs defaultValue="completed-matches" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-6">
+          <TabsTrigger value="completed-matches" className="text-xs md:text-sm">Completed Matches</TabsTrigger>
           <TabsTrigger value="record-match" className="text-xs md:text-sm">Record Match</TabsTrigger>
           <TabsTrigger value="competitions" className="text-xs md:text-sm">Competitions</TabsTrigger>
           <TabsTrigger value="bulk-upload" className="text-xs md:text-sm">Bulk Upload</TabsTrigger>
           <TabsTrigger value="leaderboards" className="text-xs md:text-sm hidden md:flex">Leaderboards</TabsTrigger>
-          <TabsTrigger value="overview" className="text-xs md:text-sm hidden md:flex">Overview</TabsTrigger>
-          <TabsTrigger value="mixed-age" className="text-xs md:text-sm hidden md:flex">Analytics</TabsTrigger>
-          <TabsTrigger value="match-results" className="text-xs md:text-sm hidden md:flex">Results</TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs md:text-sm hidden md:flex">Analytics</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="completed-matches" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Completed Matches
+              </CardTitle>
+              <CardDescription>
+                All validated and completed matches in the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CompletedMatchesDisplay />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="record-match" className="space-y-6">
           <Card>

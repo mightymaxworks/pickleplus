@@ -10,6 +10,7 @@ import {
   adminMatches,
   playerMatchResults,
   users,
+  matches,
   pointAllocationRules,
   ageGroupMappings,
   createCompetitionSchema,
@@ -635,8 +636,7 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     // UNIFIED APPROACH: Get matches from BOTH adminMatches and regular matches tables
     // This ensures matches created via both systems appear in completed matches tab
     
-    // Import regular matches table directly
-    const { matches } = require('../../../shared/schema');
+    // Now use the imported matches table from the top of the file
     
     // Get admin matches (enhanced system)
     const adminMatchesData = await db.select({
@@ -657,14 +657,12 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     .where(eq(adminMatches.status, 'completed'))
     .orderBy(desc(adminMatches.updatedAt));
     
-    // Get regular matches (player recording system)
+    // Get regular matches (player recording system) - simplified query that works
     const regularMatchesData = await db.select({
       id: matches.id,
       competitionId: matches.tournamentId,
       player1Score: matches.scorePlayerOne,
       player2Score: matches.scorePlayerTwo,
-      team1Score: sql<string>`NULL`.as('team1Score'),
-      team2Score: sql<string>`NULL`.as('team2Score'),
       status: matches.validationStatus,
       createdAt: matches.createdAt,
       updatedAt: matches.updatedAt,
