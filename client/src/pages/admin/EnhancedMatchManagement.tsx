@@ -43,12 +43,12 @@ import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchReco
 import MatchManagement from './MatchManagement';
 import BulkMatchUpload from '@/components/match/BulkMatchUpload';
 
-// Simple Completed Matches Display Component
+// Clean Apple-like Completed Matches Display
 function CompletedMatchesDisplay() {
   const { data: completedMatches, isLoading } = useQuery({
     queryKey: ['/api/admin/enhanced-match-management/matches/completed'],
     queryFn: async () => {
-      const res = await fetch('/api/admin/enhanced-match-management/matches/completed?limit=20', {
+      const res = await fetch('/api/admin/enhanced-match-management/matches/completed?limit=50', {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Failed to fetch completed matches');
@@ -58,65 +58,130 @@ function CompletedMatchesDisplay() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Completed Matches</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">Loading matches...</div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground">Loading completed matches...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!completedMatches?.success || !completedMatches?.data?.length) {
+    return (
+      <div className="text-center py-12 space-y-3">
+        <Trophy className="w-12 h-12 text-muted-foreground mx-auto" />
+        <h3 className="text-lg font-medium">No Completed Matches</h3>
+        <p className="text-muted-foreground">Start recording matches to see them here</p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          Completed Matches
-        </CardTitle>
-        <CardDescription>
-          All validated and completed matches in the system
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {completedMatches?.success && completedMatches?.data?.length > 0 ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedMatches.data.map((match: any) => (
-                <div key={match.id} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="font-medium">Match #{match.id}</div>
-                    <Badge variant="default">Completed</Badge>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">Completed Matches</h2>
+        <Badge variant="secondary" className="px-3 py-1">
+          {completedMatches.data.length} matches
+        </Badge>
+      </div>
+      
+      <div className="space-y-4">
+        {completedMatches.data.map((match: any) => (
+          <div key={match.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            {/* Match Header */}
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <span className="text-orange-600 font-semibold text-sm">#{match.id}</span>
                   </div>
-                  <div className="text-sm space-y-1">
-                    <div><strong>Players:</strong> {match.playerOneName} vs {match.playerTwoName}</div>
-                    {match.playerOnePartnerName && (
-                      <div><strong>Partners:</strong> {match.playerOnePartnerName} & {match.playerTwoPartnerName}</div>
-                    )}
-                    <div><strong>Score:</strong> {match.scorePlayerOne}</div>
-                    <div><strong>Winner:</strong> {match.winnerName}</div>
-                    <div><strong>Format:</strong> {match.category}</div>
-                    <div><strong>Points:</strong> {match.pointsAwarded || 'N/A'}</div>
-                    <div className="text-muted-foreground">
-                      {new Date(match.createdAt).toLocaleDateString()}
-                    </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {match.format === 'doubles' ? 'Doubles Match' : 'Singles Match'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(match.createdAt).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
                   </div>
                 </div>
-              ))}
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  Validated
+                </Badge>
+              </div>
+            </div>
+
+            {/* Match Details */}
+            <div className="px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Players & Score */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">Match Result</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium">{match.playerOneName || 'Player 1'}</span>
+                      <span className="text-lg font-bold">{match.player1Score || match.scorePlayerOne || '0'}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium">{match.playerTwoName || 'Player 2'}</span>
+                      <span className="text-lg font-bold">{match.player2Score || match.scorePlayerTwo || '0'}</span>
+                    </div>
+                    {match.format === 'doubles' && match.playerOnePartnerName && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-700">
+                          <strong>Partners:</strong> {match.playerOnePartnerName} & {match.playerTwoPartnerName}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Points Allocation */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">Points Allocation</h4>
+                  <div className="space-y-2">
+                    {match.playerResults?.map((result: any, index: number) => (
+                      <div key={index} className="p-3 bg-orange-50 rounded-lg border border-orange-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-gray-900">{result.playerName}</span>
+                          <span className="font-bold text-orange-600">+{result.pointsAwarded} pts</span>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div className="flex justify-between">
+                            <span>Base Points:</span>
+                            <span>{result.basePoints}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Age Group ({result.ageGroup}):</span>
+                            <span>{result.ageGroupMultiplier}x</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Result:</span>
+                            <span className={result.isWinner ? 'text-green-600' : 'text-gray-500'}>
+                              {result.isWinner ? 'WIN' : 'LOSS'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )) || (
+                      <div className="p-3 bg-gray-50 rounded-lg text-center text-sm text-gray-500">
+                        Points calculation not available
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No completed matches found. 
-            {completedMatches?.error && (
-              <div className="text-red-500 mt-2">Error: {completedMatches.error}</div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -241,20 +306,7 @@ export default function EnhancedMatchManagement() {
         </TabsList>
 
         <TabsContent value="completed-matches" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Completed Matches
-              </CardTitle>
-              <CardDescription>
-                All validated and completed matches in the system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CompletedMatchesDisplay />
-            </CardContent>
-          </Card>
+          <CompletedMatchesDisplay />
         </TabsContent>
 
         <TabsContent value="record-match" className="space-y-6">

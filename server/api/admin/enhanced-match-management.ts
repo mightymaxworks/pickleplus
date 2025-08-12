@@ -657,7 +657,7 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     .where(eq(adminMatches.status, 'completed'))
     .orderBy(desc(adminMatches.updatedAt));
     
-    // Get regular matches (player recording system) - simplified query that works
+    // Get regular matches with full player data and points allocation
     const regularMatchesData = await db.select({
       id: matches.id,
       competitionId: matches.tournamentId,
@@ -666,6 +666,12 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
       status: matches.validationStatus,
       createdAt: matches.createdAt,
       updatedAt: matches.updatedAt,
+      format: matches.category,
+      playerId1: matches.playerOneId,
+      playerId2: matches.playerTwoId,
+      partnerId1: matches.playerOnePartnerId,
+      partnerId2: matches.playerTwoPartnerId,
+      winnerId: matches.winnerId,
       competitionName: sql<string>`'Tournament ' || COALESCE(${matches.tournamentId}::text, 'N/A')`.as('competitionName'),
       source: sql<string>`'regular'`.as('source')
     })
@@ -673,31 +679,102 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     .where(eq(matches.validationStatus, 'completed'))
     .orderBy(desc(matches.updatedAt));
     
+    // Transform regular matches to include player names and points data
+    const enhancedRegularMatches = [];
+    for (const match of regularMatchesData) {
+      try {
+        // Get player names
+        const players = await db.select({
+          id: users.id,
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          yearOfBirth: users.yearOfBirth,
+          gender: users.gender
+        }).from(users).where(or(
+          eq(users.id, match.playerId1),
+          eq(users.id, match.playerId2),
+          match.partnerId1 ? eq(users.id, match.partnerId1) : sql`false`,
+          match.partnerId2 ? eq(users.id, match.partnerId2) : sql`false`
+        ));
+
+        const player1 = players.find(p => p.id === match.playerId1);
+        const player2 = players.find(p => p.id === match.playerId2);
+        const partner1 = match.partnerId1 ? players.find(p => p.id === match.partnerId1) : null;
+        const partner2 = match.partnerId2 ? players.find(p => p.id === match.partnerId2) : null;
+
+        // Calculate points for each player using the same algorithm
+        const playerResults = [];
+        if (player1) {
+          const points = await calculatePlayerPoints(
+            player1.id,
+            match.winnerId === player1.id,
+            'casual',
+            match.format || 'singles'
+          );
+          playerResults.push({
+            playerId: player1.id,
+            playerName: `${player1.firstName || ''} ${player1.lastName || ''}`.trim() || player1.username,
+            isWinner: match.winnerId === player1.id,
+            pointsAwarded: points.finalPoints,
+            basePoints: points.basePoints,
+            ageGroup: points.ageGroup,
+            ageGroupMultiplier: points.multiplier
+          });
+        }
+
+        if (player2) {
+          const points = await calculatePlayerPoints(
+            player2.id,
+            match.winnerId === player2.id,
+            'casual',
+            match.format || 'singles'
+          );
+          playerResults.push({
+            playerId: player2.id,
+            playerName: `${player2.firstName || ''} ${player2.lastName || ''}`.trim() || player2.username,
+            isWinner: match.winnerId === player2.id,
+            pointsAwarded: points.finalPoints,
+            basePoints: points.basePoints,
+            ageGroup: points.ageGroup,
+            ageGroupMultiplier: points.multiplier
+          });
+        }
+
+        enhancedRegularMatches.push({
+          ...match,
+          playerOneName: player1 ? (`${player1.firstName || ''} ${player1.lastName || ''}`.trim() || player1.username) : 'Unknown',
+          playerTwoName: player2 ? (`${player2.firstName || ''} ${player2.lastName || ''}`.trim() || player2.username) : 'Unknown',
+          playerOnePartnerName: partner1 ? (`${partner1.firstName || ''} ${partner1.lastName || ''}`.trim() || partner1.username) : null,
+          playerTwoPartnerName: partner2 ? (`${partner2.firstName || ''} ${partner2.lastName || ''}`.trim() || partner2.username) : null,
+          playerResults
+        });
+      } catch (error) {
+        console.error('Error enhancing match data:', error);
+        enhancedRegularMatches.push({
+          ...match,
+          playerOneName: 'Unknown',
+          playerTwoName: 'Unknown',
+          playerResults: []
+        });
+      }
+    }
+    
     // Combine and sort all matches
-    const allMatches = [...adminMatchesData, ...regularMatchesData]
+    const allMatches = [...adminMatchesData, ...enhancedRegularMatches]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(offset, offset + parseInt(limit as string));
     
-    // Get total count from both tables
-    const adminCount = await db.select({ count: sql`count(*)` })
-      .from(adminMatches)
-      .where(eq(adminMatches.status, 'completed'));
-      
-    const regularCount = await db.select({ count: sql`count(*)` })
-      .from(matches)
-      .where(eq(matches.validationStatus, 'completed'));
-    
-    const totalCount = Number(adminCount[0].count) + Number(regularCount[0].count);
-    
     res.json({
-      matches: allMatches,
+      success: true,
+      data: allMatches,
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: totalCount,
-        pages: Math.ceil(totalCount / parseInt(limit as string))
+        total: enhancedRegularMatches.length,
+        pages: Math.ceil(enhancedRegularMatches.length / parseInt(limit as string))
       },
-      message: 'Completed matches retrieved successfully (unified from both systems)'
+      message: 'Completed matches retrieved successfully with full player data and points allocation'
     });
     
   } catch (error) {
