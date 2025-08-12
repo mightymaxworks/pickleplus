@@ -613,39 +613,89 @@ const MatchManagement: React.FC = () => {
                   </CardHeader>
                   
                   <CardContent className="space-y-4">
-                    {/* Player Results with Points Breakdown */}
+                    {/* Team-Based Player Results with Enhanced Information */}
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <Users className="h-4 w-4" />
-                        Players & Points Allocation (Algorithm: System B - 3 points win, 1 point loss)
+                        Match Teams & Points Allocation (Algorithm: System B - 3 points win, 1 point loss)
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {match.playerResults?.map((player: any, index: number) => (
-                          <div 
-                            key={`${match.id}-${player.playerId}-${index}`} 
-                            className={`flex items-center justify-between p-3 rounded-md ${
-                              player.isWinner ? 'bg-green-100 border-l-4 border-l-green-500' : 'bg-gray-100 border-l-4 border-l-gray-300'
-                            }`}
-                          >
-                            <div>
-                              <div className="font-medium flex items-center gap-2">
-                                {player.playerName}
-                                {player.isWinner && <Badge className="bg-green-600 text-white text-xs">Winner</Badge>}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {player.ageGroup} • {player.ageGroupMultiplier}x multiplier
-                              </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Team 1 */}
+                        {match.team1 && match.team1.length > 0 && (
+                          <div className={`p-4 rounded-lg border-2 ${
+                            match.team1[0]?.isWinner ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-300'
+                          }`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <h5 className="font-medium text-lg">Team 1</h5>
+                              {match.team1[0]?.isWinner && (
+                                <Badge className="bg-green-600 text-white">Winners</Badge>
+                              )}
                             </div>
-                            <div className="text-right">
-                              <div className="font-bold text-lg">
-                                {player.pointsAwarded} pts
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Base: {player.basePoints}
-                              </div>
+                            <div className="space-y-3">
+                              {match.team1.map((player: any, index: number) => (
+                                <div key={`team1-${player.playerId}-${index}`} className="bg-white p-3 rounded-md border">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <div className="font-medium text-blue-700">{player.playerName}</div>
+                                      <div className="text-sm text-gray-600 space-y-1">
+                                        <div>Gender: {player.gender} • Age: {player.age}</div>
+                                        <div>Category: {player.genderCategory} {player.ageCategory}</div>
+                                        <div className="text-xs text-blue-600">{player.teamPosition}</div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-bold text-lg text-green-600">
+                                        +{player.pointsAwarded} pts
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Base: {player.basePoints}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
+                        )}
+
+                        {/* Team 2 */}
+                        {match.team2 && match.team2.length > 0 && (
+                          <div className={`p-4 rounded-lg border-2 ${
+                            match.team2[0]?.isWinner ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-300'
+                          }`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <h5 className="font-medium text-lg">Team 2</h5>
+                              {match.team2[0]?.isWinner && (
+                                <Badge className="bg-green-600 text-white">Winners</Badge>
+                              )}
+                            </div>
+                            <div className="space-y-3">
+                              {match.team2.map((player: any, index: number) => (
+                                <div key={`team2-${player.playerId}-${index}`} className="bg-white p-3 rounded-md border">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <div className="font-medium text-purple-700">{player.playerName}</div>
+                                      <div className="text-sm text-gray-600 space-y-1">
+                                        <div>Gender: {player.gender} • Age: {player.age}</div>
+                                        <div>Category: {player.genderCategory} {player.ageCategory}</div>
+                                        <div className="text-xs text-purple-600">{player.teamPosition}</div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-bold text-lg text-green-600">
+                                        +{player.pointsAwarded} pts
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Base: {player.basePoints}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -689,7 +689,13 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         m.score_player_one,
         m.score_player_two, 
         m.format_type as format,
-        COALESCE(t.name, m.match_type, 'Standard Match') as event_name,
+        CASE 
+          WHEN t.name IS NOT NULL THEN t.name
+          WHEN m.match_type = 'casual' THEN 'Casual Match'
+          WHEN m.match_type = 'tournament' THEN 'Tournament Match'
+          WHEN m.match_type = 'ranked' THEN 'Ranked Match'
+          ELSE COALESCE(m.match_type, 'Standard Match')
+        END as event_name,
         COALESCE(t.description, 'Standard Match') as event_description,
         m.match_date as scheduled_date,
         m.tournament_id,
@@ -699,12 +705,20 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         m.updated_at,
         u1.username as player_one_name,
         u1.first_name as player_one_first_name,
+        u1.gender as player_one_gender,
+        u1.age as player_one_age,
         u2.username as player_two_name,
         u2.first_name as player_two_first_name,
+        u2.gender as player_two_gender,
+        u2.age as player_two_age,
         u3.username as partner_one_name,
         u3.first_name as partner_one_first_name,
+        u3.gender as partner_one_gender,
+        u3.age as partner_one_age,
         u4.username as partner_two_name,
-        u4.first_name as partner_two_first_name
+        u4.first_name as partner_two_first_name,
+        u4.gender as partner_two_gender,
+        u4.age as partner_two_age
       FROM matches m
       LEFT JOIN users u1 ON m.player_one_id = u1.id
       LEFT JOIN users u2 ON m.player_two_id = u2.id
@@ -723,71 +737,112 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
 
     // Enhanced matches with player results based on PICKLE_PLUS_ALGORITHM_DOCUMENT (System B: 3 points win, 1 point loss)
     const enhancedMatches = matches.map(match => {
-      const playerResults = [];
+      // Determine age category and gender category for points allocation
+      const getAgeCategory = (age) => {
+        if (!age) return 'Open';
+        if (age < 35) return 'Open';
+        if (age < 50) return '35+';
+        if (age < 65) return '50+';
+        return '65+';
+      };
+
+      const getGenderCategory = (gender) => {
+        return gender === 'male' ? 'Men' : gender === 'female' ? 'Women' : 'Mixed';
+      };
+
+      // Team 1: Player 1 + Partner 1 (if doubles)
+      const team1 = [];
+      const team2 = [];
       
-      // Player 1
+      // Team 1 - Player 1
       if (match.player_one_id) {
         const isWinner = match.winner_id === match.player_one_id;
         const basePoints = isWinner ? 3 : 1; // PICKLE_PLUS_ALGORITHM_DOCUMENT System B
+        const ageCategory = getAgeCategory(match.player_one_age);
+        const genderCategory = getGenderCategory(match.player_one_gender);
         
-        playerResults.push({
+        team1.push({
           playerId: match.player_one_id,
           playerName: match.player_one_first_name ? `${match.player_one_first_name}` : match.player_one_name,
+          gender: match.player_one_gender || 'Not specified',
+          age: match.player_one_age || 'Not specified',
           isWinner,
           pointsAwarded: basePoints,
           basePoints,
-          ageGroup: 'Open',
-          ageGroupMultiplier: 1.0
+          ageCategory,
+          genderCategory,
+          ageGroupMultiplier: 1.0,
+          teamPosition: 'Player 1'
         });
       }
 
-      // Player 2  
-      if (match.player_two_id) {
-        const isWinner = match.winner_id === match.player_two_id;
-        const basePoints = isWinner ? 3 : 1;
-        
-        playerResults.push({
-          playerId: match.player_two_id,
-          playerName: match.player_two_first_name ? `${match.player_two_first_name}` : match.player_two_name,
-          isWinner,
-          pointsAwarded: basePoints,
-          basePoints,
-          ageGroup: 'Open',
-          ageGroupMultiplier: 1.0
-        });
-      }
-
-      // Partner 1 (for doubles)
+      // Team 1 - Partner 1 (for doubles)
       if (match.player_one_partner_id) {
         const isWinner = match.winner_id === match.player_one_id; // Same as Player 1's result
         const basePoints = isWinner ? 3 : 1;
+        const ageCategory = getAgeCategory(match.partner_one_age);
+        const genderCategory = getGenderCategory(match.partner_one_gender);
         
-        playerResults.push({
+        team1.push({
           playerId: match.player_one_partner_id,
           playerName: match.partner_one_first_name ? `${match.partner_one_first_name}` : match.partner_one_name,
+          gender: match.partner_one_gender || 'Not specified',
+          age: match.partner_one_age || 'Not specified',
           isWinner,
           pointsAwarded: basePoints,
           basePoints,
-          ageGroup: 'Open',
-          ageGroupMultiplier: 1.0
+          ageCategory,
+          genderCategory,
+          ageGroupMultiplier: 1.0,
+          teamPosition: 'Partner 1'
         });
       }
 
-      // Partner 2 (for doubles)
-      if (match.player_two_partner_id) {
-        const isWinner = match.winner_id === match.player_two_id; // Same as Player 2's result
+      // Team 2 - Player 2
+      if (match.player_two_id) {
+        const isWinner = match.winner_id === match.player_two_id;
         const basePoints = isWinner ? 3 : 1;
+        const ageCategory = getAgeCategory(match.player_two_age);
+        const genderCategory = getGenderCategory(match.player_two_gender);
         
-        playerResults.push({
-          playerId: match.player_two_partner_id,
-          playerName: match.partner_two_first_name ? `${match.partner_two_first_name}` : match.partner_two_name,
+        team2.push({
+          playerId: match.player_two_id,
+          playerName: match.player_two_first_name ? `${match.player_two_first_name}` : match.player_two_name,
+          gender: match.player_two_gender || 'Not specified',
+          age: match.player_two_age || 'Not specified',
           isWinner,
           pointsAwarded: basePoints,
           basePoints,
-          ageGroup: 'Open',
-          ageGroupMultiplier: 1.0
+          ageCategory,
+          genderCategory,
+          ageGroupMultiplier: 1.0,
+          teamPosition: 'Player 2'
         });
       }
+
+      // Team 2 - Partner 2 (for doubles)
+      if (match.player_two_partner_id) {
+        const isWinner = match.winner_id === match.player_two_id; // Same as Player 2's result
+        const basePoints = isWinner ? 3 : 1;
+        const ageCategory = getAgeCategory(match.partner_two_age);
+        const genderCategory = getGenderCategory(match.partner_two_gender);
+        
+        team2.push({
+          playerId: match.player_two_partner_id,
+          playerName: match.partner_two_first_name ? `${match.partner_two_first_name}` : match.partner_two_name,
+          gender: match.partner_two_gender || 'Not specified',
+          age: match.partner_two_age || 'Not specified',
+          isWinner,
+          pointsAwarded: basePoints,
+          basePoints,
+          ageCategory,
+          genderCategory,
+          ageGroupMultiplier: 1.0,
+          teamPosition: 'Partner 2'
+        });
+      }
+
+      const playerResults = [...team1, ...team2];
 
       return {
         id: match.id,
@@ -798,10 +853,17 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         winnerId: match.winner_id,
         scorePlayerOne: match.score_player_one,
         scorePlayerTwo: match.score_player_two,
-        category: match.category,
+        eventName: match.event_name,
+        eventDescription: match.event_description,
+        tournamentId: match.tournament_id,
+        matchType: match.match_type,
+        scheduledDate: match.scheduled_date,
+        notes: match.notes,
         createdAt: match.created_at,
         updatedAt: match.updated_at,
         playerResults,
+        team1,
+        team2,
         format: match.player_one_partner_id || match.player_two_partner_id ? 'doubles' : 'singles'
       };
     });
