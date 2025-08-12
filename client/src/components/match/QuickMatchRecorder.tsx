@@ -276,6 +276,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   
   // Pickleball standard game scoring
   const pointsToWin = 11;
+  const totalGames = formatType === "singles" ? 3 : 3; // Best of 3 games standard
   
   // Score validation state
   const [showScoreValidation, setShowScoreValidation] = useState(false);
