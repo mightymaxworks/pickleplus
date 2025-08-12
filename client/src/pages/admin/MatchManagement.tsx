@@ -90,7 +90,10 @@ const MatchManagement: React.FC = () => {
     queryKey: ['/api/admin/match-management/competitions'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/match-management/competitions');
-      return response.json();
+      const data = await response.json();
+      console.log('[Admin] Competitions API response:', data);
+      console.log('[Admin] Competitions data structure:', data?.data);
+      return data;
     }
   });
 
@@ -561,9 +564,16 @@ const MatchManagement: React.FC = () => {
         </TabsList>
 
         <TabsContent value="competitions" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {competitions?.data?.map((competition: Competition) => (
-              <Card key={competition.id} className="cursor-pointer hover:shadow-md transition-shadow">
+          {competitionsLoading ? (
+            <div className="text-center py-8">Loading competitions...</div>
+          ) : competitions?.data?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No competitions found. Create your first competition to get started.
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {competitions?.data?.map((competition: Competition) => (
+                <Card key={competition.id} className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{competition.name}</CardTitle>

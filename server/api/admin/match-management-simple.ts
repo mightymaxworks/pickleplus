@@ -51,10 +51,17 @@ router.post('/competitions', requireAuth, requireAdmin, async (req, res) => {
   try {
     console.log('[Admin Match Management] Creating competition with data:', req.body);
     
-    const competitionData = createCompetitionSchema.parse({
+    // Convert string dates to Date objects
+    const requestData = {
       ...req.body,
-      createdBy: req.user!.id
-    });
+      createdBy: req.user!.id,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : undefined
+    };
+    
+    console.log('[Admin Match Management] Processing competition data:', requestData);
+    
+    const competitionData = createCompetitionSchema.parse(requestData);
     
     console.log('[Admin Match Management] Parsed competition data:', competitionData);
 
