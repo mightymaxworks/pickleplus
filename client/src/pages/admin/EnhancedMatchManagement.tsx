@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
-import QuickMatchRecorder from '@/components/match/QuickMatchRecorder';
+import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
 
 interface Competition {
   id: number;
