@@ -249,6 +249,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
     const winningScore = Math.max(score1, score2);
     const losingScore = Math.min(score1, score2);
     
+    // Allow any score if neither player has reached a winning threshold yet
+    if (winningScore < 11) return true;
+    
     // Standard endpoints: 11-x, 15-x, 21-x (where winner has 2+ point lead or special cases)
     if (winningScore === 11 && losingScore <= 9) return true;
     if (winningScore === 15 && losingScore <= 13) return true;
@@ -258,6 +261,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
     if (winningScore > 11 && winningScore - losingScore === 2 && losingScore >= 10) return true;
     if (winningScore > 15 && winningScore - losingScore === 2 && losingScore >= 14) return true;
     if (winningScore > 21 && winningScore - losingScore === 2 && losingScore >= 20) return true;
+    
+    // Allow scores up to 11 for building games
+    if (winningScore <= 11) return true;
     
     return false;
   };
@@ -1022,23 +1028,45 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                   )}
                 </div>
                 
-                {/* Score Display */}
+                {/* Score Display with Inline Editing */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className={`text-center p-4 rounded-lg border-2 transition-all duration-300 ${
                     winner === 1 ? 'border-green-400 bg-green-100' : 'border-gray-200 bg-gray-50'
                   }`}>
                     <div className="text-sm text-muted-foreground mb-1">Player 1</div>
-                    <div className={`text-4xl font-bold ${winner === 1 ? 'text-green-700' : 'text-foreground'}`}>
-                      {game.playerOneScore}
-                    </div>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="50"
+                      value={game.playerOneScore}
+                      onChange={(e) => {
+                        const newScore = parseInt(e.target.value) || 0;
+                        validateAndUpdateScore(gameIndex, newScore, game.playerTwoScore);
+                      }}
+                      className={`text-4xl font-bold text-center border-0 bg-transparent p-0 h-auto ${
+                        winner === 1 ? 'text-green-700' : 'text-foreground'
+                      }`}
+                      style={{ fontSize: '2.25rem', lineHeight: '2.5rem' }}
+                    />
                   </div>
                   <div className={`text-center p-4 rounded-lg border-2 transition-all duration-300 ${
                     winner === 2 ? 'border-green-400 bg-green-100' : 'border-gray-200 bg-gray-50'
                   }`}>
                     <div className="text-sm text-muted-foreground mb-1">Player 2</div>
-                    <div className={`text-4xl font-bold ${winner === 2 ? 'text-green-700' : 'text-foreground'}`}>
-                      {game.playerTwoScore}
-                    </div>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="50"
+                      value={game.playerTwoScore}
+                      onChange={(e) => {
+                        const newScore = parseInt(e.target.value) || 0;
+                        validateAndUpdateScore(gameIndex, game.playerOneScore, newScore);
+                      }}
+                      className={`text-4xl font-bold text-center border-0 bg-transparent p-0 h-auto ${
+                        winner === 2 ? 'text-green-700' : 'text-foreground'
+                      }`}
+                      style={{ fontSize: '2.25rem', lineHeight: '2.5rem' }}
+                    />
                   </div>
                 </div>
 
