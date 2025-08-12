@@ -657,7 +657,6 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     if (eventName) {
       whereConditions.push(`(
         t.name ILIKE '%${eventName}%' OR 
-        c.name ILIKE '%${eventName}%' OR 
         m.match_type ILIKE '%${eventName}%'
       )`);
     }
@@ -690,8 +689,8 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         m.score_player_one,
         m.score_player_two, 
         m.format_type as format,
-        COALESCE(t.name, c.name, m.match_type) as event_name,
-        COALESCE(t.description, c.description, 'Standard Match') as event_description,
+        COALESCE(t.name, m.match_type, 'Standard Match') as event_name,
+        COALESCE(t.description, 'Standard Match') as event_description,
         m.match_date as scheduled_date,
         m.tournament_id,
         m.match_type,
@@ -712,7 +711,6 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
       LEFT JOIN users u3 ON m.player_one_partner_id = u3.id
       LEFT JOIN users u4 ON m.player_two_partner_id = u4.id
       LEFT JOIN tournaments t ON m.tournament_id = t.id
-      LEFT JOIN competitions c ON t.id = c.tournament_id
       WHERE ${whereClause}
       ORDER BY m.created_at DESC
       LIMIT ${limit}
