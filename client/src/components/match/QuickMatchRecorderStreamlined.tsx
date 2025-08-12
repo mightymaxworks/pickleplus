@@ -577,12 +577,12 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
           <div className="space-y-3">
             <div className="space-y-2">
               <Label>
-                {isAdmin ? "Player 1" : "Player 1 (You)"}
+                {isAdmin ? "Player 1 (Search by name, username, or passport ID)" : "Player 1 (You)"}
               </Label>
               {isAdmin && !playerOneData ? (
                 <div className="space-y-2">
                   <Input
-                    placeholder="Search for Player 1 by name or username..."
+                    placeholder="Search for Player 1 by name, username, or passport ID..."
                     value={playerSearch}
                     onChange={(e) => setPlayerSearch(e.target.value)}
                     className="w-full"
