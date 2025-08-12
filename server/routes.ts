@@ -11,6 +11,7 @@ import pcpCertificationRoutes from "./routes/pcp-certification-routes";
 import { registerCurriculumManagementRoutes } from "./routes/curriculum-management-routes";
 import analyticsRoutes from "./routes/analytics-routes";
 import { registerAdminRoutes } from "./routes/admin-routes";
+import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 import { registerCoachHubRoutes } from "./routes/coach-hub-routes";
 import sessionBookingRoutes from "./routes/session-booking-routes";
 import wiseBusinessRoutes from "./routes/wise-business-routes";
@@ -257,6 +258,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
     await registerAdminRoutes(app);
+    
+    // Admin Dashboard System  
+    console.log("[ROUTES] Registering Admin Dashboard routes...");
+    setupAdminDashboardRoutes(app);
     
     // Phase 3: Advanced Coach Analytics
     console.log("[ROUTES] Registering Advanced Coach Analytics routes...");
