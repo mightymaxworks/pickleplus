@@ -266,11 +266,11 @@ const MatchManagement: React.FC = () => {
     );
     
     // Convert string numbers to integers
-    if (payload.player1Score) payload.player1Score = parseInt(payload.player1Score);
-    if (payload.player2Score) payload.player2Score = parseInt(payload.player2Score);
-    if (payload.team1Score) payload.team1Score = parseInt(payload.team1Score);
-    if (payload.team2Score) payload.team2Score = parseInt(payload.team2Score);
-    if (payload.winnerId) payload.winnerId = parseInt(payload.winnerId);
+    if (payload.player1Score) payload.player1Score = parseInt(payload.player1Score as string);
+    if (payload.player2Score) payload.player2Score = parseInt(payload.player2Score as string);
+    if (payload.team1Score) payload.team1Score = parseInt(payload.team1Score as string);
+    if (payload.team2Score) payload.team2Score = parseInt(payload.team2Score as string);
+    if (payload.winnerId) payload.winnerId = parseInt(payload.winnerId as string);
     
     updateMatchMutation.mutate({ matchId: selectedMatchForEdit.id, updateData: payload });
   };
@@ -574,7 +574,7 @@ const MatchManagement: React.FC = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {competitions?.data?.map((competition: Competition) => (
                 <Card key={competition.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
+                  <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{competition.name}</CardTitle>
                     <Badge variant={competition.type === 'tournament' ? 'default' : 
@@ -607,9 +607,10 @@ const MatchManagement: React.FC = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="matches" className="space-y-4">
@@ -673,7 +674,7 @@ const MatchManagement: React.FC = () => {
                 Edit scores, update winners, and manage completed match data with automatic point recalculation
               </p>
             </div>
-            <Button onClick={refetchCompletedMatches} disabled={completedMatchesLoading}>
+            <Button onClick={() => refetchCompletedMatches()} disabled={completedMatchesLoading}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
