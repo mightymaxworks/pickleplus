@@ -25,6 +25,7 @@ Preferred communication style: Simple, everyday language.
 - **QR SCANNER FAB AUTHENTICATION FIXED (Aug 11, 2025):** Enhanced floating QR scanner button authentication logic to prevent display for non-logged-in users - added isLoading state check to QuickMatchFAB component
 - **UNIFIED MATCH MANAGEMENT RESTORED (Aug 12, 2025):** Fixed routing issue where /admin/match-management was using simple match management instead of enhanced system - both /admin/match-management and /admin/matches now use EnhancedMatchManagement.tsx with proper match recording functionality
 - **PASSPORT CODE STANDARDIZATION COMPLETE (Aug 12, 2025):** Fully standardized random passport code system (HVGN0BW0, KGLE38K4) across all components for security - updated QuickMatchRecorderStreamlined search placeholders, bulk upload Excel template examples, and removed PKL-XXXXXX format searches to use only username and secure passport code searches
+- **POINTS ALLOCATION SYSTEM FIXED (Aug 12, 2025):** Resolved critical issue where matches showed 0 points - implemented automatic points calculation and allocation in match creation API, added updateUserPicklePoints method to storage interface, fixed tournament/casual match point calculations (1-5 points based on format/type)
 
 Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches

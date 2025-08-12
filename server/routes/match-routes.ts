@@ -65,6 +65,14 @@ export function registerMatchRoutes(app: express.Express): void {
         }
       }
 
+      // Calculate points awarded based on match type and format
+      let pointsAwarded = 0;
+      if (matchType === 'tournament') {
+        pointsAwarded = formatType === 'doubles' ? 5 : 3; // Tournament matches worth more
+      } else {
+        pointsAwarded = formatType === 'doubles' ? 3 : 1; // Casual matches
+      }
+
       const newMatch = await storage.createMatch({
         playerOneId: playerOneId || (req.user as any)?.id,
         playerTwoId,
@@ -78,8 +86,17 @@ export function registerMatchRoutes(app: express.Express): void {
         status: 'completed',
         notes: notes || null,
         tournamentId: validTournamentId,
-        scheduledDate: scheduledDate || null
+        scheduledDate: scheduledDate || null,
+        pointsAwarded: pointsAwarded
       });
+
+      // Award points to winner
+      try {
+        await storage.updateUserPicklePoints(winnerId, pointsAwarded);
+        console.log(`[Match Creation] Awarded ${pointsAwarded} points to winner (User ID: ${winnerId})`);
+      } catch (error) {
+        console.log(`[Match Creation] Warning: Could not award points to winner: ${(error as Error).message}`);
+      }
 
       console.log('[Match Creation] Match created successfully:', newMatch.id);
       res.status(201).json({ success: true, match: newMatch });

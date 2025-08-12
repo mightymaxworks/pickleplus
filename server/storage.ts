@@ -110,6 +110,7 @@ export interface IStorage extends CommunityStorage {
   searchPlayers(query: string): Promise<User[]>;
   searchUsers(query: string): Promise<User[]>;
   getRecentOpponents(userId: number): Promise<User[]>;
+  updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
   
   // Password reset operations
   createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
@@ -660,6 +661,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void> {
+    await db.update(users)
+      .set({ 
+        picklePoints: sql`COALESCE(pickle_points, 0) + ${pointsToAdd}` 
+      })
+      .where(eq(users.id, userId));
   }
 
   async updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User> {
