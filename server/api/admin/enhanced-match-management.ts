@@ -646,27 +646,27 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
     // Filter by event name
     if (eventName) {
       paramIndex++;
-      whereConditions.push(`m.event_name ILIKE $${paramIndex}`);
+      whereConditions.push(`m.match_type ILIKE $${paramIndex}`);
       queryParams.push(`%${eventName}%`);
     }
 
     // Filter by date range
     if (dateFrom) {
       paramIndex++;
-      whereConditions.push(`m.scheduled_date >= $${paramIndex}`);
+      whereConditions.push(`m.match_date >= $${paramIndex}`);
       queryParams.push(dateFrom);
     }
 
     if (dateTo) {
       paramIndex++;
-      whereConditions.push(`m.scheduled_date <= $${paramIndex}`);
+      whereConditions.push(`m.match_date <= $${paramIndex}`);
       queryParams.push(dateTo);
     }
 
     // Filter by format
     if (format && format !== 'all') {
       paramIndex++;
-      whereConditions.push(`m.format = $${paramIndex}`);
+      whereConditions.push(`m.format_type = $${paramIndex}`);
       queryParams.push(format);
     }
 
@@ -684,9 +684,9 @@ router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => 
         m.score_player_one,
         m.score_player_two, 
         m.category,
-        m.format,
-        m.event_name,
-        m.scheduled_date,
+        m.format_type as format,
+        m.match_type as event_name,
+        m.match_date as scheduled_date,
         m.notes,
         m.created_at,
         m.updated_at,
@@ -853,9 +853,9 @@ router.put('/matches/:id', requireAuth, requireAdmin, async (req, res) => {
         scorePlayerTwo: player2Score,
         winnerId,
         winner,
-        eventName: eventName || null,
-        format,
-        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        matchType: eventName || null,
+        formatType: format,
+        matchDate: scheduledDate ? new Date(scheduledDate) : null,
         notes: notes || null,
         updatedAt: new Date()
       })
@@ -931,7 +931,7 @@ async function recalculatePlayerPoints(playerId: number) {
       WHERE (player_one_id = ${playerId} OR player_two_id = ${playerId} 
              OR player_one_partner_id = ${playerId} OR player_two_partner_id = ${playerId})
         AND winner_id IS NOT NULL
-      ORDER BY scheduled_date
+      ORDER BY match_date
     `;
 
     const result = await db.execute(playerMatchesQuery);
@@ -953,12 +953,12 @@ async function recalculatePlayerPoints(playerId: number) {
       let multiplier = 1.0;
       
       // Tournament matches get higher weighting
-      if (match.event_name && match.event_name.toLowerCase().includes('tournament')) {
+      if (match.match_type && match.match_type.toLowerCase().includes('tournament')) {
         multiplier = 1.5;
       }
       
       // Format-based adjustments
-      if (match.format === 'doubles') {
+      if (match.format_type === 'doubles') {
         multiplier *= 1.2; // Doubles slightly harder
       }
 
