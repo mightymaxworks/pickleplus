@@ -1,9 +1,9 @@
 /**
  * Pickle Points Calculator with Anti-Gaming Protection
  * 
- * Pure activity-based system (NO DUPR dependency):
- * - Match Win: 15 points
- * - Match Participation: 5 points
+ * OFFICIAL POINTS SYSTEM - Reference: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+ * - Match Win: 3 points (System B Standardized)
+ * - Match Participation: 1 point (System B Standardized)
  * - Daily match limits (5 per day)
  * - Drastically reduced points after 2nd match
  * - Weekly profile update restrictions
@@ -47,8 +47,9 @@ export class PicklePointsCalculator {
     
     const dailyMatchCount = todayMatches.length;
     
-    // Pure activity-based points calculation (NO DUPR dependency)
-    const basePoints = isWinner ? 15 : 5; // Winner: 15, Participant: 5
+    // OFFICIAL POINTS SYSTEM - Reference: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+    // System B Standardized: Win = 3 points, Loss = 1 point
+    const basePoints = isWinner ? 3 : 1; // Winner: 3, Participant: 1
     const activityType = isWinner ? 'match_win' : 'match_participate';
     
     // Apply anti-gaming reductions
@@ -90,7 +91,8 @@ export class PicklePointsCalculator {
       reason: dailyMatchCount === 0 ? "First match of the day" : "Second match of the day",
       canEarnPoints: true,
       dailyMatchCount,
-      isReducedPoints: false
+      isReducedPoints: false,
+      activityType
     };
   }
   
@@ -118,7 +120,8 @@ export class PicklePointsCalculator {
           reason: "Profile update points only available once per week",
           canEarnPoints: false,
           dailyMatchCount: 0,
-          isReducedPoints: false
+          isReducedPoints: false,
+          activityType: 'profile_update'
         };
       }
     }
@@ -132,7 +135,8 @@ export class PicklePointsCalculator {
         reason: "Profile completion increase too small (minimum 5%)",
         canEarnPoints: false,
         dailyMatchCount: 0,
-        isReducedPoints: false
+        isReducedPoints: false,
+        activityType: 'profile_update'
       };
     }
     
@@ -143,7 +147,8 @@ export class PicklePointsCalculator {
       reason: "Weekly profile update points awarded",
       canEarnPoints: true,
       dailyMatchCount: 0,
-      isReducedPoints: false
+      isReducedPoints: false,
+      activityType: 'profile_update'
     };
   }
   

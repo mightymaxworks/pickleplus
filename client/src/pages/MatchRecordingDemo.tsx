@@ -8,22 +8,24 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Users, User, Clock, MapPin, Award, TrendingUp, Target, Zap } from "lucide-react";
-import QuickMatchRecorder from "@/components/match/QuickMatchRecorder";
+import { QuickMatchRecorder } from "@/components/match/QuickMatchRecorder";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
 
 type MatchType = 'singles' | 'doubles';
 type EventType = 'recreational' | 'competitive' | 'tournament';
 
+// OFFICIAL POINTS SYSTEM - Reference: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+// System B Standardized: Win = 3 points, Loss = 1 point (base)
 const PICKLE_POINTS_LOGIC = {
-  recreational: { singles: { win: 50, loss: 20 }, doubles: { win: 45, loss: 20 } },
-  competitive: { singles: { win: 75, loss: 25 }, doubles: { win: 70, loss: 25 } },
-  tournament: { singles: { win: 150, loss: 30 }, doubles: { win: 140, loss: 30 } }
+  recreational: { singles: { win: 3, loss: 1 }, doubles: { win: 3, loss: 1 } },
+  competitive: { singles: { win: 3, loss: 1 }, doubles: { win: 3, loss: 1 } },
+  tournament: { singles: { win: 3, loss: 1 }, doubles: { win: 3, loss: 1 } }
 };
 
 const RANKING_POINTS_LOGIC = {
-  recreational: { singles: { win: 10, loss: 2 }, doubles: { win: 8, loss: 2 } },
-  competitive: { singles: { win: 25, loss: 5 }, doubles: { win: 20, loss: 5 } },
-  tournament: { singles: { win: 50, loss: 10 }, doubles: { win: 40, loss: 10 } }
+  recreational: { singles: { win: 3, loss: 1 }, doubles: { win: 3, loss: 1 } },
+  competitive: { singles: { win: 3, loss: 1 }, doubles: { win: 3, loss: 1 } },
+  tournament: { singles: { win: 3, loss: 1 }, doubles: { win: 3, loss: 1 } }
 };
 
 const AGE_MULTIPLIERS = {
