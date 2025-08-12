@@ -64,11 +64,39 @@ const MatchManagement: React.FC = () => {
     }
   });
 
-  // Fetch completed matches for CRUD operations
+  // Search and filter states
+  const [searchFilters, setSearchFilters] = useState({
+    playerName: '',
+    eventName: '',
+    format: 'all',
+    dateFrom: '',
+    dateTo: ''
+  });
+
+  // Fetch completed matches for CRUD operations with filtering
   const { data: completedMatches, isLoading: completedMatchesLoading, refetch: refetchCompletedMatches } = useQuery({
-    queryKey: ['/api/admin/enhanced-match-management/matches/completed'],
+    queryKey: ['/api/admin/enhanced-match-management/matches/completed', searchFilters],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/enhanced-match-management/matches/completed?limit=20');
+      const params = new URLSearchParams();
+      params.append('limit', '50');
+      
+      if (searchFilters.playerName.trim()) {
+        params.append('playerName', searchFilters.playerName.trim());
+      }
+      if (searchFilters.eventName.trim()) {
+        params.append('eventName', searchFilters.eventName.trim());
+      }
+      if (searchFilters.format !== 'all') {
+        params.append('format', searchFilters.format);
+      }
+      if (searchFilters.dateFrom) {
+        params.append('dateFrom', searchFilters.dateFrom);
+      }
+      if (searchFilters.dateTo) {
+        params.append('dateTo', searchFilters.dateTo);
+      }
+      
+      const response = await apiRequest('GET', `/api/admin/enhanced-match-management/matches/completed?${params.toString()}`);
       return response.json();
     }
   });
@@ -445,7 +473,7 @@ const MatchManagement: React.FC = () => {
             <div>
               <h3 className="text-lg font-medium">All Matches</h3>
               <p className="text-sm text-muted-foreground">
-                View all scheduled, in-progress, and completed matches with full CRUD operations
+                View all completed matches with detailed player information, competition context, and algorithm-based points breakdown
               </p>
             </div>
             <Button onClick={() => refetchCompletedMatches()} disabled={completedMatchesLoading}>
@@ -453,6 +481,85 @@ const MatchManagement: React.FC = () => {
               Refresh
             </Button>
           </div>
+
+          {/* Enhanced Filtering Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Search & Filter Matches</CardTitle>
+              <CardDescription>Filter matches by player names, competitions, formats, and dates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="playerName">Player Name</Label>
+                  <Input
+                    id="playerName"
+                    placeholder="Search by player name..."
+                    value={searchFilters.playerName}
+                    onChange={(e) => setSearchFilters(prev => ({...prev, playerName: e.target.value}))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="eventName">Competition/Event</Label>
+                  <Input
+                    id="eventName"
+                    placeholder="Search by event name..."
+                    value={searchFilters.eventName}
+                    onChange={(e) => setSearchFilters(prev => ({...prev, eventName: e.target.value}))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="format">Match Format</Label>
+                  <Select value={searchFilters.format} onValueChange={(value) => setSearchFilters(prev => ({...prev, format: value}))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All formats" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Formats</SelectItem>
+                      <SelectItem value="singles">Singles</SelectItem>
+                      <SelectItem value="doubles">Doubles</SelectItem>
+                      <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateFrom">Date From</Label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={searchFilters.dateFrom}
+                    onChange={(e) => setSearchFilters(prev => ({...prev, dateFrom: e.target.value}))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateTo">Date To</Label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={searchFilters.dateTo}
+                    onChange={(e) => setSearchFilters(prev => ({...prev, dateTo: e.target.value}))}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end mt-4 space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSearchFilters({
+                    playerName: '',
+                    eventName: '',
+                    format: 'all',
+                    dateFrom: '',
+                    dateTo: ''
+                  })}
+                >
+                  Clear Filters
+                </Button>
+                <Button onClick={() => refetchCompletedMatches()}>
+                  Apply Filters
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {completedMatchesLoading && (
             <div className="flex items-center justify-center h-48">
@@ -473,59 +580,115 @@ const MatchManagement: React.FC = () => {
           )}
 
           {!completedMatchesLoading && completedMatches?.matches && completedMatches.matches.length > 0 && (
-            <div className="grid gap-4">
+            <div className="grid gap-6">
               {completedMatches.matches.map((match: any) => (
-                <Card key={match.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
+                <Card key={match.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-base">Match #{match.id}</CardTitle>
-                        <CardDescription>
-                          {match.competitionName} • {formatMatchFormat(match.format || 'singles')} • {formatAgeGroup(match.ageGroup || '30_39')}
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Trophy className="h-5 w-5 text-blue-600" />
+                          Match #{match.id} - {match.eventName || 'Unknown Event'}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          {formatMatchFormat(match.format)} • {new Date(match.createdAt).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={match.status === 'completed' ? 'default' : 'secondary'}>{match.status}</Badge>
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          Completed
+                        </Badge>
                         <div className="text-right">
-                          <div className="font-bold text-lg">
-                            {match.player1Score}-{match.player2Score}
+                          <div className="font-bold text-xl text-blue-600">
+                            {match.scorePlayerOne}-{match.scorePlayerTwo}
                           </div>
-                          {match.team1Score !== null && (
-                            <div className="text-sm text-gray-500">
-                              Teams: {match.team1Score}-{match.team2Score}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        <div>Updated: {new Date(match.updatedAt).toLocaleDateString()}</div>
-                        <div>Competition ID: {match.competitionId}</div>
+                  
+                  <CardContent className="space-y-4">
+                    {/* Player Results with Points Breakdown */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Players & Points Allocation (Algorithm: System B - 3 points win, 1 point loss)
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {match.playerResults?.map((player: any, index: number) => (
+                          <div 
+                            key={`${match.id}-${player.playerId}-${index}`} 
+                            className={`flex items-center justify-between p-3 rounded-md ${
+                              player.isWinner ? 'bg-green-100 border-l-4 border-l-green-500' : 'bg-gray-100 border-l-4 border-l-gray-300'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-medium flex items-center gap-2">
+                                {player.playerName}
+                                {player.isWinner && <Badge className="bg-green-600 text-white text-xs">Winner</Badge>}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {player.ageGroup} • {player.ageGroupMultiplier}x multiplier
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-lg">
+                                {player.pointsAwarded} pts
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Base: {player.basePoints}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => loadMatchForEdit(match)}
-                          disabled={updateMatchMutation.isPending}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDeleteMatch(match.id)}
-                          disabled={deleteMatchMutation.isPending}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
-                        </Button>
+                    </div>
+
+                    {/* Match Details Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-700">Match Info</div>
+                        <div>Format: {formatMatchFormat(match.format)}</div>
+                        <div>Players: {match.playerResults?.length || 0}</div>
                       </div>
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-700">Competition</div>
+                        <div>Event: {match.eventName || 'Unknown Event'}</div>
+                        <div>Date: {new Date(match.createdAt).toLocaleDateString()}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-700">Points Summary</div>
+                        <div>Total Awarded: {match.playerResults?.reduce((sum: number, p: any) => sum + p.pointsAwarded, 0) || 0} points</div>
+                        <div>Algorithm: System B (3/1)</div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => loadMatchForEdit(match)}
+                        disabled={updateMatchMutation.isPending}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit Match
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteMatch(match.id)}
+                        disabled={deleteMatchMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
