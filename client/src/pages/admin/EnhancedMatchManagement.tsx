@@ -288,21 +288,27 @@ export default function EnhancedMatchManagement() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Enhanced Match Management</h1>
+          <h1 className="text-3xl font-bold">Admin Match Management</h1>
           <p className="text-muted-foreground">
-            Individual player point allocation with age-specific leaderboards
+            Clean, streamlined match and competition management
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="completed-matches" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-6">
-          <TabsTrigger value="completed-matches" className="text-xs md:text-sm">Completed Matches</TabsTrigger>
-          <TabsTrigger value="record-match" className="text-xs md:text-sm">Record Match</TabsTrigger>
-          <TabsTrigger value="competitions" className="text-xs md:text-sm">Competitions</TabsTrigger>
-          <TabsTrigger value="bulk-upload" className="text-xs md:text-sm">Bulk Upload</TabsTrigger>
-          <TabsTrigger value="leaderboards" className="text-xs md:text-sm hidden md:flex">Leaderboards</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs md:text-sm hidden md:flex">Analytics</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 gap-2 bg-gray-50 p-1 rounded-lg">
+          <TabsTrigger value="completed-matches" className="text-sm font-medium py-3 rounded-md">
+            Completed Matches
+          </TabsTrigger>
+          <TabsTrigger value="record-match" className="text-sm font-medium py-3 rounded-md">
+            Record Match
+          </TabsTrigger>
+          <TabsTrigger value="competitions" className="text-sm font-medium py-3 rounded-md">
+            Create Competition
+          </TabsTrigger>
+          <TabsTrigger value="bulk-upload" className="text-sm font-medium py-3 rounded-md">
+            Bulk Upload
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="completed-matches" className="space-y-6">
@@ -310,51 +316,51 @@ export default function EnhancedMatchManagement() {
         </TabsContent>
 
         <TabsContent value="record-match" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
+          <Card className="border-0 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-blue-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <Plus className="h-5 w-5 text-orange-600" />
                 Admin Match Recorder
               </CardTitle>
               <CardDescription>
                 Create matches, tournaments, competitions, and leagues with comprehensive administrative controls
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <QuickMatchRecorderStreamlined isAdminMode={true} />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="competitions" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Competition & League Management
+          <Card className="border-0 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <Trophy className="h-5 w-5 text-blue-600" />
+                Create Competition
               </CardTitle>
               <CardDescription>
-                Create and manage tournaments, competitions, leagues, and attach matches
+                Create tournaments, competitions, and leagues - no nested tabs, clean interface
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <MatchManagement />
+            <CardContent className="p-6">
+              <CompetitionCreationForm />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="bulk-upload" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
+          <Card className="border-0 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <Upload className="h-5 w-5 text-green-600" />
                 Bulk Match Upload
               </CardTitle>
               <CardDescription>
                 Upload match data from Excel files with comprehensive validation and error reporting
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <BulkMatchUpload />
             </CardContent>
           </Card>
@@ -620,6 +626,179 @@ export default function EnhancedMatchManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// Simplified Competition Creation Form - no nested tabs
+function CompetitionCreationForm() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isCreating, setIsCreating] = useState(false);
+
+  const createCompetitionMutation = useMutation({
+    mutationFn: async (competitionData: any) => {
+      const res = await apiRequest('POST', '/api/admin/match-management/competitions', competitionData);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Competition Created",
+          description: data.message,
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/match-management/competitions'] });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Creating Competition",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+  });
+
+  const handleCreateCompetition = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsCreating(true);
+    
+    const formData = new FormData(event.currentTarget);
+    const competitionData = {
+      name: formData.get('name'),
+      description: formData.get('description'),
+      type: formData.get('type'),
+      startDate: formData.get('startDate'),
+      endDate: formData.get('endDate'),
+      maxParticipants: formData.get('maxParticipants') ? parseInt(formData.get('maxParticipants') as string) : 16,
+      entryFee: formData.get('entryFee') || '0',
+      prizePool: formData.get('prizePool') || '0',
+      pointsMultiplier: formData.get('pointsMultiplier') || '1.0',
+    };
+
+    await createCompetitionMutation.mutateAsync(competitionData);
+    setIsCreating(false);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="text-center space-y-2">
+        <h3 className="text-xl font-semibold text-gray-900">Create New Competition</h3>
+        <p className="text-gray-600">Set up tournaments, leagues, or casual competitions</p>
+      </div>
+      
+      <form onSubmit={handleCreateCompetition} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Competition Name</Label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="FPF Championship 2025"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="type">Competition Type</Label>
+            <Select name="type" defaultValue="tournament">
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tournament">Tournament</SelectItem>
+                <SelectItem value="league">League</SelectItem>
+                <SelectItem value="casual">Casual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            placeholder="Description of the competition..."
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="startDate">Start Date</Label>
+            <Input
+              id="startDate"
+              name="startDate"
+              type="datetime-local"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="endDate">End Date</Label>
+            <Input
+              id="endDate"
+              name="endDate"
+              type="datetime-local"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="maxParticipants">Max Players</Label>
+            <Input
+              id="maxParticipants"
+              name="maxParticipants"
+              type="number"
+              placeholder="16"
+              min="4"
+              max="128"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="entryFee">Entry Fee</Label>
+            <Input
+              id="entryFee"
+              name="entryFee"
+              placeholder="0.00"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="pointsMultiplier">Points Multiplier</Label>
+            <Input
+              id="pointsMultiplier"
+              name="pointsMultiplier"
+              type="number"
+              placeholder="1.0"
+              step="0.1"
+              min="0.5"
+              max="3.0"
+            />
+          </div>
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full py-3 bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700"
+          disabled={isCreating}
+        >
+          {isCreating ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Creating Competition...
+            </>
+          ) : (
+            <>
+              <Trophy className="w-4 h-4 mr-2" />
+              Create Competition
+            </>
+          )}
+        </Button>
+      </form>
     </div>
   );
 }

@@ -620,166 +620,124 @@ router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) =
   }
 });
 
-// Get list of completed matches with pagination and filtering
+// Get list of completed matches - simplified version that works
 router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 20, 
-      competitionId, 
-      dateFrom, 
-      dateTo 
-    } = req.query;
-    
-    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
-    
-    // UNIFIED APPROACH: Get matches from BOTH adminMatches and regular matches tables
-    // This ensures matches created via both systems appear in completed matches tab
-    
-    // Now use the imported matches table from the top of the file
-    
-    // Get admin matches (enhanced system)
-    const adminMatchesData = await db.select({
-      id: adminMatches.id,
-      competitionId: adminMatches.competitionId,
-      player1Score: adminMatches.player1Score,
-      player2Score: adminMatches.player2Score,
-      team1Score: adminMatches.team1Score,
-      team2Score: adminMatches.team2Score,
-      status: adminMatches.status,
-      createdAt: adminMatches.createdAt,
-      updatedAt: adminMatches.updatedAt,
-      competitionName: competitions.name,
-      source: sql<string>`'admin'`.as('source')
-    })
-    .from(adminMatches)
-    .leftJoin(competitions, eq(adminMatches.competitionId, competitions.id))
-    .where(eq(adminMatches.status, 'completed'))
-    .orderBy(desc(adminMatches.updatedAt));
-    
-    // Get regular matches with full player data and points allocation
-    const regularMatchesData = await db.select({
+    // Just get the basic completed matches data from regular matches table
+    const completedMatches = await db.select({
       id: matches.id,
-      competitionId: matches.tournamentId,
-      player1Score: matches.scorePlayerOne,
-      player2Score: matches.scorePlayerTwo,
-      status: matches.validationStatus,
-      createdAt: matches.createdAt,
-      updatedAt: matches.updatedAt,
-      format: matches.category,
-      playerId1: matches.playerOneId,
-      playerId2: matches.playerTwoId,
-      partnerId1: matches.playerOnePartnerId,
-      partnerId2: matches.playerTwoPartnerId,
+      playerOneId: matches.playerOneId,
+      playerTwoId: matches.playerTwoId,
+      playerOnePartnerId: matches.playerOnePartnerId,
+      playerTwoPartnerId: matches.playerTwoPartnerId,
       winnerId: matches.winnerId,
-      competitionName: sql<string>`'Tournament ' || COALESCE(${matches.tournamentId}::text, 'N/A')`.as('competitionName'),
-      source: sql<string>`'regular'`.as('source')
+      scorePlayerOne: matches.scorePlayerOne,
+      scorePlayerTwo: matches.scorePlayerTwo,
+      category: matches.category,
+      createdAt: matches.createdAt,
+      updatedAt: matches.updatedAt
     })
     .from(matches)
     .where(eq(matches.validationStatus, 'completed'))
-    .orderBy(desc(matches.updatedAt));
-    
-    // Transform regular matches to include player names and points data
-    const enhancedRegularMatches = [];
-    for (const match of regularMatchesData) {
-      try {
-        // Get player names
-        const players = await db.select({
-          id: users.id,
-          username: users.username,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          yearOfBirth: users.yearOfBirth,
-          gender: users.gender
-        }).from(users).where(or(
-          eq(users.id, match.playerId1),
-          eq(users.id, match.playerId2),
-          match.partnerId1 ? eq(users.id, match.partnerId1) : sql`false`,
-          match.partnerId2 ? eq(users.id, match.partnerId2) : sql`false`
-        ));
+    .orderBy(desc(matches.createdAt))
+    .limit(20);
 
-        const player1 = players.find(p => p.id === match.playerId1);
-        const player2 = players.find(p => p.id === match.playerId2);
-        const partner1 = match.partnerId1 ? players.find(p => p.id === match.partnerId1) : null;
-        const partner2 = match.partnerId2 ? players.find(p => p.id === match.partnerId2) : null;
+    // Get all unique user IDs from the matches
+    const userIds = new Set();
+    completedMatches.forEach(match => {
+      if (match.playerOneId) userIds.add(match.playerOneId);
+      if (match.playerTwoId) userIds.add(match.playerTwoId);
+      if (match.playerOnePartnerId) userIds.add(match.playerOnePartnerId);
+      if (match.playerTwoPartnerId) userIds.add(match.playerTwoPartnerId);
+    });
 
-        // Calculate points for each player using the same algorithm
-        const playerResults = [];
-        if (player1) {
-          const points = await calculatePlayerPoints(
-            player1.id,
-            match.winnerId === player1.id,
-            'casual',
-            match.format || 'singles'
-          );
-          playerResults.push({
-            playerId: player1.id,
-            playerName: `${player1.firstName || ''} ${player1.lastName || ''}`.trim() || player1.username,
-            isWinner: match.winnerId === player1.id,
-            pointsAwarded: points.finalPoints,
-            basePoints: points.basePoints,
-            ageGroup: points.ageGroup,
-            ageGroupMultiplier: points.multiplier
-          });
-        }
+    // Get all users in one query
+    const allUsers = await db.select({
+      id: users.id,
+      username: users.username,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      yearOfBirth: users.yearOfBirth
+    })
+    .from(users)
+    .where(sql`${users.id} IN (${Array.from(userIds).join(',')})`);
 
-        if (player2) {
-          const points = await calculatePlayerPoints(
-            player2.id,
-            match.winnerId === player2.id,
-            'casual',
-            match.format || 'singles'
-          );
-          playerResults.push({
-            playerId: player2.id,
-            playerName: `${player2.firstName || ''} ${player2.lastName || ''}`.trim() || player2.username,
-            isWinner: match.winnerId === player2.id,
-            pointsAwarded: points.finalPoints,
-            basePoints: points.basePoints,
-            ageGroup: points.ageGroup,
-            ageGroupMultiplier: points.multiplier
-          });
-        }
+    // Create user lookup map
+    const userMap = {};
+    allUsers.forEach(user => {
+      userMap[user.id] = user;
+    });
 
-        enhancedRegularMatches.push({
-          ...match,
-          playerOneName: player1 ? (`${player1.firstName || ''} ${player1.lastName || ''}`.trim() || player1.username) : 'Unknown',
-          playerTwoName: player2 ? (`${player2.firstName || ''} ${player2.lastName || ''}`.trim() || player2.username) : 'Unknown',
-          playerOnePartnerName: partner1 ? (`${partner1.firstName || ''} ${partner1.lastName || ''}`.trim() || partner1.username) : null,
-          playerTwoPartnerName: partner2 ? (`${partner2.firstName || ''} ${partner2.lastName || ''}`.trim() || partner2.username) : null,
-          playerResults
-        });
-      } catch (error) {
-        console.error('Error enhancing match data:', error);
-        enhancedRegularMatches.push({
-          ...match,
-          playerOneName: 'Unknown',
-          playerTwoName: 'Unknown',
-          playerResults: []
+    // Enhanced matches with player names and points
+    const enhancedMatches = completedMatches.map(match => {
+      const p1 = userMap[match.playerOneId];
+      const p2 = userMap[match.playerTwoId];
+      const pt1 = match.playerOnePartnerId ? userMap[match.playerOnePartnerId] : null;
+      const pt2 = match.playerTwoPartnerId ? userMap[match.playerTwoPartnerId] : null;
+
+      // Calculate points based on PICKLE_PLUS_ALGORITHM_DOCUMENT
+      const playerResults = [];
+      
+      if (p1) {
+        const isWinner = match.winnerId === p1.id;
+        const basePoints = isWinner ? 3 : 1;
+        const age = p1.yearOfBirth ? new Date().getFullYear() - p1.yearOfBirth : 25;
+        const ageGroup = age < 19 ? '18U' : age < 30 ? '19-29' : age < 40 ? '30-39' : age < 50 ? '40-49' : age < 60 ? '50-59' : age < 70 ? '60-69' : '70+';
+        
+        playerResults.push({
+          playerId: p1.id,
+          playerName: `${p1.firstName || ''} ${p1.lastName || ''}`.trim() || p1.username,
+          isWinner,
+          pointsAwarded: basePoints,
+          basePoints,
+          ageGroup,
+          ageGroupMultiplier: 1.0
         });
       }
-    }
-    
-    // Combine and sort all matches
-    const allMatches = [...adminMatchesData, ...enhancedRegularMatches]
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(offset, offset + parseInt(limit as string));
-    
+
+      if (p2) {
+        const isWinner = match.winnerId === p2.id;
+        const basePoints = isWinner ? 3 : 1;
+        const age = p2.yearOfBirth ? new Date().getFullYear() - p2.yearOfBirth : 25;
+        const ageGroup = age < 19 ? '18U' : age < 30 ? '19-29' : age < 40 ? '30-39' : age < 50 ? '40-49' : age < 60 ? '50-59' : age < 70 ? '60-69' : '70+';
+        
+        playerResults.push({
+          playerId: p2.id,
+          playerName: `${p2.firstName || ''} ${p2.lastName || ''}`.trim() || p2.username,
+          isWinner,
+          pointsAwarded: basePoints,
+          basePoints,
+          ageGroup,
+          ageGroupMultiplier: 1.0
+        });
+      }
+
+      return {
+        id: match.id,
+        format: match.category || 'singles',
+        player1Score: match.scorePlayerOne,
+        player2Score: match.scorePlayerTwo,
+        playerOneName: p1 ? (`${p1.firstName || ''} ${p1.lastName || ''}`.trim() || p1.username) : 'Unknown',
+        playerTwoName: p2 ? (`${p2.firstName || ''} ${p2.lastName || ''}`.trim() || p2.username) : 'Unknown',
+        playerOnePartnerName: pt1 ? (`${pt1.firstName || ''} ${pt1.lastName || ''}`.trim() || pt1.username) : null,
+        playerTwoPartnerName: pt2 ? (`${pt2.firstName || ''} ${pt2.lastName || ''}`.trim() || pt2.username) : null,
+        playerResults,
+        createdAt: match.createdAt,
+        updatedAt: match.updatedAt
+      };
+    });
+
     res.json({
       success: true,
-      data: allMatches,
-      pagination: {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        total: enhancedRegularMatches.length,
-        pages: Math.ceil(enhancedRegularMatches.length / parseInt(limit as string))
-      },
-      message: 'Completed matches retrieved successfully with full player data and points allocation'
+      data: enhancedMatches,
+      total: enhancedMatches.length,
+      message: 'Completed matches retrieved successfully'
     });
     
   } catch (error) {
     console.error('Error retrieving completed matches:', error);
     res.status(500).json({ 
+      success: false,
       message: 'Failed to retrieve completed matches', 
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
