@@ -61,8 +61,8 @@ export default function ModernPassportProfile({
     input.click();
   };
 
-  // Generate QR code data and passport ID
-  const passportId = `PKL-${user?.id?.toString().padStart(6, '0') || '000000'}`;
+  // Generate QR code data and passport ID using the secure random passport code
+  const passportId = user?.passportCode || 'UNKNOWN';
   const qrCodeData = `${window.location.origin}/profile/${user?.id || 'demo'}`;
   const userRoles = { 
     isCoach: user?.isAdmin || user?.isCoach || false, // Admin can see coaching features
