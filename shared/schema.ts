@@ -384,42 +384,8 @@ import {
   type CoachWithMarketplaceData
 } from './schema/coach-marketplace';
 
-// Import Admin Match Management system schema
-import {
-  competitions,
-  matches,
-  pointAllocationRules,
-  ageGroupMappings,
-  competitionsRelations,
-  matchesRelations,
-  ageGroupMappingsRelations,
-  insertCompetitionSchema,
-  insertMatchSchema,
-  insertPointAllocationRuleSchema,
-  insertAgeGroupMappingSchema,
-  createCompetitionSchema,
-  createMatchSchema,
-  allocatePointsSchema,
-  matchTypeEnum,
-  matchFormatEnum,
-  matchStatusEnum,
-  ageGroupEnum,
-  calculateAgeGroup,
-  POINT_ALLOCATION_RULES,
-  type Competition,
-  type InsertCompetition,
-  type CreateCompetition,
-  type Match,
-  type InsertMatch,
-  type CreateMatch,
-  type PointAllocationRule,
-  type InsertPointAllocationRule,
-  type AgeGroupMapping,
-  type InsertAgeGroupMapping,
-  type AllocatePoints,
-  type MatchWithPlayers,
-  type CompetitionWithMatches
-} from './schema/admin-match-management';
+// Commented out duplicate import to fix conflicts
+// Using the earlier import from admin-match-management instead
 
 // Import Curriculum Management system schema (Sprint 1: Curriculum Management & Lesson Planning Foundation)
 import {

@@ -1,7 +1,6 @@
 import {
   users, type User, type InsertUser,
   profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
-  matches, type Match, type InsertMatch,
   tournaments,
   type XpTransaction, type InsertXpTransaction,
   activities, type InsertActivity,
@@ -16,6 +15,12 @@ import {
   type DrillCategory,
 
 } from "@shared/schema";
+// Import Match types from admin match management
+import {
+  type Match,
+  type InsertMatch,
+  adminMatches as matches
+} from "@shared/schema/admin-match-management";
 import {
   type CoachApplication, type InsertCoachApplication,
   type CoachProfile, type InsertCoachProfile,
@@ -88,7 +93,7 @@ import { communityStorageImplementation, type CommunityStorage } from './storage
 
 import { generateUniquePassportCode } from './utils/passport-generator';
 import { db } from "./db";
-import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql } from "drizzle-orm";
+import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql, ilike } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { sessionBookingMethods } from './storage-session-booking';
@@ -637,8 +642,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
-    return user || undefined;
+    // passwordResetToken doesn't exist in current schema, so return undefined
+    return undefined;
   }
 
   async getUserByPassportCode(passportCode: string): Promise<User | undefined> {
@@ -3117,7 +3122,7 @@ export class DatabaseStorage implements IStorage {
             ilike(users.firstName, searchPattern),
             ilike(users.lastName, searchPattern),
             ilike(users.displayName, searchPattern),
-            ilike(users.passportId, searchPattern),
+            ilike(users.passportCode, searchPattern),
             sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchPattern}`
           )
         )
