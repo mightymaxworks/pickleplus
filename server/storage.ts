@@ -856,12 +856,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMatchesByUser(userId: number): Promise<Match[]> {
-    const userMatches = await db.select()
-      .from(matches)
-      .where(or(eq(matches.playerOneId, userId), eq(matches.playerTwoId, userId)))
-      .orderBy(desc(matches.createdAt))
-      .limit(50);
-    return userMatches;
+    try {
+      const userMatches = await db.select()
+        .from(matches)
+        .where(or(
+          eq(matches.player1Id, userId), 
+          eq(matches.player2Id, userId),
+          eq(matches.player1PartnerId, userId),
+          eq(matches.player2PartnerId, userId)
+        ))
+        .orderBy(desc(matches.createdAt))
+        .limit(50);
+      return userMatches;
+    } catch (error) {
+      console.error('Error fetching matches for user:', error);
+      return [];
+    }
   }
 
   async getMatchStats(userId: number, timeRange?: string): Promise<any> {
