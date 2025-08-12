@@ -575,18 +575,25 @@ router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) =
     const matchId = parseInt(req.params.matchId);
     const { reason } = req.body;
     
-    // Verify match exists
-    const existingMatch = await db.select().from(adminMatches)
-      .where(eq(adminMatches.id, matchId)).limit(1);
+    console.log(`[Admin] Attempting to delete match ID: ${matchId}`);
+    
+    // Verify match exists in the regular matches table (not adminMatches)
+    const existingMatch = await db.select().from(matches)
+      .where(eq(matches.id, matchId)).limit(1);
       
     if (!existingMatch[0]) {
+      console.log(`[Admin] Match ${matchId} not found in matches table`);
       return res.status(404).json({ message: 'Match not found' });
     }
+    
+    console.log(`[Admin] Found match ${matchId}, checking for player results...`);
     
     // Get player results to reverse points before deletion
     const playerResults = await db.select()
       .from(playerMatchResults)
       .where(eq(playerMatchResults.matchId, matchId));
+    
+    console.log(`[Admin] Found ${playerResults.length} player results to reverse`);
     
     // Reverse all point allocations
     for (const result of playerResults) {
@@ -595,15 +602,21 @@ router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) =
           rankingPoints: sql`${users.rankingPoints} - ${result.pointsAwarded}`
         })
         .where(eq(users.id, result.playerId));
+      
+      console.log(`[Admin] Reversed ${result.pointsAwarded} points for player ${result.playerId}`);
     }
     
     // Delete player results first (foreign key constraint)
     await db.delete(playerMatchResults)
       .where(eq(playerMatchResults.matchId, matchId));
     
-    // Delete the match
-    await db.delete(adminMatches)
-      .where(eq(adminMatches.id, matchId));
+    console.log(`[Admin] Deleted player results for match ${matchId}`);
+    
+    // Delete the match from the regular matches table
+    await db.delete(matches)
+      .where(eq(matches.id, matchId));
+    
+    console.log(`[Admin] Successfully deleted match ${matchId}`);
     
     res.json({
       message: 'Match deleted successfully - all points reversed',

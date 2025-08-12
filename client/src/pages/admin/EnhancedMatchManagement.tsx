@@ -185,7 +185,7 @@ const MatchManagement: React.FC = () => {
     const competitionData = Object.fromEntries(formData.entries());
 
     // Convert numeric fields
-    const processedData = { ...competitionData };
+    const processedData: any = { ...competitionData };
     if (processedData.maxParticipants) {
       processedData.maxParticipants = parseInt(processedData.maxParticipants as string);
     }
@@ -203,7 +203,7 @@ const MatchManagement: React.FC = () => {
   const handleUpdateMatch = () => {
     if (!selectedMatchForEdit?.id) return;
     
-    const payload = Object.fromEntries(
+    const payload: any = Object.fromEntries(
       Object.entries(editMatchData).filter(([_, v]) => v !== '')
     );
     
@@ -605,7 +605,7 @@ const MatchManagement: React.FC = () => {
                         </Badge>
                         <div className="text-right">
                           <div className="font-bold text-xl text-blue-600">
-                            {match.scorePlayerOne}-{match.scorePlayerTwo}
+                            {match.scorePlayerOne || 0}-{match.scorePlayerTwo || 0}
                           </div>
                         </div>
                       </div>
