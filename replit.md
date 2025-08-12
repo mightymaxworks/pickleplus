@@ -24,6 +24,7 @@ Preferred communication style: Simple, everyday language.
 - **CI/CD SYSTEM IMPLEMENTED (Aug 6, 2025):** Comprehensive automated testing suite with Puppeteer, GitHub Actions workflow, and operational validation - ensures 100% reliability for admin match management
 - **QR SCANNER FAB AUTHENTICATION FIXED (Aug 11, 2025):** Enhanced floating QR scanner button authentication logic to prevent display for non-logged-in users - added isLoading state check to QuickMatchFAB component
 - **UNIFIED MATCH MANAGEMENT RESTORED (Aug 12, 2025):** Fixed routing issue where /admin/match-management was using simple match management instead of enhanced system - both /admin/match-management and /admin/matches now use EnhancedMatchManagement.tsx with proper match recording functionality
+- **PASSPORT ID STANDARDIZATION COMPLETE (Aug 12, 2025):** Fully standardized PKL-XXXXXX format across all components - updated QuickMatchRecorderStreamlined partner search placeholders, bulk upload Excel template examples, and enhanced all search functions to support formatted Passport IDs alongside username and passport code searches
 
 Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches

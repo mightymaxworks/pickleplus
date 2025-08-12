@@ -692,8 +692,8 @@ router.get('/download-template', requireAuth, requireAdmin, async (req, res) => 
       [
         'john_doe',
         'jane_smith',
-        'mike_partner',
-        'sara_partner',
+        'PKL-000168',
+        'PKL-000025',
         'doubles',
         '2025-08-12',
         '11',
@@ -706,8 +706,8 @@ router.get('/download-template', requireAuth, requireAdmin, async (req, res) => 
         'Great match'
       ],
       [
+        'PKL-000001',
         'alice123',
-        'bob456',
         '',
         '',
         'singles',
@@ -719,7 +719,7 @@ router.get('/download-template', requireAuth, requireAdmin, async (req, res) => 
         '11',
         '9',
         '',
-        ''
+        'Used Passport ID for Player 1'
       ]
     ];
     
@@ -823,12 +823,14 @@ router.post('/bulk-upload', requireAuth, requireAdmin, upload.single('file'), as
           continue;
         }
         
-        // Find players by username or passport ID
+        // Find players by username, passport code, or formatted Passport ID
         const player1 = await db.select()
           .from(users)
           .where(or(
             eq(users.username, rowData.Player1_Username),
-            eq(users.passportCode, rowData.Player1_Username)
+            eq(users.passportCode, rowData.Player1_Username),
+            // Search by formatted Passport ID (PKL-000001 format)
+            sql`CONCAT('PKL-', LPAD(${users.id}::text, 6, '0')) = ${rowData.Player1_Username}`
           ))
           .limit(1);
           
@@ -836,7 +838,9 @@ router.post('/bulk-upload', requireAuth, requireAdmin, upload.single('file'), as
           .from(users)
           .where(or(
             eq(users.username, rowData.Player2_Username),
-            eq(users.passportCode, rowData.Player2_Username)
+            eq(users.passportCode, rowData.Player2_Username),
+            // Search by formatted Passport ID (PKL-000001 format)
+            sql`CONCAT('PKL-', LPAD(${users.id}::text, 6, '0')) = ${rowData.Player2_Username}`
           ))
           .limit(1);
           
@@ -866,7 +870,9 @@ router.post('/bulk-upload', requireAuth, requireAdmin, upload.single('file'), as
               .from(users)
               .where(or(
                 eq(users.username, rowData.Player1_Partner_Username),
-                eq(users.passportCode, rowData.Player1_Partner_Username)
+                eq(users.passportCode, rowData.Player1_Partner_Username),
+                // Search by formatted Passport ID (PKL-000001 format)
+                sql`CONCAT('PKL-', LPAD(${users.id}::text, 6, '0')) = ${rowData.Player1_Partner_Username}`
               ))
               .limit(1);
               
@@ -885,7 +891,9 @@ router.post('/bulk-upload', requireAuth, requireAdmin, upload.single('file'), as
               .from(users)
               .where(or(
                 eq(users.username, rowData.Player2_Partner_Username),
-                eq(users.passportCode, rowData.Player2_Partner_Username)
+                eq(users.passportCode, rowData.Player2_Partner_Username),
+                // Search by formatted Passport ID (PKL-000001 format)
+                sql`CONCAT('PKL-', LPAD(${users.id}::text, 6, '0')) = ${rowData.Player2_Partner_Username}`
               ))
               .limit(1);
               

@@ -714,7 +714,9 @@ export class DatabaseStorage implements IStorage {
           sql`LOWER(${users.firstName}) LIKE ${searchTerm}`,
           sql`LOWER(${users.lastName}) LIKE ${searchTerm}`,
           sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchTerm}`,
-          sql`LOWER(${users.passportCode}) LIKE ${searchTerm}`
+          sql`LOWER(${users.passportCode}) LIKE ${searchTerm}`,
+          // Search by formatted Passport ID (PKL-000001 format)
+          sql`LOWER(CONCAT('PKL-', LPAD(${users.id}::text, 6, '0'))) LIKE ${searchTerm}`
         )
       )
       .limit(15)
