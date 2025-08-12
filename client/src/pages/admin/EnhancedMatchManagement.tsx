@@ -71,7 +71,10 @@ function CompletedMatchesDisplay() {
     );
   }
 
-  if (!completedMatches?.success || !completedMatches?.data?.length) {
+  // Handle both API response formats and missing data
+  const matches = completedMatches?.matches || completedMatches?.data || [];
+  
+  if (matches.length === 0) {
     return (
       <div className="text-center py-12 space-y-3">
         <Trophy className="w-12 h-12 text-muted-foreground mx-auto" />
@@ -86,12 +89,12 @@ function CompletedMatchesDisplay() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Completed Matches</h2>
         <Badge variant="secondary" className="px-3 py-1">
-          {completedMatches.data.length} matches
+          {matches.length} matches
         </Badge>
       </div>
       
       <div className="space-y-4">
-        {completedMatches.data.map((match: any) => (
+        {matches.map((match: any) => (
           <div key={match.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
             {/* Match Header */}
             <div className="px-6 py-4 border-b border-gray-100">
