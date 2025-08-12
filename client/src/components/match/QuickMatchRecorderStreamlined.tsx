@@ -108,6 +108,15 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
   const [playerSearchResults, setPlayerSearchResults] = useState<UserSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [recentOpponents, setRecentOpponents] = useState<UserSearchResult[]>([]);
+  
+  // Partner search states
+  const [partnerOneSearch, setPartnerOneSearch] = useState("");
+  const [partnerOneSearchResults, setPartnerOneSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearchingPartnerOne, setIsSearchingPartnerOne] = useState(false);
+  
+  const [partnerTwoSearch, setPartnerTwoSearch] = useState("");
+  const [partnerTwoSearchResults, setPartnerTwoSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearchingPartnerTwo, setIsSearchingPartnerTwo] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.isAdmin;
@@ -190,13 +199,50 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
     }
   };
 
-  // Debounced search
+  // Partner search functions
+  const searchPartners = async (searchTerm: string, setResults: (results: UserSearchResult[]) => void, setLoading: (loading: boolean) => void) => {
+    if (!searchTerm.trim()) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/players/search?q=${encodeURIComponent(searchTerm)}&limit=10`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setResults(data.players || []);
+      }
+    } catch (error) {
+      console.error('Partner search error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debounced searches
   useEffect(() => {
     const timer = setTimeout(() => {
       searchPlayers(playerSearch);
     }, 300);
     return () => clearTimeout(timer);
   }, [playerSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchPartners(partnerOneSearch, setPartnerOneSearchResults, setIsSearchingPartnerOne);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [partnerOneSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchPartners(partnerTwoSearch, setPartnerTwoSearchResults, setIsSearchingPartnerTwo);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [partnerTwoSearch]);
 
   // Smart score validation - detect standard endpoints and validate unusual scores
   const isStandardEndpoint = (score1: number, score2: number): boolean => {
@@ -647,21 +693,86 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 <Label className="text-sm text-muted-foreground">
                   {isAdmin ? "Player 1 Partner (Optional)" : "Your Partner (Optional)"}
                 </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start text-muted-foreground"
-                  onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "Partner selection will be available soon",
-                      variant: "default",
-                    });
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Select Partner
-                </Button>
+                
+                {!playerOnePartnerData ? (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Search partner by name, username, or passport ID..."
+                      value={partnerOneSearch}
+                      onChange={(e) => setPartnerOneSearch(e.target.value)}
+                      className="w-full"
+                    />
+                    
+                    {/* Partner One Search Results */}
+                    {partnerOneSearch && (
+                      <div className="border rounded-lg max-h-32 overflow-y-auto">
+                        {isSearchingPartnerOne ? (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            Searching partners...
+                          </div>
+                        ) : partnerOneSearchResults.length > 0 ? (
+                          partnerOneSearchResults.map((player) => (
+                            <button
+                              key={player.id}
+                              type="button"
+                              className="w-full text-left p-2 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                              onClick={() => {
+                                setPlayerOnePartnerData(player);
+                                setPartnerOneSearch("");
+                                setPartnerOneSearchResults([]);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>
+                                    {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {player.displayName || player.username}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    @{player.username} • {player.passportId ? `ID: ${player.passportId}` : 'No passport'} • {player.currentRating || 0} pts
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            No players found
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {playerOnePartnerData?.avatarInitials || 'P1'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {playerOnePartnerData?.displayName || playerOnePartnerData?.username}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        @{playerOnePartnerData?.username} • {playerOnePartnerData?.currentRating || 0} pts
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPlayerOnePartnerData(null)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -674,7 +785,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
               </Label>
               <div className="space-y-2">
                 <Input
-                  placeholder={`Search for ${formatType === "singles" ? (isAdmin ? "Player 2" : "opponent") : (isAdmin ? "Player 2" : "opponent team player 1")} by name or username...`}
+                  placeholder={`Search by name, username, or passport ID...`}
                   value={playerSearch}
                   onChange={(e) => setPlayerSearch(e.target.value)}
                   className="w-full"
@@ -710,7 +821,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                                 {player.displayName || player.username}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                @{player.username} • {player.currentRating || 0} pts
+                                @{player.username} • {player.passportId ? `ID: ${player.passportId}` : 'No passport'} • {player.currentRating || 0} pts
                               </p>
                             </div>
                           </div>
@@ -760,21 +871,86 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 <Label className="text-sm text-muted-foreground">
                   {isAdmin ? "Player 2 Partner (Optional)" : "Opponent Team Partner (Optional)"}
                 </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start text-muted-foreground"
-                  onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "Partner selection will be available soon",
-                      variant: "default",
-                    });
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Select Partner
-                </Button>
+                
+                {!playerTwoPartnerData ? (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Search partner by name, username, or passport ID..."
+                      value={partnerTwoSearch}
+                      onChange={(e) => setPartnerTwoSearch(e.target.value)}
+                      className="w-full"
+                    />
+                    
+                    {/* Partner Two Search Results */}
+                    {partnerTwoSearch && (
+                      <div className="border rounded-lg max-h-32 overflow-y-auto">
+                        {isSearchingPartnerTwo ? (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            Searching partners...
+                          </div>
+                        ) : partnerTwoSearchResults.length > 0 ? (
+                          partnerTwoSearchResults.map((player) => (
+                            <button
+                              key={player.id}
+                              type="button"
+                              className="w-full text-left p-2 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                              onClick={() => {
+                                setPlayerTwoPartnerData(player);
+                                setPartnerTwoSearch("");
+                                setPartnerTwoSearchResults([]);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>
+                                    {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {player.displayName || player.username}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    @{player.username} • {player.passportId ? `ID: ${player.passportId}` : 'No passport'} • {player.currentRating || 0} pts
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-2 text-center text-muted-foreground text-sm">
+                            No players found
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {playerTwoPartnerData?.avatarInitials || 'P2'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {playerTwoPartnerData?.displayName || playerTwoPartnerData?.username}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        @{playerTwoPartnerData?.username} • {playerTwoPartnerData?.currentRating || 0} pts
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPlayerTwoPartnerData(null)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

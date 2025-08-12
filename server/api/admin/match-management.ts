@@ -6,6 +6,8 @@ import { eq, desc, asc, and, or, sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { requireAuth, requireAdmin } from '../../middleware/auth';
 import { users } from '../../../shared/schema';
+import multer from 'multer';
+import * as XLSX from 'xlsx';
 import {
   competitions,
   adminMatches as matches,
@@ -18,6 +20,29 @@ import {
 } from '../../../shared/schema/admin-match-management';
 
 const router = Router();
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype) || 
+        file.originalname.endsWith('.xlsx') || 
+        file.originalname.endsWith('.xls')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel files (.xlsx, .xls) are allowed'), false);
+    }
+  }
+});
 
 // Helper function to calculate and update user age groups
 async function updateUserAgeGroup(userId: number) {
@@ -637,6 +662,401 @@ router.get('/matches', requireAuth, requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch matches'
+    });
+  }
+});
+
+// Download Excel template
+router.get('/download-template', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    // Create workbook with template headers
+    const workbook = XLSX.utils.book_new();
+    
+    const templateData = [
+      [
+        'Player1_Username',
+        'Player2_Username', 
+        'Player1_Partner_Username',
+        'Player2_Partner_Username',
+        'Format',
+        'Match_Date',
+        'Game1_P1_Score',
+        'Game1_P2_Score',
+        'Game2_P1_Score',
+        'Game2_P2_Score',
+        'Game3_P1_Score',
+        'Game3_P2_Score',
+        'Tournament_Name',
+        'Notes'
+      ],
+      [
+        'john_doe',
+        'jane_smith',
+        'mike_partner',
+        'sara_partner',
+        'doubles',
+        '2025-08-12',
+        '11',
+        '9',
+        '11',
+        '7',
+        '',
+        '',
+        'Summer Tournament',
+        'Great match'
+      ],
+      [
+        'alice123',
+        'bob456',
+        '',
+        '',
+        'singles',
+        '2025-08-12',
+        '11',
+        '6',
+        '8',
+        '11',
+        '11',
+        '9',
+        '',
+        ''
+      ]
+    ];
+    
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+    
+    // Set column widths
+    worksheet['!cols'] = [
+      { width: 20 }, { width: 20 }, { width: 20 }, { width: 20 },
+      { width: 10 }, { width: 12 }, { width: 10 }, { width: 10 },
+      { width: 10 }, { width: 10 }, { width: 10 }, { width: 10 },
+      { width: 20 }, { width: 30 }
+    ];
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Match Data Template');
+    
+    // Generate buffer
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    
+    res.setHeader('Content-Disposition', 'attachment; filename=match_upload_template.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error generating template:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate template'
+    });
+  }
+});
+
+// Bulk upload matches from Excel
+router.post('/bulk-upload', requireAuth, requireAdmin, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
+    }
+
+    // Parse Excel file
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    
+    if (jsonData.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Excel file must contain at least a header row and one data row'
+      });
+    }
+    
+    const headers = jsonData[0] as string[];
+    const dataRows = jsonData.slice(1);
+    
+    const results = {
+      success: true,
+      processed: 0,
+      errors: [] as Array<{ row: number; error: string }>
+    };
+    
+    // Process each row
+    for (let i = 0; i < dataRows.length; i++) {
+      const rowIndex = i + 2; // Excel row number (1-based, accounting for header)
+      const row = dataRows[i] as any[];
+      
+      try {
+        if (!row || row.length === 0 || !row.some(cell => cell !== null && cell !== undefined && cell !== '')) {
+          continue; // Skip empty rows
+        }
+        
+        // Create a row object from headers and data
+        const rowData: any = {};
+        headers.forEach((header, index) => {
+          rowData[header] = row[index] || null;
+        });
+        
+        // Validate required fields
+        if (!rowData.Player1_Username || !rowData.Player2_Username) {
+          results.errors.push({
+            row: rowIndex,
+            error: 'Missing required players (Player1_Username and Player2_Username are required)'
+          });
+          continue;
+        }
+        
+        if (!rowData.Format || !['singles', 'doubles'].includes(rowData.Format.toLowerCase())) {
+          results.errors.push({
+            row: rowIndex,
+            error: 'Invalid format - must be "singles" or "doubles"'
+          });
+          continue;
+        }
+        
+        if (!rowData.Match_Date) {
+          results.errors.push({
+            row: rowIndex,
+            error: 'Missing match date'
+          });
+          continue;
+        }
+        
+        // Find players by username or passport ID
+        const player1 = await db.select()
+          .from(users)
+          .where(or(
+            eq(users.username, rowData.Player1_Username),
+            eq(users.passportCode, rowData.Player1_Username)
+          ))
+          .limit(1);
+          
+        const player2 = await db.select()
+          .from(users)
+          .where(or(
+            eq(users.username, rowData.Player2_Username),
+            eq(users.passportCode, rowData.Player2_Username)
+          ))
+          .limit(1);
+          
+        if (!player1[0]) {
+          results.errors.push({
+            row: rowIndex,
+            error: `Player 1 not found: ${rowData.Player1_Username}`
+          });
+          continue;
+        }
+        
+        if (!player2[0]) {
+          results.errors.push({
+            row: rowIndex,
+            error: `Player 2 not found: ${rowData.Player2_Username}`
+          });
+          continue;
+        }
+        
+        // Find partners if specified for doubles
+        let player1Partner = null;
+        let player2Partner = null;
+        
+        if (rowData.Format.toLowerCase() === 'doubles') {
+          if (rowData.Player1_Partner_Username) {
+            const partner1Result = await db.select()
+              .from(users)
+              .where(or(
+                eq(users.username, rowData.Player1_Partner_Username),
+                eq(users.passportCode, rowData.Player1_Partner_Username)
+              ))
+              .limit(1);
+              
+            if (!partner1Result[0]) {
+              results.errors.push({
+                row: rowIndex,
+                error: `Player 1 partner not found: ${rowData.Player1_Partner_Username}`
+              });
+              continue;
+            }
+            player1Partner = partner1Result[0];
+          }
+          
+          if (rowData.Player2_Partner_Username) {
+            const partner2Result = await db.select()
+              .from(users)
+              .where(or(
+                eq(users.username, rowData.Player2_Partner_Username),
+                eq(users.passportCode, rowData.Player2_Partner_Username)
+              ))
+              .limit(1);
+              
+            if (!partner2Result[0]) {
+              results.errors.push({
+                row: rowIndex,
+                error: `Player 2 partner not found: ${rowData.Player2_Partner_Username}`
+              });
+              continue;
+            }
+            player2Partner = partner2Result[0];
+          }
+        }
+        
+        // Build games array from score columns
+        const games = [];
+        for (let gameNum = 1; gameNum <= 5; gameNum++) {
+          const p1ScoreKey = `Game${gameNum}_P1_Score`;
+          const p2ScoreKey = `Game${gameNum}_P2_Score`;
+          
+          const p1Score = parseInt(rowData[p1ScoreKey]);
+          const p2Score = parseInt(rowData[p2ScoreKey]);
+          
+          if (!isNaN(p1Score) && !isNaN(p2Score)) {
+            games.push({
+              playerOneScore: p1Score,
+              playerTwoScore: p2Score
+            });
+          }
+        }
+        
+        if (games.length === 0) {
+          results.errors.push({
+            row: rowIndex,
+            error: 'At least one game with valid scores is required'
+          });
+          continue;
+        }
+        
+        // Find or create tournament/competition
+        let competitionId = null;
+        if (rowData.Tournament_Name) {
+          const existingCompetition = await db.select()
+            .from(competitions)
+            .where(eq(competitions.name, rowData.Tournament_Name))
+            .limit(1);
+            
+          if (existingCompetition[0]) {
+            competitionId = existingCompetition[0].id;
+          } else {
+            // Create new tournament
+            const newCompetition = await db.insert(competitions)
+              .values({
+                name: rowData.Tournament_Name,
+                type: 'tournament',
+                status: 'active',
+                startDate: new Date(rowData.Match_Date),
+                endDate: new Date(rowData.Match_Date),
+                maxParticipants: 100,
+                description: `Bulk uploaded tournament: ${rowData.Tournament_Name}`,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              })
+              .returning({ id: competitions.id });
+            
+            competitionId = newCompetition[0].id;
+          }
+        }
+        
+        // Create match
+        const matchData = {
+          competitionId,
+          format: rowData.Format.toLowerCase() as 'singles' | 'doubles',
+          status: 'completed' as const,
+          scheduledTime: new Date(rowData.Match_Date),
+          player1Id: player1[0].id,
+          player2Id: player2[0].id,
+          player1PartnerId: player1Partner?.id || null,
+          player2PartnerId: player2Partner?.id || null,
+          games: JSON.stringify(games),
+          notes: rowData.Notes || null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        // Determine winner based on games won
+        let player1Wins = 0;
+        let player2Wins = 0;
+        
+        games.forEach(game => {
+          if (game.playerOneScore > game.playerTwoScore) {
+            player1Wins++;
+          } else {
+            player2Wins++;
+          }
+        });
+        
+        matchData['winnerId'] = player1Wins > player2Wins ? player1[0].id : player2[0].id;
+        
+        // Calculate team scores for doubles
+        if (matchData.format === 'doubles') {
+          matchData['team1Score'] = player1Wins;
+          matchData['team2Score'] = player2Wins;
+        } else {
+          matchData['player1Score'] = player1Wins;
+          matchData['player2Score'] = player2Wins;
+        }
+        
+        const insertedMatch = await db.insert(matches)
+          .values(matchData)
+          .returning({ id: matches.id });
+        
+        // Update player rankings (simplified point allocation)
+        const winner = player1Wins > player2Wins ? player1[0] : player2[0];
+        const loser = player1Wins > player2Wins ? player2[0] : player1[0];
+        
+        await db.update(users)
+          .set({
+            rankingPoints: sql`${users.rankingPoints} + 3`,
+            totalMatchesPlayed: sql`${users.totalMatchesPlayed} + 1`,
+            totalMatchesWon: sql`${users.totalMatchesWon} + 1`
+          })
+          .where(eq(users.id, winner.id));
+          
+        await db.update(users)
+          .set({
+            rankingPoints: sql`${users.rankingPoints} + 1`,
+            totalMatchesPlayed: sql`${users.totalMatchesPlayed} + 1`
+          })
+          .where(eq(users.id, loser.id));
+        
+        // Update partner rankings if doubles
+        if (matchData.format === 'doubles' && player1Partner && player2Partner) {
+          const winnerPartner = player1Wins > player2Wins ? player1Partner : player2Partner;
+          const loserPartner = player1Wins > player2Wins ? player2Partner : player1Partner;
+          
+          await db.update(users)
+            .set({
+              rankingPoints: sql`${users.rankingPoints} + 3`,
+              totalMatchesPlayed: sql`${users.totalMatchesPlayed} + 1`,
+              totalMatchesWon: sql`${users.totalMatchesWon} + 1`
+            })
+            .where(eq(users.id, winnerPartner.id));
+            
+          await db.update(users)
+            .set({
+              rankingPoints: sql`${users.rankingPoints} + 1`,
+              totalMatchesPlayed: sql`${users.totalMatchesPlayed} + 1`
+            })
+            .where(eq(users.id, loserPartner.id));
+        }
+        
+        results.processed++;
+        
+      } catch (error) {
+        console.error(`Error processing row ${rowIndex}:`, error);
+        results.errors.push({
+          row: rowIndex,
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+      }
+    }
+    
+    res.json(results);
+    
+  } catch (error) {
+    console.error('Bulk upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Bulk upload failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

@@ -38,9 +38,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus } from 'lucide-react';
+import { Users, Trophy, Target, TrendingUp, Calendar, Award, Plus, Upload } from 'lucide-react';
 import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import MatchManagement from './MatchManagement';
+import BulkMatchUpload from '@/components/match/BulkMatchUpload';
 
 interface PlayerResult {
   id: number;
@@ -153,9 +154,10 @@ export default function EnhancedMatchManagement() {
       </div>
 
       <Tabs defaultValue="record-match" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
           <TabsTrigger value="record-match" className="text-xs md:text-sm">Record Match</TabsTrigger>
           <TabsTrigger value="competitions" className="text-xs md:text-sm">Competitions</TabsTrigger>
+          <TabsTrigger value="bulk-upload" className="text-xs md:text-sm">Bulk Upload</TabsTrigger>
           <TabsTrigger value="leaderboards" className="text-xs md:text-sm hidden md:flex">Leaderboards</TabsTrigger>
           <TabsTrigger value="overview" className="text-xs md:text-sm hidden md:flex">Overview</TabsTrigger>
           <TabsTrigger value="mixed-age" className="text-xs md:text-sm hidden md:flex">Analytics</TabsTrigger>
@@ -192,6 +194,23 @@ export default function EnhancedMatchManagement() {
             </CardHeader>
             <CardContent>
               <MatchManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bulk-upload" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Bulk Match Upload
+              </CardTitle>
+              <CardDescription>
+                Upload match data from Excel files with comprehensive validation and error reporting
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BulkMatchUpload />
             </CardContent>
           </Card>
         </TabsContent>
