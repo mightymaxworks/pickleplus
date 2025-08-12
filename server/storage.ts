@@ -111,6 +111,7 @@ export interface IStorage extends CommunityStorage {
   searchUsers(query: string): Promise<User[]>;
   getRecentOpponents(userId: number): Promise<User[]>;
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
+  searchPlayersByMultipleFields(searchTerm: string): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
