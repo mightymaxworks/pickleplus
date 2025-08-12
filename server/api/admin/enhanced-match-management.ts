@@ -620,88 +620,145 @@ router.delete('/matches/:matchId', requireAuth, requireAdmin, async (req, res) =
   }
 });
 
-// Get list of completed matches - simplified version that works
+// Get list of completed matches - simplified working version
 router.get('/matches/completed', requireAuth, requireAdmin, async (req, res) => {
   try {
-    // Just get the basic completed matches data from regular matches table using correct column names
-    const completedMatches = await db.execute(sql`
+    // Get completed matches directly with a simpler query
+    const query = sql`
       SELECT 
-        id,
-        player_one_id as "playerOneId",
-        player_two_id as "playerTwoId", 
-        player_one_partner_id as "playerOnePartnerId",
-        player_two_partner_id as "playerTwoPartnerId",
-        winner_id as "winnerId",
-        score_player_one as "scorePlayerOne",
-        score_player_two as "scorePlayerTwo", 
-        category,
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      FROM matches 
-      WHERE winner_id IS NOT NULL
-      ORDER BY created_at DESC
-      LIMIT 20
-    `);
+        m.id,
+        m.player_one_id,
+        m.player_two_id, 
+        m.player_one_partner_id,
+        m.player_two_partner_id,
+        m.winner_id,
+        m.score_player_one,
+        m.score_player_two, 
+        m.category,
+        m.created_at,
+        m.updated_at,
+        u1.username as player_one_name,
+        u1.first_name as player_one_first_name,
+        u2.username as player_two_name,
+        u2.first_name as player_two_first_name,
+        u3.username as partner_one_name,
+        u3.first_name as partner_one_first_name,
+        u4.username as partner_two_name,
+        u4.first_name as partner_two_first_name
+      FROM matches m
+      LEFT JOIN users u1 ON m.player_one_id = u1.id
+      LEFT JOIN users u2 ON m.player_two_id = u2.id
+      LEFT JOIN users u3 ON m.player_one_partner_id = u3.id
+      LEFT JOIN users u4 ON m.player_two_partner_id = u4.id
+      WHERE m.winner_id IS NOT NULL
+      ORDER BY m.created_at DESC
+      LIMIT 50
+    `;
+    
+    const result = await db.execute(query);
+    const matches = result.rows;
 
-    // Get all unique user IDs from the matches
-    const userIds = new Set();
-    completedMatches.rows.forEach(match => {
-      if (match.playerOneId) userIds.add(match.playerOneId);
-      if (match.playerTwoId) userIds.add(match.playerTwoId);
-      if (match.playerOnePartnerId) userIds.add(match.playerOnePartnerId);
-      if (match.playerTwoPartnerId) userIds.add(match.playerTwoPartnerId);
-    });
-
-    // Get all users in one query if we have user IDs
-    let allUsers = [];
-    if (userIds.size > 0) {
-      const userIdArray = Array.from(userIds);
-      const userQueryResult = await db.execute(sql`
-        SELECT id, username, first_name as "firstName", last_name as "lastName", year_of_birth as "yearOfBirth"
-        FROM users 
-        WHERE id = ANY(${userIdArray})
-      `);
-      allUsers = userQueryResult.rows;
-    }
-
-    // Create user lookup map
-    const userMap = {};
-    allUsers.forEach(user => {
-      userMap[user.id] = user;
-    });
-
-    // Enhanced matches with player names and points
-    const enhancedMatches = completedMatches.rows.map(match => {
-      const p1 = userMap[match.playerOneId];
-      const p2 = userMap[match.playerTwoId];
-      const pt1 = match.playerOnePartnerId ? userMap[match.playerOnePartnerId] : null;
-      const pt2 = match.playerTwoPartnerId ? userMap[match.playerTwoPartnerId] : null;
-
-      // Calculate points based on PICKLE_PLUS_ALGORITHM_DOCUMENT
+    // Enhanced matches with player results based on PICKLE_PLUS_ALGORITHM_DOCUMENT (System B: 3 points win, 1 point loss)
+    const enhancedMatches = matches.map(match => {
       const playerResults = [];
       
-      if (p1) {
-        const isWinner = match.winnerId === p1.id;
-        const basePoints = isWinner ? 3 : 1;
-        const age = p1.yearOfBirth ? new Date().getFullYear() - p1.yearOfBirth : 25;
-        const ageGroup = age < 19 ? '18U' : age < 30 ? '19-29' : age < 40 ? '30-39' : age < 50 ? '40-49' : age < 60 ? '50-59' : age < 70 ? '60-69' : '70+';
+      // Player 1
+      if (match.player_one_id) {
+        const isWinner = match.winner_id === match.player_one_id;
+        const basePoints = isWinner ? 3 : 1; // PICKLE_PLUS_ALGORITHM_DOCUMENT System B
         
         playerResults.push({
-          playerId: p1.id,
-          playerName: `${p1.firstName || ''} ${p1.lastName || ''}`.trim() || p1.username,
+          playerId: match.player_one_id,
+          playerName: match.player_one_first_name ? `${match.player_one_first_name}` : match.player_one_name,
           isWinner,
           pointsAwarded: basePoints,
           basePoints,
-          ageGroup,
+          ageGroup: 'Open',
           ageGroupMultiplier: 1.0
         });
       }
 
-      if (p2) {
-        const isWinner = match.winnerId === p2.id;
+      // Player 2  
+      if (match.player_two_id) {
+        const isWinner = match.winner_id === match.player_two_id;
         const basePoints = isWinner ? 3 : 1;
-        const age = p2.yearOfBirth ? new Date().getFullYear() - p2.yearOfBirth : 25;
-        const ageGroup = age < 19 ? '18U' : age < 30 ? '19-29' : age < 40 ? '30-39' : age < 50 ? '40-49' : age < 60 ? '50-59' : age < 70 ? '60-69' : '70+';
+        
+        playerResults.push({
+          playerId: match.player_two_id,
+          playerName: match.player_two_first_name ? `${match.player_two_first_name}` : match.player_two_name,
+          isWinner,
+          pointsAwarded: basePoints,
+          basePoints,
+          ageGroup: 'Open',
+          ageGroupMultiplier: 1.0
+        });
+      }
+
+      // Partner 1 (for doubles)
+      if (match.player_one_partner_id) {
+        const isWinner = match.winner_id === match.player_one_id; // Same as Player 1's result
+        const basePoints = isWinner ? 3 : 1;
+        
+        playerResults.push({
+          playerId: match.player_one_partner_id,
+          playerName: match.partner_one_first_name ? `${match.partner_one_first_name}` : match.partner_one_name,
+          isWinner,
+          pointsAwarded: basePoints,
+          basePoints,
+          ageGroup: 'Open',
+          ageGroupMultiplier: 1.0
+        });
+      }
+
+      // Partner 2 (for doubles)
+      if (match.player_two_partner_id) {
+        const isWinner = match.winner_id === match.player_two_id; // Same as Player 2's result
+        const basePoints = isWinner ? 3 : 1;
+        
+        playerResults.push({
+          playerId: match.player_two_partner_id,
+          playerName: match.partner_two_first_name ? `${match.partner_two_first_name}` : match.partner_two_name,
+          isWinner,
+          pointsAwarded: basePoints,
+          basePoints,
+          ageGroup: 'Open',
+          ageGroupMultiplier: 1.0
+        });
+      }
+
+      return {
+        id: match.id,
+        playerOneId: match.player_one_id,
+        playerTwoId: match.player_two_id,
+        playerOnePartnerId: match.player_one_partner_id,
+        playerTwoPartnerId: match.player_two_partner_id,
+        winnerId: match.winner_id,
+        scorePlayerOne: match.score_player_one,
+        scorePlayerTwo: match.score_player_two,
+        category: match.category,
+        createdAt: match.created_at,
+        updatedAt: match.updated_at,
+        playerResults,
+        format: match.player_one_partner_id || match.player_two_partner_id ? 'doubles' : 'singles'
+      };
+    });
+
+    console.log(`Retrieved ${enhancedMatches.length} completed matches successfully`);
+    
+    res.json({
+      matches: enhancedMatches,
+      total: enhancedMatches.length,
+      message: 'Completed matches retrieved successfully'
+    });
+
+  } catch (error) {
+    console.error('Error retrieving completed matches:', error);
+    res.status(500).json({ 
+      message: 'Failed to retrieve completed matches', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
         
         playerResults.push({
           playerId: p2.id,
