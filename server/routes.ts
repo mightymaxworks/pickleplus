@@ -475,6 +475,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Player Search API
+  app.get('/api/players/search', async (req: Request, res: Response) => {
+    try {
+      const { searchPlayers } = await import('./api/players/search');
+      await searchPlayers(req, res);
+    } catch (error) {
+      console.error('Player search error:', error);
+      res.status(500).json({ error: 'Failed to search players' });
+    }
+  });
+
   // === FALLBACK API STATUS ENDPOINTS ===
   // These provide basic status for any unregistered endpoints
   const basicEndpoints = [

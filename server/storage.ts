@@ -3103,6 +3103,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Player Management Admin operations
+  // Enhanced Player Search for Match Recording
+  async searchPlayersByMultipleFields(searchTerm: string): Promise<User[]> {
+    try {
+      const searchPattern = `%${searchTerm.toLowerCase()}%`;
+      
+      const searchResults = await db.select()
+        .from(users)
+        .where(
+          or(
+            ilike(users.username, searchPattern),
+            ilike(users.firstName, searchPattern),
+            ilike(users.lastName, searchPattern),
+            ilike(users.displayName, searchPattern),
+            ilike(users.passportId, searchPattern),
+            sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchPattern}`
+          )
+        )
+        .limit(20);
+      
+      return searchResults;
+    } catch (error) {
+      console.error('Error searching players by multiple fields:', error);
+      return [];
+    }
+  }
+
   async getAllPlayersForAdmin(): Promise<any[]> {
     try {
       const result = await db.execute(sql`

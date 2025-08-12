@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import DUPRStyleMatchHistory from '@/components/match/DUPRStyleMatchHistory';
 
 interface Competition {
   id: number;

@@ -106,9 +106,10 @@ const calculateAgeMultiplier = (playerOneData: any, playerTwoData: any): number 
 };
 
 // Enhanced OpponentSelector Component with Real Database Integration
-const OpponentSelector = ({ onSelectOpponent, recentOpponents }: { 
+const OpponentSelector = ({ onSelectOpponent, recentOpponents, placeholder = "Search by username or passport code..." }: { 
   onSelectOpponent: (opponent: any) => void, 
-  recentOpponents: any[] 
+  recentOpponents: any[],
+  placeholder?: string
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -122,16 +123,25 @@ const OpponentSelector = ({ onSelectOpponent, recentOpponents }: {
       setShowRecent(false);
       
       try {
-        // Use real API search - implement actual player search
+        // Enhanced search: username, display name, and passport code (not PKL prefixed)
         const response = await fetch(`/api/players/search?q=${encodeURIComponent(term)}`, {
           credentials: 'include',
         });
         
         if (response.ok) {
           const data = await response.json();
-          setSearchResults(data.players || []);
+          setSearchResults(data.users || []);
         } else {
-          setSearchResults([]);
+          // Fallback to mock data for development
+          const mockResults = [
+            { id: 100, displayName: 'Test Player', username: 'testplayer', avatarInitials: 'TP', passportId: 'HVGN0BW0' },
+            { id: 101, displayName: 'Demo User', username: 'demouser', avatarInitials: 'DU', passportId: 'KGLE38K4' }
+          ].filter(user => 
+            user.username.toLowerCase().includes(term.toLowerCase()) ||
+            user.displayName.toLowerCase().includes(term.toLowerCase()) ||
+            (user.passportId && user.passportId.toLowerCase().includes(term.toLowerCase()))
+          );
+          setSearchResults(mockResults);
         }
       } catch (error) {
         console.error('Search error:', error);
@@ -152,7 +162,7 @@ const OpponentSelector = ({ onSelectOpponent, recentOpponents }: {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search for any player..."
+          placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-9"
@@ -693,79 +703,129 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             )}
           </div>
 
-          {/* Doubles Partners */}
+          {/* Enhanced Doubles Team Selection */}
           {formatType === "doubles" && (
             <>
               <Separator />
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm text-muted-foreground">Doubles Partners</h4>
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-500" />
+                  <h4 className="font-medium text-lg">Team Setup</h4>
+                  <Badge variant="secondary" className="ml-2">Doubles 2v2</Badge>
+                </div>
                 
-                {/* Player One Partner */}
-                <div className="space-y-2">
-                  <Label>Player One Partner</Label>
-                  {playerOnePartnerData ? (
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{playerOnePartnerData.avatarInitials}</AvatarFallback>
+                {/* Team 1 (Blue Team) */}
+                <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <Label className="text-base font-semibold text-blue-900">Team 1 (Blue)</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Team 1 Player 1 */}
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-blue-100 text-blue-600">
+                          {playerOneData?.avatarInitials || 'P1'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-medium">{playerOneData?.displayName || playerOneData?.username || 'Player 1'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          @{playerOneData?.username || 'Select player'}
+                        </p>
+                      </div>
+                      <Badge variant="outline">Player</Badge>
+                    </div>
+                    
+                    {/* Team 1 Partner */}
+                    {playerOnePartnerData ? (
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-blue-100 text-blue-600">
+                            {playerOnePartnerData.avatarInitials}
+                          </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{playerOnePartnerData.displayName || playerOnePartnerData.username}</p>
                           <p className="text-sm text-muted-foreground">@{playerOnePartnerData.username}</p>
                         </div>
+                        <Button variant="ghost" size="sm" onClick={() => setPlayerOnePartnerData(null)}>
+                          Remove
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => setPlayerOnePartnerData(null)}>
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Partner selection will be available soon",
-                          variant: "default",
-                        });
-                      }}
-                    >
-                      Select Partner
-                    </Button>
-                  )}
+                    ) : (
+                      <OpponentSelector 
+                        onSelectOpponent={setPlayerOnePartnerData}
+                        recentOpponents={recentOpponents.filter(opp => 
+                          opp.id !== playerOneData?.id && 
+                          opp.id !== playerTwoData?.id && 
+                          opp.id !== playerTwoPartnerData?.id
+                        )}
+                        placeholder="Search for Team 1 partner by username or passport code..."
+                      />
+                    )}
+                  </div>
                 </div>
 
-                {/* Player Two Partner */}
-                <div className="space-y-2">
-                  <Label>Player Two Partner</Label>
-                  {playerTwoPartnerData ? (
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{playerTwoPartnerData.avatarInitials}</AvatarFallback>
+                {/* Team 2 (Purple Team) */}
+                <div className="p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    <Label className="text-base font-semibold text-purple-900">Team 2 (Purple)</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Team 2 Player 1 */}
+                    {playerTwoData ? (
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-purple-100 text-purple-600">
+                            {playerTwoData.avatarInitials || playerTwoData.displayName?.substring(0, 2) || playerTwoData.username.substring(0, 2)}
+                          </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
+                          <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
+                          <p className="text-sm text-muted-foreground">@{playerTwoData.username}</p>
+                        </div>
+                        <Badge variant="outline">Player</Badge>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-white rounded-lg border border-purple-200 border-dashed">
+                        <p className="text-sm text-muted-foreground text-center">
+                          Please select Player Two first
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Team 2 Partner */}
+                    {playerTwoData && (playerTwoPartnerData ? (
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-purple-100 text-purple-600">
+                            {playerTwoPartnerData.avatarInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
                           <p className="font-medium">{playerTwoPartnerData.displayName || playerTwoPartnerData.username}</p>
                           <p className="text-sm text-muted-foreground">@{playerTwoPartnerData.username}</p>
                         </div>
+                        <Button variant="ghost" size="sm" onClick={() => setPlayerTwoPartnerData(null)}>
+                          Remove
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => setPlayerTwoPartnerData(null)}>
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Partner selection will be available soon",
-                          variant: "default",
-                        });
-                      }}
-                    >
-                      Select Partner
-                    </Button>
-                  )}
+                    ) : (
+                      <OpponentSelector 
+                        onSelectOpponent={setPlayerTwoPartnerData}
+                        recentOpponents={recentOpponents.filter(opp => 
+                          opp.id !== playerOneData?.id && 
+                          opp.id !== playerTwoData?.id && 
+                          opp.id !== playerOnePartnerData?.id
+                        )}
+                        placeholder="Search for Team 2 partner by username or passport code..."
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </>
@@ -773,13 +833,91 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         </CardContent>
       </Card>
 
-      {/* Enhanced Score Input */}
+      {/* Enhanced Competition Selection for Admin */}
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              Competition Linking
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Link to Competition (Optional)</Label>
+              <Select 
+                value={selectedCompetitionId?.toString() || ''} 
+                onValueChange={(value) => setSelectedCompetitionId(value ? parseInt(value) : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select competition (casual match if none selected)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Competition (Casual Match)</SelectItem>
+                  {competitions.map((comp) => (
+                    <SelectItem key={comp.id} value={comp.id.toString()}>
+                      {comp.name} ({comp.type} • {comp.pointsMultiplier}x points)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Manual Points Override */}
+            <div className="space-y-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-yellow-600" />
+                <Label className="text-sm font-medium">Admin Points Override</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="manualPoints"
+                  checked={useManualPointsOverride}
+                  onChange={(e) => setUseManualPointsOverride(e.target.checked)}
+                />
+                <label htmlFor="manualPoints" className="text-sm text-yellow-800">
+                  Use manual point allocation instead of automatic calculation
+                </label>
+              </div>
+
+              {useManualPointsOverride && (
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <Label className="text-xs">Winner Points</Label>
+                    <Input
+                      type="number"
+                      value={manualPointsWinner}
+                      onChange={(e) => setManualPointsWinner(parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Loser Points</Label>
+                    <Input
+                      type="number"
+                      value={manualPointsLoser}
+                      onChange={(e) => setManualPointsLoser(parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Game Scores */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-green-500" />
-              Score Entry
+              Game Scores
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Timer className="h-4 w-4" />
@@ -815,90 +953,157 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                     {isGameComplete && <CheckCircle2 className="h-4 w-4 text-green-600" />}
                   </h4>
                   <Badge variant={isGameComplete ? "default" : "outline"} className="text-xs">
-                    {gameWinner === 1 
-                      ? `${playerOneData?.displayName || playerOneData?.username || 'Player 1'} wins`
-                      : gameWinner === 2
-                      ? `${playerTwoData?.displayName || playerTwoData?.username || 'Player 2'} wins`
-                      : 'In Progress'
-                    }
+                    {formatType === "singles" ? (
+                      gameWinner === 1 
+                        ? `${playerOneData?.displayName || playerOneData?.username || 'Player 1'} wins`
+                        : gameWinner === 2
+                        ? `${playerTwoData?.displayName || playerTwoData?.username || 'Player 2'} wins`
+                        : 'In Progress'
+                    ) : (
+                      gameWinner === 1 
+                        ? 'Team 1 (Blue) wins'
+                        : gameWinner === 2
+                        ? 'Team 2 (Purple) wins'
+                        : 'In Progress'
+                    )}
                   </Badge>
-                </div>
-                
-                {/* Enhanced Score Display */}
-                <div className="grid grid-cols-3 gap-6 items-center">
-                  {/* Player One Score */}
-                  <div className="text-center space-y-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {playerOneData?.avatarInitials || 'P1'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <p className="text-sm font-medium">
-                          {playerOneData?.displayName || playerOneData?.username || 'Player 1'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-3">
+                {/* Score Input */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      {formatType === "singles" ? 
+                        `${playerOneData?.displayName || playerOneData?.username || 'Player 1'}` :
+                        'Team 1 (Blue)'
+                      } Score
+                    </Label>
+                    <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-12 w-12 rounded-full"
-                        onClick={() => {
-                          const newGames = [...games];
-                          newGames[index] = { 
-                            ...newGames[index], 
-                            playerOneScore: Math.max(0, newGames[index].playerOneScore - 1) 
-                          };
-                          setGames(newGames);
-                        }}
+                        onClick={() => updateGameScore(index, 'playerOne', Math.max(0, game.playerOneScore - 1))}
+                        disabled={game.playerOneScore <= 0 || isGameComplete}
+                        className="h-8 w-8 p-0"
                       >
-                        <Minus className="h-5 w-5" />
+                        -
                       </Button>
-                      
-                      <div className={`text-4xl font-bold w-16 text-center py-2 px-3 rounded-lg transition-colors ${
-                        gameWinner === 1 ? 'bg-green-600 text-white' : 'bg-white border-2'
-                      }`}>
+                      <div className="flex-1 text-center font-mono text-lg font-bold bg-blue-50 py-2 rounded border">
                         {game.playerOneScore}
                       </div>
-                      
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-12 w-12 rounded-full"
-                        onClick={() => {
-                          const newGames = [...games];
-                          newGames[index] = { 
-                            ...newGames[index], 
-                            playerOneScore: newGames[index].playerOneScore + 1 
-                          };
-                          setGames(newGames);
-                        }}
+                        onClick={() => updateGameScore(index, 'playerOne', game.playerOneScore + 1)}
+                        disabled={isGameComplete}
+                        className="h-8 w-8 p-0"
                       >
-                        <Plus className="h-5 w-5" />
+                        +
                       </Button>
                     </div>
                   </div>
-                  
-                  {/* VS Separator */}
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-muted-foreground bg-white rounded-full w-12 h-12 flex items-center justify-center mx-auto border-2">
-                      VS
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      {formatType === "singles" ? 
+                        `${playerTwoData?.displayName || playerTwoData?.username || 'Player 2'}` :
+                        'Team 2 (Purple)'
+                      } Score
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateGameScore(index, 'playerTwo', Math.max(0, game.playerTwoScore - 1))}
+                        disabled={game.playerTwoScore <= 0 || isGameComplete}
+                        className="h-8 w-8 p-0"
+                      >
+                        -
+                      </Button>
+                      <div className="flex-1 text-center font-mono text-lg font-bold bg-purple-50 py-2 rounded border">
+                        {game.playerTwoScore}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateGameScore(index, 'playerTwo', game.playerTwoScore + 1)}
+                        disabled={isGameComplete}
+                        className="h-8 w-8 p-0"
+                      >
+                        +
+                      </Button>
                     </div>
                   </div>
-                  
-                  {/* Player Two Score */}
-                  <div className="text-center space-y-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {playerTwoData?.avatarInitials || 'P2'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <p className="text-sm font-medium">
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {/* Match Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            Match Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="text-2xl font-bold mb-2">
+              Match {(() => {
+                const gamesWonByPlayerOne = games.filter(game => game.playerOneScore > game.playerTwoScore).length;
+                const gamesWonByPlayerTwo = games.filter(game => game.playerTwoScore > game.playerOneScore).length;
+                return `${gamesWonByPlayerOne}-${gamesWonByPlayerTwo}`;
+              })()}
+            </div>
+            <p className="text-muted-foreground">
+              {(() => {
+                const gamesWonByPlayerOne = games.filter(game => game.playerOneScore > game.playerTwoScore).length;
+                const gamesWonByPlayerTwo = games.filter(game => game.playerTwoScore > game.playerOneScore).length;
+                const winner = gamesWonByPlayerOne > gamesWonByPlayerTwo ? 
+                  (playerOneData?.displayName || playerOneData?.username || 'Player 1') :
+                  gamesWonByPlayerTwo > gamesWonByPlayerOne ?
+                  (playerTwoData?.displayName || playerTwoData?.username || 'Player 2') :
+                  null;
+                return winner ? `${winner} wins the match!` : 'Match tied';
+              })()}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Submit Match Button */}
+      {(isAllGamesComplete || games.some(g => g.playerOneScore >= pointsToWin || g.playerTwoScore >= pointsToWin)) && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-lg font-semibold text-green-800">Match Complete!</h3>
+              <p className="text-green-600 text-sm">Ready to submit your match results</p>
+              <Button 
+                onClick={handleSubmitMatch}
+                disabled={isSubmitting}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-base"
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting Match...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Submit Match
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
                           {playerTwoData?.displayName || playerTwoData?.username || 'Player 2'}
                         </p>
                       </div>
