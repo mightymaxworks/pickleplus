@@ -23,6 +23,7 @@ Preferred communication style: Simple, everyday language.
 - **RUNTIME ERRORS ELIMINATED (Aug 6, 2025):** All SelectItem empty value errors resolved across entire platform - QuickMatchRecorderStreamlined, BugReportDetail, AdvancedCommunitySearch, CommunityList, EventForm, PassportVerificationDashboard all fixed
 - **CI/CD SYSTEM IMPLEMENTED (Aug 6, 2025):** Comprehensive automated testing suite with Puppeteer, GitHub Actions workflow, and operational validation - ensures 100% reliability for admin match management
 - **QR SCANNER FAB AUTHENTICATION FIXED (Aug 11, 2025):** Enhanced floating QR scanner button authentication logic to prevent display for non-logged-in users - added isLoading state check to QuickMatchFAB component
+- **UNIFIED MATCH MANAGEMENT RESTORED (Aug 12, 2025):** Fixed routing issue where /admin/match-management was using simple match management instead of enhanced system - both /admin/match-management and /admin/matches now use EnhancedMatchManagement.tsx with proper match recording functionality
 
 Coach workflow preferences (DISABLED FOR LAUNCH):
 - Coaches should access training facilities to apply as facility coaches
@@ -35,35 +36,13 @@ Match Recording System preferences:
 - **UDF Standardization**: Always reuse existing components instead of creating new ones - make admin functions enhanced versions of player components
 - **Admin Match Recording**: Admin match recorder must be exact replica of player QuickMatchRecorder component with enhanced admin capabilities
 
-## Development Guidelines
-- Keep things simple - avoid unnecessary complex naming like "Enhanced" prefixes
-- Use only `/udd` route for Universal Development Dashboard
-- Tab labels must be concise and easy to navigate
-- **Mandatory Pre-Development Protocol**: All new requirements must be discussed, confirmed, and integrated into UDD before development begins
-- **Mobile-First UDD Design**: All dashboard sections must be mobile-optimized and concise
-- All critical gaps development strategy must be integrated into universal development dashboard before proceeding with implementation
-
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.
 
 ### Universal Development Framework
-- **Universal Development Dashboard (UDD)**: Located at `/udd` route (`client/src/pages/CoachingWorkflowAnalysis.tsx`), this dashboard serves as the central hub for tracking all development workflows including:
-  - **Requirements Planning**: Mandatory integration point for all new feature discussions and approvals
-  - **Mobile-First Design**: Optimized interface for mobile devices with concise information display
-  - **Interactive UDF Workflow**: Full implementation of the Discussion → UDD Integration → Review → Sequential Validation → Development protocol with proper button functionality
-  - Module development and integration status
-  - User journey implementation and testing
-  - UI/UX component development tracking
-  - API endpoint validation and testing
-  - Critical gaps analysis and resolution
-  - Phase-based development progression
-- **UDF Workflow Implementation**: Complete workflow system with:
-  - "Review Requirements & Begin Development" buttons that trigger proper UDF workflow
-  - RequirementReviewDialog with sequential validation checks
-  - Workflow state management and history tracking
-  - Proper dependency validation before development authorization
-  - **Agent Communication System**: "Begin Development" button generates and copies development request message for user to send to agent, triggering actual implementation work
-- **Unified Tracking**: All development activities are monitored through the UDD, providing real-time validation and comprehensive status reporting across the entire platform ecosystem.
+- **Universal Development Dashboard (UDD)**: Located at `/udd` route, this dashboard serves as the central hub for tracking all development workflows including requirements planning, mobile-first design, and interactive workflow.
+- **UDF Workflow Implementation**: A complete workflow system with "Review Requirements & Begin Development" buttons, `RequirementReviewDialog` with sequential validation, state management, and an Agent Communication System to trigger implementation work.
+- **Unified Tracking**: All development activities are monitored through the UDD for real-time validation and status reporting.
 - **Pre-Development Protocol**: No development begins until requirements are discussed, confirmed, and integrated into UDD with proper phase planning.
 - **Development Workflow**: Discussion → UDD Integration → Review & Validation → Sequential Dependency Check → Development Authorization → Implementation
 
@@ -73,7 +52,7 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **State Management**: React hooks with Context API
 - **Styling**: Tailwind CSS for responsive design
 - **Routing**: React Router
-- **UI Components**: Custom, mobile-first responsive components adhering to the PKL-278651 design framework, emphasizing fewer clicks, QR code integration, and comprehensive ranking system display.
+- **UI Components**: Custom, mobile-first responsive components adhering to the PKL-278651 design framework, emphasizing fewer clicks, QR code integration, and comprehensive ranking system display. Color scheme includes Primary Orange, Secondary Blue, with Inter and Roboto Mono fonts.
 
 ### Backend Architecture
 - **Runtime**: Node.js with ES modules
@@ -94,9 +73,10 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **Training Center Management**: QR code-based facility access, class scheduling, real-time capacity management.
 - **PickleJourney™ System**: Multi-role support, journaling with AI sentiment analysis, XP system, and emotional intelligence tracking.
 - **Coach Application System**: Streamlined 5-step onboarding, credential verification, and achievement showcase.
-- **PCP Ranking System**: Points-based ranking with performance tracking.
+- **PCP Ranking System**: Points-based ranking with performance tracking, implemented with StandardizedRankingService, DecayProtectionService, and GenderBalanceService. Uses System B (3/1 base points), age multipliers, and skill-based cross-gender balance. Features a dual ranking architecture (Open Rankings, Age Group Rankings) and a 7-tier tournament structure.
+- **4-Tier Player Classification System**: Recreational (0-299 pts), Competitive (300-999 pts), Elite (1000-1799 pts), Professional (1800+ pts), with specific decay rates and enhanced tournament weighting for the Professional tier.
 - **Comprehensive Assessment Tool**: 42-skillset PCP assessment across Technical, Tactical, Physical, and Mental dimensions.
-- **Payment Gateway Integration**: Wise payment gateway for international and domestic transactions.
+- **Payment Gateway Integration**: Wise payment gateway for international and domestic transactions, supporting revenue from PCP Certifications, Coaching Sessions (tiered commission), and optional Premium Coach Subscriptions.
 - **Unified Coach Hub**: Consolidates coaching features under a single `/coach` hub.
 - **Curriculum Management System**: CRUD operations for drills and learning content, integrated with PCP assessment.
 - **Session Management System**: End-to-end workflow for session requests, scheduling, and completion.
@@ -105,16 +85,10 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **Internationalization**: Bilingual support for English and Chinese.
 - **Coach Business Analytics Dashboard**: Revenue analytics, client metrics, schedule optimization, marketing ROI, performance KPIs.
 - **Student Progress Analytics System**: Skill assessments, goal tracking, session history, progress reports.
-- **Curriculum Management Integration**: Advanced drill libraries and lesson planning.
 - **Multi-dimensional Analytics Engine**: Real-time business intelligence and predictive coaching insights.
 - **AI-Powered Business Intelligence**: AI Revenue Forecasting, Demand Pattern Analysis, Smart Scheduling Optimization, Client Retention Analytics, Client Lifetime Value Analysis, Marketing ROI Dashboard, and Competitive Intelligence.
 - **PCP Coach Onboarding System**: 4-step onboarding flow for coaches, supporting sequential level progression with tiered commission structures.
-- **Payment Architecture**: Revenue from PCP Certifications, Coaching Sessions (tiered commission), and optional Premium Coach Subscriptions ($19.99/month) for advanced business tools.
-- **Design System Standards (PKL-278651 Framework)**: Mandatory mobile-first design, gesture navigation, 44px+ touch targets, micro-animations, voice-ready architecture, progressive disclosure. Color scheme includes Primary Orange, Secondary Blue, with Inter and Roboto Mono fonts.
-- **PicklePlus Ranking Algorithm**: FINALIZED implementation using System B (3/1 base points), Option B age multipliers (18-34: 1.0, 35-49: 1.2, 50-59: 1.3, 60-69: 1.5, 70+: 1.6), skill-based cross-gender balance system (Women 1.15x, Mixed 1.075x in cross-gender matches for players <1000 points; no bonuses for Elite+ players ≥1000 points), dual ranking architecture (Open Rankings for cross-generational competition, Age Group Rankings for peer comparison), 7-tier tournament structure, sophisticated **4-tier player classification system** with Professional tier enhanced weighting (Tournament 3x, League 2x, Casual 0.75x vs standard 2x/1.5x/1x), and standardized point calculations via StandardizedRankingService with DecayProtectionService and GenderBalanceService integration.
-- **4-Tier Player Classification System**: Official algorithm implementation - Recreational (0-299 pts, 1% decay), Competitive (300-999 pts, 2% decay), Elite (1000-1799 pts, 5% decay), Professional (1800+ pts, 7% decay, enhanced tournament weighting). Visual tier system integrated into rankings display with color-coded badges and comprehensive tier legend explaining decay rates and activity requirements.
-- **Critical Gaps Analysis System**: Comprehensive deployment readiness assessment with identified critical gaps: PCP Sequential Enforcement (100% complete), Coach Marketplace Discovery (100% complete), Player-Coach Direct Booking System (100% complete), Coach Reputation System (0% complete - next priority), Enhanced Admin Match Recording System (100% complete - exact QuickMatchRecorder integration), PicklePlus Ranking Algorithm Migration (100% complete - all components now use StandardizedRankingService), and Professional Tier Enhanced Decay Protection System (100% complete - full tier-specific weighting implementation).
-- **Universal Development Dashboard (UDD)**: Integrated at `/udd` route as part of the unified development framework. Features a unified Development Ledger that combines gaps and development phases into a complete tracking system with four categories: Completed Features (live and deployed), Ready to Develop (dependencies met), Blocked Features (dependency waiting), and Planned Features (future roadmap). Includes sequential validation system that prevents premature development and platform disruption by enforcing proper dependency sequencing.
+- **Critical Gaps Analysis System**: Comprehensive deployment readiness assessment with identified critical gaps, integrated into the UDD's unified Development Ledger with four categories: Completed, Ready to Develop, Blocked, and Planned. Includes a sequential validation system.
 
 ## External Dependencies
 ### Core Dependencies
@@ -131,8 +105,9 @@ Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js
 - **TypeScript**: Type safety.
 - **Tailwind CSS**: CSS framework.
 - **ESLint/Prettier**: Code quality and formatting.
+- **Puppeteer**: For automated testing.
+- **GitHub Actions**: For CI/CD.
 
 ### Deployment
 - **Replit**: Development and initial deployment.
 - **Cloud Run**: Production environment.
-- **Environment Variables**: Used for sensitive data like `DATABASE_URL`, `SESSION_SECRET`, `PORT`, `WISE_API_TOKEN`.

@@ -801,14 +801,14 @@ export default function App() {
                   <Route path="/admin/match-management">
                     {(params) => (
                       <AdminProtectedRoute>
-                        {React.createElement(lazyLoad(() => import('./pages/admin/MatchManagement')))}
+                        {React.createElement(lazyLoad(() => import('./pages/admin/EnhancedMatchManagement')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>
                   <Route path="/admin/matches">
                     {(params) => (
                       <AdminProtectedRoute>
-                        {React.createElement(lazyLoad(() => import('./pages/admin/MatchManagement')))}
+                        {React.createElement(lazyLoad(() => import('./pages/admin/EnhancedMatchManagement')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>
