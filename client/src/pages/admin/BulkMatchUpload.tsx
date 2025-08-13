@@ -199,7 +199,7 @@ export default function BulkMatchUpload() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Fill Data</h3>
-                <p className="text-sm text-gray-600">Use passport codes to identify players and include gender information</p>
+                <p className="text-sm text-gray-600">Use passport codes to identify players. Include gender/date of birth to override existing data, or leave blank to preserve current user data</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
@@ -217,7 +217,10 @@ export default function BulkMatchUpload() {
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <strong>Important:</strong> Use the exact passport codes (like CBSPZV, HVGN0BW0) to identify players. 
-              Include gender information for each player. The system will validate all data before processing.
+              <br /><br />
+              <strong>Date of Birth Format:</strong> Use YYYY-MM-DD format (e.g., 1990-05-15).
+              <br /><br />
+              <strong>Conditional Updates:</strong> If you provide gender or date of birth in Excel, it will override existing user data. Leave these fields blank to keep existing user data unchanged.
             </AlertDescription>
           </Alert>
 

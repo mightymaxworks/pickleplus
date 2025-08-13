@@ -32,12 +32,16 @@ interface BulkMatchRow {
   matchType: 'casual' | 'tournament';
   player1PassportCode: string;
   player1Gender: string;
+  player1DateOfBirth?: string;
   player2PassportCode: string;
   player2Gender: string;
+  player2DateOfBirth?: string;
   player3PassportCode?: string;
   player3Gender?: string;
+  player3DateOfBirth?: string;
   player4PassportCode?: string;
   player4Gender?: string;
+  player4DateOfBirth?: string;
   isDoubles: boolean;
   team1Score: number;
   team2Score: number;
@@ -62,36 +66,44 @@ router.get('/template', isAuthenticated, async (req, res) => {
         'Match Type (casual/tournament)': 'casual',
         'Player 1 Passport Code': 'CBSPZV',
         'Player 1 Gender (male/female)': 'male',
+        'Player 1 Date of Birth (YYYY-MM-DD)': '1990-05-15',
         'Player 2 Passport Code': 'HVGN0BW0',
         'Player 2 Gender (male/female)': 'female',
+        'Player 2 Date of Birth (YYYY-MM-DD)': '1985-12-08',
         'Player 3 Passport Code (doubles only)': 'KGLE38K4',
         'Player 3 Gender (doubles only)': 'male',
+        'Player 3 Date of Birth (doubles only)': '1992-03-22',
         'Player 4 Passport Code (doubles only)': 'MX8K7P2N',
         'Player 4 Gender (doubles only)': 'female',
+        'Player 4 Date of Birth (doubles only)': '1988-11-10',
         'Is Doubles Match (TRUE/FALSE)': 'TRUE',
         'Team 1 Score': 2,
         'Team 2 Score': 1,
         'Game Scores (JSON format)': '[{"team1": 11, "team2": 9}, {"team1": 11, "team2": 7}, {"team1": 9, "team2": 11}]',
         'Location (optional)': 'Court 1',
-        'Notes (optional)': 'Great match with close games'
+        'Notes (optional)': 'Doubles match with date overrides for all players'
       },
       {
         'Match Date (YYYY-MM-DD)': '2025-08-13',
         'Match Type (casual/tournament)': 'tournament',
         'Player 1 Passport Code': 'CBSPZV',
         'Player 1 Gender (male/female)': 'male',
+        'Player 1 Date of Birth (YYYY-MM-DD)': '',
         'Player 2 Passport Code': 'HVGN0BW0',
         'Player 2 Gender (male/female)': 'female',
+        'Player 2 Date of Birth (YYYY-MM-DD)': '',
         'Player 3 Passport Code (doubles only)': '',
         'Player 3 Gender (doubles only)': '',
+        'Player 3 Date of Birth (doubles only)': '',
         'Player 4 Passport Code (doubles only)': '',
         'Player 4 Gender (doubles only)': '',
+        'Player 4 Date of Birth (doubles only)': '',
         'Is Doubles Match (TRUE/FALSE)': 'FALSE',
         'Team 1 Score': 2,
         'Team 2 Score': 0,
         'Game Scores (JSON format)': '[{"team1": 11, "team2": 8}, {"team1": 11, "team2": 6}]',
         'Location (optional)': 'Tournament Court A',
-        'Notes (optional)': 'Singles match - tournament round 1'
+        'Notes (optional)': 'Singles match - blank dates will NOT override existing user data'
       }
     ];
 
@@ -105,12 +117,16 @@ router.get('/template', isAuthenticated, async (req, res) => {
       { wch: 25 }, // Match Type
       { wch: 20 }, // Player 1 Passport Code
       { wch: 25 }, // Player 1 Gender
+      { wch: 20 }, // Player 1 Date of Birth
       { wch: 20 }, // Player 2 Passport Code
       { wch: 25 }, // Player 2 Gender
+      { wch: 20 }, // Player 2 Date of Birth
       { wch: 25 }, // Player 3 Passport Code
       { wch: 25 }, // Player 3 Gender
+      { wch: 20 }, // Player 3 Date of Birth
       { wch: 25 }, // Player 4 Passport Code
       { wch: 25 }, // Player 4 Gender
+      { wch: 20 }, // Player 4 Date of Birth
       { wch: 20 }, // Is Doubles
       { wch: 12 }, // Team 1 Score
       { wch: 12 }, // Team 2 Score
@@ -177,12 +193,16 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
           matchType: row['Match Type (casual/tournament)']?.toLowerCase(),
           player1PassportCode: row['Player 1 Passport Code']?.toUpperCase(),
           player1Gender: row['Player 1 Gender (male/female)']?.toLowerCase(),
+          player1DateOfBirth: row['Player 1 Date of Birth (YYYY-MM-DD)'] || undefined,
           player2PassportCode: row['Player 2 Passport Code']?.toUpperCase(),
           player2Gender: row['Player 2 Gender (male/female)']?.toLowerCase(),
+          player2DateOfBirth: row['Player 2 Date of Birth (YYYY-MM-DD)'] || undefined,
           player3PassportCode: row['Player 3 Passport Code (doubles only)']?.toUpperCase() || undefined,
           player3Gender: row['Player 3 Gender (doubles only)']?.toLowerCase() || undefined,
+          player3DateOfBirth: row['Player 3 Date of Birth (doubles only)'] || undefined,
           player4PassportCode: row['Player 4 Passport Code (doubles only)']?.toUpperCase() || undefined,
           player4Gender: row['Player 4 Gender (doubles only)']?.toLowerCase() || undefined,
+          player4DateOfBirth: row['Player 4 Date of Birth (doubles only)'] || undefined,
           isDoubles: String(row['Is Doubles Match (TRUE/FALSE)']).toUpperCase() === 'TRUE',
           team1Score: Number(row['Team 1 Score']),
           team2Score: Number(row['Team 2 Score']),
@@ -243,6 +263,54 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
             results.errors.push(`Row ${i + 2}: Player 4 with passport code ${matchData.player4PassportCode} not found`);
             results.failed++;
             continue;
+          }
+        }
+
+        // CONDITIONAL OVERRIDE LOGIC - Update user data if provided in Excel
+        // If gender/DOB provided in Excel → override existing user data
+        // If gender/DOB are blank → leave existing user data unchanged
+        
+        const playersToUpdate: Array<{user: any, gender?: string, dateOfBirth?: string}> = [
+          { user: player1, gender: matchData.player1Gender, dateOfBirth: matchData.player1DateOfBirth },
+          { user: player2, gender: matchData.player2Gender, dateOfBirth: matchData.player2DateOfBirth }
+        ];
+
+        if (matchData.isDoubles && player3 && player4) {
+          playersToUpdate.push(
+            { user: player3, gender: matchData.player3Gender, dateOfBirth: matchData.player3DateOfBirth },
+            { user: player4, gender: matchData.player4Gender, dateOfBirth: matchData.player4DateOfBirth }
+          );
+        }
+
+        // Update each player's profile data conditionally
+        for (const playerUpdate of playersToUpdate) {
+          const updateData: any = {};
+          let hasUpdates = false;
+
+          // Only update gender if provided in Excel (not blank)
+          if (playerUpdate.gender && playerUpdate.gender.trim() && 
+              ['male', 'female'].includes(playerUpdate.gender.toLowerCase())) {
+            updateData.gender = playerUpdate.gender.toLowerCase();
+            hasUpdates = true;
+          }
+
+          // Only update date of birth if provided in Excel (not blank) and valid format
+          if (playerUpdate.dateOfBirth && playerUpdate.dateOfBirth.trim()) {
+            // Validate date format YYYY-MM-DD
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (dateRegex.test(playerUpdate.dateOfBirth)) {
+              const dateObj = new Date(playerUpdate.dateOfBirth);
+              if (!isNaN(dateObj.getTime())) {
+                updateData.dateOfBirth = playerUpdate.dateOfBirth;
+                hasUpdates = true;
+              }
+            }
+          }
+
+          // Apply updates only if there are valid changes to make
+          if (hasUpdates) {
+            await storage.updateUser(playerUpdate.user.id, updateData);
+            console.log(`[ADMIN-BULK] Updated user ${playerUpdate.user.username} profile:`, updateData);
           }
         }
 
