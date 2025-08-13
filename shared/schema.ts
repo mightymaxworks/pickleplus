@@ -917,7 +917,8 @@ export const users = pgTable("users", {
   lastName: varchar("last_name", { length: 100 }),
   location: varchar("location", { length: 255 }),
   bio: text("bio"),
-  yearOfBirth: integer("year_of_birth"),
+  dateOfBirth: date("date_of_birth"),
+  gender: varchar("gender", { length: 10 }), // 'male' or 'female'
   passportCode: varchar("passport_code", { length: 15 }).unique(), // alphanumeric passport code (8 chars for new users, legacy 7 chars supported)
   pointsLevel: integer("points_level").default(1),
   picklePoints: integer("pickle_points").default(0),
@@ -1006,8 +1007,6 @@ export const users = pgTable("users", {
   // Additional fields for deployment compatibility
   xp: integer("xp").default(0),
   level: integer("level").default(1),
-  dateOfBirth: date("date_of_birth"),
-  gender: varchar("gender", { length: 20 }),
   externalRatings: jsonb("external_ratings"),
   
   // Privacy settings - Default visibility profiles

@@ -36,7 +36,12 @@ const registerSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string(),
-  yearOfBirth: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
+  dateOfBirth: z.string().optional().refine(val => !val || new Date(val) <= new Date(), {
+    message: "Date of birth cannot be in the future"
+  }).refine(val => !val || new Date().getFullYear() - new Date(val).getFullYear() >= 13, {
+    message: "You must be at least 13 years old to register"
+  }),
+  gender: z.enum(["male", "female"]).optional(),
   location: z.string().optional(),
   playingSince: z.string().optional(),
   skillLevel: z.string().optional(),
@@ -98,7 +103,8 @@ export default function NewAuthPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      yearOfBirth: new Date().getFullYear() - 25,
+      dateOfBirth: "",
+      gender: undefined,
       location: "",
       playingSince: "",
       skillLevel: "beginner",
@@ -136,7 +142,8 @@ export default function NewAuthPage() {
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-        yearOfBirth: data.yearOfBirth,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
         location: data.location,
         playingSince: data.playingSince,
         skillLevel: data.skillLevel,
@@ -424,19 +431,17 @@ export default function NewAuthPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={registerForm.control}
-                            name="yearOfBirth"
+                            name="dateOfBirth"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('auth.birthYear', 'Birth Year')}</FormLabel>
+                                <FormLabel>{t('dateOfBirth', 'Date of Birth')}</FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                     <Input 
                                       {...field} 
-                                      type="number"
-                                      placeholder={t('auth.birthYearPlaceholder', '1990')}
+                                      type="date"
                                       className="pl-10"
-                                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                                     />
                                   </div>
                                 </FormControl>
@@ -447,21 +452,19 @@ export default function NewAuthPage() {
 
                           <FormField
                             control={registerForm.control}
-                            name="skillLevel"
+                            name="gender"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('auth.skillLevel', 'Skill Level')}</FormLabel>
+                                <FormLabel>{t('gender', 'Gender')}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder={t('auth.selectLevel', 'Select level')} />
+                                      <SelectValue placeholder={t('auth.selectGender', 'Select gender')} />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="beginner">{t('auth.beginner', 'Beginner')}</SelectItem>
-                                    <SelectItem value="intermediate">{t('auth.intermediate', 'Intermediate')}</SelectItem>
-                                    <SelectItem value="advanced">{t('auth.advanced', 'Advanced')}</SelectItem>
-                                    <SelectItem value="expert">{t('auth.expert', 'Expert')}</SelectItem>
+                                    <SelectItem value="male">{t('auth.male', 'Male')}</SelectItem>
+                                    <SelectItem value="female">{t('auth.female', 'Female')}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -469,6 +472,30 @@ export default function NewAuthPage() {
                             )}
                           />
                         </div>
+
+                        <FormField
+                          control={registerForm.control}
+                          name="skillLevel"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('auth.skillLevel', 'Skill Level')}</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t('auth.selectLevel', 'Select level')} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="beginner">{t('auth.beginner', 'Beginner')}</SelectItem>
+                                  <SelectItem value="intermediate">{t('auth.intermediate', 'Intermediate')}</SelectItem>
+                                  <SelectItem value="advanced">{t('auth.advanced', 'Advanced')}</SelectItem>
+                                  <SelectItem value="expert">{t('auth.expert', 'Expert')}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
                         <FormField
                           control={registerForm.control}

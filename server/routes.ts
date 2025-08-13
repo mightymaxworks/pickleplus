@@ -89,10 +89,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // === AUTHENTICATION ROUTES ===
   app.post('/api/register', async (req: Request, res: Response) => {
     try {
-      const { username, password, email, firstName, lastName } = req.body;
+      const { username, password, email, firstName, lastName, dateOfBirth, gender, location, playingSince, skillLevel } = req.body;
       
       console.log(`[API][Registration] Attempting to register user: ${username}`);
       console.log(`[API][Registration] Raw password: "${password}" (length: ${password.length})`);
+      console.log(`[API][Registration] Date of Birth: ${dateOfBirth}, Gender: ${gender}`);
       
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
@@ -100,8 +101,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: 'Username already exists' });
       }
       
-      // Generate passport code
-      const passportCode = `PKL-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      // Generate passport code using secure random format
+      const passportCode = Math.random().toString(36).substr(2, 8).toUpperCase();
       
       // Hash the password before creating user
       const { hashPassword } = await import('./auth');
@@ -109,13 +110,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[API][Registration] Password hashed from "${password}" to "${hashedPassword}"`);
       console.log(`[API][Registration] Hash length: ${hashedPassword.length}`);
       
-      // Create new user with proper defaults
+      // Create new user with proper defaults including new fields
       const newUser = await storage.createUser({
         username,
         email: email || `${username}@pickle.com`,
         password: hashedPassword, // Password is now properly hashed
         firstName,
         lastName,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        gender: gender || null,
+        location: location || null,
+        playingSince: playingSince || null,
+        skillLevel: skillLevel || 'beginner',
         displayName: `${firstName} ${lastName}` || username,
         avatarInitials: `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}` || username.charAt(0).toUpperCase(),
         passportCode,
@@ -133,6 +139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: newUser.email,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
+          dateOfBirth: newUser.dateOfBirth,
+          gender: newUser.gender,
+          location: newUser.location,
           passportCode: newUser.passportCode
         }
       });
