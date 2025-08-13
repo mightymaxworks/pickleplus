@@ -491,13 +491,13 @@ const MatchManagement: React.FC = () => {
           <Card>
             <CardContent className="p-6">
               <QuickMatchRecorder 
-                onSuccess={() => {
+                onSuccess={(matchData) => {
                   toast({
                     title: "Match Recorded Successfully",
                     description: "The match has been recorded and points have been allocated.",
                   });
                   // Refresh the matches list
-                  refetchCompletedMatches();
+                  queryClient.invalidateQueries({ queryKey: ['/api/admin/enhanced-match-management/matches/completed'] });
                 }} 
               />
             </CardContent>
