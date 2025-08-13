@@ -812,6 +812,13 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  <Route path="/admin/bulk-upload">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./pages/admin/BulkMatchUpload')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   <Route path="/admin/mobile-test">
                     {(params) => (
                       <AdminProtectedRoute>

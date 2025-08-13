@@ -259,6 +259,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   console.log("[AUTH] Authentication routes registered");
 
+  // === ADMIN BULK UPLOAD ROUTES ===
+  console.log("[ROUTES] Registering Admin Bulk Upload routes...");
+  try {
+    const adminBulkUploadRoutes = await import('./routes/admin-bulk-upload');
+    app.use('/api/admin/bulk-upload', adminBulkUploadRoutes.default);
+    console.log("[ROUTES] Admin Bulk Upload routes registered successfully");
+  } catch (error) {
+    console.error("[ROUTES] Error registering Admin Bulk Upload routes:", error);
+  }
+
   // === MODULAR ROUTE REGISTRATION ===
   console.log("[ROUTES] Registering modular route systems...");
   

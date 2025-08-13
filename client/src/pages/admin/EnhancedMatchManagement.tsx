@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle, Upload } from 'lucide-react';
+import { Link } from 'wouter';
 import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
 import DUPRStyleMatchHistory from '@/components/match/DUPRStyleMatchHistory';
 
@@ -287,6 +288,12 @@ const MatchManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
+          <Link href="/admin/bulk-upload">
+            <Button variant="outline">
+              <Upload className="h-4 w-4 mr-2" />
+              Bulk Upload
+            </Button>
+          </Link>
           <Dialog open={showCreateCompetition} onOpenChange={setShowCreateCompetition}>
             <DialogTrigger asChild>
               <Button>
