@@ -49,8 +49,20 @@ export function registerMatchRoutes(app: express.Express): void {
       
       const winnerId = playerOneGamesWon > playerTwoGamesWon ? (playerOneId || (req.user as any)?.id) : playerTwoId;
       
-      // Format scores for storage
-      const scoreString = games.map((game: any) => 
+      // Calculate individual team/player scores for proper display
+      let playerOneScore = 0;
+      let playerTwoScore = 0;
+      
+      games.forEach((game: any) => {
+        if (game.playerOneScore > game.playerTwoScore) {
+          playerOneScore++;
+        } else {
+          playerTwoScore++;
+        }
+      });
+      
+      // Format individual game results for storage
+      const detailedScores = games.map((game: any) => 
         `${game.playerOneScore}-${game.playerTwoScore}`
       ).join(', ');
       
@@ -79,14 +91,14 @@ export function registerMatchRoutes(app: express.Express): void {
         playerTwoId,
         playerOnePartnerId: playerOnePartnerId || null,
         playerTwoPartnerId: playerTwoPartnerId || null,
-        scorePlayerOne: scoreString,
-        scorePlayerTwo: scoreString, // Same string, winner determined by winnerId
+        scorePlayerOne: `${playerOneScore}`, // Games won by Team 1 (Player One + Partner)
+        scorePlayerTwo: `${playerTwoScore}`, // Games won by Team 2 (Player Two + Partner)
         winnerId,
         matchType: matchType || 'casual',
         formatType: formatType || 'singles',
         validationStatus: isAdmin ? 'completed' : 'pending', // Admin matches auto-complete
         validationCompletedAt: isAdmin ? new Date() : null,
-        notes: notes || null,
+        notes: `${notes || ''} [Game Scores: ${detailedScores}]`.trim(),
         tournamentId: validTournamentId,
         scheduledDate: scheduledDate || null,
         pointsAwarded: winnerPoints,
