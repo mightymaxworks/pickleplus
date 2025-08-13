@@ -300,7 +300,7 @@ export default function NewAuthPage() {
                             href="/forgot-password"
                             className="text-sm text-gray-600 hover:text-orange-600 transition-colors duration-200 inline-block mt-2"
                           >
-                            {t('auth.forgotPassword', 'Forgot your password?')}
+                            {t('forgotPassword', 'Forgot your password?')}
                           </a>
                         </div>
                       </form>
@@ -459,12 +459,12 @@ export default function NewAuthPage() {
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder={t('auth.selectGender', 'Select gender')} />
+                                      <SelectValue placeholder={t('selectGender', 'Select gender')} />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="male">{t('auth.male', 'Male')}</SelectItem>
-                                    <SelectItem value="female">{t('auth.female', 'Female')}</SelectItem>
+                                    <SelectItem value="male">{t('male', 'Male')}</SelectItem>
+                                    <SelectItem value="female">{t('female', 'Female')}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
