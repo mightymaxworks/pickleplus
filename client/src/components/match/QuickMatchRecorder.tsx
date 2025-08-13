@@ -53,6 +53,7 @@ import {
   Info,
   Search,
   CheckCircle2,
+  Loader2,
   Timer,
   TrendingUp
 } from "lucide-react";
@@ -373,6 +374,35 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     },
   });
 
+  // Game score management functions
+  const updateGameScore = (gameIndex: number, player: 'playerOne' | 'playerTwo', newScore: number) => {
+    setGames(prevGames => 
+      prevGames.map((game, index) => 
+        index === gameIndex 
+          ? { ...game, [player === 'playerOne' ? 'playerOneScore' : 'playerTwoScore']: newScore }
+          : game
+      )
+    );
+  };
+
+  // Check if all games are complete
+  const isAllGamesComplete = games.every(game => 
+    game.playerOneScore >= pointsToWin || game.playerTwoScore >= pointsToWin
+  );
+
+  // Handle match submission
+  const handleSubmitMatch = () => {
+    if (!isAllGamesComplete) {
+      toast({
+        title: "Match Incomplete",
+        description: "Please complete all games before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+    handleSubmit(form.getValues());
+  };
+
   // Calculate match winner based on games
   const calculateMatchWinner = (): 1 | 2 | null => {
     const playerOneWins = games.filter(game => game.playerOneScore > game.playerTwoScore).length;
@@ -418,6 +448,15 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         matchType: isAdmin ? (selectedCompetitionId ? "tournament" : "casual") : "casual",
         competitionId: selectedCompetitionId,
         winnerId: winner === 1 ? playerOneData.id : playerTwoData.id,
+        scoringSystem: "standard" as const,
+        pointsToWin,
+        players: [playerOneData, playerTwoData],
+        gameScores: games.map((game, index) => ({
+          gameNumber: index + 1,
+          playerOneScore: game.playerOneScore,
+          playerTwoScore: game.playerTwoScore,
+          winnerId: game.playerOneScore > game.playerTwoScore ? playerOneData.id : playerTwoData.id
+        })),
         games: games.map((game, index) => ({
           gameNumber: index + 1,
           playerOneScore: game.playerOneScore,
@@ -649,11 +688,15 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                   </div>
                 </div>
                 {isAdmin && (
-                  <DialogPlayerSelect
-                    trigger={<Button variant="ghost" size="sm">Change</Button>}
-                    onPlayerSelect={(player) => setPlayerOneData(player)}
-                    excludePlayerIds={[playerTwoData?.id].filter(Boolean) as number[]}
-                  />
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Admin player selection will be available soon",
+                      variant: "default",
+                    });
+                  }}>
+                    Change
+                  </Button>
                 )}
               </div>
             ) : (
@@ -967,6 +1010,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                         : 'In Progress'
                     )}
                   </Badge>
+                </div>
                 {/* Score Input */}
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">

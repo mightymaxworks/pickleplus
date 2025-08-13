@@ -72,8 +72,8 @@ router.get('/user-profile', isAuthenticated, async (req: Request, res: Response)
       level: user.level || 1,
       xp: user.xp || 0,
       avatarUrl: user.avatarUrl || '',
-      // Use passportId instead of passportCode if needed
-      passportId: user.passportId || '',
+      // Use passportCode instead of passportId
+      passportCode: user.passportCode || '',
       duprRating: user.duprRating || 0,
       // Use location instead of primaryLocation
       location: user.location || '',
@@ -125,7 +125,7 @@ router.get('/match-history', isAuthenticated, async (req: Request, res: Response
     }
     
     // Get match statistics for each match - provide fallback for missing methods
-    const matchesWithStats = await Promise.all(matches.map(async (match) => {
+    const matchesWithStats = await Promise.all(matches.map(async (match: any) => {
       let stats = null;
       let impacts = [];
       
@@ -275,8 +275,16 @@ router.get('/drill-recommendations', isAuthenticated, async (req: Request, res: 
       });
     }
     
-    // Get level for the target dimension
-    const level = courtiqRatings[targetDimension];
+    // Get level for the target dimension with mapping
+    const dimensionMap: Record<string, string> = {
+      'TECH': 'technical',
+      'TACT': 'tactical', 
+      'PHYS': 'physical',
+      'MENT': 'mental'
+    };
+    
+    const mappedDimension = dimensionMap[targetDimension] || targetDimension.toLowerCase();
+    const level = (courtiqRatings as any)[mappedDimension] || 3;
     
     // Get drill recommendations with fallback
     let drills = [];
