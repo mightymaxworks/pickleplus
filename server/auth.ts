@@ -439,6 +439,84 @@ export function setupAuth(app: Express) {
 
   // Authentication routes
   
+  // Password reset request endpoint
+  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Don't reveal whether email exists for security
+        return res.status(200).json({ 
+          message: "If an account with that email exists, a password reset link has been sent" 
+        });
+      }
+      
+      // Generate password reset token
+      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+      
+      // Store reset token in database
+      await storage.createPasswordResetToken(user.id, resetToken, resetExpires);
+      
+      // For now, return the reset token (in production, send via email)
+      console.log(`[Auth] Password reset token for ${email}: ${resetToken}`);
+      
+      res.status(200).json({ 
+        message: "If an account with that email exists, a password reset link has been sent",
+        // Development only - remove in production
+        ...(process.env.NODE_ENV !== 'production' && { resetToken, resetLink: `/reset-password?token=${resetToken}` })
+      });
+    } catch (error) {
+      console.error('[Auth] Error in forgot-password:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Password reset endpoint
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+      
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+      }
+      
+      // Verify reset token
+      const resetData = await storage.getPasswordResetToken(token);
+      
+      if (!resetData || new Date() > resetData.expiresAt) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update user password
+      await storage.updateUserPassword(resetData.userId, hashedPassword);
+      
+      // Delete used reset token
+      await storage.deletePasswordResetToken(token);
+      
+      console.log(`[Auth] Password reset successful for user ID: ${resetData.userId}`);
+      
+      res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error('[Auth] Error in reset-password:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   // Register route
   app.post("/api/auth/register", async (req, res, next) => {
     try {

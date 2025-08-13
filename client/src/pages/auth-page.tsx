@@ -447,6 +447,16 @@ export default function AuthPage() {
                               t('auth.signIn', 'Sign In')
                             )}
                           </Button>
+                          
+                          {/* Forgot Password Link */}
+                          <div className="text-center">
+                            <a
+                              href="/forgot-password"
+                              className="text-sm text-gray-600 hover:text-orange-600 transition-colors duration-200"
+                            >
+                              {t('auth.forgotPassword', 'Forgot your password?')}
+                            </a>
+                          </div>
                         </form>
                       </Form>
                     </CardContent>

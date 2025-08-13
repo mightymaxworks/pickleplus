@@ -201,6 +201,16 @@ export const userFeatureFlags = pgTable('user_feature_flags', {
   enabledAt: timestamp('enabled_at').defaultNow(),
 });
 
+// Password reset tokens table
+export const passwordResetTokens = pgTable('password_reset_tokens', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  token: varchar('token', { length: 255 }).notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  usedAt: timestamp('used_at'),
+});
+
 // Relations for charge card system
 export const chargeCardPurchasesRelations = relations(chargeCardPurchases, ({ one, many }) => ({
   organizer: one(users, {
@@ -245,6 +255,7 @@ export const insertChargeCardAllocationSchema = createInsertSchema(chargeCardAll
 export const insertChargeCardBalanceSchema = createInsertSchema(chargeCardBalances);
 export const insertChargeCardTransactionSchema = createInsertSchema(chargeCardTransactions);
 export const insertUserFeatureFlagSchema = createInsertSchema(userFeatureFlags);
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens);
 
 // Types for charge card system
 export type ChargeCardPurchase = typeof chargeCardPurchases.$inferSelect;
@@ -257,6 +268,8 @@ export type ChargeCardTransaction = typeof chargeCardTransactions.$inferSelect;
 export type InsertChargeCardTransaction = z.infer<typeof insertChargeCardTransactionSchema>;
 export type UserFeatureFlag = typeof userFeatureFlags.$inferSelect;
 export type InsertUserFeatureFlag = z.infer<typeof insertUserFeatureFlagSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {

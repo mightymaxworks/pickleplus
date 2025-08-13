@@ -6,6 +6,7 @@ import {
   activities, type InsertActivity,
   chargeCardPurchases, chargeCardAllocations, chargeCardBalances, chargeCardTransactions, userFeatureFlags,
   coachingSessionMatches, coachMatchInput, matchPcpAssessments, pointsAllocationExplanation, coachStudentProgress,
+  passwordResetTokens,
   // Sprint 1: Curriculum Management imports
   drillLibrary, curriculumTemplates, lessonPlans, sessionGoals, drillCategories,
   type DrillLibrary, type InsertDrillLibrary,
@@ -119,8 +120,8 @@ export interface IStorage extends CommunityStorage {
   searchPlayersByMultipleFields(searchTerm: string): Promise<User[]>;
   
   // Password reset operations
-  createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void>;
-  getPasswordResetToken(token: string): Promise<{ email: string; expiresAt: Date } | undefined>;
+  createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void>;
+  getPasswordResetToken(token: string): Promise<{ userId: number; expiresAt: Date } | undefined>;
   deletePasswordResetToken(token: string): Promise<void>;
   
   // Profile completion tracking
@@ -789,23 +790,36 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  // Password reset operations - implemented as memory store for now
-  private passwordResetTokens = new Map<string, { email: string; expiresAt: Date }>();
-
-  async createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<void> {
-    this.passwordResetTokens.set(token, { email, expiresAt });
+  // Password reset operations - implemented using database
+  async createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void> {
+    await db.insert(passwordResetTokens).values({
+      userId,
+      token,
+      expiresAt,
+    });
   }
 
-  async getPasswordResetToken(token: string): Promise<{ email: string; expiresAt: Date } | undefined> {
-    const tokenData = this.passwordResetTokens.get(token);
-    if (tokenData && tokenData.expiresAt > new Date()) {
-      return tokenData;
+  async getPasswordResetToken(token: string): Promise<{ userId: number; expiresAt: Date } | undefined> {
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token))
+      .where(isNull(passwordResetTokens.usedAt));
+
+    if (resetToken && resetToken.expiresAt > new Date()) {
+      return {
+        userId: resetToken.userId,
+        expiresAt: resetToken.expiresAt,
+      };
     }
     return undefined;
   }
 
   async deletePasswordResetToken(token: string): Promise<void> {
-    this.passwordResetTokens.delete(token);
+    await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.token, token));
   }
 
   async getProfileCompletion(userId: number): Promise<ProfileCompletionTracking | undefined> {
