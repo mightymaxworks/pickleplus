@@ -286,6 +286,16 @@ export default function NewAuthPage() {
                         >
                           {isLoading ? t('auth.loggingIn', 'Signing In...') : t('auth.signInToDashboard', 'Sign In to Dashboard')}
                         </Button>
+                        
+                        {/* Forgot Password Link */}
+                        <div className="text-center">
+                          <a
+                            href="/forgot-password"
+                            className="text-sm text-gray-600 hover:text-orange-600 transition-colors duration-200 inline-block mt-2"
+                          >
+                            {t('auth.forgotPassword', 'Forgot your password?')}
+                          </a>
+                        </div>
                       </form>
                     </Form>
                   </TabsContent>
