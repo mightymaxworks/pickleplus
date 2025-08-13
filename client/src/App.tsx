@@ -869,6 +869,13 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  <Route path="/admin/password-reset">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./pages/admin/password-reset-management')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   <Route path="/admin/bug-reports">
                     {(params) => (
                       <AdminProtectedRoute>

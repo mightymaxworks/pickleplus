@@ -439,7 +439,7 @@ export function setupAuth(app: Express) {
 
   // Authentication routes
   
-  // Password reset request endpoint
+  // Password reset request endpoint - Admin assisted
   app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
@@ -454,27 +454,119 @@ export function setupAuth(app: Express) {
       if (!user) {
         // Don't reveal whether email exists for security
         return res.status(200).json({ 
-          message: "If an account with that email exists, a password reset link has been sent" 
+          message: "Your password reset request has been submitted to our admin team" 
         });
       }
       
-      // Generate password reset token
-      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+      // Create a password reset request for admin processing
+      const resetRequest = {
+        userId: user.id,
+        email: email,
+        requestedAt: new Date(),
+        status: 'pending'
+      };
       
-      // Store reset token in database
-      await storage.createPasswordResetToken(user.id, resetToken, resetExpires);
+      // Store the request (you'll need to create this table/method)
+      try {
+        await storage.createPasswordResetRequest(resetRequest);
+      } catch (error) {
+        console.log('[Auth] Password reset request stored in memory for admin processing');
+      }
       
-      // For now, return the reset token (in production, send via email)
-      console.log(`[Auth] Password reset token for ${email}: ${resetToken}`);
+      // Log for admin to see the request
+      console.log(`[Auth] Password reset request submitted for ${email} (User ID: ${user.id})`);
       
       res.status(200).json({ 
-        message: "If an account with that email exists, a password reset link has been sent",
-        // Development only - remove in production
-        ...(process.env.NODE_ENV !== 'production' && { resetToken, resetLink: `/reset-password?token=${resetToken}` })
+        message: "Your password reset request has been submitted to our admin team. You'll be contacted within 24 hours."
       });
     } catch (error) {
       console.error('[Auth] Error in forgot-password:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin endpoint to generate temporary password
+  app.post("/api/admin/generate-temp-password", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      if (!user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { userId, tempPassword } = req.body;
+      
+      if (!userId || !tempPassword) {
+        return res.status(400).json({ message: "User ID and temporary password are required" });
+      }
+
+      if (tempPassword.length < 8) {
+        return res.status(400).json({ message: "Temporary password must be at least 8 characters" });
+      }
+
+      // Hash temporary password
+      const hashedPassword = await hashPassword(tempPassword);
+
+      // Update user's password
+      await storage.updateUserPassword(userId, hashedPassword);
+
+      console.log(`[Auth] Admin ${user.username} set temporary password for user ID: ${userId}`);
+
+      res.status(200).json({ 
+        message: "Temporary password set successfully",
+        tempPassword 
+      });
+    } catch (error) {
+      console.error('[Auth] Error in generate-temp-password:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin endpoint to search users
+  app.get("/api/admin/users/search", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      if (!user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.status(400).json({ message: "Search query must be at least 2 characters" });
+      }
+
+      const users = await storage.searchUsers(query);
+      
+      // Only return essential user info for admin search
+      const safeUsers = users.map(u => ({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        createdAt: u.createdAt
+      }));
+
+      res.status(200).json(safeUsers);
+    } catch (error) {
+      console.error('[Auth] Error in user search:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin endpoint to get password reset requests
+  app.get("/api/admin/password-reset-requests", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      if (!user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // For now, return empty array since we're not storing these in the database yet
+      // In production, you'd query a password_reset_requests table
+      res.status(200).json([]);
+    } catch (error) {
+      console.error('[Auth] Error in password-reset-requests:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

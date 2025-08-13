@@ -41,19 +41,14 @@ export default function ForgotPasswordPage() {
 
       if (response.ok) {
         setSubmitted(true);
-        
-        // In development, show the reset link
-        if (data.resetLink) {
-          toast({
-            title: "Reset Link Generated (Development Only)",
-            description: `Reset link: ${data.resetLink}`,
-            duration: 10000,
-          });
-        }
+        toast({
+          title: "Request Submitted",
+          description: "Your password reset request has been submitted to our admin team. You'll be contacted within 24 hours.",
+        });
       } else {
         toast({
           title: "Error",
-          description: data.message || "Failed to send reset email",
+          description: data.message || "Failed to submit request",
           variant: "destructive",
         });
       }
@@ -70,32 +65,24 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-3 bg-green-100 rounded-full w-fit">
-              <Mail className="h-6 w-6 text-green-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="text-center space-y-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <Mail className="w-8 h-8 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Check Your Email</CardTitle>
-            <CardDescription>
-              If an account with that email exists, a password reset link has been sent
+            <CardTitle className="text-2xl font-bold text-gray-900">Request Submitted</CardTitle>
+            <CardDescription className="text-gray-600">
+              Your password reset request has been submitted to our admin team. You'll be contacted within 24 hours with a temporary password.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Click the link in your email to reset your password. If you don't see the email, check your spam folder.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="text-center pt-4">
-              <Link href="/auth">
-                <Button variant="outline" className="w-full">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Login
-                </Button>
-              </Link>
-            </div>
+          <CardContent>
+            <Link href="/auth">
+              <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Login
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
@@ -103,52 +90,67 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">Forgot Password</CardTitle>
-          <CardDescription>
-            Enter your email address and we'll send you a reset link
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center space-y-4">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
+            <Mail className="w-8 h-8 text-orange-600" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">Password Reset</CardTitle>
+          <CardDescription className="text-gray-600">
+            Enter your email address and we'll help you reset your password through our admin team.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertDescription>
+              Since we don't have email service configured, our admin team will manually assist with password resets. 
+              This typically takes less than 24 hours.
+            </AlertDescription>
+          </Alert>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
                 type="email"
+                placeholder="your.email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                disabled={isLoading}
                 required
+                disabled={isLoading}
+                className="mt-1"
               />
             </div>
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
+
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+              disabled={isLoading || !email}
+            >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Sending Reset Link...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting Request...
                 </>
               ) : (
                 <>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Reset Link
+                  <Mail className="w-4 h-4 mr-2" />
+                  Submit Reset Request
                 </>
               )}
             </Button>
-            
-            <div className="text-center pt-4">
-              <Link href="/auth">
-                <Button variant="outline" className="w-full">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Login
-                </Button>
-              </Link>
-            </div>
           </form>
+
+          <div className="text-center">
+            <Link href="/auth">
+              <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Login
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -20,7 +20,6 @@ export const translations = {
     
     // Navigation
     dashboard: "Dashboard",
-    recordMatch: "Record Match",
     rankings: "Rankings",
     myProfile: "My Profile",
     communities: "Communities",
@@ -48,6 +47,7 @@ export const translations = {
     alreadyHaveAccount: "Already have an account?",
     dontHaveAccount: "Don't have an account?",
     signUp: "Sign Up",
+    forgotPassword: "Forgot Password?",
     
     // Dashboard
     welcomeBack: "Welcome back",
@@ -115,7 +115,6 @@ export const translations = {
     
     // Navigation
     dashboard: "仪表板",
-    recordMatch: "记录比赛",
     rankings: "排名",
     myProfile: "我的资料",
     communities: "社区",
@@ -143,6 +142,7 @@ export const translations = {
     alreadyHaveAccount: "已有账户？",
     dontHaveAccount: "还没有账户？",
     signUp: "注册",
+    forgotPassword: "忘记密码？",
     
     // Dashboard
     welcomeBack: "欢迎回来",

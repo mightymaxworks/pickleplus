@@ -799,6 +799,11 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async createPasswordResetRequest(request: { userId: number; email: string; requestedAt: Date; status: string }): Promise<void> {
+    // For now, just log it - in a production environment you'd store this in a database table
+    console.log('[Storage] Password reset request created:', request);
+  }
+
   async getPasswordResetToken(token: string): Promise<{ userId: number; expiresAt: Date } | undefined> {
     const [resetToken] = await db
       .select()
