@@ -45,7 +45,12 @@ interface BulkMatchRow {
   isDoubles: boolean;
   team1Score: number;
   team2Score: number;
-  gameScores: string; // JSON format: [{"team1": 11, "team2": 9}, {"team1": 11, "team2": 7}]
+  game1Team1Score?: number;
+  game1Team2Score?: number;
+  game2Team1Score?: number;
+  game2Team2Score?: number;
+  game3Team1Score?: number;
+  game3Team2Score?: number;
   location?: string;
   notes?: string;
 }
@@ -79,7 +84,12 @@ router.get('/template', isAuthenticated, async (req, res) => {
         'Is Doubles Match (TRUE/FALSE)': 'TRUE',
         'Team 1 Score': 2,
         'Team 2 Score': 1,
-        'Game Scores (JSON format)': '[{"team1": 11, "team2": 9}, {"team1": 11, "team2": 7}, {"team1": 9, "team2": 11}]',
+        'Game 1 Team 1 Score': 11,
+        'Game 1 Team 2 Score': 9,
+        'Game 2 Team 1 Score': 11,
+        'Game 2 Team 2 Score': 7,
+        'Game 3 Team 1 Score': 9,
+        'Game 3 Team 2 Score': 11,
         'Location (optional)': 'Court 1',
         'Notes (optional)': 'Doubles match with date overrides for all players'
       },
@@ -101,7 +111,12 @@ router.get('/template', isAuthenticated, async (req, res) => {
         'Is Doubles Match (TRUE/FALSE)': 'FALSE',
         'Team 1 Score': 2,
         'Team 2 Score': 0,
-        'Game Scores (JSON format)': '[{"team1": 11, "team2": 8}, {"team1": 11, "team2": 6}]',
+        'Game 1 Team 1 Score': 11,
+        'Game 1 Team 2 Score': 8,
+        'Game 2 Team 1 Score': 11,
+        'Game 2 Team 2 Score': 6,
+        'Game 3 Team 1 Score': '',
+        'Game 3 Team 2 Score': '',
         'Location (optional)': 'Tournament Court A',
         'Notes (optional)': 'Singles match - blank dates will NOT override existing user data'
       }
@@ -130,7 +145,12 @@ router.get('/template', isAuthenticated, async (req, res) => {
       { wch: 20 }, // Is Doubles
       { wch: 12 }, // Team 1 Score
       { wch: 12 }, // Team 2 Score
-      { wch: 40 }, // Game Scores
+      { wch: 15 }, // Game 1 Team 1 Score
+      { wch: 15 }, // Game 1 Team 2 Score
+      { wch: 15 }, // Game 2 Team 1 Score
+      { wch: 15 }, // Game 2 Team 2 Score
+      { wch: 15 }, // Game 3 Team 1 Score
+      { wch: 15 }, // Game 3 Team 2 Score
       { wch: 20 }, // Location
       { wch: 30 }  // Notes
     ];
@@ -206,7 +226,12 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
           isDoubles: String(row['Is Doubles Match (TRUE/FALSE)']).toUpperCase() === 'TRUE',
           team1Score: Number(row['Team 1 Score']),
           team2Score: Number(row['Team 2 Score']),
-          gameScores: row['Game Scores (JSON format)'],
+          game1Team1Score: row['Game 1 Team 1 Score'] ? Number(row['Game 1 Team 1 Score']) : undefined,
+          game1Team2Score: row['Game 1 Team 2 Score'] ? Number(row['Game 1 Team 2 Score']) : undefined,
+          game2Team1Score: row['Game 2 Team 1 Score'] ? Number(row['Game 2 Team 1 Score']) : undefined,
+          game2Team2Score: row['Game 2 Team 2 Score'] ? Number(row['Game 2 Team 2 Score']) : undefined,
+          game3Team1Score: row['Game 3 Team 1 Score'] ? Number(row['Game 3 Team 1 Score']) : undefined,
+          game3Team2Score: row['Game 3 Team 2 Score'] ? Number(row['Game 3 Team 2 Score']) : undefined,
           location: row['Location (optional)'] || undefined,
           notes: row['Notes (optional)'] || undefined
         };
@@ -314,12 +339,23 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
           }
         }
 
-        // Parse game scores
-        let gameScores;
-        try {
-          gameScores = JSON.parse(matchData.gameScores);
-        } catch (error) {
-          results.errors.push(`Row ${i + 2}: Invalid game scores JSON format`);
+        // Build game scores array from individual game columns
+        const gameScores = [];
+        
+        // Add games that have scores
+        if (matchData.game1Team1Score !== undefined && matchData.game1Team2Score !== undefined) {
+          gameScores.push({ team1: matchData.game1Team1Score, team2: matchData.game1Team2Score });
+        }
+        if (matchData.game2Team1Score !== undefined && matchData.game2Team2Score !== undefined) {
+          gameScores.push({ team1: matchData.game2Team1Score, team2: matchData.game2Team2Score });
+        }
+        if (matchData.game3Team1Score !== undefined && matchData.game3Team2Score !== undefined) {
+          gameScores.push({ team1: matchData.game3Team1Score, team2: matchData.game3Team2Score });
+        }
+
+        // Validate we have at least one game
+        if (gameScores.length === 0) {
+          results.errors.push(`Row ${i + 2}: At least one game score is required`);
           results.failed++;
           continue;
         }
