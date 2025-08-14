@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { isAuthenticated } from '../auth';
+import { storage } from '../storage';
 
 const router = Router();
 
@@ -132,6 +133,86 @@ function generateDemoLeaderboardData(
   return processedPlayers;
 }
 
+// Get real leaderboard data from database
+async function getRealLeaderboardData(
+  format: string, 
+  division: string, 
+  gender: string, 
+  searchTerm?: string,
+  currentUserId?: number
+): Promise<LeaderboardEntry[]> {
+  try {
+    console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender}`);
+    
+    // Get all users with their ranking points and basic info
+    const allUsers = await storage.getAllUsers();
+    
+    let processedPlayers = allUsers
+      .filter(user => user.rankingPoints > 0) // Only show users with ranking points
+      .map((user, index) => {
+        const age = user.dateOfBirth ? 
+          Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
+          25; // Default age if not provided
+        
+        return {
+          id: user.id,
+          displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
+          username: user.username,
+          avatar: user.profileImageUrl,
+          points: user.rankingPoints || 0,
+          matchesPlayed: user.matchesPlayed || 0,
+          winRate: user.matchesPlayed > 0 ? Math.round(((user.wins || 0) / user.matchesPlayed) * 100 * 10) / 10 : 0,
+          gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
+          age: age,
+          division: getAgeGroupFromAge(age),
+          ranking: index + 1,
+          isCurrentUser: currentUserId === user.id
+        };
+      })
+      .filter(player => {
+        // Filter by gender
+        if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
+        if (gender !== 'all' && player.gender !== gender) return false;
+        
+        // Filter by division
+        if (division === 'open') return true;
+        
+        const divisionMinAge = {
+          '35+': 35,
+          '50+': 50,
+          '60+': 60,
+          '70+': 70
+        }[division] || 0;
+        
+        return player.age >= divisionMinAge;
+      })
+      .sort((a, b) => {
+        // Sort by points descending (primary), then by win rate, then by matches played
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        return b.matchesPlayed - a.matchesPlayed;
+      })
+      .map((player, index) => ({ ...player, ranking: index + 1 }));
+
+    // Apply search filter if provided
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      processedPlayers = processedPlayers.filter(player => 
+        player.displayName.toLowerCase().includes(searchLower) ||
+        player.username.toLowerCase().includes(searchLower)
+      );
+    }
+
+    console.log(`[LEADERBOARD] Found ${processedPlayers.length} players with ranking points`);
+    return processedPlayers;
+    
+  } catch (error) {
+    console.error('[LEADERBOARD] Error fetching real data:', error);
+    // Fallback to demo data in case of database issues
+    return generateDemoLeaderboardData(format, division, gender, searchTerm, currentUserId);
+  }
+}
+
 // Enhanced leaderboard endpoint with age group, gender separation, search, and pagination
 router.get('/:format', async (req, res) => {
   try {
@@ -158,8 +239,8 @@ router.get('/:format', async (req, res) => {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    // Generate full dataset
-    const fullLeaderboardData = generateDemoLeaderboardData(format, division, gender, search, currentUserId);
+    // Get real leaderboard data from database
+    const fullLeaderboardData = await getRealLeaderboardData(format, division, gender, search, currentUserId);
     
     // Find current user position in full dataset (before pagination)
     let currentUserPosition = undefined;
