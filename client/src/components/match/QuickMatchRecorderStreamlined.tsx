@@ -190,8 +190,28 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('Search results:', data);
-        setPlayerSearchResults(data.users || []);
+        // Handle both formats: array directly or { users: [] }
+        const rawResults = Array.isArray(data) ? data : (data.users || []);
+        
+        // Map the results to the expected format for the UI
+        const results = rawResults.map((player: any) => ({
+          id: player.id,
+          username: player.username,
+          displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim(),
+          firstName: player.firstName,
+          lastName: player.lastName,
+          avatarInitials: player.avatarInitials || 
+                         player.displayName?.substring(0, 2) || 
+                         `${player.firstName?.[0] || ''}${player.lastName?.[0] || ''}` || 
+                         player.username.substring(0, 2).toUpperCase(),
+          passportId: player.passportCode || player.passportId,
+          currentRating: player.rankingPoints || player.currentRating || 0,
+          gender: player.gender,
+          dateOfBirth: player.dateOfBirth,
+          avatarUrl: player.profileImageUrl || player.avatarUrl
+        }));
+        
+        setPlayerSearchResults(results);
       } else {
         console.error('Search failed:', response.status, response.statusText);
       }
