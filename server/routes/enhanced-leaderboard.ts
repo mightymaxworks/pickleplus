@@ -188,6 +188,7 @@ async function getRealLeaderboardData(
         };
       })
       .filter(player => player.points > 0) // Only show players with points in this format
+      .filter(player => !player.displayName.includes('Test')) // Exclude test users
       .filter(player => {
         // Filter by gender
         if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;

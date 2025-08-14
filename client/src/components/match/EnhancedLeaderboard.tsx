@@ -53,7 +53,7 @@ interface EnhancedLeaderboardProps {
 
 export default function EnhancedLeaderboard({ format = "singles" }: EnhancedLeaderboardProps) {
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
-  const [selectedGender, setSelectedGender] = useState<string>("all");
+  const [selectedGender, setSelectedGender] = useState<string>("male");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
@@ -77,7 +77,6 @@ export default function EnhancedLeaderboard({ format = "singles" }: EnhancedLead
   ];
 
   const genderOptions = [
-    { value: "all", label: "All Genders" },
     { value: "male", label: "Male" },
     { value: "female", label: "Female" }
   ];
