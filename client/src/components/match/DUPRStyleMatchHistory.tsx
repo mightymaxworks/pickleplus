@@ -31,21 +31,18 @@ const DUPRStyleMatchHistory: React.FC<DUPRMatchHistoryProps> = ({
     );
   }
 
-  const formatScore = (scores: string | any[]): string => {
-    if (!scores) return 'N/A';
-    if (typeof scores === 'string') {
-      try {
-        const parsed = JSON.parse(scores);
-        if (Array.isArray(parsed)) {
-          return parsed.map(game => `${game.playerOneScore}-${game.playerTwoScore}`).join(', ');
-        }
-      } catch {
-        return scores;
-      }
+  const formatScore = (match: any): string => {
+    // First, try to extract game scores from notes field
+    const gameScoresMatch = match.notes?.match(/\[Game Scores: ([^\]]+)\]/);
+    if (gameScoresMatch) {
+      return gameScoresMatch[1]; // Return the extracted scores like "8-15" or "11-9, 15-13"
     }
-    if (Array.isArray(scores)) {
-      return scores.map(game => `${game.playerOneScore}-${game.playerTwoScore}`).join(', ');
+    
+    // Fallback: use scorePlayerOne and scorePlayerTwo if they contain actual game scores
+    if (match.scorePlayerOne && match.scorePlayerTwo) {
+      return `${match.scorePlayerOne}-${match.scorePlayerTwo}`;
     }
+    
     return 'N/A';
   };
 
@@ -212,7 +209,7 @@ const DUPRStyleMatchHistory: React.FC<DUPRMatchHistoryProps> = ({
                     {/* Game Scores */}
                     <div className="bg-white rounded-lg px-3 py-2 border">
                       <p className="text-sm font-mono font-bold">
-                        Score: {formatScore(match.scores)}
+                        Score: {formatScore(match)}
                       </p>
                     </div>
                     
