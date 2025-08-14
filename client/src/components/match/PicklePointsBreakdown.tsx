@@ -16,10 +16,9 @@ interface Player {
 
 interface PointsCalculation {
   basePoints: number;
-  tournamentBonus: number;
-  doublesBonus: number;
-  ageGroupBonus?: number;
-  streakBonus?: number;
+  tournamentMultiplier: number;
+  ageGroupMultiplier?: number;
+  genderMultiplier?: number;
   total: number;
   reason: string;
 }
@@ -141,47 +140,36 @@ export function PicklePointsBreakdown({
               <span className="font-semibold text-green-600">+{calculation.basePoints}</span>
             </div>
             
-            {/* Tournament Bonus */}
-            {calculation.tournamentBonus > 0 && (
+            {/* Tournament Multiplier */}
+            {calculation.tournamentMultiplier > 1.0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm flex items-center">
                   <Trophy className="h-3 w-3 mr-1" />
-                  Tournament Bonus
+                  Tournament Multiplier ({calculation.tournamentMultiplier}x)
                 </span>
-                <span className="font-semibold text-blue-600">+{calculation.tournamentBonus}</span>
+                <span className="font-semibold text-blue-600">×{calculation.tournamentMultiplier}</span>
               </div>
             )}
             
-            {/* Doubles Bonus */}
-            {calculation.doublesBonus > 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm flex items-center">
-                  <Users className="h-3 w-3 mr-1" />
-                  Doubles Bonus
-                </span>
-                <span className="font-semibold text-purple-600">+{calculation.doublesBonus}</span>
-              </div>
-            )}
-            
-            {/* Age Group Bonus */}
-            {calculation.ageGroupBonus && calculation.ageGroupBonus > 0 && (
+            {/* Age Group Multiplier */}
+            {calculation.ageGroupMultiplier && calculation.ageGroupMultiplier > 1.0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm flex items-center">
                   <Calendar className="h-3 w-3 mr-1" />
-                  Age Group Bonus
+                  Age Group Multiplier ({calculation.ageGroupMultiplier}x)
                 </span>
-                <span className="font-semibold text-orange-600">+{calculation.ageGroupBonus}</span>
+                <span className="font-semibold text-orange-600">×{calculation.ageGroupMultiplier}</span>
               </div>
             )}
             
-            {/* Streak Bonus */}
-            {calculation.streakBonus && calculation.streakBonus > 0 && (
+            {/* Gender Multiplier */}
+            {calculation.genderMultiplier && calculation.genderMultiplier > 1.0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm flex items-center">
-                  <Star className="h-3 w-3 mr-1" />
-                  Win Streak Bonus
+                  <Users className="h-3 w-3 mr-1" />
+                  Gender Balance Multiplier ({calculation.genderMultiplier}x)
                 </span>
-                <span className="font-semibold text-yellow-600">+{calculation.streakBonus}</span>
+                <span className="font-semibold text-purple-600">×{calculation.genderMultiplier}</span>
               </div>
             )}
           </div>
@@ -216,7 +204,7 @@ export function PicklePointsBreakdown({
         <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
           <strong>Algorithm:</strong> Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md
           <br />
-          Win: 3pts, Loss: 1pt, Tournament: +2pts, Doubles: +0.5pts
+          Base: Win 3pts, Loss 1pt | Multipliers: Tournament 2x, Age Group 1.2-1.6x, Gender Balance 1.15x
         </div>
       </CardContent>
     </Card>

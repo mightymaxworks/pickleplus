@@ -63,14 +63,12 @@ export function MatchScoreCard({
   // Calculate points based on PICKLE_PLUS_ALGORITHM_DOCUMENT
   const calculatePoints = (playerId: number, isWinner: boolean) => {
     const basePoints = isWinner ? 3 : 1;
-    const tournamentBonus = match.matchType === 'tournament' ? 2 : 0;
-    const doublesBonus = match.formatType === 'doubles' ? 0.5 : 0;
+    const tournamentMultiplier = match.matchType === 'tournament' ? 2.0 : 1.0;
     
     return {
       base: basePoints,
-      tournament: tournamentBonus,
-      doubles: doublesBonus,
-      total: basePoints + tournamentBonus + doublesBonus
+      multiplier: tournamentMultiplier,
+      total: basePoints * tournamentMultiplier
     };
   };
   

@@ -22,6 +22,11 @@ The PicklePlus algorithm uses **System B standardization** with conservative bas
 
 > **DECISION:** System B standardized across all platform components for consistent, sustainable point economy.
 
+> **IMPORTANT:** The Pickle+ algorithm does NOT include:
+> - Doubles bonuses (no +0.5 bonus for doubles matches)  
+> - Streak bonuses (no points for winning/losing streaks)
+> - These are implementation errors and should be removed from all code
+
 ### **Age Group Multipliers** ⚡ **CONFIRMED FAIR**
 
 Age-based multipliers reward senior participation and acknowledge physical demands:
