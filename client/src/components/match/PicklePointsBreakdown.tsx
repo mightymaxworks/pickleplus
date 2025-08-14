@@ -14,12 +14,12 @@ interface Player {
   level?: string;
 }
 
-interface PointsCalculation {
-  basePoints: number;
-  tournamentMultiplier: number;
-  ageGroupMultiplier?: number;
-  genderMultiplier?: number;
-  total: number;
+interface PicklePointsCalculation {
+  rankingPointsEarned: number;
+  conversionRate: number;
+  picklePointsFromMatch: number;
+  bonusPicklePoints?: number;
+  totalPicklePoints: number;
   reason: string;
 }
 
