@@ -780,8 +780,8 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <UserCircle className="h-5 w-5 text-blue-500" />
-            Players
+            <Users className="h-5 w-5 text-blue-500" />
+            Add Players
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
