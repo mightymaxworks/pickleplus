@@ -551,8 +551,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced Player Search API
-  app.get('/api/players/search', async (req: Request, res: Response) => {
+  // Enhanced Player Search API - requires authentication for security
+  app.get('/api/players/search', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { searchPlayers } = await import('./api/players/search');
       await searchPlayers(req, res);

@@ -53,6 +53,7 @@ import {
   AlertCircle,
   Info,
   Search,
+  X,
   CheckCircle2,
   Calendar,
   Loader2,
@@ -985,35 +986,56 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             <>
               <Separator />
               <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-500" />
-                  <h4 className="font-medium text-lg">Team Setup</h4>
-                  <Badge variant="secondary" className="ml-2">Doubles 2v2</Badge>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-purple-500" />
+                    <h4 className="font-medium text-lg">Team Setup</h4>
+                    <Badge variant="secondary" className="ml-2">Simultaneous Selection</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Select all 4 players
+                  </div>
                 </div>
                 
-                {/* Team 1 (Blue Team) */}
-                <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <Label className="text-base font-semibold text-blue-900">Team 1 (Blue)</Label>
+                <div className="text-sm text-muted-foreground p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-amber-600" />
+                    <span className="font-medium text-amber-800">
+                      Enhanced Team Selection: Pick all players for both teams at once. Each team needs 2 players.
+                    </span>
                   </div>
-                  
-                  <div className="space-y-3">
-                    {/* Team 1 Player 1 */}
-                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-blue-100 text-blue-600">
-                          {playerOneData?.avatarInitials || 'P1'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <p className="font-medium">{playerOneData?.displayName || playerOneData?.username || 'Player 1'}</p>
-                        <p className="text-sm text-muted-foreground">
-                          @{playerOneData?.username || 'Select player'}
-                        </p>
-                      </div>
-                      <Badge variant="outline">Player</Badge>
+                </div>
+                
+                {/* Simultaneous Team Display Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Team 1 (Blue Team) */}
+                  <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <Label className="text-base font-semibold text-blue-900">Team A (Blue)</Label>
+                      <Badge variant="outline" className="text-xs">2 Players</Badge>
                     </div>
+                    
+                    <div className="space-y-3">
+                      {/* Team 1 Player 1 */}
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                            {playerOneData?.avatarInitials || '1A'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{playerOneData?.displayName || playerOneData?.username || 'Player 1A'}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            @{playerOneData?.username || 'Not selected'}
+                          </p>
+                        </div>
+                        {isAdmin && playerOneData && (
+                          <Button variant="ghost" size="sm" onClick={() => setPlayerOneData(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     
                     {/* Team 1 Partner */}
                     {playerOnePartnerData ? (
