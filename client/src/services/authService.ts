@@ -29,7 +29,8 @@ export interface RegisterCredentials {
   confirmPassword?: string;
   firstName?: string;
   lastName?: string;
-  yearOfBirth?: number;
+  dateOfBirth?: string; // Changed from yearOfBirth to dateOfBirth for backend compatibility
+  gender?: string; // Added gender field for backend compatibility
   location?: string;
   playingSince?: string;
   skillLevel?: string;

@@ -258,7 +258,9 @@ export default function AuthPage() {
         email: data.email,
         password: data.password,
         confirmPassword: data.confirmPassword,
-        yearOfBirth: data.yearOfBirth,
+        // Convert yearOfBirth to dateOfBirth for backend compatibility
+        dateOfBirth: data.yearOfBirth ? `${data.yearOfBirth}-01-01` : undefined,
+        gender: undefined, // Add gender field for backend
         location: data.location,
         playingSince: data.playingSince,
         skillLevel: data.skillLevel,
