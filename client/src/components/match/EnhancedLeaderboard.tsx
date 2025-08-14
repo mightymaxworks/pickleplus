@@ -249,6 +249,43 @@ export default function EnhancedLeaderboard({ format = "singles" }: EnhancedLead
           </div>
         </div>
         
+        {/* Format Selection */}
+        <div className="mt-3">
+          <label className="text-xs font-medium text-orange-700 mb-2 block">Format</label>
+          <div className="flex gap-1">
+            <Button
+              variant={format === "singles" ? "default" : "outline"}
+              size="sm"
+              className={`h-7 text-xs px-3 flex-1 ${
+                format === "singles" 
+                  ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                  : "border-orange-200 text-orange-700 hover:bg-orange-50"
+              }`}
+              onClick={() => {
+                setFormat("singles");
+                setCurrentPage(1);
+              }}
+            >
+              Singles
+            </Button>
+            <Button
+              variant={format === "doubles" ? "default" : "outline"}
+              size="sm"
+              className={`h-7 text-xs px-3 flex-1 ${
+                format === "doubles" 
+                  ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                  : "border-orange-200 text-orange-700 hover:bg-orange-50"
+              }`}
+              onClick={() => {
+                setFormat("doubles");
+                setCurrentPage(1);
+              }}
+            >
+              Doubles
+            </Button>
+          </div>
+        </div>
+        
         <div className="text-xs text-orange-600 mt-2 text-center bg-orange-50 rounded px-2 py-1">
           {getAgeGroupLabel(selectedDivision, selectedGender)} • {format === "singles" ? "Singles" : 
                                   format === "mixed" ? "Mixed Doubles" : "Doubles"}
