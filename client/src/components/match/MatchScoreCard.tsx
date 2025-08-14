@@ -60,13 +60,25 @@ export function MatchScoreCard({
 }: MatchScoreCardProps) {
   const { t } = useLanguage();
   
-  const team1Score = parseInt(match.scorePlayerOne || '0');
-  const team2Score = parseInt(match.scorePlayerTwo || '0');
-  const isTeam1Winner = team1Score > team2Score;
-  
-  // Extract game scores from notes if available
+  // Extract actual game scores from notes if available
   const gameScoresMatch = match.notes?.match(/\[Game Scores: ([^\]]+)\]/);
   const gameScores = gameScoresMatch ? gameScoresMatch[1].split(', ') : [];
+  
+  // Use the actual game scores for display instead of games won
+  let team1Score = parseInt(match.scorePlayerOne || '0');
+  let team2Score = parseInt(match.scorePlayerTwo || '0');
+  
+  // If we have detailed game scores, use the final game score for display
+  if (gameScores.length > 0) {
+    const finalGameScore = gameScores[gameScores.length - 1]; // Get last game
+    const [finalTeam1Score, finalTeam2Score] = finalGameScore.split('-').map(s => parseInt(s.trim()));
+    if (!isNaN(finalTeam1Score) && !isNaN(finalTeam2Score)) {
+      team1Score = finalTeam1Score;
+      team2Score = finalTeam2Score;
+    }
+  }
+  
+  const isTeam1Winner = team1Score > team2Score;
   
   // Calculate Ranking Points (Competitive System) based on PICKLE_PLUS_ALGORITHM_DOCUMENT
   const calculateRankingPoints = (playerId: number, isWinner: boolean) => {
