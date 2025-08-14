@@ -57,24 +57,32 @@ export function RecentMatchesWidget({ className, limit = 3 }: RecentMatchesWidge
           <CardTitle className="flex items-center space-x-2">
             <Trophy className="h-5 w-5 text-emerald-600" />
             <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent font-bold">
-              PCP Verified Scores
+              {t('match.record')} - {t('profile.getStarted')}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <div className="rounded-full bg-emerald-100 p-3 mx-auto w-fit mb-4">
-              <Trophy className="h-8 w-8 text-emerald-600" />
+            <div className="rounded-full bg-gradient-to-br from-emerald-100 to-blue-50 p-4 mx-auto w-fit mb-6">
+              <Trophy className="h-10 w-10 text-emerald-600" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">No matches yet</h3>
-            <p className="text-gray-500 text-sm mb-4">
-              Record your first match to see your verified scores here
+            <h3 className="font-bold text-gray-900 mb-3 text-lg">
+              {t('dashboard.firstMatch.title')}
+            </h3>
+            <p className="text-gray-600 text-sm mb-6 max-w-sm mx-auto leading-relaxed">
+              {t('dashboard.firstMatch.encouragement')}
             </p>
-            <Link href="/record-match">
-              <Button className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white">
-                Record Match
-              </Button>
-            </Link>
+            <div className="space-y-3">
+              <Link href="/record-match">
+                <Button className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <Trophy className="h-5 w-5 mr-2" />
+                  {t('dashboard.firstMatch.recordButton')}
+                </Button>
+              </Link>
+              <div className="text-xs text-gray-500 mt-4">
+                {t('dashboard.firstMatch.benefits')}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

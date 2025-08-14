@@ -702,6 +702,12 @@ const translations: Record<Language, Record<string, string>> = {
     'stats.matches': 'Matches',
     'stats.loading': 'Loading...',
     
+    // Dashboard First Match Encouragement
+    'dashboard.firstMatch.title': 'Ready to Start Your Pickleball Journey?',
+    'dashboard.firstMatch.encouragement': 'Play your first match and record it to start tracking your progress, earning Pickle Points, and climbing the rankings!',
+    'dashboard.firstMatch.recordButton': 'Record My First Match',
+    'dashboard.firstMatch.benefits': '🏆 Earn ranking points • 🎯 Track progress • 🌟 Build your player profile',
+    
     // Tournament & Competition
     'tournament.upcoming': 'Upcoming Tournaments',
     'tournament.results': 'Tournament Results',
@@ -1565,23 +1571,23 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.joinPicklePlus': '加入 Pickle+',
     'auth.loginPlaceholder': '输入用户名或邮箱',
     
-    // Profile & Player Info
-    'profile.personalInfo': '个人信息',
-    'profile.statistics': '统计数据',
-    'profile.equipment': '装备',
+    // Profile & Player Info (duplicates removed)
     'profile.preferences': '偏好设置',
     'profile.achievements': '成就',
     'profile.updatePhoto': '更新照片',
     'profile.height': '身高',
-    'profile.weight': '体重',
-    'profile.dominantHand': '惯用手',
-    'profile.playingStyle': '比赛风格',
     
     // Dashboard Stats
     'stats.duprRating': 'DUPR评级',
     'stats.winRate': '胜率',
     'stats.matches': '比赛',
     'stats.loading': '加载中...',
+    
+    // Dashboard First Match Encouragement
+    'dashboard.firstMatch.title': '准备开始您的匹克球之旅？',
+    'dashboard.firstMatch.encouragement': '进行您的第一场比赛并记录下来，开始追踪进度、赚取匹克积分并攀登排名！',
+    'dashboard.firstMatch.recordButton': '记录我的第一场比赛',
+    'dashboard.firstMatch.benefits': '🏆 获得排名积分 • 🎯 追踪进度 • 🌟 建立球员档案',
 
     
     // Training & Facilities
@@ -1595,17 +1601,11 @@ const translations: Record<Language, Record<string, string>> = {
     'training.available': '可用',
     'training.full': '已满',
     
-    // Match Recording
-    'match.record': '记录比赛',
-    'match.opponent': '对手',
-    'match.score': '比分',
+    // Match Recording (duplicates removed)
     'match.result': '结果',
     'match.win': '胜利',
     'match.loss': '失败',
-    'match.date': '日期',
     'match.format': '比赛形式',
-    'match.singles': '单打',
-    'match.doubles': '双打',
     'match.mixed': '混双',
     
     // Time & Status
