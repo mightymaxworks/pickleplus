@@ -60,15 +60,38 @@ export function MatchScoreCard({
   const gameScoresMatch = match.notes?.match(/\[Game Scores: ([^\]]+)\]/);
   const gameScores = gameScoresMatch ? gameScoresMatch[1].split(', ') : [];
   
-  // Calculate points based on PICKLE_PLUS_ALGORITHM_DOCUMENT
-  const calculatePoints = (playerId: number, isWinner: boolean) => {
+  // Calculate Ranking Points (Competitive System) based on PICKLE_PLUS_ALGORITHM_DOCUMENT
+  const calculateRankingPoints = (playerId: number, isWinner: boolean) => {
     const basePoints = isWinner ? 3 : 1;
     const tournamentMultiplier = match.matchType === 'tournament' ? 2.0 : 1.0;
+    // Age/Gender multipliers would be calculated based on player data in real implementation
+    const ageMultiplier = 1.2; // Example multiplier
+    const genderMultiplier = 1.0; // Example multiplier
+    
+    const total = Math.round(basePoints * tournamentMultiplier * ageMultiplier * genderMultiplier);
     
     return {
-      base: basePoints,
-      multiplier: tournamentMultiplier,
-      total: basePoints * tournamentMultiplier
+      basePoints,
+      tournamentMultiplier,
+      ageMultiplier,
+      genderMultiplier,
+      total
+    };
+  };
+
+  // Calculate Pickle Points (Gamification System) 
+  const calculatePicklePoints = (rankingPoints: number) => {
+    const conversionRate = 1.5;
+    const picklePointsFromMatch = Math.ceil(rankingPoints * conversionRate);
+    const bonusPicklePoints = 2; // Example bonus
+    const totalPicklePoints = picklePointsFromMatch + bonusPicklePoints;
+    
+    return {
+      rankingPointsEarned: rankingPoints,
+      conversionRate,
+      picklePointsFromMatch,
+      bonusPicklePoints,
+      totalPicklePoints
     };
   };
   
@@ -376,70 +399,125 @@ export function MatchScoreCard({
           <>
             <Separator />
             <div className="space-y-4">
-              <h4 className="font-semibold flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4" />
-                <span>Pickle Points Allocation</span>
-              </h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Team 1 Points */}
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Team 1</h5>
-                  {team1Players.map(player => {
-                    if (!player) return null;
-                    const points = calculatePoints(player.id, isTeam1Winner);
-                    return (
-                      <div key={player.id} className="bg-gray-50 p-3 rounded">
-                        <div className="font-semibold text-sm">{formatPlayerName(player)}</div>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div>Base Points: +{points.base} ({isTeam1Winner ? 'Win' : 'Loss'})</div>
-                          {points.tournament > 0 && (
-                            <div>Tournament Bonus: +{points.tournament}</div>
-                          )}
-                          {points.doubles > 0 && (
-                            <div>Doubles Bonus: +{points.doubles}</div>
-                          )}
-                          <div className="font-semibold text-green-600">
-                            Total: +{points.total} Pickle Points
+              {/* Dual System Points Display */}
+              <div className="space-y-6">
+                {/* Ranking Points Section */}
+                <div>
+                  <h4 className="font-semibold flex items-center space-x-2 mb-3">
+                    <Trophy className="h-4 w-4 text-blue-600" />
+                    <span>Ranking Points (Competitive)</span>
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Team 1 Ranking Points */}
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-sm">Team 1</h5>
+                      {team1Players.map(player => {
+                        if (!player) return null;
+                        const rankingPoints = calculateRankingPoints(player.id, isTeam1Winner);
+                        return (
+                          <div key={player.id} className="bg-blue-50 p-3 rounded border border-blue-200">
+                            <div className="font-semibold text-sm">{formatPlayerName(player)}</div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <div>Base: {rankingPoints.basePoints} ({isTeam1Winner ? 'Win' : 'Loss'})</div>
+                              <div>Tournament: ×{rankingPoints.tournamentMultiplier}</div>
+                              <div>Age Group: ×{rankingPoints.ageMultiplier}</div>
+                              <div>Gender: ×{rankingPoints.genderMultiplier}</div>
+                              <div className="font-semibold text-blue-600 border-t pt-1">
+                                Total: {rankingPoints.total} Ranking Points
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+
+                    {/* Team 2 Ranking Points */}
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-sm">Team 2</h5>
+                      {team2Players.map(player => {
+                        if (!player) return null;
+                        const rankingPoints = calculateRankingPoints(player.id, !isTeam1Winner);
+                        return (
+                          <div key={player.id} className="bg-blue-50 p-3 rounded border border-blue-200">
+                            <div className="font-semibold text-sm">{formatPlayerName(player)}</div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <div>Base: {rankingPoints.basePoints} ({!isTeam1Winner ? 'Win' : 'Loss'})</div>
+                              <div>Tournament: ×{rankingPoints.tournamentMultiplier}</div>
+                              <div>Age Group: ×{rankingPoints.ageMultiplier}</div>
+                              <div>Gender: ×{rankingPoints.genderMultiplier}</div>
+                              <div className="font-semibold text-blue-600 border-t pt-1">
+                                Total: {rankingPoints.total} Ranking Points
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Team 2 Points */}
-                <div className="space-y-2">
-                  <h5 className="font-medium text-sm">Team 2</h5>
-                  {team2Players.map(player => {
-                    if (!player) return null;
-                    const points = calculatePoints(player.id, !isTeam1Winner);
-                    return (
-                      <div key={player.id} className="bg-gray-50 p-3 rounded">
-                        <div className="font-semibold text-sm">{formatPlayerName(player)}</div>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div>Base Points: +{points.base} ({!isTeam1Winner ? 'Win' : 'Loss'})</div>
-                          {points.tournament > 0 && (
-                            <div>Tournament Bonus: +{points.tournament}</div>
-                          )}
-                          {points.doubles > 0 && (
-                            <div>Doubles Bonus: +{points.doubles}</div>
-                          )}
-                          <div className="font-semibold text-green-600">
-                            Total: +{points.total} Pickle Points
+                {/* Pickle Points Section */}
+                <div>
+                  <h4 className="font-semibold flex items-center space-x-2 mb-3">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                    <span>Pickle Points (Gamification)</span>
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Team 1 Pickle Points */}
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-sm">Team 1</h5>
+                      {team1Players.map(player => {
+                        if (!player) return null;
+                        const rankingPoints = calculateRankingPoints(player.id, isTeam1Winner);
+                        const picklePoints = calculatePicklePoints(rankingPoints.total);
+                        return (
+                          <div key={player.id} className="bg-green-50 p-3 rounded border border-green-200">
+                            <div className="font-semibold text-sm">{formatPlayerName(player)}</div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <div>From Ranking: {picklePoints.rankingPointsEarned} × {picklePoints.conversionRate} = {picklePoints.picklePointsFromMatch}</div>
+                              <div>Bonus: +{picklePoints.bonusPicklePoints}</div>
+                              <div className="font-semibold text-green-600 border-t pt-1">
+                                Total: {picklePoints.totalPicklePoints} Pickle Points
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                        );
+                      })}
+                    </div>
 
-              {/* Algorithm Reference */}
-              <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded">
-                <strong>Algorithm Reference:</strong> Win: 3 points, Loss: 1 point, Tournament Bonus: +2, Doubles Bonus: +0.5
-                <br />
-                <em>Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md</em>
+                    {/* Team 2 Pickle Points */}
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-sm">Team 2</h5>
+                      {team2Players.map(player => {
+                        if (!player) return null;
+                        const rankingPoints = calculateRankingPoints(player.id, !isTeam1Winner);
+                        const picklePoints = calculatePicklePoints(rankingPoints.total);
+                        return (
+                          <div key={player.id} className="bg-green-50 p-3 rounded border border-green-200">
+                            <div className="font-semibold text-sm">{formatPlayerName(player)}</div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <div>From Ranking: {picklePoints.rankingPointsEarned} × {picklePoints.conversionRate} = {picklePoints.picklePointsFromMatch}</div>
+                              <div>Bonus: +{picklePoints.bonusPicklePoints}</div>
+                              <div className="font-semibold text-green-600 border-t pt-1">
+                                Total: {picklePoints.totalPicklePoints} Pickle Points
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Algorithm Reference */}
+                <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+                  <strong>Dual System Algorithm:</strong>
+                  <br />• <strong>Ranking Points:</strong> Win 3pts, Loss 1pt with Tournament (2x), Age Group (1.2-1.6x), Gender Balance (1.15x) multipliers
+                  <br />• <strong>Pickle Points:</strong> Converted from ranking points at 1.5x rate + activity bonuses
+                  <br />• <em>Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md</em>
+                </div>
               </div>
             </div>
           </>

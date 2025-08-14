@@ -94,17 +94,40 @@ export default function MatchScoreDemo() {
   const [showPointsBreakdown, setShowPointsBreakdown] = useState(true);
   const [compactMode, setCompactMode] = useState(false);
 
-  const calculatePointsForDemo = (playerId: number, isWinner: boolean) => {
+  // Calculate Ranking Points (Competitive System)
+  const calculateRankingPoints = (playerId: number, isWinner: boolean) => {
     const basePoints = isWinner ? 3 : 1;
-    const tournamentBonus = selectedMatch.matchType === 'tournament' ? 2 : 0;
-    const doublesBonus = selectedMatch.formatType === 'doubles' ? 0.5 : 0;
+    const tournamentMultiplier = selectedMatch.matchType === 'tournament' ? 2.0 : 1.0;
+    // Age/Gender multipliers would be calculated based on player data in real implementation
+    const ageMultiplier = 1.2; // Example for demo
+    const genderMultiplier = 1.0; // Example for demo
+    
+    const total = Math.round(basePoints * tournamentMultiplier * ageMultiplier * genderMultiplier);
     
     return {
       basePoints,
-      tournamentBonus,
-      doublesBonus,
-      total: basePoints + tournamentBonus + doublesBonus,
+      tournamentMultiplier,
+      ageMultiplier,
+      genderMultiplier,
+      total,
       reason: `${isWinner ? 'Win' : 'Loss'} in ${selectedMatch.matchType} ${selectedMatch.formatType}`
+    };
+  };
+
+  // Calculate Pickle Points (Gamification System)
+  const calculatePicklePoints = (rankingPoints: number, isWinner: boolean) => {
+    const conversionRate = 1.5; // 1.5x conversion rate
+    const picklePointsFromMatch = Math.ceil(rankingPoints * conversionRate);
+    const bonusPicklePoints = isWinner ? 2 : 0; // Example bonus for winning
+    const totalPicklePoints = picklePointsFromMatch + bonusPicklePoints;
+    
+    return {
+      rankingPointsEarned: rankingPoints,
+      conversionRate,
+      picklePointsFromMatch,
+      bonusPicklePoints,
+      totalPicklePoints,
+      reason: `Converted from ${rankingPoints} ranking points + bonuses`
     };
   };
 
@@ -221,15 +244,15 @@ export default function MatchScoreDemo() {
 
       <Separator />
 
-      {/* Individual Points Breakdown */}
+      {/* Individual Pickle Points Breakdown */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">3. Individual Points Breakdown</h2>
+        <h2 className="text-2xl font-semibold">3. Individual Pickle Points Breakdown</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Player 1 */}
           <PicklePointsBreakdown
             player={selectedMatch.playerOne}
-            calculation={calculatePointsForDemo(
-              selectedMatch.playerOne.id, 
+            calculation={calculatePicklePoints(
+              calculateRankingPoints(selectedMatch.playerOne.id, selectedMatch.winnerId === selectedMatch.playerOne.id).total,
               selectedMatch.winnerId === selectedMatch.playerOne.id
             )}
             matchType={selectedMatch.matchType}
@@ -242,8 +265,8 @@ export default function MatchScoreDemo() {
           {/* Player 2 */}
           <PicklePointsBreakdown
             player={selectedMatch.playerTwo}
-            calculation={calculatePointsForDemo(
-              selectedMatch.playerTwo.id, 
+            calculation={calculatePicklePoints(
+              calculateRankingPoints(selectedMatch.playerTwo.id, selectedMatch.winnerId === selectedMatch.playerTwo.id).total,
               selectedMatch.winnerId === selectedMatch.playerTwo.id
             )}
             matchType={selectedMatch.matchType}
@@ -259,8 +282,8 @@ export default function MatchScoreDemo() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             <PicklePointsBreakdown
               player={selectedMatch.playerOnePartner}
-              calculation={calculatePointsForDemo(
-                selectedMatch.playerOnePartner.id, 
+              calculation={calculatePicklePoints(
+                calculateRankingPoints(selectedMatch.playerOnePartner.id, selectedMatch.winnerId === selectedMatch.playerOne.id).total,
                 selectedMatch.winnerId === selectedMatch.playerOne.id
               )}
               matchType={selectedMatch.matchType}
@@ -272,8 +295,8 @@ export default function MatchScoreDemo() {
             
             <PicklePointsBreakdown
               player={selectedMatch.playerTwoPartner}
-              calculation={calculatePointsForDemo(
-                selectedMatch.playerTwoPartner.id, 
+              calculation={calculatePicklePoints(
+                calculateRankingPoints(selectedMatch.playerTwoPartner.id, selectedMatch.winnerId === selectedMatch.playerTwo.id).total,
                 selectedMatch.winnerId === selectedMatch.playerTwo.id
               )}
               matchType={selectedMatch.matchType}
@@ -288,21 +311,35 @@ export default function MatchScoreDemo() {
 
       <Separator />
 
-      {/* Algorithm Reference */}
+      {/* Dual System Algorithm Reference */}
       <Card>
         <CardHeader>
-          <CardTitle>Points Algorithm Reference</CardTitle>
+          <CardTitle>Dual Points System Reference</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="text-sm space-y-1">
-            <div><strong>Base Points:</strong> Win = 3 points, Loss = 1 point</div>
-            <div><strong>Tournament Bonus:</strong> +2 points for tournament matches</div>
-            <div><strong>Doubles Bonus:</strong> +0.5 points for doubles matches</div>
-            <div><strong>Age Group:</strong> Additional bonuses based on age category</div>
-            <div><strong>Streak Bonus:</strong> Additional points for consecutive wins</div>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-blue-600">Ranking Points (Competitive)</h4>
+              <div className="text-sm space-y-1">
+                <div><strong>Base:</strong> Win = 3 pts, Loss = 1 pt</div>
+                <div><strong>Tournament:</strong> ×2.0 multiplier</div>
+                <div><strong>Age Group:</strong> ×1.2-1.6 multiplier</div>
+                <div><strong>Gender Balance:</strong> ×1.15 multiplier</div>
+                <div><strong>Decay:</strong> 2% weekly with protection</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-semibold text-green-600">Pickle Points (Gamification)</h4>
+              <div className="text-sm space-y-1">
+                <div><strong>Conversion:</strong> Ranking points × 1.5</div>
+                <div><strong>Bonuses:</strong> Training, community activities</div>
+                <div><strong>Usage:</strong> Equipment discounts, premium access</div>
+                <div><strong>Decay:</strong> No decay (maintains value)</div>
+              </div>
+            </div>
           </div>
           <Badge variant="outline" className="mt-2">
-            Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+            Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md - Dual System Design
           </Badge>
         </CardContent>
       </Card>

@@ -25,7 +25,7 @@ interface PicklePointsCalculation {
 
 interface PicklePointsBreakdownProps {
   player: Player;
-  calculation: PointsCalculation;
+  calculation: PicklePointsCalculation;
   matchType: 'casual' | 'tournament';
   formatType: 'singles' | 'doubles';
   isWinner: boolean;
@@ -44,8 +44,8 @@ export function PicklePointsBreakdown({
   className,
   detailed = true
 }: PicklePointsBreakdownProps) {
-  const newTotal = previousPoints + calculation.total;
-  const percentageIncrease = previousPoints > 0 ? ((calculation.total / previousPoints) * 100) : 100;
+  const newTotal = previousPoints + calculation.totalPicklePoints;
+  const percentageIncrease = previousPoints > 0 ? ((calculation.totalPicklePoints / previousPoints) * 100) : 100;
   
   const getAgeGroupDisplay = (ageGroup?: string) => {
     if (!ageGroup) return null;
@@ -83,7 +83,7 @@ export function PicklePointsBreakdown({
             "font-bold text-lg",
             isWinner ? "text-green-600" : "text-blue-600"
           )}>
-            +{calculation.total}
+            +{calculation.totalPicklePoints}
           </div>
           <div className="text-xs text-gray-500">Pickle Points</div>
         </div>
@@ -134,50 +134,25 @@ export function PicklePointsBreakdown({
           <h4 className="font-semibold text-sm text-gray-700">Points Calculation</h4>
           
           <div className="space-y-2">
-            {/* Base Points */}
+            {/* Conversion from Ranking Points */}
             <div className="flex justify-between items-center">
-              <span className="text-sm">Base Points ({isWinner ? 'Win' : 'Loss'})</span>
-              <span className="font-semibold text-green-600">+{calculation.basePoints}</span>
+              <span className="text-sm">From Ranking Points ({calculation.rankingPointsEarned} × {calculation.conversionRate})</span>
+              <span className="font-semibold text-blue-600">+{calculation.picklePointsFromMatch}</span>
             </div>
             
-            {/* Tournament Multiplier */}
-            {calculation.tournamentMultiplier > 1.0 && (
+            {/* Activity Bonuses */}
+            {calculation.bonusPicklePoints > 0 && (
               <div className="flex justify-between items-center">
-                <span className="text-sm flex items-center">
-                  <Trophy className="h-3 w-3 mr-1" />
-                  Tournament Multiplier ({calculation.tournamentMultiplier}x)
-                </span>
-                <span className="font-semibold text-blue-600">×{calculation.tournamentMultiplier}</span>
-              </div>
-            )}
-            
-            {/* Age Group Multiplier */}
-            {calculation.ageGroupMultiplier && calculation.ageGroupMultiplier > 1.0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm flex items-center">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Age Group Multiplier ({calculation.ageGroupMultiplier}x)
-                </span>
-                <span className="font-semibold text-orange-600">×{calculation.ageGroupMultiplier}</span>
-              </div>
-            )}
-            
-            {/* Gender Multiplier */}
-            {calculation.genderMultiplier && calculation.genderMultiplier > 1.0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm flex items-center">
-                  <Users className="h-3 w-3 mr-1" />
-                  Gender Balance Multiplier ({calculation.genderMultiplier}x)
-                </span>
-                <span className="font-semibold text-purple-600">×{calculation.genderMultiplier}</span>
+                <span className="text-sm">Activity Bonuses</span>
+                <span className="font-semibold text-green-600">+{calculation.bonusPicklePoints}</span>
               </div>
             )}
           </div>
           
           <div className="border-t pt-2">
             <div className="flex justify-between items-center">
-              <span className="font-semibold">Total Points Earned</span>
-              <span className="font-bold text-lg text-green-600">+{calculation.total}</span>
+              <span className="font-semibold">Total Pickle Points Earned</span>
+              <span className="font-bold text-lg text-green-600">+{calculation.totalPicklePoints}</span>
             </div>
           </div>
         </div>
@@ -201,10 +176,10 @@ export function PicklePointsBreakdown({
         </div>
 
         {/* Algorithm Reference */}
-        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-          <strong>Algorithm:</strong> Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+        <div className="text-xs text-gray-500 bg-green-50 p-2 rounded">
+          <strong>Pickle Points System:</strong> Based on PICKLE_PLUS_ALGORITHM_DOCUMENT.md
           <br />
-          Base: Win 3pts, Loss 1pt | Multipliers: Tournament 2x, Age Group 1.2-1.6x, Gender Balance 1.15x
+          Converted from Ranking Points at 1.5x rate + activity bonuses | Used for equipment discounts & premium access
         </div>
       </CardContent>
     </Card>
