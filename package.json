@@ -97,6 +97,7 @@
     "openid-client": "^6.5.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
+    "pinyin": "^4.0.0",
     "postgres": "^3.4.5",
     "puppeteer": "^24.15.0",
     "qrcode": "^1.5.4",

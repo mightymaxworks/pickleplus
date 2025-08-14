@@ -51,8 +51,47 @@ private isProductionUserFilter(user: any): boolean {
 
 ### Filtering Criteria
 1. **Username Exclusions**: 'mightymax', 'test', 'demo', 'admin', 'sample'
-2. **Display Name Patterns**: 'test', 'demo', 'sample', 'admin', 'mighty'
-3. **Pattern Matching**: Excludes users with obviously test-like usernames (user_, User , test123, etc.)
+2. **Test Coach Exclusions**: 'coach_sarah', 'coach_emma', 'coach_mike', 'testcoach'
+3. **Display Name Patterns**: 'test', 'demo', 'sample', 'admin', 'mighty'
+4. **Pattern Matching**: Excludes users with obviously test-like usernames (user_, User , test123, etc.)
+
+## Chinese Name Enhancement Implementation ✅ COMPLETE
+
+### Overview
+Comprehensive Chinese name enhancement system that automatically adds Hanyu Pinyin to Chinese names for improved administrator accessibility and search functionality.
+
+### Features Implemented
+1. **Automatic Pinyin Generation**: Chinese names display with Hanyu Pinyin in parentheses
+2. **Enhanced Search**: Supports searching Chinese users by both Chinese characters and pinyin
+3. **Administrator Accessibility**: Non-Chinese administrators can easily find Chinese users
+4. **Production Integration**: Applied across all leaderboard and search systems
+
+### Files Modified
+
+#### 1. Chinese Name Utilities (`server/utils/chinese-name-utils.ts`)
+- `enhanceChineseName()` - Adds pinyin to Chinese names automatically
+- `matchesChineseSearch()` - Supports both Chinese character and pinyin search
+- `containsChinese()` - Detects Chinese characters
+- `generatePinyin()` - Converts Chinese to pinyin using the pinyin package
+
+#### 2. Enhanced Leaderboard Routes (`server/routes/enhanced-leaderboard.ts`)
+- Applied Chinese name enhancement to both youth and adult ranking displays
+- Enhanced search functionality to support Chinese name searching
+
+#### 3. Storage Layer (`server/storage.ts`) 
+- Updated `searchUsers()`, `searchPlayers()`, and `searchPlayersByMultipleFields()`
+- Chinese name enhancement applied to all user search functions
+- Improved search matching for Chinese names
+
+### Chinese Name Display Examples
+- English: "John Smith" → "John Smith"
+- Chinese: "张三" → "张三 (zhāng sān)"
+- Mixed: "李明 Li" → "李明 Li (lǐ míng li)"
+
+### Search Functionality
+- Administrators can search for "张三" using "zhang san"
+- Original Chinese character search still works
+- Username and passport code search unchanged
 
 ### Test Results
 

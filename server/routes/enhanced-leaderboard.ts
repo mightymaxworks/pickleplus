@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
+import { enhanceChineseName, matchesChineseSearch } from '../utils/chinese-name-utils';
 
 const router = Router();
 
@@ -75,21 +76,26 @@ router.get('/', async (req, res) => {
         offset
       );
 
-      // Transform to leaderboard format
-      let leaderboardEntries = rankings.map((ranking, index) => ({
-        id: ranking.user.id,
-        displayName: ranking.user.displayName || `${ranking.user.firstName || ''} ${ranking.user.lastName || ''}`.trim() || ranking.user.username,
-        username: ranking.user.username,
-        avatar: ranking.user.profileImage || undefined,
-        points: format === 'singles' ? ranking.singlesPoints : ranking.doublesPoints,
-        matchesPlayed: ranking.totalMatches || 0,
-        winRate: ranking.totalMatches > 0 ? (ranking.matchesWon / ranking.totalMatches) * 100 : 0,
-        gender: ranking.user.gender,
-        age: ranking.user.age || 0,
-        division: ranking.ageCategory,
-        ranking: offset + index + 1,
-        isCurrentUser: req.user?.id === ranking.user.id
-      }));
+      // Transform to leaderboard format with Chinese name enhancement
+      let leaderboardEntries = rankings.map((ranking, index) => {
+        const rawDisplayName = ranking.user.displayName || `${ranking.user.firstName || ''} ${ranking.user.lastName || ''}`.trim() || ranking.user.username;
+        const enhancedDisplayName = enhanceChineseName(rawDisplayName);
+        
+        return {
+          id: ranking.user.id,
+          displayName: enhancedDisplayName,
+          username: ranking.user.username,
+          avatar: ranking.user.profileImage || undefined,
+          points: format === 'singles' ? ranking.singlesPoints : ranking.doublesPoints,
+          matchesPlayed: ranking.totalMatches || 0,
+          winRate: ranking.totalMatches > 0 ? (ranking.matchesWon / ranking.totalMatches) * 100 : 0,
+          gender: ranking.user.gender,
+          age: ranking.user.age || 0,
+          division: ranking.ageCategory,
+          ranking: offset + index + 1,
+          isCurrentUser: req.user?.id === ranking.user.id
+        };
+      });
 
       // Apply production data filtering for youth rankings
       const originalCount = leaderboardEntries.length;
@@ -242,7 +248,11 @@ function isProductionDataFilter(player: any): boolean {
   }
   
   // Production filtering - exclude test data and specific development users
-  const excludedUsernames = ['mightymax', 'test', 'demo', 'admin', 'sample'];
+  const excludedUsernames = [
+    'mightymax', 'test', 'demo', 'admin', 'sample',
+    // Test coaches (dev only)
+    'coach_sarah', 'coach_emma', 'coach_mike', 'testcoach'
+  ];
   const excludedDisplayNamePatterns = ['test', 'demo', 'sample', 'admin', 'mighty'];
   
   // Check username exclusions
@@ -300,9 +310,12 @@ async function getRealLeaderboardData(
         // Get actual match stats for this user
         const matchStats = await storage.getMatchStats(user.id);
         
+        const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
+        const enhancedDisplayName = enhanceChineseName(rawDisplayName);
+        
         return {
           id: user.id,
-          displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
+          displayName: enhancedDisplayName,
           username: user.username,
           avatar: user.profileImage || undefined,
           points: formatPoints,
@@ -336,12 +349,10 @@ async function getRealLeaderboardData(
       })
       .map((player, index) => ({ ...player, ranking: index + 1 })); // Assign ranking based on sorted position
 
-    // Apply search filter if provided
+    // Apply search filter if provided with Chinese name support
     if (searchTerm && searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase().trim();
       processedPlayers = processedPlayers.filter(player => 
-        player.displayName.toLowerCase().includes(searchLower) ||
-        player.username.toLowerCase().includes(searchLower)
+        matchesChineseSearch(player.displayName, player.username, searchTerm)
       );
     }
 

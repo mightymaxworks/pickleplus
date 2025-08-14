@@ -99,6 +99,7 @@ interface InsertCoachingSession {
 import { communityStorageImplementation, type CommunityStorage } from './storage/community-storage';
 
 import { generateUniquePassportCode } from './utils/passport-generator';
+import { enhanceChineseName, matchesChineseSearch } from './utils/chinese-name-utils';
 import { db } from "./db";
 import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql, ilike, like } from "drizzle-orm";
 import session from "express-session";
@@ -743,7 +744,15 @@ export class DatabaseStorage implements IStorage {
       .limit(20)
       .orderBy(users.username);
     
-    return results;
+    // Apply Chinese name enhancement and search matching
+    const enhancedResults = results.map(user => ({
+      ...user,
+      displayName: enhanceChineseName(user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim())
+    })).filter(user => 
+      matchesChineseSearch(user.displayName, user.username, query)
+    );
+    
+    return enhancedResults;
   }
 
   async searchUsers(query: string, limit: number = 15): Promise<User[]> {
@@ -765,7 +774,15 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .orderBy(users.firstName, users.lastName);
     
-    return results;
+    // Apply Chinese name enhancement and search matching
+    const enhancedResults = results.map(user => ({
+      ...user,
+      displayName: enhanceChineseName(user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim())
+    })).filter(user => 
+      matchesChineseSearch(user.displayName, user.username, query)
+    );
+    
+    return enhancedResults;
   }
 
   // Production data filtering utility for storage layer
@@ -3314,17 +3331,29 @@ export class DatabaseStorage implements IStorage {
         .limit(20);
       
       console.log('[STORAGE SEARCH DEBUG] Query executed, results found:', searchResults.length);
-      if (searchResults.length > 0) {
-        console.log('[STORAGE SEARCH DEBUG] Sample result:', {
-          id: searchResults[0].id,
-          username: searchResults[0].username,
-          firstName: searchResults[0].firstName,
-          lastName: searchResults[0].lastName,
-          displayName: searchResults[0].display_name
+      
+      // Apply Chinese name enhancement and improved search matching
+      const enhancedResults = searchResults
+        .map(user => ({
+          ...user,
+          displayName: enhanceChineseName(user.displayName || user.display_name || `${user.firstName || ''} ${user.lastName || ''}`.trim())
+        }))
+        .filter(user => 
+          matchesChineseSearch(user.displayName, user.username, searchTerm)
+        );
+      
+      console.log('[STORAGE SEARCH DEBUG] Enhanced results:', enhancedResults.length);
+      if (enhancedResults.length > 0) {
+        console.log('[STORAGE SEARCH DEBUG] Sample enhanced result:', {
+          id: enhancedResults[0].id,
+          username: enhancedResults[0].username,
+          firstName: enhancedResults[0].firstName,
+          lastName: enhancedResults[0].lastName,
+          displayName: enhancedResults[0].displayName
         });
       }
       
-      return searchResults;
+      return enhancedResults;
     } catch (error) {
       console.error('[STORAGE SEARCH ERROR] Error searching players:', error);
       return [];
