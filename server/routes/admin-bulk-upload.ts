@@ -119,6 +119,33 @@ router.get('/template', isAuthenticated, async (req, res) => {
         'Game 3 Team 2 Score': '',
         'Location (optional)': 'Tournament Court A',
         'Notes (optional)': 'Singles match - blank dates will NOT override existing user data'
+      },
+      {
+        'Match Date (YYYY-MM-DD)': '2025-08-13',
+        'Match Type (casual/tournament)': 'casual',
+        'Player 1 Passport Code': 'MX8K7P2N',
+        'Player 1 Gender (male/female)': 'female',
+        'Player 1 Date of Birth (YYYY-MM-DD)': '',
+        'Player 2 Passport Code': 'KGLE38K4',
+        'Player 2 Gender (male/female)': 'male',
+        'Player 2 Date of Birth (YYYY-MM-DD)': '',
+        'Player 3 Passport Code (doubles only)': '',
+        'Player 3 Gender (doubles only)': '',
+        'Player 3 Date of Birth (doubles only)': '',
+        'Player 4 Passport Code (doubles only)': '',
+        'Player 4 Gender (doubles only)': '',
+        'Player 4 Date of Birth (doubles only)': '',
+        'Is Doubles Match (TRUE/FALSE)': 'FALSE',
+        'Team 1 Score': 0,
+        'Team 2 Score': 1,
+        'Game 1 Team 1 Score': 9,
+        'Game 1 Team 2 Score': 11,
+        'Game 2 Team 1 Score': '',
+        'Game 2 Team 2 Score': '',
+        'Game 3 Team 1 Score': '',
+        'Game 3 Team 2 Score': '',
+        'Location (optional)': 'Practice Court',
+        'Notes (optional)': 'SINGLE GAME MATCH EXAMPLE - Player 2 wins 11-9'
       }
     ];
 
@@ -360,27 +387,33 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
           continue;
         }
 
-        // Create match record
+        // Calculate winner based on team scores from Excel
+        const winnerId = matchData.team1Score > matchData.team2Score ? player1.id : player2.id;
+        
+        // Format detailed game scores for notes (like individual match recording)
+        const detailedScores = gameScores.map(game => `${game.team1}-${game.team2}`).join(', ');
+        
+        // Create match record using the new scoring format (matches regular match creation)
         const matchRecord = {
-          competitionId: 1, // Default competition ID for bulk uploads
-          matchNumber: Date.now(), // Use timestamp as match number for uniqueness
-          format: matchData.isDoubles ? 'doubles' as const : 'singles' as const,
-          player1Id: player1.id,
-          player2Id: player2.id,
-          player3Id: player3?.id || null,
-          player4Id: player4?.id || null,
-          isDoubles: matchData.isDoubles,
-          team1Score: matchData.team1Score,
-          team2Score: matchData.team2Score,
-          gameScores: gameScores,
-          matchDate: new Date(matchData.matchDate),
-          matchType: matchData.matchType,
-          location: matchData.location,
-          notes: matchData.notes,
-          recordedBy: user.id
+          playerOneId: player1.id,
+          playerTwoId: player2.id,
+          playerOnePartnerId: player3?.id || null,
+          playerTwoPartnerId: player4?.id || null,
+          scorePlayerOne: `${matchData.team1Score}`, // Games won by Team 1
+          scorePlayerTwo: `${matchData.team2Score}`, // Games won by Team 2
+          winnerId: winnerId,
+          matchType: matchData.matchType || 'casual',
+          formatType: matchData.isDoubles ? 'doubles' : 'singles',
+          validationStatus: 'completed', // Admin bulk uploads are auto-completed
+          validationCompletedAt: new Date(),
+          notes: `BULK UPLOAD: ${matchData.notes || ''} [Game Scores: ${detailedScores}] [Location: ${matchData.location || 'N/A'}]`.trim(),
+          tournamentId: null,
+          scheduledDate: new Date(matchData.matchDate),
+          pointsAwarded: 3, // Winner gets 3 points per PICKLE_PLUS_ALGORITHM_DOCUMENT
+          category: matchData.isDoubles ? 'doubles' : 'singles'
         };
 
-        // Save match to database
+        // Save match to database using the same interface as regular match creation
         const match = await storage.createMatch(matchRecord);
 
         // Update player statistics and points
@@ -413,7 +446,7 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
 // Helper function to update player statistics and points
 async function updatePlayerStatsFromMatch(match: any) {
   try {
-    const players = [match.player1Id, match.player2Id, match.player3Id, match.player4Id].filter(Boolean);
+    const players = [match.playerOneId, match.playerTwoId, match.playerOnePartnerId, match.playerTwoPartnerId].filter(Boolean);
     
     for (const playerId of players) {
       // Get current user stats
@@ -423,14 +456,17 @@ async function updatePlayerStatsFromMatch(match: any) {
       // Update match count
       await storage.updateUser(playerId, {
         totalMatches: (user.totalMatches || 0) + 1,
-        lastMatchDate: match.matchDate
+        lastMatchDate: match.scheduledDate || match.createdAt
       });
 
-      // Calculate and award points based on match result
+      // Calculate and award points based on match result using new scoring fields
+      const team1Score = parseInt(match.scorePlayerOne || '0');
+      const team2Score = parseInt(match.scorePlayerTwo || '0');
+      
       const isWinner = (
-        (playerId === match.player1Id || playerId === match.player3Id) && match.team1Score > match.team2Score
+        (playerId === match.playerOneId || playerId === match.playerOnePartnerId) && team1Score > team2Score
       ) || (
-        (playerId === match.player2Id || playerId === match.player4Id) && match.team2Score > match.team1Score
+        (playerId === match.playerTwoId || playerId === match.playerTwoPartnerId) && team2Score > team1Score
       );
 
       if (isWinner) {
@@ -438,7 +474,7 @@ async function updatePlayerStatsFromMatch(match: any) {
           matchesWon: (user.matchesWon || 0) + 1
         });
         
-        // Award pickle points based on match type
+        // Award pickle points based on match type per PICKLE_PLUS_ALGORITHM_DOCUMENT
         const points = match.matchType === 'tournament' ? 5 : 3;
         await storage.updateUserPicklePoints(playerId, points);
       } else {
