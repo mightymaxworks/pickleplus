@@ -60,6 +60,7 @@ import {
 
 // Import existing components
 import { Form } from "@/components/ui/form";
+import { SmartPlayerSearch } from "./SmartPlayerSearch";
 
 // Age multiplier constants - FINALIZED ALGORITHM (Option B - Open Age Group)
 const AGE_MULTIPLIERS = {
@@ -448,9 +449,20 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         matchType: isAdmin ? (selectedCompetitionId ? "tournament" : "casual") : "casual",
         competitionId: selectedCompetitionId,
         winnerId: winner === 1 ? playerOneData.id : playerTwoData.id,
-        scoringSystem: "standard" as const,
+        scoringSystem: "traditional" as const,
         pointsToWin,
-        players: [playerOneData, playerTwoData],
+        players: [
+          {
+            userId: playerOneData.id,
+            score: games.reduce((total, game) => total + game.playerOneScore, 0),
+            isWinner: winner === 1
+          },
+          {
+            userId: playerTwoData.id,
+            score: games.reduce((total, game) => total + game.playerTwoScore, 0),
+            isWinner: winner === 2
+          }
+        ],
         gameScores: games.map((game, index) => ({
           gameNumber: index + 1,
           playerOneScore: game.playerOneScore,
@@ -700,22 +712,29 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 )}
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground p-3 border rounded-lg">
+              <div className="space-y-2">
                 {isAdmin ? (
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      // For admin, implement player selection later
-                      toast({
-                        title: "Feature Coming Soon",
-                        description: "Admin player selection will be available soon",
-                        variant: "default",
-                      });
+                  <SmartPlayerSearch
+                    label=""
+                    placeholder="Search for Player One by name or passport code..."
+                    selectedPlayer={null}
+                    onPlayerSelect={(player) => {
+                      if (player) {
+                        setPlayerOneData({
+                          id: player.id,
+                          username: player.username,
+                          displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                          avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                        });
+                      }
                     }}
-                  >
-                    Select Player One
-                  </Button>
-                ) : "Loading your profile..."}
+                    excludePlayerIds={[playerTwoData?.id].filter(Boolean)}
+                  />
+                ) : (
+                  <div className="text-sm text-muted-foreground p-3 border rounded-lg">
+                    Loading your profile...
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -739,9 +758,21 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 </Button>
               </div>
             ) : (
-              <OpponentSelector 
-                onSelectOpponent={setPlayerTwoData}
-                recentOpponents={recentOpponents}
+              <SmartPlayerSearch
+                label=""
+                placeholder="Search for Player Two by name or passport code..."
+                selectedPlayer={null}
+                onPlayerSelect={(player) => {
+                  if (player) {
+                    setPlayerTwoData({
+                      id: player.id,
+                      username: player.username,
+                      displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                      avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                    });
+                  }
+                }}
+                excludePlayerIds={[playerOneData?.id].filter(Boolean)}
               />
             )}
           </div>
@@ -798,14 +829,25 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                         </Button>
                       </div>
                     ) : (
-                      <OpponentSelector 
-                        onSelectOpponent={setPlayerOnePartnerData}
-                        recentOpponents={recentOpponents.filter(opp => 
-                          opp.id !== playerOneData?.id && 
-                          opp.id !== playerTwoData?.id && 
-                          opp.id !== playerTwoPartnerData?.id
-                        )}
-                        placeholder="Search for Team 1 partner by username or passport code..."
+                      <SmartPlayerSearch
+                        label=""
+                        placeholder="Search for Team 1 partner by name or passport code..."
+                        selectedPlayer={null}
+                        onPlayerSelect={(player) => {
+                          if (player) {
+                            setPlayerOnePartnerData({
+                              id: player.id,
+                              username: player.username,
+                              displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                              avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                            });
+                          }
+                        }}
+                        excludePlayerIds={[
+                          playerOneData?.id,
+                          playerTwoData?.id,
+                          playerTwoPartnerData?.id
+                        ].filter(Boolean)}
                       />
                     )}
                   </div>
@@ -858,14 +900,25 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                         </Button>
                       </div>
                     ) : (
-                      <OpponentSelector 
-                        onSelectOpponent={setPlayerTwoPartnerData}
-                        recentOpponents={recentOpponents.filter(opp => 
-                          opp.id !== playerOneData?.id && 
-                          opp.id !== playerTwoData?.id && 
-                          opp.id !== playerOnePartnerData?.id
-                        )}
-                        placeholder="Search for Team 2 partner by username or passport code..."
+                      <SmartPlayerSearch
+                        label=""
+                        placeholder="Search for Team 2 partner by name or passport code..."
+                        selectedPlayer={null}
+                        onPlayerSelect={(player) => {
+                          if (player) {
+                            setPlayerTwoPartnerData({
+                              id: player.id,
+                              username: player.username,
+                              displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                              avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                            });
+                          }
+                        }}
+                        excludePlayerIds={[
+                          playerOneData?.id,
+                          playerTwoData?.id,
+                          playerOnePartnerData?.id
+                        ].filter(Boolean)}
                       />
                     ))}
                   </div>

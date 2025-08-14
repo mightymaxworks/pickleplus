@@ -41,24 +41,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === PLAYER SEARCH AND RECENT OPPONENTS ROUTES ===
   
-  // Player search endpoint for enhanced match recorder
+  // Player search endpoint for SmartPlayerSearch component
   app.get('/api/players/search', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
-      if (!query || query.length < 1) {
-        return res.json({ players: [] });
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
       }
 
-      const users = await storage.searchUsers(query);
+      const users = await storage.searchUsers(query, limit);
       const players = users.map(user => ({
         id: user.id,
-        displayName: user.displayName,
         username: user.username,
-        avatarInitials: user.avatarInitials,
-        currentRating: user.currentRating || 0,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        displayName: user.displayName,
+        passportCode: user.passportCode,
+        gender: user.gender,
+        profileImageUrl: user.profileImageUrl,
+        isVerified: user.isVerified || false,
       }));
 
-      res.json({ players });
+      res.json(players);
     } catch (error) {
       console.error('Player search error:', error);
       res.status(500).json({ error: 'Failed to search players' });
