@@ -147,24 +147,39 @@ export default function RankingsPage() {
         </Card>
 
         {/* Rankings Tabs */}
-        <Tabs defaultValue="overall" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overall">Overall Rankings</TabsTrigger>
+        <Tabs defaultValue="singles" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="singles">Singles Rankings</TabsTrigger>
+            <TabsTrigger value="doubles">Doubles Rankings</TabsTrigger>
             <TabsTrigger value="tiers">Tier System</TabsTrigger>
             <TabsTrigger value="age-group">Age Group</TabsTrigger>
             <TabsTrigger value="recent">Recent Activity</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overall" className="mt-6">
+          <TabsContent value="singles" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="w-5 h-5" />
-                  Overall Player Rankings
+                  Singles Player Rankings
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <EnhancedLeaderboard />
+                <EnhancedLeaderboard format="singles" />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="doubles" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Doubles Player Rankings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EnhancedLeaderboard format="doubles" />
               </CardContent>
             </Card>
           </TabsContent>
