@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { matchSDK } from "@/lib/sdk/matchSDK";
 import { useLocation } from "wouter";
@@ -320,12 +321,19 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const [manualPointsWinner, setManualPointsWinner] = useState<number>(0);
   const [manualPointsLoser, setManualPointsLoser] = useState<number>(0);
   
-  // Mock competitions data (in real app this would come from API)
-  const [competitions] = useState([
-    { id: 1, name: "Summer Championship 2025", type: "tournament", pointsMultiplier: 2.0, venue: "Central Courts" },
-    { id: 2, name: "Weekly League", type: "league", pointsMultiplier: 1.5, venue: "Local Club" },
-    { id: 3, name: "Masters Tournament", type: "tournament", pointsMultiplier: 3.0, venue: "Elite Center" }
-  ]);
+  // Fetch real competitions data from API
+  const { data: competitionsData } = useQuery({
+    queryKey: ['/api/admin/match-management/competitions'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/match-management/competitions');
+      const data = await response.json();
+      return data.success ? data.data : [];
+    },
+    enabled: isAdmin, // Only fetch if user is admin
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const competitions = competitionsData || [];
 
   // Load recent opponents from API
   useEffect(() => {
@@ -716,12 +724,11 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no-competition">No Competition (Casual Match)</SelectItem>
-                  <SelectItem value="1">Spring Championship 2025</SelectItem>
-                  <SelectItem value="2">Weekly League - March</SelectItem>
-                  <SelectItem value="3">Beginner Tournament</SelectItem>
-                  <SelectItem value="4">Advanced Players Cup</SelectItem>
-                  <SelectItem value="5">Friday Night Doubles</SelectItem>
-                  <SelectItem value="6">Regional Qualifiers</SelectItem>
+                  {competitions.map((comp) => (
+                    <SelectItem key={comp.id} value={comp.id.toString()}>
+                      {comp.name} ({comp.type || 'tournament'})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               
@@ -1124,7 +1131,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                   <SelectItem value="no-competition">No Competition (Casual Match)</SelectItem>
                   {competitions.map((comp) => (
                     <SelectItem key={comp.id} value={comp.id.toString()}>
-                      {comp.name} ({comp.type} • {comp.pointsMultiplier}x points)
+                      {comp.name} ({comp.type || 'tournament'} • {comp.pointsMultiplier || 1.0}x points)
                     </SelectItem>
                   ))}
                 </SelectContent>
