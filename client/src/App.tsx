@@ -601,6 +601,13 @@ export default function App() {
                     />
                   )}
                   
+                  {/* Demo Routes */}
+                  <ProtectedRouteWithLayout
+                    path="/demo/match-score"
+                    component={lazyLoad(() => import('./pages/demo/MatchScoreDemo'))}
+                    pageTitle="DUPR-Style Score Display Demo"
+                  />
+                  
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
                   <Route path="/roles/demo">
                     {() => <RoleProtectedRoute component={RoleProtectedDemoPage} path="/roles/demo" />}
