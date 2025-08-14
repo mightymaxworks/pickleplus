@@ -24,8 +24,8 @@ export async function searchPlayers(req: Request, res: Response) {
       avatarInitials: user.displayName?.substring(0, 2) || 
                      `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` || 
                      user.username.substring(0, 2),
-      passportId: user.passportId,
-      currentPickleballRating: user.currentPickleballRating,
+      passportId: user.passportCode,
+      currentRating: user.rankingPoints || 0,
       gender: user.gender
     }));
     

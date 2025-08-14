@@ -190,7 +190,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
       });
       if (response.ok) {
         const data = await response.json();
-        setPlayerSearchResults(data.players || []);
+        setPlayerSearchResults(data.users || []);
       }
     } catch (error) {
       console.error('Player search error:', error);
@@ -213,7 +213,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
       });
       if (response.ok) {
         const data = await response.json();
-        setResults(data.players || []);
+        setResults(data.users || []);
       }
     } catch (error) {
       console.error('Partner search error:', error);
