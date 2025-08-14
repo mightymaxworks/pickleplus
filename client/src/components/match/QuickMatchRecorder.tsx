@@ -1017,136 +1017,173 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                     </div>
                     
                     <div className="space-y-3">
-                      {/* Team 1 Player 1 */}
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                            {playerOneData?.avatarInitials || '1A'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{playerOneData?.displayName || playerOneData?.username || 'Player 1A'}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            @{playerOneData?.username || 'Not selected'}
-                          </p>
-                        </div>
-                        {isAdmin && playerOneData && (
+                      {/* Team A Player 1 Slot */}
+                      {playerOneData ? (
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                              {playerOneData.avatarInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{playerOneData.displayName || playerOneData.username}</p>
+                            <p className="text-xs text-muted-foreground truncate">@{playerOneData.username}</p>
+                          </div>
                           <Button variant="ghost" size="sm" onClick={() => setPlayerOneData(null)}>
                             <X className="h-3 w-3" />
                           </Button>
-                        )}
-                      </div>
-                    
-                    {/* Team 1 Partner */}
-                    {playerOnePartnerData ? (
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-blue-100 text-blue-600">
-                            {playerOnePartnerData.avatarInitials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium">{playerOnePartnerData.displayName || playerOnePartnerData.username}</p>
-                          <p className="text-sm text-muted-foreground">@{playerOnePartnerData.username}</p>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => setPlayerOnePartnerData(null)}>
-                          Remove
-                        </Button>
-                      </div>
-                    ) : (
-                      <SmartPlayerSearch
-                        label=""
-                        placeholder="Search for Team 1 partner by name or passport code..."
-                        selectedPlayer={null}
-                        onPlayerSelect={(player) => {
-                          if (player) {
-                            setPlayerOnePartnerData({
-                              id: player.id,
-                              username: player.username,
-                              displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
-                              avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
-                            });
-                          }
-                        }}
-                        excludePlayerIds={[
-                          playerOneData?.id,
-                          playerTwoData?.id,
-                          playerTwoPartnerData?.id
-                        ].filter(Boolean)}
-                      />
-                    )}
-                  </div>
+                      ) : (
+                        <SmartPlayerSearch
+                          label=""
+                          placeholder="Search for Team A Player 1..."
+                          selectedPlayer={null}
+                          onPlayerSelect={(player) => {
+                            if (player) {
+                              setPlayerOneData({
+                                id: player.id,
+                                username: player.username,
+                                displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                                avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                              });
+                            }
+                          }}
+                          excludePlayerIds={[
+                            playerOnePartnerData?.id,
+                            playerTwoData?.id,
+                            playerTwoPartnerData?.id
+                          ].filter(Boolean) as number[]}
+                        />
+                      )}
+                    
+                      {/* Team A Player 2 Slot */}
+                      {playerOnePartnerData ? (
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                              {playerOnePartnerData.avatarInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{playerOnePartnerData.displayName || playerOnePartnerData.username}</p>
+                            <p className="text-xs text-muted-foreground truncate">@{playerOnePartnerData.username}</p>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => setPlayerOnePartnerData(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <SmartPlayerSearch
+                          label=""
+                          placeholder="Search for Team A Player 2..."
+                          selectedPlayer={null}
+                          onPlayerSelect={(player) => {
+                            if (player) {
+                              setPlayerOnePartnerData({
+                                id: player.id,
+                                username: player.username,
+                                displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                                avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                              });
+                            }
+                          }}
+                          excludePlayerIds={[
+                            playerOneData?.id,
+                            playerTwoData?.id,
+                            playerTwoPartnerData?.id
+                          ].filter(Boolean) as number[]}
+                        />
+                      )}
+                    </div>
                 </div>
 
                 {/* Team 2 (Purple Team) */}
                 <div className="p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <Label className="text-base font-semibold text-purple-900">Team 2 (Purple)</Label>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {/* Team 2 Player 1 */}
-                    {playerTwoData ? (
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-purple-100 text-purple-600">
-                            {playerTwoData.avatarInitials || playerTwoData.displayName?.substring(0, 2) || playerTwoData.username.substring(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
-                          <p className="text-sm text-muted-foreground">@{playerTwoData.username}</p>
-                        </div>
-                        <Badge variant="outline">Player</Badge>
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-white rounded-lg border border-purple-200 border-dashed">
-                        <p className="text-sm text-muted-foreground text-center">
-                          Please select Player Two first
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                      <Label className="text-base font-semibold text-purple-900">Team B (Purple)</Label>
+                      <Badge variant="outline" className="text-xs">2 Players</Badge>
+                    </div>
                     
-                    {/* Team 2 Partner */}
-                    {playerTwoData && (playerTwoPartnerData ? (
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-purple-100 text-purple-600">
-                            {playerTwoPartnerData.avatarInitials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium">{playerTwoPartnerData.displayName || playerTwoPartnerData.username}</p>
-                          <p className="text-sm text-muted-foreground">@{playerTwoPartnerData.username}</p>
+                    <div className="space-y-3">
+                      {/* Team B Player 1 Slot */}
+                      {playerTwoData ? (
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
+                              {playerTwoData.avatarInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{playerTwoData.displayName || playerTwoData.username}</p>
+                            <p className="text-xs text-muted-foreground truncate">@{playerTwoData.username}</p>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => setPlayerTwoData(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => setPlayerTwoPartnerData(null)}>
-                          Remove
-                        </Button>
-                      </div>
-                    ) : (
-                      <SmartPlayerSearch
-                        label=""
-                        placeholder="Search for Team 2 partner by name or passport code..."
-                        selectedPlayer={null}
-                        onPlayerSelect={(player) => {
-                          if (player) {
-                            setPlayerTwoPartnerData({
-                              id: player.id,
-                              username: player.username,
-                              displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
-                              avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
-                            });
-                          }
-                        }}
-                        excludePlayerIds={[
-                          playerOneData?.id,
-                          playerTwoData?.id,
-                          playerOnePartnerData?.id
-                        ].filter(Boolean)}
-                      />
-                    ))}
-                  </div>
+                      ) : (
+                        <SmartPlayerSearch
+                          label=""
+                          placeholder="Search for Team B Player 1..."
+                          selectedPlayer={null}
+                          onPlayerSelect={(player) => {
+                            if (player) {
+                              setPlayerTwoData({
+                                id: player.id,
+                                username: player.username,
+                                displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                                avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                              });
+                            }
+                          }}
+                          excludePlayerIds={[
+                            playerOneData?.id,
+                            playerOnePartnerData?.id,
+                            playerTwoPartnerData?.id
+                          ].filter(Boolean) as number[]}
+                        />
+                      )}
+                    
+                      {/* Team B Player 2 Slot */}
+                      {playerTwoPartnerData ? (
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
+                              {playerTwoPartnerData.avatarInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{playerTwoPartnerData.displayName || playerTwoPartnerData.username}</p>
+                            <p className="text-xs text-muted-foreground truncate">@{playerTwoPartnerData.username}</p>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => setPlayerTwoPartnerData(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <SmartPlayerSearch
+                          label=""
+                          placeholder="Search for Team B Player 2..."
+                          selectedPlayer={null}
+                          onPlayerSelect={(player) => {
+                            if (player) {
+                              setPlayerTwoPartnerData({
+                                id: player.id,
+                                username: player.username,
+                                displayName: player.displayName || `${player.firstName || ''} ${player.lastName || ''}`.trim() || player.username,
+                                avatarInitials: (player.displayName || player.username).charAt(0).toUpperCase()
+                              });
+                            }
+                          }}
+                          excludePlayerIds={[
+                            playerOneData?.id,
+                            playerOnePartnerData?.id,
+                            playerTwoData?.id
+                          ].filter(Boolean) as number[]}
+                        />
+                      )}
+                    </div>
                 </div>
                 </div>
               </div>
