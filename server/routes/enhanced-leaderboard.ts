@@ -144,8 +144,8 @@ async function getRealLeaderboardData(
   try {
     console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender}`);
     
-    // Get all users with their ranking points and basic info
-    const allUsers = await storage.getAllUsers();
+    // Get all users with ranking points using direct database query
+    const allUsers = await storage.getUsersWithRankingPoints();
     
     let processedPlayers = allUsers
       .filter(user => user.rankingPoints > 0) // Only show users with ranking points

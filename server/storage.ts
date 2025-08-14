@@ -117,6 +117,7 @@ export interface IStorage extends CommunityStorage {
   getRecentOpponents(userId: number): Promise<User[]>;
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
   searchPlayersByMultipleFields(searchTerm: string): Promise<User[]>;
+  getUsersWithRankingPoints(): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void>;
@@ -747,6 +748,17 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .orderBy(users.firstName, users.lastName);
     
+    return results;
+  }
+
+  async getUsersWithRankingPoints(): Promise<User[]> {
+    console.log('[STORAGE] Getting users with ranking points > 0');
+    const results = await db.select()
+      .from(users)
+      .where(gte(users.rankingPoints, 0))
+      .orderBy(desc(users.rankingPoints));
+    
+    console.log('[STORAGE] Found users with ranking points:', results.length);
     return results;
   }
 
