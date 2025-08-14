@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle, Upload } from 'lucide-react';
+import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle, Upload, FileSpreadsheet, Download } from 'lucide-react';
 import { Link } from 'wouter';
 import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
 import DUPRStyleMatchHistory from '@/components/match/DUPRStyleMatchHistory';
@@ -41,6 +41,215 @@ interface Player {
   currentRating?: string;
   ageGroup?: string;
 }
+
+// Bulk Upload Tab Component
+const BulkUploadTab: React.FC = () => {
+  const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResults, setUploadResults] = useState<any>(null);
+  const [matchType, setMatchType] = useState<'casual' | 'tournament' | 'league'>('casual');
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setUploadResults(null);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please select an Excel file to upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('matchType', matchType);
+
+      const response = await fetch('/api/admin/bulk-upload/matches', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setUploadResults(result);
+        toast({
+          title: "Upload Successful",
+          description: `Successfully processed ${result.successCount} matches.`,
+        });
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload matches.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const response = await fetch('/api/admin/bulk-upload/template', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bulk-match-template.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        toast({
+          title: "Template Downloaded",
+          description: "Excel template downloaded successfully.",
+        });
+      } else {
+        throw new Error('Failed to download template');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download template.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-medium">Bulk Match Upload</h3>
+          <p className="text-sm text-muted-foreground">
+            Upload multiple matches at once using Excel files with proper date formatting (YYYY-MM-DD)
+          </p>
+        </div>
+        <Button onClick={downloadTemplate} variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Download Template
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-5 w-5" />
+            Upload Match Data
+          </CardTitle>
+          <CardDescription>
+            Select match type and upload an Excel file with match results. All dates must be in YYYY-MM-DD format.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="matchType">Match Type</Label>
+            <Select value={matchType} onValueChange={(value: 'casual' | 'tournament' | 'league') => setMatchType(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select match type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="casual">Casual Match</SelectItem>
+                <SelectItem value="tournament">Tournament Match</SelectItem>
+                <SelectItem value="league">League Match</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="file">Excel File</Label>
+            <Input
+              id="file"
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileSelect}
+              disabled={isUploading}
+            />
+            {selectedFile && (
+              <p className="text-sm text-muted-foreground">
+                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
+          </div>
+
+          <Button
+            onClick={handleUpload}
+            disabled={!selectedFile || isUploading}
+            className="w-full"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing Matches...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Matches
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {uploadResults && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-green-600">Upload Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Total Matches Processed:</span>
+                <span className="font-medium">{uploadResults.totalProcessed}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Successful:</span>
+                <span className="font-medium text-green-600">{uploadResults.successCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Failed:</span>
+                <span className="font-medium text-red-600">{uploadResults.errorCount}</span>
+              </div>
+              
+              {uploadResults.errors && uploadResults.errors.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="font-medium text-red-600 mb-2">Errors:</h4>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {uploadResults.errors.map((error: any, index: number) => (
+                      <div key={index} className="text-sm bg-red-50 p-2 rounded border-l-2 border-red-500">
+                        Row {error.row}: {error.message}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
 
 const MatchManagement: React.FC = () => {
   const { toast } = useToast();
@@ -376,10 +585,11 @@ const MatchManagement: React.FC = () => {
       </div>
 
       <Tabs defaultValue="competitions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="competitions">Competitions</TabsTrigger>
           <TabsTrigger value="record-match">Record Match</TabsTrigger>
           <TabsTrigger value="matches">View Matches</TabsTrigger>
+          <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
         </TabsList>
 
         <TabsContent value="competitions" className="space-y-4">
@@ -781,6 +991,10 @@ const MatchManagement: React.FC = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="bulk-upload" className="space-y-4">
+          <BulkUploadTab />
         </TabsContent>
 
         {/* Edit Match Dialog */}
