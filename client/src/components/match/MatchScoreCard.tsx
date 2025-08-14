@@ -143,6 +143,8 @@ export function MatchScoreCard({
       }
     });
     
+    return highest;
+    
     return highest.value > 0 ? highest : { value: player.rankingPoints || 0, category: 'Overall' };
   };
 

@@ -604,7 +604,7 @@ export default function App() {
                   {/* Demo Routes */}
                   <ProtectedRouteWithLayout
                     path="/demo/match-score"
-                    component={lazyLoad(() => import('./pages/demo/SimpleMatchScoreDemo'))}
+                    component={lazyLoad(() => import('./pages/demo/MatchScoreDemo'))}
                     pageTitle="DUPR-Style Score Display Demo"
                   />
                   
