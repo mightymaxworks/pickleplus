@@ -53,8 +53,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Use the enhanced search that supports Chinese characters
-      const users = await storage.searchPlayersByMultipleFields(query);
+      // Use simple search that works
+      const users = await storage.searchUsers(query, limit);
       const players = users.slice(0, limit).map(user => ({
         id: user.id,
         username: user.username,

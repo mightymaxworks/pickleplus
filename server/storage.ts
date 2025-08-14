@@ -728,16 +728,13 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(
         or(
-          // Support both case-insensitive and exact matching for Unicode characters
           ilike(users.username, searchTerm),
           ilike(users.firstName, searchTerm),
           ilike(users.lastName, searchTerm),
-          sql`${users.firstName} || ' ' || ${users.lastName} ILIKE ${searchTerm}`,
           ilike(users.passportCode, searchTerm),
-          // Also support exact Chinese character matching
+          // Chinese character support
           like(users.firstName, searchTerm),
-          like(users.lastName, searchTerm),
-          sql`${users.firstName} || ' ' || ${users.lastName} LIKE ${searchTerm}`
+          like(users.lastName, searchTerm)
         )
       )
       .limit(limit)
