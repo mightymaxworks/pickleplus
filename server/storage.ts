@@ -3192,9 +3192,13 @@ export class DatabaseStorage implements IStorage {
   // Enhanced Player Search for Match Recording
   async searchPlayersByMultipleFields(searchTerm: string): Promise<User[]> {
     try {
+      console.log('[SEARCH DEBUG] Search term received:', searchTerm);
+      
       // Don't use toLowerCase() for Chinese characters - preserve original casing
       const searchPattern = `%${searchTerm}%`;
       const lowerSearchPattern = `%${searchTerm.toLowerCase()}%`;
+      
+      console.log('[SEARCH DEBUG] Search patterns:', { searchPattern, lowerSearchPattern });
       
       const searchResults = await db.select()
         .from(users)
@@ -3217,6 +3221,9 @@ export class DatabaseStorage implements IStorage {
           )
         )
         .limit(20);
+      
+      console.log('[SEARCH DEBUG] Search results found:', searchResults.length);
+      console.log('[SEARCH DEBUG] First result:', searchResults[0]);
       
       return searchResults;
     } catch (error) {

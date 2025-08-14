@@ -5,11 +5,17 @@ export async function searchPlayers(req: Request, res: Response) {
   try {
     const { q } = req.query;
     
+    console.log('[API SEARCH DEBUG] Raw query param:', q);
+    console.log('[API SEARCH DEBUG] Query type:', typeof q);
+    console.log('[API SEARCH DEBUG] Query bytes:', q ? Buffer.from(q as string, 'utf8') : 'null');
+    
     if (!q || typeof q !== 'string' || q.trim().length === 0) {
       return res.json({ users: [] });
     }
     
     const searchTerm = q.trim();
+    console.log('[API SEARCH DEBUG] Final search term:', searchTerm);
+    console.log('[API SEARCH DEBUG] Search term bytes:', Buffer.from(searchTerm, 'utf8'));
     
     // Enhanced search: username, display name, first name, last name, and passport code
     const users = await storage.searchPlayersByMultipleFields(searchTerm);
