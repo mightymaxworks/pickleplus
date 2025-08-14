@@ -114,10 +114,15 @@ export function RecentMatchesWidget({ className, limit = 3 }: RecentMatchesWidge
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Compact Match Cards */}
+        {/* Enhanced Match Score Cards - Updated to use UDF MatchScoreCard */}
         <div className="space-y-3">
           {matches.slice(0, expanded ? matches.length : limit).map((match: any) => (
-            <CompactMatchCard key={match.id} match={match} />
+            <MatchScoreCard 
+              key={match.id} 
+              match={match} 
+              compact={true}
+              showPointsBreakdown={false}
+            />
           ))}
         </div>
 

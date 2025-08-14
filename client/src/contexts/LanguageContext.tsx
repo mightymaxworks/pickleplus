@@ -776,29 +776,7 @@ const translations: Record<Language, Record<string, string>> = {
     'notification.updated': 'Updated',
     'notification.deleted': 'Deleted',
     
-    // Actions & Buttons
-    'action.view': 'View',
-    'action.edit': 'Edit',
-    'action.delete': 'Delete',
-    'action.add': 'Add',
-    'action.remove': 'Remove',
-    'action.update': 'Update',
-    'action.refresh': 'Refresh',
-    'action.search': 'Search',
-    'action.filter': 'Filter',
-    'action.sort': 'Sort',
-    'action.export': 'Export',
-    'action.import': 'Import',
-    
-    // Settings & Configuration
-    'settings.general': 'General',
-    'settings.privacy': 'Privacy',
-    'settings.notifications': 'Notifications',
-    'settings.language': 'Language',
-    'settings.theme': 'Theme',
-    'settings.account': 'Account',
-    'settings.security': 'Security',
-    'settings.preferences': 'Preferences',
+    // Actions & Buttons already defined above - removing duplicates
     
     // Coaching
     'coaching.pcpProgramme': 'Coaching Bio',
@@ -1663,44 +1641,7 @@ const translations: Record<Language, Record<string, string>> = {
     'notification.updated': '已更新',
     'notification.deleted': '已删除',
     
-    // Actions & Buttons
-    'action.view': '查看',
-    'action.edit': '编辑',
-    'action.delete': '删除',
-    'action.add': '添加',
-    'action.remove': '移除',
-    'action.update': '更新',
-    'action.refresh': '刷新',
-    'action.search': '搜索',
-    'action.filter': '筛选',
-    'action.sort': '排序',
-    'action.export': '导出',
-    'action.import': '导入',
-    
-    // Settings & Configuration
-    'settings.general': '常规设置',
-    'settings.privacy': '隐私设置',
-    'settings.notifications': '通知设置',
-    'settings.language': '语言设置',
-    'settings.theme': '主题设置',
-    'settings.account': '账户设置',
-    'settings.security': '安全设置',
-    'settings.preferences': '偏好设置',
-    
-    // Coaching
-    'coaching.pcpProgramme': '教练简介',
-    
-    // Additional auth content (removed to avoid duplicates)
-
-    // Navigation Items
-    'nav.features': '功能',
-    'nav.pcpCertification': 'PCP认证',
-    'nav.developmentHub': '发展中心',
-    'nav.adminPanel': '管理面板',
-    'nav.home': '首页',
-    'nav.community': '社区',
-    'nav.coaching': '教练',
-    'nav.profile': '个人资料'
+    // Final section - removing all duplicates for clean compilation
   }
 };
 
