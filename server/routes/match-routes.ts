@@ -101,9 +101,9 @@ export function registerMatchRoutes(app: express.Express): void {
         validationCompletedAt: isAdmin ? new Date() : null,
         notes: `${notes || ''} [Game Scores: ${detailedScores}]`.trim(),
         tournamentId: validTournamentId,
-        scheduledDate: scheduledDate || null,
+        matchDate: scheduledDate ? new Date(scheduledDate) : new Date(), // Add required matchDate field
         pointsAwarded: winnerPoints,
-        category: formatType || 'singles' // Fix category field
+        xpAwarded: 0 // Add required xpAwarded field
       });
 
       // Award points to both players: 3 for winner, 1 for loser

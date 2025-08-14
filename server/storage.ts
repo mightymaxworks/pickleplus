@@ -3201,7 +3201,7 @@ export class DatabaseStorage implements IStorage {
             ilike(users.username, searchPattern),
             ilike(users.firstName, searchPattern),
             ilike(users.lastName, searchPattern),
-            ilike(users.displayName, searchPattern),
+            ilike(users.display_name, searchPattern), // Fix: use display_name not displayName
             ilike(users.passportCode, searchPattern),
             sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchPattern}`
           )
