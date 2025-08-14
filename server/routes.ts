@@ -47,23 +47,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 10;
       
-      if (!query || query.length < 2) {
+      console.log('[PLAYER SEARCH] Query received:', query, 'length:', query?.length);
+      
+      if (!query || query.length < 1) { // Allow single character search for Chinese
         return res.json([]);
       }
 
-      const users = await storage.searchUsers(query, limit);
-      const players = users.map(user => ({
+      // Use the enhanced search that supports Chinese characters
+      const users = await storage.searchPlayersByMultipleFields(query);
+      const players = users.slice(0, limit).map(user => ({
         id: user.id,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        displayName: user.displayName,
+        displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         passportCode: user.passportCode,
         gender: user.gender,
         profileImageUrl: user.profileImageUrl,
         isVerified: user.isVerified || false,
+        // Add fields expected by frontend
+        avatarInitials: user.displayName?.substring(0, 2) || 
+                       `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` || 
+                       user.username.substring(0, 2).toUpperCase(),
+        passportId: user.passportCode,
+        currentRating: user.rankingPoints || 0
       }));
 
+      console.log('[PLAYER SEARCH] Returning', players.length, 'results');
       res.json(players);
     } catch (error) {
       console.error('Player search error:', error);
