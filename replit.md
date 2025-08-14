@@ -14,6 +14,12 @@ Preferred communication style: Simple, everyday language.
 - **✅ COMPONENT CONSOLIDATION:** MatchRecordingDemo.tsx, PicklePointsCalculator.ts, RankingSystem.ts all aligned to single reference
 - **✅ TECHNICAL ERRORS RESOLVED:** Fixed import statements and missing properties across all points calculation components
 
+**CRITICAL ALGORITHM DISCREPANCIES IDENTIFIED (Aug 14, 2025):**
+- **🚨 AGE GROUP MISMATCH:** User specification (Pro, 19+, 35+, 50+, 60+, 70+) vs Algorithm document (18-34, 35-49, 50-59, 60+, 70+)
+- **🚨 GENDER BALANCE CLARIFICATION NEEDED:** Cross-gender point allocation system exists but implementation unclear for ranking point separation
+- **🚨 MATCH CARD RANKING DISPLAY:** No system for determining which ranking to display when players have multiple category rankings
+- **✅ GENDER SYSTEM DOCUMENTED:** Women get 1.15x multiplier in cross-gender matches (<1000 points only), Mixed teams get 1.075x, Elite players (1000+) get no gender bonuses
+
 **LAUNCH VERSION FOCUS (V1.0) - PRODUCTION READY STATUS:**
 - **🚀 PRODUCTION READY - MOCK DATA CLEANED (Aug 6, 2025)**
 - **✅ DATABASE CLEANUP COMPLETE:** Removed 27 mock/test users while preserving 145 real users
