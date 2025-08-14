@@ -13,7 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
-import { PCPRankings } from '@/components/dashboard/PCPRankings';
+import EnhancedLeaderboard from '@/components/match/EnhancedLeaderboard';
 import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -340,7 +340,18 @@ export default function DashboardContent() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <PCPRankings user={user} />
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] p-4 text-white">
+                <h3 className="font-bold text-lg flex items-center">
+                  <Trophy className="mr-2 h-5 w-5" />
+                  PCP Rankings
+                </h3>
+                <p className="text-white/80 text-xs mt-1">Competitive Points determine your global ranking</p>
+              </div>
+              <div className="p-4">
+                <EnhancedLeaderboard format="singles" />
+              </div>
+            </div>
           </motion.div>
           
           {/* CourtIQ Multi-Source Visualization */}
