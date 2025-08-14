@@ -29,6 +29,17 @@ export function MatchScoreDisplay({
 }: ScoreDisplayProps) {
   const isTeam1Winner = team1Score > team2Score;
   
+  // Calculate games won for each team by counting winning games
+  const team1GamesWon = gameScores.filter(score => {
+    const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+    return team1Game > team2Game;
+  }).length;
+  
+  const team2GamesWon = gameScores.filter(score => {
+    const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+    return team2Game > team1Game;
+  }).length;
+  
   const sizeClasses = {
     sm: {
       score: 'text-xl',
@@ -70,13 +81,35 @@ export function MatchScoreDisplay({
           ))}
         </div>
         
-        <div className={cn(
-          "font-bold mt-2",
-          classes.score,
-          isTeam1Winner ? "text-green-600" : "text-gray-500"
-        )}>
-          {team1Score}
-        </div>
+        {/* Display game scores prominently if available, otherwise show games won */}
+        {gameScores.length > 0 ? (
+          <div className="mt-2 space-y-1">
+            {gameScores.map((score, index) => {
+              const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+              const gameWinner = team1Game > team2Game;
+              
+              return (
+                <div key={index} className={cn(
+                  "font-bold text-lg",
+                  gameWinner ? "text-green-600" : "text-gray-500"
+                )}>
+                  {team1Game}
+                </div>
+              );
+            })}
+            <div className="text-xs text-gray-400 font-medium">
+              ({team1GamesWon} games)
+            </div>
+          </div>
+        ) : (
+          <div className={cn(
+            "font-bold mt-2",
+            classes.score,
+            isTeam1Winner ? "text-green-600" : "text-gray-500"
+          )}>
+            {team1Score}
+          </div>
+        )}
         
         {showWinnerIcon && isTeam1Winner && (
           <div className="mt-2">
@@ -108,13 +141,35 @@ export function MatchScoreDisplay({
           ))}
         </div>
         
-        <div className={cn(
-          "font-bold mt-2",
-          classes.score,
-          !isTeam1Winner ? "text-green-600" : "text-gray-500"
-        )}>
-          {team2Score}
-        </div>
+        {/* Display game scores prominently if available, otherwise show games won */}
+        {gameScores.length > 0 ? (
+          <div className="mt-2 space-y-1">
+            {gameScores.map((score, index) => {
+              const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+              const gameWinner = team2Game > team1Game;
+              
+              return (
+                <div key={index} className={cn(
+                  "font-bold text-lg",
+                  gameWinner ? "text-green-600" : "text-gray-500"
+                )}>
+                  {team2Game}
+                </div>
+              );
+            })}
+            <div className="text-xs text-gray-400 font-medium">
+              ({team2GamesWon} games)
+            </div>
+          </div>
+        ) : (
+          <div className={cn(
+            "font-bold mt-2",
+            classes.score,
+            !isTeam1Winner ? "text-green-600" : "text-gray-500"
+          )}>
+            {team2Score}
+          </div>
+        )}
         
         {showWinnerIcon && !isTeam1Winner && (
           <div className="mt-2">

@@ -98,21 +98,71 @@ export function MatchScoreCard({
       <Card className={cn("w-full", className)}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className={cn(
-                "text-2xl font-bold",
-                isTeam1Winner ? "text-green-600" : "text-gray-500"
-              )}>
-                {team1Score}
+            {gameScores.length > 0 ? (
+              <div className="flex items-center space-x-3">
+                <div className="space-y-1">
+                  <div className="flex space-x-1">
+                    {gameScores.map((score, index) => {
+                      const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+                      const gameWinner = team1Game > team2Game;
+                      
+                      return (
+                        <div key={index} className={cn(
+                          "font-bold text-lg px-2 py-1 rounded border",
+                          gameWinner 
+                            ? "text-green-600 border-green-300 bg-green-50" 
+                            : "text-gray-500 border-gray-200"
+                        )}>
+                          {team1Game}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">
+                    {formatPlayerName(match.playerOne)} {match.playerOnePartner ? `& ${formatPlayerName(match.playerOnePartner)}` : ''}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-400">vs</div>
+                <div className="space-y-1">
+                  <div className="flex space-x-1">
+                    {gameScores.map((score, index) => {
+                      const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+                      const gameWinner = team2Game > team1Game;
+                      
+                      return (
+                        <div key={index} className={cn(
+                          "font-bold text-lg px-2 py-1 rounded border",
+                          gameWinner 
+                            ? "text-green-600 border-green-300 bg-green-50" 
+                            : "text-gray-500 border-gray-200"
+                        )}>
+                          {team2Game}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">
+                    {formatPlayerName(match.playerTwo)} {match.playerTwoPartner ? `& ${formatPlayerName(match.playerTwoPartner)}` : ''}
+                  </div>
+                </div>
               </div>
-              <div className="text-sm text-gray-500">vs</div>
-              <div className={cn(
-                "text-2xl font-bold",
-                !isTeam1Winner ? "text-green-600" : "text-gray-500"
-              )}>
-                {team2Score}
+            ) : (
+              <div className="flex items-center space-x-4">
+                <div className={cn(
+                  "text-2xl font-bold",
+                  isTeam1Winner ? "text-green-600" : "text-gray-500"
+                )}>
+                  {team1Score}
+                </div>
+                <div className="text-sm text-gray-500">vs</div>
+                <div className={cn(
+                  "text-2xl font-bold",
+                  !isTeam1Winner ? "text-green-600" : "text-gray-500"
+                )}>
+                  {team2Score}
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex items-center space-x-2">
               <Badge variant={match.matchType === 'tournament' ? 'default' : 'secondary'}>
                 {match.matchType}
@@ -184,12 +234,41 @@ export function MatchScoreCard({
                 </div>
               ))}
             </div>
-            <div className={cn(
-              "text-4xl font-bold mt-2",
-              isTeam1Winner ? "text-green-600" : "text-gray-500"
-            )}>
-              {team1Score}
-            </div>
+            {/* Display game scores prominently like DUPR/ATP */}
+            {gameScores.length > 0 ? (
+              <div className="mt-3 space-y-1">
+                <div className="flex space-x-2 justify-center">
+                  {gameScores.map((score, index) => {
+                    const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+                    const gameWinner = team1Game > team2Game;
+                    
+                    return (
+                      <div key={index} className={cn(
+                        "font-bold text-2xl px-3 py-1 rounded border-2",
+                        gameWinner 
+                          ? "text-green-600 border-green-200 bg-green-50" 
+                          : "text-gray-500 border-gray-200"
+                      )}>
+                        {team1Game}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-sm text-gray-500 font-medium">
+                  Games Won: {gameScores.filter(score => {
+                    const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+                    return team1Game > team2Game;
+                  }).length}
+                </div>
+              </div>
+            ) : (
+              <div className={cn(
+                "text-4xl font-bold mt-2",
+                isTeam1Winner ? "text-green-600" : "text-gray-500"
+              )}>
+                {team1Score}
+              </div>
+            )}
             {isTeam1Winner && (
               <Badge className="mt-2 bg-green-600">
                 <Trophy className="h-3 w-3 mr-1" />
@@ -222,12 +301,41 @@ export function MatchScoreCard({
                 </div>
               ))}
             </div>
-            <div className={cn(
-              "text-4xl font-bold mt-2",
-              !isTeam1Winner ? "text-green-600" : "text-gray-500"
-            )}>
-              {team2Score}
-            </div>
+            {/* Display game scores prominently like DUPR/ATP */}
+            {gameScores.length > 0 ? (
+              <div className="mt-3 space-y-1">
+                <div className="flex space-x-2 justify-center">
+                  {gameScores.map((score, index) => {
+                    const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+                    const gameWinner = team2Game > team1Game;
+                    
+                    return (
+                      <div key={index} className={cn(
+                        "font-bold text-2xl px-3 py-1 rounded border-2",
+                        gameWinner 
+                          ? "text-green-600 border-green-200 bg-green-50" 
+                          : "text-gray-500 border-gray-200"
+                      )}>
+                        {team2Game}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-sm text-gray-500 font-medium">
+                  Games Won: {gameScores.filter(score => {
+                    const [team1Game, team2Game] = score.split('-').map(s => parseInt(s));
+                    return team2Game > team1Game;
+                  }).length}
+                </div>
+              </div>
+            ) : (
+              <div className={cn(
+                "text-4xl font-bold mt-2",
+                !isTeam1Winner ? "text-green-600" : "text-gray-500"
+              )}>
+                {team2Score}
+              </div>
+            )}
             {!isTeam1Winner && (
               <Badge className="mt-2 bg-green-600">
                 <Trophy className="h-3 w-3 mr-1" />
