@@ -38,53 +38,7 @@ export default function RankingsPage() {
             </div>
           </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-500" />
-                  <div>
-                    <div className="text-2xl font-bold">1,247</div>
-                    <div className="text-sm text-gray-600">Active Players</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <div className="text-2xl font-bold">12</div>
-                    <div className="text-sm text-gray-600">Elite Players</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                  <div>
-                    <div className="text-2xl font-bold">834</div>
-                    <div className="text-sm text-gray-600">Matches Today</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-purple-500" />
-                  <div>
-                    <div className="text-2xl font-bold">2,156</div>
-                    <div className="text-sm text-gray-600">Avg. Points</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+
         </motion.div>
 
         {/* Filters and Search */}

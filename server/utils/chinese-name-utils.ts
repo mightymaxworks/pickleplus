@@ -109,7 +109,8 @@ export function toPinyin(chineseText: string): string {
       '贺': 'hè',
       '赖': 'lài',
       '龚': 'gōng',
-      '文': 'wén'
+      '文': 'wén',
+      '明': 'míng'
     };
 
     // Check for exact matches first
@@ -118,20 +119,21 @@ export function toPinyin(chineseText: string): string {
     }
 
     // Try character by character mapping for compound names
-    let result = '';
+    let resultParts = [];
     for (const char of chineseText) {
       if (commonNameMappings[char]) {
-        result += commonNameMappings[char] + ' ';
+        resultParts.push(commonNameMappings[char]);
       } else if (/[\u4e00-\u9fff]/.test(char)) {
         // Chinese character but not in our mapping - keep original
-        result += char;
-      } else {
-        // Non-Chinese character (space, punctuation, etc.)
-        result += char;
+        resultParts.push(char);
+      } else if (char.trim()) {
+        // Non-Chinese character that isn't whitespace
+        resultParts.push(char);
       }
     }
 
-    return result.trim() || chineseText;
+    const result = resultParts.join(' ');
+    return result || chineseText;
   } catch (error) {
     console.error('Error converting to pinyin:', error);
     return chineseText; // Fallback to original text
@@ -147,14 +149,18 @@ export function enhanceChineseName(displayName: string): string {
     return displayName;
   }
   
-  const pinyinName = toPinyin(displayName);
+  // Clean up the display name by removing extra spaces first
+  const cleanDisplayName = displayName.replace(/\s+/g, '').trim();
+  const pinyinName = toPinyin(cleanDisplayName);
   
   // Only add pinyin if it's different from the original and actually converted to roman characters
-  if (pinyinName && pinyinName !== displayName && !/[\u4e00-\u9fff]/.test(pinyinName)) {
-    return `${displayName} (${pinyinName})`;
+  if (pinyinName && pinyinName !== cleanDisplayName && !/[\u4e00-\u9fff]/.test(pinyinName)) {
+    // Clean up the pinyin to remove extra spaces
+    const cleanPinyin = pinyinName.replace(/\s+/g, ' ').trim();
+    return `${cleanDisplayName} (${cleanPinyin})`;
   }
   
-  return displayName;
+  return cleanDisplayName;
 }
 
 /**
