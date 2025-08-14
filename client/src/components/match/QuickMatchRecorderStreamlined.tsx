@@ -597,6 +597,16 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
           <p className="text-sm text-muted-foreground">
             {formatType === "singles" ? "Add 2 players for singles match" : "Add 4 players for doubles match"}
           </p>
+          {formatType === "doubles" && (
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 font-medium">📝 Doubles Pairing:</p>
+              <p className="text-xs text-blue-700 mt-1">
+                • <strong>Team 1:</strong> 1st and 2nd players you add<br/>
+                • <strong>Team 2:</strong> 3rd and 4th players you add<br/>
+                • Order matters for team assignment!
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Unified Search Interface */}

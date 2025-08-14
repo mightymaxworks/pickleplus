@@ -94,7 +94,7 @@ import { communityStorageImplementation, type CommunityStorage } from './storage
 
 import { generateUniquePassportCode } from './utils/passport-generator';
 import { db } from "./db";
-import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql, ilike } from "drizzle-orm";
+import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql, ilike, like } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { sessionBookingMethods } from './storage-session-booking';
@@ -722,17 +722,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchUsers(query: string, limit: number = 15): Promise<User[]> {
-    const searchTerm = `%${query.toLowerCase()}%`;
+    const searchTerm = `%${query}%`;
     
     const results = await db.select()
       .from(users)
       .where(
         or(
-          sql`LOWER(${users.username}) LIKE ${searchTerm}`,
-          sql`LOWER(${users.firstName}) LIKE ${searchTerm}`,
-          sql`LOWER(${users.lastName}) LIKE ${searchTerm}`,
-          sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchTerm}`,
-          sql`LOWER(${users.passportCode}) LIKE ${searchTerm}`
+          // Support both case-insensitive and exact matching for Unicode characters
+          ilike(users.username, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm),
+          sql`${users.firstName} || ' ' || ${users.lastName} ILIKE ${searchTerm}`,
+          ilike(users.passportCode, searchTerm),
+          // Also support exact Chinese character matching
+          like(users.firstName, searchTerm),
+          like(users.lastName, searchTerm),
+          sql`${users.firstName} || ' ' || ${users.lastName} LIKE ${searchTerm}`
         )
       )
       .limit(limit)
