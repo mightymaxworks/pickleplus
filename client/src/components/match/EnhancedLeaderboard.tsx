@@ -68,9 +68,10 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Age divisions based on standard tournament rules
+  // Age divisions based on updated tournament rules with U19 category
   const ageDivisions = [
-    { value: "open", label: "Open (All Ages)", minAge: 0 },
+    { value: "open", label: "Open (19+)", minAge: 0 }, // All ages eligible, but labeled as 19+ primary
+    { value: "u19", label: "U19 Division", minAge: 0, maxAge: 18 }, // Under 19 category
     { value: "35+", label: "35+ Division", minAge: 35 },
     { value: "50+", label: "50+ Division", minAge: 50 },
     { value: "60+", label: "60+ Division", minAge: 60 },

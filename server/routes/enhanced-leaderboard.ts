@@ -42,12 +42,34 @@ interface LeaderboardResponse {
   searchTerm?: string;
 }
 
-// Helper function to determine division from age
-function getAgeGroupFromAge(age: number): string {
+// Helper function to determine eligible divisions from age (allows cross-category participation)
+function getEligibleDivisionsFromAge(age: number): string[] {
+  const divisions: string[] = [];
+  
+  // Age-specific categories (players must meet minimum age)
+  if (age >= 70) divisions.push("70+");
+  if (age >= 60) divisions.push("60+");
+  if (age >= 50) divisions.push("50+");
+  if (age >= 35) divisions.push("35+");
+  
+  // Youth and adult categories with cross-participation
+  if (age < 19) {
+    divisions.push("u19"); // Under 19 category
+    divisions.push("open"); // Can also participate in Open
+  } else {
+    divisions.push("open"); // 19+ for Open category
+  }
+  
+  return divisions;
+}
+
+// Helper function to get primary division from age (for display purposes)
+function getPrimaryDivisionFromAge(age: number): string {
   if (age >= 70) return "70+";
   if (age >= 60) return "60+";
   if (age >= 50) return "50+";
   if (age >= 35) return "35+";
+  if (age < 19) return "u19";
   return "open";
 }
 
@@ -63,7 +85,8 @@ function generateDemoLeaderboardData(
     { name: "Alex Johnson", gender: "male", age: 28, points: 1850, matches: 45, wins: 32 },
     { name: "Sarah Williams", gender: "female", age: 34, points: 1720, matches: 38, wins: 25 },
     { name: "Mike Rodriguez", gender: "male", age: 42, points: 1650, matches: 52, wins: 31 },
-    { name: "Emily Chen", gender: "female", age: 29, points: 1580, matches: 35, wins: 22 },
+    { name: "楚彬 林", gender: "male", age: 13, points: 1580, matches: 35, wins: 22 }, // Real U19 player from database
+    { name: "Emily Chen", gender: "female", age: 29, points: 1560, matches: 35, wins: 22 },
     { name: "David Brown", gender: "male", age: 55, points: 1520, matches: 48, wins: 28 },
     { name: "Lisa Thompson", gender: "female", age: 38, points: 1480, matches: 41, wins: 24 },
     { name: "Robert Davis", gender: "male", age: 62, points: 1450, matches: 39, wins: 23 },
@@ -103,7 +126,7 @@ function generateDemoLeaderboardData(
       winRate: Math.round((player.wins / player.matches) * 100 * 10) / 10, // Convert to percentage with 1 decimal
       gender: player.gender as 'male' | 'female',
       age: player.age,
-      division: getAgeGroupFromAge(player.age),
+      division: getPrimaryDivisionFromAge(player.age),
       ranking: index + 1,
       isCurrentUser: currentUserId === 218 && player.name === "Admin User" // Mark current user
     }))
@@ -112,17 +135,9 @@ function generateDemoLeaderboardData(
       if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
       if (gender !== 'all' && player.gender !== gender) return false;
       
-      // Filter by division
-      if (division === 'open') return true;
-      
-      const divisionMinAge = {
-        '35+': 35,
-        '50+': 50,
-        '60+': 60,
-        '70+': 70
-      }[division] || 0;
-      
-      return player.age >= divisionMinAge;
+      // Filter by division with cross-category participation support
+      const eligibleDivisions = getEligibleDivisionsFromAge(player.age);
+      return eligibleDivisions.includes(division);
     })
     .sort((a, b) => {
       // Sort by points descending, then by win rate, then by matches played
@@ -178,13 +193,13 @@ async function getRealLeaderboardData(
           id: user.id,
           displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
           username: user.username,
-          avatar: user.profileImageUrl,
+          avatar: user.profileImage || undefined,
           points: formatPoints,
           matchesPlayed: matchStats.totalMatches || 0,
           winRate: matchStats.winRate || 0,
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
           age: age,
-          division: getAgeGroupFromAge(age),
+          division: getPrimaryDivisionFromAge(age),
           ranking: index + 1,
           isCurrentUser: currentUserId === user.id
         };
@@ -198,17 +213,9 @@ async function getRealLeaderboardData(
         if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
         if (gender !== 'all' && player.gender !== gender) return false;
         
-        // Filter by division
-        if (division === 'open') return true;
-        
-        const divisionMinAge = {
-          '35+': 35,
-          '50+': 50,
-          '60+': 60,
-          '70+': 70
-        }[division] || 0;
-        
-        return player.age >= divisionMinAge;
+        // Filter by division with cross-category participation support
+        const eligibleDivisions = getEligibleDivisionsFromAge(player.age);
+        return eligibleDivisions.includes(division);
       })
       .sort((a, b) => {
         // Sort by points descending (primary), then by win rate, then by matches played
