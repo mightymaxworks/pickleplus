@@ -322,18 +322,33 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const [manualPointsLoser, setManualPointsLoser] = useState<number>(0);
   
   // Fetch real competitions data from API
-  const { data: competitionsData, isLoading: competitionsLoading } = useQuery({
+  const { data: competitionsData, isLoading: competitionsLoading, error: competitionsError } = useQuery({
     queryKey: ['/api/admin/match-management/competitions'],
     queryFn: async () => {
+      console.log('[QuickMatchRecorder] Fetching competitions...');
       const response = await apiRequest('GET', '/api/admin/match-management/competitions');
       const data = await response.json();
-      return data.success ? data.data : [];
+      console.log('[QuickMatchRecorder] Competitions response:', data);
+      
+      if (data.success && Array.isArray(data.data)) {
+        console.log('[QuickMatchRecorder] Found competitions:', data.data.length);
+        return data.data;
+      } else {
+        console.warn('[QuickMatchRecorder] Unexpected API response format:', data);
+        return [];
+      }
     },
     enabled: isAdmin, // Only fetch if user is admin
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const competitions = Array.isArray(competitionsData) ? competitionsData : [];
+  
+  // Debug logging
+  console.log('[QuickMatchRecorder] isAdmin:', isAdmin);
+  console.log('[QuickMatchRecorder] competitionsLoading:', competitionsLoading);
+  console.log('[QuickMatchRecorder] competitionsError:', competitionsError);
+  console.log('[QuickMatchRecorder] competitions count:', competitions.length);
 
   // Load recent opponents from API
   useEffect(() => {
