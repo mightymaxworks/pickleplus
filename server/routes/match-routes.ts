@@ -50,17 +50,10 @@ export function registerMatchRoutes(app: express.Express): void {
       
       const winnerId = playerOneGamesWon > playerTwoGamesWon ? (playerOneId || (req.user as any)?.id) : playerTwoId;
       
-      // Calculate individual team/player scores for proper display
-      let playerOneScore = 0;
-      let playerTwoScore = 0;
-      
-      games.forEach((game: any) => {
-        if (game.playerOneScore > game.playerTwoScore) {
-          playerOneScore++;
-        } else {
-          playerTwoScore++;
-        }
-      });
+      // Store the actual game scores from the last/final game for display
+      const finalGame = games[games.length - 1]; // Get the last game played
+      const playerOneScore = finalGame.playerOneScore;
+      const playerTwoScore = finalGame.playerTwoScore;
       
       // Format individual game results for storage
       const detailedScores = games.map((game: any) => 
