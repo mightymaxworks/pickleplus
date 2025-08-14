@@ -695,6 +695,7 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.weight': 'Weight',
     'profile.dominantHand': 'Dominant Hand',
     'profile.playingStyle': 'Playing Style',
+    'profile.getStarted': 'Get Started',
     
     // Dashboard Stats
     'stats.duprRating': 'DUPR Rating',
@@ -1576,6 +1577,7 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.achievements': '成就',
     'profile.updatePhoto': '更新照片',
     'profile.height': '身高',
+    'profile.getStarted': '开始使用',
     
     // Dashboard Stats
     'stats.duprRating': 'DUPR评级',
