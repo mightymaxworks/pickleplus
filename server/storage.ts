@@ -678,6 +678,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId));
   }
 
+  async updateUserRankingPoints(userId: number, pointsToAdd: number): Promise<void> {
+    await db.update(users)
+      .set({ 
+        rankingPoints: sql`COALESCE(ranking_points, 0) + ${pointsToAdd}` 
+      })
+      .where(eq(users.id, userId));
+  }
+
   async updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User> {
     console.log(`[Storage] Updating profile for user ${id} with data:`, profileData);
     const [user] = await db.update(users)

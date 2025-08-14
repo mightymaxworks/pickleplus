@@ -100,18 +100,31 @@ export function registerMatchRoutes(app: express.Express): void {
       });
 
       // Award points to both players: 3 for winner, 1 for loser
+      const playerOneIdResolved = playerOneId || (req.user as any)?.id;
       const allPlayerIds = [
-        playerOneId || (req.user as any)?.id,
+        playerOneIdResolved,
         playerTwoId,
         playerOnePartnerId,
         playerTwoPartnerId
       ].filter(id => id); // Remove null/undefined values
 
+      // Determine winning team for doubles matches
+      const isTeamOneWinner = winnerId === playerOneIdResolved;
+      const winningTeam = isTeamOneWinner 
+        ? [playerOneIdResolved, playerOnePartnerId].filter(id => id)
+        : [playerTwoId, playerTwoPartnerId].filter(id => id);
+
       try {
         for (const playerId of allPlayerIds) {
-          const points = playerId === winnerId ? winnerPoints : loserPoints;
-          await storage.updateUserPicklePoints(playerId, points);
-          console.log(`[Match Creation] Awarded ${points} points to ${playerId === winnerId ? 'winner' : 'loser'} (User ID: ${playerId})`);
+          const isWinner = winningTeam.includes(playerId);
+          const picklePoints = isWinner ? winnerPoints : loserPoints;
+          const rankingPoints = isWinner ? winnerPoints : loserPoints; // Same points for both systems
+          
+          // Update both Pickle Points (gamification) and Ranking Points (competitive)
+          await storage.updateUserPicklePoints(playerId, picklePoints);
+          await storage.updateUserRankingPoints(playerId, rankingPoints);
+          
+          console.log(`[Match Creation] Awarded ${picklePoints} Pickle Points and ${rankingPoints} Ranking Points to ${isWinner ? 'winner' : 'loser'} (User ID: ${playerId})`);
         }
       } catch (error) {
         console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);
