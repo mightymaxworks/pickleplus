@@ -53,6 +53,7 @@ import {
   Info,
   Search,
   CheckCircle2,
+  Calendar,
   Loader2,
   Timer,
   TrendingUp
@@ -591,9 +592,9 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     setFormatType("singles");
     setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
     
-    // Reset admin-specific fields
+    // Reset admin-specific fields (keep competition selection persistent)
     if (isAdmin) {
-      setSelectedCompetitionId(null);
+      // DO NOT reset selectedCompetitionId for seamless batch recording
       setUseManualPointsOverride(false);
       setManualPointsWinner(0);
       setManualPointsLoser(0);
@@ -675,6 +676,58 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           </div>
         </CardContent>
       </Card>
+
+      {/* Admin Competition/Event Selection */}
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-purple-500" />
+              Competition/Event
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-base font-medium">Select Competition/Event (Optional)</Label>
+              </div>
+              <Select 
+                value={selectedCompetitionId?.toString() || ""} 
+                onValueChange={(value) => setSelectedCompetitionId(value ? parseInt(value) : null)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a competition or leave blank for casual match" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Competition (Casual Match)</SelectItem>
+                  <SelectItem value="1">Spring Championship 2025</SelectItem>
+                  <SelectItem value="2">Weekly League - March</SelectItem>
+                  <SelectItem value="3">Beginner Tournament</SelectItem>
+                  <SelectItem value="4">Advanced Players Cup</SelectItem>
+                  <SelectItem value="5">Friday Night Doubles</SelectItem>
+                  <SelectItem value="6">Regional Qualifiers</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {selectedCompetitionId && (
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2 text-purple-800">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      Competition Selected - All matches will be recorded for this event
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded border border-blue-200">
+                <strong>Persistence:</strong> This selection remains active across multiple match recordings for seamless batch entry.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Player Selection */}
       <Card>
