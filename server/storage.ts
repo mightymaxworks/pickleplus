@@ -22,7 +22,7 @@ import {
 
 } from "@shared/schema";
 // Import Drizzle operators
-import { eq, or, desc, count, isNull } from "drizzle-orm";
+import { eq, or, desc, count, isNull, and } from "drizzle-orm";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
 // Regular matches table uses inferred types
@@ -6699,6 +6699,8 @@ export class DatabaseStorage implements IStorage {
     limit = 50,
     offset = 0
   ): Promise<Array<UserAgeGroupRanking & { user: User }>> {
+    console.log(`[STORAGE] getAgeGroupLeaderboard called with: ageGroup=${ageGroup}, gameType=${gameType}, gender=${gender}`);
+    
     const rankings = await db
       .select({
         ranking: userAgeGroupRankings,
@@ -6706,13 +6708,15 @@ export class DatabaseStorage implements IStorage {
       })
       .from(userAgeGroupRankings)
       .innerJoin(users, eq(userAgeGroupRankings.userId, users.id))
-      .where(eq(userAgeGroupRankings.ageGroup, ageGroup))
-      .where(eq(userAgeGroupRankings.gameType, gameType))
-      .where(eq(userAgeGroupRankings.gender, gender))
-      .orderBy(desc(userAgeGroupRankings.rankingPoints))
+      .where(and(
+        eq(userAgeGroupRankings.ageCategory, ageGroup),
+        eq(users.gender, gender)
+      ))
+      .orderBy(desc(gameType === 'singles' ? userAgeGroupRankings.singlesPoints : userAgeGroupRankings.doublesPoints))
       .limit(limit)
       .offset(offset);
 
+    console.log(`[STORAGE] Found ${rankings.length} rankings for ageGroup=${ageGroup}, gameType=${gameType}, gender=${gender}`);
     return rankings.map(r => ({ ...r.ranking, user: r.user }));
   }
 
