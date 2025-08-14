@@ -4,6 +4,17 @@ import { storage } from '../storage';
 
 const router = Router();
 
+// Simple test endpoint to verify route registration
+router.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Enhanced leaderboard routes working',
+    timestamp: new Date(),
+    path: req.path 
+  });
+});
+
+console.log('[ENHANCED LEADERBOARD] Router initialized and test endpoint added');
+
 interface LeaderboardEntry {
   id: number;
   displayName: string;

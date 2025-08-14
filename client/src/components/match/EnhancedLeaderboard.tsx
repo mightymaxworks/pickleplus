@@ -250,8 +250,8 @@ export default function EnhancedLeaderboard({ format = "singles" }: EnhancedLead
         </div>
         
         <div className="text-xs text-orange-600 mt-2 text-center bg-orange-50 rounded px-2 py-1">
-          {getAgeGroupLabel(selectedDivision, selectedGender)} • {formatType === "singles" ? "Singles" : 
-                                  formatType === "mixed" ? "Mixed Doubles" : "Doubles"}
+          {getAgeGroupLabel(selectedDivision, selectedGender)} • {format === "singles" ? "Singles" : 
+                                  format === "mixed" ? "Mixed Doubles" : "Doubles"}
         </div>
       </div>
       

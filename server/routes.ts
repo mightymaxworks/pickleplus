@@ -299,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Enhanced Leaderboard Routes for age group and gender separation
     console.log("[ROUTES] Registering Enhanced Leaderboard routes...");
     const enhancedLeaderboardRoutes = await import('./routes/enhanced-leaderboard');
-    app.use('/api/leaderboard', enhancedLeaderboardRoutes.default);
+    app.use('/api/enhanced-leaderboard', enhancedLeaderboardRoutes.default);
     console.log("[ROUTES] Enhanced leaderboard routes registered successfully");
     
     // PCP Certification System
