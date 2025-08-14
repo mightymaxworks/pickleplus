@@ -1148,6 +1148,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                     ))}
                   </div>
                 </div>
+                </div>
               </div>
             </>
           )}
