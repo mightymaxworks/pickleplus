@@ -161,8 +161,7 @@ async function getRealLeaderboardData(
     // Get all users with format-specific ranking points
     const allUsers = await storage.getUsersWithRankingPoints(formatParam);
     
-    let processedPlayers = await Promise.all(allUsers
-      .map(async (user, index) => {
+    let usersWithStats = await Promise.all(allUsers.map(async (user, index) => {
         const age = user.dateOfBirth ? 
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25; // Default age if not provided
@@ -189,7 +188,9 @@ async function getRealLeaderboardData(
           ranking: index + 1,
           isCurrentUser: currentUserId === user.id
         };
-      }))
+      }));
+
+    let processedPlayers = usersWithStats
       .filter(player => player.points > 0) // Only show players with points in this format
       .filter(player => !player.displayName.includes('Test')) // Exclude test users
       .filter(player => {
