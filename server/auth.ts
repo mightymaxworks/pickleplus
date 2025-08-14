@@ -332,12 +332,20 @@ export function setupAuth(app: Express) {
           console.log('[Auth] Special handling for test user: testuser1');
         }
         
-        const user = await storage.getUserByUsername(username);
+        // Try to find user by username first, then by email
+        let user = await storage.getUserByUsername(username);
         
         if (!user) {
-          console.log(`[Auth] User not found: ${username}`);
+          console.log(`[Auth] User not found by username: ${username}, trying email...`);
+          user = await storage.getUserByEmail(username);
+        }
+        
+        if (!user) {
+          console.log(`[Auth] User not found by username or email: ${username}`);
           return done(null, false);
         }
+        
+        console.log(`[Auth] User found: ${user.username} (Email: ${user.email}, ID: ${user.id}) for login attempt: ${username}`);
         
         console.log(`[Auth] User found: ${username} (ID: ${user.id}), validating password...`);
         console.log(`[Auth] Supplied password: "${password}" (length: ${password.length})`);
