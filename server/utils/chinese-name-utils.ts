@@ -12,36 +12,48 @@ export function toPinyin(chineseText: string): string {
   try {
     // Static mapping for common Chinese names to demonstrate functionality
     const commonNameMappings: Record<string, string> = {
-      '张三': 'zhāng sān',
-      '李四': 'lǐ sì',
-      '王五': 'wáng wǔ',
-      '赵六': 'zhào liù',
-      '钱七': 'qián qī',
-      '孙八': 'sūn bā',
-      '周九': 'zhōu jiǔ',
-      '吴十': 'wú shí',
-      '陈': 'chén',
-      '刘': 'liú',
-      '杨': 'yáng',
-      '黄': 'huáng',
-      '林': 'lín',
-      '郭': 'guō',
-      '何': 'hé',
-      '高': 'gāo',
-      '马': 'mǎ',
-      '罗': 'luó',
-      '梁': 'liáng',
-      '宋': 'sòng',
-      '郑': 'zhèng',
-      '谢': 'xiè',
-      '韩': 'hán',
-      '唐': 'táng',
-      '冯': 'féng',
-      '于': 'yú',
-      '董': 'dǒng',
-      '萧': 'xiāo',
-      '程': 'chéng',
-      '曹': 'cáo',
+      '张三': 'zhang san',
+      '李四': 'li si',
+      '王五': 'wang wu',
+      '赵六': 'zhao liu',
+      '钱七': 'qian qi',
+      '孙八': 'sun ba',
+      '周九': 'zhou jiu',
+      '吴十': 'wu shi',
+      '李明': 'li ming',
+      '陈': 'chen',
+      '刘': 'liu',
+      '杨': 'yang',
+      '黄': 'huang',
+      '林': 'lin',
+      '郭': 'guo',
+      '何': 'he',
+      '高': 'gao',
+      '马': 'ma',
+      '罗': 'luo',
+      '梁': 'liang',
+      '宋': 'song',
+      '郑': 'zheng',
+      '谢': 'xie',
+      '韩': 'han',
+      '唐': 'tang',
+      '冯': 'feng',
+      '于': 'yu',
+      '董': 'dong',
+      '萧': 'xiao',
+      '程': 'cheng',
+      '曹': 'cao',
+      '张': 'zhang',
+      '王': 'wang',
+      '李': 'li',
+      '赵': 'zhao',
+      '周': 'zhou',
+      '吴': 'wu',
+      '徐': 'xu',
+      '孙': 'sun',
+      '朱': 'zhu',
+      '胡': 'hu',
+      '三': 'san',
       '袁': 'yuán',
       '邓': 'dèng',
       '许': 'xǔ',
@@ -149,18 +161,26 @@ export function enhanceChineseName(displayName: string): string {
     return displayName;
   }
   
-  // Clean up the display name by removing extra spaces first
+  // For Chinese names, display them with spaces between characters
+  const spacedChineseName = displayName.replace(/\s+/g, '').split('').join(' ');
+  
+  // Clean display name for pinyin conversion (no spaces)
   const cleanDisplayName = displayName.replace(/\s+/g, '').trim();
   const pinyinName = toPinyin(cleanDisplayName);
   
   // Only add pinyin if it's different from the original and actually converted to roman characters
   if (pinyinName && pinyinName !== cleanDisplayName && !/[\u4e00-\u9fff]/.test(pinyinName)) {
-    // Clean up the pinyin to remove extra spaces
-    const cleanPinyin = pinyinName.replace(/\s+/g, ' ').trim();
-    return `${cleanDisplayName} (${cleanPinyin})`;
+    // Capitalize the pinyin properly (first letter of each word)
+    const capitalizedPinyin = pinyinName
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    return `${spacedChineseName} (${capitalizedPinyin})`;
   }
   
-  return cleanDisplayName;
+  return spacedChineseName;
 }
 
 /**
