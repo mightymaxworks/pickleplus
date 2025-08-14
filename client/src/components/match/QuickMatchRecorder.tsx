@@ -261,6 +261,8 @@ interface UserSearchResult {
   dateOfBirth?: string | null;
   gender?: string | null;
   currentRating?: number;
+  // Admin editable fields
+  birthdate?: string | undefined;
 }
 
 interface QuickMatchRecorderProps {
@@ -483,6 +485,19 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           winnerId: winner === 1 ? playerOneData.id : playerTwoData.id,
           winnerPoints: winner === 1 ? manualPointsWinner : manualPointsLoser,
           loserPoints: winner === 1 ? manualPointsLoser : manualPointsWinner,
+        } : undefined,
+        // Admin profile updates if provided
+        profileUpdates: isAdmin ? {
+          playerOne: (playerOneData.birthdate || playerOneData.gender) ? {
+            userId: playerOneData.id,
+            birthdate: playerOneData.birthdate,
+            gender: playerOneData.gender
+          } : null,
+          playerTwo: (playerTwoData.birthdate || playerTwoData.gender) ? {
+            userId: playerTwoData.id,
+            birthdate: playerTwoData.birthdate,
+            gender: playerTwoData.gender
+          } : null
         } : undefined,
       };
 
@@ -742,26 +757,76 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           <div className="space-y-2">
             <Label>Player One {!isAdmin && "(You)"}</Label>
             {playerOneData ? (
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{playerOneData.avatarInitials}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{playerOneData.displayName || playerOneData.username}</p>
-                    <p className="text-sm text-muted-foreground">@{playerOneData.username}</p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{playerOneData.avatarInitials}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{playerOneData.displayName || playerOneData.username}</p>
+                      <p className="text-sm text-muted-foreground">@{playerOneData.username}</p>
+                    </div>
                   </div>
+                  {isAdmin && (
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      setPlayerOneData(null);
+                    }}>
+                      Change
+                    </Button>
+                  )}
                 </div>
+                
+                {/* Admin Profile Editing Fields */}
                 {isAdmin && (
-                  <Button variant="ghost" size="sm" onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "Admin player selection will be available soon",
-                      variant: "default",
-                    });
-                  }}>
-                    Change
-                  </Button>
+                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Users className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">
+                        Optional Profile Updates (affects point calculations)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Birthdate (YYYY-MM-DD)</Label>
+                        <Input
+                          type="date"
+                          placeholder="YYYY-MM-DD"
+                          className="text-sm"
+                          onChange={(e) => {
+                            setPlayerOneData(prev => prev ? {
+                              ...prev,
+                              birthdate: e.target.value || undefined
+                            } : prev);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Gender</Label>
+                        <Select 
+                          onValueChange={(value) => {
+                            setPlayerOneData(prev => prev ? {
+                              ...prev,
+                              gender: value === 'none' ? undefined : value
+                            } : prev);
+                          }}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No data / Leave blank</SelectItem>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Leave fields blank if no updates needed. These fields affect ranking point calculations.
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
@@ -796,19 +861,73 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
           <div className="space-y-2">
             <Label>Player Two (Opponent)</Label>
             {playerTwoData ? (
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{playerTwoData.avatarInitials || playerTwoData.displayName?.substring(0, 2) || playerTwoData.username.substring(0, 2)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
-                    <p className="text-sm text-muted-foreground">@{playerTwoData.username}</p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{playerTwoData.avatarInitials || playerTwoData.displayName?.substring(0, 2) || playerTwoData.username.substring(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
+                      <p className="text-sm text-muted-foreground">@{playerTwoData.username}</p>
+                    </div>
                   </div>
+                  <Button variant="ghost" size="sm" onClick={() => setPlayerTwoData(null)}>
+                    Change
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setPlayerTwoData(null)}>
-                  Change
-                </Button>
+                
+                {/* Admin Profile Editing Fields */}
+                {isAdmin && (
+                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Users className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">
+                        Optional Profile Updates (affects point calculations)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Birthdate (YYYY-MM-DD)</Label>
+                        <Input
+                          type="date"
+                          placeholder="YYYY-MM-DD"
+                          className="text-sm"
+                          onChange={(e) => {
+                            setPlayerTwoData(prev => prev ? {
+                              ...prev,
+                              birthdate: e.target.value || undefined
+                            } : prev);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Gender</Label>
+                        <Select 
+                          onValueChange={(value) => {
+                            setPlayerTwoData(prev => prev ? {
+                              ...prev,
+                              gender: value === 'none' ? undefined : value
+                            } : prev);
+                          }}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No data / Leave blank</SelectItem>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Leave fields blank if no updates needed. These fields affect ranking point calculations.
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <SmartPlayerSearch

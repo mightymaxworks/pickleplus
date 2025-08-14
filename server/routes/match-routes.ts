@@ -28,7 +28,8 @@ export function registerMatchRoutes(app: express.Express): void {
         formatType,
         notes,
         tournamentId,
-        scheduledDate
+        scheduledDate,
+        profileUpdates // Admin profile updates for players
       } = req.body;
       
       if (!playerTwoId || !games || games.length === 0) {
@@ -121,6 +122,53 @@ export function registerMatchRoutes(app: express.Express): void {
         }
       } catch (error) {
         console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);
+      }
+
+      // Handle admin profile updates if provided
+      if (isAdmin && profileUpdates) {
+        try {
+          console.log('[Match Creation] Processing admin profile updates:', profileUpdates);
+          
+          // Update player one profile if provided
+          if (profileUpdates.playerOne && profileUpdates.playerOne.userId) {
+            const updates: any = {};
+            if (profileUpdates.playerOne.birthdate) {
+              updates.dateOfBirth = profileUpdates.playerOne.birthdate;
+              console.log(`[Profile Update] Setting birthdate for user ${profileUpdates.playerOne.userId}: ${profileUpdates.playerOne.birthdate}`);
+            }
+            if (profileUpdates.playerOne.gender) {
+              updates.gender = profileUpdates.playerOne.gender;
+              console.log(`[Profile Update] Setting gender for user ${profileUpdates.playerOne.userId}: ${profileUpdates.playerOne.gender}`);
+            }
+            
+            if (Object.keys(updates).length > 0) {
+              await storage.updateUserProfile(profileUpdates.playerOne.userId, updates);
+              console.log(`[Profile Update] Successfully updated player one profile (ID: ${profileUpdates.playerOne.userId})`);
+            }
+          }
+          
+          // Update player two profile if provided  
+          if (profileUpdates.playerTwo && profileUpdates.playerTwo.userId) {
+            const updates: any = {};
+            if (profileUpdates.playerTwo.birthdate) {
+              updates.dateOfBirth = profileUpdates.playerTwo.birthdate;
+              console.log(`[Profile Update] Setting birthdate for user ${profileUpdates.playerTwo.userId}: ${profileUpdates.playerTwo.birthdate}`);
+            }
+            if (profileUpdates.playerTwo.gender) {
+              updates.gender = profileUpdates.playerTwo.gender;
+              console.log(`[Profile Update] Setting gender for user ${profileUpdates.playerTwo.userId}: ${profileUpdates.playerTwo.gender}`);
+            }
+            
+            if (Object.keys(updates).length > 0) {
+              await storage.updateUserProfile(profileUpdates.playerTwo.userId, updates);
+              console.log(`[Profile Update] Successfully updated player two profile (ID: ${profileUpdates.playerTwo.userId})`);
+            }
+          }
+          
+        } catch (error) {
+          console.error('[Profile Update] Error updating player profiles:', error);
+          // Don't fail the match creation if profile updates fail
+        }
       }
 
       console.log(`[Match Creation] Match created successfully: ${newMatch.id} (Status: ${isAdmin ? 'auto-completed (admin)' : 'pending validation'})`);
