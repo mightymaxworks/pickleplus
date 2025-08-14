@@ -23,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 **LAUNCH VERSION FOCUS (V1.0) - PRODUCTION READY STATUS:**
 - **🚀 PRODUCTION READY - MOCK DATA CLEANED (Aug 6, 2025)**
 - **✅ DATABASE CLEANUP COMPLETE:** Removed 27 mock/test users while preserving 145 real users
-- **✅ USER DATA UPDATES:** Updated weiwei (微微) birth year to 1985 for accurate age calculations
+- **✅ USER DATA UPDATES:** Updated weiwei (微微) birth year to 1985 for accurate age calculations, corrected gender for yoke Kheng and elaine yong to female
 - **✅ PLATFORM SANITIZED:** All testing data removed, production environment clean
 - **✅ MASTER ADMIN SECURED:** mightymax confirmed as master admin with password 67661189abc and full admin privileges
 - **✅ CI/CD VALIDATION COMPLETE (Aug 6, 2025):** Admin Enhanced Match Management system validated 100% operational with comprehensive testing suite
