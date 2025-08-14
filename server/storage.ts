@@ -16,6 +16,8 @@ import {
   type DrillCategory,
 
 } from "@shared/schema";
+// Import Drizzle operators
+import { eq, or, desc, count, isNull } from "drizzle-orm";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
 // Regular matches table uses inferred types
@@ -924,10 +926,10 @@ export class DatabaseStorage implements IStorage {
       const userMatches = await db.select()
         .from(matches)
         .where(or(
-          eq(matches.player1Id, userId), 
-          eq(matches.player2Id, userId),
-          eq(matches.player1PartnerId, userId),
-          eq(matches.player2PartnerId, userId)
+          eq(matches.playerOneId, userId), 
+          eq(matches.playerTwoId, userId),
+          eq(matches.playerOnePartnerId, userId),
+          eq(matches.playerTwoPartnerId, userId)
         ))
         .orderBy(desc(matches.createdAt))
         .limit(50);
@@ -959,10 +961,10 @@ export class DatabaseStorage implements IStorage {
       const userMatches = await db.select()
         .from(matches)
         .where(or(
-          eq(matches.player1Id, userId), 
-          eq(matches.player2Id, userId),
-          eq(matches.player1PartnerId, userId),
-          eq(matches.player2PartnerId, userId)
+          eq(matches.playerOneId, userId), 
+          eq(matches.playerTwoId, userId),
+          eq(matches.playerOnePartnerId, userId),
+          eq(matches.playerTwoPartnerId, userId)
         ))
         .orderBy(desc(matches.createdAt))
         .limit(limit);

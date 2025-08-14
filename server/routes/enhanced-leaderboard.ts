@@ -161,8 +161,8 @@ async function getRealLeaderboardData(
     // Get all users with format-specific ranking points
     const allUsers = await storage.getUsersWithRankingPoints(formatParam);
     
-    let processedPlayers = allUsers
-      .map((user, index) => {
+    let processedPlayers = await Promise.all(allUsers
+      .map(async (user, index) => {
         const age = user.dateOfBirth ? 
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25; // Default age if not provided
@@ -172,21 +172,24 @@ async function getRealLeaderboardData(
           ? (user.doublesRankingPoints || 0)
           : (user.singlesRankingPoints || 0);
         
+        // Get actual match stats for this user
+        const matchStats = await storage.getMatchStats(user.id);
+        
         return {
           id: user.id,
           displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
           username: user.username,
           avatar: user.profileImageUrl,
           points: formatPoints,
-          matchesPlayed: user.matchesPlayed || 0,
-          winRate: user.matchesPlayed > 0 ? Math.round(((user.wins || 0) / user.matchesPlayed) * 100 * 10) / 10 : 0,
+          matchesPlayed: matchStats.totalMatches || 0,
+          winRate: matchStats.winRate || 0,
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
           age: age,
           division: getAgeGroupFromAge(age),
           ranking: index + 1,
           isCurrentUser: currentUserId === user.id
         };
-      })
+      }))
       .filter(player => player.points > 0) // Only show players with points in this format
       .filter(player => !player.displayName.includes('Test')) // Exclude test users
       .filter(player => {
