@@ -29,7 +29,7 @@ const upload = multer({
 // Interface for the Excel row structure
 interface BulkMatchRow {
   matchDate: string;
-  matchType: 'casual' | 'tournament';
+  matchType: 'casual' | 'tournament' | 'league';
   player1PassportCode: string;
   player1Gender: string;
   player1DateOfBirth?: string;
@@ -68,7 +68,7 @@ router.get('/template', isAuthenticated, async (req, res) => {
     const templateData = [
       {
         'Match Date (YYYY-MM-DD)': '2025-08-13',
-        'Match Type (casual/tournament)': 'casual',
+        'Match Type (casual/tournament/league)': 'casual',
         'Player 1 Passport Code': 'CBSPZV',
         'Player 1 Gender (male/female)': 'male',
         'Player 1 Date of Birth (YYYY-MM-DD)': '1990-05-15',
@@ -95,7 +95,7 @@ router.get('/template', isAuthenticated, async (req, res) => {
       },
       {
         'Match Date (YYYY-MM-DD)': '2025-08-13',
-        'Match Type (casual/tournament)': 'tournament',
+        'Match Type (casual/tournament/league)': 'tournament',
         'Player 1 Passport Code': 'CBSPZV',
         'Player 1 Gender (male/female)': 'male',
         'Player 1 Date of Birth (YYYY-MM-DD)': '',
@@ -122,7 +122,7 @@ router.get('/template', isAuthenticated, async (req, res) => {
       },
       {
         'Match Date (YYYY-MM-DD)': '2025-08-13',
-        'Match Type (casual/tournament)': 'casual',
+        'Match Type (casual/tournament/league)': 'league',
         'Player 1 Passport Code': 'MX8K7P2N',
         'Player 1 Gender (male/female)': 'female',
         'Player 1 Date of Birth (YYYY-MM-DD)': '',
@@ -237,7 +237,7 @@ router.post('/matches', isAuthenticated, upload.single('excelFile'), async (req,
         // Map Excel columns to our interface
         const matchData: BulkMatchRow = {
           matchDate: row['Match Date (YYYY-MM-DD)'],
-          matchType: row['Match Type (casual/tournament)']?.toLowerCase(),
+          matchType: row['Match Type (casual/tournament/league)']?.toLowerCase(),
           player1PassportCode: row['Player 1 Passport Code']?.toUpperCase(),
           player1Gender: row['Player 1 Gender (male/female)']?.toLowerCase(),
           player1DateOfBirth: row['Player 1 Date of Birth (YYYY-MM-DD)'] || undefined,

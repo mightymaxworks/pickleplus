@@ -62,6 +62,7 @@ import {
   LazyCoachApplicationPage,
   LazyReportsPage,
   LazySettingsPage,
+  LazyEnhancedBulkMatchUpload,
   // LazyMobileTestPage removed - test file deleted
   LazyBugReportDashboard,
   LazyBouncePage, // PKL-278651-BOUNCE-0001-CORE
@@ -823,6 +824,13 @@ export default function App() {
                     {(params) => (
                       <AdminProtectedRoute>
                         {React.createElement(lazyLoad(() => import('./pages/admin/BulkMatchUpload')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  <Route path="/admin/enhanced-bulk-upload">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        <LazyEnhancedBulkMatchUpload />
                       </AdminProtectedRoute>
                     )}
                   </Route>
