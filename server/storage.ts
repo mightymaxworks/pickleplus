@@ -14,6 +14,11 @@ import {
   type LessonPlan, type InsertLessonPlan,
   type SessionGoal, type InsertSessionGoal,
   type DrillCategory,
+  // Standalone Youth Ranking System
+  userAgeGroupRankings,
+  type UserAgeGroupRanking,
+  type InsertUserAgeGroupRanking,
+  type AgeCategory,
 
 } from "@shared/schema";
 // Import Drizzle operators
@@ -6646,6 +6651,77 @@ export class DatabaseStorage implements IStorage {
         'Direct Traffic'
       ]
     };
+  }
+
+  // Youth Ranking System Methods - Standalone Implementation
+  async getAgeGroupRanking(userId: number, ageGroup: AgeCategory, gameType: 'singles' | 'doubles', gender: 'male' | 'female'): Promise<UserAgeGroupRanking | undefined> {
+    const [ranking] = await db
+      .select()
+      .from(userAgeGroupRankings)
+      .where(eq(userAgeGroupRankings.userId, userId))
+      .where(eq(userAgeGroupRankings.ageGroup, ageGroup))
+      .where(eq(userAgeGroupRankings.gameType, gameType))
+      .where(eq(userAgeGroupRankings.gender, gender));
+    return ranking;
+  }
+
+  async createOrUpdateAgeGroupRanking(data: InsertUserAgeGroupRanking): Promise<UserAgeGroupRanking> {
+    const existing = await this.getAgeGroupRanking(data.userId, data.ageGroup, data.gameType, data.gender);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(userAgeGroupRankings)
+        .set({
+          rankingPoints: data.rankingPoints,
+          picklePoints: data.picklePoints,
+          updatedAt: new Date()
+        })
+        .where(eq(userAgeGroupRankings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(userAgeGroupRankings)
+        .values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async getAgeGroupLeaderboard(
+    ageGroup: AgeCategory, 
+    gameType: 'singles' | 'doubles', 
+    gender: 'male' | 'female',
+    limit = 50,
+    offset = 0
+  ): Promise<Array<UserAgeGroupRanking & { user: User }>> {
+    const rankings = await db
+      .select({
+        ranking: userAgeGroupRankings,
+        user: users
+      })
+      .from(userAgeGroupRankings)
+      .innerJoin(users, eq(userAgeGroupRankings.userId, users.id))
+      .where(eq(userAgeGroupRankings.ageGroup, ageGroup))
+      .where(eq(userAgeGroupRankings.gameType, gameType))
+      .where(eq(userAgeGroupRankings.gender, gender))
+      .orderBy(desc(userAgeGroupRankings.rankingPoints))
+      .limit(limit)
+      .offset(offset);
+
+    return rankings.map(r => ({ ...r.ranking, user: r.user }));
+  }
+
+  async getUserAgeGroupRankings(userId: number): Promise<UserAgeGroupRanking[]> {
+    return await db
+      .select()
+      .from(userAgeGroupRankings)
+      .where(eq(userAgeGroupRankings.userId, userId))
+      .orderBy(desc(userAgeGroupRankings.rankingPoints));
   }
 }
 

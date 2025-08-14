@@ -68,10 +68,13 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Age divisions based on updated tournament rules with U19 category
+  // Age divisions based on standalone youth system 
   const ageDivisions = [
-    { value: "open", label: "Open (19+)", minAge: 0 }, // All ages eligible, but labeled as 19+ primary
-    { value: "u19", label: "U19 Division", minAge: 0, maxAge: 18 }, // Under 19 category
+    { value: "open", label: "Open (19+)", minAge: 19 }, // Open category for 19+ players
+    { value: "u18", label: "U18 Division", minAge: 0, maxAge: 17 }, // Standalone U18 category
+    { value: "u16", label: "U16 Division", minAge: 0, maxAge: 15 }, // Standalone U16 category
+    { value: "u14", label: "U14 Division", minAge: 0, maxAge: 13 }, // Standalone U14 category
+    { value: "u12", label: "U12 Division", minAge: 0, maxAge: 11 }, // Standalone U12 category
     { value: "35+", label: "35+ Division", minAge: 35 },
     { value: "50+", label: "50+ Division", minAge: 50 },
     { value: "60+", label: "60+ Division", minAge: 60 },

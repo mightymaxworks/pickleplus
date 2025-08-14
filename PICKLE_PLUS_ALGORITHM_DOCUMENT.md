@@ -35,7 +35,10 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 |-----------|------------|-----------|-------------|
 | **Pro** | 1.0x | Highest tier of ranking points (ignored in initial implementation) | Professional players |
 | **Open** | 1.0x | Standard baseline | All ages 19+ (adults) |
-| **U19** | 1.0x | Youth development category | Players under 19 years old |
+| **U12** | 1.0x | Youth development category (standalone points) | Players under 12 years old |
+| **U14** | 1.0x | Youth development category (standalone points) | Players under 14 years old |
+| **U16** | 1.0x | Youth development category (standalone points) | Players under 16 years old |
+| **U18** | 1.0x | Youth development category (standalone points) | Players under 18 years old |
 | **35+** | 1.2x | Early career professionals bonus | Players 35 and older |
 | **50+** | 1.3x | Masters division enhancement | Players 50 and older |
 | **60+** | 1.5x | Senior division significant boost | Players 60 and older |
@@ -45,16 +48,45 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 
 **Category Eligibility:**
 - **Open Category:** All players 19+ are eligible (adults)
-- **U19 Category:** Players under 19 years old are eligible
+- **Youth Categories (U12, U14, U16, U18):** Standalone point systems that DO NOT carry forward
 - **Age-Specific Categories (35+, 50+, 60+, 70+):** Players must meet minimum age requirement
-- **Cross-Category Participation:** Players under 19 can compete in both U19 and Open categories
+- **Cross-Category Tournament Selection:** Youth players choose which category to compete in for each tournament
 - **Age Verification:** Based on birth year, calculated dynamically
 
-**Important Notes:**
-- Open category includes all adult players (19+), regardless of their specific age
-- Younger players (under 19) have their own U19 category but can also participate in Open
-- Age-specific categories (35+, 50+, etc.) are exclusive to players meeting the minimum age
-- All age calculations are based on current age derived from date of birth
+**Important Notes - Standalone Youth System:**
+- **Youth categories have completely separate point pools** - no points carry forward between age groups
+- **Tournament Selection:** U14 player can choose to compete in U16 or U18 tournament, earning points only in that chosen category
+- **League Match Logic:** Youth players competing in adult leagues earn points in Open (19+) category only
+- **Clean Transitions:** When players turn 19, they start fresh in Open category with zero points
+- **Development Focus:** Each youth category maintains its own competitive environment
+
+#### **YOUTH STANDALONE RANKING SCENARIOS** ⚡ **NEW IMPLEMENTATION**
+
+**Scenario A: Youth Tournament Competition**
+**Match:** 13-year-old (2012-born) chooses to compete in U18 tournament
+- **Point Allocation:** ALL points go to U18 ranking only
+- **Other Categories:** U12, U14 rankings remain untouched
+- **Winner:** 3 × 1.0 × 1.0 × tournament_multiplier = points in U18 category only
+- **Loser:** 1 × 1.0 × 1.0 × tournament_multiplier = points in U18 category only
+
+**Scenario B: Youth League Match with Adults**
+**Match:** 13-year-old (2012-born) plays in adult league match
+- **Point Allocation:** ALL points go to Open (19+) ranking only
+- **Youth Categories:** U12, U14, U16, U18 rankings remain untouched
+- **Winner:** 3 × 1.0 × 1.0 × event_multiplier = points in Open category only
+- **Development Logic:** League competition against adults counts toward adult rankings
+
+**Scenario C: Peer Age Group Tournament**
+**Match:** 13-year-old (2012-born) competes in U14 tournament
+- **Point Allocation:** ALL points go to U14 ranking only
+- **Other Categories:** U12, U16, U18, Open rankings remain untouched
+- **Winner:** 3 × 1.0 × 1.0 × tournament_multiplier = points in U14 category only
+
+**Scenario D: Age Transition at 19**
+**Event:** Player turns 19 years old
+- **Youth Points:** All U12, U14, U16, U18 points remain as historical records
+- **Open Category:** Player starts with ZERO points in Open (19+) rankings
+- **Clean Slate:** No youth points transfer to adult competition
 
 #### **CRITICAL DECISION NEEDED: Age Group Application Method**
 

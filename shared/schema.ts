@@ -1024,6 +1024,31 @@ export const users = pgTable("users", {
   lastUpdated: timestamp("last_updated").defaultNow()
 });
 
+// Standalone Youth Ranking System - PKL-278651-YOUTH-STANDALONE
+// Each age category maintains completely separate point pools
+export const userAgeGroupRankings = pgTable("user_age_group_rankings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  ageCategory: varchar("age_category", { length: 10 }).notNull(), // 'U12', 'U14', 'U16', 'U18', 'Open', '35+', '50+', '60+', '70+'
+  singlesPoints: integer("singles_points").default(0),
+  doublesPoints: integer("doubles_points").default(0),
+  lastMatchDate: timestamp("last_match_date"),
+  totalMatches: integer("total_matches").default(0),
+  matchesWon: integer("matches_won").default(0),
+  isActive: boolean("is_active").default(true),
+  seasonYear: integer("season_year").default(2025), // For seasonal resets if needed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Relations for age group rankings
+export const userAgeGroupRankingsRelations = relations(userAgeGroupRankings, ({ one }) => ({
+  user: one(users, {
+    fields: [userAgeGroupRankings.userId],
+    references: [users.id],
+  }),
+}));
+
 // Tournaments table
 export const tournaments = pgTable("tournaments", {
   id: serial("id").primaryKey(),
@@ -2342,3 +2367,21 @@ export {
   type DrillWithCategory,
   type LessonPlanWithTemplate
 };
+
+// Zod schemas for youth ranking system
+export const insertUserAgeGroupRankingSchema = createInsertSchema(userAgeGroupRankings);
+
+// Types for youth ranking system
+export type UserAgeGroupRanking = typeof userAgeGroupRankings.$inferSelect;
+export type InsertUserAgeGroupRanking = z.infer<typeof insertUserAgeGroupRankingSchema>;
+
+// Age category constants for standalone youth system
+export const AGE_CATEGORIES = {
+  YOUTH: ['U12', 'U14', 'U16', 'U18'] as const,
+  ADULT: ['Open', '35+', '50+', '60+', '70+'] as const,
+  ALL: ['U12', 'U14', 'U16', 'U18', 'Open', '35+', '50+', '60+', '70+'] as const
+};
+
+export type AgeCategory = typeof AGE_CATEGORIES.ALL[number];
+export type YouthCategory = typeof AGE_CATEGORIES.YOUTH[number];
+export type AdultCategory = typeof AGE_CATEGORIES.ADULT[number];

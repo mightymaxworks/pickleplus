@@ -25,6 +25,8 @@ User wants fully standardized random passport code system (e.g., HVGN0BW0, KGLE3
 User wants automatic points calculation and allocation in match creation API.
 User wants `QuickMatchRecorder` critical fixes related to JSX syntax, missing elements, SQL column name mismatches, missing imports, missing functions, and TypeScript compilation errors.
 User wants `QuickMatchRecorder` admin functions to be enhanced versions of player components.
+User wants standalone youth ranking system (U12, U14, U16, U18) fully implemented with complete category isolation from adult rankings.
+User wants the EnhancedLeaderboard to follow the same logic as /rankings but with the new standalone youth system.
 
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.

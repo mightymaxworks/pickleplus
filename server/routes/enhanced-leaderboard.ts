@@ -15,6 +15,99 @@ router.get('/test', (req, res) => {
 
 console.log('[ENHANCED LEADERBOARD] Router initialized and test endpoint added');
 
+// Enhanced leaderboard endpoint supporting new standalone youth ranking system
+router.get('/', async (req, res) => {
+  try {
+    const {
+      format = 'singles',
+      division = 'open',
+      gender = 'male',
+      search = '',
+      page = '1',
+      limit = '20'
+    } = req.query;
+
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 20;
+    const offset = (pageNum - 1) * limitNum;
+
+    // For youth categories, use the new age group ranking system
+    const youthCategories = ['u12', 'u14', 'u16', 'u18'];
+    
+    if (youthCategories.includes(division as string)) {
+      // Use standalone youth ranking system
+      const rankings = await storage.getAgeGroupLeaderboard(
+        division as any,
+        format as 'singles' | 'doubles',
+        gender as 'male' | 'female',
+        limitNum,
+        offset
+      );
+
+      const leaderboardEntries = rankings.map((ranking, index) => ({
+        id: ranking.user.id,
+        displayName: ranking.user.displayName || ranking.user.username,
+        username: ranking.user.username,
+        avatar: ranking.user.profileImageUrl,
+        points: ranking.rankingPoints,
+        matchesPlayed: 0, // TODO: Calculate from matches
+        winRate: 0, // TODO: Calculate from matches
+        gender: ranking.gender,
+        age: ranking.user.age || 0,
+        division: ranking.ageGroup,
+        ranking: offset + index + 1,
+        isCurrentUser: req.user?.id === ranking.user.id
+      }));
+
+      const response: LeaderboardResponse = {
+        players: leaderboardEntries,
+        totalCount: rankings.length,
+        currentPage: pageNum,
+        totalPages: Math.ceil(rankings.length / limitNum),
+        searchTerm: search as string
+      };
+
+      return res.json(response);
+    }
+
+    // For adult categories (open, 35+, etc.), use existing logic with demo data
+    const demoData = generateDemoLeaderboardData(
+      format as string,
+      division as string,
+      gender as string,
+      search as string,
+      req.user?.id
+    );
+
+    // Apply search filter
+    let filteredData = demoData;
+    if (search) {
+      filteredData = demoData.filter(player =>
+        player.displayName.toLowerCase().includes((search as string).toLowerCase()) ||
+        player.username.toLowerCase().includes((search as string).toLowerCase())
+      );
+    }
+
+    // Apply pagination
+    const paginatedData = filteredData.slice(offset, offset + limitNum);
+
+    const response: LeaderboardResponse = {
+      players: paginatedData,
+      totalCount: filteredData.length,
+      currentPage: pageNum,
+      totalPages: Math.ceil(filteredData.length / limitNum),
+      searchTerm: search as string
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('[ENHANCED LEADERBOARD] Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard data' });
+  }
+});
+
+console.log('[ENHANCED LEADERBOARD] Main leaderboard endpoint added');
+
 interface LeaderboardEntry {
   id: number;
   displayName: string;
@@ -42,22 +135,27 @@ interface LeaderboardResponse {
   searchTerm?: string;
 }
 
-// Helper function to determine eligible divisions from age (allows cross-category participation)
+// Helper function to determine eligible divisions from age (standalone youth system)
 function getEligibleDivisionsFromAge(age: number): string[] {
   const divisions: string[] = [];
   
-  // Age-specific categories (players must meet minimum age)
+  // Adult age-specific categories (players must meet minimum age)
   if (age >= 70) divisions.push("70+");
   if (age >= 60) divisions.push("60+");
   if (age >= 50) divisions.push("50+");
   if (age >= 35) divisions.push("35+");
   
-  // Youth and adult categories with cross-participation
-  if (age < 19) {
-    divisions.push("u19"); // Under 19 category
-    divisions.push("open"); // Can also participate in Open
-  } else {
+  // Standalone youth and adult categories
+  if (age >= 19) {
     divisions.push("open"); // 19+ for Open category
+  } else {
+    // Youth players can compete in multiple youth categories but must choose
+    if (age <= 11) divisions.push("u12");
+    if (age <= 13) divisions.push("u14");
+    if (age <= 15) divisions.push("u16");
+    if (age <= 17) divisions.push("u18");
+    // Youth can also participate in Open (league matches -> Open points only)
+    divisions.push("open");
   }
   
   return divisions;
@@ -69,7 +167,11 @@ function getPrimaryDivisionFromAge(age: number): string {
   if (age >= 60) return "60+";
   if (age >= 50) return "50+";
   if (age >= 35) return "35+";
-  if (age < 19) return "u19";
+  if (age >= 19) return "open";
+  if (age <= 11) return "u12";
+  if (age <= 13) return "u14";
+  if (age <= 15) return "u16";
+  if (age <= 17) return "u18";
   return "open";
 }
 
