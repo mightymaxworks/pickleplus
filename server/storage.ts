@@ -3192,42 +3192,44 @@ export class DatabaseStorage implements IStorage {
   // Enhanced Player Search for Match Recording
   async searchPlayersByMultipleFields(searchTerm: string): Promise<User[]> {
     try {
-      console.log('[SEARCH DEBUG] Search term received:', searchTerm);
+      console.log('[STORAGE SEARCH DEBUG] Search term received:', searchTerm, 'length:', searchTerm.length);
+      console.log('[STORAGE SEARCH DEBUG] Term bytes:', Buffer.from(searchTerm, 'utf8'));
       
-      // Don't use toLowerCase() for Chinese characters - preserve original casing
+      // Create search patterns for Chinese and English characters  
       const searchPattern = `%${searchTerm}%`;
-      const lowerSearchPattern = `%${searchTerm.toLowerCase()}%`;
       
-      console.log('[SEARCH DEBUG] Search patterns:', { searchPattern, lowerSearchPattern });
+      console.log('[STORAGE SEARCH DEBUG] Using pattern:', searchPattern);
       
+      // Use a more focused search for Chinese characters - avoid toLowerCase corruption
       const searchResults = await db.select()
         .from(users)
         .where(
           or(
-            // Case-insensitive for English fields
-            ilike(users.username, lowerSearchPattern),
-            ilike(users.passportCode, lowerSearchPattern),
-            // Case-sensitive for Chinese characters in names
+            // Username and passport code (English)
+            ilike(users.username, searchPattern),
+            ilike(users.passportCode, searchPattern),
+            // Names with Chinese characters - use LIKE to preserve character encoding
             like(users.firstName, searchPattern),
             like(users.lastName, searchPattern),
-            like(users.display_name, searchPattern),
-            // Also try case-insensitive for English names
-            ilike(users.firstName, lowerSearchPattern),
-            ilike(users.lastName, lowerSearchPattern),
-            ilike(users.display_name, lowerSearchPattern),
-            // Full name search preserving Chinese characters
-            sql`CONCAT(${users.firstName}, ' ', ${users.lastName}) LIKE ${searchPattern}`,
-            sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${lowerSearchPattern}`
+            like(users.display_name, searchPattern)
           )
         )
         .limit(20);
       
-      console.log('[SEARCH DEBUG] Search results found:', searchResults.length);
-      console.log('[SEARCH DEBUG] First result:', searchResults[0]);
+      console.log('[STORAGE SEARCH DEBUG] Query executed, results found:', searchResults.length);
+      if (searchResults.length > 0) {
+        console.log('[STORAGE SEARCH DEBUG] Sample result:', {
+          id: searchResults[0].id,
+          username: searchResults[0].username,
+          firstName: searchResults[0].firstName,
+          lastName: searchResults[0].lastName,
+          displayName: searchResults[0].display_name
+        });
+      }
       
       return searchResults;
     } catch (error) {
-      console.error('Error searching players by multiple fields:', error);
+      console.error('[STORAGE SEARCH ERROR] Error searching players:', error);
       return [];
     }
   }
