@@ -33,9 +33,10 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 
 | Age Group | Multiplier | Reasoning |
 |-----------|------------|-----------|
-| **18-34** | 1.0x | Standard baseline |
-| **35-49** | 1.2x | Early career professionals bonus |
-| **50-59** | 1.3x | Masters division enhancement |
+| **Pro** | 1.0x | Highest tier of ranking points (ignored in initial implementation) |
+| **19+** | 1.0x | Standard baseline |
+| **35+** | 1.2x | Early career professionals bonus |
+| **50+** | 1.3x | Masters division enhancement |
 | **60+** | 1.5x | Senior division significant boost |
 | **70+** | 1.6x | Super senior maximum enhancement |
 
@@ -144,7 +145,7 @@ Cross-gender competition requires careful balance between competitive fairness a
 | **Women** | 1.15x | <1000 points only | Compensation for physical differences at development levels |
 | **Mixed Teams** | 1.075x | <1000 points only | Average composition, skill-dependent |
 
-> **CRITICAL LOGIC:** Gender multipliers only apply in **cross-gender competition** for players **below 1000 ranking points**. Elite players (1000+ points) have proven competitive ability and receive no gender bonuses.
+> **CRITICAL LOGIC:** Gender multipliers only apply in **cross-gender competition** for players **below 1000 ranking points**. Elite players (1000+ points) have proven competitive ability and receive no gender bonuses. Points are allocated to respective singles and age group rankings - NO separate cross-gender rankings are created.
 
 #### **Elite Threshold Justification**
 - **Elite+ players (1000+ pts):** Demonstrated competitive parity through achievement
@@ -157,12 +158,12 @@ Cross-gender competition requires careful balance between competitive fairness a
 **Match:** 800-point male vs 750-point female, Tournament (both <1000 points)
 
 **Point Calculation:**
-- **Male Winner:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points**
-- **Female Winner:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points** (bonus applied)
-- **Male Loser:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points**  
-- **Female Loser:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points** (bonus applied)
+- **Male Winner:** 3 × 1.0 × 1.0 × 1.5 = **4.5 points** (allocated to Singles ranking and Male's age group)
+- **Female Winner:** 3 × 1.15 × 1.0 × 1.5 = **5.18 points** (bonus applied, allocated to Singles ranking and Female's age group)
+- **Male Loser:** 1 × 1.0 × 1.0 × 1.5 = **1.5 points** (allocated to Singles ranking and Male's age group)
+- **Female Loser:** 1 × 1.15 × 1.0 × 1.5 = **1.73 points** (bonus applied, allocated to Singles ranking and Female's age group)
 
-*Result: Female player receives 15% bonus for cross-gender development competition*
+*Result: Points awarded to respective singles and age group rankings - NO separate cross-gender rankings created*
 
 #### **Scenario 2: Elite Level Cross-Gender Singles - No Bonus**
 **Match:** 1200-point male vs 1100-point female, Tournament (both ≥1000 points)

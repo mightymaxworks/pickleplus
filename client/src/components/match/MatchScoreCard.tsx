@@ -10,9 +10,17 @@ interface Player {
   username: string;
   fullName?: string;
   picklePoints?: number;
+  rankingPoints?: number;
   ageGroup?: string;
   gender?: string;
   level?: string;
+  rankings?: {
+    overall?: number;
+    singles?: number;
+    doubles?: number;
+    ageGroup?: number;
+    [key: string]: number | undefined;
+  };
 }
 
 interface MatchData {
@@ -105,13 +113,37 @@ export function MatchScoreCard({
   const getAgeGroupDisplay = (ageGroup?: string) => {
     if (!ageGroup) return null;
     const ageMap: Record<string, string> = {
-      'under-30': 'U30',
-      '30-39': '30-39',
-      '40-49': '40-49',
-      '50-59': '50-59',
+      'pro': 'Pro',
+      '19+': '19+',
+      '35+': '35+',
+      '50+': '50+',
+      '60+': '60+',
+      '70+': '70+',
+      // Legacy support
+      'under-30': '19+',
+      '30-39': '35+',
+      '40-49': '35+',
+      '50-59': '50+',
       '60-plus': '60+'
     };
     return ageMap[ageGroup] || ageGroup;
+  };
+
+  // Get highest ranking for a player (for display purposes)
+  const getHighestRanking = (player: Player): { value: number; category: string } => {
+    if (!player.rankings) {
+      return { value: player.rankingPoints || 0, category: 'Overall' };
+    }
+    
+    let highest = { value: 0, category: 'Overall' };
+    
+    Object.entries(player.rankings).forEach(([category, value]) => {
+      if (value && value > highest.value) {
+        highest = { value, category: category.charAt(0).toUpperCase() + category.slice(1) };
+      }
+    });
+    
+    return highest.value > 0 ? highest : { value: player.rankingPoints || 0, category: 'Overall' };
   };
 
   if (compact) {
@@ -258,18 +290,28 @@ export function MatchScoreCard({
           )}>
             <div className="space-y-2">
               {team1Players.map((player, index) => player && (
-                <div key={player.id} className="flex items-center space-x-2">
+                <div key={player.id} className="space-y-1">
                   <div className="font-semibold">{formatPlayerName(player)}</div>
-                  {player.ageGroup && (
-                    <Badge variant="secondary" className="text-xs">
-                      {getAgeGroupDisplay(player.ageGroup)}
-                    </Badge>
-                  )}
-                  {player.gender && (
-                    <Badge variant="outline" className="text-xs">
-                      {player.gender.charAt(0).toUpperCase()}
-                    </Badge>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {(() => {
+                      const highestRanking = getHighestRanking(player);
+                      return (
+                        <Badge variant="default" className="text-xs bg-emerald-600 text-white">
+                          #{highestRanking.value} {highestRanking.category}
+                        </Badge>
+                      );
+                    })()}
+                    {player.ageGroup && (
+                      <Badge variant="secondary" className="text-xs">
+                        {getAgeGroupDisplay(player.ageGroup)}
+                      </Badge>
+                    )}
+                    {player.gender && (
+                      <Badge variant="outline" className="text-xs">
+                        {player.gender.charAt(0).toUpperCase()}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -327,18 +369,28 @@ export function MatchScoreCard({
           )}>
             <div className="space-y-2">
               {team2Players.map((player, index) => player && (
-                <div key={player.id} className="flex items-center space-x-2">
+                <div key={player.id} className="space-y-1">
                   <div className="font-semibold">{formatPlayerName(player)}</div>
-                  {player.ageGroup && (
-                    <Badge variant="secondary" className="text-xs">
-                      {getAgeGroupDisplay(player.ageGroup)}
-                    </Badge>
-                  )}
-                  {player.gender && (
-                    <Badge variant="outline" className="text-xs">
-                      {player.gender.charAt(0).toUpperCase()}
-                    </Badge>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {(() => {
+                      const highestRanking = getHighestRanking(player);
+                      return (
+                        <Badge variant="default" className="text-xs bg-emerald-600 text-white">
+                          #{highestRanking.value} {highestRanking.category}
+                        </Badge>
+                      );
+                    })()}
+                    {player.ageGroup && (
+                      <Badge variant="secondary" className="text-xs">
+                        {getAgeGroupDisplay(player.ageGroup)}
+                      </Badge>
+                    )}
+                    {player.gender && (
+                      <Badge variant="outline" className="text-xs">
+                        {player.gender.charAt(0).toUpperCase()}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
