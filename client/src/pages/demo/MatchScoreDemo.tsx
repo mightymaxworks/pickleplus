@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
+import { Trophy, TrendingUp, Star, Target, Zap, Eye, EyeOff, Shield } from "lucide-react";
 import { 
   MatchScoreCard, 
   MatchScoreDisplay, 
@@ -93,6 +95,7 @@ export default function MatchScoreDemo() {
   const [selectedMatch, setSelectedMatch] = useState(sampleMatches[0]);
   const [showPointsBreakdown, setShowPointsBreakdown] = useState(true);
   const [compactMode, setCompactMode] = useState(false);
+  const [playerFriendlyMode, setPlayerFriendlyMode] = useState(false);
 
   // Calculate Ranking Points (Competitive System)
   const calculateRankingPoints = (playerId: number, isWinner: boolean) => {
@@ -128,6 +131,42 @@ export default function MatchScoreDemo() {
       bonusPicklePoints,
       totalPicklePoints,
       reason: `Converted from ${rankingPoints} ranking points + bonuses`
+    };
+  };
+
+  // Player-friendly simplified calculation (hides algorithm details)
+  const getSimplifiedPlayerResults = (playerId: number, isWinner: boolean) => {
+    // Simple display logic - don't reveal exact multipliers
+    let performanceLevel = isWinner ? "Excellent" : "Good";
+    let rankingProgress = isWinner ? 6 : 2; // Simplified display points
+    let rewardsEarned = Math.ceil(rankingProgress * 1.5);
+    
+    if (selectedMatch.matchType === 'tournament') {
+      performanceLevel = isWinner ? "Outstanding" : "Solid";
+      rankingProgress *= 2;
+      rewardsEarned *= 2;
+    }
+    
+    const bonusIndicators = [];
+    if (selectedMatch.matchType === 'tournament') bonusIndicators.push('Tournament Bonus');
+    if (selectedMatch.formatType === 'doubles') bonusIndicators.push('Teamwork XP');
+    
+    const player = playerId === selectedMatch.playerOne.id ? selectedMatch.playerOne : selectedMatch.playerTwo;
+    const currentRanking = player.picklePoints || 0;
+    const currentRewards = player.picklePoints || 0;
+    
+    return {
+      performanceLevel,
+      rankingProgress,
+      rewardsEarned,
+      bonusIndicators,
+      currentRanking,
+      currentRewards,
+      newRanking: currentRanking + rankingProgress,
+      newRewards: currentRewards + rewardsEarned,
+      motivationalMessage: isWinner 
+        ? "Outstanding performance! Keep building that momentum! 🏆"
+        : "Great effort! Every match builds experience and skills! 💪"
     };
   };
 
@@ -178,6 +217,20 @@ export default function MatchScoreDemo() {
                 className="rounded"
               />
               <span>Compact Mode</span>
+            </label>
+            
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={playerFriendlyMode}
+                onChange={(e) => setPlayerFriendlyMode(e.target.checked)}
+                className="rounded"
+              />
+              <div className="flex items-center space-x-1">
+                {playerFriendlyMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <span>Player-Friendly Mode</span>
+                <Shield className="h-3 w-3 text-blue-500" />
+              </div>
             </label>
           </div>
         </CardContent>
@@ -244,38 +297,238 @@ export default function MatchScoreDemo() {
 
       <Separator />
 
-      {/* Individual Pickle Points Breakdown */}
+      {/* Individual Points Breakdown */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">3. Individual Pickle Points Breakdown</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Player 1 */}
-          <PicklePointsBreakdown
-            player={selectedMatch.playerOne}
-            calculation={calculatePicklePoints(
-              calculateRankingPoints(selectedMatch.playerOne.id, selectedMatch.winnerId === selectedMatch.playerOne.id).total,
-              selectedMatch.winnerId === selectedMatch.playerOne.id
-            )}
-            matchType={selectedMatch.matchType}
-            formatType={selectedMatch.formatType}
-            isWinner={selectedMatch.winnerId === selectedMatch.playerOne.id}
-            previousPoints={selectedMatch.playerOne.picklePoints || 0}
-            detailed={true}
-          />
-          
-          {/* Player 2 */}
-          <PicklePointsBreakdown
-            player={selectedMatch.playerTwo}
-            calculation={calculatePicklePoints(
-              calculateRankingPoints(selectedMatch.playerTwo.id, selectedMatch.winnerId === selectedMatch.playerTwo.id).total,
-              selectedMatch.winnerId === selectedMatch.playerTwo.id
-            )}
-            matchType={selectedMatch.matchType}
-            formatType={selectedMatch.formatType}
-            isWinner={selectedMatch.winnerId === selectedMatch.playerTwo.id}
-            previousPoints={selectedMatch.playerTwo.picklePoints || 0}
-            detailed={true}
-          />
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">
+            3. Individual {playerFriendlyMode ? 'Performance Results' : 'Pickle Points Breakdown'}
+          </h2>
+          {playerFriendlyMode && (
+            <Badge variant="outline" className="text-blue-600 border-blue-200">
+              <Shield className="h-3 w-3 mr-1" />
+              Algorithm Protected
+            </Badge>
+          )}
         </div>
+        {playerFriendlyMode ? (
+          /* Player-Friendly Results */
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Player 1 - Simplified */}
+            {(() => {
+              const results = getSimplifiedPlayerResults(selectedMatch.playerOne.id, selectedMatch.winnerId === selectedMatch.playerOne.id);
+              const isWinner = selectedMatch.winnerId === selectedMatch.playerOne.id;
+              
+              return (
+                <Card className="w-full">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        {isWinner ? (
+                          <Trophy className="h-5 w-5 text-yellow-500" />
+                        ) : (
+                          <Target className="h-5 w-5 text-blue-500" />
+                        )}
+                        <span>{selectedMatch.playerOne.fullName || selectedMatch.playerOne.username}</span>
+                      </div>
+                      <Badge className={
+                        results.performanceLevel === "Outstanding" ? "bg-purple-100 text-purple-800" :
+                        results.performanceLevel === "Excellent" ? "bg-green-100 text-green-800" :
+                        results.performanceLevel === "Solid" ? "bg-blue-100 text-blue-800" :
+                        "bg-gray-100 text-gray-600"
+                      }>
+                        {results.performanceLevel}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    {/* Points Earned */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-50 p-3 rounded text-center">
+                        <div className="flex items-center justify-center space-x-1 mb-1">
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Progress</span>
+                        </div>
+                        <div className="text-xl font-bold text-blue-600">+{results.rankingProgress}</div>
+                        <div className="text-xs text-blue-700">{results.currentRanking} → {results.newRanking}</div>
+                      </div>
+                      
+                      <div className="bg-green-50 p-3 rounded text-center">
+                        <div className="flex items-center justify-center space-x-1 mb-1">
+                          <Star className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Rewards</span>
+                        </div>
+                        <div className="text-xl font-bold text-green-600">+{results.rewardsEarned}</div>
+                        <div className="text-xs text-green-700">{results.currentRewards} → {results.newRewards}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Bonuses */}
+                    {results.bonusIndicators.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold flex items-center space-x-1">
+                          <Zap className="h-4 w-4 text-orange-500" />
+                          <span>Bonuses Applied</span>
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {results.bonusIndicators.map((bonus, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {bonus}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Progress Visualization */}
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Match Impact</span>
+                          <span className="text-blue-600">+{((results.rankingProgress / Math.max(results.currentRanking, 1)) * 100).toFixed(1)}%</span>
+                        </div>
+                        <Progress 
+                          value={Math.min((results.rankingProgress / 10) * 100, 100)} 
+                          className="h-2"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Motivational Message */}
+                    <div className={`p-3 rounded text-sm font-medium text-center ${
+                      isWinner ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                    }`}>
+                      {results.motivationalMessage}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+            
+            {/* Player 2 - Simplified */}
+            {(() => {
+              const results = getSimplifiedPlayerResults(selectedMatch.playerTwo.id, selectedMatch.winnerId === selectedMatch.playerTwo.id);
+              const isWinner = selectedMatch.winnerId === selectedMatch.playerTwo.id;
+              
+              return (
+                <Card className="w-full">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        {isWinner ? (
+                          <Trophy className="h-5 w-5 text-yellow-500" />
+                        ) : (
+                          <Target className="h-5 w-5 text-blue-500" />
+                        )}
+                        <span>{selectedMatch.playerTwo.fullName || selectedMatch.playerTwo.username}</span>
+                      </div>
+                      <Badge className={
+                        results.performanceLevel === "Outstanding" ? "bg-purple-100 text-purple-800" :
+                        results.performanceLevel === "Excellent" ? "bg-green-100 text-green-800" :
+                        results.performanceLevel === "Solid" ? "bg-blue-100 text-blue-800" :
+                        "bg-gray-100 text-gray-600"
+                      }>
+                        {results.performanceLevel}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    {/* Points Earned */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-50 p-3 rounded text-center">
+                        <div className="flex items-center justify-center space-x-1 mb-1">
+                          <TrendingUp className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Progress</span>
+                        </div>
+                        <div className="text-xl font-bold text-blue-600">+{results.rankingProgress}</div>
+                        <div className="text-xs text-blue-700">{results.currentRanking} → {results.newRanking}</div>
+                      </div>
+                      
+                      <div className="bg-green-50 p-3 rounded text-center">
+                        <div className="flex items-center justify-center space-x-1 mb-1">
+                          <Star className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Rewards</span>
+                        </div>
+                        <div className="text-xl font-bold text-green-600">+{results.rewardsEarned}</div>
+                        <div className="text-xs text-green-700">{results.currentRewards} → {results.newRewards}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Bonuses */}
+                    {results.bonusIndicators.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold flex items-center space-x-1">
+                          <Zap className="h-4 w-4 text-orange-500" />
+                          <span>Bonuses Applied</span>
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {results.bonusIndicators.map((bonus, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {bonus}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Progress Visualization */}
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Match Impact</span>
+                          <span className="text-blue-600">+{((results.rankingProgress / Math.max(results.currentRanking, 1)) * 100).toFixed(1)}%</span>
+                        </div>
+                        <Progress 
+                          value={Math.min((results.rankingProgress / 10) * 100, 100)} 
+                          className="h-2"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Motivational Message */}
+                    <div className={`p-3 rounded text-sm font-medium text-center ${
+                      isWinner ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                    }`}>
+                      {results.motivationalMessage}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
+        ) : (
+          /* Technical Breakdown (original) */
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Player 1 */}
+            <PicklePointsBreakdown
+              player={selectedMatch.playerOne}
+              calculation={calculatePicklePoints(
+                calculateRankingPoints(selectedMatch.playerOne.id, selectedMatch.winnerId === selectedMatch.playerOne.id).total,
+                selectedMatch.winnerId === selectedMatch.playerOne.id
+              )}
+              matchType={selectedMatch.matchType}
+              formatType={selectedMatch.formatType}
+              isWinner={selectedMatch.winnerId === selectedMatch.playerOne.id}
+              previousPoints={selectedMatch.playerOne.picklePoints || 0}
+              detailed={true}
+            />
+            
+            {/* Player 2 */}
+            <PicklePointsBreakdown
+              player={selectedMatch.playerTwo}
+              calculation={calculatePicklePoints(
+                calculateRankingPoints(selectedMatch.playerTwo.id, selectedMatch.winnerId === selectedMatch.playerTwo.id).total,
+                selectedMatch.winnerId === selectedMatch.playerTwo.id
+              )}
+              matchType={selectedMatch.matchType}
+              formatType={selectedMatch.formatType}
+              isWinner={selectedMatch.winnerId === selectedMatch.playerTwo.id}
+              previousPoints={selectedMatch.playerTwo.picklePoints || 0}
+              detailed={true}
+            />
+          </div>
+        )}
         
         {/* Compact versions for partners if doubles */}
         {selectedMatch.formatType === 'doubles' && selectedMatch.playerOnePartner && selectedMatch.playerTwoPartner && (
