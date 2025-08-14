@@ -16,12 +16,11 @@ import {
   type DrillCategory,
 
 } from "@shared/schema";
-// Import Match types from admin match management
-import {
-  type Match,
-  type InsertMatch,
-  adminMatches as matches
-} from "@shared/schema/admin-match-management";
+// Import regular matches table and types from main schema
+import { matches } from "@shared/schema";
+// Regular matches table uses inferred types
+type Match = typeof matches.$inferSelect;
+type InsertMatch = typeof matches.$inferInsert;
 import {
   type CoachApplication, type InsertCoachApplication,
   type CoachProfile, type InsertCoachProfile,
@@ -871,6 +870,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMatch(matchData: InsertMatch): Promise<Match> {
+    // Use the regular matches table, not admin_matches
     const [match] = await db.insert(matches).values(matchData).returning();
     return match;
   }

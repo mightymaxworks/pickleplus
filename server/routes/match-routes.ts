@@ -97,13 +97,13 @@ export function registerMatchRoutes(app: express.Express): void {
         winnerId,
         matchType: matchType || 'casual',
         formatType: formatType || 'singles',
-        validationStatus: isAdmin ? 'completed' : 'pending', // Admin matches auto-complete
+        validationStatus: isAdmin ? 'validated' : 'pending', // Admin matches auto-complete
         validationCompletedAt: isAdmin ? new Date() : null,
         notes: `${notes || ''} [Game Scores: ${detailedScores}]`.trim(),
         tournamentId: validTournamentId,
-        matchDate: scheduledDate ? new Date(scheduledDate) : new Date(), // Add required matchDate field
+        matchDate: scheduledDate ? new Date(scheduledDate) : new Date(),
         pointsAwarded: winnerPoints,
-        xpAwarded: 0 // Add required xpAwarded field
+        xpAwarded: 0
       });
 
       // Award points to both players: 3 for winner, 1 for loser
