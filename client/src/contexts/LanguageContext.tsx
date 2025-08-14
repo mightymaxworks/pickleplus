@@ -14,7 +14,6 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations: Record<Language, Record<string, string>> = {
   'en': {
     // Navigation & Common
-    'nav.dashboard': 'Dashboard',
     'nav.matches': 'Matches',
     'nav.communities': 'Communities',
     'nav.referrals': 'Referrals',
@@ -212,7 +211,6 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Home',
     'nav.community': 'Community',
     'nav.coaching': 'Coaching',
-    'nav.profile': 'Profile',
 
     // Match Recording Forms
     'match.form.matchResult': 'Match Result',
