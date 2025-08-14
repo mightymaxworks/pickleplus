@@ -3192,18 +3192,28 @@ export class DatabaseStorage implements IStorage {
   // Enhanced Player Search for Match Recording
   async searchPlayersByMultipleFields(searchTerm: string): Promise<User[]> {
     try {
-      const searchPattern = `%${searchTerm.toLowerCase()}%`;
+      // Don't use toLowerCase() for Chinese characters - preserve original casing
+      const searchPattern = `%${searchTerm}%`;
+      const lowerSearchPattern = `%${searchTerm.toLowerCase()}%`;
       
       const searchResults = await db.select()
         .from(users)
         .where(
           or(
-            ilike(users.username, searchPattern),
-            ilike(users.firstName, searchPattern),
-            ilike(users.lastName, searchPattern),
-            ilike(users.display_name, searchPattern), // Fix: use display_name not displayName
-            ilike(users.passportCode, searchPattern),
-            sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchPattern}`
+            // Case-insensitive for English fields
+            ilike(users.username, lowerSearchPattern),
+            ilike(users.passportCode, lowerSearchPattern),
+            // Case-sensitive for Chinese characters in names
+            like(users.firstName, searchPattern),
+            like(users.lastName, searchPattern),
+            like(users.display_name, searchPattern),
+            // Also try case-insensitive for English names
+            ilike(users.firstName, lowerSearchPattern),
+            ilike(users.lastName, lowerSearchPattern),
+            ilike(users.display_name, lowerSearchPattern),
+            // Full name search preserving Chinese characters
+            sql`CONCAT(${users.firstName}, ' ', ${users.lastName}) LIKE ${searchPattern}`,
+            sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${lowerSearchPattern}`
           )
         )
         .limit(20);
