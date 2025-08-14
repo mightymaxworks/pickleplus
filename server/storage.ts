@@ -768,8 +768,48 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  // Production data filtering utility for storage layer
+  private isProductionUserFilter(user: any): boolean {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (!isProduction) {
+      // In development, allow all data
+      return true;
+    }
+    
+    // Production filtering - exclude test data and specific development users
+    const excludedUsernames = ['mightymax', 'test', 'demo', 'admin', 'sample'];
+    const excludedDisplayNamePatterns = ['test', 'demo', 'sample', 'admin', 'mighty'];
+    
+    const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
+    
+    // Check username exclusions
+    if (excludedUsernames.some(excluded => 
+      user.username.toLowerCase().includes(excluded.toLowerCase())
+    )) {
+      return false;
+    }
+    
+    // Check display name exclusions
+    if (excludedDisplayNamePatterns.some(pattern => 
+      displayName.toLowerCase().includes(pattern.toLowerCase())
+    )) {
+      return false;
+    }
+    
+    // Exclude users with obviously test-like data
+    if (user.username.startsWith('user_') || 
+        displayName.startsWith('User ') ||
+        user.username.match(/^(user|test|demo)\d+$/i)) {
+      return false;
+    }
+    
+    return true;
+  }
+
   async getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]> {
-    console.log('[STORAGE] Getting users with ranking points > 0, format:', format);
+    const isProduction = process.env.NODE_ENV === 'production';
+    console.log(`[STORAGE] Getting users with ranking points > 0, format: ${format} (Production: ${isProduction})`);
     
     let query = db.select().from(users);
     
@@ -788,9 +828,18 @@ export class DatabaseStorage implements IStorage {
       ).orderBy(desc(users.rankingPoints));
     }
     
-    const results = await query;
-    console.log('[STORAGE] Found users with ranking points:', results.length);
-    return results;
+    const allResults = await query;
+    
+    // Apply production filtering
+    const filteredResults = allResults.filter(user => this.isProductionUserFilter(user));
+    
+    const excludedCount = allResults.length - filteredResults.length;
+    if (isProduction && excludedCount > 0) {
+      console.log(`[STORAGE] Production mode: Excluded ${excludedCount} test/development users from ranking points query`);
+    }
+    
+    console.log('[STORAGE] Found users with ranking points:', filteredResults.length);
+    return filteredResults;
   }
 
   async getRecentOpponents(userId: number): Promise<User[]> {
@@ -6699,9 +6748,10 @@ export class DatabaseStorage implements IStorage {
     limit = 50,
     offset = 0
   ): Promise<Array<UserAgeGroupRanking & { user: User }>> {
-    console.log(`[STORAGE] getAgeGroupLeaderboard called with: ageGroup=${ageGroup}, gameType=${gameType}, gender=${gender}`);
+    const isProduction = process.env.NODE_ENV === 'production';
+    console.log(`[STORAGE] getAgeGroupLeaderboard called with: ageGroup=${ageGroup}, gameType=${gameType}, gender=${gender} (Production: ${isProduction})`);
     
-    const rankings = await db
+    const allRankings = await db
       .select({
         ranking: userAgeGroupRankings,
         user: users
@@ -6712,12 +6762,23 @@ export class DatabaseStorage implements IStorage {
         eq(userAgeGroupRankings.ageCategory, ageGroup),
         eq(users.gender, gender)
       ))
-      .orderBy(desc(gameType === 'singles' ? userAgeGroupRankings.singlesPoints : userAgeGroupRankings.doublesPoints))
-      .limit(limit)
-      .offset(offset);
+      .orderBy(desc(gameType === 'singles' ? userAgeGroupRankings.singlesPoints : userAgeGroupRankings.doublesPoints));
 
-    console.log(`[STORAGE] Found ${rankings.length} rankings for ageGroup=${ageGroup}, gameType=${gameType}, gender=${gender}`);
-    return rankings.map(r => ({ ...r.ranking, user: r.user }));
+    // Apply production filtering
+    const filteredRankings = allRankings
+      .map(r => ({ ...r.ranking, user: r.user }))
+      .filter(ranking => this.isProductionUserFilter(ranking.user));
+
+    const excludedCount = allRankings.length - filteredRankings.length;
+    if (isProduction && excludedCount > 0) {
+      console.log(`[STORAGE] Youth rankings - Production mode: Excluded ${excludedCount} test/development users from ${ageGroup} leaderboard`);
+    }
+
+    // Apply pagination after filtering
+    const paginatedResults = filteredRankings.slice(offset, offset + limit);
+
+    console.log(`[STORAGE] Found ${paginatedResults.length} rankings for ageGroup=${ageGroup}, gameType=${gameType}, gender=${gender}`);
+    return paginatedResults;
   }
 
   async getUserAgeGroupRankings(userId: number): Promise<UserAgeGroupRanking[]> {

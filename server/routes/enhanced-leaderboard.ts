@@ -13,6 +13,29 @@ router.get('/test', (req, res) => {
   });
 });
 
+// Test endpoint to simulate production filtering
+router.get('/test-production', async (req, res) => {
+  try {
+    // Temporarily set NODE_ENV to production for this test
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    
+    const fullLeaderboardData = await getRealLeaderboardData('singles', 'open', 'male', '', req.user?.id);
+    
+    // Restore original environment
+    process.env.NODE_ENV = originalEnv;
+    
+    res.json({
+      message: 'Production filtering test',
+      environment: 'simulated production',
+      playersShown: fullLeaderboardData.length,
+      players: fullLeaderboardData.map(p => ({ displayName: p.displayName, username: p.username, points: p.points }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 console.log('[ENHANCED LEADERBOARD] Router initialized and test endpoint added');
 
 // Enhanced leaderboard endpoint supporting new standalone youth ranking system
@@ -53,7 +76,7 @@ router.get('/', async (req, res) => {
       );
 
       // Transform to leaderboard format
-      const leaderboardEntries = rankings.map((ranking, index) => ({
+      let leaderboardEntries = rankings.map((ranking, index) => ({
         id: ranking.user.id,
         displayName: ranking.user.displayName || `${ranking.user.firstName || ''} ${ranking.user.lastName || ''}`.trim() || ranking.user.username,
         username: ranking.user.username,
@@ -67,6 +90,22 @@ router.get('/', async (req, res) => {
         ranking: offset + index + 1,
         isCurrentUser: req.user?.id === ranking.user.id
       }));
+
+      // Apply production data filtering for youth rankings
+      const originalCount = leaderboardEntries.length;
+      leaderboardEntries = leaderboardEntries.filter(player => isProductionDataFilter(player));
+      
+      // Re-rank after filtering
+      leaderboardEntries = leaderboardEntries.map((player, index) => ({
+        ...player,
+        ranking: offset + index + 1
+      }));
+
+      const isProduction = process.env.NODE_ENV === 'production';
+      const excludedCount = originalCount - leaderboardEntries.length;
+      if (isProduction && excludedCount > 0) {
+        console.log(`[ENHANCED LEADERBOARD] Youth rankings - Production mode: Excluded ${excludedCount} test/development users`);
+      }
 
       const response: LeaderboardResponse = {
         players: leaderboardEntries,
@@ -190,6 +229,43 @@ function getPrimaryDivisionFromAge(age: number): string {
   return "open";
 }
 
+// Production data filtering utility
+function isProductionDataFilter(player: any): boolean {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (!isProduction) {
+    // In development, allow all data
+    return true;
+  }
+  
+  // Production filtering - exclude test data and specific development users
+  const excludedUsernames = ['mightymax', 'test', 'demo', 'admin', 'sample'];
+  const excludedDisplayNamePatterns = ['test', 'demo', 'sample', 'admin', 'mighty'];
+  
+  // Check username exclusions
+  if (excludedUsernames.some(excluded => 
+    player.username.toLowerCase().includes(excluded.toLowerCase())
+  )) {
+    return false;
+  }
+  
+  // Check display name exclusions
+  if (excludedDisplayNamePatterns.some(pattern => 
+    player.displayName.toLowerCase().includes(pattern.toLowerCase())
+  )) {
+    return false;
+  }
+  
+  // Exclude users with obviously test-like data
+  if (player.username.startsWith('user_') || 
+      player.displayName.startsWith('User ') ||
+      player.username.match(/^(user|test|demo)\d+$/i)) {
+    return false;
+  }
+  
+  return true;
+}
+
 // Get real leaderboard data from database
 async function getRealLeaderboardData(
   format: string, 
@@ -199,7 +275,8 @@ async function getRealLeaderboardData(
   currentUserId?: number
 ): Promise<LeaderboardEntry[]> {
   try {
-    console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender}`);
+    const isProduction = process.env.NODE_ENV === 'production';
+    console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender} (Production: ${isProduction})`);
     
     // Determine which ranking points to use based on format
     const formatParam = format === 'doubles' ? 'doubles' : 'singles';
@@ -238,7 +315,7 @@ async function getRealLeaderboardData(
 
     let processedPlayers = usersWithStats
       .filter(player => player.points > 0) // Only show players with points in this format
-      .filter(player => !player.displayName.includes('Test')) // Exclude test users
+      .filter(player => isProductionDataFilter(player)) // Apply production data filtering
       .filter(player => {
         // Filter by gender
         if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
@@ -265,6 +342,11 @@ async function getRealLeaderboardData(
       );
     }
 
+    const excludedCount = usersWithStats.length - processedPlayers.length;
+    if (isProduction && excludedCount > 0) {
+      console.log(`[LEADERBOARD] Production mode: Excluded ${excludedCount} test/development users`);
+    }
+    
     console.log(`[LEADERBOARD] Found ${processedPlayers.length} players with ranking points`);
     return processedPlayers;
     
