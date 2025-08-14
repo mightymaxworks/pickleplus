@@ -342,7 +342,11 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const competitions = Array.isArray(competitionsData) ? competitionsData : [];
+  const competitions = Array.isArray(competitionsData) 
+    ? competitionsData 
+    : (competitionsData?.success && Array.isArray(competitionsData?.data)) 
+      ? competitionsData.data 
+      : [];
   
   // Debug logging
   console.log('[QuickMatchRecorder] isAdmin:', isAdmin);
