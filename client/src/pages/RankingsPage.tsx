@@ -148,12 +148,12 @@ export default function RankingsPage() {
 
         {/* Rankings Tabs */}
         <Tabs defaultValue="singles" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="singles">Singles Rankings</TabsTrigger>
-            <TabsTrigger value="doubles">Doubles Rankings</TabsTrigger>
-            <TabsTrigger value="tiers">Tier System</TabsTrigger>
-            <TabsTrigger value="age-group">Age Group</TabsTrigger>
-            <TabsTrigger value="recent">Recent Activity</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+            <TabsTrigger value="singles" className="text-sm">Singles</TabsTrigger>
+            <TabsTrigger value="doubles" className="text-sm">Doubles</TabsTrigger>
+            <TabsTrigger value="tiers" className="hidden md:flex text-sm">Tiers</TabsTrigger>
+            <TabsTrigger value="age-group" className="hidden md:flex text-sm">Age Group</TabsTrigger>
+            <TabsTrigger value="recent" className="hidden md:flex text-sm">Recent</TabsTrigger>
           </TabsList>
 
           <TabsContent value="singles" className="mt-6">
