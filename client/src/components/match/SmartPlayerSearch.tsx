@@ -244,7 +244,7 @@ export const SmartPlayerSearch: React.FC<SmartPlayerSearchProps> = ({
                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                           <Hash className="h-3 w-3" />
                           <span className="font-mono">
-                            {highlightSearchTerm(player.passportCode, searchTerm)}
+                            {highlightSearchTerm(player.passportCode || 'No Code', searchTerm)}
                           </span>
                           {player.gender && (
                             <Badge variant="secondary" className="text-xs">
