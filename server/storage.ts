@@ -286,6 +286,7 @@ export interface IStorage extends CommunityStorage {
   // Match History operations - Sprint 1: Foundation
   getUserMatchHistory(userId: number, filterType: string, filterPeriod: string): Promise<any[]>;
   getUserMatchStatistics(userId: number, filterPeriod: string): Promise<any>;
+  getRecentMatchesForUser(userId: number, limit?: number): Promise<Match[]>;
   
   // Charge Card operations - Admin-controlled charge card system
   createChargeCardPurchase(data: any): Promise<any>;
@@ -907,6 +908,53 @@ export class DatabaseStorage implements IStorage {
       winRate: Math.round(winRate * 100) / 100,
       recentMatches: userMatches.slice(0, 5)
     };
+  }
+
+  async getRecentMatchesForUser(userId: number, limit: number = 5): Promise<Match[]> {
+    try {
+      const userMatches = await db.select()
+        .from(matches)
+        .where(or(
+          eq(matches.player1Id, userId), 
+          eq(matches.player2Id, userId),
+          eq(matches.player1PartnerId, userId),
+          eq(matches.player2PartnerId, userId)
+        ))
+        .orderBy(desc(matches.createdAt))
+        .limit(limit);
+
+      // Add derived fields for the UI
+      const enhancedMatches = userMatches.map(match => {
+        // Determine opponent name
+        let opponentName = 'Unknown';
+        if (match.player1Id === userId) {
+          // User is player 1, opponent is player 2
+          opponentName = match.player2Name || `Player ${match.player2Id}`;
+        } else if (match.player2Id === userId) {
+          // User is player 2, opponent is player 1  
+          opponentName = match.player1Name || `Player ${match.player1Id}`;
+        } else {
+          // User is a partner, find the main opponent
+          opponentName = match.player1Id === userId ? 
+            (match.player2Name || `Player ${match.player2Id}`) : 
+            (match.player1Name || `Player ${match.player1Id}`);
+        }
+
+        return {
+          ...match,
+          userId: userId, // Add for widget logic
+          opponentName,
+          matchDate: match.createdAt || new Date(),
+          scorePlayerOne: match.player1Score,
+          scorePlayerTwo: match.player2Score
+        };
+      });
+
+      return enhancedMatches;
+    } catch (error) {
+      console.error('Error fetching recent matches for user:', error);
+      return [];
+    }
   }
 
   async getPicklePoints(userId: number): Promise<number> {

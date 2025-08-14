@@ -16,6 +16,7 @@ import { Camera, MapPin, Calendar, QrCode, GraduationCap, BookOpen, Star, Copy, 
 import { QRCodeSVG } from "qrcode.react";
 import { EditableField } from "@/components/profile/EditableField";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
+import { RecentMatchesWidget } from "@/components/dashboard/RecentMatchesWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -853,6 +854,9 @@ export default function ModernPassportProfile({
           
           <TabsContent value="stats" className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
+              {/* PCP Verified Scores Widget */}
+              <RecentMatchesWidget className="md:col-span-2" limit={5} />
+              
               {/* Performance Chart */}
               <Card>
                 <CardHeader>
@@ -865,19 +869,27 @@ export default function ModernPassportProfile({
                 </CardContent>
               </Card>
 
-              {/* Match History */}
+              {/* Match Statistics */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Matches</CardTitle>
+                  <CardTitle>Match Statistics</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
-                    <span>vs. Player A</span>
-                    <span className="text-green-600">11-9, 11-7</span>
+                    <span>Total Matches</span>
+                    <span className="font-bold text-blue-600">{user?.totalMatches || 0}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span>vs. Player B</span>
-                    <span className="text-red-600">9-11, 8-11</span>
+                    <span>Win Rate</span>
+                    <span className="font-bold text-emerald-600">{user?.winRate || 0}%</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Current Streak</span>
+                    <span className="font-bold text-purple-600">{user?.currentStreak || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Pickle Points</span>
+                    <span className="font-bold text-orange-600">{user?.picklePoints || user?.pickle_points || 0}</span>
                   </div>
                 </CardContent>
               </Card>

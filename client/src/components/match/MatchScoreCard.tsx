@@ -199,18 +199,34 @@ export function MatchScoreCard({
   }
 
   return (
-    <Card className={cn("w-full max-w-2xl mx-auto", className)}>
+    <Card className={cn(
+      "w-full max-w-2xl mx-auto", 
+      "bg-gradient-to-br from-white via-gray-50/30 to-emerald-50/20",
+      "border border-gray-200/60 shadow-lg shadow-emerald-500/5",
+      "backdrop-blur-sm",
+      className
+    )}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <Trophy className="h-5 w-5" />
-            <span>{t('match.scoreCard')}</span>
+            <Trophy className="h-5 w-5 text-emerald-600" />
+            <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent font-bold">
+              PCP Verified Scores
+            </span>
           </CardTitle>
           <div className="flex items-center space-x-2">
-            <Badge variant={match.matchType === 'tournament' ? 'default' : 'secondary'}>
+            <Badge 
+              variant={match.matchType === 'tournament' ? 'default' : 'secondary'}
+              className={cn(
+                "font-semibold px-3 py-1",
+                match.matchType === 'tournament' 
+                  ? "bg-gradient-to-r from-emerald-600 to-blue-600 text-white border-0" 
+                  : "bg-gray-100 text-gray-700 border border-gray-200"
+              )}
+            >
               {match.matchType.toUpperCase()}
             </Badge>
-            <Badge variant="outline">
+            <Badge variant="outline" className="font-medium px-3 py-1 border-emerald-200 text-emerald-700 bg-emerald-50">
               {match.formatType.toUpperCase()}
             </Badge>
           </div>
@@ -235,8 +251,10 @@ export function MatchScoreCard({
         <div className="flex items-center justify-center space-x-8">
           {/* Team 1 */}
           <div className={cn(
-            "text-center p-4 rounded-lg border-2 transition-colors",
-            isTeam1Winner ? "border-green-500 bg-green-50" : "border-gray-200"
+            "text-center p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-[1.02]",
+            isTeam1Winner 
+              ? "border-emerald-400 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 shadow-lg shadow-emerald-500/20" 
+              : "border-gray-200 bg-gradient-to-br from-gray-50 via-white to-gray-50/50"
           )}>
             <div className="space-y-2">
               {team1Players.map((player, index) => player && (
@@ -291,8 +309,8 @@ export function MatchScoreCard({
               </div>
             )}
             {isTeam1Winner && (
-              <Badge className="mt-2 bg-green-600">
-                <Trophy className="h-3 w-3 mr-1" />
+              <Badge className="mt-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white border-0 px-4 py-2 font-bold text-sm shadow-lg shadow-emerald-500/30">
+                <Trophy className="h-4 w-4 mr-2" />
                 WINNER
               </Badge>
             )}
@@ -302,8 +320,10 @@ export function MatchScoreCard({
 
           {/* Team 2 */}
           <div className={cn(
-            "text-center p-4 rounded-lg border-2 transition-colors",
-            !isTeam1Winner ? "border-green-500 bg-green-50" : "border-gray-200"
+            "text-center p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-[1.02]",
+            !isTeam1Winner 
+              ? "border-emerald-400 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 shadow-lg shadow-emerald-500/20" 
+              : "border-gray-200 bg-gradient-to-br from-gray-50 via-white to-gray-50/50"
           )}>
             <div className="space-y-2">
               {team2Players.map((player, index) => player && (
@@ -358,8 +378,8 @@ export function MatchScoreCard({
               </div>
             )}
             {!isTeam1Winner && (
-              <Badge className="mt-2 bg-green-600">
-                <Trophy className="h-3 w-3 mr-1" />
+              <Badge className="mt-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white border-0 px-4 py-2 font-bold text-sm shadow-lg shadow-emerald-500/30">
+                <Trophy className="h-4 w-4 mr-2" />
                 WINNER
               </Badge>
             )}
