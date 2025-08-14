@@ -721,7 +721,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
             
             {/* Player Grid */}
             <div className="grid gap-3">
-              {/* Player 1 */}
+              {/* Team 1 - Player 1 (Blue) */}
               {playerOneData && (
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <Avatar className="h-10 w-10">
@@ -733,6 +733,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                     <p className="font-medium">{playerOneData.displayName || playerOneData.username}</p>
                     <p className="text-sm text-muted-foreground">
                       @{playerOneData.username} • {playerOneData.currentRating || 0} pts
+                      {formatType === "doubles" && <span className="ml-2 font-semibold text-blue-600">Team 1</span>}
                     </p>
                   </div>
                   <Button
@@ -746,9 +747,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 </div>
               )}
               
-              {/* Player 2 */}
+              {/* Team 1 - Player 2 (Blue - same as Player 1) */}
               {playerTwoData && (
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback>
                       {playerTwoData.avatarInitials || playerTwoData.username.slice(0, 2).toUpperCase()}
@@ -758,6 +759,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                     <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
                     <p className="text-sm text-muted-foreground">
                       @{playerTwoData.username} • {playerTwoData.currentRating || 0} pts
+                      {formatType === "doubles" && <span className="ml-2 font-semibold text-blue-600">Team 1</span>}
                     </p>
                   </div>
                   <Button
@@ -771,9 +773,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 </div>
               )}
 
-              {/* Partners for Doubles */}
+              {/* Team 2 - Player 3 (Green - same color for team) */}
               {formatType === "doubles" && playerOnePartnerData && (
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback>
                       {playerOnePartnerData.avatarInitials || playerOnePartnerData.username.slice(0, 2).toUpperCase()}
@@ -783,6 +785,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                     <p className="font-medium">{playerOnePartnerData.displayName || playerOnePartnerData.username}</p>
                     <p className="text-sm text-muted-foreground">
                       @{playerOnePartnerData.username} • {playerOnePartnerData.currentRating || 0} pts
+                      <span className="ml-2 font-semibold text-green-600">Team 2</span>
                     </p>
                   </div>
                   <Button
@@ -796,8 +799,9 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                 </div>
               )}
 
+              {/* Team 2 - Player 4 (Green - same as Player 3) */}
               {formatType === "doubles" && playerTwoPartnerData && (
-                <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback>
                       {playerTwoPartnerData.avatarInitials || playerTwoPartnerData.username.slice(0, 2).toUpperCase()}
@@ -807,6 +811,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                     <p className="font-medium">{playerTwoPartnerData.displayName || playerTwoPartnerData.username}</p>
                     <p className="text-sm text-muted-foreground">
                       @{playerTwoPartnerData.username} • {playerTwoPartnerData.currentRating || 0} pts
+                      <span className="ml-2 font-semibold text-green-600">Team 2</span>
                     </p>
                   </div>
                   <Button
