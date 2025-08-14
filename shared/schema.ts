@@ -933,7 +933,9 @@ export const users = pgTable("users", {
   pointsMultiplier: integer("points_multiplier").default(100),
   profileCompletionPct: integer("profile_completion_pct").default(0),
   profileMilestonesAwarded: integer("profile_milestones_awarded").array().default([]),
-  rankingPoints: integer("ranking_points").default(0),
+  rankingPoints: integer("ranking_points").default(0), // DEPRECATED - for backward compatibility only
+  singlesRankingPoints: integer("singles_ranking_points").default(0), // Singles-specific ranking points by category
+  doublesRankingPoints: integer("doubles_ranking_points").default(0), // Doubles-specific ranking points by category
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   // Note: rankingTier is calculated at runtime based on ranking points
   // rankingTier: varchar("ranking_tier", { length: 20 }).default("bronze"),

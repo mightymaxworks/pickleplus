@@ -48,10 +48,10 @@ interface PlayerTier {
 }
 
 interface EnhancedLeaderboardProps {
-  formatType?: "singles" | "doubles" | "mixed";
+  format?: "singles" | "doubles" | "mixed";
 }
 
-export default function EnhancedLeaderboard({ formatType = "singles" }: EnhancedLeaderboardProps) {
+export default function EnhancedLeaderboard({ format = "singles" }: EnhancedLeaderboardProps) {
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
   const [selectedGender, setSelectedGender] = useState<string>("male");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -127,10 +127,10 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
 
   // Fetch leaderboard data with enhanced features
   const { data: leaderboardResponse, isLoading } = useQuery({
-    queryKey: [`/api/leaderboard/${formatType}`, selectedDivision, selectedGender, debouncedSearch, currentPage],
+    queryKey: [`/api/enhanced-leaderboard`, format, selectedDivision, selectedGender, debouncedSearch, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams({
-        format: formatType,
+        format: format,
         division: selectedDivision,
         gender: selectedGender,
         page: currentPage.toString(),
@@ -138,7 +138,7 @@ export default function EnhancedLeaderboard({ formatType = "singles" }: Enhanced
         search: debouncedSearch
       });
       
-      const response = await fetch(`/api/leaderboard/${formatType}?${params}`);
+      const response = await fetch(`/api/enhanced-leaderboard?${params}`);
       if (!response.ok) {
         throw new Error("Failed to fetch leaderboard data");
       }

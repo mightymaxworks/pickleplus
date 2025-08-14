@@ -144,22 +144,29 @@ async function getRealLeaderboardData(
   try {
     console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender}`);
     
-    // Get all users with ranking points using direct database query
-    const allUsers = await storage.getUsersWithRankingPoints();
+    // Determine which ranking points to use based on format
+    const formatParam = format === 'doubles' ? 'doubles' : 'singles';
+    
+    // Get all users with format-specific ranking points
+    const allUsers = await storage.getUsersWithRankingPoints(formatParam);
     
     let processedPlayers = allUsers
-      .filter(user => user.rankingPoints > 0) // Only show users with ranking points
       .map((user, index) => {
         const age = user.dateOfBirth ? 
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25; // Default age if not provided
+        
+        // Use format-specific ranking points
+        const formatPoints = format === 'doubles' 
+          ? (user.doublesRankingPoints || 0)
+          : (user.singlesRankingPoints || 0);
         
         return {
           id: user.id,
           displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
           username: user.username,
           avatar: user.profileImageUrl,
-          points: user.rankingPoints || 0,
+          points: formatPoints,
           matchesPlayed: user.matchesPlayed || 0,
           winRate: user.matchesPlayed > 0 ? Math.round(((user.wins || 0) / user.matchesPlayed) * 100 * 10) / 10 : 0,
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
@@ -169,6 +176,7 @@ async function getRealLeaderboardData(
           isCurrentUser: currentUserId === user.id
         };
       })
+      .filter(player => player.points > 0) // Only show players with points in this format
       .filter(player => {
         // Filter by gender
         if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
@@ -213,7 +221,76 @@ async function getRealLeaderboardData(
   }
 }
 
-// Enhanced leaderboard endpoint with age group, gender separation, search, and pagination
+// Enhanced leaderboard endpoint with format as query parameter
+router.get('/', async (req, res) => {
+  try {
+    const { 
+      format = 'singles',
+      division = 'open', 
+      gender = 'all',
+      page = '1',
+      limit = '20',
+      search = ''
+    } = req.query as { 
+      format?: string;
+      division?: string; 
+      gender?: string;
+      page?: string;
+      limit?: string;
+      search?: string;
+    };
+
+    if (!['singles', 'doubles', 'mixed'].includes(format)) {
+      return res.status(400).json({ error: 'Invalid format. Must be singles, doubles, or mixed.' });
+    }
+
+    const currentUserId = req.user?.id;
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+
+    // Get real leaderboard data from database
+    const fullLeaderboardData = await getRealLeaderboardData(format, division, gender, search, currentUserId);
+    
+    // Find current user position in full dataset (before pagination)
+    let currentUserPosition = undefined;
+    if (currentUserId) {
+      const userIndex = fullLeaderboardData.findIndex(player => player.isCurrentUser);
+      if (userIndex !== -1) {
+        currentUserPosition = {
+          ranking: userIndex + 1,
+          player: fullLeaderboardData[userIndex]
+        };
+      }
+    }
+
+    // Calculate pagination
+    const totalCount = fullLeaderboardData.length;
+    const totalPages = Math.ceil(totalCount / limitNum);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    
+    // Get paginated results
+    const paginatedPlayers = fullLeaderboardData.slice(startIndex, endIndex);
+
+    const response: LeaderboardResponse = {
+      players: paginatedPlayers,
+      totalCount,
+      currentPage: pageNum,
+      totalPages,
+      currentUserPosition,
+      searchTerm: search
+    };
+
+    console.log(`[LEADERBOARD] API Response - Format: ${format}, Players: ${paginatedPlayers.length}/${totalCount}, Page: ${pageNum}/${totalPages}`);
+    res.json(response);
+
+  } catch (error) {
+    console.error('[LEADERBOARD] API Error:', error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard data' });
+  }
+});
+
+// Enhanced leaderboard endpoint with age group, gender separation, search, and pagination (legacy format param route)
 router.get('/:format', async (req, res) => {
   try {
     const { format } = req.params;

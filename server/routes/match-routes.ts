@@ -121,8 +121,10 @@ export function registerMatchRoutes(app: express.Express): void {
           const rankingPoints = isWinner ? winnerPoints : loserPoints; // Same points for both systems
           
           // Update both Pickle Points (gamification) and Ranking Points (competitive)
+          // Use format-specific ranking points to prevent Singles/Doubles mixing
+          const matchFormat = formatType === 'doubles' ? 'doubles' : 'singles';
           await storage.updateUserPicklePoints(playerId, picklePoints);
-          await storage.updateUserRankingPoints(playerId, rankingPoints);
+          await storage.updateUserRankingPoints(playerId, rankingPoints, matchFormat);
           
           console.log(`[Match Creation] Awarded ${picklePoints} Pickle Points and ${rankingPoints} Ranking Points to ${isWinner ? 'winner' : 'loser'} (User ID: ${playerId})`);
         }

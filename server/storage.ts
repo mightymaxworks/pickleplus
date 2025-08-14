@@ -679,12 +679,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId));
   }
 
-  async updateUserRankingPoints(userId: number, pointsToAdd: number): Promise<void> {
-    await db.update(users)
-      .set({ 
-        rankingPoints: sql`COALESCE(ranking_points, 0) + ${pointsToAdd}` 
-      })
-      .where(eq(users.id, userId));
+  async updateUserRankingPoints(userId: number, pointsToAdd: number, format: 'singles' | 'doubles' = 'singles'): Promise<void> {
+    if (format === 'singles') {
+      await db.update(users)
+        .set({ 
+          singlesRankingPoints: sql`COALESCE(singles_ranking_points, 0) + ${pointsToAdd}`,
+          rankingPoints: sql`COALESCE(ranking_points, 0) + ${pointsToAdd}` // Keep legacy field updated
+        })
+        .where(eq(users.id, userId));
+    } else {
+      await db.update(users)
+        .set({ 
+          doublesRankingPoints: sql`COALESCE(doubles_ranking_points, 0) + ${pointsToAdd}`,
+          rankingPoints: sql`COALESCE(ranking_points, 0) + ${pointsToAdd}` // Keep legacy field updated
+        })
+        .where(eq(users.id, userId));
+    }
   }
 
   async updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User> {
@@ -751,13 +761,27 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async getUsersWithRankingPoints(): Promise<User[]> {
-    console.log('[STORAGE] Getting users with ranking points > 0');
-    const results = await db.select()
-      .from(users)
-      .where(gte(users.rankingPoints, 0))
-      .orderBy(desc(users.rankingPoints));
+  async getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]> {
+    console.log('[STORAGE] Getting users with ranking points > 0, format:', format);
     
+    let query = db.select().from(users);
+    
+    if (format === 'singles') {
+      query = query.where(gte(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
+    } else if (format === 'doubles') {
+      query = query.where(gte(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
+    } else {
+      // Legacy: get all users with any ranking points
+      query = query.where(
+        or(
+          gte(users.singlesRankingPoints, 0),
+          gte(users.doublesRankingPoints, 0),
+          gte(users.rankingPoints, 0)
+        )
+      ).orderBy(desc(users.rankingPoints));
+    }
+    
+    const results = await query;
     console.log('[STORAGE] Found users with ranking points:', results.length);
     return results;
   }
