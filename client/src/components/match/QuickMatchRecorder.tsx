@@ -338,7 +338,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
         return [];
       }
     },
-    enabled: isAdmin, // Only fetch if user is admin
+    enabled: true, // Always fetch - removed admin check as it may be interfering
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -348,6 +348,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   console.log('[QuickMatchRecorder] isAdmin:', isAdmin);
   console.log('[QuickMatchRecorder] competitionsLoading:', competitionsLoading);
   console.log('[QuickMatchRecorder] competitionsError:', competitionsError);
+  console.log('[QuickMatchRecorder] competitionsData:', competitionsData);
   console.log('[QuickMatchRecorder] competitions count:', competitions.length);
 
   // Load recent opponents from API
