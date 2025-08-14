@@ -322,7 +322,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
   const [manualPointsLoser, setManualPointsLoser] = useState<number>(0);
   
   // Fetch real competitions data from API
-  const { data: competitionsData } = useQuery({
+  const { data: competitionsData, isLoading: competitionsLoading } = useQuery({
     queryKey: ['/api/admin/match-management/competitions'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/match-management/competitions');
@@ -333,7 +333,7 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const competitions = competitionsData || [];
+  const competitions = Array.isArray(competitionsData) ? competitionsData : [];
 
   // Load recent opponents from API
   useEffect(() => {
@@ -724,11 +724,15 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no-competition">No Competition (Casual Match)</SelectItem>
-                  {competitions.map((comp) => (
-                    <SelectItem key={comp.id} value={comp.id.toString()}>
-                      {comp.name} ({comp.type || 'tournament'})
-                    </SelectItem>
-                  ))}
+                  {competitionsLoading ? (
+                    <SelectItem value="loading" disabled>Loading competitions...</SelectItem>
+                  ) : (
+                    competitions.map((comp) => (
+                      <SelectItem key={comp.id} value={comp.id.toString()}>
+                        {comp.name} ({comp.type || 'tournament'})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               
@@ -1129,11 +1133,15 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no-competition">No Competition (Casual Match)</SelectItem>
-                  {competitions.map((comp) => (
-                    <SelectItem key={comp.id} value={comp.id.toString()}>
-                      {comp.name} ({comp.type || 'tournament'} • {comp.pointsMultiplier || 1.0}x points)
-                    </SelectItem>
-                  ))}
+                  {competitionsLoading ? (
+                    <SelectItem value="loading" disabled>Loading competitions...</SelectItem>
+                  ) : (
+                    competitions.map((comp) => (
+                      <SelectItem key={comp.id} value={comp.id.toString()}>
+                        {comp.name} ({comp.type || 'tournament'} • {comp.pointsMultiplier || 1.0}x points)
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
