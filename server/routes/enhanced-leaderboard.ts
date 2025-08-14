@@ -95,10 +95,10 @@ router.get('/', async (req, res) => {
       const originalCount = leaderboardEntries.length;
       leaderboardEntries = leaderboardEntries.filter(player => isProductionDataFilter(player));
       
-      // Re-rank after filtering
+      // Re-rank after filtering - maintain correct pagination ranking
       leaderboardEntries = leaderboardEntries.map((player, index) => ({
         ...player,
-        ranking: offset + index + 1
+        ranking: offset + index + 1 // Correct ranking based on pagination offset
       }));
 
       const isProduction = process.env.NODE_ENV === 'production';
@@ -140,8 +140,11 @@ router.get('/', async (req, res) => {
     const startIndex = (pageNum - 1) * limitNum;
     const endIndex = startIndex + limitNum;
     
-    // Get paginated results
-    const paginatedPlayers = fullLeaderboardData.slice(startIndex, endIndex);
+    // Get paginated results and ensure ranking numbers continue correctly
+    const paginatedPlayers = fullLeaderboardData.slice(startIndex, endIndex).map((player, index) => ({
+      ...player,
+      ranking: startIndex + index + 1 // Correct ranking based on pagination offset
+    }));
 
     const response: LeaderboardResponse = {
       players: paginatedPlayers,
@@ -331,7 +334,7 @@ async function getRealLeaderboardData(
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         return b.matchesPlayed - a.matchesPlayed;
       })
-      .map((player, index) => ({ ...player, ranking: index + 1 }));
+      .map((player, index) => ({ ...player, ranking: index + 1 })); // Assign ranking based on sorted position
 
     // Apply search filter if provided
     if (searchTerm && searchTerm.trim()) {
@@ -403,8 +406,11 @@ router.get('/:format', async (req, res) => {
     const startIndex = (pageNum - 1) * limitNum;
     const endIndex = startIndex + limitNum;
     
-    // Get paginated results
-    const paginatedPlayers = fullLeaderboardData.slice(startIndex, endIndex);
+    // Get paginated results and ensure ranking numbers continue correctly
+    const paginatedPlayers = fullLeaderboardData.slice(startIndex, endIndex).map((player, index) => ({
+      ...player,
+      ranking: startIndex + index + 1 // Correct ranking based on pagination offset
+    }));
 
     const response: LeaderboardResponse = {
       players: paginatedPlayers,

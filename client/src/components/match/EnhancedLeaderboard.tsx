@@ -139,7 +139,7 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
         division: selectedDivision,
         gender: selectedGender,
         page: currentPage.toString(),
-        limit: '10',
+        limit: '20',
         search: debouncedSearch
       });
       
