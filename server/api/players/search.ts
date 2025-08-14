@@ -18,7 +18,9 @@ export async function searchPlayers(req: Request, res: Response) {
     console.log('[API SEARCH DEBUG] Search term bytes:', Buffer.from(searchTerm, 'utf8'));
     
     // Enhanced search: username, display name, first name, last name, and passport code
+    console.log('[API SEARCH DEBUG] About to call storage.searchPlayersByMultipleFields');
     const users = await storage.searchPlayersByMultipleFields(searchTerm);
+    console.log('[API SEARCH DEBUG] Storage returned', users.length, 'users');
     
     // Format the response to match the expected format
     const formattedUsers = users.map(user => ({
