@@ -51,7 +51,8 @@ interface EnhancedLeaderboardProps {
   format?: "singles" | "doubles" | "mixed";
 }
 
-export default function EnhancedLeaderboard({ format = "singles" }: EnhancedLeaderboardProps) {
+export default function EnhancedLeaderboard({ format: initialFormat = "singles" }: EnhancedLeaderboardProps) {
+  const [format, setFormat] = useState<"singles" | "doubles" | "mixed">(initialFormat);
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
   const [selectedGender, setSelectedGender] = useState<string>("male");
   const [searchTerm, setSearchTerm] = useState<string>("");
