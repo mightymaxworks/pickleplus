@@ -564,395 +564,239 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
         </CardContent>
       </Card>
 
-      {/* Player Selection */}
+      {/* Unified Player Selection */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <UserCircle className="h-5 w-5 text-purple-500" />
-            Player Selection
+            <Users className="h-5 w-5 text-purple-500" />
+            Add Players
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {formatType === "singles" ? "Add 2 players for singles match" : "Add 4 players for doubles match"}
+          </p>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Player One */}
-          <div className="space-y-3">
+        <CardContent className="space-y-6">
+          {/* Unified Search Interface */}
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>
-                {isAdmin ? "Player 1 (Search by name, username, or passport code)" : "Player 1 (You)"}
-              </Label>
-              {isAdmin && !playerOneData ? (
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Search for Player 1 by name, username, or passport code..."
-                    value={playerSearch}
-                    onChange={(e) => setPlayerSearch(e.target.value)}
-                    className="w-full"
-                  />
-                  
-                  {/* Player 1 Search Results */}
-                  {playerSearch && (
-                    <div className="border rounded-lg max-h-40 overflow-y-auto">
-                      {isSearching ? (
-                        <div className="p-3 text-center text-muted-foreground">
-                          Searching players...
-                        </div>
-                      ) : playerSearchResults.length > 0 ? (
-                        playerSearchResults.map((player) => (
-                          <button
-                            key={player.id}
-                            type="button"
-                            className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
-                            onClick={() => {
-                              setPlayerOneData(player);
-                              setPlayerSearch("");
-                              setPlayerSearchResults([]);
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarFallback>
-                                  {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">
-                                  {player.displayName || player.username}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  @{player.username} • {player.currentRating || 0} pts
-                                </p>
-                              </div>
-                            </div>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="p-3 text-center text-muted-foreground">
-                          No players found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Quick Self-Select for Admin */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => {
-                      if (user) {
-                        setPlayerOneData({
-                          id: user.id,
-                          displayName: user.displayName || null,
-                          username: user.username,
-                          passportId: user.passportCode || undefined,
-                          avatarUrl: user.avatarUrl || undefined,
-                          avatarInitials: user.avatarInitials || undefined,
-                          dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
-                          gender: user.gender || null,
-                          currentRating: user.rankingPoints || 0,
-                        });
+              <Label className="text-base font-medium">Search and Add Players</Label>
+              <Input
+                placeholder="Search by name, username, or passport code to add players..."
+                value={playerSearch}
+                onChange={(e) => setPlayerSearch(e.target.value)}
+                className="w-full"
+              />
+              
+              {/* Add Myself Button for Admin */}
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (user) {
+                      const myPlayerData = {
+                        id: user.id,
+                        displayName: user.displayName || null,
+                        username: user.username,
+                        passportId: user.passportCode || undefined,
+                        avatarUrl: user.avatarUrl || undefined,
+                        avatarInitials: user.avatarInitials || undefined,
+                        dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
+                        gender: user.gender || null,
+                        currentRating: user.rankingPoints || 0,
+                      };
+                      
+                      // Add myself to the first available slot
+                      if (!playerOneData) {
+                        setPlayerOneData(myPlayerData);
+                      } else if (!playerTwoData) {
+                        setPlayerTwoData(myPlayerData);
+                      } else if (formatType === "doubles" && !playerOnePartnerData) {
+                        setPlayerOnePartnerData(myPlayerData);
+                      } else if (formatType === "doubles" && !playerTwoPartnerData) {
+                        setPlayerTwoPartnerData(myPlayerData);
                       }
-                    }}
-                  >
-                    <UserCircle className="h-4 w-4 mr-2" />
-                    Select Myself
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback>
-                      {playerOneData?.avatarInitials || user?.avatarInitials || 'P1'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {playerOneData?.displayName || user?.displayName || user?.username}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      @{playerOneData?.username || user?.username} • {playerOneData?.currentRating || 0} pts
-                    </p>
-                  </div>
-                  {isAdmin && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPlayerOneData(null)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                    }
+                  }}
+                  className="w-full justify-start"
+                >
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  Add Myself
+                </Button>
               )}
             </div>
-
-            {/* Player 1 Partner (if doubles) */}
-            {formatType === "doubles" && (
-              <div className="space-y-2 ml-4 border-l-2 border-blue-200 pl-4">
-                <Label className="text-sm text-muted-foreground">
-                  {isAdmin ? "Player 1 Partner (Optional)" : "Your Partner (Optional)"}
-                </Label>
-                
-                {!playerOnePartnerData ? (
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Search partner by name, username, or passport code..."
-                      value={partnerOneSearch}
-                      onChange={(e) => setPartnerOneSearch(e.target.value)}
-                      className="w-full"
-                    />
-                    
-                    {/* Partner One Search Results */}
-                    {partnerOneSearch && (
-                      <div className="border rounded-lg max-h-32 overflow-y-auto">
-                        {isSearchingPartnerOne ? (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            Searching partners...
-                          </div>
-                        ) : partnerOneSearchResults.length > 0 ? (
-                          partnerOneSearchResults.map((player) => (
-                            <button
-                              key={player.id}
-                              type="button"
-                              className="w-full text-left p-2 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
-                              onClick={() => {
-                                setPlayerOnePartnerData(player);
-                                setPartnerOneSearch("");
-                                setPartnerOneSearchResults([]);
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback>
-                                    {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="text-sm font-medium">
-                                    {player.displayName || player.username}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    @{player.username} • {player.passportId ? `ID: ${player.passportId}` : 'No passport'} • {player.currentRating || 0} pts
-                                  </p>
-                                </div>
-                              </div>
-                            </button>
-                          ))
-                        ) : (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            No players found
-                          </div>
-                        )}
-                      </div>
-                    )}
+            
+            {/* Search Results */}
+            {playerSearch && (
+              <div className="border rounded-lg max-h-40 overflow-y-auto">
+                {isSearching ? (
+                  <div className="p-3 text-center text-muted-foreground">
+                    Searching players...
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {playerOnePartnerData?.avatarInitials || 'P1'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {playerOnePartnerData?.displayName || playerOnePartnerData?.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        @{playerOnePartnerData?.username} • {playerOnePartnerData?.currentRating || 0} pts
-                      </p>
-                    </div>
-                    <Button
+                ) : playerSearchResults.length > 0 ? (
+                  playerSearchResults.map((player) => (
+                    <button
+                      key={player.id}
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPlayerOnePartnerData(null)}
-                      className="text-red-600 hover:text-red-700"
+                      className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                      onClick={() => {
+                        // Add player to the first available slot
+                        if (!playerOneData) {
+                          setPlayerOneData(player);
+                        } else if (!playerTwoData) {
+                          setPlayerTwoData(player);
+                        } else if (formatType === "doubles" && !playerOnePartnerData) {
+                          setPlayerOnePartnerData(player);
+                        } else if (formatType === "doubles" && !playerTwoPartnerData) {
+                          setPlayerTwoPartnerData(player);
+                        }
+                        
+                        setPlayerSearch("");
+                        setPlayerSearchResults([]);
+                      }}
                     >
-                      <RotateCcw className="h-3 w-3" />
-                    </Button>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback>
+                            {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {player.displayName || player.username}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            @{player.username} • {player.currentRating || 0} pts
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-3 text-center text-muted-foreground">
+                    No players found
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Player Two Search */}
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label>
-                {formatType === "singles" ? (isAdmin ? "Player 2" : "Opponent") : (isAdmin ? "Player 2" : "Opponent Team Player 1")}
-              </Label>
-              <div className="space-y-2">
-                <Input
-                  placeholder={`Search by name, username, or passport code...`}
-                  value={playerSearch}
-                  onChange={(e) => setPlayerSearch(e.target.value)}
-                  className="w-full"
-                />
-                
-                {/* Search Results */}
-                {playerSearch && (
-                  <div className="border rounded-lg max-h-40 overflow-y-auto">
-                    {isSearching ? (
-                      <div className="p-3 text-center text-muted-foreground">
-                        Searching players...
-                      </div>
-                    ) : playerSearchResults.length > 0 ? (
-                      playerSearchResults.map((player) => (
-                        <button
-                          key={player.id}
-                          type="button"
-                          className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
-                          onClick={() => {
-                            setPlayerTwoData(player);
-                            setPlayerSearch("");
-                            setPlayerSearchResults([]);
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback>
-                                {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">
-                                {player.displayName || player.username}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                @{player.username} • {player.passportId ? `ID: ${player.passportId}` : 'No passport'} • {player.currentRating || 0} pts
-                              </p>
-                            </div>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="p-3 text-center text-muted-foreground">
-                        No players found
-                      </div>
-                    )}
+          {/* Selected Players Display */}
+          <div className="space-y-4">
+            <Label className="text-base font-medium">Selected Players</Label>
+            
+            {/* Player Grid */}
+            <div className="grid gap-3">
+              {/* Player 1 */}
+              {playerOneData && (
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {playerOneData.avatarInitials || playerOneData.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">{playerOneData.displayName || playerOneData.username}</p>
+                    <p className="text-sm text-muted-foreground">
+                      @{playerOneData.username} • {playerOneData.currentRating || 0} pts
+                    </p>
                   </div>
-                )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPlayerOneData(null)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              )}
+              
+              {/* Player 2 */}
+              {playerTwoData && (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {playerTwoData.avatarInitials || playerTwoData.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">{playerTwoData.displayName || playerTwoData.username}</p>
+                    <p className="text-sm text-muted-foreground">
+                      @{playerTwoData.username} • {playerTwoData.currentRating || 0} pts
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPlayerTwoData(null)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              )}
 
-                {/* Selected Player Two */}
-                {playerTwoData && (
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback>
-                        {playerTwoData.avatarInitials || playerTwoData.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-medium">
-                        {playerTwoData.displayName || playerTwoData.username}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        @{playerTwoData.username} • {playerTwoData.currentRating || 0} pts
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPlayerTwoData(null)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
+              {/* Partners for Doubles */}
+              {formatType === "doubles" && playerOnePartnerData && (
+                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {playerOnePartnerData.avatarInitials || playerOnePartnerData.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">{playerOnePartnerData.displayName || playerOnePartnerData.username}</p>
+                    <p className="text-sm text-muted-foreground">
+                      @{playerOnePartnerData.username} • {playerOnePartnerData.currentRating || 0} pts
+                    </p>
                   </div>
-                )}
-              </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPlayerOnePartnerData(null)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              )}
+
+              {formatType === "doubles" && playerTwoPartnerData && (
+                <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {playerTwoPartnerData.avatarInitials || playerTwoPartnerData.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">{playerTwoPartnerData.displayName || playerTwoPartnerData.username}</p>
+                    <p className="text-sm text-muted-foreground">
+                      @{playerTwoPartnerData.username} • {playerTwoPartnerData.currentRating || 0} pts
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPlayerTwoPartnerData(null)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* Player 2 Partner (if doubles) */}
-            {formatType === "doubles" && (
-              <div className="space-y-2 ml-4 border-l-2 border-green-200 pl-4">
-                <Label className="text-sm text-muted-foreground">
-                  {isAdmin ? "Player 2 Partner (Optional)" : "Opponent Team Partner (Optional)"}
-                </Label>
-                
-                {!playerTwoPartnerData ? (
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Search partner by name, username, or passport code..."
-                      value={partnerTwoSearch}
-                      onChange={(e) => setPartnerTwoSearch(e.target.value)}
-                      className="w-full"
-                    />
-                    
-                    {/* Partner Two Search Results */}
-                    {partnerTwoSearch && (
-                      <div className="border rounded-lg max-h-32 overflow-y-auto">
-                        {isSearchingPartnerTwo ? (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            Searching partners...
-                          </div>
-                        ) : partnerTwoSearchResults.length > 0 ? (
-                          partnerTwoSearchResults.map((player) => (
-                            <button
-                              key={player.id}
-                              type="button"
-                              className="w-full text-left p-2 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
-                              onClick={() => {
-                                setPlayerTwoPartnerData(player);
-                                setPartnerTwoSearch("");
-                                setPartnerTwoSearchResults([]);
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback>
-                                    {player.avatarInitials || player.username.slice(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="text-sm font-medium">
-                                    {player.displayName || player.username}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    @{player.username} • {player.passportId ? `ID: ${player.passportId}` : 'No passport'} • {player.currentRating || 0} pts
-                                  </p>
-                                </div>
-                              </div>
-                            </button>
-                          ))
-                        ) : (
-                          <div className="p-2 text-center text-muted-foreground text-sm">
-                            No players found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {playerTwoPartnerData?.avatarInitials || 'P2'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {playerTwoPartnerData?.displayName || playerTwoPartnerData?.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        @{playerTwoPartnerData?.username} • {playerTwoPartnerData?.currentRating || 0} pts
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPlayerTwoPartnerData(null)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Status Indicator */}
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                {formatType === "singles" 
+                  ? `${(playerOneData && playerTwoData) ? "Ready to play!" : `Need ${!playerOneData && !playerTwoData ? "2" : "1"} more player(s)`}`
+                  : `${(playerOneData && playerTwoData && playerOnePartnerData && playerTwoPartnerData) ? "Ready to play!" : `Need ${4 - [playerOneData, playerTwoData, playerOnePartnerData, playerTwoPartnerData].filter(Boolean).length} more player(s)`}`
+                }
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

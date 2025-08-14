@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2, AlertCircle, Upload, FileSpreadsheet, Download } from 'lucide-react';
 import { Link } from 'wouter';
-import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import DUPRStyleMatchHistory from '@/components/match/DUPRStyleMatchHistory';
 
 interface Competition {
@@ -700,10 +700,11 @@ const MatchManagement: React.FC = () => {
           
           <Card>
             <CardContent className="p-6">
-              <QuickMatchRecorder 
+              <QuickMatchRecorderStreamlined 
+                isAdminMode={true}
                 onSuccess={(matchData) => {
                   toast({
-                    title: "Match Recorded Successfully",
+                    title: "Match Recorded Successfully", 
                     description: "The match has been recorded and points have been allocated.",
                   });
                   // Refresh the matches list
