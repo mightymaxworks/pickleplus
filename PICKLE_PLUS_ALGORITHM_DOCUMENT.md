@@ -31,14 +31,30 @@ The PicklePlus algorithm uses **System B standardization** with conservative bas
 
 Age-based multipliers reward senior participation and acknowledge physical demands:
 
-| Age Group | Multiplier | Reasoning |
-|-----------|------------|-----------|
-| **Pro** | 1.0x | Highest tier of ranking points (ignored in initial implementation) |
-| **19+** | 1.0x | Standard baseline |
-| **35+** | 1.2x | Early career professionals bonus |
-| **50+** | 1.3x | Masters division enhancement |
-| **60+** | 1.5x | Senior division significant boost |
-| **70+** | 1.6x | Super senior maximum enhancement |
+| Age Group | Multiplier | Reasoning | Eligibility |
+|-----------|------------|-----------|-------------|
+| **Pro** | 1.0x | Highest tier of ranking points (ignored in initial implementation) | Professional players |
+| **Open** | 1.0x | Standard baseline | All ages 19+ (adults) |
+| **U19** | 1.0x | Youth development category | Players under 19 years old |
+| **35+** | 1.2x | Early career professionals bonus | Players 35 and older |
+| **50+** | 1.3x | Masters division enhancement | Players 50 and older |
+| **60+** | 1.5x | Senior division significant boost | Players 60 and older |
+| **70+** | 1.6x | Super senior maximum enhancement | Players 70 and older |
+
+#### **Age Group Participation Rules** ⚡ **NEW REQUIREMENT**
+
+**Category Eligibility:**
+- **Open Category:** All players 19+ are eligible (adults)
+- **U19 Category:** Players under 19 years old are eligible
+- **Age-Specific Categories (35+, 50+, 60+, 70+):** Players must meet minimum age requirement
+- **Cross-Category Participation:** Players under 19 can compete in both U19 and Open categories
+- **Age Verification:** Based on birth year, calculated dynamically
+
+**Important Notes:**
+- Open category includes all adult players (19+), regardless of their specific age
+- Younger players (under 19) have their own U19 category but can also participate in Open
+- Age-specific categories (35+, 50+, etc.) are exclusive to players meeting the minimum age
+- All age calculations are based on current age derived from date of birth
 
 #### **CRITICAL DECISION NEEDED: Age Group Application Method**
 

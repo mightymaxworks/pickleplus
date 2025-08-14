@@ -9,7 +9,7 @@ User wants to ensure the `PICKLE_PLUS_ALGORITHM_DOCUMENT.md` is the single sourc
 User wants System B (3 points win, 1 point loss) to be standardized across all components.
 User wants UDF best practices to be enforced via `UNIFIED_DEVELOPMENT_FRAMEWORK_BEST_PRACTICES.md`.
 User wants component consolidation and alignment to the single algorithm reference.
-User wants age group standardization to `Pro, 19+, 35+, 50+, 60+, 70+`.
+User wants age group standardization to `Pro, Open (19+), U19, 35+, 50+, 60+, 70+` with cross-category eligibility where U19 players can also compete in Open category.
 User wants cross-gender matches to award points to respective singles/age group rankings with bonuses (1.15x women <1000 points, 1.075x mixed teams <1000 points).
 User wants Match Card Ranking Display to show the highest category ranking for each player with enhanced MatchScoreCard component displaying "#[value] [category]" format.
 User wants the admin integration at `/admin/match-management` to use updated MatchScoreCard components.
