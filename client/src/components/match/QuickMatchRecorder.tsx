@@ -708,14 +708,14 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
                 <Label className="text-base font-medium">Select Competition/Event (Optional)</Label>
               </div>
               <Select 
-                value={selectedCompetitionId?.toString() || ""} 
-                onValueChange={(value) => setSelectedCompetitionId(value ? parseInt(value) : null)}
+                value={selectedCompetitionId?.toString() || "no-competition"} 
+                onValueChange={(value) => setSelectedCompetitionId(value === "no-competition" ? null : parseInt(value))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a competition or leave blank for casual match" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Competition (Casual Match)</SelectItem>
+                  <SelectItem value="no-competition">No Competition (Casual Match)</SelectItem>
                   <SelectItem value="1">Spring Championship 2025</SelectItem>
                   <SelectItem value="2">Weekly League - March</SelectItem>
                   <SelectItem value="3">Beginner Tournament</SelectItem>
@@ -1114,14 +1114,14 @@ export function QuickMatchRecorder({ onSuccess, prefilledPlayer }: QuickMatchRec
             <div className="space-y-2">
               <Label>Link to Competition (Optional)</Label>
               <Select 
-                value={selectedCompetitionId?.toString() || ''} 
-                onValueChange={(value) => setSelectedCompetitionId(value ? parseInt(value) : null)}
+                value={selectedCompetitionId?.toString() || 'no-competition'} 
+                onValueChange={(value) => setSelectedCompetitionId(value === 'no-competition' ? null : parseInt(value))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select competition (casual match if none selected)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Competition (Casual Match)</SelectItem>
+                  <SelectItem value="no-competition">No Competition (Casual Match)</SelectItem>
                   {competitions.map((comp) => (
                     <SelectItem key={comp.id} value={comp.id.toString()}>
                       {comp.name} ({comp.type} • {comp.pointsMultiplier}x points)
