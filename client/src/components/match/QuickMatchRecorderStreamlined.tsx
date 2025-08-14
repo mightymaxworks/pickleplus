@@ -190,7 +190,10 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('Search results:', data);
         setPlayerSearchResults(data.users || []);
+      } else {
+        console.error('Search failed:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Player search error:', error);
