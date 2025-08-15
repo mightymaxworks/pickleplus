@@ -661,11 +661,12 @@ Pickle Points serve as the gamification layer that rewards all forms of platform
   - Match earns 12 ranking points → Player gets 12 ranking points + (12 × 1.5 = 18) Pickle Points
   - Match earns 24 ranking points → Player gets 24 ranking points + (24 × 1.5 = 36) Pickle Points
 
-**Performance Scaling:**
-- **Win Multiplier:** Base conversion rate × 1.0
-- **Loss Bonus:** Losers get 50% of winner's Pickle Points (encourages participation)
-- **Streak Bonuses:** 3+ win streaks earn 25% Pickle Point bonus
-- **Upset Victories:** Beating higher-ranked opponents earns 50% bonus Pickle Points
+**Performance Scaling - CORRECTED IMPLEMENTATION:**
+- **Per-Match Conversion:** Each match awards (Ranking Points Earned × 1.5) Pickle Points
+- **Winner Example:** Earns 3 ranking points → gets 3 ranking + 5 Pickle Points  
+- **Loser Example:** Earns 1 ranking point → gets 1 ranking + 2 Pickle Points
+- **No Additional Bonuses:** The 1.5x rate is the complete conversion system
+- **Gender Bonus Applied:** Cross-gender matches under 1000 points give 1.15x ranking bonus to women
 
 #### **Secondary Sources: Engagement-Based Rewards**
 
