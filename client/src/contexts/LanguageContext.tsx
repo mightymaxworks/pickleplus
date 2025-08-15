@@ -14,11 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations: Record<Language, Record<string, string>> = {
   'en': {
     // Navigation & Common
-    'nav.matches': 'Matches',
-    'nav.communities': 'Communities',
     'nav.referrals': 'Referrals',
-    'nav.tournaments': 'Tournaments',
-    'nav.findCoaches': 'Find Coaches',
     'nav.findPlayers': 'Find Players',
     'nav.trainingFacilities': 'Training Facilities',
     'nav.logout': 'Logout',
@@ -35,7 +31,6 @@ const translations: Record<Language, Record<string, string>> = {
     'common.tryAgain': 'Please try again',
     
     // Dashboard
-    'dashboard.welcome': 'Welcome back',
     'dashboard.playerPassport': 'Player Passport',
     'dashboard.passportCode': 'Passport Code',
     'dashboard.skillLevel': 'Skill Level',
@@ -205,7 +200,6 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Navigation Items
     'nav.features': 'Features',
-    'nav.pcpCertification': 'PCP Certification',
     'nav.developmentHub': 'Development Hub',
     'nav.adminPanel': 'Admin Panel',
     'nav.home': 'Home',
@@ -417,31 +411,21 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.footer.rights': 'All rights reserved.',
     
     // Authentication
-    'auth.backToHome': 'Back to Home',
     'auth.welcomeBack': 'Welcome Back',
     'auth.createPassport': 'Create Your Passport',
-    'auth.signInDescription': 'Sign in to access your player dashboard',
     'auth.joinRevolution': 'Join the transparent ranking revolution',
     'auth.signIn': 'Sign In',
-    'auth.createAccount': 'Create Account',
-    'auth.usernameOrEmail': 'Username or Email',
-    'auth.usernamePlaceholder': 'Enter your username or email',
+
     'auth.password': 'Password',
-    'auth.passwordPlaceholder': 'Enter your password',
-    'auth.rememberMe': 'Remember me for 30 days',
-    'auth.loggingIn': 'Signing In...',
+
     'auth.signInToDashboard': 'Sign In to Dashboard',
     'auth.firstName': 'First Name',
-    'auth.firstNamePlaceholder': 'John',
     'auth.lastName': 'Last Name',
-    'auth.lastNamePlaceholder': 'Doe',
     'auth.username': 'Username',
     'auth.usernamePlaceholderRegister': 'Choose a unique username',
     'auth.email': 'Email',
-    'auth.emailPlaceholder': 'your.email@example.com',
     'auth.createPassword': 'Create a strong password',
     'auth.confirmPassword': 'Confirm Password',
-    'auth.confirmPasswordPlaceholder': 'Confirm your password',
     'auth.birthYear': 'Birth Year',
     'auth.birthYearPlaceholder': '1990',
     'auth.skillLevel': 'Skill Level',
@@ -450,10 +434,7 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.intermediate': 'Intermediate',
     'auth.advanced': 'Advanced',
     'auth.expert': 'Expert',
-    'auth.location': 'Location (Optional)',
-    'auth.locationPlaceholder': 'City, State/Country',
-    'auth.agreeToTerms': 'I agree to the Terms of Service and Privacy Policy',
-    'auth.creatingAccount': 'Creating Account...',
+
     'auth.createPassportButton': 'Create My Player Passport',
     'auth.signingIn': 'Signing you in...',
     'auth.creatingPassport': 'Creating your player passport...',
@@ -462,7 +443,7 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.signUp': 'Sign Up',
 
     // Core Navigation
-    'nav.dashboard': 'Dashboard',
+
     'nav.recordMatch': 'Record Match',
     'nav.rankings': 'Rankings',
     'nav.profile': 'My Profile',
@@ -475,14 +456,12 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.picklePoints': 'Pickle Points',
     
     // Coming Soon Features
-    'nav.communities': 'Communities',
     'nav.findCoaches': 'Find Coaches',
     'nav.trainingHub': 'Training Hub',
     
     // Advanced Features
     'nav.coachHub': 'Coach Hub',
     'nav.coachApplication': 'Coach Application',
-    'nav.pcpCertification': 'PCP Certification',
     'nav.playerDevelopmentHub': 'Player Development Hub',
     'nav.pickleJourney': 'PickleJourney™',
     'nav.referralProgram': 'Referral Program',
@@ -501,7 +480,6 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.welcome': 'Welcome back',
     'dashboard.recentMatches': 'Recent Matches',
     'dashboard.yourRanking': 'Your Ranking',
-    'dashboard.picklePoints': 'Pickle Points',
     'dashboard.matchesToday': 'Matches Today',
     'dashboard.upcomingTournaments': 'Upcoming Tournaments',
     'dashboard.quickActions': 'Quick Actions',
@@ -513,11 +491,7 @@ const translations: Record<Language, Record<string, string>> = {
     'match.recordNew': 'Record New Match',
     'match.selectOpponent': 'Select Opponent',
     'match.matchType': 'Match Type',
-    'match.singles': 'Singles',
-    'match.doubles': 'Doubles',
-    'match.score': 'Score',
     'match.winner': 'Winner',
-    'match.date': 'Match Date',
     'match.time': 'Match Time',
     'match.location': 'Location',
     'match.notes': 'Match Notes',
@@ -538,27 +512,22 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Profile
     'profile.editProfile': 'Edit Profile',
-    'profile.personalInfo': 'Personal Information',
     'profile.playingStats': 'Playing Statistics',
     'profile.skillLevel': 'Skill Level',
     'profile.playingSince': 'Playing Since',
     'profile.favoriteShot': 'Favorite Shot',
-    'profile.playingStyle': 'Playing Style',
     'profile.bio': 'Bio',
     'profile.uploadPhoto': 'Upload Photo',
     'profile.saveChanges': 'Save Changes',
     
     // Tournaments
-    'tournament.upcoming': 'Upcoming Tournaments',
     'tournament.myTournaments': 'My Tournaments',
     'tournament.register': 'Register',
     'tournament.registered': 'Registered',
     'tournament.startDate': 'Start Date',
     'tournament.endDate': 'End Date',
-    'tournament.participants': 'Participants',
     'tournament.prize': 'Prize Pool',
-    'tournament.format': 'Format',
-    'tournament.location': 'Tournament Location',
+
     'tournament.details': 'Tournament Details',
     
     // Notifications
@@ -789,15 +758,13 @@ const translations: Record<Language, Record<string, string>> = {
     'coaching.pcpProgramme': 'Coaching Bio',
     
     // Authentication
-    'auth.backToHome': 'Back to Home',
+
     'auth.welcomeTitle': 'Welcome to Pickle+',
     'auth.welcomeSubtitle': 'Join the fastest growing pickleball community',
     'auth.loginTab': 'Login',
     'auth.registerTab': 'Register',
     'auth.signInTitle': 'Sign in to your account',
-    'auth.signInDescription': 'Enter your credentials to access your Pickle+ account.',
     'auth.usernameOrEmail': 'Username or Email',
-    'auth.usernamePlaceholder': 'Enter your username or email',
     'auth.authPassword': 'Password',
     'auth.passwordPlaceholder': 'Enter your password',
     'auth.rememberMe': 'Remember me',
@@ -819,12 +786,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   'zh-CN': {
     // Navigation & Common
-    'nav.dashboard': '控制台',
-    'nav.matches': '比赛',
-    'nav.communities': '社区',
     'nav.referrals': '推荐',
-    'nav.tournaments': '锦标赛',
-    'nav.findCoaches': '寻找教练',
     'nav.findPlayers': '寻找球员',
     'nav.trainingFacilities': '训练设施',
     'nav.logout': '登出',
@@ -841,14 +803,12 @@ const translations: Record<Language, Record<string, string>> = {
     'common.tryAgain': '请重试',
     
     // Dashboard
-    'dashboard.welcome': '欢迎回来',
     'dashboard.playerPassport': '球员护照',
     'dashboard.passportCode': '护照代码',
     'dashboard.skillLevel': '技能等级',
     'dashboard.totalMatches': '总比赛数',
     'dashboard.winRate': '胜率',
     'dashboard.currentStreak': '当前连胜',
-    'dashboard.picklePoints': '泡菜积分',
     'dashboard.recordMatch': '记录比赛',
     'dashboard.findCoaches': '寻找教练',
     'dashboard.findPlayers': '寻找球员',
@@ -938,15 +898,13 @@ const translations: Record<Language, Record<string, string>> = {
     'tournament.joinExciting': '参加这个精彩的比赛！',
     'tournament.viewDetails': '查看详情',
     'tournament.registerNow': '立即报名',
-    'tournament.upcoming': '即将开始',
+
     'tournament.inProgress': '进行中',
     'tournament.completed': '已完成',
     'tournament.cancelled': '已取消',
     'tournament.active': '活跃',
     'tournament.inactive': '不活跃',
-    'tournament.format': '赛制',
     'tournament.category': '类别',
-    'tournament.participants': '参与者',
     'tournament.teams': '队伍',
     'tournament.players': '球员',
     'tournament.venue': '场地',
@@ -1052,7 +1010,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Pickle Points
     'dashboard.picklePoints.title': '您的数字泡菜球货币',
-    'dashboard.picklePoints.description': '泡菜积分是您在泡菜球社区中活跃所获得的奖励。通过比赛、完善资料、参加锦标赛以及与其他球员互动来赚取积分。',
+
     'dashboard.picklePoints.winMatches': '获胜比赛',
     'dashboard.picklePoints.winMatchesPoints': '+15-25 分',
     'dashboard.picklePoints.profileUpdates': '资料更新',
@@ -1076,9 +1034,9 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.picklePoints.system': '系统',
     'dashboard.picklePoints.hybrid': '混合',
     'dashboard.picklePoints.spendPoints': '消费积分',
-    'dashboard.picklePoints.spendDescription': '用您的泡菜积分兑换专属奖励、商品和锦标赛报名费。',
+
     'dashboard.picklePoints.earnMore': '赚取更多',
-    'dashboard.picklePoints.earnDescription': '通过挑战、推荐和社区活动发现赚取泡菜积分的新方式。',
+
 
     // Dashboard Tabs
     'dashboard.tabs.performance': '表现',
@@ -1383,12 +1341,11 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Profile
     'profile.editProfile': '编辑资料',
-    'profile.personalInfo': '个人信息',
+
     'profile.playingStats': '比赛统计',
     'profile.skillLevel': '技能水平',
     'profile.playingSince': '开始时间',
     'profile.favoriteShot': '最爱击球',
-    'profile.playingStyle': '比赛风格',
     'profile.bio': '个人简介',
     'profile.uploadPhoto': '上传照片',
     'profile.saveChanges': '保存更改',
@@ -1402,7 +1359,6 @@ const translations: Record<Language, Record<string, string>> = {
     'tournament.endDate': '结束日期',
     'tournament.participants': '参赛者',
     'tournament.prize': '奖金池',
-    'tournament.format': '赛制',
     'tournament.location': '锦标赛地点',
     'tournament.details': '锦标赛详情',
     
@@ -1535,22 +1491,9 @@ const translations: Record<Language, Record<string, string>> = {
     'tabs.settings': '设置',
     
     // Complete auth translations - removing duplicates
-    'auth.firstNameLabel': '名字',
-    'auth.firstNamePlaceholder': '输入您的名字',
-    'auth.lastNameLabel': '姓氏',
-    'auth.lastNamePlaceholder': '输入您的姓氏',
-    'auth.usernameLabel': '用户名',
-    'auth.usernamePlaceholder': '选择用户名',
-    'auth.authUsernamePlaceholder': '选择用户名',
-    'auth.emailLabel': '邮箱地址',
-    'auth.emailPlaceholder': '输入您的邮箱地址',
-    'auth.passwordLabel': '密码',
-    'auth.passwordPlaceholder': '输入您的密码',
     'auth.confirmPasswordLabel': '确认密码',
-    'auth.confirmPasswordPlaceholder': '确认您的密码',
     'auth.yearOfBirthLabel': '出生年份',
     'auth.yearOfBirthPlaceholder': '例如: 1990',
-    'auth.location': '国家（可选）',
     'auth.countryPlaceholder': '选择国家...',
     'auth.searchCountries': '搜索国家...',
     'auth.noCountryFound': '未找到国家。',
@@ -1558,17 +1501,13 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.playingSincePlaceholder': '例如: 2 年',
     'auth.skillLevelLabel': '您的技能水平',
     'auth.skillLevelPlaceholder': '例如: 初学者',
-    'auth.agreeToTerms': '我同意条款和条件',
-    'auth.createAccount': '创建账户',
-    'auth.creatingAccount': '正在创建账户...',
+
     'auth.registerSuccess': '注册成功',
     'auth.registerSuccessDescription': '欢迎来到 Pickle+！您的账户已创建。',
     'auth.registerError': '注册失败',
     'auth.registerErrorDescription': '创建账户时出错。请重试。',
     'auth.passwordMismatch': '密码不匹配',
-    'auth.usernameOrEmail': '用户名或邮箱',
-    'auth.rememberMe': '记住我',
-    'auth.loggingIn': '正在登录...',
+
     'auth.joinPicklePlus': '加入 Pickle+',
     'auth.loginPlaceholder': '输入用户名或邮箱',
     
