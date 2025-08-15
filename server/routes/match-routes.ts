@@ -144,13 +144,13 @@ export function registerMatchRoutes(app: express.Express): void {
             console.log(`[Gender Bonus] Applied 1.15x gender bonus to female player ${playerId}`);
           }
           
-          // Calculate final ranking points with gender bonus
+          // Calculate final ranking points with gender bonus (2 decimal precision)
           const rankingPointsWithBonus = basePoints * genderMultiplier;
-          const finalRankingPoints = Math.ceil(rankingPointsWithBonus); // Round up
+          const finalRankingPoints = Math.round(rankingPointsWithBonus * 100) / 100; // 2 decimal places
           
           // Apply 1.5x conversion rate for Pickle Points (per algorithm document)
           const picklePointsBase = finalRankingPoints * 1.5;
-          const picklePoints = Math.ceil(picklePointsBase); // Round up to nearest whole number
+          const picklePoints = Math.ceil(picklePointsBase); // Pickle Points stay whole numbers for gamification
           
           // Update both Pickle Points (gamification) and Ranking Points (competitive)
           // Use format-specific ranking points to prevent Singles/Doubles mixing
