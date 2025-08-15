@@ -125,7 +125,7 @@ export function registerMatchRoutes(app: express.Express): void {
 
         // Detect cross-gender match and check elite threshold
         const genders = Object.values(playerData).map(p => p.gender).filter(g => g);
-        const uniqueGenders = [...new Set(genders)];
+        const uniqueGenders = Array.from(new Set(genders));
         const isCrossGender = uniqueGenders.length > 1;
         const allPlayersUnder1000 = Object.values(playerData).every(p => (p.ranking_points || 0) < 1000);
         
