@@ -137,6 +137,18 @@ export function registerMatchRoutes(app: express.Express): void {
           const basePoints = isWinner ? winnerPoints : loserPoints;
           const player = playerData[playerId];
           
+          // Apply age multiplier (per PICKLE_PLUS_ALGORITHM_DOCUMENT.md Option B)
+          let ageMultiplier = 1.0;
+          if (player?.dateOfBirth) {
+            const age = new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear();
+            if (age >= 70) ageMultiplier = 1.6;
+            else if (age >= 60) ageMultiplier = 1.5;
+            else if (age >= 50) ageMultiplier = 1.3;
+            else if (age >= 35) ageMultiplier = 1.2;
+            else ageMultiplier = 1.0;
+            console.log(`[Age Bonus] Applied ${ageMultiplier}x age multiplier to player ${playerId} (age ${age})`);
+          }
+          
           // Apply gender bonus if applicable (per PICKLE_PLUS_ALGORITHM_DOCUMENT.md)
           let genderMultiplier = 1.0;
           if (isCrossGender && allPlayersUnder1000 && player?.gender === 'female') {
@@ -144,9 +156,9 @@ export function registerMatchRoutes(app: express.Express): void {
             console.log(`[Gender Bonus] Applied 1.15x gender bonus to female player ${playerId}`);
           }
           
-          // Calculate final ranking points with gender bonus (2 decimal precision)
-          const rankingPointsWithBonus = basePoints * genderMultiplier;
-          const finalRankingPoints = Math.round(rankingPointsWithBonus * 100) / 100; // 2 decimal places
+          // Calculate final ranking points with age and gender bonuses (2 decimal precision)
+          const rankingPointsWithBonuses = basePoints * ageMultiplier * genderMultiplier;
+          const finalRankingPoints = Math.round(rankingPointsWithBonuses * 100) / 100; // 2 decimal places
           
           // Apply 1.5x conversion rate for Pickle Points (per algorithm document)
           const picklePointsBase = finalRankingPoints * 1.5;
@@ -158,7 +170,7 @@ export function registerMatchRoutes(app: express.Express): void {
           await storage.updateUserPicklePoints(playerId, picklePoints);
           await storage.updateUserRankingPoints(playerId, finalRankingPoints, matchFormat);
           
-          console.log(`[Match Creation] Player ${playerId} (${player?.gender || 'unknown'}): Base ${basePoints} × Gender ${genderMultiplier}x = ${rankingPointsWithBonus} → ${finalRankingPoints} ranking points, ${picklePoints} pickle points`);
+          console.log(`[Match Creation] Player ${playerId} (${player?.gender || 'unknown'}): Base ${basePoints} × Age ${ageMultiplier}x × Gender ${genderMultiplier}x = ${rankingPointsWithBonuses} → ${finalRankingPoints} ranking points, ${picklePoints} pickle points`);
         }
       } catch (error) {
         console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);

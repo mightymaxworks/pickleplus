@@ -85,6 +85,14 @@ interface MatchScoreCardProps {
 - **Display**: Show exact values with 2 decimal places in UI components
 - **Calculation**: All multipliers applied with full precision (gender 1.15x, age 1.2x, etc.)
 
+**Age Multiplier Standards (Option B - Open Age Group)**:
+- **CRITICAL**: Players always receive their age multiplier regardless of opponent age
+- **Age Categories**: Open (1.0x), 35+ (1.2x), 50+ (1.3x), 60+ (1.5x), 70+ (1.6x)
+- **Cross-Generational Play**: 35+ players competing with Open players get 1.2x bonus
+- **Compound Multipliers**: Age and gender bonuses stack (e.g., 35+ female = 1.2 × 1.15 = 1.38x)
+- **Algorithm Formula**: Final Points = Base × Age Multiplier × Gender Multiplier × Match Type
+- **UDF Enforcement**: All match recording must apply age multipliers per PICKLE_PLUS_ALGORITHM_DOCUMENT
+
 **Pickle Points Conversion**:
 - **MANDATORY 1.5x multiplier**: Applied **PER MATCH** when ranking points are earned
 - **Critical Implementation**: Pickle Points = CEIL(Match Ranking Points Earned × 1.5) 
