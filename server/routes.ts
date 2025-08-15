@@ -63,8 +63,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         passportCode: user.passportCode,
         gender: user.gender,
-        profileImageUrl: user.profileImageUrl,
-        isVerified: user.isVerified || false,
+        profileImageUrl: user.avatarUrl || null,
+        isVerified: false, // Default value since field doesn't exist in schema
         // Add fields expected by frontend
         avatarInitials: user.displayName?.substring(0, 2) || 
                        `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` || 
@@ -92,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName: opponent.displayName,
         username: opponent.username,
         avatarInitials: opponent.avatarInitials,
-        currentRating: opponent.currentRating || 0,
+        currentRating: opponent.rankingPoints || 0,
       }));
 
       res.json({ opponents });
@@ -117,8 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: 'Username already exists' });
       }
       
-      // Generate passport code using secure random format
-      const passportCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+      // Generate unique passport code using proper utility
+      const { generateUniquePassportCode } = await import('./utils/passport-code');
+      const passportCode = await generateUniquePassportCode() || 'ERROR_CODE';
       
       // Hash the password before creating user
       const { hashPassword } = await import('./auth');
@@ -133,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword, // Password is now properly hashed
         firstName,
         lastName,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        dateOfBirth: dateOfBirth || null,
         gender: gender || null,
         location: location || null,
         playingSince: playingSince || null,
