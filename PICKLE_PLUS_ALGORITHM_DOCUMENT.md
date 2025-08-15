@@ -663,8 +663,10 @@ Pickle Points serve as the gamification layer that rewards all forms of platform
 
 **Performance Scaling - CORRECTED IMPLEMENTATION:**
 - **Per-Match Conversion:** Each match awards (Ranking Points Earned × 1.5) Pickle Points
-- **Winner Example:** Earns 3 ranking points → gets 3 ranking + 5 Pickle Points  
-- **Loser Example:** Earns 1 ranking point → gets 1 ranking + 2 Pickle Points
+- **Decimal Precision:** Ranking points use 2 decimal places (e.g., 1.15, 3.25, 2.75)
+- **Winner Example:** Earns 3.00 ranking points → gets 3.00 ranking + 5 Pickle Points  
+- **Loser Example:** Earns 1.00 ranking point → gets 1.00 ranking + 2 Pickle Points
+- **Gender Bonus Example:** Female earns 1.00 × 1.15 = 1.15 ranking + 2 Pickle Points
 - **No Additional Bonuses:** The 1.5x rate is the complete conversion system
 - **Gender Bonus Applied:** Cross-gender matches under 1000 points give 1.15x ranking bonus to women
 

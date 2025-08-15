@@ -88,7 +88,7 @@ export function MatchScoreCard({
     const ageMultiplier = 1.2; // Example multiplier
     const genderMultiplier = 1.0; // Example multiplier
     
-    const total = Math.round(basePoints * tournamentMultiplier * ageMultiplier * genderMultiplier);
+    const total = Math.round((basePoints * tournamentMultiplier * ageMultiplier * genderMultiplier) * 100) / 100;
     
     return {
       basePoints,

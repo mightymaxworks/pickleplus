@@ -78,9 +78,17 @@ interface MatchScoreCardProps {
 - Elite threshold at ≥1000 points
 - Development players get 1.15x women cross-gender bonus
 
+**Ranking Points Precision Standards**:
+- **CRITICAL**: Use decimal precision (2 decimal places) for all ranking points calculations
+- **NO ROUNDING UP**: Preserve exact calculated values (e.g., 1.15, 3.25, 2.75)
+- **Storage**: Database must support decimal precision (PostgreSQL DECIMAL or NUMERIC)
+- **Display**: Show exact values with 2 decimal places in UI components
+- **Calculation**: All multipliers applied with full precision (gender 1.15x, age 1.2x, etc.)
+
 **Pickle Points Conversion**:
 - **MANDATORY 1.5x multiplier**: Applied **PER MATCH** when ranking points are earned
-- **Critical Implementation**: Pickle Points = (Match Ranking Points Earned × 1.5) 
+- **Critical Implementation**: Pickle Points = CEIL(Match Ranking Points Earned × 1.5) 
+- **Pickle Points ONLY**: Use CEIL function for rounding up conversions
 - **NOT a blanket conversion**: Do NOT multiply total ranking points by 1.5x
 - **Correct Flow**: Each match awards both ranking points AND Pickle Points simultaneously
 - **System-wide enforcement**: All match recording must calculate both point types per match
