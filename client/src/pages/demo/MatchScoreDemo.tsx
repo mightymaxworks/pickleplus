@@ -117,20 +117,20 @@ export default function MatchScoreDemo() {
     };
   };
 
-  // Calculate Pickle Points (Gamification System)
+  // Calculate Pickle Points (Gamification System) - CORRECT 1.5x CONVERSION RATE
   const calculatePicklePoints = (rankingPoints: number, isWinner: boolean) => {
-    const conversionRate = 10; // 10x conversion rate per algorithm documentation
+    const conversionRate = 1.5; // 1.5x conversion rate (DEFINITIVELY CONFIRMED)
     const picklePointsFromMatch = Math.ceil(rankingPoints * conversionRate);
-    const bonusPicklePoints = isWinner ? 2 : 0; // Example bonus for winning
-    const totalPicklePoints = picklePointsFromMatch + bonusPicklePoints;
+    // No additional bonuses - conversion rate is the only multiplier per algorithm document
+    const totalPicklePoints = picklePointsFromMatch;
     
     return {
       rankingPointsEarned: rankingPoints,
       conversionRate,
       picklePointsFromMatch,
-      bonusPicklePoints,
+      bonusPicklePoints: 0, // Removed additional bonuses for consistency
       totalPicklePoints,
-      reason: `Converted from ${rankingPoints} ranking points + bonuses`
+      reason: `${rankingPoints} ranking points × ${conversionRate}x = ${totalPicklePoints} Pickle Points`
     };
   };
 
@@ -139,7 +139,7 @@ export default function MatchScoreDemo() {
     // Simple display logic - don't reveal exact multipliers
     let performanceLevel = isWinner ? "Excellent" : "Good";
     let rankingProgress = isWinner ? 6 : 2; // Simplified display points
-    let rewardsEarned = Math.ceil(rankingProgress * 1.5);
+    let rewardsEarned = Math.ceil(rankingProgress * 1.5); // Correct 1.5x conversion rate
     
     if (selectedMatch.matchType === 'tournament') {
       performanceLevel = isWinner ? "Outstanding" : "Solid";

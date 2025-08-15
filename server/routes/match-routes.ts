@@ -117,8 +117,11 @@ export function registerMatchRoutes(app: express.Express): void {
       try {
         for (const playerId of allPlayerIds) {
           const isWinner = winningTeam.includes(playerId);
-          const picklePoints = isWinner ? winnerPoints : loserPoints;
-          const rankingPoints = isWinner ? winnerPoints : loserPoints; // Same points for both systems
+          const rankingPoints = isWinner ? winnerPoints : loserPoints;
+          
+          // Apply 1.5x conversion rate for Pickle Points (per algorithm document)
+          const picklePointsBase = rankingPoints * 1.5;
+          const picklePoints = Math.ceil(picklePointsBase); // Round up to nearest whole number
           
           // Update both Pickle Points (gamification) and Ranking Points (competitive)
           // Use format-specific ranking points to prevent Singles/Doubles mixing
@@ -126,7 +129,7 @@ export function registerMatchRoutes(app: express.Express): void {
           await storage.updateUserPicklePoints(playerId, picklePoints);
           await storage.updateUserRankingPoints(playerId, rankingPoints, matchFormat);
           
-          console.log(`[Match Creation] Awarded ${picklePoints} Pickle Points and ${rankingPoints} Ranking Points to ${isWinner ? 'winner' : 'loser'} (User ID: ${playerId})`);
+          console.log(`[Match Creation] Awarded ${picklePoints} Pickle Points (${rankingPoints} ranking points × 1.5x) and ${rankingPoints} Ranking Points to ${isWinner ? 'winner' : 'loser'} (User ID: ${playerId})`);
         }
       } catch (error) {
         console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);

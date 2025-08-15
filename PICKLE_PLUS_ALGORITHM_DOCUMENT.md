@@ -653,12 +653,12 @@ Pickle Points serve as the gamification layer that rewards all forms of platform
 #### **Primary Source: Performance-Based Conversion**
 
 **Conversion Rate Analysis:**
-- **Current Rate:** 10x multiplier (CONFIRMED)
-- **Rationale:** Provides substantial feeling of reward without inflation
+- **Current Rate:** 1.5x multiplier (CONFIRMED)
+- **Rationale:** Provides meaningful reward feeling while maintaining balanced economy
 - **Examples:**
-  - Casual win (3 pts) = 30 Pickle Points
-  - Tournament win with multipliers (12 pts) = 120 Pickle Points
-  - Major tournament victory (24 pts) = 240 Pickle Points
+  - Casual win (3 pts) = 4.5 ≈ 5 Pickle Points
+  - Tournament win with multipliers (12 pts) = 18 Pickle Points
+  - Major tournament victory (24 pts) = 36 Pickle Points
 
 **Performance Scaling:**
 - **Win Multiplier:** Base conversion rate × 1.0

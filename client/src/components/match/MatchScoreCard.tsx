@@ -99,18 +99,18 @@ export function MatchScoreCard({
     };
   };
 
-  // Calculate Pickle Points (Gamification System) 
+  // Calculate Pickle Points (Gamification System) - CORRECT 1.5x CONVERSION RATE
   const calculatePicklePoints = (rankingPoints: number) => {
-    const conversionRate = 10; // 10x conversion rate per algorithm documentation
+    const conversionRate = 1.5; // 1.5x conversion rate (DEFINITIVELY CONFIRMED)
     const picklePointsFromMatch = Math.ceil(rankingPoints * conversionRate);
-    const bonusPicklePoints = 2; // Example bonus
-    const totalPicklePoints = picklePointsFromMatch + bonusPicklePoints;
+    // No additional bonuses - conversion rate is the only multiplier per algorithm document
+    const totalPicklePoints = picklePointsFromMatch;
     
     return {
       rankingPointsEarned: rankingPoints,
       conversionRate,
       picklePointsFromMatch,
-      bonusPicklePoints,
+      bonusPicklePoints: 0, // Removed additional bonuses for consistency
       totalPicklePoints
     };
   };
