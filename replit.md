@@ -27,6 +27,7 @@ User wants `QuickMatchRecorder` critical fixes related to JSX syntax, missing el
 User wants `QuickMatchRecorder` admin functions to be enhanced versions of player components.
 User wants standalone youth ranking system (U12, U14, U16, U18) fully implemented with complete category isolation from adult rankings.
 User wants the EnhancedLeaderboard to follow the same logic as /rankings but with the new standalone youth system.
+User wants automatic gender bonus detection and application in match recording system to ensure female players receive 1.15x multiplier in cross-gender matches under 1000 points.
 
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.
