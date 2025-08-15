@@ -79,12 +79,13 @@ interface MatchScoreCardProps {
 - Development players get 1.15x women cross-gender bonus
 
 **Pickle Points Conversion**:
-- **MANDATORY 1.5x multiplier**: Ranking Points × 1.5 = Pickle Points
-- **No additional bonuses**: The 1.5x rate is the ONLY conversion multiplier
-- **System-wide enforcement**: All components must use exactly 1.5x rate
-- **Critical**: Any other multiplier (50x, 2.0x, etc.) is incorrect implementation
-- **UDF Enforcement**: `calculatePicklePoints(rankingPoints)` function must only accept ranking points and apply 1.5x rate
-- **Forbidden Patterns**: Complex bonus systems, tier multipliers, streak bonuses for Pickle Points conversion
+- **MANDATORY 1.5x multiplier**: Applied **PER MATCH** when ranking points are earned
+- **Critical Implementation**: Pickle Points = (Match Ranking Points Earned × 1.5) 
+- **NOT a blanket conversion**: Do NOT multiply total ranking points by 1.5x
+- **Correct Flow**: Each match awards both ranking points AND Pickle Points simultaneously
+- **System-wide enforcement**: All match recording must calculate both point types per match
+- **UDF Enforcement**: `awardMatchPoints(rankingPoints)` must award both ranking and Pickle Points
+- **Forbidden**: Converting existing total ranking points to Pickle Points retroactively
 
 ## Quality Assurance
 

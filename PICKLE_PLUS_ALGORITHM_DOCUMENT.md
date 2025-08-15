@@ -650,15 +650,16 @@ Pickle Points serve as the gamification layer that rewards all forms of platform
 
 ### **Pickle Points Earning Structure - DETAILED BREAKDOWN**
 
-#### **Primary Source: Performance-Based Conversion**
+#### **Primary Source: Performance-Based Conversion - PER MATCH EARNING**
 
 **Conversion Rate Analysis:**
-- **Current Rate:** 1.5x multiplier (CONFIRMED)
-- **Rationale:** Provides meaningful reward feeling while maintaining balanced economy
+- **Current Rate:** 1.5x multiplier applied **PER MATCH** when Pickle Points are earned (CONFIRMED)
+- **Critical Distinction:** The 1.5x multiplier applies to ranking points **earned in each individual match**, NOT as a blanket conversion of total ranking points
+- **Implementation:** When a player earns ranking points from a match, they simultaneously earn Pickle Points = (Match Ranking Points × 1.5)
 - **Examples:**
-  - Casual win (3 pts) = 4.5 ≈ 5 Pickle Points
-  - Tournament win with multipliers (12 pts) = 18 Pickle Points
-  - Major tournament victory (24 pts) = 36 Pickle Points
+  - Match earns 3 ranking points → Player gets 3 ranking points + (3 × 1.5 = 4.5 ≈ 5) Pickle Points
+  - Match earns 12 ranking points → Player gets 12 ranking points + (12 × 1.5 = 18) Pickle Points
+  - Match earns 24 ranking points → Player gets 24 ranking points + (24 × 1.5 = 36) Pickle Points
 
 **Performance Scaling:**
 - **Win Multiplier:** Base conversion rate × 1.0

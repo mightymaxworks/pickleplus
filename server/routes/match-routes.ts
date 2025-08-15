@@ -99,7 +99,7 @@ export function registerMatchRoutes(app: express.Express): void {
         xpAwarded: 0
       });
 
-      // Award points to both players: 3 for winner, 1 for loser
+      // Award points to both players: 3 for winner, 1 for loser + Pickle Points (1.5x per match)
       const playerOneIdResolved = playerOneId || (req.user as any)?.id;
       const allPlayerIds = [
         playerOneIdResolved,
