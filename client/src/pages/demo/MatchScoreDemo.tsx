@@ -119,7 +119,7 @@ export default function MatchScoreDemo() {
 
   // Calculate Pickle Points (Gamification System)
   const calculatePicklePoints = (rankingPoints: number, isWinner: boolean) => {
-    const conversionRate = 1.5; // 1.5x conversion rate
+    const conversionRate = 10; // 10x conversion rate per algorithm documentation
     const picklePointsFromMatch = Math.ceil(rankingPoints * conversionRate);
     const bonusPicklePoints = isWinner ? 2 : 0; // Example bonus for winning
     const totalPicklePoints = picklePointsFromMatch + bonusPicklePoints;
