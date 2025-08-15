@@ -78,6 +78,14 @@ interface MatchScoreCardProps {
 - Elite threshold at ≥1000 points
 - Development players get 1.15x women cross-gender bonus
 
+**Pickle Points Conversion**:
+- **MANDATORY 1.5x multiplier**: Ranking Points × 1.5 = Pickle Points
+- **No additional bonuses**: The 1.5x rate is the ONLY conversion multiplier
+- **System-wide enforcement**: All components must use exactly 1.5x rate
+- **Critical**: Any other multiplier (50x, 2.0x, etc.) is incorrect implementation
+- **UDF Enforcement**: `calculatePicklePoints(rankingPoints)` function must only accept ranking points and apply 1.5x rate
+- **Forbidden Patterns**: Complex bonus systems, tier multipliers, streak bonuses for Pickle Points conversion
+
 ## Quality Assurance
 
 ### 1. Component Validation

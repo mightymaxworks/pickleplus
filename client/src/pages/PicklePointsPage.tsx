@@ -57,65 +57,27 @@ interface PicklePointsResponse {
   searchTerm?: string;
 }
 
-// Pickle Points Algorithm Implementation
-const PICKLE_POINTS_CONFIG = {
-  // Base points per match type (from PicklePlus algorithm)
-  MATCH_POINTS: {
-    TOURNAMENT: 15, // Tournament matches worth more
-    LEAGUE: 10,     // League matches
-    CASUAL: 6       // Casual/recreational matches
-  },
-  // Bonus multipliers
-  WIN_BONUS: 1.5,    // 50% bonus for wins
-  STREAK_BONUS: {
-    3: 1.1,  // 10% bonus for 3+ win streak
-    5: 1.2,  // 20% bonus for 5+ win streak
-    10: 1.3  // 30% bonus for 10+ win streak
-  },
-  // Activity bonuses
-  DAILY_ACTIVITY_BONUS: 2,    // Bonus for playing each day
-  WEEKLY_TARGET_BONUS: 25,    // Bonus for meeting weekly target
-  // Tier multipliers (aligned with ranking system)
-  TIER_MULTIPLIERS: {
-    'Professional': 1.3,  // 30% bonus for professional tier
-    'Elite': 1.2,         // 20% bonus for elite tier
-    'Competitive': 1.1,   // 10% bonus for competitive tier
-    'Recreational': 1.0   // Base multiplier
-  }
+// CORRECTED Pickle Points Algorithm - Simple 1.5x Conversion (OFFICIAL ALGORITHM)
+// Per PICKLE_PLUS_ALGORITHM_DOCUMENT.md and UDF requirements
+
+/**
+ * Calculate Pickle Points using the OFFICIAL 1.5x conversion rate
+ * This is the ONLY correct implementation per algorithm document
+ * @param rankingPoints - The ranking points earned from a match
+ * @returns Pickle Points (ranking points × 1.5)
+ */
+const calculatePicklePoints = (rankingPoints: number): number => {
+  // MANDATORY 1.5x multiplier - the ONLY conversion rate allowed
+  const conversionRate = 1.5;
+  return Math.ceil(rankingPoints * conversionRate);
 };
 
 // Player tier determination (matching ranking system)
 const getPlayerTier = (rankingPoints: number): string => {
   if (rankingPoints >= 1800) return 'Professional';
-  if (rankingPoints >= 1000) return 'Elite';
+  if (rankingPoints >= 1000) return 'Elite'; 
   if (rankingPoints >= 300) return 'Competitive';
   return 'Recreational';
-};
-
-// Pickle Points calculation based on PicklePlus algorithm
-const calculatePicklePoints = (
-  matchType: 'tournament' | 'league' | 'casual',
-  won: boolean,
-  tier: string,
-  streak: number = 0
-): number => {
-  let basePoints = PICKLE_POINTS_CONFIG.MATCH_POINTS[matchType.toUpperCase() as keyof typeof PICKLE_POINTS_CONFIG.MATCH_POINTS];
-  
-  // Apply win bonus
-  if (won) {
-    basePoints *= PICKLE_POINTS_CONFIG.WIN_BONUS;
-  }
-  
-  // Apply tier multiplier
-  const tierMultiplier = PICKLE_POINTS_CONFIG.TIER_MULTIPLIERS[tier as keyof typeof PICKLE_POINTS_CONFIG.TIER_MULTIPLIERS] || 1.0;
-  basePoints *= tierMultiplier;
-  
-  // Apply streak bonus
-  if (streak >= 10) basePoints *= PICKLE_POINTS_CONFIG.STREAK_BONUS[10];
-  else if (streak >= 5) basePoints *= PICKLE_POINTS_CONFIG.STREAK_BONUS[5];
-  else if (streak >= 3) basePoints *= PICKLE_POINTS_CONFIG.STREAK_BONUS[3];
-  
-  return Math.round(basePoints);
 };
 
 export default function PicklePointsPage() {

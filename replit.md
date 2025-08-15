@@ -29,6 +29,7 @@ User wants standalone youth ranking system (U12, U14, U16, U18) fully implemente
 User wants the EnhancedLeaderboard to follow the same logic as /rankings but with the new standalone youth system.
 User wants automatic gender bonus detection and application in match recording system to ensure female players receive 1.15x multiplier in cross-gender matches under 1000 points.
 User wants decimal precision (2 decimal places) instead of rounding up for ranking points to improve fairness and accuracy.
+User wants the Pickle Points multiplier CORRECTED to exactly 1.5x throughout all documentation and system implementation - any other rate is incorrect.
 
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.
