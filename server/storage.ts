@@ -1015,7 +1015,29 @@ export class DatabaseStorage implements IStorage {
     const userMatches = await this.getMatchesByUser(userId);
     
     const totalMatches = userMatches.length;
-    const matchesWon = userMatches.filter(match => match.winnerId === userId).length;
+    
+    // Calculate wins including doubles team wins
+    const matchesWon = userMatches.filter(match => {
+      // Direct wins (individual or team leader)
+      if (match.winnerId === userId) return true;
+      
+      // Doubles team wins: if user was on winning team
+      if (match.formatType === 'doubles') {
+        // Check if user was on team 1 and team 1 won
+        if ((match.playerOneId === userId || match.playerOnePartnerId === userId) && 
+            (match.winnerId === match.playerOneId || match.winnerId === match.playerOnePartnerId)) {
+          return true;
+        }
+        // Check if user was on team 2 and team 2 won
+        if ((match.playerTwoId === userId || match.playerTwoPartnerId === userId) && 
+            (match.winnerId === match.playerTwoId || match.winnerId === match.playerTwoPartnerId)) {
+          return true;
+        }
+      }
+      
+      return false;
+    }).length;
+    
     const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
     
     return {
