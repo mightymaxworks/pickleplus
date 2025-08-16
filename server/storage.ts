@@ -22,7 +22,7 @@ import {
 
 } from "@shared/schema";
 // Import Drizzle operators
-import { eq, or, desc, count, isNull, and } from "drizzle-orm";
+import { eq, or, desc, count, isNull, and, gt, gte } from "drizzle-orm";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
 // Regular matches table uses inferred types
@@ -831,16 +831,16 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(users);
     
     if (format === 'singles') {
-      query = query.where(gte(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
+      query = query.where(gt(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
     } else if (format === 'doubles') {
-      query = query.where(gte(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
+      query = query.where(gt(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
     } else {
       // Legacy: get all users with any ranking points
       query = query.where(
         or(
-          gte(users.singlesRankingPoints, 0),
-          gte(users.doublesRankingPoints, 0),
-          gte(users.rankingPoints, 0)
+          gt(users.singlesRankingPoints, 0),
+          gt(users.doublesRankingPoints, 0),
+          gt(users.rankingPoints, 0)
         )
       ).orderBy(desc(users.rankingPoints));
     }
