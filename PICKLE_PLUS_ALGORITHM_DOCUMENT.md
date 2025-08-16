@@ -88,17 +88,15 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 - **Open Category:** Player starts with ZERO points in Open (19+) rankings
 - **Clean Slate:** No youth points transfer to adult competition
 
-#### **CRITICAL DECISION NEEDED: Age Group Application Method**
+#### **✅ CONFIRMED DECISION: Age Group Application Method**
 
-**Option A: Own Age Group Multiplier**
-- Players compete in their specific age division
-- 65-year-old gets 1.5x multiplier when playing other 60+ players
-- Maintains age division integrity
-
-**Option B: Open Age Group Multiplier**  
-- Players get multiplier regardless of opponent age
+**Option B: Open Age Group Multiplier** ✅ **OFFICIAL STANDARD**
+- Players get multiplier regardless of opponent age or tournament division
 - 65-year-old gets 1.5x multiplier even when playing 25-year-old
-- Rewards senior participation in open play
+- Rewards senior participation in open play and cross-generational competition
+- Compensates for physical disadvantages regardless of tournament structure
+
+> **RATIONALE:** Encourages cross-generational participation, provides fair compensation for physical aging effects, and prevents age-based segregation in tournament play.
 
 ### **Detailed Scenarios Comparison**
 
