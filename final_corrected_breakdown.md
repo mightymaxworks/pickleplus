@@ -1,18 +1,18 @@
 # FINAL CORRECTED BREAKDOWN - 宇(4) and ceiye (Jerry) ARE SEPARATE
 
-## CONFIRMED Player Mapping:
-- 雪(1) = hxli0213 (ID: 168) 
-- 杨浩嘉(2) = yhjyhj (ID: 235)  
-- Tony GUO(3) = tonyguo1983 (ID: 263)
-- 宇(4) = ??? **STILL NEED TO IDENTIFY**
-- Mark(5) = mark1992 (ID: 265)
-- Kai(6) = kai1996 (ID: 261)
-- 焦(7) = 蕉 (ID: 258) 
-- Allenshen(8) = Allenshen (ID: 229) 
-- Ceiye(9) = ceiye (Jerry/宇锋) (ID: 237)
-- 罗蒜头兄(10) = suantou1990 (ID: 268)
-- Gloria(11) = gloria1989 (ID: 262)
-- ricky(12) = ricky1998 (ID: 264)
+## CONFIRMED Player Mapping (WITH PKL PASSPORT CODES):
+- 雪(1) = hxli0213 (ID: 168, PKL: Y7BQOH) 
+- 杨浩嘉(2) = yhjyhj (ID: 235, PKL: QLWMX3)  
+- Tony GUO(3) = tonyguo1983 (ID: 263, PKL: TON83XY3)
+- 宇(4) = zhouqiyu (ID: 233, PKL: K1LJLP) **"启宇" shortened to "宇"**
+- Mark(5) = mark1992 (ID: 265, PKL: MRK92XY5)
+- Kai(6) = kai1996 (ID: 261, PKL: KAI96XY1)
+- 焦(7) = 蕉 (ID: 258, PKL: W5PDLIXL) 
+- Allenshen(8) = Allenshen (ID: 229, PKL: 4E58RC) 
+- Ceiye(9) = ceiye (Jerry) (ID: 237, PKL: MRWUVQ)
+- 罗蒜头兄(10) = suantou1990 (ID: 268, PKL: SUA90XY8)
+- Gloria(11) = gloria1989 (ID: 262, PKL: GLO89XY2)
+- ricky(12) = ricky1998 (ID: 264, PKL: RIC98XY4)
 
 ## INDIVIDUAL PLAYER STATISTICS (CORRECTED):
 
@@ -60,7 +60,7 @@
 - 3-1, 12-1, 14-2, 16-2
 **Total Matches:** 14 | **Win Rate:** 28.6% | **Points:** 22.00
 
-### 8. 宇(4) - UNKNOWN DATABASE ID
+### 8. zhouqiyu (宇/启宇) - ID: 233
 **Wins:** 5 matches
 - 6-2: Tony/宇 vs 焦/罗蒜头兄 → Tony/宇 WON 15:7
 - 7-2: 焦/ricky vs 杨浩嘉/宇 → 杨浩嘉/宇 WON 11:15
@@ -74,7 +74,7 @@
 - 9-2, 14-2, 16-2
 **Total Matches:** 11 | **Win Rate:** 27.3% | **Points:** 17.00
 
-### 10. ceiye (Jerry/宇锋) - ID: 237
+### 10. ceiye (Jerry) - ID: 237
 **Wins:** 4 matches  
 - 3-2: Mark/Ceiye vs 雪/罗蒜头兄 → Mark/Ceiye WON 15:10
 - 10-2: 雪/Ceiye vs 焦/Allenshen → 雪/Ceiye WON 15:12
