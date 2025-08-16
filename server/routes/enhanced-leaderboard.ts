@@ -86,9 +86,9 @@ router.get('/', async (req, res) => {
           displayName: enhancedDisplayName,
           username: ranking.user.username,
           avatar: ranking.user.profileImage || undefined,
-          points: format === 'singles' ? ranking.singlesPoints : ranking.doublesPoints,
+          points: Number((format === 'singles' ? ranking.singlesPoints : ranking.doublesPoints).toFixed(2)), // Ensure 2 decimal precision
           matchesPlayed: ranking.totalMatches || 0,
-          winRate: ranking.totalMatches > 0 ? (ranking.matchesWon / ranking.totalMatches) * 100 : 0,
+          winRate: ranking.totalMatches > 0 ? Math.round(((ranking.matchesWon / ranking.totalMatches) * 100) * 100) / 100 : 0, // Ensure 2 decimal precision for win rate
           gender: ranking.user.gender,
           age: ranking.user.age || 0,
           division: ranking.ageCategory,
@@ -162,6 +162,8 @@ router.get('/', async (req, res) => {
     };
 
     console.log(`[LEADERBOARD] API Response - Format: ${format}, Players: ${paginatedPlayers.length}/${totalCount}, Page: ${pageNum}/${totalPages}`);
+    
+    // Send response with properly formatted decimal points
     res.json(response);
   } catch (error) {
     console.error('[ENHANCED LEADERBOARD] Error fetching leaderboard:', error);
@@ -318,9 +320,9 @@ async function getRealLeaderboardData(
           displayName: enhancedDisplayName,
           username: user.username,
           avatar: user.profileImage || undefined,
-          points: formatPoints,
+          points: Number(formatPoints.toFixed(2)), // Ensure 2 decimal precision
           matchesPlayed: matchStats.totalMatches || 0,
-          winRate: matchStats.winRate || 0,
+          winRate: Math.round((matchStats.winRate || 0) * 100) / 100, // Ensure 2 decimal precision for win rate too
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
           age: age,
           division: getPrimaryDivisionFromAge(age),

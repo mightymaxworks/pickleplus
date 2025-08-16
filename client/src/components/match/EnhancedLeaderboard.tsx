@@ -370,7 +370,7 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
                 
                 {/* Mobile-Optimized Points Display */}
                 <div className="text-right">
-                  <div className={`font-bold text-sm ${tier.color}`}>{player.points}</div>
+                  <div className={`font-bold text-sm ${tier.color}`}>{player.points.toFixed(2)}</div>
                   <div className="text-xs text-orange-600">pts</div>
                 </div>
               </div>
