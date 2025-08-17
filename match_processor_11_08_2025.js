@@ -73,20 +73,20 @@ const matches_11_08_2025 = [
   { match: "17-1", team1: ["7号蕉", "11号Gloria"], team2: ["2号杨浩嘉", "5号Mark"], score: "15:12", winner: "team1" }
 ];
 
-// PKL to ID mapping corrected based on database verification
+// PKL to User ID mapping based on provided screenshot
 const pklToId = {
-  "1号雪": 267,         // PKL-000267 (corrected: username xue1990)
-  "2号杨浩嘉": 232,     // PKL-000232 (username Ricky)
-  "3号Tony GUO": 263,   // PKL-000263 (username tonyguo1983)
-  "4号宇..": 258,       // PKL-000258 (蕉)
-  "5号Mark": 238,       // PKL-000238 (tao Mark)
-  "6号Kai": 247,        // PKL-000247 (Joe zhong)
-  "7号蕉": 258,         // PKL-000258 (蕉) - SAME AS 4号
-  "8号Allenshen": 229,  // PKL-000229 (玉丰 沈, username Allenshen)
-  "9号Ceiye": 237,      // PKL-000237 (宇锋 蔡, username ceiye)
-  "10号罗蒜头兄🧡": 234, // PKL-000234 (罗 蒜头, username locpet)
-  "11号Gloria": 236,    // PKL-000236 (Qi Wang, Gloria1989)
-  "12号ricky": 264      // PKL-000264 (username ricky1998, different from 杨浩嘉)
+  "1号雪": 168,         // PKL-000168 (雪, 1990年)
+  "2号杨浩嘉": 235,     // PKL-000235 (杨浩嘉, 2002年)
+  "3号Tony GUO": 263,   // USER ID 263 (as clarified by user, not PKL-000239)
+  "4号宇..": 233,       // PKL-000233 (宇.., 1991年)
+  "5号Mark": 238,       // PKL-000238 (mark, 1992年)
+  "6号Kai": 231,        // PKL-000231 (kai, 1996年)
+  "7号蕉": 228,         // PKL-000228 (蕉, 1995年)
+  "8号Allenshen": 229,  // PKL-000229 (Allenshen, 1994年)
+  "9号Ceiye": 237,      // PKL-000237 (ceiye, 1999年)
+  "10号罗蒜头兄🧡": 234, // PKL-000234 (蒜头, 1990年)
+  "11号Gloria": 236,    // PKL-000236 (gloria, 1989年)
+  "12号ricky": 232      // PKL-000232 (ricky, 1998年)
 };
 
 // System B Algorithm: 3 points for win, 1 point for loss (as per PICKLE_PLUS_ALGORITHM_DOCUMENT.md)
