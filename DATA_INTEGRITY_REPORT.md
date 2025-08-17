@@ -4,10 +4,11 @@
 ### 🔍 OVERVIEW
 Data integrity check performed based on screenshot showing player passport codes and birth years. Cross-referenced with database records from recent match processing sessions.
 
-### ⚠️ CRITICAL ACCOUNT SHARING ALERT
-**沛林 (PKL-000241)** - Used FPF account for DUPR tonight
-- All matches involving 沛林 should count toward **Jeff (ID 245)** points
-- Need to verify this account sharing is properly handled in match processing
+### ⚠️ ACCOUNT SHARING CLARIFICATION
+**沛林 (ID 241)** - Used FPF account for DUPR tonight but is a separate Pickle+ user
+- Database shows: Peyton He (ID 241, Passport: TLORC3)
+- Screenshot shows passport PKL-000241 (different from database TLORC3)
+- This may indicate passport code update or different tournament system
 
 ### 📋 PLAYER DATA MAPPING
 
@@ -20,17 +21,21 @@ Data integrity check performed based on screenshot showing player passport codes
 | 邓卓 | 卓 邓 | 252 | 42SWC6 | 10.00 | 1997 | 28 |
 | luka | 慧杰 李 | 249 | LT57DN | 9.00 | 1991 | 34 |
 
+#### ✅ ADDITIONAL VERIFIED PLAYERS
+| Screenshot Name | Database Name | ID | Passport (DB) | Screenshot Passport | Status |
+|----------------|---------------|----|--------------|--------------------|---------|
+| 沛林 | Peyton He | 241 | TLORC3 | PKL-000241 | Passport mismatch |
+| 刘家麟 | Jialin Liu | 272 | 6MYILN | 6MYILN | ✅ Match |
+| 雾雾兔 | 零零兔 零 | 270 | ZL2NXC | ZL2NXC | ✅ Match |
+| 许若华 | 若华 许 | 274 | XQ5V4N | XQ5V4N | ✅ Match |
+
 #### ❌ MISSING FROM DATABASE
 | Screenshot Name | Screenshot Passport | Birth Year | Status |
 |----------------|-------------------|-----------|---------|
 | luka | PKL-000249 | 1991年 | Not found (different from database luka) |
 | mark | PKL-000238 | 1992年 | Not found |
 | gloria | PKL-000236 | 1989年 | Not found |
-| 沛林 | PKL-000241 | 2012年 | **ACCOUNT SHARING WITH JEFF** |
 | 小资 | PKL-000243 | 1993年 | Possible match: 如福 资 (ID 243) |
-| 刘家麟 | 6MYILN | 2005年 | Found as Jialin Liu (ID 272) |
-| 雾雾兔 | ZL2NXC | 1976年 | Found as 零零兔 零 (ID 270) |
-| 许若华 | XQ5V4N | 1991年 | Found as 若华 许 (ID 274) |
 | 千寻 | VOR7AU | 1976年 | Not found |
 
 #### 🔄 POTENTIAL MATCHES NEEDING VERIFICATION
