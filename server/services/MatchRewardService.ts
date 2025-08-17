@@ -13,9 +13,11 @@ import {
   matches, 
   xpTransactions, 
   rankingTransactions,
-  type Match,
   type User
 } from "@shared/schema";
+
+// Import Match type from matches table
+type Match = typeof matches.$inferSelect;
 import { eq, and, gt, lt, desc, sql } from "drizzle-orm";
 import { StandardizedRankingService } from "./StandardizedRankingService";
 
@@ -228,16 +230,27 @@ export class MatchRewardService {
   }
   
   /**
-   * Calculate ranking points using FINALIZED ALGORITHM
-   * Delegates to StandardizedRankingService for consistency
+   * Calculate ranking points using FINALIZED ALGORITHM with UDF compliance
+   * Implements proper age multipliers, gender balance, and dual ranking system
    * 
    * @param match The match data
    * @param user The user to calculate ranking points for
-   * @returns Ranking calculation result
+   * @param opponentUser The opponent user data for gender balance calculation
+   * @returns Ranking calculation result with separate ranking and pickle points
    */
-  async calculateRankingPoints(match: Match, user: User): Promise<RankingCalculationResult> {
+  async calculateRankingPoints(match: Match, user: User, opponentUser: User): Promise<RankingCalculationResult & {
+    picklePoints: number;
+    rankingPoints: number;
+    openRankingPoints: number;
+    ageGroupRankingPoints: number;
+    genderMultiplier: number;
+    ageMultiplier: number;
+  }> {
     if (!user.dateOfBirth) {
       throw new Error('User date of birth required for age multiplier calculation');
+    }
+    if (!user.gender) {
+      throw new Error('User gender required for gender balance calculation');
     }
 
     const userId = user.id;
@@ -253,23 +266,60 @@ export class MatchRewardService {
     
     const currentPoints = userRanking?.rankingPoints || 0;
     const currentTier = this.getTierForPoints(currentPoints);
+
+    // Import GenderBalanceService for proper cross-gender multiplier calculation
+    const { GenderBalanceService } = await import('./GenderBalanceService');
     
-    // Use StandardizedRankingService for consistent point calculation
+    // Calculate gender multiplier using cross-gender balance logic
+    const playerTeam = {
+      players: [{
+        id: user.id,
+        gender: user.gender as 'male' | 'female',
+        name: user.displayName || user.username,
+        rankingPoints: currentPoints
+      }]
+    };
+    
+    const opponentTeam = {
+      players: [{
+        id: opponentUser.id,
+        gender: opponentUser.gender as 'male' | 'female',
+        name: opponentUser.displayName || opponentUser.username,
+        rankingPoints: opponentUser.rankingPoints || 0
+      }]
+    };
+
+    // Calculate gender balance result
+    const genderBalance = GenderBalanceService.calculateGenderBalance(playerTeam, opponentTeam);
+    const genderMultiplier = genderBalance.genderMultipliers.team1;
+    
+    // Use StandardizedRankingService for consistent point calculation with all required parameters
     const calculation = StandardizedRankingService.calculateRankingPoints(
       isWinner,
       match.matchType as 'casual' | 'league' | 'tournament',
       user.dateOfBirth,
-      match.eventTier as any
+      user.gender as 'male' | 'female',
+      currentPoints,
+      genderMultiplier,
+      match.eventTier as keyof typeof StandardizedRankingService.TIER_MULTIPLIERS
     );
     
-    // Calculate new total using Open Rankings points (age-adjusted)
-    const pointsAwarded = calculation.openRankingPoints;
-    const newTotal = currentPoints + pointsAwarded;
+    // Calculate Pickle Points with 1.5x multiplier (per match)
+    const baseRankingPoints = calculation.openRankingPoints;
+    const picklePoints = Math.round(baseRankingPoints * 1.5 * 100) / 100; // 1.5x multiplier with 2 decimal precision
+    
+    const newTotal = currentPoints + baseRankingPoints;
     const newTier = this.getTierForPoints(newTotal);
     
     return {
       userId,
-      points: pointsAwarded,
+      points: baseRankingPoints, // This is for legacy compatibility
+      rankingPoints: baseRankingPoints,
+      picklePoints: picklePoints,
+      openRankingPoints: calculation.openRankingPoints,
+      ageGroupRankingPoints: calculation.ageGroupRankingPoints,
+      genderMultiplier: genderMultiplier,
+      ageMultiplier: calculation.ageMultiplier,
       previousTier: currentTier,
       newTier,
       tierChanged: currentTier !== newTier
@@ -293,17 +343,24 @@ export class MatchRewardService {
   }
   
   /**
-   * Record XP and ranking transactions for a match
+   * Record XP and ranking transactions for a match with UDF algorithm compliance
    * 
    * @param match The match data
    * @param xpResult XP calculation result
-   * @param rankingResult Ranking calculation result
+   * @param rankingResult Enhanced ranking calculation result with UDF details
    * @returns The recorded transactions
    */
   async recordRewards(
     match: Match, 
     xpResult: XPCalculationResult, 
-    rankingResult: RankingCalculationResult
+    rankingResult: RankingCalculationResult & {
+      picklePoints?: number;
+      rankingPoints?: number;
+      openRankingPoints?: number;
+      ageGroupRankingPoints?: number;
+      genderMultiplier?: number;
+      ageMultiplier?: number;
+    }
   ): Promise<{xpTransaction: any, rankingTransaction: any}> {
     // Create XP transaction
     const [xpTransaction] = await db.insert(xpTransactions)
@@ -316,11 +373,11 @@ export class MatchRewardService {
       })
       .returning();
     
-    // Create ranking transaction
+    // Create ranking transaction with UDF algorithm compliance details
     const [rankingTransaction] = await db.insert(rankingTransactions)
       .values({
         userId: rankingResult.userId,
-        amount: rankingResult.points,
+        amount: Math.round((rankingResult.rankingPoints || rankingResult.points) * 100) / 100, // 2 decimal precision
         source: `Match ${match.winnerId === rankingResult.userId ? 'victory' : 'participation'}`,
         matchId: match.id,
         metadata: {
@@ -328,15 +385,24 @@ export class MatchRewardService {
           eventTier: match.eventTier,
           tierChanged: rankingResult.tierChanged,
           previousTier: rankingResult.previousTier,
-          newTier: rankingResult.newTier
+          newTier: rankingResult.newTier,
+          // UDF Algorithm compliance metadata
+          ageMultiplier: rankingResult.ageMultiplier,
+          genderMultiplier: rankingResult.genderMultiplier,
+          picklePoints: rankingResult.picklePoints,
+          openRankingPoints: rankingResult.openRankingPoints,
+          ageGroupRankingPoints: rankingResult.ageGroupRankingPoints,
+          algorithm: 'System B + Option B + Dual Rankings',
+          precision: '2 decimal places'
         }
       })
       .returning();
     
-    // Update user's ranking points
+    // Update user's ranking points with precise decimal calculation
+    const pointsToAdd = Math.round((rankingResult.rankingPoints || rankingResult.points) * 100) / 100;
     await db.update(users)
       .set({
-        rankingPoints: sql`${users.rankingPoints} + ${rankingResult.points}`
+        rankingPoints: sql`${users.rankingPoints} + ${pointsToAdd}`
       })
       .where(eq(users.id, rankingResult.userId));
     

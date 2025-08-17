@@ -99,81 +99,68 @@ export function registerMatchRoutes(app: express.Express): void {
         xpAwarded: 0
       });
 
-      // Award points to both players: 3 for winner, 1 for loser + Pickle Points (1.5x per match)
-      const playerOneIdResolved = playerOneId || (req.user as any)?.id;
-      const allPlayerIds = [
-        playerOneIdResolved,
-        playerTwoId,
-        playerOnePartnerId,
-        playerTwoPartnerId
-      ].filter(id => id); // Remove null/undefined values
-
-      // Determine winning team for doubles matches
-      const isTeamOneWinner = winnerId === playerOneIdResolved;
-      const winningTeam = isTeamOneWinner 
-        ? [playerOneIdResolved, playerOnePartnerId].filter(id => id)
-        : [playerTwoId, playerTwoPartnerId].filter(id => id);
-
+      // Use enhanced MatchRewardService for UDF algorithm compliance
       try {
-        // Get player data for gender bonus calculations
-        const playerDataPromises = allPlayerIds.map(id => storage.getUser(id));
-        const playerDataResults = await Promise.all(playerDataPromises);
-        const playerData = playerDataResults.reduce((acc, player, index) => {
-          if (player) acc[allPlayerIds[index]] = player;
-          return acc;
-        }, {} as Record<number, any>);
-
-        // Detect cross-gender match and check elite threshold
-        const genders = Object.values(playerData).map(p => p.gender).filter(g => g);
-        const uniqueGenders = Array.from(new Set(genders));
-        const isCrossGender = uniqueGenders.length > 1;
-        const allPlayersUnder1000 = Object.values(playerData).every(p => (p.ranking_points || 0) < 1000);
+        const { MatchRewardService } = await import('../services/MatchRewardService');
+        const matchRewardService = new MatchRewardService();
         
-        console.log(`[Gender Bonus Check] Cross-gender: ${isCrossGender}, All under 1000 pts: ${allPlayersUnder1000}`);
-        console.log(`[Gender Bonus Check] Player genders: ${genders.join(', ')}`);
+        console.log('[UDF COMPLIANCE] Using enhanced MatchRewardService for points calculation');
+        
+        // Process match for each player using the UDF-compliant service
+        const playerOneIdResolved = playerOneId || (req.user as any)?.id;
+        const allPlayerIds = [
+          playerOneIdResolved,
+          playerTwoId,
+          playerOnePartnerId,
+          playerTwoPartnerId
+        ].filter(id => id); // Remove null/undefined values
+
+        for (const playerId of allPlayerIds) {
+          const playerData = await storage.getUser(playerId);
+          if (!playerData) {
+            console.log(`[UDF COMPLIANCE] Skipping player ${playerId} - user not found`);
+            continue;
+          }
+
+          // Calculate XP and ranking points with full UDF compliance
+          const xpResult = await matchRewardService.calculateMatchXP(newMatch, playerData);
+          const rankingResult = await matchRewardService.calculateRankingPoints(newMatch, playerData);
+          
+          // Record rewards with enhanced metadata
+          await matchRewardService.recordRewards(newMatch, xpResult, rankingResult);
+          
+          console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingResult.rankingPoints} ranking points, +${rankingResult.picklePoints} pickle points (Age: ${rankingResult.ageMultiplier}x, Gender: ${rankingResult.genderMultiplier}x)`);
+        }
+        
+        console.log('[UDF COMPLIANCE] Successfully processed all player rewards with enhanced algorithm');
+      } catch (error) {
+        console.error(`[UDF COMPLIANCE] Error using enhanced MatchRewardService: ${(error as Error).message}`);
+        // Fallback to basic points to ensure match creation doesn't fail
+        console.log('[FALLBACK] Using basic points calculation as fallback');
+        
+        const playerOneIdResolved = playerOneId || (req.user as any)?.id;
+        const allPlayerIds = [
+          playerOneIdResolved,
+          playerTwoId,
+          playerOnePartnerId,
+          playerTwoPartnerId
+        ].filter(id => id);
+
+        const isTeamOneWinner = winnerId === playerOneIdResolved;
+        const winningTeam = isTeamOneWinner 
+          ? [playerOneIdResolved, playerOnePartnerId].filter(id => id)
+          : [playerTwoId, playerTwoPartnerId].filter(id => id);
 
         for (const playerId of allPlayerIds) {
           const isWinner = winningTeam.includes(playerId);
-          const basePoints = isWinner ? winnerPoints : loserPoints;
-          const player = playerData[playerId];
+          const points = isWinner ? 3 : 1;
+          const picklePoints = Math.round(points * 1.5);
           
-          // Apply age multiplier (per PICKLE_PLUS_ALGORITHM_DOCUMENT.md Option B)
-          let ageMultiplier = 1.0;
-          if (player?.dateOfBirth) {
-            const age = new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear();
-            if (age >= 70) ageMultiplier = 1.6;
-            else if (age >= 60) ageMultiplier = 1.5;
-            else if (age >= 50) ageMultiplier = 1.3;
-            else if (age >= 35) ageMultiplier = 1.2;
-            else ageMultiplier = 1.0;
-            console.log(`[Age Bonus] Applied ${ageMultiplier}x age multiplier to player ${playerId} (age ${age})`);
-          }
-          
-          // Apply gender bonus if applicable (per PICKLE_PLUS_ALGORITHM_DOCUMENT.md)
-          let genderMultiplier = 1.0;
-          if (isCrossGender && allPlayersUnder1000 && player?.gender === 'female') {
-            genderMultiplier = 1.15; // 1.15x bonus for women in cross-gender matches under 1000 points
-            console.log(`[Gender Bonus] Applied 1.15x gender bonus to female player ${playerId}`);
-          }
-          
-          // Calculate final ranking points with age and gender bonuses (2 decimal precision)
-          const rankingPointsWithBonuses = basePoints * ageMultiplier * genderMultiplier;
-          const finalRankingPoints = Math.round(rankingPointsWithBonuses * 100) / 100; // 2 decimal places
-          
-          // Apply 1.5x conversion rate for Pickle Points (per algorithm document)
-          const picklePointsBase = finalRankingPoints * 1.5;
-          const picklePoints = Math.ceil(picklePointsBase); // Pickle Points stay whole numbers for gamification
-          
-          // Update both Pickle Points (gamification) and Ranking Points (competitive)
-          // Use format-specific ranking points to prevent Singles/Doubles mixing
-          const matchFormat = formatType === 'doubles' ? 'doubles' : 'singles';
           await storage.updateUserPicklePoints(playerId, picklePoints);
-          await storage.updateUserRankingPoints(playerId, finalRankingPoints, matchFormat);
+          await storage.updateUserRankingPoints(playerId, points, formatType === 'doubles' ? 'doubles' : 'singles');
           
-          console.log(`[Match Creation] Player ${playerId} (${player?.gender || 'unknown'}): Base ${basePoints} × Age ${ageMultiplier}x × Gender ${genderMultiplier}x = ${rankingPointsWithBonuses} → ${finalRankingPoints} ranking points, ${picklePoints} pickle points`);
+          console.log(`[FALLBACK] Player ${playerId}: +${points} ranking points, +${picklePoints} pickle points`);
         }
-      } catch (error) {
-        console.log(`[Match Creation] Warning: Could not award points: ${(error as Error).message}`);
       }
 
       // Handle admin profile updates if provided
