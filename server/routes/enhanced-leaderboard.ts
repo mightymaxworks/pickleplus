@@ -178,13 +178,12 @@ interface LeaderboardEntry {
   displayName: string;
   username: string;
   avatar?: string;
-  rankingPoints: number; // Changed from 'points' to match client expectations
-  totalMatches: number;  // Changed from 'matchesPlayed' to match client expectations
-  matchesWon: number;    // Added to match client expectations
+  points: number; // Frontend expects 'points'
+  matchesPlayed: number; // Frontend expects 'matchesPlayed'
   winRate: number;
   gender: 'male' | 'female';
   age: number;
-  ageGroup: string;      // Changed from 'division' to match client expectations
+  division: string; // Frontend expects 'division'
   ranking: number;
   isCurrentUser?: boolean;
 }
@@ -321,20 +320,19 @@ async function getRealLeaderboardData(
           displayName: enhancedDisplayName,
           username: user.username,
           avatar: user.profileImage || undefined,
-          rankingPoints: Number(formatPoints.toFixed(2)), // Changed from 'points' to match client expectations
-          totalMatches: matchStats.totalMatches || 0,     // Changed from 'matchesPlayed' to match client expectations
-          matchesWon: matchStats.wins || 0,               // Added to match client expectations
-          winRate: Math.round((matchStats.winRate || 0) * 100) / 100, // Ensure 2 decimal precision for win rate too
+          points: Number(formatPoints.toFixed(2)), // Frontend expects 'points'
+          matchesPlayed: matchStats.totalMatches || 0, // Frontend expects 'matchesPlayed'
+          winRate: Math.round((matchStats.winRate || 0) * 100) / 100, // Frontend expects 'winRate'
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
           age: age,
-          ageGroup: getPrimaryDivisionFromAge(age),       // Changed from 'division' to match client expectations
+          division: getPrimaryDivisionFromAge(age), // Frontend expects 'division'
           ranking: index + 1,
           isCurrentUser: currentUserId === user.id
         };
       }));
 
     let processedPlayers = usersWithStats
-      .filter(player => player.rankingPoints > 0) // Only show players with points in this format
+      .filter(player => player.points > 0) // Only show players with points in this format
       .filter(player => isProductionDataFilter(player)) // Apply production data filtering
       .filter(player => {
         // Filter by gender
@@ -347,9 +345,9 @@ async function getRealLeaderboardData(
       })
       .sort((a, b) => {
         // Sort by points descending (primary), then by win rate, then by matches played
-        if (b.rankingPoints !== a.rankingPoints) return b.rankingPoints - a.rankingPoints;
+        if (b.points !== a.points) return b.points - a.points;
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.totalMatches - a.totalMatches;
+        return b.matchesPlayed - a.matchesPlayed;
       })
       .map((player, index) => ({ ...player, ranking: index + 1 })); // Assign ranking based on sorted position
 
