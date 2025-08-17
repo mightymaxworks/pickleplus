@@ -192,12 +192,12 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
         </div>
 
         {/* Current User Position Display */}
-        {currentUserPosition && (
+        {currentUserPosition && currentUserPosition.player && (
           <div className="mb-3 p-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-green-600" />
               <span className="font-medium text-green-700">
-                Your Position: #{currentUserPosition.ranking} ({currentUserPosition.player.points} pts)
+                Your Position: #{currentUserPosition.ranking} ({(currentUserPosition.player.points || 0).toFixed(2)} pts)
               </span>
             </div>
           </div>
@@ -364,13 +364,13 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
                     </Badge>
                   </div>
                   <div className="text-xs text-orange-600 truncate">
-                    Age {player.age} • {player.winRate}% wins • {player.matchesPlayed} matches
+                    Age {player.age || 'N/A'} • {(player.winRate || 0).toFixed(1)}% wins • {player.matchesPlayed || 0} matches
                   </div>
                 </div>
                 
                 {/* Mobile-Optimized Points Display */}
                 <div className="text-right">
-                  <div className={`font-bold text-sm ${tier.color}`}>{player.points.toFixed(2)}</div>
+                  <div className={`font-bold text-sm ${tier.color}`}>{(player.points || 0).toFixed(2)}</div>
                   <div className="text-xs text-orange-600">pts</div>
                 </div>
               </div>
