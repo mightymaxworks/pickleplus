@@ -263,6 +263,7 @@ export interface IStorage extends CommunityStorage {
   getPicklePoints(userId: number): Promise<number>;
   updateUserRankingPoints(userId: number, pointsToAdd: number, format: 'singles' | 'doubles'): Promise<void>;
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
+  searchUsersByName(searchTerm: string): Promise<User[]>;
   getTournamentParticipationByUser(userId: number): Promise<any[]>;
   createAuditLog(data: any): Promise<void>;
   
@@ -1161,6 +1162,25 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Error updating pickle points for user ${userId}:`, error);
       throw error;
+    }
+  }
+
+  async searchUsersByName(searchTerm: string): Promise<User[]> {
+    try {
+      const users = await db.select()
+        .from(users)
+        .where(
+          or(
+            sql`LOWER(${users.displayName}) LIKE ${`%${searchTerm.toLowerCase()}%`}`,
+            sql`LOWER(${users.username}) LIKE ${`%${searchTerm.toLowerCase()}%`}`
+          )
+        )
+        .limit(50);
+      
+      return users;
+    } catch (error) {
+      console.error('Error searching users by name:', error);
+      return [];
     }
   }
 

@@ -39,6 +39,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerMatchRoutes(app);
   console.log("[ROUTES] Match routes registered successfully");
 
+  // === DATA AUDIT ROUTES ===
+  
+  // Tony Guo audit endpoint
+  app.get('/api/admin/audit-tony-guo', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      console.log('🔍 AUDITING TONY GUO MATCHES...');
+      
+      // Find Tony Guo by searching all users
+      const allUsers = await storage.searchUsersByName('tony guo');
+      const tony = allUsers.find((u: any) => 
+        u.displayName?.toLowerCase().includes('tony') && 
+        u.displayName?.toLowerCase().includes('guo')
+      );
+      
+      if (!tony) {
+        return res.status(404).json({ error: 'Tony Guo not found' });
+      }
+      
+      console.log('Found Tony Guo:', tony.displayName, 'ID:', tony.id);
+      
+      // Get all his matches
+      const matches = await storage.getMatchesByUser(tony.id);
+      console.log(`Found ${matches.length} matches for Tony Guo`);
+      
+      // Check for potential duplicates
+      const duplicates = [];
+      for (let i = 0; i < matches.length - 1; i++) {
+        for (let j = i + 1; j < matches.length; j++) {
+          const match1 = matches[i];
+          const match2 = matches[j];
+          
+          const time1 = match1.createdAt ? new Date(match1.createdAt).getTime() : 0;
+          const time2 = match2.createdAt ? new Date(match2.createdAt).getTime() : 0;
+          const timeDiff = Math.abs(time2 - time1) / (1000 * 60); // minutes
+          
+          if (timeDiff < 5) {
+            // Check if same players
+            const players1 = [match1.playerOneId, match1.playerTwoId, match1.playerOnePartnerId, match1.playerTwoPartnerId].filter(p => p);
+            const players2 = [match2.playerOneId, match2.playerTwoId, match2.playerOnePartnerId, match2.playerTwoPartnerId].filter(p => p);
+            
+            const samePlayers = players1.length === players2.length && 
+                               players1.every(p => players2.includes(p));
+            
+            if (samePlayers) {
+              duplicates.push({
+                match1: { id: match1.id, date: match1.createdAt },
+                match2: { id: match2.id, date: match2.createdAt },
+                timeDifferenceMinutes: timeDiff.toFixed(2)
+              });
+            }
+          }
+        }
+      }
+      
+      // Group by date to find clustering
+      const matchesByDate: { [key: string]: any[] } = {};
+      matches.forEach(match => {
+        if (match.createdAt) {
+          const date = new Date(match.createdAt).toDateString();
+          if (!matchesByDate[date]) matchesByDate[date] = [];
+          matchesByDate[date].push(match);
+        }
+      });
+      
+      const suspiciousDates = Object.entries(matchesByDate)
+        .filter(([date, matches]) => matches.length > 3)
+        .map(([date, matches]) => ({ date, matchCount: matches.length }));
+      
+      res.json({
+        user: {
+          id: tony.id,
+          displayName: tony.displayName,
+          username: tony.username,
+          rankingPoints: tony.rankingPoints,
+          picklePoints: tony.picklePoints
+        },
+        analysis: {
+          totalMatches: matches.length,
+          duplicatesFound: duplicates.length,
+          duplicates,
+          suspiciousDates,
+          recentMatches: matches.slice(0, 10).map(m => ({
+            id: m.id,
+            date: m.createdAt,
+            format: m.formatType
+          }))
+        }
+      });
+      
+    } catch (error) {
+      console.error('Tony Guo audit error:', error);
+      res.status(500).json({ error: 'Audit failed' });
+    }
+  });
+
+  // System-wide corruption audit endpoint
+  app.get('/api/admin/system-corruption-audit', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { duplicateCleanupService } = await import('./utils/duplicateCleanup');
+      const auditReport = await duplicateCleanupService.generateComprehensiveAudit();
+      res.json(auditReport);
+    } catch (error) {
+      console.error('System audit error:', error);
+      res.status(500).json({ error: 'System audit failed' });
+    }
+  });
+
+  // Duplicate cleanup endpoint (DRY RUN by default)
+  app.post('/api/admin/cleanup-duplicates', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const dryRun = req.body.dryRun !== false; // Default to dry run
+      const { duplicateCleanupService } = await import('./utils/duplicateCleanup');
+      
+      console.log(`🧹 Starting duplicate cleanup - ${dryRun ? 'DRY RUN' : 'LIVE'}`);
+      const results = await duplicateCleanupService.removeDuplicateMatches(dryRun);
+      
+      res.json({
+        mode: dryRun ? 'DRY_RUN' : 'LIVE',
+        results,
+        warning: dryRun ? 'This was a dry run. No data was actually removed.' : 'Live cleanup completed.'
+      });
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      res.status(500).json({ error: 'Cleanup failed' });
+    }
+  });
+
   // === PLAYER SEARCH AND RECENT OPPONENTS ROUTES ===
   
   // Player search endpoint for SmartPlayerSearch component

@@ -32,6 +32,8 @@ User wants decimal precision (2 decimal places) instead of rounding up for ranki
 User wants decimal precision enforced in UDF best practices as the standard for all future development.
 User wants the Pickle Points multiplier CORRECTED to exactly 1.5x throughout all documentation and system implementation - any other rate is incorrect.
 User clarified that the 1.5x multiplier must apply PER MATCH when Pickle Points are earned, NOT as a blanket conversion of total ranking points.
+User reported Tony Guo showing 28 matches but physical records don't match, leading to discovery of massive historical data corruption.
+User wants immediate data integrity cleanup to resolve system-wide duplicate match corruption affecting rankings and points.
 
 ## System Architecture
 Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.
