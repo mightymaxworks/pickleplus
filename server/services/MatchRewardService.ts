@@ -235,10 +235,9 @@ export class MatchRewardService {
    * 
    * @param match The match data
    * @param user The user to calculate ranking points for
-   * @param opponentUser The opponent user data for gender balance calculation
    * @returns Ranking calculation result with separate ranking and pickle points
    */
-  async calculateRankingPoints(match: Match, user: User, opponentUser: User): Promise<RankingCalculationResult & {
+  async calculateRankingPoints(match: Match, user: User): Promise<RankingCalculationResult & {
     picklePoints: number;
     rankingPoints: number;
     openRankingPoints: number;
@@ -267,31 +266,26 @@ export class MatchRewardService {
     const currentPoints = userRanking?.rankingPoints || 0;
     const currentTier = this.getTierForPoints(currentPoints);
 
-    // Import GenderBalanceService for proper cross-gender multiplier calculation
-    const { GenderBalanceService } = await import('./GenderBalanceService');
+    // For now, use simple gender multiplier logic until we have opponent data
+    // In cross-gender matches with players under 1000 points, women get 1.15x multiplier
+    let genderMultiplier = 1.0;
     
-    // Calculate gender multiplier using cross-gender balance logic
-    const playerTeam = {
-      players: [{
-        id: user.id,
-        gender: user.gender as 'male' | 'female',
-        name: user.displayName || user.username,
-        rankingPoints: currentPoints
-      }]
-    };
+    // Get all match participants to check for cross-gender competition
+    const allPlayerIds = [match.playerOneId, match.playerTwoId, match.playerOnePartnerId, match.playerTwoPartnerId].filter(id => id);
+    const allPlayers = await Promise.all(
+      allPlayerIds.map(id => db.query.users.findFirst({
+        where: eq(users.id, id),
+        columns: { gender: true, rankingPoints: true }
+      }))
+    );
     
-    const opponentTeam = {
-      players: [{
-        id: opponentUser.id,
-        gender: opponentUser.gender as 'male' | 'female',
-        name: opponentUser.displayName || opponentUser.username,
-        rankingPoints: opponentUser.rankingPoints || 0
-      }]
-    };
-
-    // Calculate gender balance result
-    const genderBalance = GenderBalanceService.calculateGenderBalance(playerTeam, opponentTeam);
-    const genderMultiplier = genderBalance.genderMultipliers.team1;
+    const playerGenders = allPlayers.map(p => p?.gender).filter(g => g);
+    const isCrossGender = new Set(playerGenders).size > 1;
+    const allUnder1000 = allPlayers.every(p => (p?.rankingPoints || 0) < 1000);
+    
+    if (isCrossGender && allUnder1000 && user.gender === 'female') {
+      genderMultiplier = 1.15; // Gender bonus for women in cross-gender matches under 1000 points
+    }
     
     // Use StandardizedRankingService for consistent point calculation with all required parameters
     const calculation = StandardizedRankingService.calculateRankingPoints(
@@ -398,15 +392,17 @@ export class MatchRewardService {
       })
       .returning();
     
-    // Update user's ranking points with precise decimal calculation
-    const pointsToAdd = Math.round((rankingResult.rankingPoints || rankingResult.points) * 100) / 100;
-    await db.update(users)
-      .set({
-        rankingPoints: sql`${users.rankingPoints} + ${pointsToAdd}`
-      })
-      .where(eq(users.id, rankingResult.userId));
+    // NOTE: Do NOT update user ranking points here - this causes double counting
+    // The calling code should handle the actual point updates to prevent duplication
+    // This method only records the transactions for audit purposes
     
-    return { xpTransaction, rankingTransaction };
+    return { 
+      xpTransaction, 
+      rankingTransaction,
+      // Return the calculated points for the caller to apply
+      rankingPointsToAdd: Math.round((rankingResult.rankingPoints || rankingResult.points) * 100) / 100,
+      picklePointsToAdd: rankingResult.picklePoints || Math.round((rankingResult.rankingPoints || rankingResult.points) * 1.5)
+    };
   }
   
   /**

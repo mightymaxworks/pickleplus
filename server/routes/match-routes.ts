@@ -80,8 +80,33 @@ export function registerMatchRoutes(app: express.Express): void {
       const user = req.user as any;
       const isAdmin = user?.isAdmin || false;
       
+      // CRITICAL DUPLICATE DETECTION: Check for duplicate matches
+      const matchDate = scheduledDate ? new Date(scheduledDate) : new Date();
+      const playerOneIdResolved = playerOneId || user?.id;
+      
+      // Build a unique match signature to detect duplicates
+      const playerIds = [playerOneIdResolved, playerTwoId, playerOnePartnerId, playerTwoPartnerId]
+        .filter(id => id)
+        .sort(); // Sort to ensure consistent ordering
+      
+      // Check for existing matches with the same players within the last 5 minutes
+      const fiveMinutesAgo = new Date(matchDate.getTime() - 5 * 60 * 1000);
+      try {
+        const existingMatches = await storage.getRecentMatches(playerIds, fiveMinutesAgo);
+        
+        if (existingMatches.length > 0) {
+          console.log('[DUPLICATE DETECTION] Preventing duplicate match creation');
+          console.log('[DUPLICATE DETECTION] Found existing match:', existingMatches[0]);
+          return res.status(409).json({ 
+            error: 'Duplicate match detected. A match with the same players was already recorded within the last 5 minutes.' 
+          });
+        }
+      } catch (error) {
+        console.log('[DUPLICATE DETECTION] Warning: Could not check for duplicates, proceeding with match creation');
+      }
+
       const newMatch = await storage.createMatch({
-        playerOneId: playerOneId || user?.id,
+        playerOneId: playerOneIdResolved,
         playerTwoId,
         playerOnePartnerId: playerOnePartnerId || null,
         playerTwoPartnerId: playerTwoPartnerId || null,
@@ -94,7 +119,7 @@ export function registerMatchRoutes(app: express.Express): void {
         validationCompletedAt: isAdmin ? new Date() : null,
         notes: `${notes || ''} [Game Scores: ${detailedScores}]`.trim(),
         tournamentId: validTournamentId,
-        matchDate: scheduledDate ? new Date(scheduledDate) : new Date(),
+        matchDate: matchDate,
         pointsAwarded: winnerPoints,
         xpAwarded: 0
       });
@@ -126,10 +151,14 @@ export function registerMatchRoutes(app: express.Express): void {
           const xpResult = await matchRewardService.calculateMatchXP(newMatch, playerData);
           const rankingResult = await matchRewardService.calculateRankingPoints(newMatch, playerData);
           
-          // Record rewards with enhanced metadata
-          await matchRewardService.recordRewards(newMatch, xpResult, rankingResult);
+          // Record rewards with enhanced metadata and get the calculated points
+          const { rankingPointsToAdd, picklePointsToAdd } = await matchRewardService.recordRewards(newMatch, xpResult, rankingResult);
           
-          console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingResult.rankingPoints} ranking points, +${rankingResult.picklePoints} pickle points (Age: ${rankingResult.ageMultiplier}x, Gender: ${rankingResult.genderMultiplier}x)`);
+          // Apply the calculated points (prevents double counting)
+          await storage.updateUserRankingPoints(playerId, rankingPointsToAdd, formatType === 'doubles' ? 'doubles' : 'singles');
+          await storage.updateUserPicklePoints(playerId, picklePointsToAdd);
+          
+          console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingPointsToAdd} ranking points, +${picklePointsToAdd} pickle points (Age: ${rankingResult.ageMultiplier}x, Gender: ${rankingResult.genderMultiplier}x)`);
         }
         
         console.log('[UDF COMPLIANCE] Successfully processed all player rewards with enhanced algorithm');

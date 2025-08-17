@@ -22,7 +22,7 @@ import {
 
 } from "@shared/schema";
 // Import Drizzle operators
-import { eq, or, desc, count, isNull, and, gt, gte } from "drizzle-orm";
+import { eq, or, desc, count, isNull, and, gt, gte, sql } from "drizzle-orm";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
 // Regular matches table uses inferred types
@@ -258,8 +258,11 @@ export interface IStorage extends CommunityStorage {
   getTournamentCount(): Promise<number>;
   createMatch(matchData: InsertMatch): Promise<Match>;
   getMatchesByUser(userId: number): Promise<Match[]>;
+  getRecentMatches(playerIds: number[], afterDate: Date): Promise<Match[]>;
   getMatchStats(userId: number, timeRange?: string): Promise<any>;
   getPicklePoints(userId: number): Promise<number>;
+  updateUserRankingPoints(userId: number, pointsToAdd: number, format: 'singles' | 'doubles'): Promise<void>;
+  updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
   getTournamentParticipationByUser(userId: number): Promise<any[]>;
   createAuditLog(data: any): Promise<void>;
   
@@ -992,6 +995,36 @@ export class DatabaseStorage implements IStorage {
     return match;
   }
 
+  async getRecentMatches(playerIds: number[], afterDate: Date): Promise<Match[]> {
+    try {
+      // Create a query to find matches with any of the provided player IDs after the given date
+      const recentMatches = await db.select()
+        .from(matches)
+        .where(
+          and(
+            gte(matches.createdAt, afterDate),
+            or(
+              ...playerIds.map(playerId => 
+                or(
+                  eq(matches.playerOneId, playerId),
+                  eq(matches.playerTwoId, playerId),
+                  eq(matches.playerOnePartnerId, playerId),
+                  eq(matches.playerTwoPartnerId, playerId)
+                )
+              )
+            )
+          )
+        )
+        .orderBy(desc(matches.createdAt))
+        .limit(10);
+      
+      return recentMatches;
+    } catch (error) {
+      console.error('Error fetching recent matches:', error);
+      return [];
+    }
+  }
+
   async getMatchesByUser(userId: number): Promise<Match[]> {
     try {
       const userMatches = await db.select()
@@ -1099,6 +1132,36 @@ export class DatabaseStorage implements IStorage {
   async getPicklePoints(userId: number): Promise<number> {
     const user = await this.getUser(userId);
     return user?.picklePoints || 0;
+  }
+
+  async updateUserRankingPoints(userId: number, pointsToAdd: number, format: 'singles' | 'doubles'): Promise<void> {
+    try {
+      await db.update(users)
+        .set({
+          rankingPoints: sql`${users.rankingPoints} + ${pointsToAdd}`
+        })
+        .where(eq(users.id, userId));
+      
+      console.log(`[POINTS UPDATE] User ${userId}: +${pointsToAdd} ranking points (${format})`);
+    } catch (error) {
+      console.error(`Error updating ranking points for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void> {
+    try {
+      await db.update(users)
+        .set({
+          picklePoints: sql`${users.picklePoints} + ${pointsToAdd}`
+        })
+        .where(eq(users.id, userId));
+      
+      console.log(`[POINTS UPDATE] User ${userId}: +${pointsToAdd} pickle points`);
+    } catch (error) {
+      console.error(`Error updating pickle points for user ${userId}:`, error);
+      throw error;
+    }
   }
 
   async getTournamentParticipationByUser(userId: number): Promise<any[]> {
