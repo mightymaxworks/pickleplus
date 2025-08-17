@@ -101,28 +101,13 @@ export default function RankingsPage() {
         </Card>
 
         {/* Rankings Tabs */}
-        <Tabs defaultValue="singles" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-            <TabsTrigger value="singles" className="text-sm">Singles</TabsTrigger>
+        <Tabs defaultValue="doubles" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="doubles" className="text-sm">Doubles</TabsTrigger>
+            <TabsTrigger value="singles" className="text-sm">Singles</TabsTrigger>
             <TabsTrigger value="tiers" className="hidden md:flex text-sm">Tiers</TabsTrigger>
             <TabsTrigger value="age-group" className="hidden md:flex text-sm">Age Group</TabsTrigger>
-            <TabsTrigger value="recent" className="hidden md:flex text-sm">Recent</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="singles" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  Singles Player Rankings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EnhancedLeaderboard format="singles" />
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="doubles" className="mt-6">
             <Card>
@@ -134,6 +119,20 @@ export default function RankingsPage() {
               </CardHeader>
               <CardContent>
                 <EnhancedLeaderboard format="doubles" />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="singles" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5" />
+                  Singles Player Rankings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EnhancedLeaderboard format="singles" />
               </CardContent>
             </Card>
           </TabsContent>
