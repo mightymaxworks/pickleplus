@@ -168,7 +168,7 @@ export function registerMatchRoutes(app: express.Express): void {
           }
           
           const rankingPointsToAdd = Number((basePoints * ageMultiplier * genderMultiplier).toFixed(2));
-          const picklePointsToAdd = Number((rankingPointsToAdd * 1.5).toFixed(2));
+          const picklePointsToAdd = Math.round(rankingPointsToAdd * 1.5);
           
           // Apply the calculated points (prevents double counting)
           await storage.updateUserRankingPoints(playerId, rankingPointsToAdd, formatType === 'doubles' ? 'doubles' : 'singles');
