@@ -1,7 +1,6 @@
 import { db } from '../db';
 import { matches, users } from '../../shared/schema';
-import { eq, sql, and, or } from 'drizzle-orm';
-import { storage } from '../storage';
+import { eq, sql } from 'drizzle-orm';
 
 export class DuplicateCleanupService {
   
@@ -20,7 +19,7 @@ export class DuplicateCleanupService {
       ORDER BY match_count DESC, created_at DESC
     `);
     
-    return duplicateTimestamps;
+    return duplicateTimestamps.rows || [];
   }
 
   // Find users with suspiciously high match counts
@@ -47,7 +46,7 @@ export class DuplicateCleanupService {
       ORDER BY match_count DESC
     `);
     
-    return userStats;
+    return userStats.rows || [];
   }
 
   // Calculate corrected points for a user after removing duplicates
