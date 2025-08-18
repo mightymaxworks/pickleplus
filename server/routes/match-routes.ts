@@ -147,12 +147,28 @@ export function registerMatchRoutes(app: express.Express): void {
             continue;
           }
 
-          // Calculate XP and ranking points with full UDF compliance
-          const xpResult = await matchRewardService.calculateMatchXP(newMatch, playerData);
-          const rankingResult = await matchRewardService.calculateRankingPoints(newMatch, playerData);
+          // Calculate points using System B (3 points win, 1 point loss) with age/gender multipliers
+          const isWinner = winnerId === playerId;
+          const basePoints = isWinner ? 3 : 1;
           
-          // Record rewards with enhanced metadata and get the calculated points
-          const { rankingPointsToAdd, picklePointsToAdd } = await matchRewardService.recordRewards(newMatch, xpResult, rankingResult);
+          // Apply age multiplier based on player age
+          let ageMultiplier = 1.0;
+          if (playerData.dateOfBirth) {
+            const age = new Date().getFullYear() - new Date(playerData.dateOfBirth).getFullYear();
+            if (age >= 35 && age < 50) ageMultiplier = 1.2;
+            else if (age >= 50 && age < 60) ageMultiplier = 1.3;
+            else if (age >= 60 && age < 70) ageMultiplier = 1.4;
+            else if (age >= 70) ageMultiplier = 1.6;
+          }
+          
+          // Apply gender bonus for women under 1000 points in cross-gender matches
+          let genderMultiplier = 1.0;
+          if (playerData.gender === 'female' && (playerData.rankingPoints || 0) < 1000) {
+            genderMultiplier = 1.15;
+          }
+          
+          const rankingPointsToAdd = Number((basePoints * ageMultiplier * genderMultiplier).toFixed(2));
+          const picklePointsToAdd = Number((rankingPointsToAdd * 1.5).toFixed(2));
           
           // Apply the calculated points (prevents double counting)
           await storage.updateUserRankingPoints(playerId, rankingPointsToAdd, formatType === 'doubles' ? 'doubles' : 'singles');

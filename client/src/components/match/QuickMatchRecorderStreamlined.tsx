@@ -169,7 +169,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
         passportId: user.passportCode || undefined,
         avatarUrl: user.avatarUrl || undefined,
         avatarInitials: user.avatarInitials || undefined,
-        dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
+        dateOfBirth: user.dateOfBirth || null,
         gender: user.gender || null,
         currentRating: user.rankingPoints || 0,
       });
@@ -635,7 +635,7 @@ export function QuickMatchRecorderStreamlined({ onSuccess, prefilledPlayer, isAd
                         passportId: user.passportCode || undefined,
                         avatarUrl: user.avatarUrl || undefined,
                         avatarInitials: user.avatarInitials || undefined,
-                        dateOfBirth: user.yearOfBirth ? `${user.yearOfBirth}-01-01` : null,
+                        dateOfBirth: user.dateOfBirth || null,
                         gender: user.gender || null,
                         currentRating: user.rankingPoints || 0,
                       };
