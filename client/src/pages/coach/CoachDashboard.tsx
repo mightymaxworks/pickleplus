@@ -21,7 +21,7 @@ import { Link } from 'wouter';
 import { CoachingAssessmentValidator } from '@/components/coaching/CoachingAssessmentValidator';
 import { useToast } from '@/hooks/use-toast';
 
-// 35-Skill Assessment Interface Component
+// 55-Skill PCP Assessment Interface Component
 const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete, onCancel }: {
   studentId: number;
   coachId: number;
@@ -36,42 +36,85 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   const categories = [
     {
       name: "Groundstrokes and Serves",
+      description: "Power shots, placement accuracy, and serve mechanics - 11 skills total",
       skills: [
-        "Serve Power", "Serve Placement", "Forehand Flat Drive", "Forehand Topspin Drive", 
-        "Forehand Slice", "Backhand Flat Drive", "Backhand Topspin Drive", "Backhand Slice",
-        "Third Shot Drive", "Forehand Return of Serve", "Backhand Return of Serve"
+        { name: "Serve Power", desc: "Ability to generate pace on serve consistently" },
+        { name: "Serve Placement", desc: "Accuracy in targeting specific court areas on serve" },
+        { name: "Forehand Flat Drive", desc: "Clean, penetrating forehand with minimal spin" },
+        { name: "Forehand Topspin Drive", desc: "Aggressive forehand with heavy topspin for control" },
+        { name: "Forehand Slice", desc: "Defensive/offensive slice with backspin control" },
+        { name: "Backhand Flat Drive", desc: "Solid backhand drive with pace and depth" },
+        { name: "Backhand Topspin Drive", desc: "Attacking backhand with topspin for net clearance" },
+        { name: "Backhand Slice", desc: "Consistent backhand slice for variety and defense" },
+        { name: "Third Shot Drive", desc: "Aggressive third shot to put pressure on opponents" },
+        { name: "Forehand Return of Serve", desc: "Consistent, well-placed forehand returns" },
+        { name: "Backhand Return of Serve", desc: "Reliable backhand returns to start points well" }
       ]
     },
     {
       name: "Dinks and Resets",
+      description: "Soft game precision, third shot drops, and court control - 16 skills total",
       skills: [
-        "Forehand Topspin Dink", "Forehand Dead Dink", "Forehand Slice Dink", "Backhand Topspin Dink",
-        "Backhand Dead Dink", "Backhand Slice Dink", "Forehand Third Shot Drop", "Forehand Top Spin Third Shot Drop",
-        "Forehand Slice Third Shot Drop", "Backhand Third Shot Drop", "Backhand Top Spin Third Shot Drop", 
-        "Backhand Slice Third Shot Drop", "Forehand Resets", "Backhand Resets", "Forehand Lob", "Backhand Lob"
+        { name: "Forehand Topspin Dink", desc: "Soft forehand with slight topspin to clear net" },
+        { name: "Forehand Dead Dink", desc: "Ultra-soft forehand that barely clears the net" },
+        { name: "Forehand Slice Dink", desc: "Forehand dink with backspin to stay low" },
+        { name: "Backhand Topspin Dink", desc: "Controlled backhand dink with forward spin" },
+        { name: "Backhand Dead Dink", desc: "Soft backhand that drops quickly after net" },
+        { name: "Backhand Slice Dink", desc: "Backhand with slice to keep ball low and slow" },
+        { name: "Forehand Third Shot Drop", desc: "Neutral third shot to get to the kitchen line" },
+        { name: "Forehand Top Spin Third Shot Drop", desc: "Third shot with topspin for net clearance" },
+        { name: "Forehand Slice Third Shot Drop", desc: "Third shot with backspin to die in kitchen" },
+        { name: "Backhand Third Shot Drop", desc: "Consistent backhand third shot placement" },
+        { name: "Backhand Top Spin Third Shot Drop", desc: "Backhand third with topspin control" },
+        { name: "Backhand Slice Third Shot Drop", desc: "Backhand third with slice to minimize bounce" },
+        { name: "Forehand Resets", desc: "Ability to absorb pace and reset point tempo" },
+        { name: "Backhand Resets", desc: "Defensive backhand resets under pressure" },
+        { name: "Forehand Lob", desc: "Offensive/defensive lob over opponents' heads" },
+        { name: "Backhand Lob", desc: "Backhand lob for court positioning and defense" }
       ]
     },
     {
       name: "Volleys and Smashes",
+      description: "Net game aggression, put-away shots, and finishing ability - 6 skills total",
       skills: [
-        "Forehand Punch Volley", "Forehand Roll Volley", "Backhand Punch Volley", 
-        "Backhand Roll Volley", "Forehand Overhead Smash", "Backhand Overhead Smash"
+        { name: "Forehand Punch Volley", desc: "Quick, compact forehand volley with pace" },
+        { name: "Forehand Roll Volley", desc: "Attacking forehand volley with topspin roll" },
+        { name: "Backhand Punch Volley", desc: "Solid backhand volley for quick exchanges" },
+        { name: "Backhand Roll Volley", desc: "Backhand volley with forward roll for angle" },
+        { name: "Forehand Overhead Smash", desc: "Power overhead to finish points decisively" },
+        { name: "Backhand Overhead Smash", desc: "Difficult backhand overhead for coverage" }
       ]
     },
     {
       name: "Footwork & Fitness",
+      description: "Court movement, athletic positioning, and physical conditioning - 10 skills total",
       skills: [
-        "Split Step Readiness", "Lateral Shuffles", "Crossover Steps", "Court Recovery", 
-        "First Step Speed", "Balance & Core Stability", "Agility", "Endurance Conditioning",
-        "Leg Strength & Power", "Transition Speed (Baseline to Kitchen)"
+        { name: "Split Step Readiness", desc: "Proper timing of split step for quick reactions" },
+        { name: "Lateral Shuffles", desc: "Side-to-side movement while maintaining balance" },
+        { name: "Crossover Steps", desc: "Efficient crossover technique for court coverage" },
+        { name: "Court Recovery", desc: "Quick return to optimal court position after shots" },
+        { name: "First Step Speed", desc: "Explosive first step quickness in all directions" },
+        { name: "Balance & Core Stability", desc: "Maintaining balance during dynamic movements" },
+        { name: "Agility", desc: "Quick direction changes and reactive movements" },
+        { name: "Endurance Conditioning", desc: "Stamina to maintain performance through long matches" },
+        { name: "Leg Strength & Power", desc: "Lower body strength for explosive movements" },
+        { name: "Transition Speed (Baseline to Kitchen)", desc: "Quick movement from back court to net" }
       ]
     },
     {
       name: "Mental Game",
+      description: "Psychological skills, focus control, and competitive mindset - 10 skills total",
       skills: [
-        "Staying Present", "Resetting After Errors", "Patience & Shot Selection", "Positive Self-Talk",
-        "Visualization", "Pressure Handling", "Focus Shifts", "Opponent Reading",
-        "Emotional Regulation", "Competitive Confidence"
+        { name: "Staying Present", desc: "Maintaining focus on current point, not past/future" },
+        { name: "Resetting After Errors", desc: "Quick mental recovery from mistakes or bad shots" },
+        { name: "Patience & Shot Selection", desc: "Choosing right shots at right times, not forcing" },
+        { name: "Positive Self-Talk", desc: "Internal dialogue that builds confidence and focus" },
+        { name: "Visualization", desc: "Mental rehearsal of shots and game situations" },
+        { name: "Pressure Handling", desc: "Performance maintenance during crucial moments" },
+        { name: "Focus Shifts", desc: "Adjusting attention between technical, tactical, and emotional" },
+        { name: "Opponent Reading", desc: "Recognizing patterns and weaknesses in opponents" },
+        { name: "Emotional Regulation", desc: "Managing frustration, excitement, and energy levels" },
+        { name: "Competitive Confidence", desc: "Belief in abilities during competitive situations" }
       ]
     }
   ];
@@ -80,10 +123,10 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   const isLastCategory = currentCategory === categories.length - 1;
   const categoryProgress = (currentCategory + 1) / categories.length * 100;
 
-  const handleRatingChange = (skill: string, rating: number) => {
+  const handleRatingChange = (skillName: string, rating: number) => {
     setAssessmentData(prev => ({
       ...prev,
-      [`${categories[currentCategory].name}_${skill}`]: rating
+      [`${categories[currentCategory].name}_${skillName}`]: rating
     }));
   };
 
@@ -111,8 +154,8 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
 
       if (response.ok) {
         toast({
-          title: "Assessment Complete",
-          description: `Successfully assessed ${studentName} across all 35 skills.`,
+          title: "55-Skill Assessment Complete",
+          description: `Successfully assessed ${studentName} across all 55 PCP skills in 5 categories.`,
         });
         onComplete();
       } else {
@@ -134,10 +177,10 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           <div>
             <CardTitle className="text-blue-800 flex items-center gap-2">
               <Star className="w-6 h-6" />
-              35-Skill Assessment: {studentName}
+              55-Skill PCP Assessment: {studentName}
             </CardTitle>
             <CardDescription className="text-blue-600 mt-1">
-              Category: {categories[currentCategory]?.name} ({currentCategory + 1}/4)
+              {categories[currentCategory]?.description} - Category {currentCategory + 1}/5
             </CardDescription>
           </div>
           <Badge className="bg-blue-600 text-white">
@@ -162,25 +205,28 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           
           <div className="grid gap-4">
             {currentSkills.map((skill, index) => (
-              <div key={skill} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium text-gray-700">{skill}</span>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                    <Button
-                      key={rating}
-                      variant={assessmentData[`${categories[currentCategory].name}_${skill}`] === rating ? "default" : "outline"}
-                      size="sm"
-                      className={`w-8 h-8 p-0 ${
-                        assessmentData[`${categories[currentCategory].name}_${skill}`] === rating 
-                          ? "bg-blue-600 text-white" 
-                          : "hover:bg-blue-100"
-                      }`}
-                      onClick={() => handleRatingChange(skill, rating)}
-                    >
-                      {rating}
-                    </Button>
-                  ))}
+              <div key={skill.name} className="flex flex-col p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-800">{skill.name}</span>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                      <Button
+                        key={rating}
+                        variant={assessmentData[`${categories[currentCategory].name}_${skill.name}`] === rating ? "default" : "outline"}
+                        size="sm"
+                        className={`w-8 h-8 p-0 ${
+                          assessmentData[`${categories[currentCategory].name}_${skill.name}`] === rating 
+                            ? "bg-blue-600 text-white" 
+                            : "hover:bg-blue-100"
+                        }`}
+                        onClick={() => handleRatingChange(skill.name, rating)}
+                      >
+                        {rating}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
+                <p className="text-sm text-gray-600 italic">{skill.desc}</p>
               </div>
             ))}
           </div>
@@ -202,7 +248,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           <Button 
             onClick={handleNext}
             className="flex-1 bg-green-600 hover:bg-green-700"
-            disabled={currentSkills.some(skill => !assessmentData[`${categories[currentCategory].name}_${skill}`])}
+            disabled={currentSkills.some(skill => !assessmentData[`${categories[currentCategory].name}_${skill.name}`])}
           >
             {isLastCategory ? "Submit Assessment" : "Next Category"}
           </Button>
