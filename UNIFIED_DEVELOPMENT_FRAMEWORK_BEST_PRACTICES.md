@@ -69,7 +69,23 @@ interface MatchScoreCardProps {
 4. Update all references across codebase
 5. Test in multiple contexts (dashboard, admin, mobile)
 
-### 4. Points System Standardization
+### 4. PCP Rating System Standardization
+**Algorithm Reference**: PCP_RATING_CALCULATION_ALGORITHM.md (ONLY authoritative source)
+
+**Progressive Assessment Framework**:
+- Individual skill persistence with metadata tracking
+- Focused session assessment capability (coaches can assess skill subsets)
+- PCP calculation from current individual skill averages
+- Data freshness monitoring and quality assurance
+- Required complete 55-skill baseline for new players
+
+**Implementation Requirements**:
+- All skill ratings stored individually with assessment history
+- PCP recalculated using most recent rating for each skill
+- Support for partial skill assessments during focused training sessions
+- Quality indicators based on data freshness and completeness
+
+### 5. Points System Standardization
 **Algorithm Reference**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md (ONLY authoritative source)
 
 **System B Standards**:
