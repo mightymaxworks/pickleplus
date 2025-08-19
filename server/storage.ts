@@ -272,6 +272,10 @@ export interface IStorage extends CommunityStorage {
   getActiveTrainingCenters(): Promise<any[]>;
   getAvailableCoach(centerId: number): Promise<any>;
   
+  // Coach Dashboard operations
+  getCoachStudentAssignments(coachId: number): Promise<any[]>;
+  getCoachRecentAssessments(coachId: number): Promise<any[]>;
+  
   // Calendar operations
   getWeeklyClassSchedule(centerId: number): Promise<any[]>;
   getClassesForDate(centerId: number, date: Date): Promise<any[]>;
@@ -6921,6 +6925,68 @@ export class DatabaseStorage implements IStorage {
       .from(userAgeGroupRankings)
       .where(eq(userAgeGroupRankings.userId, userId))
       .orderBy(desc(userAgeGroupRankings.rankingPoints));
+  }
+
+  // Coach Dashboard Methods
+  async getCoachStudentAssignments(coachId: number): Promise<any[]> {
+    try {
+      // Look for coach-student assignments in the coach student assignments table
+      const result = await db.execute(sql`
+        SELECT 
+          csa.student_id,
+          csa.assigned_date,
+          csa.last_assessment_date,
+          u.username,
+          u.display_name,
+          u.current_ranking
+        FROM coach_student_assignments csa
+        JOIN users u ON csa.student_id = u.id
+        WHERE csa.coach_id = ${coachId} AND csa.is_active = true
+        ORDER BY csa.assigned_date DESC
+      `);
+      
+      return result.rows.map((row: any) => ({
+        studentId: row.student_id,
+        assignedDate: row.assigned_date,
+        lastAssessmentDate: row.last_assessment_date
+      }));
+    } catch (error) {
+      console.error('Error fetching coach student assignments:', error);
+      // Return empty array for now - real data will come from admin assignments
+      return [];
+    }
+  }
+
+  async getCoachRecentAssessments(coachId: number): Promise<any[]> {
+    try {
+      // Look for recent assessments conducted by this coach
+      const result = await db.execute(sql`
+        SELECT 
+          a.id,
+          a.student_id,
+          a.overall_rating,
+          a.assessment_type,
+          a.created_at,
+          u.display_name as student_name
+        FROM assessments a
+        JOIN users u ON a.student_id = u.id
+        WHERE a.coach_id = ${coachId}
+        ORDER BY a.created_at DESC
+        LIMIT 10
+      `);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        studentName: row.student_name,
+        overallRating: row.overall_rating,
+        assessmentType: row.assessment_type || 'PCP Assessment',
+        createdAt: row.created_at
+      }));
+    } catch (error) {
+      console.error('Error fetching coach recent assessments:', error);
+      // Return empty array for now - will be populated when assessments are created
+      return [];
+    }
   }
 }
 

@@ -39,6 +39,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerMatchRoutes(app);
   console.log("[ROUTES] Match routes registered successfully");
 
+  // Coach Dashboard API Routes
+  app.get('/api/coach/assigned-students', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // Get coach's assigned students
+      const assignments = await storage.getCoachStudentAssignments(userId);
+      const students = [];
+      
+      for (const assignment of assignments) {
+        const student = await storage.getUser(assignment.studentId);
+        if (student) {
+          students.push({
+            id: student.id,
+            displayName: student.displayName || student.username,
+            currentRanking: student.currentRanking || null,
+            lastAssessment: assignment.lastAssessmentDate || null
+          });
+        }
+      }
+      
+      res.json(students);
+    } catch (error) {
+      console.error('Error fetching assigned students:', error);
+      res.status(500).json({ error: 'Failed to fetch assigned students' });
+    }
+  });
+
+  app.get('/api/coach/recent-assessments', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // Get recent assessments conducted by this coach
+      const assessments = await storage.getCoachRecentAssessments(userId);
+      res.json(assessments);
+    } catch (error) {
+      console.error('Error fetching recent assessments:', error);
+      res.status(500).json({ error: 'Failed to fetch recent assessments' });
+    }
+  });
+
   // === DATA AUDIT ROUTES ===
   
   // Tony Guo audit endpoint

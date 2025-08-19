@@ -107,17 +107,27 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // Add admin dashboard item for admin users
   console.log("User admin status:", user?.isAdmin);
+  console.log("User coach level:", user?.coachLevel);
   
-  const navigationItems: NavigationItem[] = user?.isAdmin 
-    ? [
-        ...baseNavigationItems,
-        { 
-          name: 'Admin Dashboard', 
-          path: '/admin', 
-          icon: <Shield className="h-5 w-5 text-rose-500" /> 
-        },
-      ] 
-    : baseNavigationItems;
+  let navigationItems: NavigationItem[] = [...baseNavigationItems];
+  
+  // Add coach dashboard for users with coach level
+  if (user?.coachLevel && user.coachLevel > 0) {
+    navigationItems.push({
+      name: 'Coach Dashboard', 
+      path: '/coach-dashboard', 
+      icon: <BookOpen className="h-5 w-5 text-blue-600" />
+    });
+  }
+  
+  // Add admin dashboard for admin users
+  if (user?.isAdmin) {
+    navigationItems.push({
+      name: 'Admin Dashboard', 
+      path: '/admin', 
+      icon: <Shield className="h-5 w-5 text-rose-500" />
+    });
+  }
 
   // Generate initials for avatar
   const initials = user?.displayName

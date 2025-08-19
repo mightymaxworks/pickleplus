@@ -357,6 +357,14 @@ export default function App() {
                     component={lazyLoad(() => import('./pages/pcp-learning-dashboard'))} 
                     pageTitle="PCP Learning Dashboard"
                   />
+                  
+                  {/* Coach Dashboard - Real Interface Integration */}
+                  <ProtectedRouteWithLayout 
+                    path="/coach-dashboard" 
+                    component={lazyLoad(() => import('./pages/coach/CoachDashboard'))} 
+                    pageTitle="Coach Dashboard"
+                  />
+                  
                   <ProtectedRouteWithLayout 
                     path="/pcp-assessment/:id" 
                     component={lazyLoad(() => import('./pages/pcp-assessment'))} 

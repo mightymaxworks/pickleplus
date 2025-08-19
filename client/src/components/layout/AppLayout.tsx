@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import Sidebar from "./Sidebar";
-import MobileNavigation from "./MobileNavigation";
+import { MobileNavigation } from "./MobileNavigation";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@/lib/types";
 import { useLocation } from "wouter";
