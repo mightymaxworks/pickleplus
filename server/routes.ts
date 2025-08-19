@@ -47,21 +47,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
-      // Get coach's assigned students
-      const assignments = await storage.getCoachStudentAssignments(userId);
-      const students = [];
+      console.log(`[COACH API] Fetching assigned students for coach ID: ${userId}`);
       
-      for (const assignment of assignments) {
-        const student = await storage.getUser(assignment.studentId);
-        if (student) {
-          students.push({
-            id: student.id,
-            displayName: student.displayName || student.username,
-            currentRanking: student.rankingPoints || 0,
-            lastAssessment: assignment.lastAssessmentDate || null
-          });
-        }
-      }
+      // Get coach's assigned students directly from the storage method
+      const students = await storage.getCoachStudentAssignments(userId);
+      
+      console.log(`[COACH API] Found ${students.length} assigned students:`, students);
       
       res.json(students);
     } catch (error) {
