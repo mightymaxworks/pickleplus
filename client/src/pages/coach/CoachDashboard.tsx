@@ -436,6 +436,7 @@ export default function CoachDashboard() {
           {/* Enhanced Assessment Launch Section */}
           {selectedStudent && (
             <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md">
+              {console.log('Assessment Launch Section RENDERING for student:', selectedStudent)}
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
