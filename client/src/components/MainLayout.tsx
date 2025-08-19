@@ -13,7 +13,8 @@ import {
   Shield,
   CheckCircle2,
   Palette,
-  HeartPulse
+  HeartPulse,
+  Ticket
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -80,17 +81,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
   };
 
-  // Simplified navigation per user request: 4 core items only
+  // Core navigation items per user request: Dashboard, Record Match, Rankings, My Profile + Pickle Points
   const baseNavigationItems: NavigationItem[] = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Record Match', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
     { name: 'Rankings', path: '/rankings', icon: <Award className="h-5 w-5" /> },
+    { name: 'Pickle Points', path: '/pickle-points', icon: <Ticket className="h-5 w-5" /> },
     { name: 'My Profile', path: '/profile', icon: <Users className="h-5 w-5" /> },
   ];
 
-  // Add admin dashboard item for admin users
+  // Debug user data for coach dashboard
   console.log("User admin status:", user?.isAdmin);
   console.log("User coach level:", user?.coachLevel);
+  console.log("Full user object keys:", user ? Object.keys(user) : "no user");
+  console.log("User data sample:", user ? { id: user.id, username: user.username, coachLevel: user.coachLevel, isAdmin: user.isAdmin } : "no user");
   
   let navigationItems: NavigationItem[] = [...baseNavigationItems];
   

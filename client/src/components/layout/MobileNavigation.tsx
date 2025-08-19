@@ -13,7 +13,7 @@
 import React from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { Home, Calendar, Users, Award, User } from 'lucide-react';
+import { Home, Calendar, Users, Award, User, Ticket } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -27,7 +27,7 @@ export function MobileNavigation() {
   // Don't render on desktop
   if (!isMobile) return null;
 
-  // V1.0 Simplified mobile navigation - 4 core items only
+  // V1.0 Core mobile navigation - includes Pickle Points per user request
   const navItems = [
     { 
       icon: <Home size={20} />, 
@@ -46,6 +46,12 @@ export function MobileNavigation() {
       label: 'Rankings', 
       path: '/rankings',
       id: 'rankings'
+    },
+    { 
+      icon: <Ticket size={20} />, 
+      label: 'Pickle Points', 
+      path: '/pickle-points',
+      id: 'pickle-points'
     },
     { 
       icon: <User size={20} />, 
