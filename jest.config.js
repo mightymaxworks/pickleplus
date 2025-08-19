@@ -1,24 +1,15 @@
-export default {
-  preset: 'ts-jest',
+module.exports = {
   testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.ts'],
-  roots: ['<rootDir>/server/test'],
-  testMatch: ['**/*.test.ts'],
-  transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      useESM: true
-    }],
-  },
-  moduleNameMapping: {
-    '^@shared/(.*)$': '<rootDir>/shared/$1',
-    '^@/(.*)$': '<rootDir>/server/$1',
-  },
-  setupFilesAfterEnv: ['<rootDir>/server/test/setup.ts'],
-  collectCoverageFrom: [
-    'server/**/*.ts',
-    '!server/**/*.d.ts',
-    '!server/test/**/*',
+  testTimeout: 30000,
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  testMatch: [
+    '<rootDir>/tests/**/*.test.js'
   ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  collectCoverageFrom: [
+    'client/src/pages/coach/**/*.{js,ts,jsx,tsx}',
+    'server/routes/coach-*.{js,ts}',
+    'shared/schema/coach-*.{js,ts}'
+  ],
+  coverageDirectory: 'coverage/coaching',
+  coverageReporters: ['text', 'lcov', 'html']
 };

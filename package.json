@@ -17,6 +17,7 @@
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
     "@hookform/resolvers": "^3.9.1",
+    "@jest/globals": "^30.0.5",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
     "@paralleldrive/cuid2": "^2.2.2",
@@ -99,7 +100,7 @@
     "passport-local": "^1.0.0",
     "pinyin": "^4.0.0",
     "postgres": "^3.4.5",
-    "puppeteer": "^24.15.0",
+    "puppeteer": "^24.16.2",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",

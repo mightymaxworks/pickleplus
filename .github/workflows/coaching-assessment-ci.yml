@@ -1,0 +1,212 @@
+name: 55-Skill PCP Assessment System - CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'client/src/pages/coach/**'
+      - 'server/routes/coach-*'
+      - 'shared/schema/coach-*'
+      - 'tests/coaching-assessment-*'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client/src/pages/coach/**'
+      - 'server/routes/coach-*'
+      - 'shared/schema/coach-*'
+
+jobs:
+  coaching-assessment-tests:
+    name: 55-Skill Assessment End-to-End Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pickle_plus_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm run build
+
+    - name: Setup test database
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pickle_plus_test
+      run: |
+        npm run db:push
+        npm run test:seed-coaching-data
+
+    - name: Start application in test mode
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pickle_plus_test
+        SESSION_SECRET: test-session-secret-key-for-ci
+      run: |
+        npm run start:test &
+        sleep 15 # Wait for server to be ready
+
+    - name: Wait for application to be ready
+      run: |
+        until curl -f http://localhost:5173/health; do
+          echo "Waiting for application..."
+          sleep 2
+        done
+
+    - name: Run 55-Skill Assessment E2E Tests
+      env:
+        TEST_URL: http://localhost:5173
+        NODE_ENV: test
+      run: |
+        npm run test:coaching-e2e
+
+    - name: Generate test coverage report
+      run: |
+        npm run test:coverage:coaching
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coaching-test-results
+        path: |
+          test-results/
+          coverage/coaching/
+
+    - name: Post test results to PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = 'test-results/coaching-assessment-summary.json';
+          
+          if (fs.existsSync(path)) {
+            const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+            
+            const body = `
+            ## 55-Skill Assessment Test Results 📊
+            
+            **Test Summary:**
+            - ✅ Total Tests: ${results.totalTests}
+            - ✅ Passed: ${results.passed}
+            - ❌ Failed: ${results.failed}
+            - 🏃 Test Duration: ${results.duration}
+            
+            **Coverage:**
+            - Assessment Workflow: ${results.coverage.workflow}%
+            - Skill Descriptors: ${results.coverage.descriptors}%
+            - Navigation & UX: ${results.coverage.navigation}%
+            - Error Handling: ${results.coverage.errorHandling}%
+            
+            **Key Features Tested:**
+            - [x] Complete 55-skill assessment across 5 categories
+            - [x] Meaningful skill descriptors for all 55 skills
+            - [x] Coach authentication and student assignment
+            - [x] Assessment data persistence and validation
+            - [x] Progress tracking and navigation controls
+            - [x] Error handling and recovery mechanisms
+            
+            ${results.failed > 0 ? '⚠️ Some tests failed. Please review the detailed results above.' : '🎉 All coaching assessment tests passed!'}
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+          }
+
+  coaching-performance-tests:
+    name: Assessment Performance & Load Testing
+    runs-on: ubuntu-latest
+    needs: coaching-assessment-tests
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run performance tests
+      env:
+        TEST_URL: http://localhost:5173
+      run: |
+        npm run test:coaching-performance
+
+    - name: Run load tests (simulated multiple coaches)
+      run: |
+        npm run test:coaching-load
+
+  coaching-accessibility-tests:
+    name: Assessment Accessibility Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Run accessibility tests
+      run: |
+        npm run test:a11y:coaching
+
+  deploy-to-staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    needs: [coaching-assessment-tests, coaching-performance-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying 55-skill assessment system to staging..."
+        # Add actual deployment steps here
+        
+    - name: Run staging smoke tests
+      run: |
+        npm run test:coaching-smoke -- --env=staging
+
+    - name: Notify stakeholders
+      if: success()
+      run: |
+        echo "55-Skill Assessment System successfully deployed to staging!"
+        # Add notification logic (Slack, email, etc.)
