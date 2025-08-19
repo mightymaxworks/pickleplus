@@ -4,9 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, CheckCircle, XCircle, Users, Star } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Shield, CheckCircle, XCircle, Users, Star, Target, TrendingUp, BookOpen } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { SKILL_CATEGORIES, calculatePCPRating, type AssessmentData } from '../../../shared/utils/pcpCalculation';
 
 interface CoachingAssessmentValidatorProps {
   coachId: number;
@@ -21,6 +28,20 @@ interface ValidationResult {
   coachName: string;
   validatedAt: string;
   message: string;
+}
+
+interface SkillAssessment {
+  skillName: string;
+  rating: number;
+  category: string;
+}
+
+interface ProgressiveAssessmentState {
+  selectedSkills: SkillAssessment[];
+  assessmentType: 'focused' | 'comprehensive' | 'baseline';
+  sessionNotes: string;
+  selectedCategory: string;
+  currentPCPRating?: number;
 }
 
 /**
@@ -42,6 +63,12 @@ export function CoachingAssessmentValidator({
 }: CoachingAssessmentValidatorProps) {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [progressiveState, setProgressiveState] = useState<ProgressiveAssessmentState>({
+    selectedSkills: [],
+    assessmentType: 'focused',
+    sessionNotes: '',
+    selectedCategory: ''
+  });
   const { toast } = useToast();
 
   const validateMutation = useMutation({
@@ -85,98 +112,323 @@ export function CoachingAssessmentValidator({
     return descriptions[level as keyof typeof descriptions] || `L${level} Coach`;
   };
 
+  const handleSkillAssessment = (skillName: string, rating: number, category: string) => {
+    setProgressiveState(prev => {
+      const updatedSkills = prev.selectedSkills.filter(s => s.skillName !== skillName);
+      const newSkill: SkillAssessment = { skillName, rating, category };
+      const skills = [...updatedSkills, newSkill];
+      
+      // Calculate PCP rating with updated skills
+      const assessmentData: Partial<AssessmentData> = {};
+      skills.forEach(skill => {
+        const categoryKey = skill.category.toLowerCase().replace(' ', '') as keyof AssessmentData;
+        if (!assessmentData[categoryKey]) {
+          assessmentData[categoryKey] = {};
+        }
+        assessmentData[categoryKey]![skill.skillName] = skill.rating;
+      });
+      
+      const currentPCP = Object.keys(assessmentData).length > 0 ? calculatePCPRating(assessmentData as AssessmentData) : undefined;
+      
+      return {
+        ...prev,
+        selectedSkills: skills,
+        currentPCPRating: currentPCP
+      };
+    });
+  };
+
+  const saveProgressiveAssessment = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/coaching/progressive-assessment", {
+        coachId,
+        studentId,
+        assessmentType: progressiveState.assessmentType,
+        skills: progressiveState.selectedSkills,
+        sessionNotes: progressiveState.sessionNotes,
+        pcpRating: progressiveState.currentPCPRating
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Assessment Saved",
+        description: "Progressive assessment completed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   return (
     <Card className="border-orange-200 bg-orange-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-orange-800">
           <Shield className="w-5 h-5" />
-          Coaching Assessment Security Validation
+          Progressive Coaching Assessment System
         </CardTitle>
         <CardDescription className="text-orange-700">
-          Mandatory coach-student relationship verification required before assessment
+          Enhanced 55-skill assessment with focused session capability and real-time PCP calculation
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!validationResult && !validationError && (
-          <div className="space-y-4">
-            <Alert>
-              <Users className="w-4 h-4" />
-              <AlertDescription>
-                <strong>Security Notice:</strong> Assessment requires active coach-student assignment created by an admin. 
-                Only authorized coaches (L1-L5) can perform student assessments.
-              </AlertDescription>
-            </Alert>
-            
-            <Button 
-              onClick={() => validateMutation.mutate()}
-              disabled={validateMutation.isPending}
-              className="w-full bg-orange-600 hover:bg-orange-700"
+        <Tabs defaultValue="validation" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="validation">Validation</TabsTrigger>
+            <TabsTrigger value="assessment" disabled={!validationResult}>Progressive Assessment</TabsTrigger>
+            <TabsTrigger value="results" disabled={!validationResult}>Results & PCP</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="validation" className="space-y-4">
+            {!validationResult && !validationError && (
+              <div className="space-y-4">
+                <Alert>
+                  <Users className="w-4 h-4" />
+                  <AlertDescription>
+                    <strong>Security Notice:</strong> Assessment requires active coach-student assignment created by an admin. 
+                    Only authorized coaches (L1-L5) can perform student assessments.
+                  </AlertDescription>
+                </Alert>
+                
+                <Button 
+                  onClick={() => validateMutation.mutate()}
+                  disabled={validateMutation.isPending}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                >
+                  {validateMutation.isPending ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Validating Relationship...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Validate Coach-Student Relationship
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {validationResult && (
+              <div className="space-y-3">
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    <strong>Validation Successful!</strong> Progressive assessment system ready.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-3 border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Star className="w-4 h-4 text-orange-500" />
+                      <span className="font-semibold text-sm">Coach Level</span>
+                    </div>
+                    <Badge className="bg-orange-500">
+                      {getCoachLevelDescription(validationResult.coachLevel)}
+                    </Badge>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-3 border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="w-4 h-4 text-blue-500" />
+                      <span className="font-semibold text-sm">Coach Name</span>
+                    </div>
+                    <span className="text-sm text-gray-700">{validationResult.coachName}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {validationError && (
+              <Alert variant="destructive">
+                <XCircle className="w-4 h-4" />
+                <AlertDescription>
+                  <strong>Validation Failed:</strong> {validationError}
+                </AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+
+          <TabsContent value="assessment" className="space-y-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="assessment-type">Assessment Type</Label>
+                  <Select
+                    value={progressiveState.assessmentType}
+                    onValueChange={(value: 'focused' | 'comprehensive' | 'baseline') =>
+                      setProgressiveState(prev => ({ ...prev, assessmentType: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select assessment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="focused">Focused Session (Specific Skills)</SelectItem>
+                      <SelectItem value="comprehensive">Comprehensive (All 55 Skills)</SelectItem>
+                      <SelectItem value="baseline">Baseline Assessment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="skill-category">Focus Category</Label>
+                  <Select
+                    value={progressiveState.selectedCategory}
+                    onValueChange={(value) =>
+                      setProgressiveState(prev => ({ ...prev, selectedCategory: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category to focus on" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SKILL_CATEGORIES.map(category => (
+                        <SelectItem key={category.name} value={category.name}>
+                          {category.name} ({category.weight}% weight)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {progressiveState.selectedCategory && (
+                <Card className="border-blue-200 bg-blue-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-800">
+                      <Target className="w-5 h-5" />
+                      {progressiveState.selectedCategory} Skills Assessment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      {SKILL_CATEGORIES
+                        .find(cat => cat.name === progressiveState.selectedCategory)
+                        ?.skills.map(skill => {
+                          const currentAssessment = progressiveState.selectedSkills.find(s => s.skillName === skill);
+                          return (
+                            <div key={skill} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                              <span className="font-medium text-sm">{skill}</span>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="10"
+                                  value={currentAssessment?.rating || ''}
+                                  onChange={(e) => {
+                                    const rating = parseInt(e.target.value);
+                                    if (rating >= 1 && rating <= 10) {
+                                      handleSkillAssessment(skill, rating, progressiveState.selectedCategory);
+                                    }
+                                  }}
+                                  className="w-20"
+                                  placeholder="1-10"
+                                />
+                                <span className="text-xs text-gray-500">/ 10</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div>
+                <Label htmlFor="session-notes">Session Notes</Label>
+                <Textarea
+                  id="session-notes"
+                  placeholder="Add notes about this assessment session, areas of focus, observations..."
+                  value={progressiveState.sessionNotes}
+                  onChange={(e) => setProgressiveState(prev => ({ ...prev, sessionNotes: e.target.value }))}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="results" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-800">
+                    <TrendingUp className="w-5 h-5" />
+                    Current PCP Rating
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-700">
+                    {progressiveState.currentPCPRating?.toFixed(2) || 'Calculating...'}
+                  </div>
+                  <p className="text-sm text-green-600">
+                    Based on {progressiveState.selectedSkills.length} assessed skills
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-800">
+                    <BookOpen className="w-5 h-5" />
+                    Assessment Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Skills Assessed</span>
+                      <span>{progressiveState.selectedSkills.length}/55</span>
+                    </div>
+                    <Progress 
+                      value={(progressiveState.selectedSkills.length / 55) * 100}
+                      className="h-2"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-3">
+              {progressiveState.selectedSkills.map(skill => (
+                <div key={skill.skillName} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <div>
+                    <span className="font-medium">{skill.skillName}</span>
+                    <Badge variant="outline" className="ml-2">{skill.category}</Badge>
+                  </div>
+                  <div className="text-lg font-semibold text-blue-600">
+                    {skill.rating}/10
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              onClick={() => saveProgressiveAssessment.mutate()}
+              disabled={saveProgressiveAssessment.isPending || progressiveState.selectedSkills.length === 0}
+              className="w-full bg-green-600 hover:bg-green-700"
             >
-              {validateMutation.isPending ? (
+              {saveProgressiveAssessment.isPending ? (
                 <>
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Validating Relationship...
+                  Saving Assessment...
                 </>
               ) : (
                 <>
-                  <Shield className="w-4 h-4 mr-2" />
-                  Validate Coach-Student Relationship
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Save Progressive Assessment
                 </>
               )}
             </Button>
-          </div>
-        )}
-
-        {validationResult && (
-          <div className="space-y-3">
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                <strong>Validation Successful!</strong> Assessment authorized for this coach-student pair.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-lg p-3 border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-orange-500" />
-                  <span className="font-semibold text-sm">Coach Level</span>
-                </div>
-                <Badge className="bg-orange-500">
-                  {getCoachLevelDescription(validationResult.coachLevel)}
-                </Badge>
-              </div>
-              
-              <div className="bg-white rounded-lg p-3 border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4 text-blue-500" />
-                  <span className="font-semibold text-sm">Coach Name</span>
-                </div>
-                <span className="text-sm text-gray-700">{validationResult.coachName}</span>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-              <p className="text-sm text-blue-800">
-                <strong>Assessment Ready:</strong> You can now proceed with the comprehensive 35-skill assessment 
-                tool and 4-dimensional PCP system. All coaching interactions will be logged for audit purposes.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {validationError && (
-          <Alert variant="destructive">
-            <XCircle className="w-4 h-4" />
-            <AlertDescription>
-              <strong>Validation Failed:</strong> {validationError}
-              <br />
-              <span className="text-sm mt-2 block">
-                ✅ This is expected behavior - security validation is working correctly. Contact an admin to create a proper coach-student assignment before proceeding with assessments.
-              </span>
-            </AlertDescription>
-          </Alert>
-        )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

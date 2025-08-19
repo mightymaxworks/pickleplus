@@ -206,6 +206,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Progressive Assessment Submission Route - Enhanced CoachingAssessmentValidator Integration
+  app.post('/api/coaching/progressive-assessment', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { coachId, studentId, assessmentType, skills, sessionNotes, pcpRating } = req.body;
+      
+      if (!coachId || !studentId || !skills || !Array.isArray(skills)) {
+        return res.status(400).json({ error: 'Missing required progressive assessment data' });
+      }
+
+      // Verify the coach is the authenticated user
+      if (coachId !== userId) {
+        return res.status(403).json({ error: 'Coach can only submit assessments for themselves' });
+      }
+
+      // Verify coach-student relationship exists
+      const assignments = await storage.getCoachStudentAssignments(coachId);
+      const hasAssignment = assignments.some(assignment => assignment.id === studentId);
+      if (!hasAssignment) {
+        return res.status(403).json({ error: 'No active coach-student assignment found' });
+      }
+
+      console.log(`[PROGRESSIVE ASSESSMENT] Processing ${assessmentType} assessment with ${skills.length} skills`);
+      
+      // Import UDF-compliant PCP calculation utilities
+      const { calculatePCPRating } = await import('../shared/utils/pcpCalculation.ts');
+      
+      // Convert skills array to assessment data format for PCP calculation
+      const assessmentData: Record<string, Record<string, number>> = {};
+      skills.forEach((skill: any) => {
+        const categoryKey = skill.category.toLowerCase().replace(/\s+/g, '');
+        if (!assessmentData[categoryKey]) {
+          assessmentData[categoryKey] = {};
+        }
+        assessmentData[categoryKey][skill.skillName] = skill.rating;
+      });
+
+      // Calculate PCP rating with progressive assessment data
+      let pcpResult = null;
+      if (Object.keys(assessmentData).length > 0) {
+        try {
+          pcpResult = calculatePCPRating(assessmentData);
+        } catch (error) {
+          console.log('[PROGRESSIVE ASSESSMENT] PCP calculation with partial data - using provided rating');
+          pcpResult = { pcpRating: pcpRating || 0 };
+        }
+      }
+
+      // Create progressive assessment record using existing assessment structure
+      const progressiveAssessmentData = {
+        coach_id: coachId,
+        student_id: studentId,
+        session_id: null,
+        technical_rating: pcpResult?.categoryAverages?.technical || null,
+        tactical_rating: pcpResult?.categoryAverages?.touch || null,
+        volley_rating: pcpResult?.categoryAverages?.power || null,
+        physical_rating: pcpResult?.categoryAverages?.athletic || null,
+        mental_rating: pcpResult?.categoryAverages?.mental || null,
+        pcp_rating: pcpResult?.pcpRating || pcpRating || null,
+        raw_weighted_score: pcpResult?.rawWeightedScore || null,
+        calculation_timestamp: new Date(),
+        notes: `Progressive ${assessmentType} assessment: ${skills.length} skills evaluated. ${sessionNotes}`,
+        assessment_type: assessmentType,
+        skills_data: JSON.stringify(skills),
+        is_progressive: true
+      };
+
+      // Store the progressive assessment
+      const assessment = await storage.createAssessment(progressiveAssessmentData);
+
+      console.log(`[PROGRESSIVE ASSESSMENT] Successfully saved assessment with ID: ${assessment.id}`);
+      
+      res.json({ 
+        success: true, 
+        message: `Progressive ${assessmentType} assessment saved successfully`,
+        assessmentId: assessment.id,
+        skillsAssessed: skills.length,
+        pcpRating: pcpResult?.pcpRating || pcpRating,
+        assessmentType
+      });
+    } catch (error) {
+      console.error('Error saving progressive assessment:', error);
+      res.status(500).json({ error: 'Failed to save progressive assessment' });
+    }
+  });
+
   // Admin route to create coach-student assignments
   app.post('/api/admin/coach-student-assignment', isAuthenticated, async (req: Request, res: Response) => {
     try {
