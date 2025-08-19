@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Coach Assessment Submission Route
+  // Coach Assessment Submission Route (UDF-Compliant)
   app.post('/api/coach/submit-assessment', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any)?.id;
@@ -153,26 +153,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: 'No active coach-student assignment found' });
       }
 
-      // Store the assessment using the existing createAssessment method
+      // Import UDF-compliant PCP calculation utilities
+      const { calculatePCPRating, validateAssessmentData, calculateCategoryAverage } = await import('../shared/utils/pcpCalculation.ts');
+      
+      // Validate assessment data using UDF standards
+      const validation = validateAssessmentData(assessmentData);
+      if (!validation.isValid) {
+        return res.status(400).json({ 
+          error: 'Invalid assessment data',
+          details: {
+            missingSkills: validation.missingSkills,
+            invalidRatings: validation.invalidRatings
+          }
+        });
+      }
+
+      // Calculate PCP rating using official UDF algorithm
+      const pcpResult = calculatePCPRating(assessmentData);
+
+      // Store the assessment using the existing createAssessment method with PCP data
       const assessmentRecord = await storage.createAssessment({
         coach_id: coachId,
         student_id: studentId,
         session_id: null, // For skill assessments without sessions
-        technical_rating: calculateCategoryAverage(assessmentData, 'Groundstrokes and Serves'),
-        tactical_rating: calculateCategoryAverage(assessmentData, 'Dinks and Resets'),
-        volley_rating: calculateCategoryAverage(assessmentData, 'Volleys and Smashes'),
-        physical_rating: calculateCategoryAverage(assessmentData, 'Footwork & Fitness'),
-        mental_rating: calculateCategoryAverage(assessmentData, 'Mental Game'),
-        notes: `55-skill assessment completed: ${totalSkills} skills evaluated - Categories: Groundstrokes/Serves (11), Dinks/Resets (16), Volleys/Smashes (6), Footwork/Fitness (10), Mental Game (10)`,
+        technical_rating: pcpResult.categoryAverages.technical,
+        tactical_rating: pcpResult.categoryAverages.touch,
+        volley_rating: pcpResult.categoryAverages.power,
+        physical_rating: pcpResult.categoryAverages.athletic,
+        mental_rating: pcpResult.categoryAverages.mental,
+        pcp_rating: pcpResult.pcpRating,
+        raw_weighted_score: pcpResult.rawWeightedScore,
+        calculation_timestamp: pcpResult.calculationTimestamp,
+        notes: `55-skill assessment completed: ${pcpResult.totalSkillsAssessed}/55 skills evaluated - PCP Rating: ${pcpResult.pcpRating}`,
         ...assessmentData
       });
 
-      console.log(`[COACH API] Assessment submitted successfully for student ${studentId} by coach ${coachId}`);
+      console.log(`[COACH API] UDF-compliant assessment submitted for student ${studentId} by coach ${coachId} - PCP Rating: ${pcpResult.pcpRating}`);
       
       res.json({ 
         success: true, 
         assessmentId: assessmentRecord.id,
-        message: 'Assessment submitted successfully'
+        pcpRating: pcpResult.pcpRating,
+        categoryBreakdown: pcpResult.categoryAverages,
+        rawWeightedScore: pcpResult.rawWeightedScore,
+        totalSkillsAssessed: pcpResult.totalSkillsAssessed,
+        isComplete: pcpResult.isComplete,
+        message: 'UDF-compliant assessment submitted successfully'
       });
     } catch (error) {
       console.error('Error submitting assessment:', error);

@@ -73,6 +73,21 @@ interface MatchScoreCardProps {
 **Algorithm Reference**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md (ONLY authoritative source)
 
 **System B Standards**:
+
+### 5. PCP Rating Calculation Standardization
+**Algorithm Reference**: PCP_RATING_CALCULATION_ALGORITHM.md (ONLY authoritative source)
+
+**Mandatory Implementation Standards**:
+- All PCP calculations MUST use the weighted category algorithm (Touch 30%, Technical 25%, Mental 20%, Athletic 15%, Power 10%)
+- Rating range: 2.0-8.0 with 1 decimal precision
+- 55-skill assessment input requirement
+- No component-specific calculation variations allowed
+
+**UDF Compliance Requirements**:
+- Import standardized calculation functions from shared utilities
+- Store both raw weighted score and final PCP rating
+- Include calculation timestamp and audit trail
+- Validate all 55 skills before processing
 - 3 points win, 1 point loss (official algorithm)
 - No doubles/streak bonuses
 - Elite threshold at ≥1000 points
