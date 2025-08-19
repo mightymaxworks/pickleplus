@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-08-19T13:41:36.309Z",
+  "testSuite": "55-Skill PCP Assessment System",
+  "summary": {
+    "total": 6,
+    "passed": 1,
+    "failed": 5,
+    "successRate": "16.7%"
+  },
+  "errors": [
+    {
+      "test": "Coach Authentication",
+      "error": "Authentication failed - user needs to be logged in via browser"
+    },
+    {
+      "test": "Coach-Student Assignments",
+      "error": "Failed to fetch assigned students: 401 Unauthorized"
+    },
+    {
+      "test": "55-Skill Assessment Submission",
+      "error": "No test student ID available for assessment"
+    },
+    {
+      "test": "Assessment Persistence",
+      "error": "No assessment ID available for persistence test"
+    },
+    {
+      "test": "Assessment Validation",
+      "error": "Expected 403 or 404 status, got 401"
+    }
+  ],
+  "status": "SOME_TESTS_FAILED"
+}
