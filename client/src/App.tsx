@@ -440,11 +440,11 @@ export default function App() {
                     {(params) => <CentralProtectedRoute component={LazyPassportPage} path="/passport" />}
                   </Route>
                   
-                  {/* Unified Coach Hub - Smart routing based on user status */}
+                  {/* Coach Workspace - Streamlined coaching dashboard */}
                   <ProtectedRouteWithLayout
                     path="/coach"
-                    component={lazyLoad(() => import('./pages/CoachHubPage'))}
-                    pageTitle="Coach Hub"
+                    component={lazyLoad(() => import('./pages/coach/CoachDashboard'))}
+                    pageTitle="Coach Workspace"
                   />
                   
                   {/* Coach Application Process */}
