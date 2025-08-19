@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -238,6 +238,9 @@ export default function CoachDashboard() {
   
   // Debug logging
   console.log('CoachDashboard render - selectedStudent:', selectedStudent, 'showAssessment:', showAssessment);
+  
+  // Reference for scroll behavior
+  const assessmentSectionRef = useRef<HTMLDivElement>(null);
 
   // Fetch coach's current user data
   const { data: currentUser } = useQuery<CurrentUser>({
@@ -412,6 +415,13 @@ export default function CoachDashboard() {
                                 console.log('Start Skills Assessment clicked for student:', student.id);
                                 setSelectedStudent(student.id);
                                 console.log('Selected student set to:', student.id);
+                                // Scroll to assessment section after a brief delay
+                                setTimeout(() => {
+                                  assessmentSectionRef.current?.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'start' 
+                                  });
+                                }, 100);
                               }}
                             >
                               <BookOpen className="w-4 h-4 mr-2" />
@@ -435,7 +445,10 @@ export default function CoachDashboard() {
 
           {/* Enhanced Assessment Launch Section */}
           {selectedStudent && (
-            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md">
+            <Card 
+              ref={assessmentSectionRef}
+              className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md"
+            >
               {console.log('Assessment Launch Section RENDERING for student:', selectedStudent)}
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -455,13 +468,12 @@ export default function CoachDashboard() {
                     </ul>
                   </div>
                   
-                  <CoachingAssessmentValidator
-                    coachId={currentUser?.id || 0}
-                    studentId={selectedStudent}
-                    onValidationComplete={() => {
-                      console.log('Assessment validation completed for student:', selectedStudent);
-                    }}
-                  />
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Ready to Begin:</strong> All 35 skills across 4 categories will be assessed. 
+                      Each skill is rated 1-10 for comprehensive player evaluation.
+                    </p>
+                  </div>
                   
                   <div className="flex gap-3">
                     <Button 
