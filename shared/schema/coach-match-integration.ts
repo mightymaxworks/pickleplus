@@ -58,7 +58,7 @@ export const coachMatchInput = pgTable("coach_match_input", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// PCP Assessment integration with matches
+// Enhanced 55-Skill PCP Assessment integration with matches
 export const matchPcpAssessments = pgTable("match_pcp_assessments", {
   id: serial("id").primaryKey(),
   matchId: integer("match_id").notNull().references(() => matches.id),
@@ -66,11 +66,12 @@ export const matchPcpAssessments = pgTable("match_pcp_assessments", {
   playerId: integer("player_id").notNull().references(() => users.id),
   sessionMatchId: integer("session_match_id").references(() => coachingSessionMatches.id),
   
-  // 4-dimensional PCP assessment based on match performance
-  technicalRating: decimal("technical_rating", { precision: 3, scale: 1 }).notNull(), // 1.0-5.0
-  tacticalRating: decimal("tactical_rating", { precision: 3, scale: 1 }).notNull(),
-  physicalRating: decimal("physical_rating", { precision: 3, scale: 1 }).notNull(),
-  mentalRating: decimal("mental_rating", { precision: 3, scale: 1 }).notNull(),
+  // 5-dimensional enhanced assessment based on 55-skill comprehensive evaluation
+  technicalRating: decimal("technical_rating", { precision: 3, scale: 1 }).notNull(), // Groundstrokes and Serves (11 skills)
+  tacticalRating: decimal("tactical_rating", { precision: 3, scale: 1 }).notNull(), // Dinks and Resets (16 skills)  
+  volleyRating: decimal("volley_rating", { precision: 3, scale: 1 }).notNull(), // Volleys and Smashes (6 skills)
+  physicalRating: decimal("physical_rating", { precision: 3, scale: 1 }).notNull(), // Footwork & Fitness (10 skills)
+  mentalRating: decimal("mental_rating", { precision: 3, scale: 1 }).notNull(), // Mental Game (10 skills)
   
   // Detailed assessment notes
   technicalNotes: text("technical_notes"),

@@ -35,31 +35,43 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
 
   const categories = [
     {
-      name: "Power",
+      name: "Groundstrokes and Serves",
       skills: [
-        "Serve Power", "Serve Placement", "Forehand Drive", "Backhand Drive", 
-        "Overhead Slam", "Third Shot Drive", "Return of Serve Power", "Aggressive Volleys", "Cross-Court Power"
+        "Serve Power", "Serve Placement", "Forehand Flat Drive", "Forehand Topspin Drive", 
+        "Forehand Slice", "Backhand Flat Drive", "Backhand Topspin Drive", "Backhand Slice",
+        "Third Shot Drive", "Forehand Return of Serve", "Backhand Return of Serve"
       ]
     },
     {
-      name: "Control",
+      name: "Dinks and Resets",
       skills: [
-        "Dink Consistency", "Dink Placement", "Soft Game", "Kitchen Line Play",
-        "Third Shot Drop", "Reset Shots", "Transition Game", "Ball Control", "Touch Shots"
+        "Forehand Topspin Dink", "Forehand Dead Dink", "Forehand Slice Dink", "Backhand Topspin Dink",
+        "Backhand Dead Dink", "Backhand Slice Dink", "Forehand Third Shot Drop", "Forehand Top Spin Third Shot Drop",
+        "Forehand Slice Third Shot Drop", "Backhand Third Shot Drop", "Backhand Top Spin Third Shot Drop", 
+        "Backhand Slice Third Shot Drop", "Forehand Resets", "Backhand Resets", "Forehand Lob", "Backhand Lob"
       ]
     },
     {
-      name: "Precision",
+      name: "Volleys and Smashes",
       skills: [
-        "Target Accuracy", "Shot Consistency", "Footwork", "Court Positioning",
-        "Shot Selection", "Angle Creation", "Line Shots", "Drop Shot Accuracy", "Lob Placement"
+        "Forehand Punch Volley", "Forehand Roll Volley", "Backhand Punch Volley", 
+        "Backhand Roll Volley", "Forehand Overhead Smash", "Backhand Overhead Smash"
       ]
     },
     {
-      name: "Performance",
+      name: "Footwork & Fitness",
       skills: [
-        "Court Awareness", "Strategic Thinking", "Mental Toughness", "Adaptability",
-        "Communication", "Partner Coordination", "Match Tempo", "Pressure Handling", "Game Management"
+        "Split Step Readiness", "Lateral Shuffles", "Crossover Steps", "Court Recovery", 
+        "First Step Speed", "Balance & Core Stability", "Agility", "Endurance Conditioning",
+        "Leg Strength & Power", "Transition Speed (Baseline to Kitchen)"
+      ]
+    },
+    {
+      name: "Mental Game",
+      skills: [
+        "Staying Present", "Resetting After Errors", "Patience & Shot Selection", "Positive Self-Talk",
+        "Visualization", "Pressure Handling", "Focus Shifts", "Opponent Reading",
+        "Emotional Regulation", "Competitive Confidence"
       ]
     }
   ];
@@ -93,7 +105,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           studentId,
           coachId,
           assessmentData,
-          totalSkills: 35
+          totalSkills: 55
         })
       });
 
@@ -449,7 +461,6 @@ export default function CoachDashboard() {
               ref={assessmentSectionRef}
               className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md"
             >
-              {console.log('Assessment Launch Section RENDERING for student:', selectedStudent)}
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
@@ -459,18 +470,19 @@ export default function CoachDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
-                    <h4 className="font-medium text-gray-900 mb-2">35-Skill Assessment Overview</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">55-Skill Comprehensive Assessment</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• <strong>Power:</strong> Serves, groundstrokes, overhead shots</li>
-                      <li>• <strong>Control:</strong> Dinks, placement, touch shots</li>
-                      <li>• <strong>Precision:</strong> Target accuracy, consistency</li>
-                      <li>• <strong>Performance:</strong> Court awareness, strategy, mental game</li>
+                      <li>• <strong>Groundstrokes & Serves:</strong> 11 skills - Power, placement, drives, returns</li>
+                      <li>• <strong>Dinks & Resets:</strong> 16 skills - All dink variations, drops, resets, lobs</li>
+                      <li>• <strong>Volleys & Smashes:</strong> 6 skills - Punch/roll volleys, overhead smashes</li>
+                      <li>• <strong>Footwork & Fitness:</strong> 10 skills - Movement, agility, conditioning</li>
+                      <li>• <strong>Mental Game:</strong> 10 skills - Focus, pressure, emotional control</li>
                     </ul>
                   </div>
                   
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-sm text-yellow-800">
-                      <strong>Ready to Begin:</strong> All 35 skills across 4 categories will be assessed. 
+                      <strong>Ready to Begin:</strong> All 55 skills across 5 categories will be assessed. 
                       Each skill is rated 1-10 for comprehensive player evaluation.
                     </p>
                   </div>
@@ -497,7 +509,7 @@ export default function CoachDashboard() {
           )}
         </TabsContent>
 
-        {/* 35-Skill Assessment Interface */}
+        {/* 55-Skill Assessment Interface */}
         {showAssessment && selectedStudent && (
           <div className="mt-6">
             <SkillAssessmentInterface

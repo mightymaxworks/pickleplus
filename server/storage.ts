@@ -5810,20 +5810,29 @@ export class DatabaseStorage implements IStorage {
 
   async createAssessment(assessmentData: any): Promise<any> {
     try {
-      console.log(`[Storage] Creating assessment for session ${assessmentData.session_id}`);
+      console.log(`[Storage] Creating 55-skill assessment for session ${assessmentData.session_id}`);
       const result = await db.insert(matchPcpAssessments).values({
-        coach_id: assessmentData.coach_id,
-        student_id: assessmentData.student_id,
-        session_id: assessmentData.session_id,
-        calculated_technical: assessmentData.technical_rating || 40,
-        calculated_tactical: assessmentData.tactical_rating || 40,
-        calculated_physical: assessmentData.physical_rating || 40,
-        calculated_mental: assessmentData.mental_rating || 40,
-        coach_notes: assessmentData.notes || ""
+        coachId: assessmentData.coach_id,
+        playerId: assessmentData.student_id,
+        sessionMatchId: assessmentData.session_id,
+        technicalRating: assessmentData.technical_rating || 40,
+        tacticalRating: assessmentData.tactical_rating || 40,
+        volleyRating: assessmentData.volley_rating || 40,
+        physicalRating: assessmentData.physical_rating || 40,
+        mentalRating: assessmentData.mental_rating || 40,
+        overallPerformance: ((assessmentData.technical_rating || 40) + 
+                           (assessmentData.tactical_rating || 40) + 
+                           (assessmentData.volley_rating || 40) +
+                           (assessmentData.physical_rating || 40) + 
+                           (assessmentData.mental_rating || 40)) / 5,
+        technicalNotes: assessmentData.notes || "55-skill comprehensive assessment completed",
+        tacticalNotes: `Dinks and Resets (16 skills): ${assessmentData.tactical_rating || 40}`,
+        physicalNotes: `Footwork & Fitness (10 skills): ${assessmentData.physical_rating || 40}`,
+        mentalNotes: `Mental Game (10 skills): ${assessmentData.mental_rating || 40}`
       }).returning();
       return result[0];
     } catch (error) {
-      console.error("Error creating assessment:", error);
+      console.error("Error creating 55-skill assessment:", error);
       throw error;
     }
   }

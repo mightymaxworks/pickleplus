@@ -28,11 +28,52 @@ import decayProtectionRoutes from './routes/decay-protection';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
-  const categorySkills = Object.keys(assessmentData).filter(key => key.startsWith(`${category}_`));
-  if (categorySkills.length === 0) return 50; // Default to middle value
+  // Map category names to the keys used in assessment data
+  const categoryKeyMappings: Record<string, string[]> = {
+    'Groundstrokes and Serves': [
+      'Serve Power', 'Serve Placement', 'Forehand Flat Drive', 'Forehand Topspin Drive', 
+      'Forehand Slice', 'Backhand Flat Drive', 'Backhand Topspin Drive', 'Backhand Slice',
+      'Third Shot Drive', 'Forehand Return of Serve', 'Backhand Return of Serve'
+    ],
+    'Dinks and Resets': [
+      'Forehand Topspin Dink', 'Forehand Dead Dink', 'Forehand Slice Dink', 'Backhand Topspin Dink',
+      'Backhand Dead Dink', 'Backhand Slice Dink', 'Forehand Third Shot Drop', 'Forehand Top Spin Third Shot Drop',
+      'Forehand Slice Third Shot Drop', 'Backhand Third Shot Drop', 'Backhand Top Spin Third Shot Drop', 
+      'Backhand Slice Third Shot Drop', 'Forehand Resets', 'Backhand Resets', 'Forehand Lob', 'Backhand Lob'
+    ],
+    'Volleys and Smashes': [
+      'Forehand Punch Volley', 'Forehand Roll Volley', 'Backhand Punch Volley', 
+      'Backhand Roll Volley', 'Forehand Overhead Smash', 'Backhand Overhead Smash'
+    ],
+    'Footwork & Fitness': [
+      'Split Step Readiness', 'Lateral Shuffles', 'Crossover Steps', 'Court Recovery', 
+      'First Step Speed', 'Balance & Core Stability', 'Agility', 'Endurance Conditioning',
+      'Leg Strength & Power', 'Transition Speed (Baseline to Kitchen)'
+    ],
+    'Mental Game': [
+      'Staying Present', 'Resetting After Errors', 'Patience & Shot Selection', 'Positive Self-Talk',
+      'Visualization', 'Pressure Handling', 'Focus Shifts', 'Opponent Reading',
+      'Emotional Regulation', 'Competitive Confidence'
+    ]
+  };
+
+  const expectedSkills = categoryKeyMappings[category];
+  if (!expectedSkills || expectedSkills.length === 0) {
+    console.warn(`Unknown assessment category: ${category}`);
+    return 50; // Default to middle value
+  }
+
+  const values = expectedSkills
+    .filter(skill => assessmentData[skill] !== undefined)
+    .map(skill => assessmentData[skill]);
   
-  const total = categorySkills.reduce((sum, key) => sum + assessmentData[key], 0);
-  return Math.round(total / categorySkills.length);
+  if (values.length === 0) {
+    console.warn(`No assessment data found for category: ${category}`);
+    return 50; // Default to middle value
+  }
+  
+  const total = values.reduce((sum, val) => sum + val, 0);
+  return Math.round(total / values.length);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -117,11 +158,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         coach_id: coachId,
         student_id: studentId,
         session_id: null, // For skill assessments without sessions
-        technical_rating: calculateCategoryAverage(assessmentData, 'Power'),
-        tactical_rating: calculateCategoryAverage(assessmentData, 'Control'),
-        physical_rating: calculateCategoryAverage(assessmentData, 'Precision'),
-        mental_rating: calculateCategoryAverage(assessmentData, 'Performance'),
-        notes: `35-skill assessment completed: ${totalSkills} skills evaluated`,
+        technical_rating: calculateCategoryAverage(assessmentData, 'Groundstrokes and Serves'),
+        tactical_rating: calculateCategoryAverage(assessmentData, 'Dinks and Resets'),
+        volley_rating: calculateCategoryAverage(assessmentData, 'Volleys and Smashes'),
+        physical_rating: calculateCategoryAverage(assessmentData, 'Footwork & Fitness'),
+        mental_rating: calculateCategoryAverage(assessmentData, 'Mental Game'),
+        notes: `55-skill assessment completed: ${totalSkills} skills evaluated - Categories: Groundstrokes/Serves (11), Dinks/Resets (16), Volleys/Smashes (6), Footwork/Fitness (10), Mental Game (10)`,
         ...assessmentData
       });
 
