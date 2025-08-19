@@ -277,6 +277,7 @@ export interface IStorage extends CommunityStorage {
   // Coach Dashboard operations
   getCoachStudentAssignments(coachId: number): Promise<any[]>;
   getCoachRecentAssessments(coachId: number): Promise<any[]>;
+  createCoachStudentAssignment(coachId: number, studentId: number, assignedBy: number, notes?: string): Promise<any>;
   
   // Calendar operations
   getWeeklyClassSchedule(centerId: number): Promise<any[]>;
@@ -6971,6 +6972,51 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching coach recent assessments:', error);
       return [];
+    }
+  }
+
+  async createCoachStudentAssignment(coachId: number, studentId: number, assignedBy: number, notes?: string): Promise<any> {
+    try {
+      console.log(`[STORAGE] Creating coach-student assignment: coach=${coachId}, student=${studentId}, assignedBy=${assignedBy}`);
+      
+      // Check if assignment already exists
+      const existingAssignment = await db
+        .select()
+        .from(coachStudentAssignments)
+        .where(
+          and(
+            eq(coachStudentAssignments.coachId, coachId),
+            eq(coachStudentAssignments.studentId, studentId),
+            eq(coachStudentAssignments.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (existingAssignment.length > 0) {
+        console.log(`[STORAGE] Assignment already exists for coach ${coachId} and student ${studentId}`);
+        return existingAssignment[0];
+      }
+
+      // Create new assignment
+      const [newAssignment] = await db
+        .insert(coachStudentAssignments)
+        .values({
+          coachId,
+          studentId,
+          assignedBy,
+          notes: notes || 'Admin-assigned coach-student relationship',
+          isActive: true,
+          assignedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      console.log(`[STORAGE] Successfully created coach-student assignment with ID: ${newAssignment.id}`);
+      return newAssignment;
+    } catch (error) {
+      console.error('Error creating coach-student assignment:', error);
+      throw error;
     }
   }
 }

@@ -57,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           students.push({
             id: student.id,
             displayName: student.displayName || student.username,
-            currentRanking: student.currentRanking || null,
+            currentRanking: student.rankingPoints || 0,
             lastAssessment: assignment.lastAssessmentDate || null
           });
         }
@@ -83,6 +83,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching recent assessments:', error);
       res.status(500).json({ error: 'Failed to fetch recent assessments' });
+    }
+  });
+
+  // Admin route to create coach-student assignments
+  app.post('/api/admin/coach-student-assignment', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      if (!user?.isAdmin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const { coachId, studentId, notes } = req.body;
+      
+      if (!coachId || !studentId) {
+        return res.status(400).json({ error: 'Both coachId and studentId are required' });
+      }
+
+      // Verify coach and student exist
+      const coach = await storage.getUser(coachId);
+      const student = await storage.getUser(studentId);
+      
+      if (!coach) {
+        return res.status(404).json({ error: 'Coach not found' });
+      }
+      
+      if (!student) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+
+      // Create the assignment
+      const assignment = await storage.createCoachStudentAssignment(
+        coachId, 
+        studentId, 
+        user.id, 
+        notes || `Admin-assigned coach-student relationship for testing`
+      );
+
+      res.json({ 
+        success: true, 
+        assignment,
+        message: `Successfully assigned ${student.displayName || student.username} to coach ${coach.displayName || coach.username}`
+      });
+    } catch (error) {
+      console.error('Error creating coach-student assignment:', error);
+      res.status(500).json({ error: 'Failed to create coach-student assignment' });
     }
   });
 
