@@ -5810,29 +5810,33 @@ export class DatabaseStorage implements IStorage {
 
   async createAssessment(assessmentData: any): Promise<any> {
     try {
-      console.log(`[Storage] Creating 55-skill assessment for session ${assessmentData.session_id}`);
-      const result = await db.insert(matchPcpAssessments).values({
-        coachId: assessmentData.coach_id,
-        playerId: assessmentData.student_id,
-        sessionMatchId: assessmentData.session_id,
-        technicalRating: assessmentData.technical_rating || 40,
-        tacticalRating: assessmentData.tactical_rating || 40,
-        volleyRating: assessmentData.volley_rating || 40,
-        physicalRating: assessmentData.physical_rating || 40,
-        mentalRating: assessmentData.mental_rating || 40,
-        overallPerformance: ((assessmentData.technical_rating || 40) + 
-                           (assessmentData.tactical_rating || 40) + 
-                           (assessmentData.volley_rating || 40) +
-                           (assessmentData.physical_rating || 40) + 
-                           (assessmentData.mental_rating || 40)) / 5,
-        technicalNotes: assessmentData.notes || "55-skill comprehensive assessment completed",
-        tacticalNotes: `Dinks and Resets (16 skills): ${assessmentData.tactical_rating || 40}`,
-        physicalNotes: `Footwork & Fitness (10 skills): ${assessmentData.physical_rating || 40}`,
-        mentalNotes: `Mental Game (10 skills): ${assessmentData.mental_rating || 40}`
+      console.log(`[Storage] Creating progressive assessment for coach ${assessmentData.coach_id}, student ${assessmentData.student_id}`);
+      
+      // Use existing match_assessments table structure
+      const result = await db.insert(matchAssessments).values({
+        matchId: assessmentData.session_id || 0, // Use 0 for progressive assessments without match
+        assessorId: assessmentData.coach_id,
+        targetId: assessmentData.student_id,
+        technicalRating: Math.round(assessmentData.technical_rating || 5),
+        tacticalRating: Math.round(assessmentData.tactical_rating || 5),
+        physicalRating: Math.round(assessmentData.physical_rating || 5),
+        mentalRating: Math.round(assessmentData.mental_rating || 5),
+        consistencyRating: Math.round(assessmentData.consistency_rating || 5),
+        notes: assessmentData.notes || "Progressive assessment completed",
+        assessmentType: assessmentData.assessment_type || "progressive",
+        matchContext: {
+          skills: assessmentData.skills || [],
+          pcpRating: assessmentData.pcp_rating || 0,
+          assessmentType: assessmentData.assessment_type,
+          sessionNotes: assessmentData.session_notes
+        },
+        isComplete: true
       }).returning();
+      
+      console.log(`[Storage] Progressive assessment created with ID: ${result[0].id}`);
       return result[0];
     } catch (error) {
-      console.error("Error creating 55-skill assessment:", error);
+      console.error("Error creating progressive assessment:", error);
       throw error;
     }
   }
