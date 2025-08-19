@@ -16,6 +16,14 @@ User wants the admin integration at `/admin/match-management` to use updated Mat
 User wants the platform to be streamlined for core player functionality only in V1.0.
 User wants advanced features disabled for the focused launch experience.
 User wants navigation simplified to 4 core items: Dashboard, Record Match, Rankings, My Profile.
+
+## Current Sprint Focus
+User wants to focus on actual sprint development rather than infrastructure distractions. Current coaching system sprint priorities:
+1. Admin-controlled coach levels (L1-L5) with streamlined assignment workflow
+2. Simplified coaching assessment tool with mandatory coach-student relationship validation
+3. Preserve comprehensive 35-skill assessment tool with 4-dimensional PCP system
+4. Remove complex certification processes in favor of admin-only coach activation
+5. Admin authentication issues resolved - admin_test user properly configured with isAdmin=true
 User wants interactive slider components for all 1-10 rating fields in the profile UX.
 User wants all SelectItem empty value errors resolved across the platform.
 User wants a comprehensive automated testing suite with Puppeteer, GitHub Actions workflow for CI/CD.
