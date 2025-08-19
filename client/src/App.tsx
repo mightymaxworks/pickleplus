@@ -104,6 +104,9 @@ import PickleJourneyDashboard from './pages/PickleJourneyDashboard'
 // Import referral page (PKL-278651-COMM-0007 - Enhanced Referral System)
 import ReferralPage from './pages/ReferralPage'
 
+// Import Progressive Assessment Test Page
+import ProgressiveAssessmentTestPage from './pages/progressive-assessment-test'
+
 // Import PCP Coach Onboarding Components (PKL-278651-PCP-BASIC-TIER)
 import { LazyPCPCoachOnboardingPage, LazyCoachDashboardPage } from './components/coach/LazyPCPCoachOnboardingPage'
 
@@ -720,6 +723,13 @@ export default function App() {
                     path="/coach-assessment-workflow"
                     component={lazyLoad(() => import('./pages/coach-assessment-workflow-page'))}
                     pageTitle="Coach Assessment Workflow"
+                  />
+                  
+                  {/* Progressive Assessment Model Test Page */}
+                  <ProtectedRouteWithLayout
+                    path="/progressive-assessment-test"
+                    component={ProgressiveAssessmentTestPage}
+                    pageTitle="Progressive Assessment Model Test"
                   />
                   
                   {/* PKL-278651-COACH-WORKFLOW-GUIDE - Complete Coach Workflow Documentation */}

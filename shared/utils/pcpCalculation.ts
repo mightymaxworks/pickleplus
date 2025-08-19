@@ -61,6 +61,19 @@ export interface CategoryAverages {
   mental: number;
 }
 
+export interface IndividualSkillRating {
+  currentRating: number;
+  lastAssessed: string;
+  assessmentCount: number;
+  lastCoachId?: number;
+  trendDirection?: 'improving' | 'stable' | 'declining';
+  monthlyChange?: number;
+}
+
+export interface PlayerSkillProfile {
+  [skillName: string]: IndividualSkillRating;
+}
+
 export interface PCPCalculationResult {
   pcpRating: number;
   rawWeightedScore: number;
@@ -68,6 +81,23 @@ export interface PCPCalculationResult {
   calculationTimestamp: string;
   totalSkillsAssessed: number;
   isComplete: boolean; // All 55 skills present
+  skillFreshness: SkillFreshnessInfo;
+  confidenceScore: number;
+}
+
+export interface SkillFreshnessInfo {
+  touch: CategoryFreshness;
+  technical: CategoryFreshness;
+  power: CategoryFreshness;
+  athletic: CategoryFreshness;
+  mental: CategoryFreshness;
+}
+
+export interface CategoryFreshness {
+  oldestAssessment: string;
+  daysSince: number;
+  status: 'current' | 'aging' | 'stale';
+  skillsNeedingUpdate: string[];
 }
 
 /**
@@ -179,7 +209,9 @@ export function calculatePCPRating(assessmentData: AssessmentData): PCPCalculati
     categoryAverages,
     calculationTimestamp,
     totalSkillsAssessed: validation.totalSkills - validation.missingSkills.length,
-    isComplete: validation.isValid
+    isComplete: validation.isValid,
+    skillFreshness: calculateSkillFreshness(assessmentData),
+    confidenceScore: calculateConfidenceScore(assessmentData)
   };
 }
 
@@ -229,6 +261,172 @@ export function createSampleAssessmentData(baseRating: number = 6): AssessmentDa
   });
   
   return assessmentData;
+}
+
+// Progressive assessment helper functions
+export function calculatePCPRatingFromProfile(skillProfile: PlayerSkillProfile): PCPCalculationResult {
+  // Convert skill profile to assessment data format
+  const assessmentData: AssessmentData = {};
+  
+  for (const [skillName, skillRating] of Object.entries(skillProfile)) {
+    assessmentData[skillName] = skillRating.currentRating;
+  }
+  
+  return calculatePCPRating(assessmentData);
+}
+
+export function calculateSkillFreshness(assessmentData: AssessmentData): SkillFreshnessInfo {
+  const now = new Date();
+  
+  const calculateCategoryFreshness = (categoryName: string): CategoryFreshness => {
+    const categorySkills = SKILL_CATEGORIES[categoryName] || [];
+    const skillsNeedingUpdate: string[] = [];
+    let oldestAssessment = now.toISOString();
+    let maxDays = 0;
+    
+    categorySkills.forEach(skill => {
+      if (assessmentData[skill]) {
+        // For basic implementation, assume all skills are fresh (would be enhanced with actual timestamps)
+        const daysSince = 0; // Would calculate from actual assessment date
+        if (daysSince > 90) skillsNeedingUpdate.push(skill);
+        if (daysSince > maxDays) {
+          maxDays = daysSince;
+          oldestAssessment = now.toISOString(); // Would use actual assessment date
+        }
+      }
+    });
+    
+    let status: 'current' | 'aging' | 'stale' = 'current';
+    if (maxDays > 180) status = 'stale';
+    else if (maxDays > 90) status = 'aging';
+    
+    return {
+      oldestAssessment,
+      daysSince: maxDays,
+      status,
+      skillsNeedingUpdate
+    };
+  };
+  
+  return {
+    touch: calculateCategoryFreshness('Dinks and Resets'),
+    technical: calculateCategoryFreshness('Groundstrokes and Serves'),
+    power: calculateCategoryFreshness('Volleys and Smashes'),
+    athletic: calculateCategoryFreshness('Footwork & Fitness'),
+    mental: calculateCategoryFreshness('Mental Game')
+  };
+}
+
+export function calculateSkillFreshnessFromProfile(skillProfile: PlayerSkillProfile): SkillFreshnessInfo {
+  const now = new Date();
+  
+  const calculateCategoryFreshness = (categoryName: string): CategoryFreshness => {
+    const categorySkills = SKILL_CATEGORIES[categoryName] || [];
+    const skillsNeedingUpdate: string[] = [];
+    let oldestAssessment = now.toISOString();
+    let maxDays = 0;
+    
+    categorySkills.forEach(skill => {
+      const skillData = skillProfile[skill];
+      if (skillData) {
+        const assessmentDate = new Date(skillData.lastAssessed);
+        const daysSince = Math.floor((now.getTime() - assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSince > 90) skillsNeedingUpdate.push(skill);
+        if (daysSince > maxDays) {
+          maxDays = daysSince;
+          oldestAssessment = skillData.lastAssessed;
+        }
+      }
+    });
+    
+    let status: 'current' | 'aging' | 'stale' = 'current';
+    if (maxDays > 180) status = 'stale';
+    else if (maxDays > 90) status = 'aging';
+    
+    return {
+      oldestAssessment,
+      daysSince: maxDays,
+      status,
+      skillsNeedingUpdate
+    };
+  };
+  
+  return {
+    touch: calculateCategoryFreshness('Dinks and Resets'),
+    technical: calculateCategoryFreshness('Groundstrokes and Serves'),
+    power: calculateCategoryFreshness('Volleys and Smashes'),
+    athletic: calculateCategoryFreshness('Footwork & Fitness'),
+    mental: calculateCategoryFreshness('Mental Game')
+  };
+}
+
+export function calculateConfidenceScore(assessmentData: AssessmentData): number {
+  const totalSkills = 55;
+  const assessedSkills = Object.keys(assessmentData).length;
+  const completeness = assessedSkills / totalSkills;
+  
+  // Base confidence on completeness (would be enhanced with freshness data)
+  return Math.round(completeness * 100) / 100;
+}
+
+export function calculateConfidenceScoreFromProfile(skillProfile: PlayerSkillProfile): number {
+  const totalSkills = 55;
+  const assessedSkills = Object.keys(skillProfile).length;
+  const now = new Date();
+  
+  let freshnessScore = 0;
+  let totalWeight = 0;
+  
+  Object.values(skillProfile).forEach(skill => {
+    const assessmentDate = new Date(skill.lastAssessed);
+    const daysSince = Math.floor((now.getTime() - assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Fresh assessments (0-30 days): weight 1.0
+    // Current assessments (30-90 days): weight 0.8
+    // Aging assessments (90-180 days): weight 0.5
+    // Stale assessments (180+ days): weight 0.2
+    let weight = 1.0;
+    if (daysSince > 180) weight = 0.2;
+    else if (daysSince > 90) weight = 0.5;
+    else if (daysSince > 30) weight = 0.8;
+    
+    freshnessScore += weight;
+    totalWeight += 1.0;
+  });
+  
+  const completeness = assessedSkills / totalSkills;
+  const freshness = totalWeight > 0 ? freshnessScore / totalWeight : 0;
+  
+  // Combine completeness and freshness for final confidence
+  const confidence = (completeness * 0.7) + (freshness * 0.3);
+  return Math.round(confidence * 100) / 100;
+}
+
+export function updatePlayerSkillRating(
+  skillProfile: PlayerSkillProfile,
+  skillName: string,
+  newRating: number,
+  coachId: number
+): PlayerSkillProfile {
+  const existingSkill = skillProfile[skillName];
+  const now = new Date().toISOString();
+  
+  const updatedSkill: IndividualSkillRating = {
+    currentRating: newRating,
+    lastAssessed: now,
+    assessmentCount: existingSkill ? existingSkill.assessmentCount + 1 : 1,
+    lastCoachId: coachId,
+    trendDirection: existingSkill ? 
+      (newRating > existingSkill.currentRating ? 'improving' : 
+       newRating < existingSkill.currentRating ? 'declining' : 'stable') : 'stable',
+    monthlyChange: existingSkill ? newRating - existingSkill.currentRating : 0
+  };
+  
+  return {
+    ...skillProfile,
+    [skillName]: updatedSkill
+  };
 }
 
 // Export validation functions for external use

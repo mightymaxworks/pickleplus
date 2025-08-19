@@ -934,6 +934,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   console.log("[ROUTES] Fallback endpoints registered");
 
+  // Progressive Assessment API routes
+  console.log("[ROUTES] Registering progressive assessment routes...");
+  const {
+    getPlayerSkillProfile,
+    updateSkillsFromAssessment,
+    getCalculatedPCPRating,
+    getSkillAssessmentHistory,
+    getSkillsNeedingUpdate
+  } = await import('./api/progressive-assessment');
+
+  app.get('/api/progressive-assessment/player/:playerId/skills', getPlayerSkillProfile);
+  app.post('/api/progressive-assessment/player/:playerId/update-skills', updateSkillsFromAssessment);
+  app.get('/api/progressive-assessment/player/:playerId/pcp-rating', getCalculatedPCPRating);
+  app.get('/api/progressive-assessment/player/:playerId/history', getSkillAssessmentHistory);
+  app.get('/api/progressive-assessment/player/:playerId/stale-skills', getSkillsNeedingUpdate);
+  console.log("[ROUTES] Progressive assessment routes registered successfully");
+
   // Register simplified coaching system admin routes
   console.log("[ROUTES] Registering coach management admin routes...");
   const adminCoachManagementRoutes = await import('./routes/admin-coach-management');
