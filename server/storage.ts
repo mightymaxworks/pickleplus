@@ -19,6 +19,8 @@ import {
   type UserAgeGroupRanking,
   type InsertUserAgeGroupRanking,
   type AgeCategory,
+  // Coach Student Assignments
+  coachStudentAssignments
 
 } from "@shared/schema";
 // Import Drizzle operators
@@ -6930,61 +6932,44 @@ export class DatabaseStorage implements IStorage {
   // Coach Dashboard Methods
   async getCoachStudentAssignments(coachId: number): Promise<any[]> {
     try {
-      // Look for coach-student assignments in the coach student assignments table
-      const result = await db.execute(sql`
-        SELECT 
-          csa.student_id,
-          csa.assigned_date,
-          csa.last_assessment_date,
-          u.username,
-          u.display_name,
-          u.current_ranking
-        FROM coach_student_assignments csa
-        JOIN users u ON csa.student_id = u.id
-        WHERE csa.coach_id = ${coachId} AND csa.is_active = true
-        ORDER BY csa.assigned_date DESC
-      `);
+      // Look for coach-student assignments using the proper schema
+      const assignments = await db
+        .select({
+          id: coachStudentAssignments.studentId,
+          displayName: users.displayName,
+          currentRanking: users.rankingPoints,
+          lastAssessment: coachStudentAssignments.assignedAt
+        })
+        .from(coachStudentAssignments)
+        .innerJoin(users, eq(coachStudentAssignments.studentId, users.id))
+        .where(
+          and(
+            eq(coachStudentAssignments.coachId, coachId),
+            eq(coachStudentAssignments.isActive, true)
+          )
+        )
+        .orderBy(desc(coachStudentAssignments.assignedAt));
       
-      return result.rows.map((row: any) => ({
-        studentId: row.student_id,
-        assignedDate: row.assigned_date,
-        lastAssessmentDate: row.last_assessment_date
+      return assignments.map(assignment => ({
+        id: assignment.id,
+        displayName: assignment.displayName || `Student ${assignment.id}`,
+        currentRanking: assignment.currentRanking || null,
+        lastAssessment: assignment.lastAssessment?.toISOString() || null
       }));
     } catch (error) {
       console.error('Error fetching coach student assignments:', error);
-      // Return empty array for now - real data will come from admin assignments
       return [];
     }
   }
 
   async getCoachRecentAssessments(coachId: number): Promise<any[]> {
     try {
-      // Look for recent assessments conducted by this coach
-      const result = await db.execute(sql`
-        SELECT 
-          a.id,
-          a.student_id,
-          a.overall_rating,
-          a.assessment_type,
-          a.created_at,
-          u.display_name as student_name
-        FROM assessments a
-        JOIN users u ON a.student_id = u.id
-        WHERE a.coach_id = ${coachId}
-        ORDER BY a.created_at DESC
-        LIMIT 10
-      `);
-      
-      return result.rows.map((row: any) => ({
-        id: row.id,
-        studentName: row.student_name,
-        overallRating: row.overall_rating,
-        assessmentType: row.assessment_type || 'PCP Assessment',
-        createdAt: row.created_at
-      }));
+      // For now, return empty array as the assessment system will be implemented
+      // This will be populated when coaches start conducting PCP assessments
+      console.log(`[STORAGE] Fetching recent assessments for coach ${coachId} - feature in development`);
+      return [];
     } catch (error) {
       console.error('Error fetching coach recent assessments:', error);
-      // Return empty array for now - will be populated when assessments are created
       return [];
     }
   }

@@ -42,13 +42,14 @@ interface RecentAssessment {
 }
 
 /**
- * Coach Dashboard - Real User Interface Integration
+ * Enhanced Coach Dashboard - Professional Interface
  * 
- * This replaces the demo page with actual coach workflow integration:
- * - View assigned students
- * - Access assessment tools with security validation
- * - Track coaching progress and sessions
- * - Direct integration with the 35-skill assessment system
+ * Major UI Enhancement Features:
+ * - Modern gradient headers with visual hierarchy
+ * - Enhanced loading states and empty states
+ * - Professional card layouts with shadows and hover effects
+ * - Improved color coding and visual feedback
+ * - Streamlined workflow with better UX
  */
 export default function CoachDashboard() {
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
@@ -60,13 +61,13 @@ export default function CoachDashboard() {
   });
 
   // Fetch coach's assigned students
-  const { data: assignedStudents = [] } = useQuery<AssignedStudent[]>({
+  const { data: assignedStudents = [], isLoading: studentsLoading } = useQuery<AssignedStudent[]>({
     queryKey: ['/api/coach/assigned-students'],
     enabled: !!currentUser?.id
   });
 
   // Fetch recent assessments
-  const { data: recentAssessments = [] } = useQuery<RecentAssessment[]>({
+  const { data: recentAssessments = [], isLoading: assessmentsLoading } = useQuery<RecentAssessment[]>({
     queryKey: ['/api/coach/recent-assessments'],
     enabled: !!currentUser?.id
   });
@@ -100,43 +101,61 @@ export default function CoachDashboard() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl space-y-6">
-      {/* Coach Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Coach Workspace</h1>
-          <div className="flex items-center gap-3">
-            <Badge className={`${coachInfo.color} text-white`}>
-              {coachInfo.name}
-            </Badge>
-            <span className="text-gray-600">{coachInfo.focus}</span>
+      {/* Enhanced Coach Header with Professional Design */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Coach Workspace</h1>
+                <p className="text-lg text-gray-600">Level {coachLevel} Coaching Platform</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Badge className={`${coachInfo.color} text-white px-3 py-1 shadow-sm`}>
+                {coachInfo.name}
+              </Badge>
+              <span className="text-gray-700 font-medium">{coachInfo.focus}</span>
+            </div>
+            
+            <p className="text-sm text-gray-600 max-w-2xl">
+              Welcome to your enhanced coaching dashboard. Manage student assessments and track progress using our comprehensive 35-skill PCP evaluation system.
+            </p>
           </div>
-          <p className="text-sm text-gray-500">
-            Manage student assessments and track progress using the 35-skill PCP evaluation system
-          </p>
-        </div>
-        
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Users className="w-4 h-4" />
-            <span>{assignedStudents.length} Active Students</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Star className="w-4 h-4" />
-            <span>{recentAssessments.length} Recent Assessments</span>
+          
+          <div className="flex flex-col items-end gap-3">
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2 text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">{assignedStudents.length} Students</span>
+              </div>
+              <div className="flex items-center gap-2 text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                <Star className="w-4 h-4" />
+                <span className="font-medium">{recentAssessments.length} Assessments</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Calendar className="w-4 h-4" />
+              <span>Last updated: {new Date().toLocaleDateString()}</span>
+            </div>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="students">My Students</TabsTrigger>
-          <TabsTrigger value="assessments">Recent Assessments</TabsTrigger>
-          <TabsTrigger value="progress">Progress Tracking</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+          <TabsTrigger value="students" className="data-[state=active]:bg-white">My Students</TabsTrigger>
+          <TabsTrigger value="assessments" className="data-[state=active]:bg-white">Recent Assessments</TabsTrigger>
+          <TabsTrigger value="progress" className="data-[state=active]:bg-white">Progress Tracking</TabsTrigger>
         </TabsList>
 
-        {/* Students Tab - Streamlined Coach Workspace */}
+        {/* Enhanced Students Tab */}
         <TabsContent value="students" className="space-y-4">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
@@ -144,12 +163,19 @@ export default function CoachDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {assignedStudents.length === 0 ? (
+              {studentsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Clock className="w-4 h-4 animate-spin" />
+                    <span>Loading students...</span>
+                  </div>
+                </div>
+              ) : assignedStudents.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
                   <h3 className="text-lg font-medium mb-2">No Students Assigned</h3>
                   <p className="text-sm mb-4">You don't have any students assigned for coaching yet.</p>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left max-w-md mx-auto">
                     <h4 className="font-medium text-blue-800 mb-2">Getting Started:</h4>
                     <ul className="text-sm text-blue-700 space-y-1">
                       <li>• Admin assigns students to coaches through the admin panel</li>
@@ -172,11 +198,11 @@ export default function CoachDashboard() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {assignedStudents.map((student) => (
-                      <Card key={student.id} className="border-2 hover:border-blue-300 transition-colors">
+                      <Card key={student.id} className="border-2 hover:border-blue-300 transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg">
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
                                 <User className="w-6 h-6 text-white" />
                               </div>
                               <div>
@@ -196,7 +222,7 @@ export default function CoachDashboard() {
                           
                           <div className="space-y-3">
                             <Button 
-                              className="w-full bg-blue-600 hover:bg-blue-700" 
+                              className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" 
                               onClick={() => setSelectedStudent(student.id)}
                             >
                               <BookOpen className="w-4 h-4 mr-2" />
@@ -218,9 +244,9 @@ export default function CoachDashboard() {
             </CardContent>
           </Card>
 
-          {/* Assessment Launch Section */}
+          {/* Enhanced Assessment Launch Section */}
           {selectedStudent && (
-            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
@@ -229,22 +255,21 @@ export default function CoachDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
                     <h4 className="font-medium text-gray-900 mb-2">35-Skill Assessment Overview</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
                       <li>• <strong>Power:</strong> Serves, groundstrokes, overhead shots</li>
-                      <li>• <strong>Control:</strong> Dinks, placement, consistency</li>
-                      <li>• <strong>Performance:</strong> Movement, positioning, court coverage</li>
-                      <li>• <strong>Presence:</strong> Mental game, strategy, composure</li>
+                      <li>• <strong>Control:</strong> Dinks, placement, touch shots</li>
+                      <li>• <strong>Precision:</strong> Target accuracy, consistency</li>
+                      <li>• <strong>Performance:</strong> Court awareness, strategy, mental game</li>
                     </ul>
                   </div>
                   
-                  <CoachingAssessmentValidator 
-                    coachId={currentUser?.id}
+                  <CoachingAssessmentValidator
+                    coachId={currentUser?.id || 0}
                     studentId={selectedStudent}
-                    onValidationSuccess={(validationResult) => {
-                      // Redirect to actual assessment page when validation passes
-                      window.location.href = `/pcp-assessment/${selectedStudent}`;
+                    onValidationComplete={() => {
+                      console.log('Assessment validation completed for student:', selectedStudent);
                     }}
                   />
                   
@@ -258,7 +283,7 @@ export default function CoachDashboard() {
                     </Button>
                     <Button 
                       onClick={() => window.location.href = `/pcp-assessment/${selectedStudent}`}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      className="flex-1 bg-green-600 hover:bg-green-700 shadow-sm"
                     >
                       <Star className="w-4 h-4 mr-2" />
                       Begin Assessment
@@ -270,46 +295,60 @@ export default function CoachDashboard() {
           )}
         </TabsContent>
 
-        {/* Recent Assessments Tab */}
+        {/* Enhanced Recent Assessments Tab */}
         <TabsContent value="assessments" className="space-y-4">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Recent Assessment Activity
+                <Star className="w-5 h-5" />
+                Recent Assessments
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recentAssessments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No assessments completed yet.</p>
-                  <p className="text-sm">Start by assessing your assigned students above.</p>
+              {assessmentsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Clock className="w-4 h-4 animate-spin" />
+                    <span>Loading assessments...</span>
+                  </div>
+                </div>
+              ) : recentAssessments.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Star className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <h3 className="text-lg font-medium mb-2">No Assessments Yet</h3>
+                  <p className="text-sm mb-4">You haven't conducted any skills assessments yet.</p>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left max-w-md mx-auto">
+                    <h4 className="font-medium text-yellow-800 mb-2">Ready to Begin:</h4>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      <li>• Go to the "My Students" tab to select a student</li>
+                      <li>• Click "Start Skills Assessment" to begin</li>
+                      <li>• Complete the 35-skill PCP evaluation</li>
+                      <li>• Assessment results will appear here</li>
+                    </ul>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentAssessments.map((assessment) => (
-                    <div key={assessment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                    <Card key={assessment.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium">{assessment.studentName}</h4>
+                            <p className="text-sm text-gray-600">{assessment.assessmentType}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              <span className="font-medium">{assessment.overallRating}/10</span>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {new Date(assessment.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{assessment.studentName}</h3>
-                          <p className="text-sm text-gray-600">
-                            Overall Rating: {assessment.overallRating}/10
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500">
-                          {new Date(assessment.createdAt).toLocaleDateString()}
-                        </div>
-                        <Badge variant="outline">
-                          {assessment.assessmentType}
-                        </Badge>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -317,9 +356,9 @@ export default function CoachDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Progress Tracking Tab */}
+        {/* Enhanced Progress Tracking Tab */}
         <TabsContent value="progress" className="space-y-4">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -327,10 +366,19 @@ export default function CoachDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Progress tracking coming soon.</p>
-                <p className="text-sm">Complete more assessments to see student progress charts.</p>
+              <div className="text-center py-12 text-gray-500">
+                <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <h3 className="text-lg font-medium mb-2">Progress Tracking Coming Soon</h3>
+                <p className="text-sm mb-4">Advanced student progress analytics will be available once assessments are conducted.</p>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left max-w-md mx-auto">
+                  <h4 className="font-medium text-purple-800 mb-2">Future Features:</h4>
+                  <ul className="text-sm text-purple-700 space-y-1">
+                    <li>• Student improvement tracking over time</li>
+                    <li>• Skill progression graphs and charts</li>
+                    <li>• Performance comparison metrics</li>
+                    <li>• Coaching effectiveness analytics</li>
+                  </ul>
+                </div>
               </div>
             </CardContent>
           </Card>
