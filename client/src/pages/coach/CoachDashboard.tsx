@@ -235,6 +235,9 @@ interface RecentAssessment {
 export default function CoachDashboard() {
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
   const [showAssessment, setShowAssessment] = useState(false);
+  
+  // Debug logging
+  console.log('CoachDashboard render - selectedStudent:', selectedStudent, 'showAssessment:', showAssessment);
 
   // Fetch coach's current user data
   const { data: currentUser } = useQuery<CurrentUser>({
@@ -405,7 +408,11 @@ export default function CoachDashboard() {
                           <div className="space-y-3">
                             <Button 
                               className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" 
-                              onClick={() => setSelectedStudent(student.id)}
+                              onClick={() => {
+                                console.log('Start Skills Assessment clicked for student:', student.id);
+                                setSelectedStudent(student.id);
+                                console.log('Selected student set to:', student.id);
+                              }}
                             >
                               <BookOpen className="w-4 h-4 mr-2" />
                               Start Skills Assessment
