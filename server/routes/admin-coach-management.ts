@@ -224,4 +224,66 @@ router.delete("/coach-assignments/:assignmentId", requireAdmin, async (req, res)
   }
 });
 
+// Validate coach-student relationship for assessments
+router.post("/validate-coaching-assessment", requireAdmin, async (req, res) => {
+  try {
+    const { coachId, studentId } = z.object({
+      coachId: z.number(),
+      studentId: z.number()
+    }).parse(req.body);
+
+    // Verify coach exists and has coaching privileges (L1-L5)
+    const [coach] = await db
+      .select({ 
+        id: users.id,
+        username: users.username,
+        coachLevel: users.coachLevel 
+      })
+      .from(users)
+      .where(eq(users.id, coachId));
+
+    if (!coach || coach.coachLevel === 0) {
+      return res.status(403).json({ 
+        error: "User is not an authorized coach",
+        details: "Only users with coach levels L1-L5 can perform assessments"
+      });
+    }
+
+    // Verify active coach-student assignment exists
+    const assignment = await db
+      .select()
+      .from(coachStudentAssignments)
+      .where(
+        and(
+          eq(coachStudentAssignments.coachId, coachId),
+          eq(coachStudentAssignments.studentId, studentId),
+          eq(coachStudentAssignments.isActive, true)
+        )
+      );
+
+    if (assignment.length === 0) {
+      return res.status(403).json({ 
+        error: "No active coach-student relationship found",
+        details: "Assessment can only be performed on students assigned to this coach by an admin"
+      });
+    }
+
+    // Validation successful
+    res.json({
+      success: true,
+      coachLevel: coach.coachLevel,
+      coachName: coach.username,
+      validatedAt: new Date().toISOString(),
+      message: "Coach-student relationship validated. Assessment authorized."
+    });
+
+  } catch (error) {
+    console.error("Error validating coaching assessment:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Invalid validation request data" });
+    }
+    res.status(500).json({ error: "Failed to validate coaching assessment" });
+  }
+});
+
 export default router;

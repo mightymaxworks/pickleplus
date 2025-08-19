@@ -179,8 +179,8 @@ export default function CoachManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Coach Management</h1>
-          <p className="text-gray-600 mt-1">Manage coach levels and student assignments</p>
+          <h1 className="text-3xl font-bold text-gray-900">Simplified Coaching System</h1>
+          <p className="text-gray-600 mt-1">Admin-controlled coach levels with streamlined assignment workflow</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="flex items-center gap-2">
@@ -189,6 +189,61 @@ export default function CoachManagement() {
           </Badge>
         </div>
       </div>
+
+      {/* Coach Level Information Panel */}
+      <Card className="bg-orange-50 border-orange-200">
+        <CardHeader>
+          <CardTitle className="text-orange-800">📚 Coach Level System (L1-L5)</CardTitle>
+          <CardDescription className="text-orange-700">
+            Simplified admin-controlled coaching system with mandatory coach-student validation
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="bg-white rounded-lg p-3 border border-green-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-green-500">L1</Badge>
+                <span className="font-semibold text-sm">Basic Skills</span>
+              </div>
+              <p className="text-xs text-gray-600">Beginner instruction, fundamentals, basic techniques</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-blue-500">L2</Badge>
+                <span className="font-semibold text-sm">Intermediate</span>
+              </div>
+              <p className="text-xs text-gray-600">Strategy development, technique refinement</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-purple-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-purple-500">L3</Badge>
+                <span className="font-semibold text-sm">Advanced</span>
+              </div>
+              <p className="text-xs text-gray-600">Competitive training, advanced tactics</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-orange-500">L4</Badge>
+                <span className="font-semibold text-sm">Elite</span>
+              </div>
+              <p className="text-xs text-gray-600">Tournament preparation, elite performance</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-red-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-red-500">L5</Badge>
+                <span className="font-semibold text-sm">Master</span>
+              </div>
+              <p className="text-xs text-gray-600">Certification, mentor training, system mastery</p>
+            </div>
+          </div>
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800">
+              <strong>Security Note:</strong> Only admins can activate coaches and assign students. 
+              All coaching assessments require valid coach-student relationships.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* User Management Section */}
       <Card>
@@ -254,12 +309,12 @@ export default function CoachManagement() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="0">Player</SelectItem>
-                          <SelectItem value="1">L1 Coach</SelectItem>
-                          <SelectItem value="2">L2 Coach</SelectItem>
-                          <SelectItem value="3">L3 Coach</SelectItem>
-                          <SelectItem value="4">L4 Coach</SelectItem>
-                          <SelectItem value="5">L5 Coach</SelectItem>
+                          <SelectItem value="0">Player (No coaching privileges)</SelectItem>
+                          <SelectItem value="1">L1 Coach (Basic Skills)</SelectItem>
+                          <SelectItem value="2">L2 Coach (Intermediate & Strategy)</SelectItem>
+                          <SelectItem value="3">L3 Coach (Advanced & Competitive)</SelectItem>
+                          <SelectItem value="4">L4 Coach (Elite & Tournament)</SelectItem>
+                          <SelectItem value="5">L5 Coach (Master & Certification)</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
