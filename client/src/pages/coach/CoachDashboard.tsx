@@ -103,18 +103,27 @@ export default function CoachDashboard() {
       {/* Coach Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Coach Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Coach Workspace</h1>
           <div className="flex items-center gap-3">
             <Badge className={`${coachInfo.color} text-white`}>
               {coachInfo.name}
             </Badge>
             <span className="text-gray-600">{coachInfo.focus}</span>
           </div>
+          <p className="text-sm text-gray-500">
+            Manage student assessments and track progress using the 35-skill PCP evaluation system
+          </p>
         </div>
         
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Users className="w-4 h-4" />
-          <span>{assignedStudents.length} Active Students</span>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Users className="w-4 h-4" />
+            <span>{assignedStudents.length} Active Students</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Star className="w-4 h-4" />
+            <span>{recentAssessments.length} Recent Assessments</span>
+          </div>
         </div>
       </div>
 
@@ -125,94 +134,136 @@ export default function CoachDashboard() {
           <TabsTrigger value="progress">Progress Tracking</TabsTrigger>
         </TabsList>
 
-        {/* Students Tab */}
+        {/* Students Tab - Streamlined Coach Workspace */}
         <TabsContent value="students" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Assigned Students ({assignedStudents.length})
+                My Students ({assignedStudents.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
               {assignedStudents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No students assigned yet.</p>
-                  <p className="text-sm">Contact an admin to get student assignments.</p>
+                <div className="text-center py-12 text-gray-500">
+                  <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <h3 className="text-lg font-medium mb-2">No Students Assigned</h3>
+                  <p className="text-sm mb-4">You don't have any students assigned for coaching yet.</p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                    <h4 className="font-medium text-blue-800 mb-2">Getting Started:</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Admin assigns students to coaches through the admin panel</li>
+                      <li>• Once assigned, students will appear here for assessment</li>
+                      <li>• You can then conduct the 35-skill PCP assessment system</li>
+                    </ul>
+                  </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {assignedStudents.map((student) => (
-                    <Card key={student.id} className="border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-blue-600" />
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">Ready for Coaching</span>
+                    </div>
+                    <p className="text-sm text-green-700 mt-1">
+                      Select a student below to begin their skills assessment using our comprehensive 35-skill evaluation system.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {assignedStudents.map((student) => (
+                      <Card key={student.id} className="border-2 hover:border-blue-300 transition-colors">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                                <User className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-lg">{student.displayName}</h3>
+                                <p className="text-sm text-gray-600">
+                                  {student.currentRanking ? `Ranking: #${student.currentRanking}` : 'Unranked Player'}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h3 className="font-semibold">{student.displayName}</h3>
-                              <p className="text-sm text-gray-600">
-                                {student.currentRanking ? `Ranking: ${student.currentRanking}` : 'Unranked'}
-                              </p>
-                            </div>
+                            <Badge 
+                              variant={student.lastAssessment ? "default" : "secondary"}
+                              className={student.lastAssessment ? "bg-green-100 text-green-800" : ""}
+                            >
+                              {student.lastAssessment ? 'Assessed' : 'New Student'}
+                            </Badge>
                           </div>
-                          <Badge variant="outline">
-                            {student.lastAssessment ? 'Assessed' : 'New'}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Button 
-                            className="w-full" 
-                            onClick={() => setSelectedStudent(student.id)}
-                          >
-                            <BookOpen className="w-4 h-4 mr-2" />
-                            Conduct Assessment
-                          </Button>
                           
-                          {student.lastAssessment && (
-                            <div className="text-xs text-gray-500 text-center">
-                              Last assessed: {new Date(student.lastAssessment).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          <div className="space-y-3">
+                            <Button 
+                              className="w-full bg-blue-600 hover:bg-blue-700" 
+                              onClick={() => setSelectedStudent(student.id)}
+                            >
+                              <BookOpen className="w-4 h-4 mr-2" />
+                              Start Skills Assessment
+                            </Button>
+                            
+                            {student.lastAssessment && (
+                              <div className="text-xs text-gray-500 text-center bg-gray-50 rounded p-2">
+                                Last assessed: {new Date(student.lastAssessment).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Assessment Validation Section */}
+          {/* Assessment Launch Section */}
           {selectedStudent && (
-            <Card className="border-blue-200 bg-blue-50">
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
-                  Assessment Access Validation
+                  Launch Skills Assessment
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <CoachingAssessmentValidator 
-                  coachId={currentUser?.id}
-                  studentId={selectedStudent}
-                  onValidationSuccess={(validationResult) => {
-                    // Redirect to actual assessment page when validation passes
-                    window.location.href = `/pcp-assessment/${selectedStudent}`;
-                  }}
-                />
-                
-                <div className="mt-4 pt-4 border-t border-blue-200">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedStudent(null)}
-                    className="w-full"
-                  >
-                    Cancel Assessment
-                  </Button>
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4 border border-blue-200">
+                    <h4 className="font-medium text-gray-900 mb-2">35-Skill Assessment Overview</h4>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• <strong>Power:</strong> Serves, groundstrokes, overhead shots</li>
+                      <li>• <strong>Control:</strong> Dinks, placement, consistency</li>
+                      <li>• <strong>Performance:</strong> Movement, positioning, court coverage</li>
+                      <li>• <strong>Presence:</strong> Mental game, strategy, composure</li>
+                    </ul>
+                  </div>
+                  
+                  <CoachingAssessmentValidator 
+                    coachId={currentUser?.id}
+                    studentId={selectedStudent}
+                    onValidationSuccess={(validationResult) => {
+                      // Redirect to actual assessment page when validation passes
+                      window.location.href = `/pcp-assessment/${selectedStudent}`;
+                    }}
+                  />
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedStudent(null)}
+                      className="flex-1"
+                    >
+                      Back to Students
+                    </Button>
+                    <Button 
+                      onClick={() => window.location.href = `/pcp-assessment/${selectedStudent}`}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      Begin Assessment
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
