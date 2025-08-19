@@ -13,7 +13,7 @@
 import React from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { Home, Calendar, Users, Award, User, Ticket } from 'lucide-react';
+import { Home, Calendar, Users, Award, User, Ticket, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -27,8 +27,11 @@ export function MobileNavigation() {
   // Don't render on desktop
   if (!isMobile) return null;
 
-  // V1.0 Core mobile navigation - includes Pickle Points per user request
-  const navItems = [
+  // Debug user coach level for mobile
+  console.log("MobileNavigation - User coach level:", user?.coachLevel);
+  
+  // V1.0 Core mobile navigation - includes Pickle Points per user request  
+  const baseNavItems = [
     { 
       icon: <Home size={20} />, 
       label: 'Dashboard', 
@@ -60,6 +63,18 @@ export function MobileNavigation() {
       id: 'profile'
     }
   ];
+
+  // Add Coach Dashboard if user has coachLevel > 0
+  let navItems = [...baseNavItems];
+  if (user?.coachLevel && user.coachLevel > 0) {
+    console.log("MobileNavigation - Adding Coach Dashboard for coachLevel:", user.coachLevel);
+    navItems.splice(1, 0, { 
+      icon: <GraduationCap size={20} />, 
+      label: 'Coach Dashboard', 
+      path: '/coach',
+      id: 'coach-dashboard'
+    });
+  }
 
   const isActive = (path: string) => {
     if (path === '/') {

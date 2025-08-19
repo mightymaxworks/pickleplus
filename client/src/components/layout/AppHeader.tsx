@@ -158,13 +158,29 @@ export function AppHeader({
     setComingSoonDialog({ open: true, feature, description });
   };
 
-  // V1.0 Launch Navigation - Simplified 4 core features only (no translation keys)
-  const defaultNavItems = [
+  // Debug user coach level
+  console.log("AppHeader - User coach level:", user?.coachLevel);
+  console.log("AppHeader - User object keys:", user ? Object.keys(user) : "no user");
+  
+  // V1.0 Launch Navigation - 5 core features including Pickle Points per user request
+  const baseNavItems = [
     { label: 'Dashboard', icon: <Home size={18} />, path: '/' },
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/matches' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/rankings' },
+    { label: 'Pickle Points', icon: <Ticket size={18} />, path: '/pickle-points' },
     { label: 'My Profile', icon: <Users size={18} />, path: '/profile' }
   ];
+
+  // Add Coach Dashboard if user has coachLevel > 0
+  let defaultNavItems = [...baseNavItems];
+  if (user?.coachLevel && user.coachLevel > 0) {
+    console.log("AppHeader - Adding Coach Dashboard for coachLevel:", user.coachLevel);
+    defaultNavItems.splice(1, 0, { 
+      label: 'Coach Dashboard', 
+      icon: <GraduationCap size={18} />, 
+      path: '/coach' 
+    });
+  }
 
   // Use custom nav items if provided, otherwise use default
   const navigationItems = customNavItems || defaultNavItems;
