@@ -158,40 +158,12 @@ export function AppHeader({
     setComingSoonDialog({ open: true, feature, description });
   };
 
-  // V1.0 Launch Navigation - Streamlined core features only
+  // V1.0 Launch Navigation - Simplified 4 core features only (no translation keys)
   const defaultNavItems = [
-    { label: t('nav.dashboard'), icon: <Home size={18} />, path: '/dashboard' },
-    { label: t('nav.recordMatch'), icon: <Calendar size={18} />, path: '/record-match' },
-    { label: t('nav.rankings'), icon: <Award size={18} />, path: '/leaderboard' },
-    { label: t('nav.picklePoints'), icon: <Ticket size={18} />, path: '/pickle-points' },
-    // Coming soon features - show popup instead of navigation
-    { 
-      label: t('nav.communities'), 
-      icon: <Users size={18} />, 
-      path: 'coming-soon',
-      comingSoon: {
-        feature: t('nav.communities'),
-        description: t('comingSoon.communities.description')
-      }
-    },
-    { 
-      label: t('nav.findCoaches'), 
-      icon: <GraduationCap size={18} />, 
-      path: 'coming-soon',
-      comingSoon: {
-        feature: t('nav.findCoaches'),
-        description: t('comingSoon.findCoaches.description')
-      }
-    },
-    { 
-      label: t('nav.trainingHub'), 
-      icon: <Building2 size={18} />, 
-      path: 'coming-soon',
-      comingSoon: {
-        feature: t('nav.trainingHub'),
-        description: t('comingSoon.trainingHub.description')
-      }
-    }
+    { label: 'Dashboard', icon: <Home size={18} />, path: '/' },
+    { label: 'Record Match', icon: <Calendar size={18} />, path: '/matches' },
+    { label: 'Rankings', icon: <Award size={18} />, path: '/rankings' },
+    { label: 'My Profile', icon: <Users size={18} />, path: '/profile' }
   ];
 
   // Use custom nav items if provided, otherwise use default

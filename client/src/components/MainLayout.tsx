@@ -80,29 +80,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
   };
 
-  // Create the base navigation items - removed tournaments and profile per user request
+  // Simplified navigation per user request: 4 core items only
   const baseNavigationItems: NavigationItem[] = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
-    { name: 'Matches', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
-    { name: 'Achievements', path: '/achievements', icon: <Award className="h-5 w-5" /> },
-    { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
-    { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },
-    // PKL-278651-JOUR-001 - PickleJourney™
-    { 
-      name: 'Your Journey', 
-      path: '/journey', 
-      icon: <HeartPulse className="h-5 w-5" />,
-      badge: { text: 'New', variant: 'success' }
-    },
-    { name: 'Communities', path: '/communities', icon: <Users className="h-5 w-5" /> },
-    // New NodeBB-based Community Hub
-    { 
-      name: 'Community Beta', 
-      path: '/community/v2', 
-      icon: <Users className="h-5 w-5" />,
-      badge: { text: 'New', variant: 'outline' }
-    },
-    { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
+    { name: 'Record Match', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
+    { name: 'Rankings', path: '/rankings', icon: <Award className="h-5 w-5" /> },
+    { name: 'My Profile', path: '/profile', icon: <Users className="h-5 w-5" /> },
   ];
 
   // Add admin dashboard item for admin users
