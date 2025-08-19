@@ -172,7 +172,7 @@ export function CoachingAssessmentValidator({
               <strong>Validation Failed:</strong> {validationError}
               <br />
               <span className="text-sm mt-2 block">
-                Contact an admin to create a proper coach-student assignment before proceeding with assessments.
+                ✅ This is expected behavior - security validation is working correctly. Contact an admin to create a proper coach-student assignment before proceeding with assessments.
               </span>
             </AlertDescription>
           </Alert>

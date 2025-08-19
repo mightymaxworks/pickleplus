@@ -37,8 +37,8 @@ export default function CoachingSystemDemo() {
     refetchInterval: 30000
   });
 
-  const coaches = users.filter((user: any) => user.coachLevel > 0);
-  const students = users.filter((user: any) => user.coachLevel === 0);
+  const coaches = Array.isArray(users) ? users.filter((user: any) => user.coachLevel > 0) : [];
+  const students = Array.isArray(users) ? users.filter((user: any) => user.coachLevel === 0) : [];
 
   const getCoachLevelInfo = (level: number) => {
     const info = {
@@ -305,7 +305,13 @@ export default function CoachingSystemDemo() {
                   <p className="text-sm text-green-700 mb-3">
                     Coach-student validation passed. Assessment tools are now accessible.
                   </p>
-                  <Button className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      // Demo: Show assessment tool access
+                      alert('Assessment Tool Access Demo:\n\n✅ Coach-student relationship validated\n✅ 35-skill comprehensive assessment ready\n✅ 4-dimensional PCP system integrated\n\nIn production, this would redirect to the full assessment interface.');
+                    }}
+                  >
                     <ArrowRight className="w-4 h-4 mr-2" />
                     Access 35-Skill Assessment Tool
                   </Button>
