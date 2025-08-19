@@ -18,6 +18,186 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { CoachingAssessmentValidator } from '@/components/coaching/CoachingAssessmentValidator';
+import { useToast } from '@/hooks/use-toast';
+
+// 35-Skill Assessment Interface Component
+const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete, onCancel }: {
+  studentId: number;
+  coachId: number;
+  studentName: string;
+  onComplete: () => void;
+  onCancel: () => void;
+}) => {
+  const [currentCategory, setCurrentCategory] = useState(0);
+  const [assessmentData, setAssessmentData] = useState<Record<string, number>>({});
+  const { toast } = useToast();
+
+  const categories = [
+    {
+      name: "Power",
+      skills: [
+        "Serve Power", "Serve Placement", "Forehand Drive", "Backhand Drive", 
+        "Overhead Slam", "Third Shot Drive", "Return of Serve Power", "Aggressive Volleys", "Cross-Court Power"
+      ]
+    },
+    {
+      name: "Control",
+      skills: [
+        "Dink Consistency", "Dink Placement", "Soft Game", "Kitchen Line Play",
+        "Third Shot Drop", "Reset Shots", "Transition Game", "Ball Control", "Touch Shots"
+      ]
+    },
+    {
+      name: "Precision",
+      skills: [
+        "Target Accuracy", "Shot Consistency", "Footwork", "Court Positioning",
+        "Shot Selection", "Angle Creation", "Line Shots", "Drop Shot Accuracy", "Lob Placement"
+      ]
+    },
+    {
+      name: "Performance",
+      skills: [
+        "Court Awareness", "Strategic Thinking", "Mental Toughness", "Adaptability",
+        "Communication", "Partner Coordination", "Match Tempo", "Pressure Handling", "Game Management"
+      ]
+    }
+  ];
+
+  const currentSkills = categories[currentCategory]?.skills || [];
+  const isLastCategory = currentCategory === categories.length - 1;
+  const categoryProgress = (currentCategory + 1) / categories.length * 100;
+
+  const handleRatingChange = (skill: string, rating: number) => {
+    setAssessmentData(prev => ({
+      ...prev,
+      [`${categories[currentCategory].name}_${skill}`]: rating
+    }));
+  };
+
+  const handleNext = () => {
+    if (isLastCategory) {
+      handleSubmit();
+    } else {
+      setCurrentCategory(prev => prev + 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('/api/coach/submit-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          studentId,
+          coachId,
+          assessmentData,
+          totalSkills: 35
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Assessment Complete",
+          description: `Successfully assessed ${studentName} across all 35 skills.`,
+        });
+        onComplete();
+      } else {
+        throw new Error('Failed to submit assessment');
+      }
+    } catch (error) {
+      toast({
+        title: "Assessment Failed",
+        description: "Failed to save assessment. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-blue-800 flex items-center gap-2">
+              <Star className="w-6 h-6" />
+              35-Skill Assessment: {studentName}
+            </CardTitle>
+            <CardDescription className="text-blue-600 mt-1">
+              Category: {categories[currentCategory]?.name} ({currentCategory + 1}/4)
+            </CardDescription>
+          </div>
+          <Badge className="bg-blue-600 text-white">
+            Progress: {Math.round(categoryProgress)}%
+          </Badge>
+        </div>
+        
+        <div className="w-full bg-blue-200 rounded-full h-2 mt-3">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+            style={{ width: `${categoryProgress}%` }}
+          />
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
+          <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-blue-600" />
+            {categories[currentCategory]?.name} Skills Assessment
+          </h4>
+          
+          <div className="grid gap-4">
+            {currentSkills.map((skill, index) => (
+              <div key={skill} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="font-medium text-gray-700">{skill}</span>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                    <Button
+                      key={rating}
+                      variant={assessmentData[`${categories[currentCategory].name}_${skill}`] === rating ? "default" : "outline"}
+                      size="sm"
+                      className={`w-8 h-8 p-0 ${
+                        assessmentData[`${categories[currentCategory].name}_${skill}`] === rating 
+                          ? "bg-blue-600 text-white" 
+                          : "hover:bg-blue-100"
+                      }`}
+                      onClick={() => handleRatingChange(skill, rating)}
+                    >
+                      {rating}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={onCancel} className="flex-1">
+            Cancel Assessment
+          </Button>
+          {currentCategory > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentCategory(prev => prev - 1)}
+              className="flex-1"
+            >
+              Previous Category
+            </Button>
+          )}
+          <Button 
+            onClick={handleNext}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            disabled={currentSkills.some(skill => !assessmentData[`${categories[currentCategory].name}_${skill}`])}
+          >
+            {isLastCategory ? "Submit Assessment" : "Next Category"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 interface CurrentUser {
   id: number;
@@ -53,6 +233,7 @@ interface RecentAssessment {
  */
 export default function CoachDashboard() {
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
+  const [showAssessment, setShowAssessment] = useState(false);
 
   // Fetch coach's current user data
   const { data: currentUser } = useQuery<CurrentUser>({
@@ -282,7 +463,7 @@ export default function CoachDashboard() {
                       Back to Students
                     </Button>
                     <Button 
-                      onClick={() => window.location.href = `/pcp-assessment/${selectedStudent}`}
+                      onClick={() => setShowAssessment(true)}
                       className="flex-1 bg-green-600 hover:bg-green-700 shadow-sm"
                     >
                       <Star className="w-4 h-4 mr-2" />
@@ -294,6 +475,22 @@ export default function CoachDashboard() {
             </Card>
           )}
         </TabsContent>
+
+        {/* 35-Skill Assessment Interface */}
+        {showAssessment && selectedStudent && (
+          <div className="mt-6">
+            <SkillAssessmentInterface
+              studentId={selectedStudent}
+              coachId={currentUser?.id || 0}
+              studentName={assignedStudents.find(s => s.id === selectedStudent)?.displayName || ""}
+              onComplete={() => {
+                setShowAssessment(false);
+                setSelectedStudent(null);
+              }}
+              onCancel={() => setShowAssessment(false)}
+            />
+          </div>
+        )}
 
         {/* Enhanced Recent Assessments Tab */}
         <TabsContent value="assessments" className="space-y-4">

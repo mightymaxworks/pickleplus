@@ -26,6 +26,15 @@ import coachPublicProfilesEditRoutes from "./api/coach-public-profiles-edit";
 import coachMarketplaceProfilesRouter from './api/coach-marketplace-profiles';
 import decayProtectionRoutes from './routes/decay-protection';
 
+// Helper function to calculate category averages from assessment data
+function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
+  const categorySkills = Object.keys(assessmentData).filter(key => key.startsWith(`${category}_`));
+  if (categorySkills.length === 0) return 50; // Default to middle value
+  
+  const total = categorySkills.reduce((sum, key) => sum + assessmentData[key], 0);
+  return Math.round(total / categorySkills.length);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
   
@@ -74,6 +83,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching recent assessments:', error);
       res.status(500).json({ error: 'Failed to fetch recent assessments' });
+    }
+  });
+
+  // Coach Assessment Submission Route
+  app.post('/api/coach/submit-assessment', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { studentId, coachId, assessmentData, totalSkills } = req.body;
+      
+      if (!studentId || !coachId || !assessmentData) {
+        return res.status(400).json({ error: 'Missing required assessment data' });
+      }
+
+      // Verify the coach is the authenticated user
+      if (coachId !== userId) {
+        return res.status(403).json({ error: 'Coach can only submit assessments for themselves' });
+      }
+
+      // Verify coach-student relationship exists
+      const assignments = await storage.getCoachStudentAssignments(coachId);
+      const hasAssignment = assignments.some(assignment => assignment.id === studentId);
+      if (!hasAssignment) {
+        return res.status(403).json({ error: 'No active coach-student assignment found' });
+      }
+
+      // Store the assessment using the existing createAssessment method
+      const assessmentRecord = await storage.createAssessment({
+        coach_id: coachId,
+        student_id: studentId,
+        session_id: null, // For skill assessments without sessions
+        technical_rating: calculateCategoryAverage(assessmentData, 'Power'),
+        tactical_rating: calculateCategoryAverage(assessmentData, 'Control'),
+        physical_rating: calculateCategoryAverage(assessmentData, 'Precision'),
+        mental_rating: calculateCategoryAverage(assessmentData, 'Performance'),
+        notes: `35-skill assessment completed: ${totalSkills} skills evaluated`,
+        ...assessmentData
+      });
+
+      console.log(`[COACH API] Assessment submitted successfully for student ${studentId} by coach ${coachId}`);
+      
+      res.json({ 
+        success: true, 
+        assessmentId: assessmentRecord.id,
+        message: 'Assessment submitted successfully'
+      });
+    } catch (error) {
+      console.error('Error submitting assessment:', error);
+      res.status(500).json({ error: 'Failed to submit assessment' });
     }
   });
 
