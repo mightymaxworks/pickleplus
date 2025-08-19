@@ -382,6 +382,16 @@ export default function App() {
                       );
                     }}
                   </Route>
+                  <Route path="/admin/coach-management">
+                    {(params) => {
+                      const CoachManagementPage = lazyLoad(() => import('./pages/admin/coach-management'));
+                      return (
+                        <AdminProtectedRoute>
+                          <CoachManagementPage />
+                        </AdminProtectedRoute>
+                      );
+                    }}
+                  </Route>
                   <Route path="/admin/tournaments/:id">
                     {(params) => (
                       <AdminProtectedRoute>

@@ -1,77 +1,172 @@
-/**
- * PKL-278651-COACH-DUAL-ROLE - Admin Coach Management Page
- * Allows admins to view and manage coach role assignments
- */
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, Users, UserCheck, Star, Plus, Settings } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CoachRoleManager } from '@/components/admin/CoachRoleManager';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  Settings,
-  Star,
-  Calendar,
-  Building
-} from 'lucide-react';
-
-interface Coach {
+interface User {
   id: number;
-  userId: number;
-  name: string;
-  currentRoles: string[];
-  status: string;
-  averageRating: number;
-  totalSessions: number;
-  joinedAt: string;
+  username: string;
+  displayName: string;
+  email: string;
+  coachLevel: number;
+  totalMatches: number;
+  rankingPoints: number;
+  createdAt: string;
 }
 
-export default function CoachManagementPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
+interface CoachStudentAssignment {
+  id: number;
+  coachId: number;
+  studentId: number;
+  assignedBy: number;
+  assignedAt: string;
+  isActive: boolean;
+  notes: string;
+  coach: User;
+  student: User;
+  assignedByUser: User;
+}
 
-  const { data: coaches = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/coaches'],
-    enabled: true
+export default function CoachManagement() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCoach, setSelectedCoach] = useState<User | null>(null);
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+  const [assignmentNotes, setAssignmentNotes] = useState("");
+  const { toast } = useToast();
+
+  // Fetch all users
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["/api/admin/users"],
+    refetchInterval: 30000
   });
 
-  const filteredCoaches = coaches.filter((coach: Coach) => {
-    const matchesSearch = coach.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || coach.status === statusFilter;
-    const matchesRole = roleFilter === 'all' || coach.currentRoles.includes(roleFilter);
-    
-    return matchesSearch && matchesStatus && matchesRole;
+  // Fetch coach-student assignments  
+  const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
+    queryKey: ["/api/admin/coach-assignments"],
+    refetchInterval: 30000
   });
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'independent': return <Users className="w-4 h-4" />;
-      case 'facility': return <Building className="w-4 h-4" />;
-      case 'guest': return <Star className="w-4 h-4" />;
-      case 'volunteer': return <Calendar className="w-4 h-4" />;
-      default: return <Users className="w-4 h-4" />;
-    }
+  // Coach level update mutation
+  const coachLevelMutation = useMutation({
+    mutationFn: async ({ userId, coachLevel }: { userId: number; coachLevel: number }) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/coach-level`, {
+        coachLevel
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Coach Level Updated",
+        description: "Coach level has been successfully updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Student assignment mutation
+  const assignStudentsMutation = useMutation({
+    mutationFn: async ({ coachId, studentIds, notes }: { coachId: number; studentIds: number[]; notes: string }) => {
+      const response = await apiRequest("POST", "/api/admin/coach-assignments", {
+        coachId,
+        studentIds,
+        notes
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coach-assignments"] });
+      setAssignmentDialogOpen(false);
+      setSelectedStudents([]);
+      setAssignmentNotes("");
+      toast({
+        title: "Students Assigned",
+        description: "Students have been successfully assigned to the coach.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Assignment Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Remove assignment mutation
+  const removeAssignmentMutation = useMutation({
+    mutationFn: async (assignmentId: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/coach-assignments/${assignmentId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coach-assignments"] });
+      toast({
+        title: "Assignment Removed",
+        description: "Coach-student assignment has been removed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Removal Failed", 
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getCoachLevelBadge = (level: number) => {
+    if (level === 0) return <Badge variant="secondary">Player</Badge>;
+    return <Badge variant="default" className="bg-orange-500">L{level} Coach</Badge>;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getCoachLevelColor = (level: number) => {
+    const colors = {
+      0: "bg-gray-100",
+      1: "bg-green-100", 
+      2: "bg-blue-100",
+      3: "bg-purple-100",
+      4: "bg-orange-100",
+      5: "bg-red-100"
+    };
+    return colors[level as keyof typeof colors] || "bg-gray-100";
   };
 
-  if (isLoading) {
+  const userList = users as User[];
+  const assignmentList = assignments as CoachStudentAssignment[];
+
+  const filteredUsers = userList.filter((user: User) =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const coaches = userList.filter((user: User) => user.coachLevel > 0);
+  const availableStudents = userList.filter((user: User) => user.coachLevel === 0);
+
+  const getAssignedStudents = (coachId: number) => {
+    return assignmentList.filter((assignment: CoachStudentAssignment) => 
+      assignment.coachId === coachId && assignment.isActive
+    );
+  };
+
+  if (usersLoading || assignmentsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -80,157 +175,247 @@ export default function CoachManagementPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 max-w-7xl space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Coach Management</h1>
-          <p className="text-gray-600 mt-1">
-            Manage coach role assignments and permissions
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Coach Management</h1>
+          <p className="text-gray-600 mt-1">Manage coach levels and student assignments</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-sm">
-            {filteredCoaches.length} coaches
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            {coaches.length} Active Coaches
           </Badge>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* User Management Section */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search coaches..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="w-5 h-5" />
+            User Coach Level Management
+          </CardTitle>
+          <CardDescription>
+            Activate users as coaches and set their coaching level (L1-L5)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Search */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search users by name, username, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="independent">Independent</SelectItem>
-                <SelectItem value="facility">Facility</SelectItem>
-                <SelectItem value="guest">Guest</SelectItem>
-                <SelectItem value="volunteer">Volunteer</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Users Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Current Level</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user: User) => (
+                  <TableRow key={user.id} className={getCoachLevelColor(user.coachLevel)}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{user.displayName || user.username}</div>
+                        <div className="text-sm text-gray-600">{user.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>{user.totalMatches} matches</div>
+                        <div className="text-gray-600">{user.rankingPoints} points</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getCoachLevelBadge(user.coachLevel)}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.coachLevel.toString()}
+                        onValueChange={(value) => {
+                          const newLevel = parseInt(value);
+                          coachLevelMutation.mutate({ userId: user.id, coachLevel: newLevel });
+                        }}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Player</SelectItem>
+                          <SelectItem value="1">L1 Coach</SelectItem>
+                          <SelectItem value="2">L2 Coach</SelectItem>
+                          <SelectItem value="3">L3 Coach</SelectItem>
+                          <SelectItem value="4">L4 Coach</SelectItem>
+                          <SelectItem value="5">L5 Coach</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Coach List */}
-      <div className="grid gap-4">
-        {filteredCoaches.map((coach: Coach) => (
-          <Card key={coach.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {coach.name.charAt(0).toUpperCase()}
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-lg">{coach.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={getStatusColor(coach.status)}>
-                        {coach.status}
-                      </Badge>
-                      <div className="flex gap-1">
-                        {coach.currentRoles.map(role => (
-                          <Badge key={role} variant="outline" className="flex items-center gap-1">
-                            {getRoleIcon(role)}
-                            {role}
-                          </Badge>
-                        ))}
+      {/* Coach-Student Assignments Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Coach-Student Assignments
+          </CardTitle>
+          <CardDescription>
+            Assign students to coaches for assessment and coaching sessions
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {coaches.map((coach: User) => {
+            const assignedStudents = getAssignedStudents(coach.id);
+            return (
+              <div key={coach.id} className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <Star className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{coach.displayName || coach.username}</h3>
+                      <div className="flex items-center gap-2">
+                        {getCoachLevelBadge(coach.coachLevel)}
+                        <span className="text-sm text-gray-600">
+                          {assignedStudents.length} assigned students
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <div className="text-sm text-gray-500">Rating</div>
-                    <div className="font-semibold flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      {coach.averageRating.toFixed(1)}
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-sm text-gray-500">Sessions</div>
-                    <div className="font-semibold">{coach.totalSessions}</div>
-                  </div>
-
-                  <Dialog>
+                  <Dialog open={assignmentDialogOpen && selectedCoach?.id === coach.id} onOpenChange={(open) => {
+                    setAssignmentDialogOpen(open);
+                    if (open) setSelectedCoach(coach);
+                  }}>
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setSelectedCoach(coach)}
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Manage Roles
+                      <Button variant="outline" size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Assign Students
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="max-w-2xl">
                       <DialogHeader>
-                        <DialogTitle>Manage Coach Roles</DialogTitle>
+                        <DialogTitle>Assign Students to {coach.displayName || coach.username}</DialogTitle>
+                        <DialogDescription>
+                          Select students to assign to this coach for assessments and coaching
+                        </DialogDescription>
                       </DialogHeader>
-                      {selectedCoach && (
-                        <CoachRoleManager
-                          coachId={selectedCoach.userId}
-                          currentRoles={selectedCoach.currentRoles}
-                          coachName={selectedCoach.name}
-                          onRoleChange={(newRoles) => {
-                            // Update the coach list locally
-                            setSelectedCoach(prev => prev ? {...prev, currentRoles: newRoles} : null);
+                      <div className="space-y-4">
+                        <div className="max-h-60 overflow-y-auto border rounded-md p-4">
+                          <div className="space-y-2">
+                            {availableStudents.map((student: User) => (
+                              <label key={student.id} className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedStudents.includes(student.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedStudents([...selectedStudents, student.id]);
+                                    } else {
+                                      setSelectedStudents(selectedStudents.filter(id => id !== student.id));
+                                    }
+                                  }}
+                                  className="rounded"
+                                />
+                                <div>
+                                  <div className="font-medium">{student.displayName || student.username}</div>
+                                  <div className="text-sm text-gray-600">{student.email}</div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Assignment Notes</label>
+                          <Textarea
+                            value={assignmentNotes}
+                            onChange={(e) => setAssignmentNotes(e.target.value)}
+                            placeholder="Optional notes about this assignment..."
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setAssignmentDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            if (selectedCoach && selectedStudents.length > 0) {
+                              assignStudentsMutation.mutate({
+                                coachId: selectedCoach.id,
+                                studentIds: selectedStudents,
+                                notes: assignmentNotes
+                              });
+                            }
                           }}
-                        />
-                      )}
+                          disabled={selectedStudents.length === 0 || assignStudentsMutation.isPending}
+                        >
+                          Assign {selectedStudents.length} Students
+                        </Button>
+                      </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      {filteredCoaches.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No coaches found</h3>
-            <p className="text-gray-600">
-              {searchQuery || statusFilter !== 'all' || roleFilter !== 'all'
-                ? 'Try adjusting your filters to see more results.'
-                : 'No coaches have been approved yet.'}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+                {/* Assigned Students List */}
+                {assignedStudents.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Assigned Students:</h4>
+                    <div className="grid gap-2">
+                      {assignedStudents.map((assignment: CoachStudentAssignment) => (
+                        <div key={assignment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                          <div className="flex-1">
+                            <div className="font-medium">{assignment.student.displayName || assignment.student.username}</div>
+                            <div className="text-sm text-gray-600">
+                              Assigned {new Date(assignment.assignedAt).toLocaleDateString()}
+                              {assignment.notes && ` • ${assignment.notes}`}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAssignmentMutation.mutate(assignment.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {coaches.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <UserCheck className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No active coaches yet. Activate users as coaches above to get started.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

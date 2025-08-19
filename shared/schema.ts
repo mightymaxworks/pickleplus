@@ -693,6 +693,8 @@ import {
   type GoalPriorityType
 } from './schema/goals';
 
+// Coach-Student Assignment System will be defined below with the users table
+
 // Import coach-match integration schema (PKL-278651-COACH-MATCH-INTEGRATION - Phase 1)
 import {
   coachingSessionMatches,
@@ -929,7 +931,7 @@ export const users = pgTable("users", {
   totalTournaments: integer("total_tournaments").default(0),
   isFoundingMember: boolean("is_founding_member").default(false),
   isAdmin: boolean("is_admin").default(false),
-  isCoach: boolean("is_coach").default(false),
+  coachLevel: integer("coach_level").default(0), // 0=not coach, 1-5=coach levels L1-L5
   pointsMultiplier: integer("points_multiplier").default(100),
   profileCompletionPct: integer("profile_completion_pct").default(0),
   profileMilestonesAwarded: integer("profile_milestones_awarded").array().default([]),
@@ -1023,6 +1025,38 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   lastUpdated: timestamp("last_updated").defaultNow()
 });
+
+// Coach-Student Assignment System - Simplified Coaching Implementation
+export const coachStudentAssignments = pgTable("coach_student_assignments", {
+  id: serial("id").primaryKey(),
+  coachId: integer("coach_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  assignedBy: integer("assigned_by").references(() => users.id).notNull(), // Admin who made the assignment
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"), // Admin notes about the assignment
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Relations for coach-student assignments
+export const coachStudentAssignmentsRelations = relations(coachStudentAssignments, ({ one }) => ({
+  coach: one(users, {
+    fields: [coachStudentAssignments.coachId],
+    references: [users.id],
+    relationName: "coach_assignments"
+  }),
+  student: one(users, {
+    fields: [coachStudentAssignments.studentId],
+    references: [users.id],
+    relationName: "student_assignments"
+  }),
+  assignedByUser: one(users, {
+    fields: [coachStudentAssignments.assignedBy],
+    references: [users.id],
+    relationName: "assignment_admin"
+  })
+}));
 
 // Standalone Youth Ranking System - PKL-278651-YOUTH-STANDALONE
 // Each age category maintains completely separate point pools
@@ -1953,6 +1987,13 @@ export type InsertMatchFeedback = z.infer<typeof insertMatchFeedbackSchema>;
 
 export type UserDailyMatches = typeof userDailyMatches.$inferSelect;
 export type InsertUserDailyMatches = z.infer<typeof insertUserDailyMatchesSchema>;
+
+// Coach-Student Assignment System Types
+export const insertCoachStudentAssignmentSchema = createInsertSchema(coachStudentAssignments)
+  .omit({ id: true, assignedAt: true, createdAt: true, updatedAt: true });
+
+export type CoachStudentAssignment = typeof coachStudentAssignments.$inferSelect;
+export type InsertCoachStudentAssignment = z.infer<typeof insertCoachStudentAssignmentSchema>;
 
 // Relations for XP and Ranking tables
 // NOTE: We are using the relations from the xp schema directly

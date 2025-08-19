@@ -722,6 +722,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   console.log("[ROUTES] Fallback endpoints registered");
 
+  // Register simplified coaching system admin routes
+  console.log("[ROUTES] Registering coach management admin routes...");
+  const adminCoachManagementRoutes = await import('./routes/admin-coach-management');
+  app.use('/api/admin', adminCoachManagementRoutes.default);
+  console.log("[ROUTES] Coach management admin routes registered successfully");
+
   const httpServer = createServer(app);
   console.log("[ROUTES] Modular route architecture setup complete");
   
