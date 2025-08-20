@@ -41,7 +41,18 @@ interface ProgressiveAssessmentState {
   assessmentType: 'focused' | 'comprehensive' | 'baseline';
   sessionNotes: string;
   selectedCategory: string;
-  currentPCPRating?: number;
+  currentPCPRating?: {
+    pcpRating: number;
+    categoryAverages: {
+      touch: number;
+      technical: number;
+      mental: number;
+      athletic: number;
+      power: number;
+    };
+    skillCount: number;
+    rawScore: number;
+  };
 }
 
 /**
@@ -123,9 +134,9 @@ export function CoachingAssessmentValidator({
       skills.forEach(skill => {
         const categoryKey = skill.category.toLowerCase().replace(' ', '') as keyof AssessmentData;
         if (!assessmentData[categoryKey]) {
-          assessmentData[categoryKey] = {};
+          assessmentData[categoryKey] = {} as any;
         }
-        assessmentData[categoryKey]![skill.skillName] = skill.rating;
+        (assessmentData[categoryKey] as any)[skill.skillName] = skill.rating;
       });
       
       const currentPCP = Object.keys(assessmentData).length > 0 ? calculatePCPRating(assessmentData as AssessmentData) : undefined;
@@ -364,7 +375,7 @@ export function CoachingAssessmentValidator({
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-700">
-                    {progressiveState.currentPCPRating?.toFixed(2) || 'Calculating...'}
+                    {progressiveState.currentPCPRating?.pcpRating.toFixed(2) || 'Calculating...'}
                   </div>
                   <p className="text-sm text-green-600">
                     Based on {progressiveState.selectedSkills.length} assessed skills
