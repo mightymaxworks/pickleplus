@@ -27,6 +27,8 @@ import { registerCoachPublicProfilesRoutes } from "./api/coach-public-profiles";
 import coachPublicProfilesEditRoutes from "./api/coach-public-profiles-edit";
 import coachMarketplaceProfilesRouter from './api/coach-marketplace-profiles';
 import decayProtectionRoutes from './routes/decay-protection';
+import { studentCoachConnectionRoutes } from './routes/student-coach-connections';
+import { coachStudentRequestRoutes } from './routes/coach-student-requests';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -837,6 +839,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Decay Protection routes...");
     app.use('/api/decay-protection', decayProtectionRoutes);
     console.log("[ROUTES] Decay Protection routes registered successfully");
+    
+    // Student-Coach Connection System routes
+    console.log("[ROUTES] Registering Student-Coach Connection routes...");
+    app.use('/api', studentCoachConnectionRoutes);
+    app.use('/api', coachStudentRequestRoutes);
+    console.log("[ROUTES] Student-Coach Connection routes registered successfully");
     
     console.log("[ROUTES] All modular route systems registered successfully");
     

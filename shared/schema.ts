@@ -1031,10 +1031,18 @@ export const coachStudentAssignments = pgTable("coach_student_assignments", {
   id: serial("id").primaryKey(),
   coachId: integer("coach_id").references(() => users.id).notNull(),
   studentId: integer("student_id").references(() => users.id).notNull(),
-  assignedBy: integer("assigned_by").references(() => users.id).notNull(), // Admin who made the assignment
+  assignedBy: integer("assigned_by").references(() => users.id), // Admin who made the assignment (nullable for student-initiated)
   assignedAt: timestamp("assigned_at").defaultNow(),
   isActive: boolean("is_active").default(true),
   notes: text("notes"), // Admin notes about the assignment
+  
+  // Student-initiated assignments
+  initiatedByStudent: boolean("initiated_by_student").default(false),
+  coachPassportCode: varchar("coach_passport_code", { length: 10 }), // For validation
+  studentRequestDate: timestamp("student_request_date"),
+  coachApprovedDate: timestamp("coach_approved_date"),
+  status: varchar("status", { length: 20 }).default("active"), // "pending", "active", "inactive"
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
