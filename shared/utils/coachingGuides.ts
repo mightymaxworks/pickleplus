@@ -23,13 +23,18 @@ export const SKILL_ASSESSMENT_GUIDES = {
   'Serve Power': {
     description: "Ability to generate speed and force on serves",
     indicators: {
-      1: "Slow, weak serves with minimal speed",
-      3: "Moderate pace, inconsistent power generation",
-      5: "Good power with proper technique, reliable speed",
-      7: "Strong, fast serves that challenge opponents",
-      9: "Explosive power, serves as weapons in matches"
+      1: "Slow, weak serves with minimal speed (under 25 mph)",
+      2: "Limited power, inconsistent speed generation",
+      3: "Moderate pace, developing power (25-35 mph)",
+      4: "Adequate power, some speed but lacks consistency",
+      5: "Good power with proper technique, reliable speed (35-45 mph)",
+      6: "Strong serves with good pace and control",
+      7: "Powerful, fast serves that challenge opponents (45-55 mph)",
+      8: "Excellent power with precision and placement",
+      9: "Explosive power, serves as offensive weapons (55+ mph)",
+      10: "Professional-level power with complete control"
     },
-    coachingTips: "Look for: Weight transfer, shoulder rotation, contact point height, follow-through"
+    coachingTips: "Rating 4: Basic power but inconsistent follow-through. Rating 7: Strong leg drive, full shoulder rotation, consistent power generation"
   },
   
   'Serve Placement': {
@@ -48,12 +53,17 @@ export const SKILL_ASSESSMENT_GUIDES = {
     description: "Powerful, low-trajectory forehand shots with minimal spin",
     indicators: {
       1: "Inconsistent contact, ball often goes high or wide",
+      2: "Poor contact point, limited pace",
       3: "Basic flat shot with some power, needs better control",
-      5: "Solid flat drive with good pace and direction",
-      7: "Powerful, penetrating shots that pressure opponents",
-      9: "Exceptional pace and precision, dominates rallies"
+      4: "Adequate power but inconsistent placement, 6/10 shots land",
+      5: "Solid flat drive with good pace and direction, 7/10 accuracy",
+      6: "Strong drives with consistent depth and pace",
+      7: "Powerful, penetrating shots that pressure opponents, 8/10 accuracy",
+      8: "Excellent pace with pinpoint placement",
+      9: "Exceptional pace and precision, dominates rallies consistently",
+      10: "Perfect technique, can place drives anywhere at will"
     },
-    coachingTips: "Evaluate: Contact point, racquet face angle, follow-through, ball trajectory"
+    coachingTips: "Rating 4: Hits with decent pace but struggles with consistency - work on contact point. Rating 7: Consistently hits with authority and places shots to pressure opponent"
   },
 
   'Forehand Topspin Drive': {
@@ -158,24 +168,34 @@ export const SKILL_ASSESSMENT_GUIDES = {
     description: "Soft shot with slight topspin over the net",
     indicators: {
       1: "Hard to control, often too high or in net",
-      3: "Basic dink with some consistency developing",
-      5: "Good touch and placement, reliable execution",
-      7: "Excellent dink with perfect pace and spin",
-      9: "Master of dink variations, exceptional feel"
+      2: "Inconsistent pace and direction, frequent errors",
+      3: "Basic dink with some consistency developing (5/10 successful)",
+      4: "Adequate soft touch but placement inconsistent (6/10 land in kitchen)",
+      5: "Good touch and placement, reliable execution (7/10 accuracy)",
+      6: "Consistent dinks with good arc and control",
+      7: "Excellent dink with perfect pace and spin (8/10 accuracy, can vary placement)",
+      8: "Superior control with variety of spins and speeds",
+      9: "Master of dink variations, exceptional feel",
+      10: "Perfect touch, can hit any dink shot imaginable"
     },
-    coachingTips: "Look for: Soft hands, minimal swing, contact point, net clearance"
+    coachingTips: "Rating 4: Basic soft touch but struggles with precise placement - work on paddle face control. Rating 7: Consistently places dinks with purpose and can vary pace effectively"
   },
 
   'Forehand Dead Dink': {
     description: "Soft shot with no spin, maximum control",
     indicators: {
       1: "Inconsistent pace, often too hard or soft",
-      3: "Developing touch, improving consistency",
-      5: "Good dead dink with proper pace and placement",
-      7: "Exceptional touch, ball barely clears net",
-      9: "Perfect dead dinks that drop immediately"
+      2: "Poor pace control, struggles with net clearance",
+      3: "Developing touch, improving consistency (5/10 successful)",
+      4: "Adequate pace control but inconsistent placement (6/10 land properly)",
+      5: "Good dead dink with proper pace and placement (7/10 accuracy)",
+      6: "Consistent dead dinks with minimal net clearance",
+      7: "Exceptional touch, ball barely clears net (8/10 accuracy, perfect pace)",
+      8: "Masterful control with pinpoint placement",
+      9: "Perfect dead dinks that drop immediately",
+      10: "Flawless execution, ball drops like a feather"
     },
-    coachingTips: "Assess: Paddle face angle, gentle acceleration, follow-through control"
+    coachingTips: "Rating 4: Has basic soft touch but lacks precision - ball often lands too deep. Rating 7: Consistently drops ball just over net with perfect pace control"
   },
 
   'Forehand Slice Dink': {
@@ -428,12 +448,17 @@ export const SKILL_ASSESSMENT_GUIDES = {
     description: "Powerful overhead shot to finish points",
     indicators: {
       1: "Poor overhead technique, often mishits",
-      3: "Basic overhead, improving power and placement",
-      5: "Good overhead smash with solid technique",
-      7: "Powerful, well-placed overhead shots",
-      9: "Devastating overhead weapon, perfect execution"
+      2: "Inconsistent contact, limited power generation",
+      3: "Basic overhead, improving power and placement (5/10 successful)",
+      4: "Adequate power but inconsistent direction (6/10 put away successfully)",
+      5: "Good overhead smash with solid technique (7/10 accuracy)",
+      6: "Strong smashes with consistent placement",
+      7: "Powerful, well-placed overhead shots (8/10 winners, can angle shots)",
+      8: "Excellent smashes with pinpoint placement",
+      9: "Devastating overhead weapon, perfect execution",
+      10: "Unreturnable overhead smashes at will"
     },
-    coachingTips: "Check: Preparation, contact point height, power generation, follow-through"
+    coachingTips: "Rating 4: Hits with decent power but struggles with placement - often hits straight down. Rating 7: Consistently finishes points with angled smashes and varying pace"
   },
 
   'Backhand Overhead Smash': {
