@@ -279,7 +279,7 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
             PCP Assessment
           </CardTitle>
           <div className="text-xs md:text-sm text-muted-foreground">
-            35 individual skills • Weighted scoring system
+            55 individual skills • Weighted scoring system
           </div>
         </CardHeader>
         <CardContent className="pt-0">

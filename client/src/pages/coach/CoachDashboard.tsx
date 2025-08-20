@@ -370,7 +370,7 @@ export default function CoachDashboard() {
             </div>
             
             <p className="text-sm text-gray-600 max-w-2xl">
-              Welcome to your enhanced coaching dashboard. Manage student assessments and track progress using our comprehensive 35-skill PCP evaluation system.
+              Welcome to your enhanced coaching dashboard. Manage student assessments and track progress using our comprehensive 55-skill PCP evaluation system.
             </p>
           </div>
           
@@ -428,7 +428,7 @@ export default function CoachDashboard() {
                     <ul className="text-sm text-blue-700 space-y-1">
                       <li>• Admin assigns students to coaches through the admin panel</li>
                       <li>• Once assigned, students will appear here for assessment</li>
-                      <li>• You can then conduct the 35-skill PCP assessment system</li>
+                      <li>• You can then conduct the 55-skill PCP assessment system</li>
                     </ul>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export default function CoachDashboard() {
                       <span className="font-medium">Ready for Coaching</span>
                     </div>
                     <p className="text-sm text-green-700 mt-1">
-                      Select a student below to begin their skills assessment using our comprehensive 35-skill evaluation system.
+                      Select a student below to begin their skills assessment using our comprehensive 55-skill evaluation system.
                     </p>
                   </div>
                   
@@ -606,7 +606,7 @@ export default function CoachDashboard() {
                     <ul className="text-sm text-yellow-700 space-y-1">
                       <li>• Go to the "My Students" tab to select a student</li>
                       <li>• Click "Start Skills Assessment" to begin</li>
-                      <li>• Complete the 35-skill PCP evaluation</li>
+                      <li>• Complete the 55-skill PCP evaluation</li>
                       <li>• Assessment results will appear here</li>
                     </ul>
                   </div>

@@ -214,7 +214,7 @@ export default function CoachAssessmentToolPage() {
         <div className="min-w-0 flex-1">
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground truncate">PCP Assessment Tool</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1 line-clamp-2">
-            35 detailed skills • Real-time transparent points • PCP methodology
+            55 detailed skills • Real-time transparent points • PCP methodology
           </p>
         </div>
       </div>

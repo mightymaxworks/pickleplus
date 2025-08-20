@@ -56,7 +56,7 @@ export default function EnhancedCoachingLanding() {
     {
       icon: <Target className="h-8 w-8" />,
       title: 'PCP 4-Dimensional Assessment',
-      description: '35 detailed skills across Technical, Tactical, Physical, and Mental dimensions',
+      description: '55 detailed skills across Technical, Tactical, Physical, and Mental dimensions',
       status: 'Complete'
     },
     {

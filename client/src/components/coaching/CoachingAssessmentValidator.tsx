@@ -52,7 +52,7 @@ interface ProgressiveAssessmentState {
  * 
  * 1. Coach has active L1-L5 level (not just a player)
  * 2. Active coach-student assignment exists (admin-created)
- * 3. Security validation before accessing 35-skill assessment tools
+ * 3. Security validation before accessing 55-skill assessment tools
  * 4. Preserves existing PCP 4-dimensional assessment system
  */
 export function CoachingAssessmentValidator({

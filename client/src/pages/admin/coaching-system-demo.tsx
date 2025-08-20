@@ -58,7 +58,7 @@ export default function CoachingSystemDemo() {
         <h1 className="text-4xl font-bold text-gray-900">Simplified Coaching System</h1>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">
           Complete sprint implementation: Admin-controlled coach levels with mandatory coach-student validation,
-          preserving the comprehensive 35-skill assessment tool and 4-dimensional PCP system.
+          preserving the comprehensive 55-skill assessment tool and 4-dimensional PCP system.
         </p>
       </div>
 
@@ -265,14 +265,14 @@ export default function CoachingSystemDemo() {
                 Preserved Assessment Tools
               </CardTitle>
               <CardDescription>
-                Comprehensive 35-skill assessment tool with 4-dimensional PCP system integration
+                Comprehensive 55-skill assessment tool with 4-dimensional PCP system integration
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert className="border-blue-200 bg-blue-50">
                 <BookOpen className="w-4 h-4" />
                 <AlertDescription>
-                  <strong>Assessment System Preserved:</strong> The existing 35-skill assessment tool and 
+                  <strong>Assessment System Preserved:</strong> The existing 55-skill assessment tool and 
                   4-dimensional PCP system have been maintained exactly as built, with enhanced security 
                   validation now integrated into the workflow.
                 </AlertDescription>
@@ -309,11 +309,11 @@ export default function CoachingSystemDemo() {
                     className="bg-green-600 hover:bg-green-700"
                     onClick={() => {
                       // Demo: Show assessment tool access
-                      alert('Assessment Tool Access Demo:\n\n✅ Coach-student relationship validated\n✅ 35-skill comprehensive assessment ready\n✅ 4-dimensional PCP system integrated\n\nIn production, this would redirect to the full assessment interface.');
+                      alert('Assessment Tool Access Demo:\n\n✅ Coach-student relationship validated\n✅ 55-skill comprehensive assessment ready\n✅ 4-dimensional PCP system integrated\n\nIn production, this would redirect to the full assessment interface.');
                     }}
                   >
                     <ArrowRight className="w-4 h-4 mr-2" />
-                    Access 35-Skill Assessment Tool
+                    Access 55-Skill Assessment Tool
                   </Button>
                 </div>
               )}
