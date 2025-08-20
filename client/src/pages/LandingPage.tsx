@@ -127,20 +127,20 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">PCP</div>
-              <div className="text-gray-300 font-medium">Certified Coaches</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">55</div>
+              <div className="text-gray-300 font-medium">Skill Assessment Points</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">4D</div>
-              <div className="text-gray-300 font-medium">Assessment System</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">L1-L5</div>
+              <div className="text-gray-300 font-medium">Certified Coach Levels</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">DUPR</div>
-              <div className="text-gray-300 font-medium">Integration</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">2-TIER</div>
+              <div className="text-gray-300 font-medium">Rating Validation</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">24/7</div>
-              <div className="text-gray-300 font-medium">Mobile Access</div>
+              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 bg-clip-text text-transparent mb-2">EXPERT</div>
+              <div className="text-gray-300 font-medium">Tournament Ratings</div>
             </div>
           </motion.div>
           
@@ -263,6 +263,134 @@ export default function LandingPage() {
         </div>
       </section>
       
+      {/* Revolutionary Coaching Rating System */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-slate-900 to-gray-900 text-white">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+              Revolutionary <span className="text-orange-500">Coach Rating System</span>
+            </h2>
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+              The most comprehensive skill assessment platform in pickleball, featuring expert coach validation and tournament-ready ratings.
+            </p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Key Features */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="space-y-8">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-orange-500 to-cyan-400 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-white">55-Point Skill Framework™</h3>
+                    <p className="text-gray-300">
+                      Comprehensive assessment across Technical Mastery (20 skills), Tactical Intelligence (15 skills), 
+                      Physical Performance (10 skills), and Mental Fortitude (10 skills).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-orange-500 to-cyan-400 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-white">L1-L5 Coach Certification Hierarchy</h3>
+                    <p className="text-gray-300">
+                      Five levels of certified coaches from foundational instructors to master-level experts, 
+                      ensuring assessments match coaching expertise and experience.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-orange-500 to-cyan-400 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-white">Two-Tier Rating Validation</h3>
+                    <p className="text-gray-300">
+                      <span className="text-amber-400 font-medium">Provisional ratings</span> for development tracking and 
+                      <span className="text-emerald-400 font-medium"> verified ratings</span> confirmed by expert coaches for tournament eligibility.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right: Rating Badge Examples */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="lg:pl-8"
+            >
+              <div className="bg-white/5 backdrop-blur-sm p-8 rounded-2xl border border-orange-500/20">
+                <h3 className="text-xl font-bold mb-6 text-center text-white">Rating Status Examples</h3>
+                
+                {/* Verified Rating Badge */}
+                <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-emerald-600 text-white text-sm font-medium rounded-full">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      VERIFIED
+                    </div>
+                    <span className="text-emerald-400 font-bold text-lg">7.2 PCP</span>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    <span className="text-emerald-400">✓ Tournament eligible</span> • Confirmed by L4 expert coach
+                  </p>
+                </div>
+
+                {/* Provisional Rating Badge */}
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-600 text-white text-sm font-medium rounded-full">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      PROVISIONAL
+                    </div>
+                    <span className="text-amber-400 font-bold text-lg">6.8 PCP</span>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    <span className="text-amber-400">⚠ Requires L4+ validation</span> • Perfect for development tracking
+                  </p>
+                </div>
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-gray-400">
+                    Only expert-level coaches (L4-L5) can create tournament-eligible verified ratings
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* CourtIQ Explanation Section */}
       <CourtIQExplanationSection />
       
