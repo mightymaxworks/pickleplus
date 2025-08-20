@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { CoachingAssessmentValidator } from '@/components/coaching/CoachingAssessmentValidator';
+import { SimpleProgressiveAssessment } from '@/components/coaching/SimpleProgressiveAssessment';
 import { useToast } from '@/hooks/use-toast';
 
 // 55-Skill PCP Assessment Interface Component
@@ -556,12 +556,13 @@ export default function CoachDashboard() {
           )}
         </TabsContent>
 
-        {/* Progressive Assessment Interface */}
+        {/* Simple Progressive Assessment Interface */}
         {showAssessment && selectedStudent && (
           <div className="mt-6" ref={assessmentSectionRef}>
-            <CoachingAssessmentValidator
+            <SimpleProgressiveAssessment
               coachId={currentUser?.id || 0}
               studentId={selectedStudent}
+              studentName={assignedStudents.find(s => s.id === selectedStudent)?.displayName || ""}
               onComplete={() => {
                 setShowAssessment(false);
                 setSelectedStudent(null);
