@@ -174,7 +174,7 @@ export function registerMatchRoutes(app: express.Express): void {
           await storage.updateUserRankingPoints(playerId, rankingPointsToAdd, formatType === 'doubles' ? 'doubles' : 'singles');
           await storage.updateUserPicklePoints(playerId, picklePointsToAdd);
           
-          console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingPointsToAdd} ranking points, +${picklePointsToAdd} pickle points (Age: ${rankingResult.ageMultiplier}x, Gender: ${rankingResult.genderMultiplier}x)`);
+          console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingPointsToAdd} ranking points, +${picklePointsToAdd} pickle points (Age: ${ageMultiplier}x, Gender: ${genderMultiplier}x)`);
         }
         
         console.log('[UDF COMPLIANCE] Successfully processed all player rewards with enhanced algorithm');
