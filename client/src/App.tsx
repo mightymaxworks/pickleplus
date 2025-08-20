@@ -25,6 +25,7 @@ import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
 import { LanguageProvider } from '@/contexts/LanguageContext' // Language internationalization
 import { SmartFeatureGuide } from '@/components/onboarding/SmartFeatureGuide' // Smart feature discovery
 import { ProfileCompletionWrapper } from '@/components/profile/ProfileCompletionWrapper' // Profile completion system
+import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coach weighted assessment testing
 
 
 // Import module initializations
@@ -256,6 +257,8 @@ export default function App() {
                   <Route path="/streamlined-match-demo" component={lazyLoad(() => import('./pages/StreamlinedMatchDemo'))} />
                   {/* Student-Coach Connection Demo */}
                   <Route path="/coaching-connection-demo" component={lazyLoad(() => import('./pages/coaching-connection-demo'))} />
+                  {/* Coach Weighted Assessment Test */}
+                  <Route path="/weighted-assessment-test" component={WeightedAssessmentTestPage} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
                   {/* <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} /> */}
                   {/* <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} /> */}

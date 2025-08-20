@@ -14,8 +14,7 @@ import {
   getAssessmentsRequiringValidation,
   type CoachAssessment 
 } from '@shared/utils/coachWeightedAssessment';
-import { requireAuth } from '../middleware/auth';
-import { requireCoachLevel } from '../middleware/coaching';
+import { requireCoachLevel, requireCoach } from '../middleware/coaching';
 
 const router = Router();
 
@@ -42,11 +41,11 @@ const weightedPCPRequestSchema = z.object({
  * Submit a new coach assessment with automatic weighting
  * POST /api/coach-weighted-assessment/submit
  */
-router.post('/submit', requireAuth, requireCoachLevel(1), async (req, res) => {
+router.post('/submit', requireCoach, async (req, res) => {
   try {
     const validatedData = assessmentSubmissionSchema.parse(req.body);
     const coachId = req.user!.id;
-    const coachLevel = req.user!.coachLevel;
+    const coachLevel = req.user!.coachLevel || 0;
 
     // Create assessment record
     const newAssessment: CoachAssessment = {
@@ -88,10 +87,11 @@ router.post('/submit', requireAuth, requireCoachLevel(1), async (req, res) => {
 
   } catch (error) {
     console.error('Assessment submission error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(400).json({
       success: false,
       error: error instanceof z.ZodError ? 'Validation failed' : 'Assessment submission failed',
-      details: error instanceof z.ZodError ? error.errors : error.message
+      details: error instanceof z.ZodError ? error.errors : errorMessage
     });
   }
 });
@@ -100,7 +100,7 @@ router.post('/submit', requireAuth, requireCoachLevel(1), async (req, res) => {
  * Calculate weighted PCP for a student based on all coach assessments
  * GET /api/coach-weighted-assessment/calculate/:studentId
  */
-router.get('/calculate/:studentId', requireAuth, async (req, res) => {
+router.get('/calculate/:studentId', requireCoach, async (req, res) => {
   try {
     const studentId = parseInt(req.params.studentId);
     const query = weightedPCPRequestSchema.parse(req.query);
@@ -175,10 +175,11 @@ router.get('/calculate/:studentId', requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('Weighted PCP calculation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       error: 'Failed to calculate weighted PCP',
-      details: error.message
+      details: errorMessage
     });
   }
 });
@@ -187,7 +188,7 @@ router.get('/calculate/:studentId', requireAuth, async (req, res) => {
  * Get assessment requirements and validation status for a student
  * GET /api/coach-weighted-assessment/validation-status/:studentId
  */
-router.get('/validation-status/:studentId', requireAuth, async (req, res) => {
+router.get('/validation-status/:studentId', requireCoach, async (req, res) => {
   try {
     const studentId = parseInt(req.params.studentId);
 
@@ -237,10 +238,11 @@ router.get('/validation-status/:studentId', requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('Validation status error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       error: 'Failed to get validation status',
-      details: error.message
+      details: errorMessage
     });
   }
 });
@@ -249,9 +251,9 @@ router.get('/validation-status/:studentId', requireAuth, async (req, res) => {
  * Get coach weighting information and capabilities
  * GET /api/coach-weighted-assessment/coach-info
  */
-router.get('/coach-info', requireAuth, requireCoachLevel(1), async (req, res) => {
+router.get('/coach-info', requireCoach, async (req, res) => {
   try {
-    const coachLevel = req.user!.coachLevel;
+    const coachLevel = req.user!.coachLevel || 0;
     const coachId = req.user!.id;
 
     // Get coach's weighting information
@@ -310,10 +312,11 @@ router.get('/coach-info', requireAuth, requireCoachLevel(1), async (req, res) =>
 
   } catch (error) {
     console.error('Coach info error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       error: 'Failed to get coach information',
-      details: error.message
+      details: errorMessage
     });
   }
 });

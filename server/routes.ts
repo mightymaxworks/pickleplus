@@ -29,6 +29,7 @@ import coachMarketplaceProfilesRouter from './api/coach-marketplace-profiles';
 import decayProtectionRoutes from './routes/decay-protection';
 import { studentCoachConnectionRoutes } from './routes/student-coach-connections';
 import { coachStudentRequestRoutes } from './routes/coach-student-requests';
+import coachWeightedAssessmentRoutes from './routes/coach-weighted-assessment';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -1100,6 +1101,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Coach management admin routes registered successfully");
 
   const httpServer = createServer(app);
+  // Register Coach Weighted Assessment routes
+  console.log('[ROUTES] Registering Coach Weighted Assessment routes...');
+  app.use('/api/coach-weighted-assessment', coachWeightedAssessmentRoutes);
+  console.log('[ROUTES] Coach Weighted Assessment routes registered successfully');
+
+  // Register Coach Weighted Assessment Test routes
+  console.log('[ROUTES] Registering Coach Weighted Assessment Test routes...');
+  const { getTestScenarios, runTestScenario, getWeightMatrix } = await import('./api/test-coach-weighted-assessment');
+  app.get('/api/test/coach-weighted-assessment/scenarios', getTestScenarios);
+  app.post('/api/test/coach-weighted-assessment/run-scenario', runTestScenario);
+  app.get('/api/test/coach-weighted-assessment/weight-matrix', getWeightMatrix);
+  console.log('[ROUTES] Coach Weighted Assessment Test routes registered successfully');
+
   console.log("[ROUTES] Modular route architecture setup complete");
   
   return httpServer;

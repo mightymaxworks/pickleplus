@@ -200,9 +200,9 @@ export function validateAssessmentRequirements(assessments: CoachAssessment[]): 
  */
 export function calculateWeightedPCP(assessments: CoachAssessment[]): WeightedPCPResult {
   // Validate assessment requirements
-  const validation = validateAssessmentRequirements(assessments);
-  if (!validation.isValid) {
-    throw new Error(`Assessment validation failed: ${validation.reason}`);
+  const assessmentValidation = validateAssessmentRequirements(assessments);
+  if (!assessmentValidation.isValid) {
+    throw new Error(`Assessment validation failed: ${assessmentValidation.reason}`);
   }
 
   const categories = ['technical', 'tactical', 'physical', 'mental'] as const;
@@ -265,7 +265,7 @@ export function calculateWeightedPCP(assessments: CoachAssessment[]): WeightedPC
   );
 
   // Get rating status from validation
-  const validation = validateAssessmentRequirements(assessments);
+  const ratingValidation = validateAssessmentRequirements(assessments);
 
   // Calculate quality metrics
   const totalWeight = Object.values(categoryWeights).reduce((sum, weight) => sum + weight, 0) / 4;
@@ -276,9 +276,9 @@ export function calculateWeightedPCP(assessments: CoachAssessment[]): WeightedPC
 
   return {
     finalPCPRating: Math.round(finalPCPRating * 100) / 100, // 2 decimal precision
-    ratingStatus: validation.ratingStatus,
-    statusReason: validation.statusReason,
-    daysUntilExpiration: validation.daysUntilExpiration,
+    ratingStatus: ratingValidation.ratingStatus,
+    statusReason: ratingValidation.statusReason,
+    daysUntilExpiration: ratingValidation.daysUntilExpiration,
     categoryBreakdown,
     contributingAssessments,
     qualityMetrics: {
@@ -298,7 +298,8 @@ export function calculateWeightedPCP(assessments: CoachAssessment[]): WeightedPC
 export function getAssessmentsRequiringValidation(assessments: CoachAssessment[]): CoachAssessment[] {
   return assessments.filter(assessment => {
     const daysSince = Math.floor((Date.now() - assessment.assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
-    return assessment.coachLevel <= 2 && daysSince > 30;
+    const maxDays = assessment.coachLevel <= 2 ? 60 : 90;
+    return assessment.coachLevel <= 3 && daysSince > maxDays;
   });
 }
 
@@ -313,8 +314,8 @@ export function getNextAssessmentRecommendation(assessments: CoachAssessment[]):
   if (assessments.length === 0) {
     return {
       recommendedDate: new Date(),
-      recommendedCoachLevel: 1,
-      reason: "Initial assessment required"
+      recommendedCoachLevel: 4,
+      reason: "Initial L4+ assessment required for confirmed rating"
     };
   }
 
@@ -324,30 +325,39 @@ export function getNextAssessmentRecommendation(assessments: CoachAssessment[]):
 
   const daysSinceLatest = Math.floor((Date.now() - latestAssessment.assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
   const maxLevel = Math.max(...assessments.map(a => a.coachLevel));
+  const hasL4Plus = assessments.some(a => a.coachLevel >= 4);
 
-  if (maxLevel <= 2 && daysSinceLatest > 20) {
+  // If no L4+ assessment exists, recommend L4+ for confirmation
+  if (!hasL4Plus) {
     return {
       recommendedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      recommendedCoachLevel: 3,
-      reason: "L3+ validation required for L1-L2 assessments"
+      recommendedCoachLevel: 4,
+      reason: "L4+ assessment required to confirm provisional rating"
     };
   }
 
-  if (maxLevel >= 3 && daysSinceLatest > 60) {
+  // If L4+ assessment is expiring soon
+  const l4PlusAssessments = assessments.filter(a => a.coachLevel >= 4);
+  const latestL4Plus = l4PlusAssessments.reduce((latest, current) => 
+    current.assessmentDate > latest.assessmentDate ? current : latest
+  );
+  const daysSinceL4Plus = Math.floor((Date.now() - latestL4Plus.assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysSinceL4Plus > 90) {
     return {
       recommendedDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
-      recommendedCoachLevel: maxLevel,
-      reason: "Regular reassessment recommended"
+      recommendedCoachLevel: 4,
+      reason: "L4+ reassessment needed to maintain confirmed status"
     };
   }
 
   // Standard reassessment timeline
-  const nextDate = new Date(latestAssessment.assessmentDate);
-  nextDate.setDate(nextDate.getDate() + (maxLevel >= 3 ? 90 : 30));
+  const nextDate = new Date(latestL4Plus.assessmentDate);
+  nextDate.setDate(nextDate.getDate() + 120);
 
   return {
     recommendedDate: nextDate,
-    recommendedCoachLevel: maxLevel,
-    reason: "Scheduled reassessment"
+    recommendedCoachLevel: 4,
+    reason: "Scheduled L4+ reassessment to maintain confirmed rating"
   };
 }
