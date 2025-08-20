@@ -7,11 +7,11 @@ This algorithm introduces differential weighting based on coach certification le
 
 ### 1. Coach Level Weight Matrix
 ```
-L1 Coach: 1.0x base weight (foundational assessment)
-L2 Coach: 1.3x weight (enhanced technical knowledge)
-L3 Coach: 1.6x weight (advanced tactical understanding)
-L4 Coach: 2.0x weight (expert-level analysis)
-L5 Coach: 2.5x weight (master-level assessment authority)
+L1 Coach: 0.7x base weight (minimal influence - foundational assessment)
+L2 Coach: 1.0x weight (standard baseline - enhanced technical knowledge)
+L3 Coach: 1.8x weight (80% increase - advanced tactical understanding)
+L4 Coach: 3.2x weight (220% increase - expert-level analysis)
+L5 Coach: 3.8x weight (280% increase - master-level assessment authority)
 ```
 
 ### 2. Assessment Confidence Factors

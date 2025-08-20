@@ -47,14 +47,14 @@ export interface WeightedPCPResult {
 
 /**
  * Coach level base weight multipliers
- * Higher levels receive greater influence due to enhanced expertise
+ * Adjusted to reflect certification difficulty with larger gaps at higher levels
  */
 const COACH_LEVEL_WEIGHTS: Record<number, number> = {
-  1: 1.0,   // Foundational assessment
-  2: 1.3,   // Enhanced technical knowledge
-  3: 1.6,   // Advanced tactical understanding
-  4: 2.0,   // Expert-level analysis
-  5: 2.5    // Master-level assessment authority
+  1: 0.7,   // Minimal influence - foundational assessment only
+  2: 1.0,   // Standard baseline - enhanced technical knowledge
+  3: 1.8,   // 80% increase - advanced tactical understanding
+  4: 3.2,   // 220% increase - expert-level analysis (largest gap)
+  5: 3.8    // 280% increase - master-level assessment authority
 };
 
 /**

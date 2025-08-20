@@ -259,10 +259,10 @@ router.get('/coach-info', requireAuth, requireCoachLevel(1), async (req, res) =>
       coachId,
       coachLevel,
       assessmentCapabilities: {
-        baseWeight: coachLevel === 1 ? 1.0 : 
-                   coachLevel === 2 ? 1.3 :
-                   coachLevel === 3 ? 1.6 :
-                   coachLevel === 4 ? 2.0 : 2.5,
+        baseWeight: coachLevel === 1 ? 0.7 : 
+                   coachLevel === 2 ? 1.0 :
+                   coachLevel === 3 ? 1.8 :
+                   coachLevel === 4 ? 3.2 : 3.8,
         confidenceFactors: {
           technical: coachLevel === 1 ? 0.8 : 
                     coachLevel === 2 ? 0.9 :

@@ -8,14 +8,20 @@ I've designed a sophisticated multi-level coach weighting algorithm that address
 
 ### 1. **Progressive Weight Scaling**
 ```
-L1: 1.0x  (Base weight - foundational assessment)
-L2: 1.3x  (30% increase - enhanced technical knowledge)
-L3: 1.6x  (60% increase - advanced tactical understanding)
-L4: 2.0x  (100% increase - expert-level analysis)
-L5: 2.5x  (150% increase - master-level assessment authority)
+L1: 0.7x  (Minimal influence - foundational assessment only)
+L2: 1.0x  (Standard baseline - enhanced technical knowledge)
+L3: 1.8x  (80% increase - advanced tactical understanding)
+L4: 3.2x  (220% increase - expert-level analysis)
+L5: 3.8x  (280% increase - master-level assessment authority)
 ```
 
-**Rationale:** This creates meaningful differentiation without making lower-level coaches irrelevant. An L5 coach has 2.5x the influence of an L1 coach, but L1 assessments still contribute meaningfully.
+**Rationale:** This creates significant differentiation that reflects certification difficulty. Key gaps:
+- **L1→L2:** 43% increase (0.7→1.0) - establishing baseline competency
+- **L2→L3:** 80% increase (1.0→1.8) - major advancement in tactical skills
+- **L3→L4:** 78% increase (1.8→3.2) - largest gap reflecting expert certification difficulty
+- **L4→L5:** 19% increase (3.2→3.8) - smaller gap between expert levels
+
+An L5 coach now has 5.4x the influence of an L1 coach, properly reflecting the certification hierarchy.
 
 ### 2. **Category-Specific Confidence Factors**
 
@@ -54,13 +60,13 @@ Final_Category_Score = Σ(Coach_Score × Coach_Weight × Confidence × Time_Weig
 
 **Calculation for Technical Category:**
 ```
-L2 Contribution: 7.5 × 1.3 × 0.9 × 1.0 = 8.775
-L4 Contribution: 8.0 × 2.0 × 0.98 × 1.0 = 15.68
-Total Weight: (1.3 × 0.9) + (2.0 × 0.98) = 3.13
-Final Technical Score: (8.775 + 15.68) / 3.13 = 7.84
+L2 Contribution: 7.5 × 1.0 × 0.9 × 1.0 = 6.75
+L4 Contribution: 8.0 × 3.2 × 0.98 × 1.0 = 25.088
+Total Weight: (1.0 × 0.9) + (3.2 × 0.98) = 4.036
+Final Technical Score: (6.75 + 25.088) / 4.036 = 7.88
 ```
 
-**Result:** The L4 coach's higher rating carries more weight, but the L2 assessment still influences the final score.
+**Result:** The L4 coach's assessment now carries significantly more weight (3.2x vs 1.0x), properly reflecting the expert certification level. The L2 assessment contributes but has limited influence on the expert-validated rating.
 
 ## Quality Assurance Mechanisms
 
@@ -125,13 +131,14 @@ Certain assessment areas have enhanced authority requirements:
 
 ## Discussion Points
 
-### Q: How do we prevent L5 coaches from completely dominating assessments?
+### Q: How do we prevent L4/L5 coaches from completely dominating assessments?
 
 **A:** The algorithm includes several safeguards:
-1. **Maximum Weight Cap:** Even L5 coaches are limited to 2.5x base weight
-2. **Multi-Coach Averaging:** Multiple assessments dilute any single coach's influence
-3. **Category-Specific Limits:** No coach has 100% confidence in all categories
+1. **Confidence Factor Limits:** Even L5 coaches don't have 100% confidence in all categories
+2. **Multi-Coach Averaging:** Multiple assessments dilute any single coach's influence  
+3. **Category-Specific Expertise:** Physical skills have smaller expertise gaps across levels
 4. **Consensus Requirements:** Outlier assessments are flagged for review
+5. **Time Decay:** All assessments lose weight over time, requiring fresh input
 
 ### Q: What happens when coaches disagree significantly?
 
@@ -140,13 +147,14 @@ Certain assessment areas have enhanced authority requirements:
 2. **Moderate Consensus (0.5-0.8):** Weighted averaging with flagging
 3. **High Consensus (>0.8):** Standard weighted calculation
 
-### Q: How do we ensure L1-L2 coaches remain motivated?
+### Q: How do we ensure L1-L2 coaches remain motivated despite reduced weight?
 
 **A:** Several algorithmic features maintain lower-level coach value:
-1. **Meaningful Contribution:** L1 assessments still influence final ratings
-2. **Category Strengths:** Physical skills have smaller expertise gaps
-3. **Validation Opportunities:** L1-L2 coaches can validate each other initially
-4. **Development Tracking:** System tracks improvement toward higher levels
+1. **Foundational Role:** L1 assessments provide essential baseline data
+2. **Category Contributions:** Physical skills maintain reasonable L1 influence (90% confidence)
+3. **Multi-Assessment Value:** L1/L2 coaches working together carry meaningful weight
+4. **Development Pathway:** Clear progression incentives toward higher certification
+5. **Student Volume:** L1/L2 coaches handle larger student populations where expert coaches aren't available
 
 ### Q: Can this algorithm detect coaching bias or errors?
 
