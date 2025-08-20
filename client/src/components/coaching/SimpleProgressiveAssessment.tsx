@@ -224,9 +224,31 @@ export function SimpleProgressiveAssessment({
                         <div key={skill} className="bg-white border border-gray-200 rounded-lg p-2 lg:p-3">
                           {/* Mobile Compact Design */}
                           <div className="lg:hidden">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-sm text-gray-900">{skill}</h4>
-                              <span className="text-xs text-gray-500">{skillGuide.coachingTips.slice(0, 30)}...</span>
+                            <div className="mb-2">
+                              <h4 className="font-semibold text-sm text-gray-900 mb-1">{skill}</h4>
+                              <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                                <span className="font-medium">💡 Coach Tip:</span> {skillGuide.coachingTips}
+                              </div>
+                            </div>
+                            
+                            {/* Mobile Rating Scale Reference */}
+                            <div className="grid grid-cols-4 gap-1 text-xs mb-2">
+                              <div className="text-center">
+                                <div className="font-medium text-red-700">1-3</div>
+                                <div className="text-red-600">Beginner</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium text-yellow-700">4-5</div>
+                                <div className="text-yellow-600">Competent</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium text-green-700">6-8</div>
+                                <div className="text-green-600">Advanced</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="font-medium text-purple-700">9-10</div>
+                                <div className="text-purple-600">Expert</div>
+                              </div>
                             </div>
                             
                             {/* Mobile Inline Rating */}
@@ -248,9 +270,9 @@ export function SimpleProgressiveAssessment({
                             
                             {/* Mobile Quick Guide */}
                             {skillRatings[skill] && (
-                              <div className="text-xs bg-blue-50 border border-blue-200 rounded p-1.5">
-                                <span className="font-medium text-blue-700">Rating {skillRatings[skill]}: </span>
-                                <span className="text-blue-600">{getRatingDescription(skillRatings[skill]).label}</span>
+                              <div className="text-xs bg-green-50 border border-green-200 rounded p-1.5">
+                                <span className="font-medium text-green-700">Rating {skillRatings[skill]}: </span>
+                                <span className="text-green-600">{getRatingDescription(skillRatings[skill]).label}</span>
                               </div>
                             )}
 
@@ -279,9 +301,31 @@ export function SimpleProgressiveAssessment({
                     <div key={skill} className="bg-white border border-gray-200 rounded-lg p-2 lg:p-3">
                       {/* Mobile Compact Design */}
                       <div className="lg:hidden">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-sm text-gray-900">{skill}</h4>
-                          <span className="text-xs text-gray-500">{skillGuide.coachingTips.slice(0, 30)}...</span>
+                        <div className="mb-2">
+                          <h4 className="font-semibold text-sm text-gray-900 mb-1">{skill}</h4>
+                          <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                            <span className="font-medium">💡 Coach Tip:</span> {skillGuide.coachingTips}
+                          </div>
+                        </div>
+                        
+                        {/* Mobile Rating Scale Reference */}
+                        <div className="grid grid-cols-4 gap-1 text-xs mb-2">
+                          <div className="text-center">
+                            <div className="font-medium text-red-700">1-3</div>
+                            <div className="text-red-600">Beginner</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-medium text-yellow-700">4-5</div>
+                            <div className="text-yellow-600">Competent</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-medium text-green-700">6-8</div>
+                            <div className="text-green-600">Advanced</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-medium text-purple-700">9-10</div>
+                            <div className="text-purple-600">Expert</div>
+                          </div>
                         </div>
                         
                         {/* Mobile Inline Rating */}
@@ -303,45 +347,12 @@ export function SimpleProgressiveAssessment({
                         
                         {/* Mobile Quick Guide */}
                         {skillRatings[skill] && (
-                          <div className="text-xs bg-blue-50 border border-blue-200 rounded p-1.5">
-                            <span className="font-medium text-blue-700">Rating {skillRatings[skill]}: </span>
-                            <span className="text-blue-600">{getRatingDescription(skillRatings[skill]).label}</span>
+                          <div className="text-xs bg-green-50 border border-green-200 rounded p-1.5">
+                            <span className="font-medium text-green-700">Rating {skillRatings[skill]}: </span>
+                            <span className="text-green-600">{getRatingDescription(skillRatings[skill]).label}</span>
                           </div>
                         )}
-                        
-                        {/* Mobile Rating Guide - Always Visible */}
-                        <div className="space-y-3 text-xs bg-gray-50 p-3 rounded-lg border">
-                          <div className="font-semibold text-gray-800 text-center mb-2">
-                            📋 Coaching Guidance - Review Before Rating
-                          </div>
-                          
 
-                          
-                          {/* Coaching Tip */}
-                          <div className="bg-blue-50 border border-blue-300 rounded p-2">
-                            <div className="font-medium text-blue-800">Coach Tip:</div>
-                            <div className="text-blue-700 text-xs">{skillGuide.coachingTips}</div>
-                          </div>
-                          
-                          {/* Complete Rating Scale */}
-                          <div className="grid grid-cols-2 gap-1">
-                            <div className="bg-red-50 border border-red-200 rounded p-1.5">
-                              <div className="font-medium text-red-700">1-3: Beginner</div>
-                              <div className="text-red-600 text-xs">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic development needed"}</div>
-                            </div>
-                            <div className="bg-yellow-50 border border-yellow-200 rounded p-1.5">
-                              <div className="font-medium text-yellow-700">4-5: Competent</div>
-                              <div className="text-yellow-600 text-xs">{skillGuide.indicators[5] || "Adequate execution"}</div>
-                            </div>
-                            <div className="bg-green-50 border border-green-200 rounded p-1.5">
-                              <div className="font-medium text-green-700">6-8: Advanced</div>
-                              <div className="text-green-600 text-xs">{skillGuide.indicators[7] || "Strong performance"}</div>
-                            </div>
-                            <div className="bg-purple-50 border border-purple-200 rounded p-1.5">
-                              <div className="font-medium text-purple-700">9-10: Expert</div>
-                              <div className="text-purple-600 text-xs">{skillGuide.indicators[9] || "Exceptional skill"}</div>
-                            </div>
-                          </div>
                           
                           {/* Current Rating Feedback */}
                           {currentRating && (
