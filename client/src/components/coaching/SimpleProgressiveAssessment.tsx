@@ -119,9 +119,38 @@ export function SimpleProgressiveAssessment({
   const progressPercentage = totalSkills > 0 ? (completedSkills / totalSkills) * 100 : 0;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 w-full max-w-7xl mx-auto p-4">
-      {/* Main Assessment Content */}
-      <div className="flex-1 order-2 lg:order-1">
+    <div className="w-full max-w-7xl mx-auto p-4">
+      {/* Mobile Sticky PCP Header */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200 mb-4 -mx-4 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {currentPCP?.pcpRating?.toFixed(2) || '0.00'}
+              </div>
+              <div className="text-xs text-gray-500">PCP Rating</div>
+            </div>
+            <div className="flex-1 max-w-32">
+              <div className="text-xs text-gray-600 mb-1">
+                {completedSkills}/{totalSkills} skills
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={onCancel}>
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Main Assessment Content */}
+        <div className="flex-1 order-2 lg:order-1">
         <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -198,68 +227,106 @@ export function SimpleProgressiveAssessment({
                       const currentRating = skillRatings[skill];
                       
                       return (
-                        <div key={skill} className="bg-white border border-gray-200 rounded-lg p-4">
-                          {/* Skill Header */}
-                          <div className="flex items-start gap-2 mb-3">
-                            <div className="flex-1">
+                        <div key={skill} className="bg-white border border-gray-200 rounded-lg p-3 lg:p-4">
+                          {/* Mobile Compact Header */}
+                          <div className="lg:hidden">
+                            <div className="flex items-center justify-between mb-2">
                               <h4 className="font-semibold text-sm text-gray-900">{skill}</h4>
-                              <p className="text-xs text-gray-600 mt-1">{skillGuide.description}</p>
+                              <HelpCircle className="w-4 h-4 text-gray-400" />
                             </div>
-                            <HelpCircle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                          </div>
-                          
-                          {/* Rating Buttons */}
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {[1,2,3,4,5,6,7,8,9,10].map(num => (
-                              <button
-                                key={num}
-                                onClick={() => updateSkillRating(skill, num)}
-                                className={`w-8 h-8 rounded text-xs font-medium border transition-colors ${
-                                  skillRatings[skill] === num 
-                                    ? 'bg-blue-500 text-white border-blue-500' 
-                                    : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
-                                }`}
-                              >
-                                {num}
-                              </button>
-                            ))}
-                          </div>
-                          
-                          {/* Smart Indicators */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                            <div className="bg-red-50 border border-red-200 rounded p-2">
-                              <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
-                              <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                            <p className="text-xs text-gray-600 mb-3">{skillGuide.description}</p>
+                            
+                            {/* Mobile Rating Buttons */}
+                            <div className="grid grid-cols-5 gap-1 mb-3">
+                              {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                                <button
+                                  key={num}
+                                  onClick={() => updateSkillRating(skill, num)}
+                                  className={`h-10 rounded text-xs font-medium border transition-colors ${
+                                    skillRatings[skill] === num 
+                                      ? 'bg-blue-500 text-white border-blue-500' 
+                                      : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50'
+                                  }`}
+                                >
+                                  {num}
+                                </button>
+                              ))}
                             </div>
-                            <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                              <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
-                              <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
-                            </div>
-                            <div className="bg-green-50 border border-green-200 rounded p-2">
-                              <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
-                              <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
-                            </div>
-                            <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                              <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
-                              <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
-                            </div>
-                          </div>
-                          
-                          {/* Current Rating Feedback */}
-                          {currentRating && (
-                            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
-                              <div className="flex items-center gap-2">
-                                <Info className="w-4 h-4 text-blue-600" />
-                                <div>
+                            
+                            {/* Mobile Feedback Only */}
+                            {currentRating && (
+                              <div className="p-2 bg-blue-50 border border-blue-200 rounded">
+                                <div className="text-xs">
                                   <span className="font-medium text-blue-700">Rating {currentRating}: </span>
-                                  <span className="text-blue-600 text-sm">{getRatingDescription(currentRating).label}</span>
+                                  <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
                                 </div>
                               </div>
-                              <div className="text-xs text-blue-600 mt-1 font-medium">
-                                Coach Tip: {skillGuide.coachingTips}
+                            )}
+                          </div>
+
+                          {/* Desktop Full Header */}
+                          <div className="hidden lg:block">
+                            <div className="flex items-start gap-2 mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm text-gray-900">{skill}</h4>
+                                <p className="text-xs text-gray-600 mt-1">{skillGuide.description}</p>
+                              </div>
+                              <HelpCircle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                            </div>
+                            
+                            {/* Desktop Rating Buttons */}
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                                <button
+                                  key={num}
+                                  onClick={() => updateSkillRating(skill, num)}
+                                  className={`w-8 h-8 rounded text-xs font-medium border transition-colors ${
+                                    skillRatings[skill] === num 
+                                      ? 'bg-blue-500 text-white border-blue-500' 
+                                      : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
+                                  }`}
+                                >
+                                  {num}
+                                </button>
+                              ))}
+                            </div>
+                            
+                            {/* Desktop Smart Indicators */}
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="bg-red-50 border border-red-200 rounded p-2">
+                                <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
+                                <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                              </div>
+                              <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                                <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
+                                <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
+                              </div>
+                              <div className="bg-green-50 border border-green-200 rounded p-2">
+                                <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
+                                <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
+                              </div>
+                              <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                                <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
+                                <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
                               </div>
                             </div>
-                          )}
+                            
+                            {/* Desktop Current Rating Feedback */}
+                            {currentRating && (
+                              <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+                                <div className="flex items-center gap-2">
+                                  <Info className="w-4 h-4 text-blue-600" />
+                                  <div>
+                                    <span className="font-medium text-blue-700">Rating {currentRating}: </span>
+                                    <span className="text-blue-600 text-sm">{getRatingDescription(currentRating).label}</span>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-blue-600 mt-1 font-medium">
+                                  Coach Tip: {skillGuide.coachingTips}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -279,68 +346,106 @@ export function SimpleProgressiveAssessment({
                   const currentRating = skillRatings[skill];
                   
                   return (
-                    <div key={skill} className="bg-white border border-gray-200 rounded-lg p-4">
-                      {/* Skill Header */}
-                      <div className="flex items-start gap-2 mb-3">
-                        <div className="flex-1">
+                    <div key={skill} className="bg-white border border-gray-200 rounded-lg p-3 lg:p-4">
+                      {/* Mobile Compact Header */}
+                      <div className="lg:hidden">
+                        <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-sm text-gray-900">{skill}</h4>
-                          <p className="text-xs text-gray-600 mt-1">{skillGuide.description}</p>
+                          <HelpCircle className="w-4 h-4 text-gray-400" />
                         </div>
-                        <HelpCircle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                      </div>
-                      
-                      {/* Rating Buttons */}
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {[1,2,3,4,5,6,7,8,9,10].map(num => (
-                          <button
-                            key={num}
-                            onClick={() => updateSkillRating(skill, num)}
-                            className={`w-8 h-8 rounded text-xs font-medium border transition-colors ${
-                              skillRatings[skill] === num 
-                                ? 'bg-blue-500 text-white border-blue-500' 
-                                : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                      
-                      {/* Smart Indicators */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        <div className="bg-red-50 border border-red-200 rounded p-2">
-                          <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
-                          <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                        <p className="text-xs text-gray-600 mb-3">{skillGuide.description}</p>
+                        
+                        {/* Mobile Rating Buttons */}
+                        <div className="grid grid-cols-5 gap-1 mb-3">
+                          {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => updateSkillRating(skill, num)}
+                              className={`h-10 rounded text-xs font-medium border transition-colors ${
+                                skillRatings[skill] === num 
+                                  ? 'bg-blue-500 text-white border-blue-500' 
+                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
                         </div>
-                        <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                          <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
-                          <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
-                        </div>
-                        <div className="bg-green-50 border border-green-200 rounded p-2">
-                          <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
-                          <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
-                        </div>
-                        <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                          <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
-                          <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
-                        </div>
-                      </div>
-                      
-                      {/* Current Rating Feedback */}
-                      {currentRating && (
-                        <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
-                          <div className="flex items-center gap-2">
-                            <Info className="w-4 h-4 text-blue-600" />
-                            <div>
+                        
+                        {/* Mobile Feedback Only */}
+                        {currentRating && (
+                          <div className="p-2 bg-blue-50 border border-blue-200 rounded">
+                            <div className="text-xs">
                               <span className="font-medium text-blue-700">Rating {currentRating}: </span>
-                              <span className="text-blue-600 text-sm">{getRatingDescription(currentRating).label}</span>
+                              <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
                             </div>
                           </div>
-                          <div className="text-xs text-blue-600 mt-1 font-medium">
-                            Coach Tip: {skillGuide.coachingTips}
+                        )}
+                      </div>
+
+                      {/* Desktop Full Header */}
+                      <div className="hidden lg:block">
+                        <div className="flex items-start gap-2 mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm text-gray-900">{skill}</h4>
+                            <p className="text-xs text-gray-600 mt-1">{skillGuide.description}</p>
+                          </div>
+                          <HelpCircle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                        </div>
+                        
+                        {/* Desktop Rating Buttons */}
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => updateSkillRating(skill, num)}
+                              className={`w-8 h-8 rounded text-xs font-medium border transition-colors ${
+                                skillRatings[skill] === num 
+                                  ? 'bg-blue-500 text-white border-blue-500' 
+                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* Desktop Smart Indicators */}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="bg-red-50 border border-red-200 rounded p-2">
+                            <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
+                            <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                          </div>
+                          <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                            <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
+                            <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
+                          </div>
+                          <div className="bg-green-50 border border-green-200 rounded p-2">
+                            <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
+                            <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
+                          </div>
+                          <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                            <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
+                            <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
                           </div>
                         </div>
-                      )}
+                        
+                        {/* Desktop Current Rating Feedback */}
+                        {currentRating && (
+                          <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+                            <div className="flex items-center gap-2">
+                              <Info className="w-4 h-4 text-blue-600" />
+                              <div>
+                                <span className="font-medium text-blue-700">Rating {currentRating}: </span>
+                                <span className="text-blue-600 text-sm">{getRatingDescription(currentRating).label}</span>
+                              </div>
+                            </div>
+                            <div className="text-xs text-blue-600 mt-1 font-medium">
+                              Coach Tip: {skillGuide.coachingTips}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -392,9 +497,9 @@ export function SimpleProgressiveAssessment({
     </Card>
     </div>
 
-    {/* Sticky PCP Sidebar */}
-    <div className="w-full lg:w-72 flex-shrink-0 order-1 lg:order-2">
-      <div className="lg:sticky lg:top-24">
+        {/* Desktop PCP Sidebar */}
+        <div className="hidden lg:block w-72 flex-shrink-0 order-1 lg:order-2">
+          <div className="sticky top-24">
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-center text-blue-800 text-lg">Live PCP Rating</CardTitle>
@@ -461,8 +566,9 @@ export function SimpleProgressiveAssessment({
             </div>
           </CardContent>
         </Card>
+          </div>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
