@@ -19,7 +19,12 @@ import {
   TrendingUp,
   Calendar,
   TestTube,
-  Play
+  Play,
+  Award,
+  BadgeCheck,
+  AlertCircle,
+  ShieldCheck,
+  Timer
 } from 'lucide-react';
 
 interface CoachInfo {
@@ -177,16 +182,44 @@ export function WeightedAssessmentDashboard() {
     }
   };
 
-  const getRatingStatusIcon = (status: string) => {
+  const getRatingStatusIcon = (status: string, size: 'sm' | 'md' | 'lg' = 'md') => {
+    const sizeClass = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5';
+    
     return status === 'CONFIRMED' ? (
-      <CheckCircle className="w-4 h-4 text-green-600" />
+      <BadgeCheck className={`${sizeClass} text-emerald-600`} />
     ) : (
-      <AlertTriangle className="w-4 h-4 text-amber-600" />
+      <AlertCircle className={`${sizeClass} text-amber-500`} />
     );
   };
 
   const getRatingStatusColor = (status: string) => {
-    return status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800';
+    return status === 'CONFIRMED' 
+      ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+      : 'bg-amber-50 text-amber-800 border-amber-200';
+  };
+
+  const getRatingStatusBadge = (status: string, large?: boolean) => {
+    const baseClasses = large 
+      ? 'px-4 py-2 text-sm font-semibold border-2' 
+      : 'px-3 py-1 text-xs font-medium border';
+    
+    if (status === 'CONFIRMED') {
+      return (
+        <div className={`inline-flex items-center gap-2 rounded-full ${baseClasses} bg-emerald-50 text-emerald-800 border-emerald-200`}>
+          <ShieldCheck className={large ? 'w-5 h-5' : 'w-4 h-4'} />
+          <span className="font-bold">VERIFIED RATING</span>
+          {large && <Star className="w-4 h-4 fill-emerald-600 text-emerald-600" />}
+        </div>
+      );
+    } else {
+      return (
+        <div className={`inline-flex items-center gap-2 rounded-full ${baseClasses} bg-amber-50 text-amber-800 border-amber-200`}>
+          <Timer className={large ? 'w-5 h-5' : 'w-4 h-4'} />
+          <span className="font-bold">PROVISIONAL</span>
+          {large && <AlertTriangle className="w-4 h-4 text-amber-600" />}
+        </div>
+      );
+    }
   };
 
   const fetchTestScenarios = async () => {
@@ -327,18 +360,67 @@ export function WeightedAssessmentDashboard() {
                   </Alert>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-semibold">Validation Status</h4>
-                        <div className="flex items-center gap-2">
-                          {getRatingStatusIcon(testResults.validation.ratingStatus)}
-                          <Badge className={getRatingStatusColor(testResults.validation.ratingStatus)}>
-                            {testResults.validation.ratingStatus}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <h4 className="font-semibold mb-3">Rating Validation Status</h4>
+                        {getRatingStatusBadge(testResults.validation.ratingStatus, true)}
+                        <p className="text-sm text-muted-foreground mt-2">
                           {testResults.validation.statusReason}
                         </p>
+                      </div>
+
+                      {testResults.validation.ratingStatus === 'PROVISIONAL' && (
+                        <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="w-6 h-6 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm">
+                              <p className="font-bold text-amber-800 mb-2">⚠️ PROVISIONAL RATING NOTICE</p>
+                              <p className="text-amber-700 mb-2">
+                                This rating requires validation by an <strong>L4+ certified coach</strong> before it can be used for official tournaments or rankings.
+                              </p>
+                              <div className="bg-amber-100 rounded-md p-2 mt-2">
+                                <p className="text-xs font-medium text-amber-800">
+                                  💡 Book an assessment with an L4 or L5 coach to get your verified rating badge!
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {testResults.validation.ratingStatus === 'CONFIRMED' && (
+                        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <Award className="w-6 h-6 text-emerald-600 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm">
+                              <p className="font-bold text-emerald-800 mb-2">🏆 VERIFIED RATING ACHIEVEMENT</p>
+                              <p className="text-emerald-700 mb-2">
+                                This rating has been <strong>confirmed by expert-level coaches</strong> and is eligible for all official competitions.
+                              </p>
+                              <div className="bg-emerald-100 rounded-md p-2 mt-2">
+                                <p className="text-xs font-medium text-emerald-800">
+                                  ✨ Congratulations! Your skills have been officially recognized.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        {testResults.weightedResult && (
+                          <div className="text-center">
+                            <h4 className="font-semibold mb-2">Final PCP Rating</h4>
+                            <div className="text-3xl font-bold text-primary mb-2">
+                              {testResults.weightedResult.finalPCPRating}
+                            </div>
+                            {testResults.weightedResult.daysUntilExpiration && (
+                              <p className="text-sm text-muted-foreground">
+                                Expires in {testResults.weightedResult.daysUntilExpiration} days
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
                       {testResults.weightedResult && (
@@ -548,13 +630,12 @@ export function WeightedAssessmentDashboard() {
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Rating Status:</span>
-              <div className="flex items-center gap-2">
-                {getRatingStatusIcon(submissionResult.ratingStatus)}
-                <Badge className={getRatingStatusColor(submissionResult.ratingStatus)}>
-                  {submissionResult.ratingStatus}
-                </Badge>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Rating Status:</span>
+              </div>
+              <div className="flex justify-center">
+                {getRatingStatusBadge(submissionResult.ratingStatus, true)}
               </div>
             </div>
 
@@ -601,10 +682,42 @@ export function WeightedAssessmentDashboard() {
             </div>
 
             {submissionResult.ratingStatus === 'PROVISIONAL' && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  This rating requires confirmation from an L4+ coach for official use.
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <div className="space-y-2">
+                    <p className="font-semibold">⚠️ Provisional Rating Status</p>
+                    <p>This assessment creates a <strong>provisional rating</strong> that requires validation by an L4+ certified coach before it can be used for:</p>
+                    <ul className="list-disc list-inside ml-4 space-y-1 text-sm">
+                      <li>Official tournament participation</li>
+                      <li>Ranking system inclusion</li>
+                      <li>Coach certification applications</li>
+                    </ul>
+                    <p className="text-sm font-medium mt-2">
+                      💡 To get a verified rating, schedule an assessment with an L4 or L5 certified coach.
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {submissionResult.ratingStatus === 'CONFIRMED' && (
+              <Alert className="border-emerald-200 bg-emerald-50">
+                <Award className="h-5 w-5 text-emerald-600" />
+                <AlertDescription className="text-emerald-800">
+                  <div className="space-y-2">
+                    <p className="font-semibold">🏆 Verified Rating Achievement</p>
+                    <p>Congratulations! This assessment has been <strong>verified by expert-level coaches</strong> and is now eligible for:</p>
+                    <ul className="list-disc list-inside ml-4 space-y-1 text-sm">
+                      <li>All official tournament competitions</li>
+                      <li>Professional ranking inclusion</li>
+                      <li>Advanced coaching program applications</li>
+                      <li>Skill-based matchmaking systems</li>
+                    </ul>
+                    <p className="text-sm font-medium mt-2">
+                      ✨ This verified rating represents official recognition of your pickleball abilities.
+                    </p>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
