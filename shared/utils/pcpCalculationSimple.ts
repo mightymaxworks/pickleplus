@@ -119,34 +119,9 @@ export function calculatePCPRating(assessmentData: AssessmentData): PCPCalculati
   };
 }
 
-/**
- * Calculate average rating for a skill category
- */
-function calculateCategoryAverage(category: CategoryName, assessmentData: AssessmentData): number {
-  const categorySkills = SKILL_CATEGORIES[category];
-  const ratings = categorySkills
-    .map(skill => assessmentData[skill])
-    .filter(rating => rating !== undefined && rating > 0);
 
-  if (ratings.length === 0) return 1; // Default to minimum if no ratings
 
-  return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
-}
 
-/**
- * Get category weight for display
- */
-export function getCategoryWeight(category: CategoryName): number {
-  const weightMap: Record<CategoryName, number> = {
-    'Touch': PCP_WEIGHTS.TOUCH,
-    'Technical': PCP_WEIGHTS.TECHNICAL,
-    'Mental': PCP_WEIGHTS.MENTAL,
-    'Athletic': PCP_WEIGHTS.ATHLETIC,
-    'Power': PCP_WEIGHTS.POWER
-  };
-  
-  return weightMap[category];
-}
 
 /**
  * Generate sample assessment data for testing
