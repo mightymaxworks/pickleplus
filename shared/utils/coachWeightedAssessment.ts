@@ -24,6 +24,9 @@ export interface CoachAssessment {
 
 export interface WeightedPCPResult {
   finalPCPRating: number;
+  ratingStatus: 'PROVISIONAL' | 'CONFIRMED';
+  statusReason: string;
+  daysUntilExpiration?: number;
   categoryBreakdown: {
     technical: number;
     tactical: number;
@@ -42,6 +45,8 @@ export interface WeightedPCPResult {
     assessmentCount: number;
     averageCoachLevel: number;
     consensusScore: number; // 0-1, higher = more agreement
+    hasL4PlusValidation: boolean;
+    highestCoachLevel: number;
   };
 }
 
@@ -115,56 +120,79 @@ function calculateConsensus(categoryScores: Record<string, number[]>): number {
 }
 
 /**
- * Validate assessment requirements based on coach levels
+ * Validate assessment requirements and determine rating status
  */
 export function validateAssessmentRequirements(assessments: CoachAssessment[]): {
   isValid: boolean;
   reason?: string;
   requiresHigherLevelValidation?: boolean;
+  ratingStatus: 'PROVISIONAL' | 'CONFIRMED';
+  statusReason: string;
+  daysUntilExpiration?: number;
 } {
   if (assessments.length === 0) {
-    return { isValid: false, reason: "No assessments provided" };
-  }
-
-  const maxLevel = Math.max(...assessments.map(a => a.coachLevel));
-  const hasL3Plus = assessments.some(a => a.coachLevel >= 3);
-  const hasL4Plus = assessments.some(a => a.coachLevel >= 4);
-
-  // Single assessment validation
-  if (assessments.length === 1) {
-    const assessment = assessments[0];
-    const daysSince = Math.floor((Date.now() - assessment.assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (assessment.coachLevel <= 2 && daysSince > 30) {
-      return { 
-        isValid: false, 
-        reason: "L1-L2 assessments require validation from L3+ within 30 days",
-        requiresHigherLevelValidation: true
-      };
-    }
-
-    if (assessment.coachLevel >= 3 && daysSince > 90) {
-      return { 
-        isValid: false, 
-        reason: "Assessment expired - L3+ assessments valid for 90 days"
-      };
-    }
-  }
-
-  // Multi-coach assessment validation
-  if (assessments.length >= 2) {
-    if (hasL3Plus || hasL4Plus) {
-      return { isValid: true };
-    }
-
     return { 
       isValid: false, 
-      reason: "Multiple L1-L2 assessments require L3+ validation",
-      requiresHigherLevelValidation: true
+      reason: "No assessments provided",
+      ratingStatus: 'PROVISIONAL',
+      statusReason: "No assessments available"
     };
   }
 
-  return { isValid: true };
+  const maxLevel = Math.max(...assessments.map(a => a.coachLevel));
+  const hasL4Plus = assessments.some(a => a.coachLevel >= 4);
+  const latestAssessment = assessments.reduce((latest, current) => 
+    current.assessmentDate > latest.assessmentDate ? current : latest
+  );
+  const daysSinceLatest = Math.floor((Date.now() - latestAssessment.assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  // CONFIRMED RATING: Requires L4+ coach assessment
+  if (hasL4Plus) {
+    const l4PlusAssessments = assessments.filter(a => a.coachLevel >= 4);
+    const latestL4Plus = l4PlusAssessments.reduce((latest, current) => 
+      current.assessmentDate > latest.assessmentDate ? current : latest
+    );
+    const daysSinceL4Plus = Math.floor((Date.now() - latestL4Plus.assessmentDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysSinceL4Plus > 120) {
+      return {
+        isValid: false,
+        reason: "L4+ assessment expired - confirmed ratings valid for 120 days",
+        ratingStatus: 'PROVISIONAL',
+        statusReason: "L4+ confirmation expired",
+        daysUntilExpiration: 0
+      };
+    }
+
+    return {
+      isValid: true,
+      ratingStatus: 'CONFIRMED',
+      statusReason: `Confirmed by L${latestL4Plus.coachLevel} coach`,
+      daysUntilExpiration: 120 - daysSinceL4Plus
+    };
+  }
+
+  // PROVISIONAL RATING: L1-L3 assessments only
+  const maxProvisionalDays = maxLevel <= 2 ? 60 : 90; // L3 gets longer provisional period
+  
+  if (daysSinceLatest > maxProvisionalDays) {
+    return {
+      isValid: false,
+      reason: `Provisional rating expired - L${maxLevel} assessments valid for ${maxProvisionalDays} days`,
+      requiresHigherLevelValidation: true,
+      ratingStatus: 'PROVISIONAL',
+      statusReason: "Provisional rating expired - requires L4+ confirmation",
+      daysUntilExpiration: 0
+    };
+  }
+
+  return {
+    isValid: true,
+    requiresHigherLevelValidation: true,
+    ratingStatus: 'PROVISIONAL',
+    statusReason: `Provisional rating - requires L4+ coach confirmation`,
+    daysUntilExpiration: maxProvisionalDays - daysSinceLatest
+  };
 }
 
 /**
@@ -236,20 +264,30 @@ export function calculateWeightedPCP(assessments: CoachAssessment[]): WeightedPC
     categoryBreakdown.mental * 0.15      // 15% mental
   );
 
+  // Get rating status from validation
+  const validation = validateAssessmentRequirements(assessments);
+
   // Calculate quality metrics
   const totalWeight = Object.values(categoryWeights).reduce((sum, weight) => sum + weight, 0) / 4;
   const averageCoachLevel = assessments.reduce((sum, a) => sum + a.coachLevel, 0) / assessments.length;
   const consensusScore = calculateConsensus(categoryScores);
+  const hasL4PlusValidation = assessments.some(a => a.coachLevel >= 4);
+  const highestCoachLevel = Math.max(...assessments.map(a => a.coachLevel));
 
   return {
     finalPCPRating: Math.round(finalPCPRating * 100) / 100, // 2 decimal precision
+    ratingStatus: validation.ratingStatus,
+    statusReason: validation.statusReason,
+    daysUntilExpiration: validation.daysUntilExpiration,
     categoryBreakdown,
     contributingAssessments,
     qualityMetrics: {
       totalWeight,
       assessmentCount: assessments.length,
       averageCoachLevel,
-      consensusScore
+      consensusScore,
+      hasL4PlusValidation,
+      highestCoachLevel
     }
   };
 }

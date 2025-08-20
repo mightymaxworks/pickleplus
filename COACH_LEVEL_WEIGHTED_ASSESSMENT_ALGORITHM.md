@@ -3,6 +3,8 @@
 ## Overview
 This algorithm introduces differential weighting based on coach certification levels (L1-L5) to enhance PCP rating accuracy through expert assessment validation. Higher-level coaches receive greater influence on a player's final PCP rating due to their enhanced training, experience, and assessment capabilities.
 
+**CRITICAL QUALITY REQUIREMENT:** All player PCP ratings remain **PROVISIONAL** until validated by at least one L4+ coach assessment. Only L4 and L5 coaches possess the expertise required to provide **CONFIRMED** ratings that establish a player's official PCP standing.
+
 ## Core Algorithm Structure
 
 ### 1. Coach Level Weight Matrix
@@ -69,16 +71,25 @@ Time_Weight = max(0.5, 1.0 - (days_since_assessment / 90))
 Final_Weight = Coach_Weight × Confidence_Factor × Time_Weight
 ```
 
-### 5. Assessment Validation Thresholds
+### 5. Assessment Validation Thresholds & Rating Status
 
-**Single Coach Assessment:**
-- L1-L2: Requires validation from L3+ within 30 days
-- L3+: Standalone assessment valid for 90 days
+**PROVISIONAL RATINGS (L1-L3 Only):**
+- All assessments from L1-L3 coaches produce PROVISIONAL ratings
+- Provisional ratings are temporary and must be confirmed by L4+ assessment
+- Provisional status displayed prominently in all interfaces
+- Limited validity period: 60 days maximum before requiring L4+ confirmation
 
-**Multi-Coach Assessment:**
-- 2+ L3+ coaches: Immediate validation
-- L4/L5 + any level: Immediate validation
-- L1/L2 only: Pending until higher-level validation
+**CONFIRMED RATINGS (L4+ Required):**
+- Only L4 and L5 coaches can establish CONFIRMED PCP ratings
+- L4/L5 assessment immediately validates any existing provisional assessments
+- Confirmed ratings valid for 120 days
+- Official tournament eligibility requires CONFIRMED rating status
+
+**Validation Timeline Requirements:**
+- L1-L2 assessments: Require L4+ confirmation within 60 days
+- L3 assessments: Require L4+ confirmation within 90 days  
+- L4+ assessments: Provide immediate confirmation status
+- Expired provisional ratings: Must be re-assessed by L4+ coach
 
 ### 6. Skill Category Expertise Zones
 

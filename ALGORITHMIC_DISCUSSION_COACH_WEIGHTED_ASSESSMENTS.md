@@ -4,6 +4,8 @@
 
 I've designed a sophisticated multi-level coach weighting algorithm that addresses the fundamental challenge: **How can we ensure that more experienced coaches have appropriate influence on player PCP ratings while maintaining assessment integrity?**
 
+**CRITICAL QUALITY CONTROL:** The algorithm implements a **PROVISIONAL vs. CONFIRMED** rating system where only L4+ coaches can establish official PCP ratings. All L1-L3 assessments remain provisional until validated by expert-level coaches, ensuring quality throughout the certification ecosystem.
+
 ## Core Algorithmic Principles
 
 ### 1. **Progressive Weight Scaling**
