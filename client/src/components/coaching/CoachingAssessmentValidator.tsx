@@ -290,9 +290,9 @@ export function CoachingAssessmentValidator({
                       <SelectValue placeholder="Select category to focus on" />
                     </SelectTrigger>
                     <SelectContent>
-                      {SKILL_CATEGORIES.map(category => (
-                        <SelectItem key={category.name} value={category.name}>
-                          {category.name} ({category.weight}% weight)
+                      {Object.keys(SKILL_CATEGORIES).map(categoryName => (
+                        <SelectItem key={categoryName} value={categoryName}>
+                          {categoryName} ({Math.round(getCategoryWeight(categoryName as CategoryName) * 100)}% weight)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -310,9 +310,7 @@ export function CoachingAssessmentValidator({
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
-                      {SKILL_CATEGORIES
-                        .find(cat => cat.name === progressiveState.selectedCategory)
-                        ?.skills.map(skill => {
+                      {SKILL_CATEGORIES[progressiveState.selectedCategory as CategoryName]?.map(skill => {
                           const currentAssessment = progressiveState.selectedSkills.find(s => s.skillName === skill);
                           return (
                             <div key={skill} className="flex items-center justify-between p-3 bg-white rounded-lg border">
