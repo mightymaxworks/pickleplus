@@ -12,8 +12,21 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Target, BookOpen, User, ArrowLeft, Info, HelpCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { SKILL_CATEGORIES, calculatePCPRating, getCategoryWeight, type AssessmentData, type CategoryName } from '@shared/utils/pcpCalculationSimple';
+import { SKILL_CATEGORIES, calculatePCPRating, getCategoryWeight, type CategoryName } from '@shared/utils/pcpCalculationSimple';
 import { getSkillGuide, getRatingDescription } from '@shared/utils/coachingGuides';
+
+interface PCPResult {
+  pcpRating: number;
+  categoryAverages: {
+    touch: number;
+    technical: number;
+    mental: number;
+    athletic: number;
+    power: number;
+  };
+  skillCount: number;
+  rawScore: number;
+}
 
 interface SimpleProgressiveAssessmentProps {
   coachId: number;
@@ -40,7 +53,7 @@ export function SimpleProgressiveAssessment({
   const [selectedCategory, setSelectedCategory] = useState<CategoryName | 'all'>('all');
   const [skillRatings, setSkillRatings] = useState<Record<string, number>>({});
   const [sessionNotes, setSessionNotes] = useState('');
-  const [currentPCP, setCurrentPCP] = useState<number | null>(null);
+  const [currentPCP, setCurrentPCP] = useState<PCPResult | null>(null);
 
   // Get skills to display based on selected category
   const getSkillsToDisplay = () => {
@@ -60,7 +73,9 @@ export function SimpleProgressiveAssessment({
     // Calculate PCP if we have any ratings
     if (Object.keys(newRatings).length > 0) {
       const result = calculatePCPRating(newRatings);
-      setCurrentPCP(result.pcpRating);
+      setCurrentPCP(result);
+    } else {
+      setCurrentPCP(null);
     }
   };
 
