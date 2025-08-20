@@ -352,24 +352,7 @@ export function SimpleProgressiveAssessment({
                             <span className="text-green-600">{getRatingDescription(skillRatings[skill]).label}</span>
                           </div>
                         )}
-
-                          
-                          {/* Current Rating Feedback */}
-                          {currentRating && (
-                            <div className="p-2 bg-blue-50 border border-blue-200 rounded">
-                              <div className="flex items-center gap-2">
-                                <Info className="w-3 h-3 text-blue-600" />
-                                <div>
-                                  <span className="font-medium text-blue-700">Rating {currentRating}: </span>
-                                  <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
-                                </div>
-                              </div>
-                              <div className="text-xs text-blue-600 mt-1 font-medium">
-                                Tip: {skillGuide.coachingTips}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        
                       </div>
 
                       {/* Desktop Compact Design */}
