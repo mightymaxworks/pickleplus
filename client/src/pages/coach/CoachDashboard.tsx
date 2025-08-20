@@ -470,8 +470,9 @@ export default function CoachDashboard() {
                             <Button 
                               className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" 
                               onClick={() => {
-                                console.log('Start Skills Assessment clicked for student:', student.id);
+                                console.log('Start Progressive Assessment clicked for student:', student.id);
                                 setSelectedStudent(student.id);
+                                setShowAssessment(true);
                                 console.log('Selected student set to:', student.id);
                                 // Scroll to assessment section after a brief delay
                                 setTimeout(() => {
@@ -483,7 +484,7 @@ export default function CoachDashboard() {
                               }}
                             >
                               <BookOpen className="w-4 h-4 mr-2" />
-                              Start Skills Assessment
+                              Start Progressive Assessment
                             </Button>
                             
                             {student.lastAssessment && (
@@ -516,13 +517,13 @@ export default function CoachDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
-                    <h4 className="font-medium text-gray-900 mb-2">55-Skill Comprehensive Assessment</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">Progressive Assessment System</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• <strong>Groundstrokes & Serves:</strong> 11 skills - Power, placement, drives, returns</li>
-                      <li>• <strong>Dinks & Resets:</strong> 16 skills - All dink variations, drops, resets, lobs</li>
-                      <li>• <strong>Volleys & Smashes:</strong> 6 skills - Punch/roll volleys, overhead smashes</li>
-                      <li>• <strong>Footwork & Fitness:</strong> 10 skills - Movement, agility, conditioning</li>
-                      <li>• <strong>Mental Game:</strong> 10 skills - Focus, pressure, emotional control</li>
+                      <li>• <strong>Focused Training:</strong> Target specific skill categories</li>
+                      <li>• <strong>Comprehensive Evaluation:</strong> Full 55-skill assessment available</li>
+                      <li>• <strong>Real-time PCP Calculation:</strong> Live rating updates as skills are assessed</li>
+                      <li>• <strong>Session Documentation:</strong> Notes and progress tracking</li>
+                      <li>• <strong>Coach-Student Validation:</strong> Security and assignment verification</li>
                     </ul>
                   </div>
                   
@@ -555,13 +556,12 @@ export default function CoachDashboard() {
           )}
         </TabsContent>
 
-        {/* 55-Skill Assessment Interface */}
+        {/* Progressive Assessment Interface */}
         {showAssessment && selectedStudent && (
-          <div className="mt-6">
-            <SkillAssessmentInterface
-              studentId={selectedStudent}
+          <div className="mt-6" ref={assessmentSectionRef}>
+            <CoachingAssessmentValidator
               coachId={currentUser?.id || 0}
-              studentName={assignedStudents.find(s => s.id === selectedStudent)?.displayName || ""}
+              studentId={selectedStudent}
               onComplete={() => {
                 setShowAssessment(false);
                 setSelectedStudent(null);
