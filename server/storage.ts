@@ -265,6 +265,7 @@ export interface IStorage extends CommunityStorage {
   getPicklePoints(userId: number): Promise<number>;
   updateUserRankingPoints(userId: number, pointsToAdd: number, format: 'singles' | 'doubles'): Promise<void>;
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
+  updateUserMatchStatistics(userId: number, isWinner: boolean): Promise<void>;
   searchUsersByName(searchTerm: string): Promise<User[]>;
   getTournamentParticipationByUser(userId: number): Promise<any[]>;
   createAuditLog(data: any): Promise<void>;
@@ -1168,6 +1169,36 @@ export class DatabaseStorage implements IStorage {
       console.log(`[POINTS UPDATE] User ${userId}: +${pointsToAdd} pickle points`);
     } catch (error) {
       console.error(`Error updating pickle points for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async updateUserMatchStatistics(userId: number, isWinner: boolean): Promise<void> {
+    try {
+      if (isWinner) {
+        // Increment both total matches and matches won for winners
+        await db.update(users)
+          .set({
+            totalMatches: sql`${users.totalMatches} + 1`,
+            matchesWon: sql`${users.matchesWon} + 1`,
+            lastMatchDate: new Date()
+          })
+          .where(eq(users.id, userId));
+        
+        console.log(`[MATCH STATS UPDATE] User ${userId}: +1 total match, +1 match won (Winner)`);
+      } else {
+        // Increment only total matches for losers
+        await db.update(users)
+          .set({
+            totalMatches: sql`${users.totalMatches} + 1`,
+            lastMatchDate: new Date()
+          })
+          .where(eq(users.id, userId));
+        
+        console.log(`[MATCH STATS UPDATE] User ${userId}: +1 total match (Loser)`);
+      }
+    } catch (error) {
+      console.error(`Error updating match statistics for user ${userId}:`, error);
       throw error;
     }
   }

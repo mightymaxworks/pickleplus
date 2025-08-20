@@ -174,6 +174,9 @@ export function registerMatchRoutes(app: express.Express): void {
           await storage.updateUserRankingPoints(playerId, rankingPointsToAdd, formatType === 'doubles' ? 'doubles' : 'singles');
           await storage.updateUserPicklePoints(playerId, picklePointsToAdd);
           
+          // CRITICAL FIX: Update match statistics to fix win percentage calculation
+          await storage.updateUserMatchStatistics(playerId, isWinner);
+          
           console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingPointsToAdd} ranking points, +${picklePointsToAdd} pickle points (Age: ${ageMultiplier}x, Gender: ${genderMultiplier}x)`);
         }
         
@@ -203,6 +206,9 @@ export function registerMatchRoutes(app: express.Express): void {
           
           await storage.updateUserPicklePoints(playerId, picklePoints);
           await storage.updateUserRankingPoints(playerId, points, formatType === 'doubles' ? 'doubles' : 'singles');
+          
+          // CRITICAL FIX: Update match statistics in fallback too
+          await storage.updateUserMatchStatistics(playerId, isWinner);
           
           console.log(`[FALLBACK] Player ${playerId}: +${points} ranking points, +${picklePoints} pickle points`);
         }
