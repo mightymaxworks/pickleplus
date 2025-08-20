@@ -104,45 +104,10 @@ export function SimpleProgressiveAssessment({
   const progressPercentage = totalSkills > 0 ? (completedSkills / totalSkills) * 100 : 0;
 
   return (
-    <div className="relative">
-      {/* Floating PCP Rating Display */}
-      <div className="fixed top-20 right-6 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[220px]">
-        <div className="text-center">
-          <div className="text-sm font-medium text-gray-600 mb-2">Current PCP Rating</div>
-          <div className="text-3xl font-bold text-blue-600 mb-2">
-            {currentPCP?.pcpRating?.toFixed(2) || '0.00'}
-          </div>
-          <div className="text-xs text-gray-500 mb-3">
-            {completedSkills} of {totalSkills} skills rated
-          </div>
-          {currentPCP && currentPCP.categoryAverages && (
-            <div className="space-y-1 text-xs border-t pt-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Touch (30%):</span>
-                <span className="font-bold text-blue-600">{currentPCP.categoryAverages.touch?.toFixed(1) || '0.0'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Technical (25%):</span>
-                <span className="font-bold text-green-600">{currentPCP.categoryAverages.technical?.toFixed(1) || '0.0'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Mental (20%):</span>
-                <span className="font-bold text-purple-600">{currentPCP.categoryAverages.mental?.toFixed(1) || '0.0'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Athletic (15%):</span>
-                <span className="font-bold text-orange-600">{currentPCP.categoryAverages.athletic?.toFixed(1) || '0.0'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Power (10%):</span>
-                <span className="font-bold text-red-600">{currentPCP.categoryAverages.power?.toFixed(1) || '0.0'}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Card className="border-blue-200 bg-blue-50 mr-60">
+    <div className="flex flex-col lg:flex-row gap-6 w-full max-w-7xl mx-auto p-4">
+      {/* Main Assessment Content */}
+      <div className="flex-1 order-2 lg:order-1">
+        <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-blue-800">
@@ -229,7 +194,7 @@ export function SimpleProgressiveAssessment({
                           </div>
                           
                           {/* Rating Buttons */}
-                          <div className="flex gap-1 mb-3">
+                          <div className="flex flex-wrap gap-1 mb-3">
                             {[1,2,3,4,5,6,7,8,9,10].map(num => (
                               <button
                                 key={num}
@@ -246,7 +211,7 @@ export function SimpleProgressiveAssessment({
                           </div>
                           
                           {/* Smart Indicators */}
-                          <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                             <div className="bg-red-50 border border-red-200 rounded p-2">
                               <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
                               <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
@@ -310,7 +275,7 @@ export function SimpleProgressiveAssessment({
                       </div>
                       
                       {/* Rating Buttons */}
-                      <div className="flex gap-1 mb-3">
+                      <div className="flex flex-wrap gap-1 mb-3">
                         {[1,2,3,4,5,6,7,8,9,10].map(num => (
                           <button
                             key={num}
@@ -327,7 +292,7 @@ export function SimpleProgressiveAssessment({
                       </div>
                       
                       {/* Smart Indicators */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                         <div className="bg-red-50 border border-red-200 rounded p-2">
                           <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
                           <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
@@ -410,6 +375,79 @@ export function SimpleProgressiveAssessment({
         </div>
       </CardContent>
     </Card>
+    </div>
+
+    {/* Sticky PCP Sidebar */}
+    <div className="w-full lg:w-72 flex-shrink-0 order-1 lg:order-2">
+      <div className="lg:sticky lg:top-24">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-center text-blue-800 text-lg">Live PCP Rating</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Main PCP Display */}
+            <div className="text-center bg-white rounded-lg p-4 border border-blue-100">
+              <div className="text-4xl font-bold text-blue-600 mb-1">
+                {currentPCP?.pcpRating?.toFixed(2) || '0.00'}
+              </div>
+              <div className="text-sm text-gray-600">
+                {completedSkills} of {totalSkills} skills rated
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Category Breakdown */}
+            {currentPCP && currentPCP.categoryAverages && (
+              <div className="space-y-2">
+                <h3 className="font-semibold text-blue-700 text-sm">Category Breakdown</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center bg-white rounded px-3 py-2 border border-blue-100">
+                    <span className="text-xs font-medium text-gray-700">Touch (30%)</span>
+                    <span className="font-bold text-blue-600">{currentPCP.categoryAverages.touch?.toFixed(1) || '0.0'}</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-white rounded px-3 py-2 border border-green-100">
+                    <span className="text-xs font-medium text-gray-700">Technical (25%)</span>
+                    <span className="font-bold text-green-600">{currentPCP.categoryAverages.technical?.toFixed(1) || '0.0'}</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-white rounded px-3 py-2 border border-purple-100">
+                    <span className="text-xs font-medium text-gray-700">Mental (20%)</span>
+                    <span className="font-bold text-purple-600">{currentPCP.categoryAverages.mental?.toFixed(1) || '0.0'}</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-white rounded px-3 py-2 border border-orange-100">
+                    <span className="text-xs font-medium text-gray-700">Athletic (15%)</span>
+                    <span className="font-bold text-orange-600">{currentPCP.categoryAverages.athletic?.toFixed(1) || '0.0'}</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-white rounded px-3 py-2 border border-red-100">
+                    <span className="text-xs font-medium text-gray-700">Power (10%)</span>
+                    <span className="font-bold text-red-600">{currentPCP.categoryAverages.power?.toFixed(1) || '0.0'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Assessment Progress */}
+            <div className="bg-white rounded-lg p-3 border border-blue-100">
+              <h3 className="font-semibold text-blue-700 text-sm mb-2">Assessment Progress</h3>
+              <div className="text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>Completion:</span>
+                  <span className="font-medium">{Math.round(progressPercentage)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Skills Remaining:</span>
+                  <span className="font-medium">{totalSkills - completedSkills}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
     </div>
   );
 }
