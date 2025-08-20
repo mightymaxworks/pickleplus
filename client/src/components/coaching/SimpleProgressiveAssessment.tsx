@@ -143,7 +143,7 @@ export function SimpleProgressiveAssessment({
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={onCancel}>
-            <ArrowLeft className="w-4 h-4" />
+            Done
           </Button>
         </div>
       </div>
@@ -153,16 +153,10 @@ export function SimpleProgressiveAssessment({
         <div className="flex-1 order-2 lg:order-1">
         <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-blue-800">
-              <Star className="w-5 h-5" />
-              Progressive Skills Assessment
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={onCancel}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Star className="w-5 h-5" />
+            Progressive Skills Assessment
+          </CardTitle>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-blue-600" />
@@ -350,21 +344,7 @@ export function SimpleProgressiveAssessment({
                                 <h5 className="font-semibold text-gray-800">Professional Assessment Guidance</h5>
                               </div>
                               
-                              {/* Highlighted Examples for Common Ratings */}
-                              <div className="grid grid-cols-2 gap-3 mb-3">
-                                {skillGuide.indicators[4] && (
-                                  <div className="bg-yellow-50 border border-yellow-300 rounded p-3">
-                                    <div className="font-semibold text-yellow-800 mb-1">Rating 4 - Competent Level</div>
-                                    <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
-                                  </div>
-                                )}
-                                {skillGuide.indicators[7] && (
-                                  <div className="bg-green-50 border border-green-300 rounded p-3">
-                                    <div className="font-semibold text-green-800 mb-1">Rating 7 - Advanced Level</div>
-                                    <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
-                                  </div>
-                                )}
-                              </div>
+
                               
                               {/* Professional Coaching Tip */}
                               <div className="bg-blue-50 border border-blue-300 rounded p-3">
@@ -460,21 +440,7 @@ export function SimpleProgressiveAssessment({
                             📋 Coaching Guidance - Review Before Rating
                           </div>
                           
-                          {/* Key Rating Examples */}
-                          <div className="space-y-2">
-                            {skillGuide.indicators[4] && (
-                              <div className="bg-yellow-50 border border-yellow-300 rounded p-2">
-                                <div className="font-medium text-yellow-800">Rating 4 Example:</div>
-                                <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
-                              </div>
-                            )}
-                            {skillGuide.indicators[7] && (
-                              <div className="bg-green-50 border border-green-300 rounded p-2">
-                                <div className="font-medium text-green-800">Rating 7 Example:</div>
-                                <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
-                              </div>
-                            )}
-                          </div>
+
                           
                           {/* Coaching Tip */}
                           <div className="bg-blue-50 border border-blue-300 rounded p-2">
@@ -554,21 +520,7 @@ export function SimpleProgressiveAssessment({
                             <h5 className="font-semibold text-gray-800">Professional Assessment Guidance</h5>
                           </div>
                           
-                          {/* Highlighted Examples for Common Ratings */}
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                            {skillGuide.indicators[4] && (
-                              <div className="bg-yellow-50 border border-yellow-300 rounded p-3">
-                                <div className="font-semibold text-yellow-800 mb-1">Rating 4 - Competent Level</div>
-                                <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
-                              </div>
-                            )}
-                            {skillGuide.indicators[7] && (
-                              <div className="bg-green-50 border border-green-300 rounded p-3">
-                                <div className="font-semibold text-green-800 mb-1">Rating 7 - Advanced Level</div>
-                                <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
-                              </div>
-                            )}
-                          </div>
+
                           
                           {/* Professional Coaching Tip */}
                           <div className="bg-blue-50 border border-blue-300 rounded p-3">
@@ -635,13 +587,6 @@ export function SimpleProgressiveAssessment({
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
-          <Button 
-            variant="outline" 
-            onClick={onCancel}
-            className="flex-1"
-          >
-            Cancel
-          </Button>
           <Button 
             onClick={() => saveAssessment.mutate()}
             disabled={saveAssessment.isPending || completedSkills === 0}
