@@ -13,6 +13,15 @@ The PicklePlus algorithm uses **System B standardization** with conservative bas
 
 ## 📊 **1. RANKING POINTS SYSTEM - SYSTEM B STANDARDIZED**
 
+### **CRITICAL: ADDITIVE POINTS REQUIREMENT** ⚠️ **MANDATORY**
+
+**ALL POINT ALLOCATIONS MUST USE CUMULATIVE ADDITION:**
+- ✅ **CORRECT:** New points ADD to existing career totals  
+- ❌ **FORBIDDEN:** Replacing/overwriting existing point balances
+- **Tournament Example:** Player has 25.5 points, earns 8.2 in tournament → Final total: 33.7 points
+- **Database Rule:** Always use `points = points + new_points` syntax
+- **System Logic:** Each match/tournament contributes to lifetime career progression
+
 ### **Base Point Structure** ✅ **CONFIRMED**
 
 | Result | Base Points | Description |

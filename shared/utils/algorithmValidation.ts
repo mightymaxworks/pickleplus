@@ -1,6 +1,11 @@
 /**
  * Algorithm Validation Utilities
  * Ensures all point calculations follow the official Pickle+ Algorithm Document
+ * 
+ * CRITICAL VALIDATION: ALL POINT OPERATIONS MUST BE ADDITIVE
+ * - validateAdditivePointsOperation() prevents destructive point replacement
+ * - All database operations must use: currentPoints + newPoints
+ * - System protects against tournament history loss
  */
 
 export interface MatchResult {
@@ -67,6 +72,69 @@ export function validatePointCalculation(
   return {
     isValid: errors.length === 0,
     errors
+  };
+}
+
+/**
+ * CRITICAL VALIDATION: Prevents destructive point replacement operations
+ */
+export function validateAdditivePointsOperation(
+  currentPoints: number,
+  newPoints: number,
+  operation: 'add' | 'replace'
+): { isValid: boolean; error?: string; correctTotal?: number } {
+  
+  // Prevent any replacement operations
+  if (operation === 'replace') {
+    return {
+      isValid: false,
+      error: 'FORBIDDEN: Point replacement operations destroy tournament history. Use additive operations only.',
+      correctTotal: currentPoints + newPoints
+    };
+  }
+  
+  // Validate additive operation
+  if (operation === 'add') {
+    const expectedTotal = currentPoints + newPoints;
+    return {
+      isValid: true,
+      correctTotal: expectedTotal
+    };
+  }
+  
+  return {
+    isValid: false,
+    error: 'Invalid operation type. Must be "add" or "replace"'
+  };
+}
+
+/**
+ * Database-safe point update helper
+ * Enforces additive-only operations to preserve tournament history
+ */
+export function createAdditivePointsUpdate(
+  currentRankingPoints: number,
+  currentPicklePoints: number,
+  newRankingPoints: number,
+  newPicklePoints: number,
+  currentMatches?: number,
+  newMatches?: number,
+  currentWins?: number,
+  newWins?: number
+) {
+  return {
+    ranking_points: currentRankingPoints + newRankingPoints,
+    pickle_points: currentPicklePoints + newPicklePoints,
+    total_matches: (currentMatches || 0) + (newMatches || 0),
+    matches_won: (currentWins || 0) + (newWins || 0),
+    
+    // For SQL generation
+    sql: `
+      doubles_ranking_points = doubles_ranking_points + ${newRankingPoints},
+      pickle_points = pickle_points + ${newPicklePoints},
+      total_matches = total_matches + ${newMatches || 0},
+      matches_won = matches_won + ${newWins || 0}
+    `
   };
 }
 

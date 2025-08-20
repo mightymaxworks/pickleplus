@@ -2,6 +2,12 @@
  * Match Points Calculator - Official Implementation
  * Single source of truth for all point calculations in Pickle+
  * References: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+ * 
+ * CRITICAL: ALL POINT OPERATIONS MUST BE ADDITIVE
+ * - Points are ALWAYS added to existing totals, never replaced
+ * - Tournament points ADD to league points ADD to casual match points
+ * - Database operations MUST use: points = points + new_points
+ * - This preserves complete tournament and match history
  */
 
 import { calculateOfficialPoints, validatePointCalculation, logCalculationBreakdown, type MatchResult } from './algorithmValidation';

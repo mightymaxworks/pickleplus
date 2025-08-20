@@ -32,6 +32,7 @@ User wants the EnhancedLeaderboard to follow the same logic as /rankings but wit
 User wants automatic gender bonus detection and application in match recording system to ensure female players receive 1.15x multiplier in cross-gender matches under 1000 points.
 User wants decimal precision (2 decimal places) instead of rounding up for ranking points to improve fairness and accuracy.
 User wants decimal precision enforced in UDF best practices as the standard for all future development.
+User wants MANDATORY ADDITIVE POINTS SYSTEM enforced across all components - points must ALWAYS be added to existing totals, never replaced, to preserve tournament history and career progression. Created comprehensive validation utilities and documentation to prevent destructive point replacement operations.
 User wants the Pickle Points multiplier CORRECTED to exactly 1.5x throughout all documentation and system implementation - any other rate is incorrect.
 User clarified that the 1.5x multiplier must apply PER MATCH when Pickle Points are earned, NOT as a blanket conversion of total ranking points.
 User wants all assessment references standardized to 55-skill framework - COMPLETED across all coaching files (CoachDashboard.tsx, assessment-tool.tsx, CoachingAssessmentValidator.tsx, DetailedSkillAssessment.tsx, coaching-system-demo.tsx, and enhanced-coaching-landing.tsx).

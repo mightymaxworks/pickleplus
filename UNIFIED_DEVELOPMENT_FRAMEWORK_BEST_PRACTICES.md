@@ -20,6 +20,33 @@
    - Required for tournament participation and official rankings
    - Automatically validate any existing provisional assessments
 
+### CRITICAL POINTS ALLOCATION REQUIREMENT ⚠️
+
+**MANDATORY ADDITIVE POINTS SYSTEM:**
+
+```sql
+-- ✅ CORRECT: Always ADD to existing points
+UPDATE users SET 
+  doubles_ranking_points = doubles_ranking_points + new_points,
+  pickle_points = pickle_points + new_pickle_points,
+  total_matches = total_matches + match_count,
+  matches_won = matches_won + win_count
+WHERE user_id = ?;
+
+-- ❌ NEVER REPLACE: This destroys tournament history
+UPDATE users SET 
+  doubles_ranking_points = new_points,  -- WRONG! Loses previous tournaments
+  pickle_points = new_pickle_points     -- WRONG! Destroys earning history
+WHERE user_id = ?;
+```
+
+**IMPLEMENTATION RULES:**
+1. **ALL point calculations MUST use additive operations (+)**
+2. **NEVER replace existing point totals**
+3. **Tournament points ADD to league points ADD to casual match points**
+4. **Each match/tournament is cumulative to player's career total**
+5. **Database operations MUST use += syntax or explicit addition**
+
 ### UDF Implementation Requirements
 
 **ALL components dealing with PCP ratings MUST:**
