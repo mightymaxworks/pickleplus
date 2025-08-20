@@ -1,18 +1,18 @@
 /**
- * Simplified PCP Calculation Utilities for Progressive Assessment
- * Type-safe implementation for Coach Dashboard integration
+ * PCP (Player Competency Profile) Rating Calculation
+ * 55-Skill Individual Tracking System
  */
 
-// Weights for PCP calculation (System B: standardized across platform)
+// PCP Category Weights (must sum to 1.0)
 export const PCP_WEIGHTS = {
-  TOUCH: 0.30,      // Dinks/Resets - Most critical
-  TECHNICAL: 0.25,  // Groundstrokes/Serves 
-  MENTAL: 0.20,     // Mental Game
-  ATHLETIC: 0.15,   // Footwork/Fitness
-  POWER: 0.10       // Volleys/Smashes
-} as const;
+  TOUCH: 0.30,      // Dinks/Resets - Most critical for competitive play
+  TECHNICAL: 0.25,  // Groundstrokes/Serves - Foundation skills
+  MENTAL: 0.20,     // Mental Game - Separates good from great players
+  ATHLETIC: 0.15,   // Footwork/Fitness - Enables all other skills
+  POWER: 0.10       // Volleys/Smashes - Important but situational
+};
 
-// Complete 55-skill framework for progressive assessment
+// 55-Skill Categories
 export const SKILL_CATEGORIES = {
   'Groundstrokes and Serves': [
     'Serve Power', 'Serve Placement', 'Forehand Flat Drive', 'Forehand Topspin Drive', 
@@ -24,7 +24,8 @@ export const SKILL_CATEGORIES = {
     'Backhand Topspin Dink', 'Backhand Dead Dink', 'Backhand Slice Dink',
     'Forehand Third Shot Drop', 'Forehand Top Spin Third Shot Drop', 'Forehand Slice Third Shot Drop',
     'Backhand Third Shot Drop', 'Backhand Top Spin Third Shot Drop', 'Backhand Slice Third Shot Drop',
-    'Forehand Resets', 'Backhand Resets', 'Forehand Lob', 'Backhand Lob'
+    'Forehand Resets', 'Backhand Resets', 'Forehand Lob', 'Backhand Lob',
+    'Cross-Court Dinks', 'Kitchen Line Positioning'
   ],
   'Volleys and Smashes': [
     'Forehand Punch Volley', 'Forehand Roll Volley', 'Backhand Punch Volley',
@@ -42,55 +43,32 @@ export const SKILL_CATEGORIES = {
   ]
 } as const;
 
+// Type definitions
 export type CategoryName = keyof typeof SKILL_CATEGORIES;
 export type SkillName = typeof SKILL_CATEGORIES[CategoryName][number];
+export type AssessmentData = Record<string, number>;
 
 /**
- * Get the weight for a category in PCP calculation
+ * Calculate average rating for a skill category
  */
-export function getCategoryWeight(categoryName: CategoryName): number {
-  switch (categoryName) {
-    case 'Dinks and Resets': return PCP_WEIGHTS.TOUCH;
-    case 'Groundstrokes and Serves': return PCP_WEIGHTS.TECHNICAL;
-    case 'Mental Game': return PCP_WEIGHTS.MENTAL;
-    case 'Footwork & Fitness': return PCP_WEIGHTS.ATHLETIC;
-    case 'Volleys and Smashes': return PCP_WEIGHTS.POWER;
-    default: return 0;
-  }
-}
+function calculateCategoryAverage(category: CategoryName, assessmentData: AssessmentData): number {
+  const categorySkills = SKILL_CATEGORIES[category];
+  const ratings = categorySkills
+    .map(skill => assessmentData[skill])
+    .filter(rating => rating !== undefined && rating > 0);
 
-/**
- * Calculate average rating for a specific category
- */
-function calculateCategoryAverage(categoryName: CategoryName, assessmentData: AssessmentData): number {
-  const skills = SKILL_CATEGORIES[categoryName];
-  const skillRatings = skills.map(skill => assessmentData[skill]).filter(rating => rating > 0);
-  
-  if (skillRatings.length === 0) return 0;
-  return skillRatings.reduce((sum, rating) => sum + rating, 0) / skillRatings.length;
-}
+  if (ratings.length === 0) return 1; // Default to minimum if no ratings
 
-export interface AssessmentData {
-  [skillName: string]: number;
-}
-
-export interface PCPCalculationResult {
-  pcpRating: number;
-  categoryAverages: {
-    touch: number;
-    technical: number;
-    mental: number;
-    athletic: number;
-    power: number;
-  };
-  skillCount: number;
-  rawScore: number;
+  return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
 }
 
 /**
- * Calculate PCP rating from assessment data
+ * Calculate PCP rating from assessment data using weighted category averages
+ * Algorithm: PCP = 2.0 + (weighted_average - 1.0) * (6.0/9.0)
+ * Range: 2.0 to 8.0
  */
-export function calculatePCPRating(assessmentData: AssessmentData): PCPCalculationResult {
+export function calculatePCPFromAssessment(assessmentData: AssessmentData) {
+  // Calculate category averages from individual skills
   const categoryAverages = {
     touch: calculateCategoryAverage('Dinks and Resets', assessmentData),
     technical: calculateCategoryAverage('Groundstrokes and Serves', assessmentData),
@@ -119,9 +97,20 @@ export function calculatePCPRating(assessmentData: AssessmentData): PCPCalculati
   };
 }
 
-
-
-
+/**
+ * Get category weight for display
+ */
+export function getCategoryWeight(category: CategoryName): number {
+  const weightMap: Record<CategoryName, number> = {
+    'Dinks and Resets': PCP_WEIGHTS.TOUCH,
+    'Groundstrokes and Serves': PCP_WEIGHTS.TECHNICAL,
+    'Mental Game': PCP_WEIGHTS.MENTAL,
+    'Footwork & Fitness': PCP_WEIGHTS.ATHLETIC,
+    'Volleys and Smashes': PCP_WEIGHTS.POWER
+  };
+  
+  return weightMap[category] || 0;
+}
 
 /**
  * Generate sample assessment data for testing
@@ -138,3 +127,6 @@ export function generateSampleAssessment(baseRating: number = 5): AssessmentData
   
   return assessmentData;
 }
+
+// Alternative export name for backward compatibility
+export const calculatePCPRating = calculatePCPFromAssessment;

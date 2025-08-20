@@ -156,35 +156,83 @@ export function SimpleProgressiveAssessment({
           <Progress value={progressPercentage} className="h-2" />
         </div>
 
-        {/* Skills Assessment */}
-        <div className="space-y-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            {selectedCategory === 'all' ? 'All Skills Assessment' : `${selectedCategory} Skills`}
-          </h3>
-          
-          <div className="grid gap-3 max-h-96 overflow-y-auto">
-            {skillsToDisplay.map(({ skill, category }) => (
-              <div key={skill} className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                <div className="flex-1">
-                  <span className="font-medium text-sm">{skill}</span>
-                  <div className="text-xs text-gray-500 mt-1">{category}</div>
+        {/* Skills Assessment - Touch-Friendly Interface */}
+        <div className="space-y-6">
+          {selectedCategory === 'all' ? (
+            // Comprehensive Assessment - Show all categories with sections
+            Object.keys(SKILL_CATEGORIES).map(categoryName => {
+              const categorySkills = SKILL_CATEGORIES[categoryName as CategoryName];
+              const categoryProgress = categorySkills.filter(skill => skillRatings[skill] > 0).length;
+              const categoryWeight = getCategoryWeight(categoryName as CategoryName);
+              
+              return (
+                <div key={categoryName} className="bg-white rounded-lg border p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-lg text-gray-800">
+                      {categoryName} ({categorySkills.length} skills)
+                    </h3>
+                    <Badge variant="outline" className="text-sm">
+                      {Math.round(categoryWeight * 100)}% weight
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-3">
+                    Progress: {categoryProgress}/{categorySkills.length} skills assessed
+                  </div>
+                  <div className="grid gap-3">
+                    {categorySkills.map(skill => (
+                      <div key={skill} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="font-medium text-sm flex-1">{skill}</span>
+                        <div className="flex gap-1">
+                          {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => updateSkillRating(skill, num)}
+                              className={`w-8 h-8 rounded text-xs font-medium border transition-colors ${
+                                skillRatings[skill] === num 
+                                  ? 'bg-blue-500 text-white border-blue-500' 
+                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={skillRatings[skill] || ''}
-                    onChange={(e) => updateSkillRating(skill, parseInt(e.target.value) || 0)}
-                    className="w-16 text-center"
-                    placeholder="1-10"
-                  />
-                  <span className="text-xs text-gray-500">/ 10</span>
-                </div>
+              );
+            })
+          ) : (
+            // Focused Assessment - Single category
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="font-semibold text-lg mb-4">
+                {selectedCategory} Skills Assessment
+              </h3>
+              <div className="grid gap-3">
+                {SKILL_CATEGORIES[selectedCategory as CategoryName].map(skill => (
+                  <div key={skill} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <span className="font-medium text-sm flex-1">{skill}</span>
+                    <div className="flex gap-1">
+                      {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                        <button
+                          key={num}
+                          onClick={() => updateSkillRating(skill, num)}
+                          className={`w-8 h-8 rounded text-xs font-medium border transition-colors ${
+                            skillRatings[skill] === num 
+                              ? 'bg-blue-500 text-white border-blue-500' 
+                              : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Session Notes */}
