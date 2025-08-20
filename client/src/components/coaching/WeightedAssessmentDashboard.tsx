@@ -247,7 +247,20 @@ export function WeightedAssessmentDashboard() {
         },
         body: JSON.stringify({
           scenarioName: scenario.name,
-          assessments: scenario.assessments
+          assessments: scenario.assessments?.map((assessment: any) => ({
+            id: `test_${assessment.coachId}_${Date.now()}`,
+            coachId: assessment.coachId,
+            coachLevel: assessment.coachLevel,
+            studentId: assessment.studentId || 100,
+            assessmentDate: assessment.assessmentDate || new Date().toISOString(),
+            scores: assessment.skillRatings || assessment.scores || {
+              technical: 6.0,
+              tactical: 5.5,
+              physical: 7.0,
+              mental: 5.0
+            },
+            skillRatings: {}
+          })) || []
         })
       });
 
