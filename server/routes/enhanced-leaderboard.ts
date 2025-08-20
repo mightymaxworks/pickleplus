@@ -309,8 +309,10 @@ async function getRealLeaderboardData(
           ? (user.doublesRankingPoints || 0)
           : (user.singlesRankingPoints || 0);
         
-        // Get actual match stats for this user
-        const matchStats = await storage.getMatchStats(user.id);
+        // Use direct user stats (includes tournament data) instead of calculating from individual matches
+        const totalMatches = user.totalMatches || 0;
+        const matchesWon = user.matchesWon || 0;
+        const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
         
         const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         const enhancedDisplayName = enhanceChineseName(rawDisplayName);
@@ -321,8 +323,8 @@ async function getRealLeaderboardData(
           username: user.username,
           avatar: user.profileImage || undefined,
           points: Number(formatPoints.toFixed(2)), // Frontend expects 'points'
-          matchesPlayed: matchStats.totalMatches || 0, // Frontend expects 'matchesPlayed'
-          winRate: Math.round((matchStats.winRate || 0) * 100) / 100, // Frontend expects 'winRate'
+          matchesPlayed: totalMatches, // Frontend expects 'matchesPlayed'
+          winRate: Math.round(winRate * 100) / 100, // Frontend expects 'winRate' (2 decimal precision)
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
           age: age,
           division: getPrimaryDivisionFromAge(age), // Frontend expects 'division'
