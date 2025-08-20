@@ -187,7 +187,7 @@ export default function CoachAssessmentToolPage() {
   };
 
   // Ensure availableStudents is an array and get selected student details
-  const studentsArray = Array.isArray(availableStudents?.data) ? availableStudents.data : [];
+  const studentsArray = Array.isArray(availableStudents) ? availableStudents : [];
   const selectedStudentDetails = studentsArray.find((s: any) => s.id === selectedStudent);
 
   // Set student from URL if provided
