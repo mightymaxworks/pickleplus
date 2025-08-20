@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Shield, CheckCircle, XCircle, Users, Star, Target, TrendingUp, BookOpen } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { SKILL_CATEGORIES, calculatePCPRating, type AssessmentData } from '../../../shared/utils/pcpCalculation';
+import { SKILL_CATEGORIES, calculatePCPRating, type AssessmentData, type CategoryName, getCategoryWeight } from '@shared/utils/pcpCalculationSimple';
 
 interface CoachingAssessmentValidatorProps {
   coachId: number;

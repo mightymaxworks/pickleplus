@@ -17,7 +17,7 @@ export const PCP_WEIGHTS = {
   POWER: 0.10       // Volleys/Smashes - Important but situational
 } as const;
 
-// Official 55-Skill Categories Mapping
+// Official 55-Skill Categories Mapping with proper TypeScript typing
 export const SKILL_CATEGORIES = {
   'Groundstrokes and Serves': [
     'Serve Power', 'Serve Placement', 'Forehand Flat Drive', 'Forehand Topspin Drive',
