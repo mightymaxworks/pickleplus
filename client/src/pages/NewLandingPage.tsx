@@ -459,6 +459,143 @@ export default function NewLandingPage() {
         </div>
       </section>
 
+      {/* Revolutionary Coaching Rating System */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-slate-900 to-gray-900 text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+          >
+            <motion.h2 
+              variants={fadeInUp}
+              className="text-3xl sm:text-4xl font-bold mb-4 text-white"
+            >
+              Revolutionary <span className="text-orange-500">Coach Rating System</span>
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-lg text-gray-300 max-w-3xl mx-auto"
+            >
+              The most comprehensive skill assessment platform in pickleball, featuring expert coach validation and tournament-ready ratings.
+            </motion.p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Key Features */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={staggerContainer}
+            >
+              <div className="space-y-8">
+                <motion.div variants={fadeInUp} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-orange-500 to-cyan-400 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-white">55-Point Skill Framework™</h3>
+                    <p className="text-gray-300">
+                      Comprehensive assessment covering Technical, Tactical, Physical, and Mental dimensions with granular skill tracking.
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-white">Expert Coach Certification</h3>
+                    <p className="text-gray-300">
+                      5-level certification system (L1-L5) with weighted assessment authority and professional validation standards.
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div variants={fadeInUp} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-white">Two-Tier Validation</h3>
+                    <p className="text-gray-300">
+                      PROVISIONAL ratings for development tracking, VERIFIED ratings for official tournament use.
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Right: Rating Examples */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={fadeInUp}
+              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700"
+            >
+              <h3 className="text-2xl font-bold text-white mb-6 text-center">Live Rating Examples</h3>
+              
+              <div className="space-y-6">
+                {/* Verified Rating Example */}
+                <div className="bg-emerald-900/30 border border-emerald-500/20 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <Shield className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">Alex Rodriguez</p>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400">
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                          <span className="text-emerald-300 text-sm font-bold">VERIFIED</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-emerald-400 font-bold text-lg">7.2 PCP</span>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    <span className="text-emerald-400">✓ Tournament Eligible</span> • Confirmed by L4+ expert coach
+                  </p>
+                </div>
+
+                {/* Provisional Rating Example */}
+                <div className="bg-amber-900/30 border border-amber-500/20 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+                        <Target className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">Sarah Chen</p>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400">
+                          <Target className="w-4 h-4 text-amber-400" />
+                          <span className="text-amber-300 text-sm font-bold">PROVISIONAL</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-amber-400 font-bold text-lg">6.8 PCP</span>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    <span className="text-amber-400">⚠ Requires L4+ validation</span> • Perfect for development tracking
+                  </p>
+                </div>
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-gray-400">
+                    Only expert-level coaches (L4-L5) can create tournament-eligible verified ratings
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof Section */}
       <section className="py-24 px-4 bg-gradient-to-r from-orange-50 to-cyan-50">
         <div className="max-w-4xl mx-auto text-center">
