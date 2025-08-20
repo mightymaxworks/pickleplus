@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Target, BookOpen, User, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { SKILL_CATEGORIES, calculatePCPRating, type AssessmentData, type CategoryName } from '@shared/utils/pcpCalculationSimple';
+import { SKILL_CATEGORIES, calculatePCPRating, getCategoryWeight, type AssessmentData, type CategoryName } from '@shared/utils/pcpCalculationSimple';
 
 interface SimpleProgressiveAssessmentProps {
   coachId: number;
