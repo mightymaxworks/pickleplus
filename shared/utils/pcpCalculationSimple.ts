@@ -12,32 +12,63 @@ export const PCP_WEIGHTS = {
   POWER: 0.10       // Volleys/Smashes
 } as const;
 
-// Skill categories for progressive assessment
+// Complete 55-skill framework for progressive assessment
 export const SKILL_CATEGORIES = {
-  'Touch': [
-    'Forehand Topspin Dink', 'Forehand Dead Dink', 'Forehand Slice Dink', 
+  'Groundstrokes and Serves': [
+    'Serve Power', 'Serve Placement', 'Forehand Flat Drive', 'Forehand Topspin Drive', 
+    'Forehand Slice', 'Backhand Flat Drive', 'Backhand Topspin Drive', 'Backhand Slice',
+    'Third Shot Drive', 'Forehand Return of Serve', 'Backhand Return of Serve'
+  ],
+  'Dinks and Resets': [
+    'Forehand Topspin Dink', 'Forehand Dead Dink', 'Forehand Slice Dink',
     'Backhand Topspin Dink', 'Backhand Dead Dink', 'Backhand Slice Dink',
-    'Forehand Third Shot Drop', 'Backhand Third Shot Drop', 
+    'Forehand Third Shot Drop', 'Forehand Top Spin Third Shot Drop', 'Forehand Slice Third Shot Drop',
+    'Backhand Third Shot Drop', 'Backhand Top Spin Third Shot Drop', 'Backhand Slice Third Shot Drop',
     'Forehand Resets', 'Backhand Resets', 'Forehand Lob', 'Backhand Lob'
   ],
-  'Technical': [
-    'Serve Power', 'Serve Placement', 'Forehand Drive', 'Backhand Drive',
-    'Forehand Return', 'Backhand Return', 'Third Shot Drive'
+  'Volleys and Smashes': [
+    'Forehand Punch Volley', 'Forehand Roll Volley', 'Backhand Punch Volley',
+    'Backhand Roll Volley', 'Forehand Overhead Smash', 'Backhand Overhead Smash'
   ],
-  'Mental': [
-    'Focus', 'Pressure Handling', 'Shot Selection', 'Emotional Control',
-    'Competitive Confidence', 'Patience'
+  'Footwork & Fitness': [
+    'Split Step Readiness', 'Lateral Shuffles', 'Crossover Steps', 'Court Recovery',
+    'First Step Speed', 'Balance & Core Stability', 'Agility', 'Endurance Conditioning',
+    'Leg Strength & Power', 'Transition Speed (Baseline to Kitchen)'
   ],
-  'Athletic': [
-    'Footwork', 'Court Coverage', 'Agility', 'Endurance', 'Balance'
-  ],
-  'Power': [
-    'Forehand Volley', 'Backhand Volley', 'Overhead Smash'
+  'Mental Game': [
+    'Staying Present', 'Resetting After Errors', 'Patience & Shot Selection', 'Positive Self-Talk',
+    'Visualization', 'Pressure Handling', 'Focus Shifts', 'Opponent Reading',
+    'Emotional Regulation', 'Competitive Confidence'
   ]
 } as const;
 
 export type CategoryName = keyof typeof SKILL_CATEGORIES;
 export type SkillName = typeof SKILL_CATEGORIES[CategoryName][number];
+
+/**
+ * Get the weight for a category in PCP calculation
+ */
+export function getCategoryWeight(categoryName: CategoryName): number {
+  switch (categoryName) {
+    case 'Dinks and Resets': return PCP_WEIGHTS.TOUCH;
+    case 'Groundstrokes and Serves': return PCP_WEIGHTS.TECHNICAL;
+    case 'Mental Game': return PCP_WEIGHTS.MENTAL;
+    case 'Footwork & Fitness': return PCP_WEIGHTS.ATHLETIC;
+    case 'Volleys and Smashes': return PCP_WEIGHTS.POWER;
+    default: return 0;
+  }
+}
+
+/**
+ * Calculate average rating for a specific category
+ */
+function calculateCategoryAverage(categoryName: CategoryName, assessmentData: AssessmentData): number {
+  const skills = SKILL_CATEGORIES[categoryName];
+  const skillRatings = skills.map(skill => assessmentData[skill]).filter(rating => rating > 0);
+  
+  if (skillRatings.length === 0) return 0;
+  return skillRatings.reduce((sum, rating) => sum + rating, 0) / skillRatings.length;
+}
 
 export interface AssessmentData {
   [skillName: string]: number;
@@ -61,11 +92,11 @@ export interface PCPCalculationResult {
  */
 export function calculatePCPRating(assessmentData: AssessmentData): PCPCalculationResult {
   const categoryAverages = {
-    touch: calculateCategoryAverage('Touch', assessmentData),
-    technical: calculateCategoryAverage('Technical', assessmentData),
-    mental: calculateCategoryAverage('Mental', assessmentData),
-    athletic: calculateCategoryAverage('Athletic', assessmentData),
-    power: calculateCategoryAverage('Power', assessmentData)
+    touch: calculateCategoryAverage('Dinks and Resets', assessmentData),
+    technical: calculateCategoryAverage('Groundstrokes and Serves', assessmentData),
+    mental: calculateCategoryAverage('Mental Game', assessmentData),
+    athletic: calculateCategoryAverage('Footwork & Fitness', assessmentData),
+    power: calculateCategoryAverage('Volleys and Smashes', assessmentData)
   };
 
   // Calculate weighted average
