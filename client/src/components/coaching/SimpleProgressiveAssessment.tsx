@@ -253,15 +253,67 @@ export function SimpleProgressiveAssessment({
                               ))}
                             </div>
                             
-                            {/* Mobile Feedback Only */}
-                            {currentRating && (
-                              <div className="p-2 bg-blue-50 border border-blue-200 rounded">
-                                <div className="text-xs">
-                                  <span className="font-medium text-blue-700">Rating {currentRating}: </span>
-                                  <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
+                            {/* Mobile Coaching Guide - Always Visible */}
+                            <div className="space-y-3 text-xs bg-gray-50 p-3 rounded-lg border">
+                              <div className="font-semibold text-gray-800 text-center mb-2">
+                                📋 Coaching Guidance - Review Before Rating
+                              </div>
+                              
+                              {/* Key Rating Examples */}
+                              <div className="space-y-2">
+                                {skillGuide.indicators[4] && (
+                                  <div className="bg-yellow-50 border border-yellow-300 rounded p-2">
+                                    <div className="font-medium text-yellow-800">Rating 4 Example:</div>
+                                    <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
+                                  </div>
+                                )}
+                                {skillGuide.indicators[7] && (
+                                  <div className="bg-green-50 border border-green-300 rounded p-2">
+                                    <div className="font-medium text-green-800">Rating 7 Example:</div>
+                                    <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Coaching Tip */}
+                              <div className="bg-blue-50 border border-blue-300 rounded p-2">
+                                <div className="font-medium text-blue-800">Coach Tip:</div>
+                                <div className="text-blue-700 text-xs">{skillGuide.coachingTips}</div>
+                              </div>
+                              
+                              {/* Complete Rating Scale */}
+                              <div className="grid grid-cols-2 gap-1">
+                                <div className="bg-red-50 border border-red-200 rounded p-1.5">
+                                  <div className="font-medium text-red-700">1-3: Beginner</div>
+                                  <div className="text-red-600 text-xs">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic development needed"}</div>
+                                </div>
+                                <div className="bg-yellow-50 border border-yellow-200 rounded p-1.5">
+                                  <div className="font-medium text-yellow-700">4-5: Competent</div>
+                                  <div className="text-yellow-600 text-xs">{skillGuide.indicators[5] || "Adequate execution"}</div>
+                                </div>
+                                <div className="bg-green-50 border border-green-200 rounded p-1.5">
+                                  <div className="font-medium text-green-700">6-8: Advanced</div>
+                                  <div className="text-green-600 text-xs">{skillGuide.indicators[7] || "Strong performance"}</div>
+                                </div>
+                                <div className="bg-purple-50 border border-purple-200 rounded p-1.5">
+                                  <div className="font-medium text-purple-700">9-10: Expert</div>
+                                  <div className="text-purple-600 text-xs">{skillGuide.indicators[9] || "Exceptional skill"}</div>
                                 </div>
                               </div>
-                            )}
+                              
+                              {/* Current Rating Feedback */}
+                              {currentRating && (
+                                <div className="p-2 bg-blue-50 border border-blue-200 rounded">
+                                  <div className="flex items-center gap-2">
+                                    <Info className="w-3 h-3 text-blue-600" />
+                                    <div>
+                                      <span className="font-medium text-blue-700">Current Rating {currentRating}: </span>
+                                      <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Desktop Full Header */}
@@ -291,23 +343,53 @@ export function SimpleProgressiveAssessment({
                               ))}
                             </div>
                             
-                            {/* Desktop Smart Indicators */}
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div className="bg-red-50 border border-red-200 rounded p-2">
-                                <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
-                                <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                            {/* Desktop Professional Coaching Guide - Always Visible */}
+                            <div className="bg-gray-50 p-4 rounded-lg border space-y-3">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                <h5 className="font-semibold text-gray-800">Professional Assessment Guidance</h5>
                               </div>
-                              <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                                <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
-                                <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
+                              
+                              {/* Highlighted Examples for Common Ratings */}
+                              <div className="grid grid-cols-2 gap-3 mb-3">
+                                {skillGuide.indicators[4] && (
+                                  <div className="bg-yellow-50 border border-yellow-300 rounded p-3">
+                                    <div className="font-semibold text-yellow-800 mb-1">Rating 4 - Competent Level</div>
+                                    <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
+                                  </div>
+                                )}
+                                {skillGuide.indicators[7] && (
+                                  <div className="bg-green-50 border border-green-300 rounded p-3">
+                                    <div className="font-semibold text-green-800 mb-1">Rating 7 - Advanced Level</div>
+                                    <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
+                                  </div>
+                                )}
                               </div>
-                              <div className="bg-green-50 border border-green-200 rounded p-2">
-                                <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
-                                <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
+                              
+                              {/* Professional Coaching Tip */}
+                              <div className="bg-blue-50 border border-blue-300 rounded p-3">
+                                <div className="font-semibold text-blue-800 mb-1">💡 Professional Coaching Insight</div>
+                                <div className="text-blue-700 text-sm">{skillGuide.coachingTips}</div>
                               </div>
-                              <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                                <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
-                                <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
+                              
+                              {/* Complete Scale Reference */}
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="bg-red-50 border border-red-200 rounded p-2">
+                                  <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
+                                  <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                                </div>
+                                <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                                  <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
+                                  <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
+                                </div>
+                                <div className="bg-green-50 border border-green-200 rounded p-2">
+                                  <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
+                                  <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
+                                </div>
+                                <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                                  <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
+                                  <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
+                                </div>
                               </div>
                             </div>
                             
@@ -372,12 +454,39 @@ export function SimpleProgressiveAssessment({
                           ))}
                         </div>
                         
-                        {/* Mobile Rating Guide */}
-                        <div className="space-y-2 text-xs">
+                        {/* Mobile Rating Guide - Always Visible */}
+                        <div className="space-y-3 text-xs bg-gray-50 p-3 rounded-lg border">
+                          <div className="font-semibold text-gray-800 text-center mb-2">
+                            📋 Coaching Guidance - Review Before Rating
+                          </div>
+                          
+                          {/* Key Rating Examples */}
+                          <div className="space-y-2">
+                            {skillGuide.indicators[4] && (
+                              <div className="bg-yellow-50 border border-yellow-300 rounded p-2">
+                                <div className="font-medium text-yellow-800">Rating 4 Example:</div>
+                                <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
+                              </div>
+                            )}
+                            {skillGuide.indicators[7] && (
+                              <div className="bg-green-50 border border-green-300 rounded p-2">
+                                <div className="font-medium text-green-800">Rating 7 Example:</div>
+                                <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Coaching Tip */}
+                          <div className="bg-blue-50 border border-blue-300 rounded p-2">
+                            <div className="font-medium text-blue-800">Coach Tip:</div>
+                            <div className="text-blue-700 text-xs">{skillGuide.coachingTips}</div>
+                          </div>
+                          
+                          {/* Complete Rating Scale */}
                           <div className="grid grid-cols-2 gap-1">
                             <div className="bg-red-50 border border-red-200 rounded p-1.5">
                               <div className="font-medium text-red-700">1-3: Beginner</div>
-                              <div className="text-red-600 text-xs">{skillGuide.indicators[1] || "Basic development needed"}</div>
+                              <div className="text-red-600 text-xs">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic development needed"}</div>
                             </div>
                             <div className="bg-yellow-50 border border-yellow-200 rounded p-1.5">
                               <div className="font-medium text-yellow-700">4-5: Competent</div>
@@ -438,23 +547,53 @@ export function SimpleProgressiveAssessment({
                           ))}
                         </div>
                         
-                        {/* Desktop Smart Indicators */}
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="bg-red-50 border border-red-200 rounded p-2">
-                            <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
-                            <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                        {/* Desktop Professional Coaching Guide - Always Visible */}
+                        <div className="bg-gray-50 p-4 rounded-lg border space-y-3">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                            <h5 className="font-semibold text-gray-800">Professional Assessment Guidance</h5>
                           </div>
-                          <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                            <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
-                            <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
+                          
+                          {/* Highlighted Examples for Common Ratings */}
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            {skillGuide.indicators[4] && (
+                              <div className="bg-yellow-50 border border-yellow-300 rounded p-3">
+                                <div className="font-semibold text-yellow-800 mb-1">Rating 4 - Competent Level</div>
+                                <div className="text-yellow-700 text-xs">{skillGuide.indicators[4]}</div>
+                              </div>
+                            )}
+                            {skillGuide.indicators[7] && (
+                              <div className="bg-green-50 border border-green-300 rounded p-3">
+                                <div className="font-semibold text-green-800 mb-1">Rating 7 - Advanced Level</div>
+                                <div className="text-green-700 text-xs">{skillGuide.indicators[7]}</div>
+                              </div>
+                            )}
                           </div>
-                          <div className="bg-green-50 border border-green-200 rounded p-2">
-                            <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
-                            <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
+                          
+                          {/* Professional Coaching Tip */}
+                          <div className="bg-blue-50 border border-blue-300 rounded p-3">
+                            <div className="font-semibold text-blue-800 mb-1">💡 Professional Coaching Insight</div>
+                            <div className="text-blue-700 text-sm">{skillGuide.coachingTips}</div>
                           </div>
-                          <div className="bg-purple-50 border border-purple-200 rounded p-2">
-                            <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
-                            <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
+                          
+                          {/* Complete Scale Reference */}
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-red-50 border border-red-200 rounded p-2">
+                              <div className="font-medium text-red-700 mb-1">Beginner (1-3)</div>
+                              <div className="text-red-600">{skillGuide.indicators[1] || skillGuide.indicators[3] || "Basic skill development needed"}</div>
+                            </div>
+                            <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                              <div className="font-medium text-yellow-700 mb-1">Competent (4-5)</div>
+                              <div className="text-yellow-600">{skillGuide.indicators[5] || "Adequate execution, room for improvement"}</div>
+                            </div>
+                            <div className="bg-green-50 border border-green-200 rounded p-2">
+                              <div className="font-medium text-green-700 mb-1">Advanced (6-8)</div>
+                              <div className="text-green-600">{skillGuide.indicators[7] || "Strong, consistent performance"}</div>
+                            </div>
+                            <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                              <div className="font-medium text-purple-700 mb-1">Expert (9-10)</div>
+                              <div className="text-purple-600">{skillGuide.indicators[9] || "Exceptional, tournament-level skill"}</div>
+                            </div>
                           </div>
                         </div>
                         
