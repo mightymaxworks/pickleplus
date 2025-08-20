@@ -94,8 +94,8 @@ export function StudentCoachConnection() {
     );
   }
 
-  const activeConnections = connections?.filter((conn: CoachConnection) => conn.status === 'active') || [];
-  const pendingConnections = connections?.filter((conn: CoachConnection) => conn.status === 'pending') || [];
+  const activeConnections = Array.isArray(connections) ? connections.filter((conn: CoachConnection) => conn.status === 'active') : [];
+  const pendingConnections = Array.isArray(connections) ? connections.filter((conn: CoachConnection) => conn.status === 'pending') : [];
 
   return (
     <div className="space-y-6">
@@ -119,9 +119,9 @@ export function StudentCoachConnection() {
                     <User className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-medium">{connection.coach.displayName}</p>
+                    <p className="font-medium">{connection.coach?.displayName || 'Unknown Coach'}</p>
                     <p className="text-sm text-muted-foreground">
-                      Level {connection.coach.coachLevel} Coach • {connection.coach.passportCode}
+                      Level {connection.coach?.coachLevel || 'N/A'} Coach • {connection.coach?.passportCode || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -155,9 +155,9 @@ export function StudentCoachConnection() {
                     <User className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="font-medium">{connection.coach.displayName}</p>
+                    <p className="font-medium">{connection.coach?.displayName || 'Unknown Coach'}</p>
                     <p className="text-sm text-muted-foreground">
-                      Level {connection.coach.coachLevel} Coach • {connection.coach.passportCode}
+                      Level {connection.coach?.coachLevel || 'N/A'} Coach • {connection.coach?.passportCode || 'N/A'}
                     </p>
                   </div>
                 </div>

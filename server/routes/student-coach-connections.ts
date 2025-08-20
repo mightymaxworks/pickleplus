@@ -69,12 +69,7 @@ router.post('/student/request-coach', isAuthenticated, async (req, res) => {
         coachLevel: users.coachLevel
       })
       .from(users)
-      .where(
-        and(
-          eq(users.passportCode, coachPassportCode.toUpperCase()),
-          eq(users.coachLevel, 3) // Only Level 3+ coaches can accept students
-        )
-      );
+      .where(eq(users.passportCode, coachPassportCode.toUpperCase()));
 
     if (!coach) {
       return res.status(404).json({ 
