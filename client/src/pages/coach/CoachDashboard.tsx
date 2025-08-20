@@ -19,6 +19,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { SimpleProgressiveAssessment } from '@/components/coaching/SimpleProgressiveAssessment';
+import { CoachStudentRequests } from '@/components/coaching/CoachStudentRequests';
 import { useToast } from '@/hooks/use-toast';
 
 // 55-Skill PCP Assessment Interface Component
@@ -393,8 +394,9 @@ export default function CoachDashboard() {
       </div>
 
       <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-100">
           <TabsTrigger value="students" className="data-[state=active]:bg-white">My Students</TabsTrigger>
+          <TabsTrigger value="connections" className="data-[state=active]:bg-white">Connections</TabsTrigger>
           <TabsTrigger value="assessments" className="data-[state=active]:bg-white">Recent Assessments</TabsTrigger>
           <TabsTrigger value="progress" className="data-[state=active]:bg-white">Progress Tracking</TabsTrigger>
         </TabsList>
@@ -554,6 +556,11 @@ export default function CoachDashboard() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Connections Tab */}
+        <TabsContent value="connections" className="space-y-4">
+          <CoachStudentRequests />
         </TabsContent>
 
         {/* Simple Progressive Assessment Interface */}

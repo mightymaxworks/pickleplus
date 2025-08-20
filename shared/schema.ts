@@ -146,6 +146,18 @@ import {
   type GalleryWithRelations
 } from './schema/media';
 
+// Import student-coach connections schema
+import {
+  studentCoachConnections,
+  insertStudentCoachConnectionSchema,
+  createConnectionRequestSchema,
+  processConnectionRequestSchema,
+  type StudentCoachConnection,
+  type InsertStudentCoachConnection,
+  type CreateConnectionRequest,
+  type ProcessConnectionRequest
+} from './schema/student-coach-connections';
+
 // XP system schema imports temporarily removed for deployment fix
 
 // Charge card system schema (PKL-278651-CHARGE-CARD - Charge Card Payment System)

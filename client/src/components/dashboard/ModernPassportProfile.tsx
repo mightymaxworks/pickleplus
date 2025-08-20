@@ -17,6 +17,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { EditableField } from "@/components/profile/EditableField";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
 import { RecentMatchesWidget } from "@/components/dashboard/RecentMatchesWidget";
+import { StudentCoachingWidget } from "@/components/dashboard/StudentCoachingWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -336,6 +337,11 @@ export default function ModernPassportProfile({
                 />
               </CardContent>
             </Card>
+
+            {/* Coaching Widget - Only show for students (isOwner and not coach) */}
+            {isOwner && (!userRoles?.isCoach) && (
+              <StudentCoachingWidget />
+            )}
 
             {/* Personal Information */}
             <Card>
