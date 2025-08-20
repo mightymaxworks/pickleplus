@@ -254,6 +254,8 @@ export default function App() {
                   
                   {/* UDF Demo - Streamlined Match Recording */}
                   <Route path="/streamlined-match-demo" component={lazyLoad(() => import('./pages/StreamlinedMatchDemo'))} />
+                  {/* Student-Coach Connection Demo */}
+                  <Route path="/coaching-connection-demo" component={lazyLoad(() => import('./pages/coaching-connection-demo'))} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
                   {/* <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} /> */}
                   {/* <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} /> */}
