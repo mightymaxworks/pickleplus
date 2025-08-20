@@ -372,15 +372,43 @@ export function SimpleProgressiveAssessment({
                           ))}
                         </div>
                         
-                        {/* Mobile Feedback Only */}
-                        {currentRating && (
-                          <div className="p-2 bg-blue-50 border border-blue-200 rounded">
-                            <div className="text-xs">
-                              <span className="font-medium text-blue-700">Rating {currentRating}: </span>
-                              <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
+                        {/* Mobile Rating Guide */}
+                        <div className="space-y-2 text-xs">
+                          <div className="grid grid-cols-2 gap-1">
+                            <div className="bg-red-50 border border-red-200 rounded p-1.5">
+                              <div className="font-medium text-red-700">1-3: Beginner</div>
+                              <div className="text-red-600 text-xs">{skillGuide.indicators[1] || "Basic development needed"}</div>
+                            </div>
+                            <div className="bg-yellow-50 border border-yellow-200 rounded p-1.5">
+                              <div className="font-medium text-yellow-700">4-5: Competent</div>
+                              <div className="text-yellow-600 text-xs">{skillGuide.indicators[5] || "Adequate execution"}</div>
+                            </div>
+                            <div className="bg-green-50 border border-green-200 rounded p-1.5">
+                              <div className="font-medium text-green-700">6-8: Advanced</div>
+                              <div className="text-green-600 text-xs">{skillGuide.indicators[7] || "Strong performance"}</div>
+                            </div>
+                            <div className="bg-purple-50 border border-purple-200 rounded p-1.5">
+                              <div className="font-medium text-purple-700">9-10: Expert</div>
+                              <div className="text-purple-600 text-xs">{skillGuide.indicators[9] || "Exceptional skill"}</div>
                             </div>
                           </div>
-                        )}
+                          
+                          {/* Current Rating Feedback */}
+                          {currentRating && (
+                            <div className="p-2 bg-blue-50 border border-blue-200 rounded">
+                              <div className="flex items-center gap-2">
+                                <Info className="w-3 h-3 text-blue-600" />
+                                <div>
+                                  <span className="font-medium text-blue-700">Rating {currentRating}: </span>
+                                  <span className="text-blue-600">{getRatingDescription(currentRating).label}</span>
+                                </div>
+                              </div>
+                              <div className="text-xs text-blue-600 mt-1 font-medium">
+                                Tip: {skillGuide.coachingTips}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Desktop Full Header */}
