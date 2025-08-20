@@ -1,4 +1,4 @@
-# Pickle+ - Comprehensive Ecosystem Platform
+# Pickle+ - Compressed replit.md
 
 ## Overview
 Pickle+ is a comprehensive ecosystem platform designed as the central operating system for the global FPF (Future Pickleball Federation) franchise network. It unifies players, coaches, franchisees, headquarters, events, retail, facilities, and digital currency into a seamless and scalable platform. Its main purpose is to serve various stakeholder groups including casual and competitive players, certified coaches, franchisees managing facilities and operations, FPF headquarters for strategic oversight, facilities requiring operational management, and retail partners for equipment management and sales. Key capabilities include a unified player passport system, gamified loyalty via Pickle Points digital currency, and comprehensive franchise management, all while supporting the core pickleball community and coaching development.
@@ -18,80 +18,6 @@ User wants the admin integration at `/admin/match-management` to use updated Mat
 User wants the platform to be streamlined for core player functionality only in V1.0.
 User wants advanced features disabled for the focused launch experience.
 User wants navigation simplified to 4 core items: Dashboard, Record Match, Rankings, My Profile.
-
-## Current Sprint Focus - Progressive Assessment UX Enhancement
-User wants to focus on clean, professional coaching interface without UI clutter.
-
-### ✅ Phase 1: Professional Coaching Guidance (COMPLETED)
-- Enhanced coachingGuides.ts with detailed performance metrics and professional standards
-- Fixed critical UX flow: coaching guidance now shows BEFORE rating, not after
-- Added comprehensive professional assessment guidance with specific performance indicators
-- Implemented mobile and desktop coaching guidance sections with proper visibility
-
-### ✅ Phase 2: UI Cleanup & Streamlining (COMPLETED)
-- Removed cluttering examples (rating 4 vs 7 comparisons) from assessment interface
-- Streamlined navigation by removing redundant "Back" buttons from header
-- Simplified action buttons - removed "Cancel", kept single "Save Assessment" primary action
-- Clean, uncluttered interface while maintaining professional coaching standards
-- Mobile "Done" button for easy exit, desktop header simplified
-
-### ✅ Phase 3: Elegant Compact Design (COMPLETED)
-- Redesigned interface to dramatically reduce scrolling with inline rating buttons
-- Mobile: Compact skill cards with inline rating buttons (8x8) and coaching tips preview
-- Desktop: Single-row design with skill name, coaching tip, inline rating (7x7), and instant feedback
-- Eliminated verbose coaching guides that caused excessive scrolling
-- Maintained essential professional coaching standards in a space-efficient design
-- Each skill now takes minimal vertical space while preserving usability
-
-### ✅ Phase 4: Coaching Standards Maintained (COMPLETED)
-- Professional coaching insights with specific performance tips
-- Essential coaching guidance preserved without UI clutter
-- Touch-friendly inline rating buttons for efficient skill assessment
-- Real-time PCP calculation with category breakdown sidebar
-- Instant feedback when skills are rated
-
-## Progressive Assessment System - COMPLETE ✅
-The coaching assessment interface now provides:
-- Clean, professional guidance visible BEFORE rating selection
-- Streamlined navigation without unnecessary buttons
-- Comprehensive 55-skill assessment tools with professional standards
-- Real-time PCP calculation using proper algorithm weights
-
-## PCP Rating Algorithm Implementation - INTEGRATED ✅
-**Date**: August 19, 2025
-**Status**: Progressive Assessment Model fully integrated with existing CoachingAssessmentValidator
-
-**Integration Achievement**:
-- **Unified Assessment System**: Progressive Assessment capabilities integrated into existing CoachingAssessmentValidator component
-- **Enhanced 3-Tab Interface**: Validation, Progressive Assessment, Results & PCP tabs
-- **Focused Session Capability**: Coaches can assess specific skill categories or comprehensive 55-skill evaluations
-- **Real-Time PCP Calculation**: Live updates as skills are assessed using existing algorithm
-- **Security Integration**: Maintains existing L1-L5 coach validation and admin-controlled assignments
-- **Session Type Selection**: Focused, Comprehensive, or Baseline assessment workflows
-- **Individual Skill Tracking**: Each of 55 skills tracked individually with category-based organization
-
-**Progressive Assessment Features**:
-- Realistic coaching workflow (focused training sessions on specific categories)
-- Category selection with weighted importance display (Touch 30%, Technical 25%, etc.)
-- Session notes capability for coaching documentation
-- Progress tracking with visual indicators
-- Real-time PCP rating calculation as skills are assessed
-
-**Algorithm Formula** (unchanged):
-```
-Raw_Score = (Touch×0.30 + Technical×0.25 + Mental×0.20 + Athletic×0.15 + Power×0.10)
-PCP_Rating = 2.0 + (Raw_Score - 1.0) × (6.0/9.0)
-```
-
-**UDF Compliance**: Progressive assessment integrated with existing coaching infrastructure - single comprehensive assessment system.
-
-## Next Sprint Phase Options
-Priority development areas identified from user preferences:
-1. **Match Management Enhancement** - QuickMatchRecorder fixes, enhanced admin tools
-2. **Youth Rankings System** - Standalone youth categories (U12, U14, U16, U18)
-3. **UI/UX Critical Fixes** - Interactive sliders, SelectItem errors, QR scanner
-4. **Gender Bonus & Decimal Precision** - Automatic detection, 2-decimal accuracy
-5. **Testing & Deployment** - Automated testing, CI/CD, passport standardization
 User wants interactive slider components for all 1-10 rating fields in the profile UX.
 User wants all SelectItem empty value errors resolved across the platform.
 User wants a comprehensive automated testing suite with Puppeteer, GitHub Actions workflow for CI/CD.
@@ -108,14 +34,9 @@ User wants decimal precision (2 decimal places) instead of rounding up for ranki
 User wants decimal precision enforced in UDF best practices as the standard for all future development.
 User wants the Pickle Points multiplier CORRECTED to exactly 1.5x throughout all documentation and system implementation - any other rate is incorrect.
 User clarified that the 1.5x multiplier must apply PER MATCH when Pickle Points are earned, NOT as a blanket conversion of total ranking points.
-User reported Tony Guo showing 28 matches but physical records don't match, leading to discovery of massive historical data corruption.
-User wants immediate data integrity cleanup to resolve system-wide duplicate match corruption affecting rankings and points.
-✅ DATA CORRUPTION CLEANUP EXECUTED: Successfully removed 42 duplicate matches system-wide while preserving 5 legitimate matches.
-✅ TONY GUO CASE RESOLVED: Match count corrected from 28 to 11 matches, confirming massive data corruption cleanup.
-✅ SYSTEM INTEGRITY RESTORED: Live cleanup completed with zero errors, affecting 7 users total.
 
 ## System Architecture
-Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards, ensuring specialized route modules, proper registration functions, and authentic data integration.
+Pickle+ utilizes a modern full-stack architecture with a React frontend, Node.js backend, and PostgreSQL database. All development adheres to a modular architecture and evidence-based completion standards.
 
 ### Universal Development Framework
 The Universal Development Dashboard (UDD) at `/udd` tracks all development workflows, enforces pre-development protocols, and manages the discussion, integration, review, validation, dependency check, authorization, and implementation phases of development.
@@ -157,6 +78,7 @@ The Universal Development Dashboard (UDD) at `/udd` tracks all development workf
 - **Internationalization**: Bilingual support for English and Chinese.
 - **AI-Powered Business Intelligence**: AI Revenue Forecasting, Demand Pattern Analysis, Smart Scheduling Optimization, Client Retention Analytics, Client Lifetime Value Analysis, Marketing ROI Dashboard, and Competitive Intelligence.
 - **Critical Gaps Analysis System**: Comprehensive deployment readiness assessment with identified critical gaps, integrated into the UDD's unified Development Ledger.
+- **Student-Coach Connection System**: Supports multiple coaches per student with passport validation and coach approval.
 
 ## External Dependencies
 - **React**: Frontend framework.

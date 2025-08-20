@@ -90,19 +90,19 @@ export default function CoachingConnectionDemo() {
               <CardContent className="space-y-3">
                 <div className="flex items-start gap-2">
                   <Badge variant="outline" className="mt-0.5">✓</Badge>
-                  <span className="text-sm text-blue-800">Connect with certified coaches</span>
+                  <span className="text-sm text-blue-800">Connect with multiple certified coaches</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Badge variant="outline" className="mt-0.5">✓</Badge>
-                  <span className="text-sm text-blue-800">Receive professional skill assessments</span>
+                  <span className="text-sm text-blue-800">Receive diverse training perspectives</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Badge variant="outline" className="mt-0.5">✓</Badge>
-                  <span className="text-sm text-blue-800">Get official PCP rating calculations</span>
+                  <span className="text-sm text-blue-800">Get professional skill assessments from each coach</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Badge variant="outline" className="mt-0.5">✓</Badge>
-                  <span className="text-sm text-blue-800">Track development progress over time</span>
+                  <span className="text-sm text-blue-800">Build comprehensive development portfolio</span>
                 </div>
               </CardContent>
             </Card>
@@ -139,11 +139,11 @@ export default function CoachingConnectionDemo() {
             <CardContent className="p-6">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Why Passport Code Validation?
+                  Why Multiple Coach Relationships?
                 </h3>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  This system ensures quality connections by requiring in-person meetings before digital relationships. 
-                  Coaches maintain control over their student roster while students can easily connect with multiple qualified instructors.
+                  Students benefit from diverse coaching perspectives - one coach might excel at technical skills while another specializes in strategy or mental game. 
+                  Our passport system enables secure connections with multiple qualified instructors for comprehensive development.
                 </p>
               </div>
             </CardContent>

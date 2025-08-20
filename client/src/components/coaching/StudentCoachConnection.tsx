@@ -105,10 +105,10 @@ export function StudentCoachConnection() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-green-600" />
-              Your Coach
+              Your Coaches ({activeConnections.length})
             </CardTitle>
             <CardDescription>
-              You are currently connected to this coach for assessments and training
+              You are currently connected to these coaches for assessments and training
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -225,10 +225,10 @@ export function StudentCoachConnection() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-blue-900">How it works</p>
               <ul className="text-xs text-blue-700 space-y-1">
-                <li>1. Get your coach's passport code in person</li>
-                <li>2. Enter the code and send a connection request</li>
-                <li>3. Your coach will approve the request</li>
-                <li>4. Once approved, you'll receive assessments and training from your coach</li>
+                <li>1. Get each coach's passport code in person at courts or events</li>
+                <li>2. Enter codes and send connection requests to multiple coaches</li>
+                <li>3. Each coach will approve their individual request</li>
+                <li>4. Work with multiple coaches for diverse training perspectives</li>
               </ul>
             </div>
           </div>
