@@ -103,30 +103,63 @@ export function SimpleProgressiveAssessment({
   const progressPercentage = totalSkills > 0 ? (completedSkills / totalSkills) * 100 : 0;
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-blue-800">
-            <Star className="w-5 h-5" />
-            Progressive Skills Assessment
-          </CardTitle>
-          <Button variant="outline" size="sm" onClick={onCancel}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-blue-600" />
-            <span className="font-medium text-blue-700">Student: {studentName}</span>
+    <div className="relative">
+      {/* Floating PCP Rating Display */}
+      <div className="fixed top-20 right-6 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[220px]">
+        <div className="text-center">
+          <div className="text-sm font-medium text-gray-600 mb-2">Current PCP Rating</div>
+          <div className="text-3xl font-bold text-blue-600 mb-2">
+            {currentPCP?.pcpRating || '0.00'}
+          </div>
+          <div className="text-xs text-gray-500 mb-3">
+            {completedSkills} of {totalSkills} skills rated
           </div>
           {currentPCP && (
-            <Badge className="bg-green-500 text-white">
-              Current PCP Rating: {currentPCP.toFixed(2)}
-            </Badge>
+            <div className="space-y-1 text-xs border-t pt-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Touch (30%):</span>
+                <span className="font-bold text-blue-600">{currentPCP.categoryAverages.touch.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Technical (25%):</span>
+                <span className="font-bold text-green-600">{currentPCP.categoryAverages.technical.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Mental (20%):</span>
+                <span className="font-bold text-purple-600">{currentPCP.categoryAverages.mental.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Athletic (15%):</span>
+                <span className="font-bold text-orange-600">{currentPCP.categoryAverages.athletic.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Power (10%):</span>
+                <span className="font-bold text-red-600">{currentPCP.categoryAverages.power.toFixed(1)}</span>
+              </div>
+            </div>
           )}
         </div>
-      </CardHeader>
+      </div>
+
+      <Card className="border-blue-200 bg-blue-50 mr-60">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <Star className="w-5 h-5" />
+              Progressive Skills Assessment
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={onCancel}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-blue-600" />
+              <span className="font-medium text-blue-700">Student: {studentName}</span>
+            </div>
+          </div>
+        </CardHeader>
 
       <CardContent className="space-y-6">
         {/* Category Selection */}
@@ -276,5 +309,6 @@ export function SimpleProgressiveAssessment({
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
