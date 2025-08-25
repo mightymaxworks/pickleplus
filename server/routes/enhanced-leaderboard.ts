@@ -63,8 +63,8 @@ router.get('/facility-debug', async (req, res) => {
           ? (user.doublesRankingPoints || 0)
           : (user.singlesRankingPoints || 0);
         
-        const totalMatches = user.totalMatches || 0;
-        const matchesWon = user.matchesWon || 0;
+        const totalMatches = user.total_matches || 0;
+        const matchesWon = user.matches_won || 0;
         const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
         
         const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
@@ -384,8 +384,8 @@ async function getRealLeaderboardData(
           : (user.singlesRankingPoints || 0);
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches
-        const totalMatches = user.totalMatches || 0;
-        const matchesWon = user.matchesWon || 0;
+        const totalMatches = user.total_matches || 0;
+        const matchesWon = user.matches_won || 0;
         const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
         
         const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
