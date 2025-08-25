@@ -272,7 +272,7 @@ export default function FacilityDisplaysAdminDashboard() {
                       </div>
                       <div className="p-3 bg-green-50 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
-                          {leaderboardData.filter(p => p.matchesPlayed >= 10).length}
+                          {leaderboardData.filter(p => p.points > 0).length}
                         </div>
                         <div className="text-sm text-green-800">Ranked</div>
                       </div>
@@ -314,45 +314,110 @@ export default function FacilityDisplaysAdminDashboard() {
                     Loading ranking data...
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b bg-gray-50">
-                          <th className="text-left p-3 font-semibold">Rank</th>
-                          <th className="text-left p-3 font-semibold">Player</th>
-                          <th className="text-left p-3 font-semibold">Points</th>
-                          <th className="text-left p-3 font-semibold">Matches</th>
-                          <th className="text-left p-3 font-semibold">Win Rate</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {leaderboardData.slice(0, 20).map((player, index) => (
-                          <tr key={player.id} className="border-b hover:bg-gray-50">
-                            <td className="p-3">
-                              <div className="flex items-center">
-                                {index < 3 && (
-                                  <Trophy className={`w-4 h-4 mr-2 ${
-                                    index === 0 ? 'text-yellow-500' :
-                                    index === 1 ? 'text-gray-400' :
-                                    'text-orange-500'
-                                  }`} />
-                                )}
-                                <span className="font-semibold">{player.ranking}</span>
-                              </div>
-                            </td>
-                            <td className="p-3">
-                              <div>
-                                <div className="font-medium">{player.displayName}</div>
-                                <div className="text-sm text-gray-500">@{player.username}</div>
-                              </div>
-                            </td>
-                            <td className="p-3 font-semibold">{player.points.toFixed(2)}</td>
-                            <td className="p-3">{player.matchesPlayed}</td>
-                            <td className="p-3">{player.winRate.toFixed(1)}%</td>
+                  {/* Step 3: Enhanced Preview Component with Professional Facility Display Formatting */}
+                  <div className="overflow-x-auto bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-slate-200">
+                    {/* Facility Display Header */}
+                    <div className="mb-6 text-center">
+                      <h2 className="text-3xl font-bold text-slate-800 mb-2">
+                        🏆 {formats.find(f => f.value === selectedFormat)?.label} Rankings
+                      </h2>
+                      <div className="text-lg text-slate-600">
+                        {divisions.find(d => d.value === selectedDivision)?.label} • {' '}
+                        {genders.find(g => g.value === selectedGender)?.label}
+                      </div>
+                      <div className="text-sm text-slate-500 mt-1">
+                        Last Updated: {lastUpdated?.toLocaleString() || 'Never'}
+                      </div>
+                    </div>
+
+                    {/* Professional Ranking Table */}
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+                            <th className="text-left p-4 font-bold text-lg">Rank</th>
+                            <th className="text-left p-4 font-bold text-lg">Player</th>
+                            <th className="text-right p-4 font-bold text-lg">Points</th>
+                            <th className="text-center p-4 font-bold text-lg">Matches</th>
+                            <th className="text-center p-4 font-bold text-lg">Win Rate</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {leaderboardData.slice(0, 20).map((player, index) => (
+                            <tr 
+                              key={player.id} 
+                              className={`border-b transition-colors ${
+                                index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                              } hover:bg-blue-50`}
+                            >
+                              <td className="p-4">
+                                <div className="flex items-center">
+                                  {index < 3 && (
+                                    <Trophy className={`w-6 h-6 mr-3 ${
+                                      index === 0 ? 'text-yellow-500' :
+                                      index === 1 ? 'text-gray-400' :
+                                      'text-orange-500'
+                                    }`} />
+                                  )}
+                                  <span className={`text-2xl font-bold ${
+                                    index < 3 ? 'text-orange-600' : 'text-slate-700'
+                                  }`}>
+                                    #{player.ranking}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-400 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                                    {player.displayName.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div className="text-xl font-bold text-slate-800">
+                                      {player.displayName}
+                                    </div>
+                                    <div className="text-sm text-slate-500 font-medium">
+                                      @{player.username}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="text-2xl font-bold text-orange-600">
+                                  {player.points.toFixed(2)}
+                                </span>
+                                <div className="text-sm text-slate-500">pts</div>
+                              </td>
+                              <td className="p-4 text-center">
+                                <span className="text-lg font-semibold text-slate-700">
+                                  {player.matchesPlayed}
+                                </span>
+                                <div className="text-sm text-slate-500">games</div>
+                              </td>
+                              <td className="p-4 text-center">
+                                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
+                                  player.winRate >= 70 ? 'bg-green-100 text-green-800' :
+                                  player.winRate >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {player.winRate.toFixed(1)}%
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Footer for 4K Display */}
+                    <div className="mt-6 text-center text-slate-500 text-sm">
+                      <div className="flex items-center justify-center gap-4">
+                        <span>🏓 Pickle+ Ranking System</span>
+                        <span>•</span>
+                        <span>Powered by PCP Algorithm</span>
+                        <span>•</span>
+                        <span>Real-time Updates</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
