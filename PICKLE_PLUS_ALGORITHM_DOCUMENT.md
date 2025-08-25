@@ -99,63 +99,50 @@ Age-based multipliers reward senior participation and acknowledge physical deman
 
 #### **✅ CONFIRMED DECISION: Age Group Application Method**
 
-**Option B: Open Age Group Multiplier** ✅ **OFFICIAL STANDARD**
-- Players get multiplier regardless of opponent age or tournament division
-- 65-year-old gets 1.5x multiplier even when playing 25-year-old
-- Rewards senior participation in open play and cross-generational competition
-- Compensates for physical disadvantages regardless of tournament structure
+**Differential Age Group Multipliers** ✅ **OFFICIAL STANDARD**
+- Age multipliers apply ONLY when players compete across different age groups
+- Same age group matches: Both players receive 1.0x multiplier (equal treatment)
+- Cross age group matches: Each player receives their individual age group multiplier
+- Individual player calculation: Applied per player regardless of doubles team composition
+- Universal application: Applies to all match types (tournaments, leagues, casual play)
 
-> **RATIONALE:** Encourages cross-generational participation, provides fair compensation for physical aging effects, and prevents age-based segregation in tournament play.
+> **RATIONALE:** Provides fair compensation for cross-generational competition while ensuring equal treatment within age groups. Encourages older players to challenge themselves in younger age divisions while maintaining competitive integrity within peer groups.
 
-### **Detailed Scenarios Comparison**
+### **Detailed Scenarios with Differential Age Multipliers**
 
-#### **Scenario 1: Senior vs Senior Match**
-**Match:** 65-year-old (1.5x) vs 67-year-old (1.5x), Tournament Singles, Club Event
+#### **Scenario 1: Same Age Group Match**
+**Match:** 65-year-old vs 67-year-old (both 60+), Tournament Singles, Club Event
 
-**Option A (Own Age Group):**
-- Both players competing in 60+ division
-- Winner: 3 × 1.5 × 1.0 × 1.0 = **4.5 points**
-- Loser: 1 × 1.5 × 1.0 × 1.0 = **1.5 points**
-- *Result: Age-appropriate competition with senior bonuses*
-
-**Option B (Open Age Group):**
-- Same calculation regardless of division
-- Winner: 3 × 1.5 × 1.0 × 1.0 = **4.5 points**
-- Loser: 1 × 1.5 × 1.0 × 1.0 = **1.5 points**
-- *Result: Identical to Option A*
-
-#### **Scenario 2: Senior vs Young Player Match**
-**Match:** 65-year-old (1.5x) vs 25-year-old (1.0x), Tournament Singles, Club Event
-
-**Option A (Own Age Group):**
-- Mixed-age match, no age multipliers applied
-- Senior Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
-- Young Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
+**Differential Logic:**
+- Both players in same age group (60+)
+- Both players receive 1.0x multiplier (equal treatment)
+- Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
 - Loser: 1 × 1.0 × 1.0 × 1.0 = **1.0 point**
-- *Result: Equal treatment, no age advantage*
+- *Result: Equal treatment within age group, no age advantage inflation*
 
-**Option B (Open Age Group):**
-- Players always get their age multiplier
+#### **Scenario 2: Cross Age Group Match**
+**Match:** 65-year-old (60+) vs 25-year-old (Open), Tournament Singles, Club Event
+
+**Differential Logic:**
+- Different age groups: 60+ vs Open
+- 65-year-old gets 1.5x multiplier (individual age group)
+- 25-year-old gets 1.0x multiplier (individual age group)
 - Senior Winner: 3 × 1.5 × 1.0 × 1.0 = **4.5 points**
 - Senior Loser: 1 × 1.5 × 1.0 × 1.0 = **1.5 points**
 - Young Winner: 3 × 1.0 × 1.0 × 1.0 = **3.0 points**
 - Young Loser: 1 × 1.0 × 1.0 × 1.0 = **1.0 point**
-- *Result: Senior gets 50% more points regardless of outcome*
+- *Result: Physical disadvantage compensation for cross-generational competition*
 
-#### **Scenario 3: Masters Tournament (50+ Division)**
-**Match:** 55-year-old (1.3x) vs 52-year-old (1.3x), National Tournament
+#### **Scenario 3: Mixed Age Doubles Team**
+**Match:** Team A (25-year-old + 55-year-old) vs Team B (30-year-old + 35-year-old), Tournament
 
-**Option A (Own Age Group):**
-- Both compete in 50+ division
-- Winner: 3 × 1.3 × 1.0 × 3.0 = **11.7 points**
-- Loser: 1 × 1.3 × 1.0 × 3.0 = **3.9 points**
-- *Result: Proper masters division scoring*
-
-**Option B (Open Age Group):**
-- Same calculation (both get age multiplier)
-- Winner: 3 × 1.3 × 1.0 × 3.0 = **11.7 points**
-- Loser: 1 × 1.3 × 1.0 × 3.0 = **3.9 points**
-- *Result: Identical to Option A*
+**Differential Logic - Individual Player Calculations:**
+- 25-year-old (Open): Competes against 35+ players → gets 1.0x multiplier
+- 55-year-old (50+): Competes against Open/35+ players → gets 1.3x multiplier  
+- 30-year-old (Open): Competes against Open/50+ players → gets 1.0x multiplier
+- 35-year-old (35+): Competes against Open/50+ players → gets 1.2x multiplier
+- **Result**: Each player receives their age group multiplier when competing across age groups
+- *Individual calculation encourages cross-generational team formation*
 
 #### **Scenario 4: Open Tournament Mixed Ages**
 **Match:** 45-year-old (1.2x) vs 28-year-old (1.0x), City Tournament
