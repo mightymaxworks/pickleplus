@@ -475,3 +475,208 @@ export function logCalculationBreakdown(result: MatchResult): void {
   console.log(`Pickle Points: ${calculation.picklePoints} (1.5x per match)`);
   console.log('=====================================');
 }
+
+/**
+ * DATA INTEGRITY VALIDATION UTILITIES
+ * Added August 25, 2025 - UDF Critical Safeguards Implementation
+ */
+
+export interface DataIntegrityAuditResult {
+  passed: boolean;
+  criticalIssues: string[];
+  warnings: string[];
+  mustFixBeforeDeployment: boolean;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  correctOperation?: string;
+  correctRange?: string;
+  maxExpected?: string;
+}
+
+/**
+ * RULE 12: Enhanced additive points system protection
+ */
+export function validateAdditivePointUpdate(
+  currentPoints: number,
+  newPoints: number, 
+  playerId: string,
+  operation: 'add' | 'replace' = 'add'
+): ValidationResult {
+  
+  // CRITICAL: Block any non-additive operations
+  if (operation === 'replace') {
+    return {
+      isValid: false,
+      error: 'FORBIDDEN: Point replacement operations destroy tournament history',
+      correctOperation: `Use additive: ${currentPoints} + ${newPoints} = ${currentPoints + newPoints}`
+    };
+  }
+  
+  // VALIDATION: Ensure new points are reasonable
+  if (newPoints < 0) {
+    return {
+      isValid: false,
+      error: 'INVALID: Negative point additions not allowed',
+      correctRange: 'Points must be positive integers'
+    };
+  }
+  
+  if (newPoints > 100) {
+    return {
+      isValid: false,
+      error: 'SUSPICIOUS: Single match point addition exceeds maximum expected value',
+      maxExpected: 'Tournament matches typically award ≤30 points'
+    };
+  }
+  
+  return { isValid: true };
+}
+
+/**
+ * RULE 10: User match statistics consistency validation
+ */
+export function validateUserMatchConsistency(
+  userTotalMatches: number,
+  userWinsCount: number,
+  actualMatchCount: number,
+  actualWinsCount: number,
+  userId: string
+): ValidationResult {
+  
+  const issues: string[] = [];
+  
+  if (userTotalMatches !== actualMatchCount) {
+    issues.push(`Total matches mismatch: User table shows ${userTotalMatches}, actual matches: ${actualMatchCount}`);
+  }
+  
+  if (userWinsCount !== actualWinsCount) {
+    issues.push(`Wins count mismatch: User table shows ${userWinsCount}, actual wins: ${actualWinsCount}`);
+  }
+  
+  if (userWinsCount > userTotalMatches) {
+    issues.push(`Impossible data: Wins (${userWinsCount}) cannot exceed total matches (${userTotalMatches})`);
+  }
+  
+  return {
+    isValid: issues.length === 0,
+    error: issues.length > 0 ? `User ${userId} statistics corrupted: ${issues.join('; ')}` : undefined
+  };
+}
+
+/**
+ * RULE 9: Column name consistency validation
+ */
+export function validateColumnNameConsistency(
+  queryResult: any,
+  expectedFields: string[]
+): ValidationResult {
+  
+  const missingFields: string[] = [];
+  const unexpectedFields: string[] = [];
+  
+  // Check for missing expected fields
+  for (const field of expectedFields) {
+    if (!(field in queryResult)) {
+      missingFields.push(field);
+    }
+  }
+  
+  // Check for unexpected snake_case fields (indicating mapping issues)
+  const snakeCasePattern = /^[a-z]+(_[a-z]+)+$/;
+  for (const field in queryResult) {
+    if (snakeCasePattern.test(field) && !expectedFields.includes(field)) {
+      unexpectedFields.push(field);
+    }
+  }
+  
+  const issues: string[] = [];
+  if (missingFields.length > 0) {
+    issues.push(`Missing fields: ${missingFields.join(', ')}`);
+  }
+  if (unexpectedFields.length > 0) {
+    issues.push(`Unmapped snake_case fields detected: ${unexpectedFields.join(', ')}`);
+  }
+  
+  return {
+    isValid: issues.length === 0,
+    error: issues.length > 0 ? `Column mapping issues: ${issues.join('; ')}` : undefined
+  };
+}
+
+/**
+ * RULE 8: Database schema consistency enforcement
+ */
+export function validateRankingDataSource(
+  dataSource: 'users_table' | 'ranking_points_table',
+  legacyCount: number,
+  currentCount: number
+): ValidationResult {
+  
+  if (dataSource === 'users_table' && legacyCount > currentCount) {
+    return {
+      isValid: false,
+      error: `CRITICAL: Reading from deprecated users table while ${legacyCount} users are trapped in legacy system`,
+      correctOperation: 'Must migrate to ranking_points table and use current ranking system'
+    };
+  }
+  
+  if (dataSource === 'users_table') {
+    return {
+      isValid: false,
+      error: 'DEPRECATED: Using legacy users.ranking_points columns',
+      correctOperation: 'Switch to ranking_points table for all ranking displays'
+    };
+  }
+  
+  return { isValid: true };
+}
+
+/**
+ * RULE 11: Pre-deployment data migration audit
+ */
+export function createDataIntegrityAudit(): DataIntegrityAuditResult {
+  // This would be implemented with actual database queries in a real system
+  // For now, providing the structure for implementation
+  
+  return {
+    passed: false, // Will be determined by actual audit results
+    criticalIssues: [
+      'DATA MIGRATION INCOMPLETE: Users trapped in legacy system detected',
+      'USER STATS CORRUPTION: Match count inconsistencies found',
+      'POINT CALCULATION ERRORS: Invalid point totals detected'
+    ],
+    warnings: [
+      'Column name mapping inconsistencies detected',
+      'Performance degradation from dual system queries'
+    ],
+    mustFixBeforeDeployment: true
+  };
+}
+
+/**
+ * Comprehensive point calculation validation
+ */
+export function validatePointCalculationAccuracy(
+  playerId: string,
+  expectedPoints: number,
+  actualPoints: number,
+  matchHistory: { wins: number; losses: number }
+): ValidationResult {
+  
+  // Calculate expected points using System B
+  const expectedCalculation = (matchHistory.wins * SYSTEM_B_BASE_POINTS.WIN) + 
+                             (matchHistory.losses * SYSTEM_B_BASE_POINTS.LOSS);
+  
+  if (Math.abs(actualPoints - expectedCalculation) > 0.01) {
+    return {
+      isValid: false,
+      error: `Point calculation error for player ${playerId}: Expected ${expectedCalculation}, found ${actualPoints}`,
+      correctOperation: `Recalculate: ${matchHistory.wins} wins × 3 + ${matchHistory.losses} losses × 1 = ${expectedCalculation} points`
+    };
+  }
+  
+  return { isValid: true };
+}

@@ -103,6 +103,144 @@ const finalPoints = Math.ceil(calculatedPoints); // ❌ WRONG
 
 ---
 
+## 🚨 CRITICAL DATA INTEGRITY SAFEGUARDS
+*Added August 25, 2025 - Based on Production Data Corruption Discovery*
+
+### **RULE 8: DATABASE SCHEMA CONSISTENCY ENFORCEMENT**
+```typescript
+// MANDATORY: Single source of truth for ranking data
+// FORBIDDEN: Dual ranking systems that cause data fragmentation
+
+// ❌ WRONG: Reading from legacy users table
+const users = await db.select().from(users).where(gt(users.doublesRankingPoints, 0));
+
+// ✅ CORRECT: Always use current ranking_points table
+const rankings = await db.select().from(rankingPoints).where(gt(rankingPoints.points, 0));
+```
+
+**CRITICAL ENFORCEMENT**: 
+- All ranking displays MUST read from `ranking_points` table
+- Legacy `users.ranking_points` columns are deprecated
+- Match recording MUST update both systems during transition period
+
+### **RULE 9: COLUMN NAME CONSISTENCY VALIDATION**
+```typescript
+// MANDATORY: Standardized column naming across all queries
+// Database uses snake_case, TypeScript uses camelCase with proper mapping
+
+// ❌ WRONG: Direct column name usage causing field mapping errors
+SELECT total_matches, matches_won FROM users; // Returns snake_case
+const matchesPlayed = user.total_matches; // Undefined due to casing
+
+// ✅ CORRECT: Use ORM field mapping or explicit aliases  
+const rankings = await db.select({
+  matchesPlayed: rankingPoints.totalMatches,
+  winsCount: rankingPoints.winsCount
+}).from(rankingPoints);
+```
+
+**ENFORCEMENT**: 
+- All database queries use consistent column references
+- Field mapping validation in development environment
+- Automated testing for column consistency
+
+### **RULE 10: MATCH STATISTICS SYNCHRONIZATION**
+```typescript
+// MANDATORY: User statistics must update when matches are recorded
+// FORBIDDEN: Match creation without user table updates
+
+// CRITICAL PATTERN: Every match creation must trigger user stats update
+await storage.createMatch(matchData);
+await storage.updateUserMatchStatistics(playersInMatch); // REQUIRED
+
+// VALIDATION: Verify user statistics match actual match history
+const validationResult = await validateUserMatchConsistency(userId);
+if (!validationResult.isValid) {
+  throw new Error(`User statistics out of sync: ${validationResult.errors}`);
+}
+```
+
+### **RULE 11: PRE-DEPLOYMENT DATA MIGRATION AUDIT**
+```typescript
+// MANDATORY: Run before any ranking system deployment
+export async function mandatoryDataIntegrityAudit(): Promise<AuditResult> {
+  const issues = [];
+  
+  // Check for dual ranking system inconsistencies
+  const legacyUsers = await countUsersWithLegacyRankings();
+  const currentUsers = await countUsersWithCurrentRankings();
+  
+  if (legacyUsers.count > currentUsers.count) {
+    issues.push(`DATA MIGRATION INCOMPLETE: ${legacyUsers.count} users trapped in legacy system`);
+  }
+  
+  // Validate user statistics consistency
+  const inconsistentUsers = await findUsersWithInconsistentStats();
+  if (inconsistentUsers.length > 0) {
+    issues.push(`USER STATS CORRUPTION: ${inconsistentUsers.length} users with invalid match counts`);
+  }
+  
+  // Check for algorithm calculation errors
+  const invalidPoints = await findUsersWithInvalidPoints();
+  if (invalidPoints.length > 0) {
+    issues.push(`POINT CALCULATION ERRORS: ${invalidPoints.length} users with incorrect points`);
+  }
+  
+  return {
+    passed: issues.length === 0,
+    criticalIssues: issues,
+    mustFixBeforeDeployment: issues.length > 0
+  };
+}
+```
+
+**ENFORCEMENT**: 
+- Mandatory audit before any production deployment
+- Automated blocking of deployments with critical issues
+- Required fixes for all data integrity violations
+
+### **RULE 12: ADDITIVE POINTS SYSTEM PROTECTION**
+```typescript
+// ENHANCED: Comprehensive validation for additive-only operations
+export function validateAdditivePointUpdate(
+  currentPoints: number,
+  newPoints: number, 
+  playerId: string,
+  operation: 'add' | 'replace' = 'add'
+): ValidationResult {
+  
+  // CRITICAL: Block any non-additive operations
+  if (operation === 'replace') {
+    return {
+      isValid: false,
+      error: 'FORBIDDEN: Point replacement operations destroy tournament history',
+      correctOperation: `Use additive: ${currentPoints} + ${newPoints} = ${currentPoints + newPoints}`
+    };
+  }
+  
+  // VALIDATION: Ensure new points are reasonable
+  if (newPoints < 0) {
+    return {
+      isValid: false,
+      error: 'INVALID: Negative point additions not allowed',
+      correctRange: 'Points must be positive integers'
+    };
+  }
+  
+  if (newPoints > 100) {
+    return {
+      isValid: false,
+      error: 'SUSPICIOUS: Single match point addition exceeds maximum expected value',
+      maxExpected: 'Tournament matches typically award ≤30 points'
+    };
+  }
+  
+  return { isValid: true };
+}
+```
+
+---
+
 ## 🔧 FRAMEWORK INTEGRATION PROTOCOLS
 
 ### **A. PRE-DEVELOPMENT VALIDATION**
@@ -226,12 +364,22 @@ describe('Algorithm Compliance', () => {
 - [ ] All point operations use additive syntax
 - [ ] Automated tests pass for algorithm compliance
 - [ ] Manual verification against tournament scenarios
+- [ ] **CRITICAL**: Mandatory data integrity audit passes
+- [ ] **CRITICAL**: User statistics consistency verification
+- [ ] **CRITICAL**: Database schema migration validation
+- [ ] **CRITICAL**: Column name consistency check
+- [ ] **CRITICAL**: Match recording system synchronization test
 
 ### **POST-DEPLOYMENT MONITORING**
 - [ ] Algorithm compliance metrics tracking
 - [ ] Point calculation accuracy monitoring
 - [ ] Performance impact assessment
 - [ ] User experience validation
+- [ ] **CRITICAL**: Real-time data integrity monitoring
+- [ ] **CRITICAL**: Match statistics synchronization alerts
+- [ ] **CRITICAL**: Dual ranking system prevention
+- [ ] **CRITICAL**: Column mapping validation
+- [ ] **CRITICAL**: User data corruption detection
 
 ---
 
