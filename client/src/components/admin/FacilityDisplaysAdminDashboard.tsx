@@ -314,7 +314,6 @@ export default function FacilityDisplaysAdminDashboard() {
                     Loading ranking data...
                   </div>
                 ) : (
-                  {/* Step 3: Enhanced Preview Component with Professional Facility Display Formatting */}
                   <div className="overflow-x-auto bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-slate-200">
                     {/* Facility Display Header */}
                     <div className="mb-6 text-center">
