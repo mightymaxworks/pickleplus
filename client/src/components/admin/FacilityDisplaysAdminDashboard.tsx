@@ -102,25 +102,348 @@ export default function FacilityDisplaysAdminDashboard() {
     }
   };
 
-  // Generate 4K display export (placeholder for now)
+  // Generate 4K display export - PROFESSIONAL CANVAS IMPLEMENTATION
   const generate4KDisplay = async () => {
     setIsGenerating(true);
     try {
-      // TODO: Implement actual 4K canvas export
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate generation
+      // Create 4K canvas (3840x2160)
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Cannot create canvas context');
+
+      // 4K UHD dimensions
+      const width = 3840;
+      const height = 2160;
+      canvas.width = width;
+      canvas.height = height;
+
+      // Enable high-quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // BACKGROUND: Professional gradient
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, '#f8fafc');
+      gradient.addColorStop(0.5, '#e2e8f0');
+      gradient.addColorStop(1, '#cbd5e1');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // HEADER SECTION
+      const headerHeight = 400;
       
-      // Create download link for now
-      const blob = new Blob(['4K Display Generated'], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${selectedFormat}-${selectedDivision}-${selectedGender}-4k-display.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Header background
+      const headerGradient = ctx.createLinearGradient(0, 0, width, headerHeight);
+      headerGradient.addColorStop(0, '#1e40af');
+      headerGradient.addColorStop(1, '#3b82f6');
+      ctx.fillStyle = headerGradient;
+      ctx.fillRect(0, 0, width, headerHeight);
+
+      // Main title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 120px "Inter", "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const formatLabel = formats.find(f => f.value === selectedFormat)?.label || 'Rankings';
+      const divisionLabel = divisions.find(d => d.value === selectedDivision)?.label || 'Open';
+      const genderLabel = genders.find(g => g.value === selectedGender)?.label || 'All';
+      
+      // Trophy icon (text-based for reliability)
+      ctx.font = 'bold 150px "Arial", sans-serif';
+      ctx.fillText('🏆', width / 2, 200);
+      
+      // Title text
+      ctx.font = 'bold 110px "Inter", "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(`${formatLabel} Rankings`, width / 2, 320);
+      
+      // Subtitle
+      ctx.font = 'bold 65px "Inter", "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(`${divisionLabel} • ${genderLabel}`, width / 2, 370);
+
+      // RANKINGS TABLE
+      const tableStartY = headerHeight + 60;
+      const rowHeight = 120;
+      const maxVisiblePlayers = Math.min(12, leaderboardData.length); // Show top 12 for 4K display
+      
+      // Table header background
+      ctx.fillStyle = 'rgba(30, 64, 175, 0.1)';
+      ctx.fillRect(120, tableStartY, width - 240, 100);
+      
+      // Table headers
+      ctx.fillStyle = '#1e40af';
+      ctx.font = 'bold 55px "Inter", "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      
+      const headers = [
+        { text: 'Rank', x: 200 },
+        { text: 'Player', x: 400 },
+        { text: 'Points', x: width - 800 },
+        { text: 'Matches', x: width - 500 },
+        { text: 'Win Rate', x: width - 280 }
+      ];
+      
+      headers.forEach(header => {
+        ctx.fillText(header.text, header.x, tableStartY + 65);
+      });
+
+      // Player rows
+      for (let i = 0; i < maxVisiblePlayers; i++) {
+        const player = leaderboardData[i];
+        if (!player) continue;
+        
+        const y = tableStartY + 100 + (i * rowHeight);
+        
+        // Alternate row background
+        if (i % 2 === 0) {
+          ctx.fillStyle = 'rgba(241, 245, 249, 0.7)';
+          ctx.fillRect(120, y, width - 240, rowHeight);
+        }
+        
+        // Ranking highlight for top 3
+        if (i < 3) {
+          const rankColors = ['#fbbf24', '#d1d5db', '#c2410c']; // Gold, Silver, Bronze
+          ctx.fillStyle = rankColors[i];
+          ctx.fillRect(120, y, 12, rowHeight);
+        }
+
+        // Text styling based on rank
+        const textColor = i < 3 ? '#1f2937' : '#374151';
+        ctx.fillStyle = textColor;
+        ctx.font = i < 3 ? 'bold 50px "Inter", sans-serif' : '48px "Inter", sans-serif';
+        
+        // Rank with medal for top 3
+        const medals = ['🥇', '🥈', '🥉'];
+        const rankText = i < 3 ? `${medals[i]} #${player.ranking}` : `#${player.ranking}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(rankText, 300, y + 65);
+        
+        // Player name
+        ctx.textAlign = 'left';
+        ctx.fillText(player.displayName, 400, y + 65);
+        
+        // Points (highlighted)
+        ctx.fillStyle = '#1e40af';
+        ctx.font = 'bold 50px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(player.points.toString(), width - 700, y + 65);
+        
+        // Matches played
+        ctx.fillStyle = textColor;
+        ctx.font = '48px "Inter", sans-serif';
+        ctx.fillText(player.matchesPlayed.toString(), width - 400, y + 65);
+        
+        // Win rate
+        const winRate = player.matchesPlayed > 0 ? Math.round(player.winRate) : 0;
+        ctx.fillText(`${winRate}%`, width - 180, y + 65);
+      }
+
+      // FOOTER
+      const footerY = height - 150;
+      
+      // Footer background
+      ctx.fillStyle = 'rgba(30, 64, 175, 0.05)';
+      ctx.fillRect(0, footerY, width, 150);
+      
+      // Pickle+ branding
+      ctx.fillStyle = '#6b7280';
+      ctx.font = 'bold 45px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Powered by Pickle+ Platform', width / 2, footerY + 60);
+      
+      // Timestamp
+      ctx.font = '35px "Inter", sans-serif';
+      ctx.fillText(`Generated: ${new Date().toLocaleString()}`, width / 2, footerY + 110);
+
+      // DATA QUALITY INDICATOR
+      const dataQualityY = height - 300;
+      ctx.fillStyle = '#059669';
+      ctx.font = 'bold 40px "Inter", sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`✓ Live Data • ${leaderboardData.length} Players`, width - 120, dataQualityY);
+
+      // Convert canvas to blob and download
+      return new Promise<void>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to generate canvas blob'));
+            return;
+          }
+          
+          // Create download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `pickle-plus-${selectedFormat}-${selectedDivision}-${selectedGender}-4k-display.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          console.log(`✅ 4K Display Export Complete: ${a.download}`);
+          resolve();
+        }, 'image/png', 1.0); // Maximum quality
+      });
+      
     } catch (error) {
       console.error('Error generating 4K display:', error);
+      throw error;
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Generate League Table Export - COMPACT FORMAT
+  const generateLeagueTable = async () => {
+    setIsGenerating(true);
+    try {
+      // Create landscape canvas for printing (11x8.5 inches at 300 DPI)
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Cannot create canvas context');
+
+      // High-quality print dimensions
+      const width = 3300;
+      const height = 2550;
+      canvas.width = width;
+      canvas.height = height;
+
+      // High-quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Clean white background for printing
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      // HEADER
+      ctx.fillStyle = '#1e40af';
+      ctx.font = 'bold 80px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      
+      const formatLabel = formats.find(f => f.value === selectedFormat)?.label || 'Rankings';
+      const divisionLabel = divisions.find(d => d.value === selectedDivision)?.label || 'Open';
+      const genderLabel = genders.find(g => g.value === selectedGender)?.label || 'All';
+      
+      ctx.fillText(`${formatLabel} League Table - ${divisionLabel} ${genderLabel}`, width / 2, 120);
+
+      // Table structure - more compact for printing
+      const tableStartY = 220;
+      const rowHeight = 80;
+      const maxPlayers = Math.min(25, leaderboardData.length); // Show more players for league table
+      
+      // Column definitions with better spacing
+      const columns = [
+        { header: 'Rank', x: 200, width: 150 },
+        { header: 'Player Name', x: 350, width: 800 },
+        { header: 'Points', x: 1150, width: 200 },
+        { header: 'Matches', x: 1350, width: 180 },
+        { header: 'Wins', x: 1530, width: 150 },
+        { header: 'Losses', x: 1680, width: 150 },
+        { header: 'Win %', x: 1830, width: 180 }
+      ];
+
+      // Table headers
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(150, tableStartY, width - 300, 60);
+      ctx.strokeStyle = '#1e40af';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(150, tableStartY, width - 300, 60);
+
+      ctx.fillStyle = '#1e40af';
+      ctx.font = 'bold 40px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      
+      columns.forEach(col => {
+        ctx.fillText(col.header, col.x, tableStartY + 45);
+      });
+
+      // Player rows with alternating colors
+      for (let i = 0; i < maxPlayers; i++) {
+        const player = leaderboardData[i];
+        if (!player) continue;
+        
+        const y = tableStartY + 60 + (i * rowHeight);
+        
+        // Row background
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        ctx.fillRect(150, y, width - 300, rowHeight);
+        
+        // Row border
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(150, y, width - 300, rowHeight);
+
+        // Text color and font
+        ctx.fillStyle = '#1f2937';
+        ctx.font = i < 3 ? 'bold 36px "Inter", sans-serif' : '34px "Inter", sans-serif';
+        
+        // Rank
+        ctx.textAlign = 'center';
+        const rankText = i < 3 ? `🏆${player.ranking}` : player.ranking.toString();
+        ctx.fillText(rankText, columns[0].x, y + 50);
+        
+        // Player name
+        ctx.textAlign = 'left';
+        ctx.fillText(player.displayName, columns[1].x - 100, y + 50);
+        
+        // Points (highlighted)
+        ctx.fillStyle = '#1e40af';
+        ctx.font = 'bold 36px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(player.points.toString(), columns[2].x, y + 50);
+        
+        // Stats
+        ctx.fillStyle = '#1f2937';
+        ctx.font = '34px "Inter", sans-serif';
+        ctx.fillText(player.matchesPlayed.toString(), columns[3].x, y + 50);
+        
+        // Calculate wins/losses
+        const wins = Math.round(player.matchesPlayed * (player.winRate / 100));
+        const losses = player.matchesPlayed - wins;
+        
+        ctx.fillText(wins.toString(), columns[4].x, y + 50);
+        ctx.fillText(losses.toString(), columns[5].x, y + 50);
+        
+        // Win percentage
+        const winRate = player.matchesPlayed > 0 ? Math.round(player.winRate) : 0;
+        ctx.fillText(`${winRate}%`, columns[6].x, y + 50);
+      }
+
+      // Footer with timestamp and stats
+      const footerY = height - 150;
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '30px "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Generated: ${new Date().toLocaleDateString()} • Pickle+ Platform`, width / 2, footerY);
+      ctx.fillText(`Total Players: ${leaderboardData.length} • Active Rankings`, width / 2, footerY + 40);
+
+      // Convert and download
+      return new Promise<void>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to generate league table blob'));
+            return;
+          }
+          
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `pickle-plus-league-table-${selectedFormat}-${selectedDivision}-${selectedGender}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          console.log(`✅ League Table Export Complete: ${a.download}`);
+          resolve();
+        }, 'image/png', 1.0);
+      });
+      
+    } catch (error) {
+      console.error('Error generating league table:', error);
+      throw error;
     } finally {
       setIsGenerating(false);
     }
@@ -435,32 +758,69 @@ export default function FacilityDisplaysAdminDashboard() {
                 <CardContent className="space-y-4">
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <h3 className="font-semibold text-blue-900 mb-2">Export Specifications</h3>
-                    <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• Resolution: 3840 x 2160 (4K UHD)</li>
-                      <li>• Format: PNG with transparency</li>
-                      <li>• Optimized for facility displays</li>
-                      <li>• High contrast, readable fonts</li>
-                    </ul>
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-semibold text-blue-900 mb-1">4K Facility Display</h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li>• Resolution: 3840 x 2160 (4K UHD)</li>
+                          <li>• Top 12 players with medals</li>
+                          <li>• Professional gradient styling</li>
+                          <li>• Large fonts for TV displays</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-blue-900 mb-1">League Table (Print)</h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li>• Resolution: 3300 x 2550 (11x8.5")</li>
+                          <li>• Up to 25 players in compact format</li>
+                          <li>• Clean white background for printing</li>
+                          <li>• Detailed statistics table</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
 
-                  <Button 
-                    onClick={generate4KDisplay}
-                    disabled={isGenerating || leaderboardData.length === 0}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Generating 4K Display...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-4 h-4 mr-2" />
-                        Generate & Download 4K Display
-                      </>
-                    )}
-                  </Button>
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={generate4KDisplay}
+                      disabled={isGenerating || leaderboardData.length === 0}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Generating 4K Display...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Generate 4K Facility Display
+                        </>
+                      )}
+                    </Button>
+
+                    <Button 
+                      onClick={generateLeagueTable}
+                      disabled={isGenerating || leaderboardData.length === 0}
+                      className="w-full"
+                      size="lg"
+                      variant="outline"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Generating League Table...
+                        </>
+                      ) : (
+                        <>
+                          <Layout className="w-4 h-4 mr-2" />
+                          Generate League Table (Print)
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
