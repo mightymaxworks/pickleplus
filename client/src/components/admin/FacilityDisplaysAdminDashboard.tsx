@@ -121,21 +121,23 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // BACKGROUND: Professional gradient
+      // BACKGROUND: Pickle+ signature gradient
       const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, '#f8fafc');
-      gradient.addColorStop(0.5, '#e2e8f0');
-      gradient.addColorStop(1, '#cbd5e1');
+      gradient.addColorStop(0, '#fff7ed'); // Orange-50
+      gradient.addColorStop(0.3, '#ffedd5'); // Orange-100  
+      gradient.addColorStop(0.7, '#fed7aa'); // Orange-200
+      gradient.addColorStop(1, '#fdba74'); // Orange-300
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
       // HEADER SECTION
       const headerHeight = 400;
       
-      // Header background
+      // Header background - Pickle+ orange gradient
       const headerGradient = ctx.createLinearGradient(0, 0, width, headerHeight);
-      headerGradient.addColorStop(0, '#1e40af');
-      headerGradient.addColorStop(1, '#3b82f6');
+      headerGradient.addColorStop(0, '#FF5722'); // Pickle+ Primary Orange
+      headerGradient.addColorStop(0.6, '#f97316'); // Orange-500
+      headerGradient.addColorStop(1, '#ea580c'); // Orange-600
       ctx.fillStyle = headerGradient;
       ctx.fillRect(0, 0, width, headerHeight);
 
@@ -167,12 +169,12 @@ export default function FacilityDisplaysAdminDashboard() {
       const rowHeight = 120;
       const maxVisiblePlayers = Math.min(12, leaderboardData.length); // Show top 12 for 4K display
       
-      // Table header background
-      ctx.fillStyle = 'rgba(30, 64, 175, 0.1)';
+      // Table header background - Pickle+ orange accent
+      ctx.fillStyle = 'rgba(255, 87, 34, 0.15)'; // Pickle+ orange with transparency
       ctx.fillRect(120, tableStartY, width - 240, 100);
       
       // Table headers
-      ctx.fillStyle = '#1e40af';
+      ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
       ctx.font = 'bold 55px "Inter", "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'left';
       
@@ -201,11 +203,15 @@ export default function FacilityDisplaysAdminDashboard() {
           ctx.fillRect(120, y, width - 240, rowHeight);
         }
         
-        // Ranking highlight for top 3
+        // Ranking highlight for top 3 - Enhanced with Pickle+ styling
         if (i < 3) {
-          const rankColors = ['#fbbf24', '#d1d5db', '#c2410c']; // Gold, Silver, Bronze
+          const rankColors = ['#fbbf24', '#e5e7eb', '#cd7c2f']; // Gold, Silver, Bronze
           ctx.fillStyle = rankColors[i];
-          ctx.fillRect(120, y, 12, rowHeight);
+          ctx.fillRect(120, y, 15, rowHeight);
+          
+          // Add Pickle+ orange accent border for top 3
+          ctx.fillStyle = '#FF5722';
+          ctx.fillRect(135, y, 3, rowHeight);
         }
 
         // Text styling based on rank
@@ -223,8 +229,8 @@ export default function FacilityDisplaysAdminDashboard() {
         ctx.textAlign = 'left';
         ctx.fillText(player.displayName, 400, y + 65);
         
-        // Points (highlighted)
-        ctx.fillStyle = '#1e40af';
+        // Points (highlighted) - Pickle+ orange
+        ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
         ctx.font = 'bold 50px "Inter", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(player.points.toString(), width - 700, y + 65);
@@ -242,23 +248,24 @@ export default function FacilityDisplaysAdminDashboard() {
       // FOOTER
       const footerY = height - 150;
       
-      // Footer background
-      ctx.fillStyle = 'rgba(30, 64, 175, 0.05)';
+      // Footer background - Pickle+ subtle orange
+      ctx.fillStyle = 'rgba(255, 87, 34, 0.08)';
       ctx.fillRect(0, footerY, width, 150);
       
-      // Pickle+ branding
-      ctx.fillStyle = '#6b7280';
+      // Pickle+ branding with signature orange
+      ctx.fillStyle = '#FF5722';
       ctx.font = 'bold 45px "Inter", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Powered by Pickle+ Platform', width / 2, footerY + 60);
+      ctx.fillText('🥒 Powered by Pickle+ Platform', width / 2, footerY + 60);
       
       // Timestamp
+      ctx.fillStyle = '#9a3412'; // Orange-800
       ctx.font = '35px "Inter", sans-serif';
       ctx.fillText(`Generated: ${new Date().toLocaleString()}`, width / 2, footerY + 110);
 
-      // DATA QUALITY INDICATOR
+      // DATA QUALITY INDICATOR - Pickle+ green accent
       const dataQualityY = height - 300;
-      ctx.fillStyle = '#059669';
+      ctx.fillStyle = '#4CAF50'; // Pickle+ Secondary Green
       ctx.font = 'bold 40px "Inter", sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(`✓ Live Data • ${leaderboardData.length} Players`, width - 120, dataQualityY);
@@ -313,12 +320,16 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // Clean white background for printing
-      ctx.fillStyle = '#ffffff';
+      // Pickle+ branded background for printing
+      const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+      bgGradient.addColorStop(0, '#ffffff');
+      bgGradient.addColorStop(0.9, '#fff7ed'); // Orange-50
+      bgGradient.addColorStop(1, '#ffedd5'); // Orange-100
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
 
-      // HEADER
-      ctx.fillStyle = '#1e40af';
+      // HEADER - Pickle+ orange
+      ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
       ctx.font = 'bold 80px "Inter", sans-serif';
       ctx.textAlign = 'center';
       
@@ -344,14 +355,14 @@ export default function FacilityDisplaysAdminDashboard() {
         { header: 'Win %', x: 1830, width: 180 }
       ];
 
-      // Table headers
-      ctx.fillStyle = '#f8fafc';
+      // Table headers - Pickle+ styling
+      ctx.fillStyle = '#fff7ed'; // Orange-50
       ctx.fillRect(150, tableStartY, width - 300, 60);
-      ctx.strokeStyle = '#1e40af';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#FF5722'; // Pickle+ Primary Orange
+      ctx.lineWidth = 3;
       ctx.strokeRect(150, tableStartY, width - 300, 60);
 
-      ctx.fillStyle = '#1e40af';
+      ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
       ctx.font = 'bold 40px "Inter", sans-serif';
       ctx.textAlign = 'center';
       
@@ -366,12 +377,12 @@ export default function FacilityDisplaysAdminDashboard() {
         
         const y = tableStartY + 60 + (i * rowHeight);
         
-        // Row background
-        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        // Row background - Pickle+ alternating colors
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#fff7ed'; // White / Orange-50
         ctx.fillRect(150, y, width - 300, rowHeight);
         
         // Row border
-        ctx.strokeStyle = '#e2e8f0';
+        ctx.strokeStyle = '#fed7aa'; // Orange-200
         ctx.lineWidth = 1;
         ctx.strokeRect(150, y, width - 300, rowHeight);
 
@@ -379,17 +390,21 @@ export default function FacilityDisplaysAdminDashboard() {
         ctx.fillStyle = '#1f2937';
         ctx.font = i < 3 ? 'bold 36px "Inter", sans-serif' : '34px "Inter", sans-serif';
         
-        // Rank
+        // Rank - Special styling for top 3
         ctx.textAlign = 'center';
-        const rankText = i < 3 ? `🏆${player.ranking}` : player.ranking.toString();
-        ctx.fillText(rankText, columns[0].x, y + 50);
+        if (i < 3) {
+          const medals = ['🥇', '🥈', '🥉'];
+          ctx.fillText(`${medals[i]} #${player.ranking}`, columns[0].x, y + 50);
+        } else {
+          ctx.fillText(player.ranking.toString(), columns[0].x, y + 50);
+        }
         
         // Player name
         ctx.textAlign = 'left';
         ctx.fillText(player.displayName, columns[1].x - 100, y + 50);
         
-        // Points (highlighted)
-        ctx.fillStyle = '#1e40af';
+        // Points (highlighted) - Pickle+ orange
+        ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
         ctx.font = 'bold 36px "Inter", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(player.points.toString(), columns[2].x, y + 50);
@@ -411,13 +426,21 @@ export default function FacilityDisplaysAdminDashboard() {
         ctx.fillText(`${winRate}%`, columns[6].x, y + 50);
       }
 
-      // Footer with timestamp and stats
+      // Footer with timestamp and stats - Pickle+ branding
       const footerY = height - 150;
-      ctx.fillStyle = '#6b7280';
-      ctx.font = '30px "Inter", sans-serif';
+      
+      // Footer background
+      ctx.fillStyle = 'rgba(255, 87, 34, 0.08)'; // Pickle+ orange tint
+      ctx.fillRect(0, footerY - 20, width, 120);
+      
+      ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
+      ctx.font = 'bold 32px "Inter", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`Generated: ${new Date().toLocaleDateString()} • Pickle+ Platform`, width / 2, footerY);
-      ctx.fillText(`Total Players: ${leaderboardData.length} • Active Rankings`, width / 2, footerY + 40);
+      ctx.fillText(`🥒 Generated: ${new Date().toLocaleDateString()} • Pickle+ Platform`, width / 2, footerY);
+      
+      ctx.fillStyle = '#9a3412'; // Orange-800
+      ctx.font = '28px "Inter", sans-serif';
+      ctx.fillText(`Total Players: ${leaderboardData.length} • Live Rankings System`, width / 2, footerY + 40);
 
       // Convert and download
       return new Promise<void>((resolve, reject) => {
