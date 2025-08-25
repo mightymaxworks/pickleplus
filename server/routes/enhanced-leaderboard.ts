@@ -37,6 +37,80 @@ router.get('/test-production', async (req, res) => {
   }
 });
 
+// Debug endpoint for facility displays - shows ALL data without filtering
+router.get('/facility-debug', async (req, res) => {
+  try {
+    const {
+      format = 'singles',
+      division = 'open',
+      gender = 'male'
+    } = req.query;
+
+    console.log(`[FACILITY DEBUG] Fetching ALL data for ${format} - ${division} - ${gender} (No filtering)`);
+    
+    // Get all users with format-specific ranking points (no filtering)
+    const formatParam = format === 'doubles' ? 'doubles' : 'singles';
+    const allUsers = await storage.getUsersWithRankingPoints(formatParam);
+    
+    console.log(`[FACILITY DEBUG] Raw users from storage: ${allUsers.length}`);
+    
+    let usersWithStats = await Promise.all(allUsers.map(async (user, index) => {
+        const age = user.dateOfBirth ? 
+          Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
+          25;
+        
+        const formatPoints = format === 'doubles' 
+          ? (user.doublesRankingPoints || 0)
+          : (user.singlesRankingPoints || 0);
+        
+        const totalMatches = user.totalMatches || 0;
+        const matchesWon = user.matchesWon || 0;
+        const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
+        
+        const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
+        
+        return {
+          id: user.id,
+          displayName: rawDisplayName,
+          username: user.username,
+          points: Number(formatPoints.toFixed(2)),
+          matchesPlayed: totalMatches,
+          winRate: Math.round(winRate * 100) / 100,
+          gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
+          age: age,
+          division: division,
+          ranking: index + 1,
+          isCurrentUser: false
+        };
+      }));
+
+    // Only filter by points > 0 and basic gender/division matching
+    let processedPlayers = usersWithStats
+      .filter(player => player.points > 0)
+      .filter(player => {
+        if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
+        if (gender !== 'all' && player.gender !== gender) return false;
+        return true; // Skip age/division filtering for debug
+      })
+      .sort((a, b) => b.points - a.points)
+      .map((player, index) => ({ ...player, ranking: index + 1 }));
+
+    console.log(`[FACILITY DEBUG] Final processed players: ${processedPlayers.length}`);
+    
+    res.json({
+      message: 'Facility debug - all data without filtering',
+      rawUsers: allUsers.length,
+      withPoints: usersWithStats.filter(p => p.points > 0).length,
+      finalPlayers: processedPlayers.length,
+      players: processedPlayers.slice(0, 50), // Limit to 50 for display
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    console.error('[FACILITY DEBUG] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 console.log('[ENHANCED LEADERBOARD] Router initialized and test endpoint added');
 
 // Enhanced leaderboard endpoint supporting new standalone youth ranking system

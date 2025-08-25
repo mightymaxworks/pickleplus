@@ -75,14 +75,28 @@ export default function FacilityDisplaysAdminDashboard() {
   const fetchLeaderboardData = async () => {
     setIsLoading(true);
     try {
+      // Use debug endpoint to show ALL data without production filtering
       const response = await apiRequest('GET', 
-        `/api/enhanced-leaderboard?format=${selectedFormat}&division=${selectedDivision}&gender=${selectedGender}&limit=50`
+        `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=${selectedGender}`
       );
-      const data: LeaderboardResponse = await response.json();
-      setLeaderboardData(data.players);
+      const data = await response.json();
+      setLeaderboardData(data.players || []);
       setLastUpdated(new Date());
+      
+      // Log debug info
+      console.log(`[FACILITY DISPLAYS] Debug data: ${data.rawUsers} raw users, ${data.withPoints} with points, ${data.finalPlayers} final players`);
     } catch (error) {
       console.error('Error fetching leaderboard data:', error);
+      // Fallback to regular endpoint
+      try {
+        const response = await apiRequest('GET', 
+          `/api/enhanced-leaderboard?format=${selectedFormat}&division=${selectedDivision}&gender=${selectedGender}&limit=50`
+        );
+        const data: LeaderboardResponse = await response.json();
+        setLeaderboardData(data.players);
+      } catch (fallbackError) {
+        console.error('Fallback request also failed:', fallbackError);
+      }
     } finally {
       setIsLoading(false);
     }
