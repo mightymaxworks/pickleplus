@@ -1,12 +1,132 @@
 /**
- * Algorithm Validation Utilities
- * Ensures all point calculations follow the official Pickle+ Algorithm Document
+ * PICKLE+ ALGORITHM VALIDATION UTILITIES
+ * 
+ * MANDATORY IMPORT: All match calculation components MUST import and use these utilities
+ * to ensure compliance with the official Pickle+ Algorithm Document.
+ * 
+ * Version: 2.0.0 - Differential Age Multiplier System
+ * Last Updated: August 25, 2025
+ * Source of Truth: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
  * 
  * CRITICAL VALIDATION: ALL POINT OPERATIONS MUST BE ADDITIVE
  * - validateAdditivePointsOperation() prevents destructive point replacement
  * - All database operations must use: currentPoints + newPoints
  * - System protects against tournament history loss
  */
+
+import { differenceInYears } from 'date-fns';
+
+// ========================================
+// SYSTEM B CONSTANTS (IMMUTABLE)
+// ========================================
+export const SYSTEM_B_BASE_POINTS = {
+  WIN: 3,
+  LOSS: 1
+} as const;
+
+export const PICKLE_POINTS_MULTIPLIER = 1.5 as const;
+
+// ========================================
+// AGE GROUP DEFINITIONS (DIFFERENTIAL SYSTEM)
+// ========================================
+export enum AgeGroup {
+  OPEN = 'Open',
+  THIRTY_FIVE_PLUS = '35+',
+  FIFTY_PLUS = '50+',
+  SIXTY_PLUS = '60+',
+  SEVENTY_PLUS = '70+'
+}
+
+export const AGE_GROUP_MULTIPLIERS = {
+  [AgeGroup.OPEN]: 1.0,
+  [AgeGroup.THIRTY_FIVE_PLUS]: 1.2,
+  [AgeGroup.FIFTY_PLUS]: 1.3,
+  [AgeGroup.SIXTY_PLUS]: 1.5,
+  [AgeGroup.SEVENTY_PLUS]: 1.6
+} as const;
+
+// ========================================
+// ENHANCED PLAYER INTERFACES
+// ========================================
+export interface EnhancedPlayer {
+  id: string;
+  dateOfBirth: Date | string;
+  gender: 'male' | 'female';
+  currentRankingPoints: number;
+}
+
+/**
+ * Calculate age from date of birth
+ */
+export function calculateAge(dateOfBirth: Date | string): number {
+  const birthDate = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth;
+  return differenceInYears(new Date(), birthDate);
+}
+
+/**
+ * Determine age group from date of birth
+ */
+export function getAgeGroup(dateOfBirth: Date | string): AgeGroup {
+  const age = calculateAge(dateOfBirth);
+  
+  if (age >= 70) return AgeGroup.SEVENTY_PLUS;
+  if (age >= 60) return AgeGroup.SIXTY_PLUS;
+  if (age >= 50) return AgeGroup.FIFTY_PLUS;
+  if (age >= 35) return AgeGroup.THIRTY_FIVE_PLUS;
+  return AgeGroup.OPEN;
+}
+
+/**
+ * CRITICAL: Calculate differential age multipliers
+ * 
+ * RULE: Same age group = 1.0x for all players
+ * RULE: Different age groups = individual multipliers apply
+ */
+export function calculateDifferentialAgeMultipliers(players: EnhancedPlayer[]): Record<string, number> {
+  // Get unique age groups in the match
+  const ageGroups = players.map(p => getAgeGroup(p.dateOfBirth));
+  const uniqueAgeGroups = Array.from(new Set(ageGroups));
+  
+  // If only one age group: everyone gets 1.0x (equal treatment)
+  if (uniqueAgeGroups.length === 1) {
+    return players.reduce((acc, player) => {
+      acc[player.id] = 1.0;
+      return acc;
+    }, {} as Record<string, number>);
+  }
+  
+  // Multiple age groups: individual multipliers apply
+  return players.reduce((acc, player) => {
+    const ageGroup = getAgeGroup(player.dateOfBirth);
+    acc[player.id] = AGE_GROUP_MULTIPLIERS[ageGroup];
+    return acc;
+  }, {} as Record<string, number>);
+}
+
+/**
+ * Calculate gender bonus for cross-gender matches
+ * 
+ * RULE: 1.15x for female players in cross-gender matches
+ * RULE: Only when player has <1000 ranking points
+ */
+export function calculateGenderBonus(players: EnhancedPlayer[]): Record<string, number> {
+  const genderList = players.map(p => p.gender);
+  const genders = Array.from(new Set(genderList));
+  const isCrossGender = genders.length > 1;
+  
+  if (!isCrossGender) {
+    return players.reduce((acc, player) => {
+      acc[player.id] = 1.0;
+      return acc;
+    }, {} as Record<string, number>);
+  }
+  
+  return players.reduce((acc, player) => {
+    const isEligibleFemale = player.gender === 'female' && player.currentRankingPoints < 1000;
+    acc[player.id] = isEligibleFemale ? 1.15 : 1.0;
+    return acc;
+  }, {} as Record<string, number>);
+}
 
 export interface MatchResult {
   playerId: number;
@@ -23,12 +143,12 @@ export interface PointCalculation {
 }
 
 /**
- * Official Pickle+ Algorithm Point Calculation
- * Source: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
+ * ENHANCED: Official Pickle+ Algorithm Point Calculation with Differential System
+ * Source: PICKLE_PLUS_ALGORITHM_DOCUMENT.md Version 2.0.0
  */
 export function calculateOfficialPoints(result: MatchResult): PointCalculation {
   // System B: 3 points win, 1 point loss (CONFIRMED)
-  const basePoints = result.isWin ? 3 : 1;
+  const basePoints = result.isWin ? SYSTEM_B_BASE_POINTS.WIN : SYSTEM_B_BASE_POINTS.LOSS;
   
   // Apply multipliers (age, gender, event)
   const rankingPoints = basePoints * 
@@ -37,11 +157,148 @@ export function calculateOfficialPoints(result: MatchResult): PointCalculation {
     (result.eventMultiplier || 1.0);
     
   // Pickle Points: 1.5x multiplier PER MATCH (not total points)
-  const picklePoints = Math.round(rankingPoints * 1.5);
+  const picklePoints = Number((rankingPoints * PICKLE_POINTS_MULTIPLIER).toFixed(2));
   
   return {
-    rankingPoints: Math.round(rankingPoints * 100) / 100, // 2 decimal precision
+    rankingPoints: Number((rankingPoints).toFixed(2)), // 2 decimal precision
     picklePoints
+  };
+}
+
+/**
+ * ENHANCED: Create validated match calculation using differential system
+ */
+export function createValidatedMatchCalculation(
+  players: EnhancedPlayer[],
+  winners: string[],
+  matchType: 'singles' | 'doubles',
+  tournamentLevel: 'club' | 'regional' | 'national' | 'professional' = 'club'
+): { 
+  success: boolean; 
+  results?: Array<{
+    playerId: string;
+    isWinner: boolean;
+    basePoints: number;
+    ageMultiplier: number;
+    genderBonus: number;
+    finalRankingPoints: number;
+    finalPicklePoints: number;
+  }>;
+  errors?: string[];
+} {
+  try {
+    const ageMultipliers = calculateDifferentialAgeMultipliers(players);
+    const genderBonuses = calculateGenderBonus(players);
+    
+    const results = players.map(player => {
+      const isWinner = winners.includes(player.id);
+      const basePoints = isWinner ? SYSTEM_B_BASE_POINTS.WIN : SYSTEM_B_BASE_POINTS.LOSS;
+      const ageMultiplier = ageMultipliers[player.id];
+      const genderBonus = genderBonuses[player.id];
+      
+      const finalRankingPoints = Number((basePoints * ageMultiplier * genderBonus).toFixed(2));
+      const finalPicklePoints = Number((finalRankingPoints * PICKLE_POINTS_MULTIPLIER).toFixed(2));
+      
+      return {
+        playerId: player.id,
+        isWinner,
+        basePoints,
+        ageMultiplier,
+        genderBonus,
+        finalRankingPoints,
+        finalPicklePoints
+      };
+    });
+    
+    return { success: true, results };
+    
+  } catch (error) {
+    return { 
+      success: false, 
+      errors: [`Algorithm validation failed: ${error instanceof Error ? error.message : String(error)}`] 
+    };
+  }
+}
+
+/**
+ * ENHANCED: Validate complete match calculation with differential system
+ */
+export function validateEnhancedMatchCalculation(
+  players: EnhancedPlayer[],
+  results: Array<{
+    playerId: string;
+    isWinner: boolean;
+    basePoints: number;
+    ageMultiplier: number;
+    genderBonus: number;
+    finalRankingPoints: number;
+    finalPicklePoints: number;
+  }>
+): { isValid: boolean; errors: string[]; warnings: string[] } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  // 1. Validate System B base points
+  for (const result of results) {
+    const expectedBasePoints = result.isWinner ? SYSTEM_B_BASE_POINTS.WIN : SYSTEM_B_BASE_POINTS.LOSS;
+    if (result.basePoints !== expectedBasePoints) {
+      errors.push(`Invalid base points: Expected ${expectedBasePoints}, got ${result.basePoints} for player ${result.playerId}`);
+    }
+  }
+  
+  // 2. Validate differential age multipliers
+  const expectedAgeMultipliers = calculateDifferentialAgeMultipliers(players);
+  for (const result of results) {
+    const expectedMultiplier = expectedAgeMultipliers[result.playerId];
+    if (Math.abs(result.ageMultiplier - expectedMultiplier) > 0.01) {
+      errors.push(`Invalid age multiplier: Expected ${expectedMultiplier}, got ${result.ageMultiplier} for player ${result.playerId}`);
+    }
+  }
+  
+  // 3. Validate gender bonuses
+  const expectedGenderBonuses = calculateGenderBonus(players);
+  for (const result of results) {
+    const expectedBonus = expectedGenderBonuses[result.playerId];
+    if (Math.abs(result.genderBonus - expectedBonus) > 0.01) {
+      errors.push(`Invalid gender bonus: Expected ${expectedBonus}, got ${result.genderBonus} for player ${result.playerId}`);
+    }
+  }
+  
+  // 4. Validate final calculations
+  for (const result of results) {
+    const expectedRankingPoints = Number((
+      result.basePoints * 
+      result.ageMultiplier * 
+      result.genderBonus
+    ).toFixed(2));
+    
+    if (Math.abs(result.finalRankingPoints - expectedRankingPoints) > 0.01) {
+      errors.push(`Invalid final ranking points: Expected ${expectedRankingPoints}, got ${result.finalRankingPoints} for player ${result.playerId}`);
+    }
+    
+    const expectedPicklePoints = Number((result.finalRankingPoints * PICKLE_POINTS_MULTIPLIER).toFixed(2));
+    if (Math.abs(result.finalPicklePoints - expectedPicklePoints) > 0.01) {
+      errors.push(`Invalid pickle points: Expected ${expectedPicklePoints}, got ${result.finalPicklePoints} for player ${result.playerId}`);
+    }
+  }
+  
+  // 5. Check for decimal precision
+  for (const result of results) {
+    const rankingDecimalPlaces = (result.finalRankingPoints.toString().split('.')[1] || '').length;
+    const pickleDecimalPlaces = (result.finalPicklePoints.toString().split('.')[1] || '').length;
+    
+    if (rankingDecimalPlaces > 2) {
+      warnings.push(`Ranking points precision exceeds 2 decimal places for player ${result.playerId}`);
+    }
+    if (pickleDecimalPlaces > 2) {
+      warnings.push(`Pickle points precision exceeds 2 decimal places for player ${result.playerId}`);
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
   };
 }
 
