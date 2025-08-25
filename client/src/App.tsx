@@ -418,6 +418,16 @@ export default function App() {
                       );
                     }}
                   </Route>
+                  <Route path="/admin/facility-displays">
+                    {(params) => {
+                      const FacilityDisplaysAdminDashboard = lazyLoad(() => import('./components/admin/FacilityDisplaysAdminDashboard'));
+                      return (
+                        <AdminProtectedRoute>
+                          <FacilityDisplaysAdminDashboard />
+                        </AdminProtectedRoute>
+                      );
+                    }}
+                  </Route>
                   <Route path="/admin/tournaments/:id">
                     {(params) => (
                       <AdminProtectedRoute>

@@ -22,7 +22,7 @@ import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-
 import AdminCoachNavItem from '../components/coach/AdminCoachNavItem'; // PKL-278651-COACH-ADMIN-001
 import TrainingCenterAdminNavItem from '../components/training-center/TrainingCenterAdminNavItem'; // PKL-278651-TRAINING-CENTER-ADMIN-001
 import { ChargeCardAdminNavItem } from '../components/charge-cards/ChargeCardAdminNavItem'; // PKL-278651-CHARGE-CARD-ADMIN
-import { Trophy } from 'lucide-react';
+import { Trophy, Monitor } from 'lucide-react';
 // Import settings module to register its components
 import '../components/settings';
 
@@ -158,6 +158,24 @@ export function registerMatchManagementComponents() {
 }
 
 /**
+ * Register facility displays components
+ * PKL-278651-FACILITY-DISPLAYS-001
+ * System for generating 4K ranking displays for facility screens
+ */
+export function registerFacilityDisplaysComponents() {
+  // Register facility displays nav item
+  adminComponentRegistry.registerNavItem('displays', {
+    label: 'Facility Displays',
+    path: '/admin/facility-displays',
+    icon: React.createElement(Monitor, { size: 18 }),
+    order: 5,
+    description: 'Generate 4K ranking displays for facility screens'
+  });
+  
+  console.log('[Admin] Facility displays components registered');
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -174,6 +192,7 @@ export function registerAllAdminComponents() {
   registerCoachComponents(); // Added Coach Management
   registerTrainingCenterComponents(); // Added Training Center Management
   registerMatchManagementComponents(); // Added Match Management System
+  registerFacilityDisplaysComponents(); // Added Facility Displays System
   registerSystemToolsComponents(); // Added System Tools
   // registerChargeCardComponents(); // Hidden for coaching features focus
   
