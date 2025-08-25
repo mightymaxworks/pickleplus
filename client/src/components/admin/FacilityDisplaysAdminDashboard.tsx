@@ -322,8 +322,7 @@ export default function FacilityDisplaysAdminDashboard() {
                         🏆 {formats.find(f => f.value === selectedFormat)?.label} Rankings
                       </h2>
                       <div className="text-lg text-slate-600">
-                        {divisions.find(d => d.value === selectedDivision)?.label} • {' '}
-                        {genders.find(g => g.value === selectedGender)?.label}
+                        {divisions.find(d => d.value === selectedDivision)?.label} • {genders.find(g => g.value === selectedGender)?.label}
                       </div>
                       <div className="text-sm text-slate-500 mt-1">
                         Last Updated: {lastUpdated?.toLocaleString() || 'Never'}
