@@ -10,6 +10,33 @@
 
 ## 🚨 CRITICAL COMPLIANCE REQUIREMENTS
 
+### **RULE 0: DATA INTEGRITY & API CONTRACT ENFORCEMENT**
+```typescript
+// MANDATORY: Storage methods must return ALL expected fields
+async getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]> {
+  // ❌ WRONG: Missing match statistics
+  return db.select().from(users);
+  
+  // ✅ CORRECT: Include all required fields for consuming components
+  return db.select({
+    ...getTableColumns(users),
+    totalMatches: sql<number>`COUNT(DISTINCT ${matches.id})`,
+    matchesWon: sql<number>`SUM(CASE WHEN ${matches.winnerId} = ${users.id} THEN 1 ELSE 0 END)`
+  }).from(users).leftJoin(matches, /* join conditions */).groupBy(users.id);
+}
+```
+
+**CRITICAL REQUIREMENTS**:
+- **Complete Data Return**: Storage methods MUST include ALL fields that consuming components expect
+- **Field Name Consistency**: Use consistent naming (totalMatches/matchesWon, not total_matches/matches_won)  
+- **Component Validation**: Components MUST validate data structure before accessing fields
+- **Debug Endpoint Parity**: Debug endpoints MUST use identical data flow as production endpoints
+
+**ENFORCEMENT**: 
+- Pre-deployment validation will check storage method return types against component requirements
+- Match statistics MUST be included in any user data for facility displays or leaderboards
+- Field mapping inconsistencies will trigger build failures
+
 ### **RULE 1: MANDATORY ALGORITHM VALIDATION IMPORT**
 ```typescript
 // MANDATORY: Every match calculation file must import
@@ -469,3 +496,93 @@ const COACH_WEIGHTS = {
 **VIOLATION CONSEQUENCES**: Code rejection, mandatory re-development, algorithm training
 
 **Remember**: The UDF framework protects tournament integrity, player fairness, and platform reliability. Compliance is not optional—it's essential for the success of the Pickle+ ecosystem.
+
+---
+
+## 🚨 CRITICAL LESSONS LEARNED - MATCH STATISTICS BUG
+*Added August 26, 2025 - Based on Production Bug Discovery*
+
+### **RULE 15: COMPONENT-STORAGE API CONTRACT VALIDATION**
+```typescript
+// MANDATORY: Document expected return types for all storage methods
+interface ExpectedUserData {
+  // Base user fields
+  id: number;
+  displayName: string;
+  singlesRankingPoints: number;
+  doublesRankingPoints: number;
+  
+  // REQUIRED: Match statistics for leaderboard/facility displays
+  totalMatches: number;     // NOT total_matches
+  matchesWon: number;       // NOT matches_won
+  winRate: number;          // Calculated field
+}
+
+// ❌ WRONG: Storage method that doesn't match component expectations
+async getUsersWithRankingPoints(): Promise<User[]> {
+  return db.select().from(users); // Missing totalMatches, matchesWon
+}
+
+// ✅ CORRECT: Storage method that includes ALL required fields
+async getUsersWithRankingPoints(): Promise<ExpectedUserData[]> {
+  return db.select({
+    ...getTableColumns(users),
+    totalMatches: sql<number>`COUNT(DISTINCT ${matches.id})`,
+    matchesWon: sql<number>`SUM(CASE WHEN ${matches.winnerId} = ${users.id} THEN 1 ELSE 0 END)`
+  }).from(users).leftJoin(matches, /* proper joins */).groupBy(users.id);
+}
+```
+
+### **RULE 16: DEBUG ENDPOINT DATA INTEGRITY**
+```typescript
+// MANDATORY: Debug endpoints MUST use production data flow
+// FORBIDDEN: Different data sources for debug vs production
+
+// ❌ WRONG: Debug endpoint with different data logic
+app.get('/debug-rankings', async (req, res) => {
+  const users = await db.select().from(users); // Different from production
+  res.json({ users });
+});
+
+// ✅ CORRECT: Debug endpoint using production data flow
+app.get('/debug-rankings', async (req, res) => {
+  const users = await storage.getUsersWithRankingPoints(); // Same as production
+  const processedData = rankingService.processUsers(users); // Same processing
+  res.json({ users: processedData });
+});
+```
+
+### **RULE 17: FIELD MAPPING PROTECTION**
+```typescript
+// MANDATORY: Validate field mapping at component level
+// FORBIDDEN: Silent failures due to undefined field access
+
+// ❌ WRONG: Direct field access without validation
+const winRate = user.winRate || 0; // Silent failure if winRate undefined
+
+// ✅ CORRECT: Explicit field validation with fallbacks
+function validateUserData(user: any): UserWithStats {
+  const validated = {
+    ...user,
+    totalMatches: user.totalMatches || user.total_matches || 0,
+    matchesWon: user.matchesWon || user.matches_won || 0,
+    winRate: 0
+  };
+  
+  // Calculate winRate if not provided
+  if (validated.totalMatches > 0) {
+    validated.winRate = (validated.matchesWon / validated.totalMatches) * 100;
+  }
+  
+  return validated;
+}
+```
+
+**CRITICAL ENFORCEMENT**: 
+- Components MUST validate data structure before field access
+- Storage methods MUST include TypeScript return type annotations
+- Debug endpoints MUST use identical data processing as production
+- Field mapping tests MUST verify camelCase/snake_case consistency
+- Zero tolerance for silent data field failures in production
+
+**[End of Document - UDF v2.1.0 - Updated with Match Statistics Bug Prevention]**
