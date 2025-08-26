@@ -197,87 +197,89 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.fillText(`${divisionLabel} Division`, width / 2, 230);
 
-      // SIMPLIFIED RANKINGS TABLE - Clean 3-column layout
-      const tableStartY = 300;
-      const rowHeight = 90;
-      const maxVisiblePlayers = Math.min(18, leaderboardData.length);
+      // ELEGANT RANKINGS TABLE - Sleek design
+      const tableStartY = 280;
+      const rowHeight = 85;
+      const maxVisiblePlayers = Math.min(20, leaderboardData.length);
       
-      // Clean table header background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.fillRect(150, tableStartY, width - 300, 80);
+      // Subtle table header background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillRect(180, tableStartY, width - 360, 70);
       
-      // Simple 3-column headers
-      ctx.fillStyle = '#1a202c';
-      ctx.font = 'bold 55px "Inter", sans-serif';
+      // Clean single-language headers  
+      ctx.fillStyle = '#2d3748';
+      ctx.font = '48px "Inter", sans-serif';
+      
+      // Better column positioning
+      const col1X = 400;  // Rank - centered
+      const col2X = 700;  // Player Name - left aligned
+      const col3X = width - 400;  // Points - centered
+      
       ctx.textAlign = 'center';
+      ctx.fillText('RANK', col1X, tableStartY + 45);
       
-      // Header positions - evenly spaced
-      const col1X = 350;  // Rank
-      const col2X = width / 2;  // Player Name
-      const col3X = width - 350;  // Points
+      ctx.textAlign = 'left';
+      ctx.fillText('PLAYER NAME', col2X, tableStartY + 45);
       
-      ctx.fillText('RANK', col1X, tableStartY + 30);
-      ctx.fillText('排名', col1X, tableStartY + 65);
-      
-      ctx.fillText('PLAYER', col2X, tableStartY + 30);
-      ctx.fillText('球员', col2X, tableStartY + 65);
-      
-      ctx.fillText('POINTS', col3X, tableStartY + 30);
-      ctx.fillText('积分', col3X, tableStartY + 65);
+      ctx.textAlign = 'center';
+      ctx.fillText('POINTS', col3X, tableStartY + 45);
 
-      // Clean player rows - simplified 3-column design
+      // Elegant player rows - refined typography
       for (let i = 0; i < maxVisiblePlayers; i++) {
         const player = leaderboardData[i];
         if (!player) continue;
         
-        const y = tableStartY + 80 + (i * rowHeight);
+        const y = tableStartY + 70 + (i * rowHeight);
         
-        // Clean alternating row backgrounds
+        // Subtle alternating backgrounds
         if (i % 2 === 0) {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-          ctx.fillRect(150, y, width - 300, rowHeight);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.fillRect(180, y, width - 360, rowHeight);
         }
         
-        // Podium highlighting for top 3
+        // Refined podium highlighting
         if (i < 3) {
-          ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-          ctx.fillRect(150, y, width - 300, rowHeight);
+          ctx.fillStyle = 'rgba(255, 193, 7, 0.12)';  // Subtle gold tint
+          ctx.fillRect(180, y, width - 360, rowHeight);
           
-          // Left accent stripe
-          ctx.fillStyle = '#FF5722';
-          ctx.fillRect(150, y, 8, rowHeight);
+          // Elegant left accent
+          ctx.fillStyle = '#f59e0b';  // Gold accent
+          ctx.fillRect(180, y, 5, rowHeight);
         }
 
-        // Clean text styling
-        const textColor = '#1a202c';
+        // Refined text styling - much lighter
+        const textColor = '#374151';  // Softer gray
         ctx.fillStyle = textColor;
-        ctx.textAlign = 'center';
         
-        // RANK - Column 1
-        ctx.font = i < 3 ? 'bold 55px "Inter", sans-serif' : '50px "Inter", sans-serif';
+        // RANK - Centered, lighter typography
+        ctx.textAlign = 'center';
+        ctx.font = i < 3 ? 'bold 46px "Inter", sans-serif' : '42px "Inter", sans-serif';
+        
         if (i < 3) {
           const medals = ['🥇', '🥈', '🥉'];
-          ctx.fillText(`${medals[i]} #${player.ranking}`, col1X, y + 60);
+          ctx.fillText(`${medals[i]} ${player.ranking}`, col1X, y + 55);
         } else {
-          ctx.fillText(`#${player.ranking}`, col1X, y + 60);
+          ctx.fillText(`${player.ranking}`, col1X, y + 55);
         }
         
-        // PLAYER NAME - Column 2
-        ctx.font = i < 3 ? 'bold 50px "Inter", sans-serif' : '45px "Inter", sans-serif';
-        ctx.fillText(player.displayName, col2X, y + 60);
+        // PLAYER NAME - Left aligned, elegant
+        ctx.textAlign = 'left';
+        ctx.font = i < 3 ? 'bold 46px "Inter", sans-serif' : '42px "Inter", sans-serif';
+        ctx.fillText(player.displayName, col2X, y + 55);
         
-        // POINTS - Column 3 (highlighted)
-        ctx.fillStyle = '#FF5722';
-        ctx.font = 'bold 60px "Inter", sans-serif';
+        // POINTS - Highlighted but refined
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#dc2626';  // Refined red instead of harsh orange
+        ctx.font = 'bold 50px "Inter", sans-serif';
         
-        // Add subtle background for points
+        // Subtle point background
         ctx.save();
-        ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
-        ctx.fillRect(col3X - 80, y + 20, 160, 50);
+        ctx.fillStyle = 'rgba(220, 38, 38, 0.08)';
+        ctx.fillRect(col3X - 70, y + 25, 140, 40);
         ctx.restore();
         
-        ctx.fillStyle = '#FF5722';
-        ctx.fillText(player.points.toString(), col3X, y + 60);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillText(player.points.toString(), col3X, y + 55);
       }
 
       // CLEAN FOOTER
