@@ -88,7 +88,13 @@ router.get('/facility-debug', async (req, res) => {
     let processedPlayers = usersWithStats
       .filter(player => player.points > 0)
       .filter(player => {
-        if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
+        // Support mixed doubles in facility debug
+        if (gender !== 'all' && gender !== 'male' && gender !== 'female' && gender !== 'mixed') return false;
+        
+        // For mixed doubles, show all players (they can participate in mixed teams)
+        if (gender === 'mixed') return true;
+        
+        // For male/female specific, filter by player gender
         if (gender !== 'all' && player.gender !== gender) return false;
         return true; // Skip age/division filtering for debug
       })
@@ -411,8 +417,13 @@ async function getRealLeaderboardData(
       .filter(player => player.points > 0) // Only show players with points in this format
       .filter(player => isProductionDataFilter(player)) // Apply production data filtering
       .filter(player => {
-        // Filter by gender
-        if (gender !== 'all' && gender !== 'male' && gender !== 'female') return false;
+        // Filter by gender - support mixed doubles
+        if (gender !== 'all' && gender !== 'male' && gender !== 'female' && gender !== 'mixed') return false;
+        
+        // For mixed doubles, show all players (they can participate in mixed teams)
+        if (gender === 'mixed') return true;
+        
+        // For male/female specific, filter by player gender
         if (gender !== 'all' && player.gender !== gender) return false;
         
         // Filter by division with cross-category participation support

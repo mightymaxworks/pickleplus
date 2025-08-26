@@ -48,6 +48,39 @@ export default function FacilityDisplaysAdminDashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Chinese translation helpers for bilingual facility displays
+  const getChineseLabel = (format: string): string => {
+    const translations: Record<string, string> = {
+      'Singles': '单打',
+      'Doubles': '双打'
+    };
+    return translations[format] || format;
+  };
+
+  const getChineseDivision = (division: string): string => {
+    const translations: Record<string, string> = {
+      'Open (19+)': '公开 (19+)',
+      '35+': '35岁以上',
+      '50+': '50岁以上', 
+      '60+': '60岁以上',
+      '70+': '70岁以上',
+      'U18': '18岁以下',
+      'U16': '16岁以下',
+      'U14': '14岁以下',
+      'U12': '12岁以下'
+    };
+    return translations[division] || division;
+  };
+
+  const getChineseGender = (gender: string): string => {
+    const translations: Record<string, string> = {
+      'Men': '男子',
+      'Women': '女子',
+      'Mixed Doubles': '混合双打'
+    };
+    return translations[gender] || gender;
+  };
+
   // Available options for facility displays
   const formats = [
     { value: 'singles', label: 'Singles' },
@@ -68,7 +101,8 @@ export default function FacilityDisplaysAdminDashboard() {
 
   const genders = [
     { value: 'male', label: 'Men' },
-    { value: 'female', label: 'Women' }
+    { value: 'female', label: 'Women' },
+    { value: 'mixed', label: 'Mixed Doubles' }
   ];
 
   // Fetch leaderboard data
@@ -130,8 +164,8 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // HEADER SECTION - More compact and elegant
-      const headerHeight = 280;
+      // HEADER SECTION - Bilingual compact design
+      const headerHeight = 320;
       
       // Header background - Pickle+ orange gradient
       const headerGradient = ctx.createLinearGradient(0, 0, width, headerHeight);
@@ -150,19 +184,29 @@ export default function FacilityDisplaysAdminDashboard() {
       const divisionLabel = divisions.find(d => d.value === selectedDivision)?.label || 'Open';
       const genderLabel = genders.find(g => g.value === selectedGender)?.label || 'All';
       
-      // Main title - elegant and prominent
-      ctx.font = 'bold 85px "Inter", "Segoe UI", system-ui, sans-serif';
-      ctx.fillText(`🏆 ${formatLabel} Rankings`, width / 2, 110);
+      // Bilingual titles for Chinese facilities
+      ctx.fillStyle = '#ffffff';
       
-      // Subtitle - clean and well-spaced
-      ctx.font = '52px "Inter", "Segoe UI", system-ui, sans-serif';
+      // Main title - English
+      ctx.font = 'bold 70px "Inter", "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(`🏆 ${formatLabel} Rankings`, width / 2, 90);
+      
+      // Main title - Mandarin
+      ctx.font = 'bold 48px "Microsoft YaHei", "SimHei", sans-serif';
+      ctx.fillText(`🏆 ${getChineseLabel(formatLabel)} 排行榜`, width / 2, 140);
+      
+      // Subtitle - English/Chinese
+      ctx.font = '42px "Inter", "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(`${divisionLabel} • ${genderLabel} Division`, width / 2, 180);
+      ctx.fillText(`${divisionLabel} • ${genderLabel} Division`, width / 2, 185);
+      
+      ctx.font = '32px "Microsoft YaHei", "SimHei", sans-serif';
+      ctx.fillText(`${getChineseDivision(divisionLabel)} • ${getChineseGender(genderLabel)} 组别`, width / 2, 220);
       
       // Live indicator - positioned in header for clarity
-      ctx.font = '36px "Inter", sans-serif';
+      ctx.font = '32px "Inter", sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.fillText(`🟢 Live Data • Updated ${new Date().toLocaleDateString()}`, width / 2, 240);
+      ctx.fillText(`🟢 实时数据 Live Data • ${new Date().toLocaleDateString()}`, width / 2, 280);
 
       // RANKINGS TABLE - More spacious and elegant
       const tableStartY = headerHeight + 80;
@@ -180,10 +224,10 @@ export default function FacilityDisplaysAdminDashboard() {
       
       const headers = [
         { text: '#', x: 200 },
-        { text: 'Player Name', x: 500 },
-        { text: 'Points', x: width - 900 },
-        { text: 'Matches', x: width - 600 },
-        { text: 'Win Rate', x: width - 300 }
+        { text: 'Player Name / 球员姓名', x: 500 },
+        { text: 'Points / 积分', x: width - 900 },
+        { text: 'Matches / 比赛', x: width - 600 },
+        { text: 'Win Rate / 胜率', x: width - 300 }
       ];
       
       headers.forEach(header => {
@@ -332,31 +376,43 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
 
-      // HEADER - Pickle+ orange
+      // HEADER - Bilingual for Chinese facilities
       ctx.fillStyle = '#FF5722'; // Pickle+ Primary Orange
-      ctx.font = 'bold 80px "Inter", sans-serif';
       ctx.textAlign = 'center';
       
       const formatLabel = formats.find(f => f.value === selectedFormat)?.label || 'Rankings';
       const divisionLabel = divisions.find(d => d.value === selectedDivision)?.label || 'Open';
       const genderLabel = genders.find(g => g.value === selectedGender)?.label || 'All';
       
-      ctx.fillText(`${formatLabel} League Table - ${divisionLabel} ${genderLabel}`, width / 2, 120);
+      // English title
+      ctx.font = 'bold 65px "Inter", sans-serif';
+      ctx.fillText(`${formatLabel} League Table`, width / 2, 80);
+      
+      // Chinese title
+      ctx.font = 'bold 45px "Microsoft YaHei", "SimHei", sans-serif';
+      ctx.fillText(`${getChineseLabel(formatLabel)} 联赛表`, width / 2, 130);
+      
+      // Subtitle - English/Chinese
+      ctx.font = '50px "Inter", sans-serif';
+      ctx.fillText(`${divisionLabel} ${genderLabel}`, width / 2, 180);
+      
+      ctx.font = '35px "Microsoft YaHei", "SimHei", sans-serif';
+      ctx.fillText(`${getChineseDivision(divisionLabel)} ${getChineseGender(genderLabel)}`, width / 2, 220);
 
       // Table structure - more compact for printing
-      const tableStartY = 220;
+      const tableStartY = 280;
       const rowHeight = 80;
       const maxPlayers = Math.min(25, leaderboardData.length); // Show more players for league table
       
-      // Column definitions with better spacing
+      // Column definitions with bilingual headers
       const columns = [
-        { header: 'Rank', x: 200, width: 150 },
-        { header: 'Player Name', x: 350, width: 800 },
-        { header: 'Points', x: 1150, width: 200 },
-        { header: 'Matches', x: 1350, width: 180 },
-        { header: 'Wins', x: 1530, width: 150 },
-        { header: 'Losses', x: 1680, width: 150 },
-        { header: 'Win %', x: 1830, width: 180 }
+        { header: 'Rank / 排名', x: 200, width: 150 },
+        { header: 'Player Name / 球员姓名', x: 350, width: 800 },
+        { header: 'Points / 积分', x: 1150, width: 200 },
+        { header: 'Matches / 比赛', x: 1350, width: 180 },
+        { header: 'Wins / 胜', x: 1530, width: 150 },
+        { header: 'Losses / 负', x: 1680, width: 150 },
+        { header: 'Win % / 胜率', x: 1830, width: 180 }
       ];
 
       // Table headers - Pickle+ styling
