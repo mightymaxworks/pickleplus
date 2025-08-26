@@ -1,8 +1,8 @@
 # UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES
 ## Algorithm Compliance & Framework Integration Standards
 
-**Version**: 2.0.0  
-**Last Updated**: August 25, 2025  
+**Version**: 2.1.0  
+**Last Updated**: August 26, 2025  
 **Mandatory Compliance**: ALL match calculation components  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md  
 
@@ -13,7 +13,7 @@
 ### **RULE 0: DATA INTEGRITY & API CONTRACT ENFORCEMENT**
 ```typescript
 // MANDATORY: Storage methods must return ALL expected fields
-async getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]> {
+async getUsersWithRankingPoints(format?: 'singles' | 'doubles' | 'mixed'): Promise<User[]> {
   // ❌ WRONG: Missing match statistics
   return db.select().from(users);
   
@@ -72,6 +72,36 @@ const ageMultiplier = 1.2; // ❌ WRONG
 const ageMultipliers = calculateDifferentialAgeMultipliers(players); // ✅ CORRECT
 const playerMultiplier = ageMultipliers[playerId];
 ```
+
+### **RULE 4: MIXED DOUBLES FORMAT SEPARATION** 🆕
+```typescript
+// CRITICAL: Mixed doubles uses SEPARATE ranking pool from regular doubles
+
+// ❌ WRONG: Treating mixed as variant of doubles
+if (format === 'doubles' || format === 'mixed') {
+  formatPoints = user.doublesRankingPoints || 0;
+}
+
+// ✅ CORRECT: Separate format-specific allocation
+if (format === 'mixed') {
+  formatPoints = user.mixedDoublesRankingPoints || 0;
+} else if (format === 'doubles') {
+  formatPoints = user.doublesRankingPoints || 0;
+} else {
+  formatPoints = user.singlesRankingPoints || 0;
+}
+```
+
+**MANDATORY REQUIREMENTS**:
+- **Database Schema**: `mixedDoublesRankingPoints` and `mixedDoublesPoints` fields required
+- **Point Allocation**: Mixed vs Mixed → `mixedDoublesPoints` only
+- **Cross-Format Prevention**: Mixed teams cannot compete against same-gender teams
+- **Independent Rankings**: No ranking comparison between mixed and same-gender doubles
+
+**ENFORCEMENT**: 
+- All leaderboard components must handle three separate ranking pools
+- Match recording must validate format consistency before point allocation
+- Storage methods must support 'mixed' format parameter
 
 **CRITICAL LOGIC**: 
 - **Same age group** → All players get 1.0x (equal treatment)
