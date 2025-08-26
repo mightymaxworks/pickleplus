@@ -73,33 +73,40 @@ const ageMultipliers = calculateDifferentialAgeMultipliers(players); // ✅ CORR
 const playerMultiplier = ageMultipliers[playerId];
 ```
 
-### **RULE 4: UNIFIED DOUBLES SYSTEM WITH CROSS-FORMAT SUPPORT** 🔄
+### **RULE 4: FORMAT-SPECIFIC RANKING SYSTEM WITH GENDER SEPARATION** 🎯
 ```typescript
-// CRITICAL: Mixed and regular doubles use UNIFIED ranking pool for cross-format compatibility
+// CRITICAL: Each doubles format maintains separate ranking pools with gender-specific mixed doubles
 
-// ❌ WRONG: Separate ranking pools (breaks cross-format competition)
-if (format === 'mixed') {
-  formatPoints = user.mixedDoublesRankingPoints || 0;
-} else if (format === 'doubles') {
-  formatPoints = user.doublesRankingPoints || 0;
-}
-
-// ✅ CORRECT: Unified doubles ranking with format-aware bonuses
+// ❌ WRONG: Unified ranking pools (loses format-specific competition)
 const formatPoints = (format === 'doubles' || format === 'mixed')
   ? (user.doublesRankingPoints || 0)
   : (user.singlesRankingPoints || 0);
+
+// ✅ CORRECT: Format-specific ranking with gender-separated mixed doubles
+let formatPoints = 0;
+if (format === 'singles') {
+  formatPoints = user.singlesRankingPoints || 0;
+} else if (format === 'mens-doubles') {
+  formatPoints = user.mensDoublesRankingPoints || 0;
+} else if (format === 'womens-doubles') {
+  formatPoints = user.womensDoublesRankingPoints || 0;
+} else if (format === 'mixed-doubles-men') {
+  formatPoints = user.mixedDoublesMenRankingPoints || 0;
+} else if (format === 'mixed-doubles-women') {
+  formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+}
 ```
 
 **MANDATORY REQUIREMENTS**:
-- **Database Schema**: Single `doublesRankingPoints` field for all doubles formats
-- **Cross-Format Support**: Mixed vs Same-Gender matches fully supported
-- **Gender Bonuses**: Applied during calculation, not via separate pools
-- **League Compatibility**: All doubles teams comparable in unified rankings
+- **Database Schema**: Separate ranking fields for each format including gender-specific mixed doubles
+- **Cross-Format Support**: Teams compete across formats but earn points in their own category
+- **Mixed Doubles Gender Separation**: Men and women ranked separately within mixed doubles
+- **Format Integrity**: Each doubles format maintains independent competitive structure
 
 **ENFORCEMENT**: 
-- All leaderboard components must treat mixed as doubles format variant
-- Match recording must support cross-format team competitions
-- Storage methods must use unified doubles ranking pool
+- All leaderboard components must support five ranking formats
+- Match recording must allocate points to format-specific and gender-specific fields
+- Mixed doubles UI must display both men's and women's rankings
 
 **CRITICAL LOGIC**: 
 - **Same age group** → All players get 1.0x (equal treatment)

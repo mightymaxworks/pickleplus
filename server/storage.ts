@@ -127,7 +127,7 @@ export interface IStorage extends CommunityStorage {
   getRecentOpponents(userId: number): Promise<User[]>;
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
   searchPlayersByMultipleFields(searchTerm: string): Promise<User[]>;
-  getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]>;
+  getUsersWithRankingPoints(format?: 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women'): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void>;
@@ -836,7 +836,7 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]> {
+  async getUsersWithRankingPoints(format?: 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women'): Promise<User[]> {
     const isProduction = process.env.NODE_ENV === 'production';
     console.log(`[STORAGE] Getting users with ranking points > 0, format: ${format} (Production: ${isProduction})`);
     
@@ -859,15 +859,23 @@ export class DatabaseStorage implements IStorage {
     let filteredQuery;
     if (format === 'singles') {
       filteredQuery = query.where(gt(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
-    } else if (format === 'doubles') {
-      // UNIFIED DOUBLES SYSTEM: Mixed and regular doubles use same ranking field
-      filteredQuery = query.where(gt(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
+    } else if (format === 'mens-doubles') {
+      filteredQuery = query.where(gt(users.mensDoublesRankingPoints, 0)).orderBy(desc(users.mensDoublesRankingPoints));
+    } else if (format === 'womens-doubles') {
+      filteredQuery = query.where(gt(users.womensDoublesRankingPoints, 0)).orderBy(desc(users.womensDoublesRankingPoints));
+    } else if (format === 'mixed-doubles-men') {
+      filteredQuery = query.where(gt(users.mixedDoublesMenRankingPoints, 0)).orderBy(desc(users.mixedDoublesMenRankingPoints));
+    } else if (format === 'mixed-doubles-women') {
+      filteredQuery = query.where(gt(users.mixedDoublesWomenRankingPoints, 0)).orderBy(desc(users.mixedDoublesWomenRankingPoints));
     } else {
       // Legacy: get all users with any ranking points
       filteredQuery = query.where(
         or(
           gt(users.singlesRankingPoints, 0),
-          gt(users.doublesRankingPoints, 0),
+          gt(users.mensDoublesRankingPoints, 0),
+          gt(users.womensDoublesRankingPoints, 0),
+          gt(users.mixedDoublesMenRankingPoints, 0),
+          gt(users.mixedDoublesWomenRankingPoints, 0),
           gt(users.rankingPoints, 0)
         )
       ).orderBy(desc(users.rankingPoints));
