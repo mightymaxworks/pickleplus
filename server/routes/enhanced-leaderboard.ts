@@ -49,8 +49,8 @@ router.get('/facility-debug', async (req, res) => {
     console.log(`[FACILITY DEBUG] Fetching ALL data for ${format} - ${division} - ${gender} (No filtering)`);
     
     // Get all users with format-specific ranking points (no filtering)
-    // MIXED DOUBLES FORMAT SEPARATION: Mixed doubles now has separate ranking pool
-    const formatParam = format; // Each format uses its own ranking pool
+    // UNIFIED DOUBLES SYSTEM: Mixed doubles uses same ranking pool as regular doubles
+    const formatParam = (format === 'mixed') ? 'doubles' : format;
     const allUsers = await storage.getUsersWithRankingPoints(formatParam);
     
     console.log(`[FACILITY DEBUG] Raw users from storage: ${allUsers.length}`);
@@ -60,15 +60,10 @@ router.get('/facility-debug', async (req, res) => {
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25;
         
-        // MIXED DOUBLES FORMAT SEPARATION: Use appropriate ranking field per format
-        let formatPoints;
-        if (format === 'mixed') {
-          formatPoints = user.mixedDoublesRankingPoints || 0;
-        } else if (format === 'doubles') {
-          formatPoints = user.doublesRankingPoints || 0;
-        } else {
-          formatPoints = user.singlesRankingPoints || 0;
-        }
+        // UNIFIED DOUBLES SYSTEM: Mixed and regular doubles use same ranking field
+        const formatPoints = (format === 'doubles' || format === 'mixed')
+          ? (user.doublesRankingPoints || 0)
+          : (user.singlesRankingPoints || 0);
         
         const totalMatches = user.totalMatches || user.total_matches || 0;
         const matchesWon = user.matchesWon || user.matches_won || 0;
@@ -392,15 +387,10 @@ async function getRealLeaderboardData(
           25; // Default age if not provided
         
         // Use format-specific ranking points
-        // MIXED DOUBLES FORMAT SEPARATION: Use appropriate ranking field per format
-        let formatPoints;
-        if (format === 'mixed') {
-          formatPoints = user.mixedDoublesRankingPoints || 0;
-        } else if (format === 'doubles') {
-          formatPoints = user.doublesRankingPoints || 0;
-        } else {
-          formatPoints = user.singlesRankingPoints || 0;
-        }
+        // UNIFIED DOUBLES SYSTEM: Mixed and regular doubles use same ranking field
+        const formatPoints = (format === 'doubles' || format === 'mixed')
+          ? (user.doublesRankingPoints || 0)
+          : (user.singlesRankingPoints || 0);
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches
         const totalMatches = user.total_matches || 0;

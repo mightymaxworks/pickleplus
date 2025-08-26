@@ -270,29 +270,30 @@ All same-gender matches use **1.0x gender multiplier** for equal treatment:
 2. **Doubles Rankings** - Same-gender team competition  
 3. **Mixed Doubles Rankings** - Cross-gender team competition
 
-> **CRITICAL RULE:** Mixed doubles uses **completely separate ranking pool** from regular doubles. Players competing in mixed doubles do NOT compete against same-gender doubles players for rankings.
+> **CRITICAL RULE REVISION:** Mixed doubles uses **unified doubles ranking pool** with format-aware gender bonuses. All doubles teams (mixed, men's, women's) compete in the same ranking system for meaningful comparisons in leagues and tournaments.
 
-#### **Mixed Doubles Format Separation Details:**
+#### **Unified Doubles System with Gender Balance:**
 
 **Database Implementation:**
 - **Singles Points:** `singlesPoints` field
-- **Doubles Points:** `doublesPoints` field  
-- **Mixed Doubles Points:** `mixedDoublesPoints` field (separate field)
+- **Doubles Points:** `doublesPoints` field (unified for all doubles formats)
+- **No Separate Mixed Field:** Eliminates ranking pool fragmentation
 
 **Competitive Logic:**
-- Mixed doubles tournaments rank players ONLY against other mixed doubles players
-- No cross-format ranking comparisons between same-gender doubles and mixed doubles
-- Each format maintains independent leaderboards, statistics, and tournament structures
+- All doubles teams compete in unified `doublesPoints` ranking pool
+- Gender bonuses applied during match calculation (not separate pools)
+- Cross-format matches fully supported (Mixed vs Men's, Mixed vs Women's)
+- League standings and tournament brackets work seamlessly
 
 **Match Recording Rules:**
-- **Mixed vs Mixed:** Points go to `mixedDoublesPoints` for all players
-- **Same-Gender vs Same-Gender:** Points go to `doublesPoints` for all players
-- **Mixed vs Same-Gender:** NOT ALLOWED - different competitive formats
+- **Mixed vs Mixed:** Points go to `doublesPoints` with gender bonuses applied
+- **Same-Gender vs Same-Gender:** Points go to `doublesPoints` with standard calculation
+- **Mixed vs Same-Gender:** FULLY SUPPORTED - points to unified `doublesPoints`
 
-**Player Career Progression:**
-- Players can excel in one format without affecting others
-- Separate championship titles and recognition for each format
-- Independent skill development tracking per format
+**Competitive Fairness:**
+- Gender bonuses ensure fair competition across team compositions
+- Elite players (1000+ points) receive no gender bonuses regardless of format
+- Unified rankings enable meaningful head-to-head comparisons
 
 ### **Tournament Division Considerations**
 
@@ -340,33 +341,43 @@ Examples:
 Final Points = Base Points × Age Multiplier × Gender Multiplier × Match Type Weight × Tournament Tier Multiplier
 ```
 
-#### **Format-Specific Calculation Examples:**
+#### **Unified Doubles Calculation Examples:**
 
-**Example 1: Mixed Doubles Tournament (Cross-Gender)**
+**Example 1: Mixed vs Mixed Doubles**
 **Match:** Mixed team (55F + 45M) vs Mixed team (40F + 50M), Provincial Tournament
 - Base Points: 3 (win) / 1 (loss)
 - Age Multipliers: 1.3 (55F), 1.0 (45M), 1.0 (40F), 1.3 (50M)
-- Gender Multipliers: 1.15 (women), 1.0 (men) in cross-gender
+- Gender Multipliers: Mixed teams average (1.0 + 1.15) ÷ 2 = **1.075x**
 - Tournament Tier: 2.0 (provincial)
-- **Points Allocation:** To `mixedDoublesPoints` field only
+- **Points Allocation:** To unified `doublesPoints` field
 
 **Winner Calculations:**
-- 55-year-old woman: 3 × 1.3 × 1.15 × 2.0 = **8.97 mixed doubles points**
-- 45-year-old man: 3 × 1.0 × 1.0 × 2.0 = **6.0 mixed doubles points**
+- 55-year-old woman: 3 × 1.3 × 1.075 × 2.0 = **8.385 doubles points**
+- 45-year-old man: 3 × 1.0 × 1.075 × 2.0 = **6.45 doubles points**
 
-**Example 2: Same-Gender Doubles Tournament**
-**Match:** Men's team (55M + 45M) vs Men's team (40M + 50M), Provincial Tournament
-- Base Points: 3 (win) / 1 (loss)
-- Age Multipliers: 1.3 (55M), 1.0 (45M), 1.0 (40M), 1.3 (50M)
-- Gender Multipliers: 1.0 (same-gender competition)
+**Example 2: Mixed vs Men's Doubles (Cross-Format)**
+**Match:** Mixed team (850M + 900F) vs Men's team (800M + 780M), Provincial Tournament
+- Mixed Team Gender Multiplier: (1.0 + 1.15) ÷ 2 = **1.075x**
+- Men's Team Gender Multiplier: **1.0x** (same-gender)
 - Tournament Tier: 2.0 (provincial)
-- **Points Allocation:** To `doublesPoints` field only
+- **Points Allocation:** To unified `doublesPoints` field for ALL players
+
+**Winner Calculations:**
+- **Mixed Team Winners:** 3 × 1.075 × 2.0 = **6.45 doubles points each**
+- **Men's Team Winners:** 3 × 1.0 × 2.0 = **6.0 doubles points each**
+
+**Example 3: Same-Gender Doubles**
+**Match:** Men's team (55M + 45M) vs Men's team (40M + 50M), Provincial Tournament
+- Age Multipliers: 1.3 (55M), 1.0 (45M), 1.0 (40M), 1.3 (50M)
+- Gender Multipliers: 1.0x (same-gender competition)
+- Tournament Tier: 2.0 (provincial)
+- **Points Allocation:** To unified `doublesPoints` field
 
 **Winner Calculations:**
 - 55-year-old man: 3 × 1.3 × 1.0 × 2.0 = **7.8 doubles points**
 - 45-year-old man: 3 × 1.0 × 1.0 × 2.0 = **6.0 doubles points**
 
-*These examples show format-specific point allocation with appropriate field targeting*
+*All examples show unified doubles ranking with format-aware gender bonuses enabling cross-format competition and meaningful comparisons*
 
 ---
 

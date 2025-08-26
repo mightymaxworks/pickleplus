@@ -1,7 +1,7 @@
 # UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES
 ## Algorithm Compliance & Framework Integration Standards
 
-**Version**: 2.1.0  
+**Version**: 2.1.1  
 **Last Updated**: August 26, 2025  
 **Mandatory Compliance**: ALL match calculation components  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md  
@@ -73,35 +73,33 @@ const ageMultipliers = calculateDifferentialAgeMultipliers(players); // ✅ CORR
 const playerMultiplier = ageMultipliers[playerId];
 ```
 
-### **RULE 4: MIXED DOUBLES FORMAT SEPARATION** 🆕
+### **RULE 4: UNIFIED DOUBLES SYSTEM WITH CROSS-FORMAT SUPPORT** 🔄
 ```typescript
-// CRITICAL: Mixed doubles uses SEPARATE ranking pool from regular doubles
+// CRITICAL: Mixed and regular doubles use UNIFIED ranking pool for cross-format compatibility
 
-// ❌ WRONG: Treating mixed as variant of doubles
-if (format === 'doubles' || format === 'mixed') {
-  formatPoints = user.doublesRankingPoints || 0;
-}
-
-// ✅ CORRECT: Separate format-specific allocation
+// ❌ WRONG: Separate ranking pools (breaks cross-format competition)
 if (format === 'mixed') {
   formatPoints = user.mixedDoublesRankingPoints || 0;
 } else if (format === 'doubles') {
   formatPoints = user.doublesRankingPoints || 0;
-} else {
-  formatPoints = user.singlesRankingPoints || 0;
 }
+
+// ✅ CORRECT: Unified doubles ranking with format-aware bonuses
+const formatPoints = (format === 'doubles' || format === 'mixed')
+  ? (user.doublesRankingPoints || 0)
+  : (user.singlesRankingPoints || 0);
 ```
 
 **MANDATORY REQUIREMENTS**:
-- **Database Schema**: `mixedDoublesRankingPoints` and `mixedDoublesPoints` fields required
-- **Point Allocation**: Mixed vs Mixed → `mixedDoublesPoints` only
-- **Cross-Format Prevention**: Mixed teams cannot compete against same-gender teams
-- **Independent Rankings**: No ranking comparison between mixed and same-gender doubles
+- **Database Schema**: Single `doublesRankingPoints` field for all doubles formats
+- **Cross-Format Support**: Mixed vs Same-Gender matches fully supported
+- **Gender Bonuses**: Applied during calculation, not via separate pools
+- **League Compatibility**: All doubles teams comparable in unified rankings
 
 **ENFORCEMENT**: 
-- All leaderboard components must handle three separate ranking pools
-- Match recording must validate format consistency before point allocation
-- Storage methods must support 'mixed' format parameter
+- All leaderboard components must treat mixed as doubles format variant
+- Match recording must support cross-format team competitions
+- Storage methods must use unified doubles ranking pool
 
 **CRITICAL LOGIC**: 
 - **Same age group** → All players get 1.0x (equal treatment)

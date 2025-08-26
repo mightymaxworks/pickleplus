@@ -127,7 +127,7 @@ export interface IStorage extends CommunityStorage {
   getRecentOpponents(userId: number): Promise<User[]>;
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
   searchPlayersByMultipleFields(searchTerm: string): Promise<User[]>;
-  getUsersWithRankingPoints(format?: 'singles' | 'doubles' | 'mixed'): Promise<User[]>;
+  getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void>;
@@ -836,7 +836,7 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async getUsersWithRankingPoints(format?: 'singles' | 'doubles' | 'mixed'): Promise<User[]> {
+  async getUsersWithRankingPoints(format?: 'singles' | 'doubles'): Promise<User[]> {
     const isProduction = process.env.NODE_ENV === 'production';
     console.log(`[STORAGE] Getting users with ranking points > 0, format: ${format} (Production: ${isProduction})`);
     
@@ -860,17 +860,14 @@ export class DatabaseStorage implements IStorage {
     if (format === 'singles') {
       filteredQuery = query.where(gt(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
     } else if (format === 'doubles') {
+      // UNIFIED DOUBLES SYSTEM: Mixed and regular doubles use same ranking field
       filteredQuery = query.where(gt(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
-    } else if (format === 'mixed') {
-      // MIXED DOUBLES FORMAT SEPARATION: Use separate mixed doubles ranking field
-      filteredQuery = query.where(gt(users.mixedDoublesRankingPoints, 0)).orderBy(desc(users.mixedDoublesRankingPoints));
     } else {
-      // Legacy: get all users with any ranking points (includes new mixed doubles)
+      // Legacy: get all users with any ranking points
       filteredQuery = query.where(
         or(
           gt(users.singlesRankingPoints, 0),
           gt(users.doublesRankingPoints, 0),
-          gt(users.mixedDoublesRankingPoints, 0),
           gt(users.rankingPoints, 0)
         )
       ).orderBy(desc(users.rankingPoints));
