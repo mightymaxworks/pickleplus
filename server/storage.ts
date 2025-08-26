@@ -24,7 +24,7 @@ import {
 
 } from "@shared/schema";
 // Import Drizzle operators
-import { eq, or, desc, count, isNull, and, gt, gte, sql } from "drizzle-orm";
+import { eq, or, desc, count, isNull, and, gt, gte, sql, getTableColumns } from "drizzle-orm";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
 // Regular matches table uses inferred types
@@ -840,15 +840,30 @@ export class DatabaseStorage implements IStorage {
     const isProduction = process.env.NODE_ENV === 'production';
     console.log(`[STORAGE] Getting users with ranking points > 0, format: ${format} (Production: ${isProduction})`);
     
-    let query = db.select().from(users);
+    // Enhanced query with match statistics  
+    const query = db
+      .select({
+        ...getTableColumns(users),
+        totalMatches: sql<number>`COUNT(DISTINCT ${matches.id})`.as('total_matches'),
+        matchesWon: sql<number>`SUM(CASE WHEN ${matches.winnerId} = ${users.id} THEN 1 ELSE 0 END)`.as('matches_won')
+      })
+      .from(users)
+      .leftJoin(matches, or(
+        eq(matches.playerOneId, users.id),
+        eq(matches.playerTwoId, users.id),
+        eq(matches.playerOnePartnerId, users.id),
+        eq(matches.playerTwoPartnerId, users.id)
+      ))
+      .groupBy(users.id);
     
+    let filteredQuery;
     if (format === 'singles') {
-      query = query.where(gt(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
+      filteredQuery = query.where(gt(users.singlesRankingPoints, 0)).orderBy(desc(users.singlesRankingPoints));
     } else if (format === 'doubles') {
-      query = query.where(gt(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
+      filteredQuery = query.where(gt(users.doublesRankingPoints, 0)).orderBy(desc(users.doublesRankingPoints));
     } else {
       // Legacy: get all users with any ranking points
-      query = query.where(
+      filteredQuery = query.where(
         or(
           gt(users.singlesRankingPoints, 0),
           gt(users.doublesRankingPoints, 0),
@@ -857,7 +872,7 @@ export class DatabaseStorage implements IStorage {
       ).orderBy(desc(users.rankingPoints));
     }
     
-    const allResults = await query;
+    const allResults = await filteredQuery;
     
     // Apply production filtering
     const filteredResults = allResults.filter(user => this.isProductionUserFilter(user));
