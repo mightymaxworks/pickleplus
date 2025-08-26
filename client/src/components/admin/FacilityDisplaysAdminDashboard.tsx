@@ -175,148 +175,136 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillStyle = headerGradient;
       ctx.fillRect(0, 0, width, headerHeight);
 
-      // Clean modern title layout
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
+      // Clean title layout - no overlapping
       const formatLabel = formats.find(f => f.value === selectedFormat)?.label || 'Rankings';
       const divisionLabel = divisions.find(d => d.value === selectedDivision)?.label || 'Open';
       const genderLabel = genders.find(g => g.value === selectedGender)?.label || 'All';
       
-      // Bilingual titles for Chinese facilities
       ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
       
-      // Main title - English
-      ctx.font = 'bold 70px "Inter", "Segoe UI", system-ui, sans-serif';
-      ctx.fillText(`🏆 ${formatLabel} Rankings`, width / 2, 90);
+      // Main title - clean and spaced
+      ctx.font = 'bold 80px "Inter", sans-serif';
+      ctx.fillText(`${formatLabel} Rankings`, width / 2, 100);
       
-      // Main title - Mandarin
-      ctx.font = 'bold 48px "Microsoft YaHei", "SimHei", sans-serif';
-      ctx.fillText(`🏆 ${getChineseLabel(formatLabel)} 排行榜`, width / 2, 140);
-      
-      // Subtitle - English/Chinese
-      ctx.font = '42px "Inter", "Segoe UI", system-ui, sans-serif';
+      // Chinese subtitle - proper spacing
+      ctx.font = 'bold 50px "Microsoft YaHei", "SimHei", sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(`${divisionLabel} • ${genderLabel} Division`, width / 2, 185);
+      ctx.fillText(`${getChineseLabel(formatLabel)} 排行榜`, width / 2, 170);
       
-      ctx.font = '32px "Microsoft YaHei", "SimHei", sans-serif';
-      ctx.fillText(`${getChineseDivision(divisionLabel)} • ${getChineseGender(genderLabel)} 组别`, width / 2, 220);
-      
-      // Live indicator - positioned in header for clarity
-      ctx.font = '32px "Inter", sans-serif';
+      // Division info - single line
+      ctx.font = '45px "Inter", sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.fillText(`🟢 实时数据 Live Data • ${new Date().toLocaleDateString()}`, width / 2, 280);
+      ctx.fillText(`${divisionLabel} Division`, width / 2, 230);
 
-      // RANKINGS TABLE - More spacious and elegant
-      const tableStartY = headerHeight + 80;
-      const rowHeight = 100;
-      const maxVisiblePlayers = Math.min(14, leaderboardData.length); // Show more players
+      // SIMPLIFIED RANKINGS TABLE - Clean 3-column layout
+      const tableStartY = 300;
+      const rowHeight = 90;
+      const maxVisiblePlayers = Math.min(18, leaderboardData.length);
       
-      // Table header background - subtle and elegant
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.fillRect(120, tableStartY, width - 240, 90);
+      // Clean table header background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(150, tableStartY, width - 300, 80);
       
-      // Table headers - refined typography
-      ctx.fillStyle = '#2d3748'; // Dark gray for contrast
-      ctx.font = 'bold 48px "Inter", "Segoe UI", system-ui, sans-serif';
-      ctx.textAlign = 'left';
+      // Simple 3-column headers
+      ctx.fillStyle = '#1a202c';
+      ctx.font = 'bold 55px "Inter", sans-serif';
+      ctx.textAlign = 'center';
       
-      const headers = [
-        { text: '#', x: 200 },
-        { text: 'Player Name / 球员姓名', x: 500 },
-        { text: 'Points / 积分', x: width - 900 },
-        { text: 'Matches / 比赛', x: width - 600 },
-        { text: 'Win Rate / 胜率', x: width - 300 }
-      ];
+      // Header positions - evenly spaced
+      const col1X = 350;  // Rank
+      const col2X = width / 2;  // Player Name
+      const col3X = width - 350;  // Points
       
-      headers.forEach(header => {
-        ctx.fillText(header.text, header.x, tableStartY + 60);
-      });
+      ctx.fillText('RANK', col1X, tableStartY + 30);
+      ctx.fillText('排名', col1X, tableStartY + 65);
+      
+      ctx.fillText('PLAYER', col2X, tableStartY + 30);
+      ctx.fillText('球员', col2X, tableStartY + 65);
+      
+      ctx.fillText('POINTS', col3X, tableStartY + 30);
+      ctx.fillText('积分', col3X, tableStartY + 65);
 
-      // Player rows - sleek and elegant design
+      // Clean player rows - simplified 3-column design
       for (let i = 0; i < maxVisiblePlayers; i++) {
         const player = leaderboardData[i];
         if (!player) continue;
         
-        const y = tableStartY + 90 + (i * rowHeight);
+        const y = tableStartY + 80 + (i * rowHeight);
         
-        // Elegant row background with soft alternating colors
+        // Clean alternating row backgrounds
         if (i % 2 === 0) {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.fillRect(120, y, width - 240, rowHeight);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.fillRect(150, y, width - 300, rowHeight);
         }
         
-        // Top 3 special highlighting - more elegant
+        // Podium highlighting for top 3
         if (i < 3) {
-          // Subtle left accent for podium positions
-          const accentColors = ['#FFD700', '#C0C0C0', '#CD7F32']; // Gold, Silver, Bronze
-          ctx.fillStyle = accentColors[i];
-          ctx.fillRect(120, y, 8, rowHeight);
+          ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+          ctx.fillRect(150, y, width - 300, rowHeight);
           
-          // Subtle background highlight
-          ctx.fillStyle = 'rgba(255, 215, 0, 0.1)';
-          ctx.fillRect(128, y, width - 256, rowHeight);
+          // Left accent stripe
+          ctx.fillStyle = '#FF5722';
+          ctx.fillRect(150, y, 8, rowHeight);
         }
 
-        // Text styling - refined and readable
-        const textColor = i < 3 ? '#1a202c' : '#2d3748';
+        // Clean text styling
+        const textColor = '#1a202c';
         ctx.fillStyle = textColor;
-        ctx.font = i < 3 ? 'bold 46px "Inter", sans-serif' : '44px "Inter", sans-serif';
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'center';
         
-        // Rank with elegant medals for top 3
-        const medals = ['🥇', '🥈', '🥉'];
+        // RANK - Column 1
+        ctx.font = i < 3 ? 'bold 55px "Inter", sans-serif' : '50px "Inter", sans-serif';
         if (i < 3) {
-          ctx.fillText(`${medals[i]}`, 200, y + 65);
-          ctx.fillText(`#${player.ranking}`, 280, y + 65);
+          const medals = ['🥇', '🥈', '🥉'];
+          ctx.fillText(`${medals[i]} #${player.ranking}`, col1X, y + 60);
         } else {
-          ctx.fillText(`#${player.ranking}`, 200, y + 65);
+          ctx.fillText(`#${player.ranking}`, col1X, y + 60);
         }
         
-        // Player name - prominent and clear
-        ctx.font = i < 3 ? 'bold 46px "Inter", sans-serif' : '44px "Inter", sans-serif';
-        ctx.fillText(player.displayName, 500, y + 65);
+        // PLAYER NAME - Column 2
+        ctx.font = i < 3 ? 'bold 50px "Inter", sans-serif' : '45px "Inter", sans-serif';
+        ctx.fillText(player.displayName, col2X, y + 60);
         
-        // Points (highlighted) - Pickle+ orange
+        // POINTS - Column 3 (highlighted)
         ctx.fillStyle = '#FF5722';
-        ctx.font = 'bold 48px "Inter", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(player.points.toString(), width - 900, y + 65);
+        ctx.font = 'bold 60px "Inter", sans-serif';
         
-        // Stats - clean and readable
-        ctx.fillStyle = textColor;
-        ctx.font = '42px "Inter", sans-serif';
-        ctx.fillText(player.matchesPlayed.toString(), width - 600, y + 65);
+        // Add subtle background for points
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
+        ctx.fillRect(col3X - 80, y + 20, 160, 50);
+        ctx.restore();
         
-        // Win rate with elegant formatting
-        const winRate = player.matchesPlayed > 0 ? Math.round(player.winRate) : 0;
-        ctx.fillText(`${winRate}%`, width - 300, y + 65);
+        ctx.fillStyle = '#FF5722';
+        ctx.fillText(player.points.toString(), col3X, y + 60);
       }
 
-      // FOOTER
-      const footerY = height - 150;
+      // CLEAN FOOTER
+      const footerY = height - 180;
       
-      // Footer background - Pickle+ subtle orange
-      ctx.fillStyle = 'rgba(255, 87, 34, 0.08)';
-      ctx.fillRect(0, footerY, width, 150);
+      // Elegant footer background
+      const footerGrad = ctx.createLinearGradient(0, footerY, 0, height);
+      footerGrad.addColorStop(0, 'rgba(255, 87, 34, 0.1)');
+      footerGrad.addColorStop(1, 'rgba(255, 87, 34, 0.2)');
+      ctx.fillStyle = footerGrad;
+      ctx.fillRect(0, footerY, width, 180);
       
-      // Pickle+ branding with signature orange
+      // Pickle+ branding - main
       ctx.fillStyle = '#FF5722';
-      ctx.font = 'bold 45px "Inter", sans-serif';
+      ctx.font = 'bold 50px "Inter", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🥒 Powered by Pickle+ Platform', width / 2, footerY + 60);
+      ctx.fillText('🥒 Pickle+ Tournament Platform', width / 2, footerY + 60);
       
-      // Timestamp
-      ctx.fillStyle = '#9a3412'; // Orange-800
-      ctx.font = '35px "Inter", sans-serif';
-      ctx.fillText(`Generated: ${new Date().toLocaleString()}`, width / 2, footerY + 110);
-
-      // Player count indicator in footer (no overlap)
-      ctx.fillStyle = '#4CAF50'; // Pickle+ Secondary Green
-      ctx.font = '32px "Inter", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`✓ ${leaderboardData.length} Active Players`, width / 2, footerY + 140);
+      // Timestamp and player count
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '38px "Inter", sans-serif';
+      ctx.fillText(`Generated ${new Date().toLocaleDateString()} • ${leaderboardData.length} Players`, width / 2, footerY + 120);
+      
+      // Bilingual note
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '28px "Microsoft YaHei", "SimHei", sans-serif';
+      ctx.fillText('实时排行榜 • Live Rankings • Pickle+ 平台', width / 2, footerY + 160);
 
       // Convert canvas to blob and download
       return new Promise<void>((resolve, reject) => {
