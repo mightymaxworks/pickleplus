@@ -929,8 +929,8 @@ export default function FacilityDisplaysAdminDashboard() {
                       <div className="text-sm text-gray-500">Scheduled updates</div>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="mt-4">
-                    Step 6: Polish & Features
+                  <Badge variant="default" className="mt-4 bg-green-500 text-white">
+                    ✅ Step 6: Complete - Bilingual Mixed Doubles Support
                   </Badge>
                 </CardContent>
               </Card>

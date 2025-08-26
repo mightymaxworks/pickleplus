@@ -49,7 +49,8 @@ router.get('/facility-debug', async (req, res) => {
     console.log(`[FACILITY DEBUG] Fetching ALL data for ${format} - ${division} - ${gender} (No filtering)`);
     
     // Get all users with format-specific ranking points (no filtering)
-    const formatParam = format === 'doubles' ? 'doubles' : 'singles';
+    // For mixed format, use doubles data since mixed is a variant of doubles
+    const formatParam = (format === 'doubles' || format === 'mixed') ? 'doubles' : 'singles';
     const allUsers = await storage.getUsersWithRankingPoints(formatParam);
     
     console.log(`[FACILITY DEBUG] Raw users from storage: ${allUsers.length}`);
@@ -59,7 +60,7 @@ router.get('/facility-debug', async (req, res) => {
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25;
         
-        const formatPoints = format === 'doubles' 
+        const formatPoints = (format === 'doubles' || format === 'mixed')
           ? (user.doublesRankingPoints || 0)
           : (user.singlesRankingPoints || 0);
         
@@ -385,7 +386,7 @@ async function getRealLeaderboardData(
           25; // Default age if not provided
         
         // Use format-specific ranking points
-        const formatPoints = format === 'doubles' 
+        const formatPoints = (format === 'doubles' || format === 'mixed')
           ? (user.doublesRankingPoints || 0)
           : (user.singlesRankingPoints || 0);
         
