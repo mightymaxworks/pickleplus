@@ -949,10 +949,7 @@ export const users = pgTable("users", {
   profileMilestonesAwarded: integer("profile_milestones_awarded").array().default([]),
   rankingPoints: integer("ranking_points").default(0), // DEPRECATED - for backward compatibility only
   singlesRankingPoints: integer("singles_ranking_points").default(0), // Singles-specific ranking points by category
-  mensDoublesRankingPoints: integer("mens_doubles_ranking_points").default(0), // Men's doubles ranking points
-  womensDoublesRankingPoints: integer("womens_doubles_ranking_points").default(0), // Women's doubles ranking points
-  mixedDoublesMenRankingPoints: integer("mixed_doubles_men_ranking_points").default(0), // Mixed doubles men's ranking points
-  mixedDoublesWomenRankingPoints: integer("mixed_doubles_women_ranking_points").default(0), // Mixed doubles women's ranking points
+  doublesRankingPoints: integer("doubles_ranking_points").default(0), // Unified doubles ranking points (all formats: mixed, men's, women's)
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   // Note: rankingTier is calculated at runtime based on ranking points
   // rankingTier: varchar("ranking_tier", { length: 20 }).default("bronze"),
@@ -1088,10 +1085,7 @@ export const userAgeGroupRankings = pgTable("user_age_group_rankings", {
   userId: integer("user_id").references(() => users.id).notNull(),
   ageCategory: varchar("age_category", { length: 10 }).notNull(), // 'U12', 'U14', 'U16', 'U18', 'Open', '35+', '50+', '60+', '70+'
   singlesPoints: integer("singles_points").default(0),
-  mensDoublesPoints: integer("mens_doubles_points").default(0), // Men's doubles age group points
-  womensDoublesPoints: integer("womens_doubles_points").default(0), // Women's doubles age group points
-  mixedDoublesMenPoints: integer("mixed_doubles_men_points").default(0), // Mixed doubles men's age group points
-  mixedDoublesWomenPoints: integer("mixed_doubles_women_points").default(0), // Mixed doubles women's age group points
+  doublesPoints: integer("doubles_points").default(0), // Unified doubles points (all formats)
   lastMatchDate: timestamp("last_match_date"),
   totalMatches: integer("total_matches").default(0),
   matchesWon: integer("matches_won").default(0),
