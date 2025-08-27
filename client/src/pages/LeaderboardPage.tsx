@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { convertRatingScale, useTierRules } from '@/hooks/use-tier-rules';
 import { 
   Medal, 
@@ -65,6 +66,9 @@ export function LeaderboardPage() {
   const [ageDivision, setAgeDivision] = React.useState<AgeDivision>(
     (params.get('division') as AgeDivision) || '19plus'
   );
+  const [selectedGender, setSelectedGender] = React.useState<'male' | 'female'>(
+    (params.get('gender') as 'male' | 'female') || 'male'
+  );
   const [page, setPage] = React.useState(parseInt(params.get('page') || '1', 10));
   const [searchTerm, setSearchTerm] = React.useState(params.get('search') || '');
   const [itemsPerPage, setItemsPerPage] = React.useState(20);
@@ -86,22 +90,42 @@ export function LeaderboardPage() {
   // Fetch rating tiers
   const { data: tiers, isLoading: tiersLoading } = useRatingTiers();
   
-  // Fetch leaderboard data
+  // Map format and gender to our new format-specific API
+  const getApiFormat = () => {
+    if (format === 'mixed') {
+      return selectedGender === 'male' ? 'mixed-doubles-men' : 'mixed-doubles-women';
+    }
+    if (format === 'doubles') {
+      return selectedGender === 'male' ? 'mens-doubles' : 'womens-doubles';
+    }
+    return format; // singles
+  };
+
+  // Fetch leaderboard data directly from enhanced-leaderboard API
   const { 
     data: leaderboardResponse,
     isLoading,
     isError,
     refetch
-  } = usePCPGlobalLeaderboard(
-    format, 
-    ageDivision, 
-    undefined, 
-    itemsPerPage, 
-    (page - 1) * itemsPerPage,
-    tierFilter,
-    minRating,
-    maxRating
-  );
+  } = useQuery({
+    queryKey: ['/api/enhanced-leaderboard/all-facilities', getApiFormat(), ageDivision, selectedGender, page, itemsPerPage, searchTerm],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        format: getApiFormat(),
+        division: ageDivision,
+        gender: selectedGender,
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+        ...(searchTerm && { search: searchTerm })
+      });
+      
+      const response = await fetch(`/api/enhanced-leaderboard/all-facilities?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard data');
+      }
+      return response.json();
+    }
+  });
   
   // Extract the leaderboard array from the response
   const leaderboard = leaderboardResponse?.leaderboard || [];
@@ -116,6 +140,7 @@ export function LeaderboardPage() {
     newParams.set('format', format);
     newParams.set('division', ageDivision);
     newParams.set('page', page.toString());
+    if (selectedGender) newParams.set('gender', selectedGender);
     if (searchTerm) newParams.set('search', searchTerm);
     if (tierFilter) newParams.set('tier', tierFilter);
     if (minRating !== undefined) newParams.set('minRating', minRating.toString());
@@ -127,11 +152,17 @@ export function LeaderboardPage() {
       '', 
       window.location.pathname + '?' + newParams.toString()
     );
-  }, [format, ageDivision, page, searchTerm, tierFilter, minRating, maxRating]);
+  }, [format, ageDivision, page, searchTerm, tierFilter, minRating, maxRating, selectedGender]);
   
   // Handle format change
   const handleFormatChange = (value: string) => {
     setFormat(value as PlayFormat);
+    setPage(1); // Reset to first page on filter change
+  };
+  
+  // Handle gender change
+  const handleGenderChange = (value: string) => {
+    setSelectedGender(value as 'male' | 'female');
     setPage(1); // Reset to first page on filter change
   };
   
@@ -295,6 +326,25 @@ export function LeaderboardPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Gender selector for doubles and mixed doubles */}
+            {(format === 'doubles' || format === 'mixed') && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Gender</label>
+                <Select
+                  value={selectedGender}
+                  onValueChange={handleGenderChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="flex-1">
               <Select

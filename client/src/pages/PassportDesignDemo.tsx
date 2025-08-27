@@ -932,15 +932,15 @@ function ModernPassportDemo() {
               </TabsList>
               
               <TabsContent value="singles" className="space-y-0">
-                <EnhancedLeaderboard formatType="singles" />
+                <EnhancedLeaderboard format="singles" />
               </TabsContent>
               
               <TabsContent value="doubles" className="space-y-0">
-                <EnhancedLeaderboard formatType="doubles" />
+                <EnhancedLeaderboard format="doubles" />
               </TabsContent>
               
               <TabsContent value="mixed" className="space-y-0">
-                <EnhancedLeaderboard formatType="mixed" />
+                <EnhancedLeaderboard format="mixed" />
               </TabsContent>
             </Tabs>
           </div>

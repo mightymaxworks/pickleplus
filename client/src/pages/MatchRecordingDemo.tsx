@@ -403,13 +403,13 @@ export default function MatchRecordingDemo() {
               {/* Singles Leaderboard */}
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold">Singles Leaderboard</h3>
-                <EnhancedLeaderboard formatType="singles" />
+                <EnhancedLeaderboard format="singles" />
               </div>
               
               {/* Doubles Leaderboard */}
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold">Doubles Leaderboard</h3>
-                <EnhancedLeaderboard formatType="doubles" />
+                <EnhancedLeaderboard format="doubles" />
               </div>
             </div>
           </TabsContent>

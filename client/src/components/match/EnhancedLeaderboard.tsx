@@ -48,11 +48,11 @@ interface PlayerTier {
 }
 
 interface EnhancedLeaderboardProps {
-  format?: "singles" | "doubles" | "mixed";
+  format: "singles" | "doubles" | "mixed";
 }
 
-export default function EnhancedLeaderboard({ format: initialFormat = "singles" }: EnhancedLeaderboardProps) {
-  const [format, setFormat] = useState<"singles" | "doubles" | "mixed">(initialFormat);
+export default function EnhancedLeaderboard({ format }: EnhancedLeaderboardProps) {
+  // Remove internal format state - now controlled by parent
   const [selectedDivision, setSelectedDivision] = useState<string>("open");
   const [selectedGender, setSelectedGender] = useState<string>("male");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -254,42 +254,7 @@ export default function EnhancedLeaderboard({ format: initialFormat = "singles" 
           </div>
         </div>
         
-        {/* Format Selection */}
-        <div className="mt-3">
-          <label className="text-xs font-medium text-orange-700 mb-2 block">Format</label>
-          <div className="flex gap-1">
-            <Button
-              variant={format === "singles" ? "default" : "outline"}
-              size="sm"
-              className={`h-7 text-xs px-3 flex-1 ${
-                format === "singles" 
-                  ? "bg-orange-600 hover:bg-orange-700 text-white" 
-                  : "border-orange-200 text-orange-700 hover:bg-orange-50"
-              }`}
-              onClick={() => {
-                setFormat("singles");
-                setCurrentPage(1);
-              }}
-            >
-              Singles
-            </Button>
-            <Button
-              variant={format === "doubles" ? "default" : "outline"}
-              size="sm"
-              className={`h-7 text-xs px-3 flex-1 ${
-                format === "doubles" 
-                  ? "bg-orange-600 hover:bg-orange-700 text-white" 
-                  : "border-orange-200 text-orange-700 hover:bg-orange-50"
-              }`}
-              onClick={() => {
-                setFormat("doubles");
-                setCurrentPage(1);
-              }}
-            >
-              Doubles
-            </Button>
-          </div>
-        </div>
+        {/* Format now controlled by parent component */}
         
         <div className="text-xs text-orange-600 mt-2 text-center bg-orange-50 rounded px-2 py-1">
           {getAgeGroupLabel(selectedDivision, selectedGender)} • {format === "singles" ? "Singles" : 
