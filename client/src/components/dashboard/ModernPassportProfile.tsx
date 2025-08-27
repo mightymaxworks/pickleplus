@@ -16,6 +16,7 @@ import { Camera, MapPin, Calendar, QrCode, GraduationCap, BookOpen, Star, Copy, 
 import { QRCodeSVG } from "qrcode.react";
 import { EditableField } from "@/components/profile/EditableField";
 import EnhancedLeaderboard from "@/components/match/EnhancedLeaderboard";
+import UnifiedRankingsView from "@/components/rankings/UnifiedRankingsView";
 import { RecentMatchesWidget } from "@/components/dashboard/RecentMatchesWidget";
 import { StudentCoachingWidget } from "@/components/dashboard/StudentCoachingWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
