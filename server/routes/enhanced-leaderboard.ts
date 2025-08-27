@@ -64,14 +64,10 @@ router.get('/facility-debug', async (req, res) => {
         if (format === 'singles') {
           formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'doubles') {
-          // MIXED DOUBLES FIX: Handle mixed doubles case properly
+          // UNIFIED DOUBLES SYSTEM: All doubles (including mixed) use same ranking pool
           if (gender === 'mixed') {
-            // For mixed doubles, use gender-specific mixed doubles columns
-            if (user.gender === 'male') {
-              formatPoints = user.mixedDoublesMenRankingPoints || 0;
-            } else if (user.gender === 'female') {
-              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
-            }
+            // Mixed doubles uses unified doubles ranking system per Pickle+ Algorithm
+            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
           } else {
             // Regular doubles
             formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
@@ -424,14 +420,10 @@ async function getRealLeaderboardData(
         if (format === 'singles') {
           formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'doubles') {
-          // MIXED DOUBLES FIX: Handle mixed doubles case properly
+          // UNIFIED DOUBLES SYSTEM: All doubles (including mixed) use same ranking pool
           if (gender === 'mixed') {
-            // For mixed doubles, use gender-specific mixed doubles columns
-            if (user.gender === 'male') {
-              formatPoints = user.mixedDoublesMenRankingPoints || 0;
-            } else if (user.gender === 'female') {
-              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
-            }
+            // Mixed doubles uses unified doubles ranking system per Pickle+ Algorithm
+            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
           } else {
             // Regular doubles
             formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
@@ -441,16 +433,14 @@ async function getRealLeaderboardData(
         } else if (format === 'womens-doubles') {
           formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          formatPoints = user.mixedDoublesMenRankingPoints || 0;
+          // Unified doubles system for mixed doubles men
+          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+          // Unified doubles system for mixed doubles women
+          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed') {
-          // Legacy mixed format - use gender-specific columns
-          if (user.gender === 'male') {
-            formatPoints = user.mixedDoublesMenRankingPoints || 0;
-          } else if (user.gender === 'female') {
-            formatPoints = user.mixedDoublesWomenRankingPoints || 0;
-          }
+          // Unified doubles system for legacy mixed format
+          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         }
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches
