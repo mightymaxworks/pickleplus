@@ -49,12 +49,12 @@ interface PlayerTier {
 
 interface EnhancedLeaderboardProps {
   format: "singles" | "doubles" | "mixed";
+  division?: string;
+  gender?: string;
 }
 
-export default function EnhancedLeaderboard({ format }: EnhancedLeaderboardProps) {
-  // Remove internal format state - now controlled by parent
-  const [selectedDivision, setSelectedDivision] = useState<string>("open");
-  const [selectedGender, setSelectedGender] = useState<string>("male");
+export default function EnhancedLeaderboard({ format, division = "open", gender = "male" }: EnhancedLeaderboardProps) {
+  // Use props instead of internal state for division and gender
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
@@ -132,12 +132,12 @@ export default function EnhancedLeaderboard({ format }: EnhancedLeaderboardProps
 
   // Fetch leaderboard data with enhanced features
   const { data: leaderboardResponse, isLoading } = useQuery({
-    queryKey: [`/api/enhanced-leaderboard`, format, selectedDivision, selectedGender, debouncedSearch, currentPage],
+    queryKey: [`/api/enhanced-leaderboard`, format, division, gender, debouncedSearch, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams({
         format: format,
-        division: selectedDivision,
-        gender: selectedGender,
+        division: division,
+        gender: gender,
         page: currentPage.toString(),
         limit: '20',
         search: debouncedSearch
@@ -203,61 +203,9 @@ export default function EnhancedLeaderboard({ format }: EnhancedLeaderboardProps
           </div>
         )}
 
-        {/* Compact Filter Controls */}
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-orange-700 mb-2 block">Age Group</label>
-            <div className="flex flex-wrap gap-1">
-              {ageDivisions.map((division) => (
-                <Button
-                  key={division.value}
-                  variant={selectedDivision === division.value ? "default" : "outline"}
-                  size="sm"
-                  className={`h-7 text-xs px-2 ${
-                    selectedDivision === division.value 
-                      ? "bg-orange-600 hover:bg-orange-700 text-white" 
-                      : "border-orange-200 text-orange-700 hover:bg-orange-50"
-                  }`}
-                  onClick={() => {
-                    setSelectedDivision(division.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  {division.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <label className="text-xs font-medium text-orange-700 mb-2 block">Gender</label>
-            <div className="flex gap-1">
-              {genderOptions.map((gender) => (
-                <Button
-                  key={gender.value}
-                  variant={selectedGender === gender.value ? "default" : "outline"}
-                  size="sm"
-                  className={`h-7 text-xs px-3 flex-1 ${
-                    selectedGender === gender.value 
-                      ? "bg-orange-600 hover:bg-orange-700 text-white" 
-                      : "border-orange-200 text-orange-700 hover:bg-orange-50"
-                  }`}
-                  onClick={() => {
-                    setSelectedGender(gender.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  {gender.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        {/* Format now controlled by parent component */}
-        
+        {/* Format controlled by parent component - no local filter controls needed */}
         <div className="text-xs text-orange-600 mt-2 text-center bg-orange-50 rounded px-2 py-1">
-          {getAgeGroupLabel(selectedDivision, selectedGender)} • {format === "singles" ? "Singles" : 
+          {getAgeGroupLabel(division, gender)} • {format === "singles" ? "Singles" : 
                                   format === "mixed" ? "Mixed Doubles" : "Doubles"}
         </div>
       </div>
@@ -347,7 +295,7 @@ export default function EnhancedLeaderboard({ format }: EnhancedLeaderboardProps
             <Trophy className="h-10 w-10 text-orange-300 mx-auto mb-3" />
             <h3 className="text-sm font-medium mb-1 text-orange-800">No Rankings Yet</h3>
             <p className="text-xs text-orange-600 mb-2">
-              No players in {getAgeGroupLabel(selectedDivision, selectedGender)}
+              No players in {getAgeGroupLabel(division, gender)}
             </p>
             <p className="text-xs text-orange-500">
               Start recording matches to populate rankings!

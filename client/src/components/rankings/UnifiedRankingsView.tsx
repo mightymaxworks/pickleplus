@@ -29,6 +29,21 @@ function mapDivisionToEnhancedLeaderboard(division: RankingDivision): string {
   return division === 'open' ? 'open' : division;
 }
 
+// Gender mapping utility based on format
+function mapGenderFromFormat(format: RankingFormat): 'male' | 'female' {
+  switch (format) {
+    case 'mens-doubles':
+    case 'mixed-doubles-men':
+      return 'male';
+    case 'womens-doubles':
+    case 'mixed-doubles-women':
+      return 'female';
+    case 'singles':
+    default:
+      return 'male'; // Default for singles, will be controlled by user selection
+  }
+}
+
 export default function UnifiedRankingsView() {
   const [format, setFormat] = useState<RankingFormat>('singles');
   const [division, setDivision] = useState<RankingDivision>('open');
@@ -87,6 +102,8 @@ export default function UnifiedRankingsView() {
       {/* Rankings Data */}
       <EnhancedLeaderboard 
         format={mapToEnhancedLeaderboardFormat(format)}
+        division={mapDivisionToEnhancedLeaderboard(division)}
+        gender={mapGenderFromFormat(format)}
       />
     </Card>
   );
