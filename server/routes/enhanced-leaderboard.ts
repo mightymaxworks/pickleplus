@@ -70,9 +70,9 @@ router.get('/facility-debug', async (req, res) => {
         } else if (format === 'womens-doubles') {
           formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          formatPoints = user.mixedDoublesMenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          formatPoints = user.mixedDoublesMenRankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          formatPoints = user.mixedDoublesWomenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
         }
         
         const totalMatches = user.totalMatches || 0;
@@ -387,8 +387,11 @@ async function getRealLeaderboardData(
     
     // FORMAT MAPPING: Handle both old generic formats and new specific formats
     let formatParam: string;
-    if (format === 'doubles' || format === 'mixed') {
+    if (format === 'doubles') {
       formatParam = 'doubles'; // Legacy mapping for getUsersWithRankingPoints
+    } else if (format === 'mixed') {
+      // Mixed doubles needs to query the specific mixed format based on gender
+      formatParam = gender === 'female' ? 'mixed-doubles-women' : 'mixed-doubles-men';
     } else {
       formatParam = format; // singles, mens-doubles, womens-doubles, etc.
     }
@@ -413,9 +416,9 @@ async function getRealLeaderboardData(
         } else if (format === 'womens-doubles') {
           formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          formatPoints = user.mixedDoublesMenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          formatPoints = user.mixedDoublesMenRankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          formatPoints = user.mixedDoublesWomenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
         } else if (format === 'mixed') {
           formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         }
