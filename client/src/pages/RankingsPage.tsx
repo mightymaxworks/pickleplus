@@ -113,61 +113,6 @@ export default function RankingsPage() {
             <UnifiedRankingsView />
           </CardContent>
         </Card>
-
-          <TabsContent value="tiers" className="mt-6">
-            <TierLegend />
-          </TabsContent>
-
-          <TabsContent value="age-group" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Age Group Rankings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Medal className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                    Age Group Rankings - Coming Soon!
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    Compare your performance against players in your age group
-                  </p>
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                    Phase 2 Feature
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="recent" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                    Activity Feed - Coming Soon!
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    See recent matches, ranking changes, and achievements
-                  </p>
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                    Phase 2 Feature
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   );

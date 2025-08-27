@@ -938,26 +938,8 @@ export default function ModernPassportProfile({
                 </p>
               </div>
               
-              {/* Event Type Tabs */}
-              <Tabs defaultValue="singles" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="singles">Singles</TabsTrigger>
-                  <TabsTrigger value="doubles">Doubles</TabsTrigger>
-                  <TabsTrigger value="mixed">Mixed Doubles</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="singles" className="space-y-0">
-                  <EnhancedLeaderboard format="singles" />
-                </TabsContent>
-                
-                <TabsContent value="doubles" className="space-y-0">
-                  <EnhancedLeaderboard format="mens-doubles" />
-                </TabsContent>
-                
-                <TabsContent value="mixed" className="space-y-0">
-                  <EnhancedLeaderboard format="mixed-doubles-men" />
-                </TabsContent>
-              </Tabs>
+              {/* Unified Rankings Interface */}
+              <UnifiedRankingsView />
             </div>
           </TabsContent>
           

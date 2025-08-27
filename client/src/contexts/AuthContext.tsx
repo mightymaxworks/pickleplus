@@ -81,10 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Invalidate queries that might depend on auth state
       queryClient.invalidateQueries();
       
-      toast({
-        title: 'Login successful',
-        description: `Welcome back, ${loggedInUser.username}!`,
-      });
+      // Toast will be shown by the auth page to avoid duplicates
       
       return loggedInUser;
     } catch (err) {

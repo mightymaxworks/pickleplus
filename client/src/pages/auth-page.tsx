@@ -210,9 +210,9 @@ export default function AuthPage() {
         rememberMe: data.rememberMe
       });
       
+      // Simple success notification
       toast({
-        title: t('auth.loginSuccess', 'Login successful'),
-        description: t('auth.loginSuccessDescription', 'Welcome back to Pickle+!'),
+        title: t('auth.loginSuccess', 'Welcome back!'),
       });
 
       // Redirect to dashboard after successful login
