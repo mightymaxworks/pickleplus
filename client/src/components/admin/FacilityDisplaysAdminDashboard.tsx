@@ -357,6 +357,9 @@ export default function FacilityDisplaysAdminDashboard() {
       const isMixedDoubles = selectedFormat === 'doubles' && selectedGender === 'mixed' && 
                            isMixedDoublesData(leaderboardData);
       
+      console.log('[4K EXPORT DEBUG] Format:', selectedFormat, 'Gender:', selectedGender, 'IsMixed:', isMixedDoubles);
+      console.log('[4K EXPORT DEBUG] Leaderboard data structure:', leaderboardData);
+      
       if (isMixedDoubles) {
         // MIXED DOUBLES: Side-by-side tables layout
         const tableStartY = 320;
@@ -369,6 +372,9 @@ export default function FacilityDisplaysAdminDashboard() {
         // RENDER SIDE-BY-SIDE TABLES
         const menData = isMixedDoublesData(leaderboardData) ? leaderboardData.men || [] : [];
         const womenData = isMixedDoublesData(leaderboardData) ? leaderboardData.women || [] : [];
+        
+        console.log('[4K EXPORT DEBUG] Men data:', menData.length, 'Women data:', womenData.length);
+        
         renderMixedDoublesTable(ctx, menData, leftTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "MEN'S");
         renderMixedDoublesTable(ctx, womenData, rightTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "WOMEN'S");
         
