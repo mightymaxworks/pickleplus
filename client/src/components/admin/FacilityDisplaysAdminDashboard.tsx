@@ -109,16 +109,39 @@ export default function FacilityDisplaysAdminDashboard() {
   const fetchLeaderboardData = async () => {
     setIsLoading(true);
     try {
-      // Use debug endpoint to show ALL data without production filtering
-      const response = await apiRequest('GET', 
-        `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=${selectedGender}`
-      );
-      const data = await response.json();
-      setLeaderboardData(data.players || []);
-      setLastUpdated(new Date());
+      // MIXED DOUBLES: For mixed doubles, fetch men's and women's data separately
+      if (selectedFormat === 'doubles' && selectedGender === 'mixed') {
+        // Fetch men's mixed doubles data
+        const menResponse = await apiRequest('GET', 
+          `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=male`
+        );
+        const menData = await menResponse.json();
+        
+        // Fetch women's mixed doubles data  
+        const womenResponse = await apiRequest('GET', 
+          `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=female`
+        );
+        const womenData = await womenResponse.json();
+        
+        // Store both datasets for mixed doubles side-by-side display
+        setLeaderboardData({
+          men: menData.players || [],
+          women: womenData.players || []
+        });
+        
+        console.log(`[FACILITY DISPLAYS] Mixed Doubles - Men: ${menData.finalPlayers} players, Women: ${womenData.finalPlayers} players`);
+      } else {
+        // Regular single-gender data fetch
+        const response = await apiRequest('GET', 
+          `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=${selectedGender}`
+        );
+        const data = await response.json();
+        setLeaderboardData(data.players || []);
+        
+        console.log(`[FACILITY DISPLAYS] Debug data: ${data.rawUsers} raw users, ${data.withPoints} with points, ${data.finalPlayers} final players`);
+      }
       
-      // Log debug info
-      console.log(`[FACILITY DISPLAYS] Debug data: ${data.rawUsers} raw users, ${data.withPoints} with points, ${data.finalPlayers} final players`);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching leaderboard data:', error);
       // Fallback to regular endpoint
@@ -133,6 +156,95 @@ export default function FacilityDisplaysAdminDashboard() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to render side-by-side mixed doubles tables
+  const renderMixedDoublesTable = (ctx: CanvasRenderingContext2D, players: any[], tableX: number, tableStartY: number, tableWidth: number, rowHeight: number, maxPlayers: number, genderLabel: string) => {
+    // Table header background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.fillRect(tableX, tableStartY, tableWidth, 60);
+    
+    // Gender label
+    ctx.fillStyle = '#2d3748';
+    ctx.font = 'bold 36px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${genderLabel} RANKINGS`, tableX + tableWidth/2, tableStartY + 40);
+    
+    // Column headers
+    const headerY = tableStartY + 80;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillRect(tableX, headerY, tableWidth, 50);
+    
+    ctx.fillStyle = '#2d3748';
+    ctx.font = '30px "Inter", sans-serif';
+    
+    const col1X = tableX + 60;   // Rank
+    const col2X = tableX + 120;  // Name 
+    const col3X = tableX + tableWidth - 80; // Points
+    
+    ctx.textAlign = 'center';
+    ctx.fillText('RANK', col1X, headerY + 35);
+    
+    ctx.textAlign = 'left'; 
+    ctx.fillText('PLAYER', col2X, headerY + 35);
+    
+    ctx.textAlign = 'center';
+    ctx.fillText('PTS', col3X, headerY + 35);
+    
+    // Player rows
+    const actualPlayers = Math.min(maxPlayers, players.length);
+    for (let i = 0; i < actualPlayers; i++) {
+      const player = players[i];
+      const y = headerY + 50 + (i * rowHeight);
+      
+      // Alternating row backgrounds
+      if (i % 2 === 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(tableX, y, tableWidth, rowHeight);
+      }
+      
+      // Podium highlighting for top 3
+      if (i < 3) {
+        ctx.fillStyle = 'rgba(255, 193, 7, 0.1)';
+        ctx.fillRect(tableX, y, tableWidth, rowHeight);
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(tableX, y, 3, rowHeight);
+      }
+      
+      const textColor = '#374151';
+      ctx.fillStyle = textColor;
+      
+      // Rank
+      ctx.textAlign = 'center';
+      ctx.font = i < 3 ? 'bold 32px "Inter", sans-serif' : '28px "Inter", sans-serif';
+      
+      if (i < 3) {
+        const medals = ['🥇', '🥈', '🥉'];
+        ctx.fillText(`${medals[i]} ${player.ranking}`, col1X, y + 45);
+      } else {
+        ctx.fillText(`${player.ranking}`, col1X, y + 45);
+      }
+      
+      // Player name (truncated if too long)
+      ctx.textAlign = 'left';
+      ctx.font = i < 3 ? 'bold 32px "Inter", sans-serif' : '28px "Inter", sans-serif';
+      const maxNameWidth = tableWidth - 200;
+      let displayName = player.displayName;
+      if (ctx.measureText(displayName).width > maxNameWidth) {
+        while (ctx.measureText(displayName + '...').width > maxNameWidth && displayName.length > 0) {
+          displayName = displayName.slice(0, -1);
+        }
+        displayName += '...';
+      }
+      ctx.fillText(displayName, col2X, y + 45);
+      
+      // Points
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 34px "Inter", sans-serif';
+      ctx.fillText(player.points.toString(), col3X, y + 45);
     }
   };
 
@@ -213,14 +325,34 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.fillText('RANKINGS', width / 2, 230);
 
-      // ELEGANT RANKINGS TABLE - Sleek design
-      const tableStartY = 280;
-      const rowHeight = 85;
-      const maxVisiblePlayers = Math.min(20, leaderboardData.length);
+      // Check if this is mixed doubles with separate men/women data
+      const isMixedDoubles = selectedFormat === 'doubles' && selectedGender === 'mixed' && 
+                           leaderboardData && typeof leaderboardData === 'object' && 
+                           leaderboardData.men && leaderboardData.women;
       
-      // Subtle table header background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.fillRect(180, tableStartY, width - 360, 70);
+      if (isMixedDoubles) {
+        // MIXED DOUBLES: Side-by-side tables layout
+        const tableStartY = 320;
+        const rowHeight = 70;
+        const tableWidth = (width - 300) / 2; // Two tables side by side with spacing
+        const leftTableX = 100;
+        const rightTableX = leftTableX + tableWidth + 100;
+        const maxVisiblePlayers = 15; // Smaller to fit two tables
+
+        // RENDER SIDE-BY-SIDE TABLES
+        renderMixedDoublesTable(ctx, leaderboardData.men, leftTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "MEN'S");
+        renderMixedDoublesTable(ctx, leaderboardData.women, rightTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "WOMEN'S");
+        
+      } else {
+        // REGULAR SINGLE TABLE - Sleek design
+        const tableStartY = 280;
+        const rowHeight = 85;
+        const playersArray = Array.isArray(leaderboardData) ? leaderboardData : [];
+        const maxVisiblePlayers = Math.min(20, playersArray.length);
+      
+        // Subtle table header background
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.fillRect(180, tableStartY, width - 360, 70);
       
       // Clean single-language headers  
       ctx.fillStyle = '#2d3748';
