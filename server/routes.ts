@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth, isAuthenticated, handleMightymaxLogin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, handleMightymaxLogin } from "./auth";
 import passport from "passport";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -646,6 +646,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[API][Logout] User logged out successfully');
       res.json({ success: true, message: 'Logged out successfully' });
     });
+  });
+
+  // Admin password reset route
+  app.post('/api/admin/reset-password', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { userId, newPassword } = req.body;
+      
+      if (!userId || !newPassword) {
+        return res.status(400).json({ error: 'userId and newPassword are required' });
+      }
+      
+      // Hash the new password
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the user's password
+      await storage.updateUserPassword(userId, hashedPassword);
+      
+      console.log(`[Admin] Password reset for user ID ${userId} by admin ${req.user?.username}`);
+      res.json({ success: true, message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('[Admin] Password reset error:', error);
+      res.status(500).json({ error: 'Failed to reset password' });
+    }
   });
 
   // Current user endpoint
