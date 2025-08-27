@@ -43,7 +43,7 @@ export default function FacilityDisplaysAdminDashboard() {
   const [selectedFormat, setSelectedFormat] = useState('singles');
   const [selectedDivision, setSelectedDivision] = useState('open');
   const [selectedGender, setSelectedGender] = useState('male');
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[] | {men: LeaderboardEntry[], women: LeaderboardEntry[]}>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -880,13 +880,19 @@ export default function FacilityDisplaysAdminDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 bg-blue-50 rounded-lg">
                         <div className="text-2xl font-bold text-blue-600">
-                          {leaderboardData.length}
+                          {Array.isArray(leaderboardData) 
+                            ? leaderboardData.length 
+                            : (leaderboardData?.men?.length || 0) + (leaderboardData?.women?.length || 0)
+                          }
                         </div>
                         <div className="text-sm text-blue-800">Players</div>
                       </div>
                       <div className="p-3 bg-green-50 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
-                          {leaderboardData.filter(p => p.points > 0).length}
+                          {Array.isArray(leaderboardData) 
+                            ? leaderboardData.filter(p => p.points > 0).length
+                            : (leaderboardData?.men?.filter(p => p.points > 0).length || 0) + (leaderboardData?.women?.filter(p => p.points > 0).length || 0)
+                          }
                         </div>
                         <div className="text-sm text-green-800">Ranked</div>
                       </div>
