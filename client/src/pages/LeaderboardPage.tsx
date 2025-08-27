@@ -313,41 +313,6 @@ export function LeaderboardPage() {
           <div className="flex flex-1 space-x-2">
             <div className="flex-1">
               <Select
-                value={format}
-                onValueChange={handleFormatChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="singles">Singles</SelectItem>
-                  <SelectItem value="doubles">Doubles</SelectItem>
-                  <SelectItem value="mixed">Mixed Doubles</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Gender selector for doubles and mixed doubles */}
-            {(format === 'doubles' || format === 'mixed') && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Gender</label>
-                <Select
-                  value={selectedGender}
-                  onValueChange={handleGenderChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            <div className="flex-1">
-              <Select
                 value={ageDivision}
                 onValueChange={handleDivisionChange}
               >

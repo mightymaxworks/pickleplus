@@ -947,15 +947,15 @@ export default function ModernPassportProfile({
                 </TabsList>
                 
                 <TabsContent value="singles" className="space-y-0">
-                  <EnhancedLeaderboard formatType="singles" />
+                  <EnhancedLeaderboard format="singles" />
                 </TabsContent>
                 
                 <TabsContent value="doubles" className="space-y-0">
-                  <EnhancedLeaderboard formatType="doubles" />
+                  <EnhancedLeaderboard format="mens-doubles" />
                 </TabsContent>
                 
                 <TabsContent value="mixed" className="space-y-0">
-                  <EnhancedLeaderboard formatType="mixed" />
+                  <EnhancedLeaderboard format="mixed-doubles-men" />
                 </TabsContent>
               </Tabs>
             </div>

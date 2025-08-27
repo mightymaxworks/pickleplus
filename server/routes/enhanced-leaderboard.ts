@@ -33,7 +33,7 @@ router.get('/test-production', async (req, res) => {
       players: fullLeaderboardData.map(p => ({ displayName: p.displayName, username: p.username, points: p.points }))
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 });
 
@@ -73,8 +73,8 @@ router.get('/facility-debug', async (req, res) => {
           formatPoints = user.mixedDoublesWomenRankingPoints || 0;
         }
         
-        const totalMatches = user.totalMatches || user.total_matches || 0;
-        const matchesWon = user.matchesWon || user.matches_won || 0;
+        const totalMatches = user.totalMatches || 0;
+        const matchesWon = user.matchesWon || 0;
         const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
         
         const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
@@ -123,7 +123,7 @@ router.get('/facility-debug', async (req, res) => {
     });
   } catch (error) {
     console.error('[FACILITY DEBUG] Error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 });
 
@@ -175,7 +175,7 @@ router.get('/', async (req, res) => {
           id: ranking.user.id,
           displayName: enhancedDisplayName,
           username: ranking.user.username,
-          avatar: ranking.user.profileImage || undefined,
+          avatar: ranking.user.avatarUrl || undefined,
           points: Number((format === 'singles' ? ranking.singlesPoints : ranking.doublesPoints).toFixed(2)), // Ensure 2 decimal precision
           matchesPlayed: ranking.totalMatches || 0,
           winRate: ranking.totalMatches > 0 ? Math.round(((ranking.matchesWon / ranking.totalMatches) * 100) * 100) / 100 : 0, // Ensure 2 decimal precision for win rate
@@ -383,8 +383,13 @@ async function getRealLeaderboardData(
     const isProduction = process.env.NODE_ENV === 'production';
     console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender} (Production: ${isProduction})`);
     
-    // Determine which ranking points to use based on format
-    const formatParam = format === 'doubles' ? 'doubles' : 'singles';
+    // FORMAT MAPPING: Handle both old generic formats and new specific formats
+    let formatParam: string;
+    if (format === 'doubles' || format === 'mixed') {
+      formatParam = 'doubles'; // Legacy mapping for getUsersWithRankingPoints
+    } else {
+      formatParam = format; // singles, mens-doubles, womens-doubles, etc.
+    }
     
     // Get all users with format-specific ranking points
     const allUsers = await storage.getUsersWithRankingPoints(formatParam);
@@ -410,8 +415,8 @@ async function getRealLeaderboardData(
         }
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches
-        const totalMatches = user.total_matches || 0;
-        const matchesWon = user.matches_won || 0;
+        const totalMatches = user.totalMatches || 0;
+        const matchesWon = user.matchesWon || 0;
         const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
         
         const rawDisplayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
@@ -421,7 +426,7 @@ async function getRealLeaderboardData(
           id: user.id,
           displayName: enhancedDisplayName,
           username: user.username,
-          avatar: user.profileImage || undefined,
+          avatar: user.avatarUrl || undefined,
           points: Number(formatPoints.toFixed(2)), // Frontend expects 'points'
           matchesPlayed: totalMatches, // Frontend expects 'matchesPlayed'
           winRate: Math.round(winRate * 100) / 100, // Frontend expects 'winRate' (2 decimal precision)

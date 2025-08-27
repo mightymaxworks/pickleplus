@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import EnhancedLeaderboard from '@/components/match/EnhancedLeaderboard';
 import TierLegend from '@/components/match/TierLegend';
+import UnifiedRankingsView from '@/components/rankings/UnifiedRankingsView';
 
 export default function RankingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,42 +101,18 @@ export default function RankingsPage() {
           </CardContent>
         </Card>
 
-        {/* Rankings Tabs */}
-        <Tabs defaultValue="doubles" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-            <TabsTrigger value="doubles" className="text-sm">Doubles</TabsTrigger>
-            <TabsTrigger value="singles" className="text-sm">Singles</TabsTrigger>
-            <TabsTrigger value="tiers" className="hidden md:flex text-sm">Tiers</TabsTrigger>
-            <TabsTrigger value="age-group" className="hidden md:flex text-sm">Age Group</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="doubles" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Doubles Player Rankings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EnhancedLeaderboard format="doubles" />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="singles" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  Singles Player Rankings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EnhancedLeaderboard format="singles" />
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {/* Unified Rankings Interface */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Player Rankings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UnifiedRankingsView />
+          </CardContent>
+        </Card>
 
           <TabsContent value="tiers" className="mt-6">
             <TierLegend />
