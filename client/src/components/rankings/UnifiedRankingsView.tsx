@@ -33,33 +33,29 @@ export default function UnifiedRankingsView() {
   const [division, setDivision] = useState<RankingDivision>('open');
 
   return (
-    <div className="space-y-6">
-      {/* Format Selection */}
-      <Card className="p-4">
+    <Card className="p-4">
+      {/* Integrated Header with Format Selection */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            {formatLabels[format].icon}
+            {formatLabels[format].label} Rankings
+          </h3>
+        </div>
+        
+        {/* Compact Format Selector */}
         <UnifiedFormatSelector
           format={format}
           division={division}
           onFormatChange={setFormat}
           onDivisionChange={setDivision}
         />
-      </Card>
-
-      {/* Rankings Display */}
-      <Card className="p-4">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            {formatLabels[format].icon}
-            {formatLabels[format].label} Rankings
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            {formatLabels[format].description} - {division.replace('plus', '+').replace('U', 'Under ')} division
-          </p>
-        </div>
-        
-        <EnhancedLeaderboard 
-          format={mapToEnhancedLeaderboardFormat(format)}
-        />
-      </Card>
-    </div>
+      </div>
+      
+      {/* Rankings Data */}
+      <EnhancedLeaderboard 
+        format={mapToEnhancedLeaderboardFormat(format)}
+      />
+    </Card>
   );
 }

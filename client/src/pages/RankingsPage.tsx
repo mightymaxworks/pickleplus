@@ -42,77 +42,8 @@ export default function RankingsPage() {
 
         </motion.div>
 
-        {/* Filters and Search */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filters & Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search players..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={filterAge} onValueChange={setFilterAge}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Age Group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Ages</SelectItem>
-                  <SelectItem value="18-34">18-34</SelectItem>
-                  <SelectItem value="35-49">35-49</SelectItem>
-                  <SelectItem value="50-59">50-59</SelectItem>
-                  <SelectItem value="60-69">60-69</SelectItem>
-                  <SelectItem value="70+">70+</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterSkill} onValueChange={setFilterSkill}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Skill Level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="beginner">Beginner (0-499)</SelectItem>
-                  <SelectItem value="intermediate">Intermediate (500-999)</SelectItem>
-                  <SelectItem value="advanced">Advanced (1000-1499)</SelectItem>
-                  <SelectItem value="expert">Expert (1500-1999)</SelectItem>
-                  <SelectItem value="elite">Elite (2000+)</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterAge('all');
-                  setFilterSkill('all');
-                }}
-              >
-                Clear Filters
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Unified Rankings Interface */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Player Rankings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <UnifiedRankingsView />
-          </CardContent>
-        </Card>
+        {/* Streamlined Rankings Interface */}
+        <UnifiedRankingsView />
       </div>
     </div>
   );
