@@ -429,6 +429,7 @@ export default function FacilityDisplaysAdminDashboard() {
         ctx.fillStyle = '#dc2626';
         ctx.fillText(player.points.toString(), col3X, y + 55);
       }
+      } // Close the else block for regular single table
 
       // CLEAN FOOTER
       const footerY = height - 180;
