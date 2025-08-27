@@ -244,15 +244,17 @@ export default function FacilityDisplaysAdminDashboard() {
       const textColor = '#374151';
       ctx.fillStyle = textColor;
       
-      // Rank
+      // Rank - Use position index + 1 for mixed doubles gender-specific ranking
       ctx.textAlign = 'center';
       ctx.font = i < 3 ? 'bold 32px "Inter", sans-serif' : '28px "Inter", sans-serif';
       
+      const genderSpecificRank = i + 1; // Each gender group starts ranking from 1
+      
       if (i < 3) {
         const medals = ['🥇', '🥈', '🥉'];
-        ctx.fillText(`${medals[i]} ${player.ranking}`, col1X, y + 45);
+        ctx.fillText(`${medals[i]} ${genderSpecificRank}`, col1X, y + 45);
       } else {
-        ctx.fillText(`${player.ranking}`, col1X, y + 45);
+        ctx.fillText(`${genderSpecificRank}`, col1X, y + 45);
       }
       
       // Player name (truncated if too long)
@@ -357,9 +359,6 @@ export default function FacilityDisplaysAdminDashboard() {
       const isMixedDoubles = selectedFormat === 'doubles' && selectedGender === 'mixed' && 
                            isMixedDoublesData(leaderboardData);
       
-      console.log('[4K EXPORT DEBUG] Format:', selectedFormat, 'Gender:', selectedGender, 'IsMixed:', isMixedDoubles);
-      console.log('[4K EXPORT DEBUG] Leaderboard data structure:', leaderboardData);
-      
       if (isMixedDoubles) {
         // MIXED DOUBLES: Side-by-side tables layout
         const tableStartY = 320;
@@ -372,8 +371,6 @@ export default function FacilityDisplaysAdminDashboard() {
         // RENDER SIDE-BY-SIDE TABLES
         const menData = isMixedDoublesData(leaderboardData) ? leaderboardData.men || [] : [];
         const womenData = isMixedDoublesData(leaderboardData) ? leaderboardData.women || [] : [];
-        
-        console.log('[4K EXPORT DEBUG] Men data:', menData.length, 'Women data:', womenData.length);
         
         renderMixedDoublesTable(ctx, menData, leftTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "MEN'S");
         renderMixedDoublesTable(ctx, womenData, rightTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "WOMEN'S");
