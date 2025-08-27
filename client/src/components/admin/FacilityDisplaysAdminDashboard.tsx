@@ -449,7 +449,16 @@ export default function FacilityDisplaysAdminDashboard() {
       // Timestamp and player count
       ctx.fillStyle = '#6b7280';
       ctx.font = '38px "Inter", sans-serif';
-      ctx.fillText(`Generated ${new Date().toLocaleDateString()} • ${leaderboardData.length} Players`, width / 2, footerY + 120);
+      
+      // Calculate player count based on data structure
+      let playerCount = 0;
+      if (isMixedDoubles) {
+        playerCount = (leaderboardData.men?.length || 0) + (leaderboardData.women?.length || 0);
+      } else {
+        playerCount = Array.isArray(leaderboardData) ? leaderboardData.length : 0;
+      }
+      
+      ctx.fillText(`Generated ${new Date().toLocaleDateString()} • ${playerCount} Players`, width / 2, footerY + 120);
       
       // Bilingual note
       ctx.fillStyle = '#9ca3af';
@@ -464,11 +473,32 @@ export default function FacilityDisplaysAdminDashboard() {
             return;
           }
           
-          // Create download
+          // Create download with descriptive filename: DD/MM/YYYY PicklePlus [Category] [Age Group] Rankings
+          const now = new Date();
+          const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+          
+          // Build category name
+          let categoryName = '';
+          if (selectedFormat === 'doubles' && selectedGender === 'mixed') {
+            categoryName = 'Mixed Doubles';
+          } else if (selectedGender === 'male') {
+            categoryName = `Men's ${formatLabel}`;
+          } else if (selectedGender === 'female') {
+            categoryName = `Women's ${formatLabel}`;
+          } else {
+            categoryName = formatLabel;
+          }
+          
+          // Build age group name
+          const ageGroupName = divisionLabel;
+          
+          // Create descriptive filename
+          const filename = `${dateStr} PicklePlus ${categoryName} ${ageGroupName} Rankings.png`;
+          
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `pickle-plus-${selectedFormat}-${selectedDivision}-${selectedGender}-4k-display.png`;
+          a.download = filename;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
