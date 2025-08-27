@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, User, Heart } from 'lucide-react';
 
-export type RankingFormat = 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women';
+export type RankingFormat = 'mens-singles' | 'womens-singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women';
 export type RankingDivision = 'open' | '35plus' | '50plus' | '60plus' | '70plus' | 'U19' | 'U16' | 'U14' | 'U12';
 
 interface UnifiedFormatSelectorProps {
@@ -20,7 +20,8 @@ interface UnifiedFormatSelectorProps {
 }
 
 export const formatLabels: Record<RankingFormat, { label: string; icon: React.ReactNode; description: string }> = {
-  'singles': { label: 'Singles', icon: <User className="w-4 h-4" />, description: 'Individual play rankings' },
+  'mens-singles': { label: "Men's Singles", icon: <User className="w-4 h-4" />, description: 'Male singles play rankings' },
+  'womens-singles': { label: "Women's Singles", icon: <User className="w-4 h-4" />, description: 'Female singles play rankings' },
   'mens-doubles': { label: "Men's Doubles", icon: <Users className="w-4 h-4" />, description: 'Male doubles teams' },
   'womens-doubles': { label: "Women's Doubles", icon: <Users className="w-4 h-4" />, description: 'Female doubles teams' },
   'mixed-doubles-men': { label: 'Mixed Doubles (Men)', icon: <Heart className="w-4 h-4" />, description: 'Male players in mixed teams' },

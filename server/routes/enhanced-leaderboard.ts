@@ -59,18 +59,20 @@ router.get('/facility-debug', async (req, res) => {
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25;
         
-        // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field
+        // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field with fallback
         let formatPoints = 0;
         if (format === 'singles') {
-          formatPoints = user.singlesRankingPoints || 0;
+          formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
+        } else if (format === 'doubles') {
+          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mens-doubles') {
-          formatPoints = user.mensDoublesRankingPoints || 0;
+          formatPoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'womens-doubles') {
-          formatPoints = user.womensDoublesRankingPoints || 0;
+          formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          formatPoints = user.mixedDoublesMenRankingPoints || 0;
+          formatPoints = user.mixedDoublesMenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+          formatPoints = user.mixedDoublesWomenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         }
         
         const totalMatches = user.totalMatches || 0;
@@ -399,19 +401,23 @@ async function getRealLeaderboardData(
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25; // Default age if not provided
         
-        // Use format-specific ranking points
+        // Use format-specific ranking points with fallback to legacy fields
         // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field
         let formatPoints = 0;
         if (format === 'singles') {
-          formatPoints = user.singlesRankingPoints || 0;
+          formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
+        } else if (format === 'doubles') {
+          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mens-doubles') {
-          formatPoints = user.mensDoublesRankingPoints || 0;
+          formatPoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'womens-doubles') {
-          formatPoints = user.womensDoublesRankingPoints || 0;
+          formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          formatPoints = user.mixedDoublesMenRankingPoints || 0;
+          formatPoints = user.mixedDoublesMenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+          formatPoints = user.mixedDoublesWomenRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+        } else if (format === 'mixed') {
+          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
         }
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches

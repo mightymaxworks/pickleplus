@@ -11,7 +11,8 @@ import EnhancedLeaderboard from '@/components/match/EnhancedLeaderboard';
 // Format mapping utility to convert new format types to what EnhancedLeaderboard expects
 function mapToEnhancedLeaderboardFormat(format: RankingFormat): "singles" | "doubles" | "mixed" {
   switch (format) {
-    case 'singles':
+    case 'mens-singles':
+    case 'womens-singles':
       return 'singles';
     case 'mens-doubles':
     case 'womens-doubles':
@@ -32,20 +33,21 @@ function mapDivisionToEnhancedLeaderboard(division: RankingDivision): string {
 // Gender mapping utility based on format
 function mapGenderFromFormat(format: RankingFormat): 'male' | 'female' {
   switch (format) {
+    case 'mens-singles':
     case 'mens-doubles':
     case 'mixed-doubles-men':
       return 'male';
+    case 'womens-singles':
     case 'womens-doubles':
     case 'mixed-doubles-women':
       return 'female';
-    case 'singles':
     default:
-      return 'male'; // Default for singles, will be controlled by user selection
+      return 'male';
   }
 }
 
 export default function UnifiedRankingsView() {
-  const [format, setFormat] = useState<RankingFormat>('singles');
+  const [format, setFormat] = useState<RankingFormat>('mens-singles');
   const [division, setDivision] = useState<RankingDivision>('open');
 
   return (
