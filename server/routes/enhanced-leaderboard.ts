@@ -64,7 +64,18 @@ router.get('/facility-debug', async (req, res) => {
         if (format === 'singles') {
           formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'doubles') {
-          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          // MIXED DOUBLES FIX: Handle mixed doubles case properly
+          if (gender === 'mixed') {
+            // For mixed doubles, use gender-specific mixed doubles columns
+            if (user.gender === 'male') {
+              formatPoints = user.mixedDoublesMenRankingPoints || 0;
+            } else if (user.gender === 'female') {
+              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+            }
+          } else {
+            // Regular doubles
+            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          }
         } else if (format === 'mens-doubles') {
           formatPoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'womens-doubles') {
@@ -103,8 +114,11 @@ router.get('/facility-debug', async (req, res) => {
         // Support mixed doubles in facility debug
         if (gender !== 'all' && gender !== 'male' && gender !== 'female' && gender !== 'mixed') return false;
         
-        // For mixed doubles, show all players (they can participate in mixed teams)
-        if (gender === 'mixed') return true;
+        // MIXED DOUBLES FIX: For mixed doubles, only show players with mixed doubles points
+        if (gender === 'mixed') {
+          // Player must have mixed doubles points in their gender-specific column
+          return player.points > 0; // Already filtered above, but ensure mixed doubles points exist
+        }
         
         // For male/female specific, filter by player gender
         if (gender !== 'all' && player.gender !== gender) return false;
@@ -410,7 +424,18 @@ async function getRealLeaderboardData(
         if (format === 'singles') {
           formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'doubles') {
-          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          // MIXED DOUBLES FIX: Handle mixed doubles case properly
+          if (gender === 'mixed') {
+            // For mixed doubles, use gender-specific mixed doubles columns
+            if (user.gender === 'male') {
+              formatPoints = user.mixedDoublesMenRankingPoints || 0;
+            } else if (user.gender === 'female') {
+              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+            }
+          } else {
+            // Regular doubles
+            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          }
         } else if (format === 'mens-doubles') {
           formatPoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'womens-doubles') {
@@ -420,7 +445,12 @@ async function getRealLeaderboardData(
         } else if (format === 'mixed-doubles-women') {
           formatPoints = user.mixedDoublesWomenRankingPoints || 0;
         } else if (format === 'mixed') {
-          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          // Legacy mixed format - use gender-specific columns
+          if (user.gender === 'male') {
+            formatPoints = user.mixedDoublesMenRankingPoints || 0;
+          } else if (user.gender === 'female') {
+            formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+          }
         }
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches
@@ -454,8 +484,11 @@ async function getRealLeaderboardData(
         // Filter by gender - support mixed doubles
         if (gender !== 'all' && gender !== 'male' && gender !== 'female' && gender !== 'mixed') return false;
         
-        // For mixed doubles, show all players (they can participate in mixed teams)
-        if (gender === 'mixed') return true;
+        // MIXED DOUBLES FIX: For mixed doubles, only show players with mixed doubles points
+        if (gender === 'mixed') {
+          // Player must have mixed doubles points in their gender-specific column
+          return player.points > 0; // Already filtered above, but ensure mixed doubles points exist
+        }
         
         // For male/female specific, filter by player gender
         if (gender !== 'all' && player.gender !== gender) return false;
