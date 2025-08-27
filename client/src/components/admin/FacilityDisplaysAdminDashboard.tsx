@@ -112,7 +112,8 @@ export default function FacilityDisplaysAdminDashboard() {
   // Available options for facility displays
   const formats = [
     { value: 'singles', label: 'Singles' },
-    { value: 'doubles', label: 'Doubles' }
+    { value: 'doubles', label: 'Doubles' },
+    { value: 'mixed-doubles', label: 'Mixed Doubles' }
   ];
 
   const divisions = [
@@ -130,24 +131,24 @@ export default function FacilityDisplaysAdminDashboard() {
   const genders = [
     { value: 'male', label: 'Men' },
     { value: 'female', label: 'Women' },
-    { value: 'mixed', label: 'Mixed Doubles' }
+    { value: 'all', label: 'All' }
   ];
 
   // Fetch leaderboard data
   const fetchLeaderboardData = async () => {
     setIsLoading(true);
     try {
-      // MIXED DOUBLES: For mixed doubles, fetch men's and women's data separately
-      if (selectedFormat === 'doubles' && selectedGender === 'mixed') {
+      // MIXED DOUBLES: For mixed doubles format, fetch men's and women's data separately
+      if (selectedFormat === 'mixed-doubles') {
         // Fetch men's mixed doubles data
         const menResponse = await apiRequest('GET', 
-          `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=male`
+          `/api/enhanced-leaderboard/facility-debug?format=doubles&division=${selectedDivision}&gender=male`
         );
         const menData = await menResponse.json();
         
         // Fetch women's mixed doubles data  
         const womenResponse = await apiRequest('GET', 
-          `/api/enhanced-leaderboard/facility-debug?format=${selectedFormat}&division=${selectedDivision}&gender=female`
+          `/api/enhanced-leaderboard/facility-debug?format=doubles&division=${selectedDivision}&gender=female`
         );
         const womenData = await womenResponse.json();
         
@@ -324,16 +325,16 @@ export default function FacilityDisplaysAdminDashboard() {
       
       // Create comprehensive category title
       let categoryTitle = '';
-      if (selectedGender === 'mixed') {
-        categoryTitle = `Mixed ${formatLabel} ${divisionLabel}`;
+      if (selectedFormat === 'mixed-doubles') {
+        categoryTitle = `Mixed Doubles ${divisionLabel}`;
       } else {
         categoryTitle = `${genderLabel} ${formatLabel} ${divisionLabel}`;
       }
       
       // Chinese equivalent
       let chineseCategoryTitle = '';
-      if (selectedGender === 'mixed') {
-        chineseCategoryTitle = `混合${getChineseLabel(formatLabel)} ${getChineseDivision(divisionLabel)}`;
+      if (selectedFormat === 'mixed-doubles') {
+        chineseCategoryTitle = `混合双打 ${getChineseDivision(divisionLabel)}`;
       } else {
         chineseCategoryTitle = `${getChineseGender(genderLabel)}${getChineseLabel(formatLabel)} ${getChineseDivision(divisionLabel)}`;
       }
@@ -356,7 +357,7 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillText('RANKINGS', width / 2, 230);
 
       // Check if this is mixed doubles with separate men/women data
-      const isMixedDoubles = selectedFormat === 'doubles' && selectedGender === 'mixed' && 
+      const isMixedDoubles = selectedFormat === 'mixed-doubles' && 
                            isMixedDoublesData(leaderboardData);
       
       if (isMixedDoubles) {
@@ -512,7 +513,7 @@ export default function FacilityDisplaysAdminDashboard() {
           
           // Build category name
           let categoryName = '';
-          if (selectedFormat === 'doubles' && selectedGender === 'mixed') {
+          if (selectedFormat === 'mixed-doubles') {
             categoryName = 'Mixed Doubles';
           } else if (selectedGender === 'male') {
             categoryName = `Men's ${formatLabel}`;
