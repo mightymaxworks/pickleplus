@@ -48,6 +48,34 @@ export default function FacilityDisplaysAdminDashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Helper functions to handle both data structures
+  const isMixedDoublesData = (data: typeof leaderboardData): data is {men: LeaderboardEntry[], women: LeaderboardEntry[]} => {
+    return typeof data === 'object' && data !== null && 'men' in data && 'women' in data;
+  };
+
+  const getDisplayPlayers = (): LeaderboardEntry[] => {
+    if (isMixedDoublesData(leaderboardData)) {
+      // For mixed doubles preview, show men's data (you could also combine or show both)
+      return leaderboardData.men || [];
+    }
+    return Array.isArray(leaderboardData) ? leaderboardData : [];
+  };
+
+  const getTotalPlayerCount = (): number => {
+    if (isMixedDoublesData(leaderboardData)) {
+      return (leaderboardData.men?.length || 0) + (leaderboardData.women?.length || 0);
+    }
+    return Array.isArray(leaderboardData) ? leaderboardData.length : 0;
+  };
+
+  const getRankedPlayerCount = (): number => {
+    if (isMixedDoublesData(leaderboardData)) {
+      return (leaderboardData.men?.filter(p => p.points > 0).length || 0) + 
+             (leaderboardData.women?.filter(p => p.points > 0).length || 0);
+    }
+    return Array.isArray(leaderboardData) ? leaderboardData.filter(p => p.points > 0).length : 0;
+  };
+
   // Chinese translation helpers for bilingual facility displays
   const getChineseLabel = (format: string): string => {
     const translations: Record<string, string> = {
@@ -327,8 +355,7 @@ export default function FacilityDisplaysAdminDashboard() {
 
       // Check if this is mixed doubles with separate men/women data
       const isMixedDoubles = selectedFormat === 'doubles' && selectedGender === 'mixed' && 
-                           leaderboardData && typeof leaderboardData === 'object' && 
-                           leaderboardData.men && leaderboardData.women;
+                           isMixedDoublesData(leaderboardData);
       
       if (isMixedDoubles) {
         // MIXED DOUBLES: Side-by-side tables layout
@@ -340,8 +367,10 @@ export default function FacilityDisplaysAdminDashboard() {
         const maxVisiblePlayers = 15; // Smaller to fit two tables
 
         // RENDER SIDE-BY-SIDE TABLES
-        renderMixedDoublesTable(ctx, leaderboardData.men, leftTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "MEN'S");
-        renderMixedDoublesTable(ctx, leaderboardData.women, rightTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "WOMEN'S");
+        const menData = isMixedDoublesData(leaderboardData) ? leaderboardData.men || [] : [];
+        const womenData = isMixedDoublesData(leaderboardData) ? leaderboardData.women || [] : [];
+        renderMixedDoublesTable(ctx, menData, leftTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "MEN'S");
+        renderMixedDoublesTable(ctx, womenData, rightTableX, tableStartY, tableWidth, rowHeight, maxVisiblePlayers, "WOMEN'S");
         
       } else {
         // REGULAR SINGLE TABLE - Sleek design
@@ -374,7 +403,7 @@ export default function FacilityDisplaysAdminDashboard() {
 
       // Elegant player rows - refined typography
       for (let i = 0; i < maxVisiblePlayers; i++) {
-        const player = leaderboardData[i];
+        const player = playersArray[i];
         if (!player) continue;
         
         const y = tableStartY + 70 + (i * rowHeight);
@@ -880,19 +909,13 @@ export default function FacilityDisplaysAdminDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 bg-blue-50 rounded-lg">
                         <div className="text-2xl font-bold text-blue-600">
-                          {Array.isArray(leaderboardData) 
-                            ? leaderboardData.length 
-                            : (leaderboardData?.men?.length || 0) + (leaderboardData?.women?.length || 0)
-                          }
+                          {getTotalPlayerCount()}
                         </div>
                         <div className="text-sm text-blue-800">Players</div>
                       </div>
                       <div className="p-3 bg-green-50 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
-                          {Array.isArray(leaderboardData) 
-                            ? leaderboardData.filter(p => p.points > 0).length
-                            : (leaderboardData?.men?.filter(p => p.points > 0).length || 0) + (leaderboardData?.women?.filter(p => p.points > 0).length || 0)
-                          }
+                          {getRankedPlayerCount()}
                         </div>
                         <div className="text-sm text-green-800">Ranked</div>
                       </div>
@@ -968,7 +991,7 @@ export default function FacilityDisplaysAdminDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {leaderboardData.slice(0, 15).map((player, index) => (
+                          {getDisplayPlayers().slice(0, 15).map((player, index) => (
                             <tr 
                               key={player.id} 
                               className={`border-b transition-colors ${
