@@ -420,10 +420,14 @@ async function getRealLeaderboardData(
         if (format === 'singles') {
           formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'doubles') {
-          // UNIFIED DOUBLES SYSTEM: All doubles (including mixed) use same ranking pool
+          // MIXED DOUBLES PERFORMANCE: For mixed doubles display, show actual mixed doubles performance
           if (gender === 'mixed') {
-            // Mixed doubles uses unified doubles ranking system per Pickle+ Algorithm
-            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+            // Show performance from actual mixed doubles matches
+            if (user.gender === 'male') {
+              formatPoints = user.mixedDoublesMenRankingPoints || 0;
+            } else if (user.gender === 'female') {
+              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+            }
           } else {
             // Regular doubles
             formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
@@ -433,14 +437,18 @@ async function getRealLeaderboardData(
         } else if (format === 'womens-doubles') {
           formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          // Unified doubles system for mixed doubles men
-          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          // Mixed doubles performance tracking - show actual mixed doubles performance
+          formatPoints = user.mixedDoublesMenRankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          // Unified doubles system for mixed doubles women
-          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          // Mixed doubles performance tracking - show actual mixed doubles performance  
+          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
         } else if (format === 'mixed') {
-          // Unified doubles system for legacy mixed format
-          formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+          // Legacy mixed format - use gender-specific mixed doubles performance
+          if (user.gender === 'male') {
+            formatPoints = user.mixedDoublesMenRankingPoints || 0;
+          } else if (user.gender === 'female') {
+            formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+          }
         }
         
         // Use direct user stats (includes tournament data) instead of calculating from individual matches
