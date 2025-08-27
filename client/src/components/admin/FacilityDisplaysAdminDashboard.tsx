@@ -140,15 +140,15 @@ export default function FacilityDisplaysAdminDashboard() {
     try {
       // MIXED DOUBLES: For mixed doubles format, fetch men's and women's data separately
       if (selectedFormat === 'mixed-doubles') {
-        // Fetch men's mixed doubles data
+        // Fetch men's mixed doubles data - use specific mixed doubles format
         const menResponse = await apiRequest('GET', 
-          `/api/enhanced-leaderboard/facility-debug?format=doubles&division=${selectedDivision}&gender=male`
+          `/api/enhanced-leaderboard/facility-debug?format=mixed-doubles-men&division=${selectedDivision}&gender=male`
         );
         const menData = await menResponse.json();
         
-        // Fetch women's mixed doubles data  
+        // Fetch women's mixed doubles data - use specific mixed doubles format
         const womenResponse = await apiRequest('GET', 
-          `/api/enhanced-leaderboard/facility-debug?format=doubles&division=${selectedDivision}&gender=female`
+          `/api/enhanced-leaderboard/facility-debug?format=mixed-doubles-women&division=${selectedDivision}&gender=female`
         );
         const womenData = await womenResponse.json();
         
