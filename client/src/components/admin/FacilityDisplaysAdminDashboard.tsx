@@ -175,27 +175,43 @@ export default function FacilityDisplaysAdminDashboard() {
       ctx.fillStyle = headerGradient;
       ctx.fillRect(0, 0, width, headerHeight);
 
-      // Clean title layout - no overlapping
+      // Generate descriptive header combining gender, format, and division
       const formatLabel = formats.find(f => f.value === selectedFormat)?.label || 'Rankings';
       const divisionLabel = divisions.find(d => d.value === selectedDivision)?.label || 'Open';
       const genderLabel = genders.find(g => g.value === selectedGender)?.label || 'All';
       
+      // Create comprehensive category title
+      let categoryTitle = '';
+      if (selectedGender === 'mixed') {
+        categoryTitle = `Mixed ${formatLabel} ${divisionLabel}`;
+      } else {
+        categoryTitle = `${genderLabel} ${formatLabel} ${divisionLabel}`;
+      }
+      
+      // Chinese equivalent
+      let chineseCategoryTitle = '';
+      if (selectedGender === 'mixed') {
+        chineseCategoryTitle = `混合${getChineseLabel(formatLabel)} ${getChineseDivision(divisionLabel)}`;
+      } else {
+        chineseCategoryTitle = `${getChineseGender(genderLabel)}${getChineseLabel(formatLabel)} ${getChineseDivision(divisionLabel)}`;
+      }
+      
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       
-      // Main title - clean and spaced
-      ctx.font = 'bold 80px "Inter", sans-serif';
-      ctx.fillText(`${formatLabel} Rankings`, width / 2, 100);
+      // Main title - descriptive category
+      ctx.font = 'bold 72px "Inter", sans-serif';
+      ctx.fillText(categoryTitle, width / 2, 100);
       
       // Chinese subtitle - proper spacing
-      ctx.font = 'bold 50px "Microsoft YaHei", "SimHei", sans-serif';
+      ctx.font = 'bold 45px "Microsoft YaHei", "SimHei", sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(`${getChineseLabel(formatLabel)} 排行榜`, width / 2, 170);
+      ctx.fillText(`${chineseCategoryTitle} 排行榜`, width / 2, 170);
       
-      // Division info - single line
-      ctx.font = '45px "Inter", sans-serif';
+      // Subtitle - "Rankings"
+      ctx.font = '40px "Inter", sans-serif';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.fillText(`${divisionLabel} Division`, width / 2, 230);
+      ctx.fillText('RANKINGS', width / 2, 230);
 
       // ELEGANT RANKINGS TABLE - Sleek design
       const tableStartY = 280;
