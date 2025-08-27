@@ -26,6 +26,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext' // Language intern
 import { SmartFeatureGuide } from '@/components/onboarding/SmartFeatureGuide' // Smart feature discovery
 import { ProfileCompletionWrapper } from '@/components/profile/ProfileCompletionWrapper' // Profile completion system
 import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coach weighted assessment testing
+import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed doubles ranking test
 
 
 // Import module initializations
@@ -259,6 +260,8 @@ export default function App() {
                   <Route path="/coaching-connection-demo" component={lazyLoad(() => import('./pages/coaching-connection-demo'))} />
                   {/* Coach Weighted Assessment Test */}
                   <Route path="/weighted-assessment-test" component={WeightedAssessmentTestPage} />
+                  {/* Mixed Doubles Ranking Test */}
+                  <Route path="/mixed-doubles-test" component={MixedDoublesRankingTest} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
                   {/* <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} /> */}
                   {/* <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} /> */}
