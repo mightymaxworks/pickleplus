@@ -112,7 +112,7 @@ if (format === 'singles') {
 - **Same age group** → All players get 1.0x (equal treatment)
 - **Different age groups** → Individual multipliers apply
 
-### **RULE 4: ADDITIVE POINTS ENFORCEMENT**
+### **RULE 5: ADDITIVE POINTS ENFORCEMENT**
 ```typescript
 // MANDATORY: Always use additive syntax with validation
 const updatedPoints = await validateAdditivePointUpdate(
@@ -620,4 +620,203 @@ function validateUserData(user: any): UserWithStats {
 - Field mapping tests MUST verify camelCase/snake_case consistency
 - Zero tolerance for silent data field failures in production
 
-**[End of Document - UDF v2.1.0 - Updated with Match Statistics Bug Prevention]**
+---
+
+## 🔐 ADMIN-FIRST DEVELOPMENT FRAMEWORK
+*Added August 29, 2025 - Mandatory Admin Controls Integration*
+
+### **RULE 18: ADMIN PARITY REQUIREMENT** 🚨
+```typescript
+// MANDATORY: Every feature MUST include corresponding admin controls
+interface FeatureDevelopmentRequirement {
+  userFunctionality: Component;      // The user-facing feature
+  adminControls: AdminComponent;     // Administrative oversight - REQUIRED
+  securityConfig: SecurityConfig;   // Role-based permissions - REQUIRED
+  auditLogging: AuditHooks;         // Activity tracking - REQUIRED
+  adminTesting: TestSuite;          // Admin-specific tests - REQUIRED
+}
+
+// FORBIDDEN: Feature deployment without admin controls
+export const MatchRecording = () => { /* user feature */ }; // ❌ INCOMPLETE
+// No corresponding admin oversight component
+
+// REQUIRED: Complete feature implementation
+export const MatchRecording = () => { /* user feature */ };
+export const AdminMatchOversight = () => { /* admin controls */ }; // ✅ COMPLETE
+```
+
+**ENFORCEMENT**:
+- Pre-deployment checks verify admin component existence
+- CI/CD pipeline blocks deployment without admin controls
+- Code review requires admin functionality approval
+
+### **RULE 19: HIERARCHICAL ADMIN SECURITY** 🛡️
+```typescript
+// MANDATORY: Role-based access control for all admin functions
+enum AdminRole {
+  SUPER_ADMIN = 'super_admin',    // Full system access
+  ADMIN = 'admin',               // Feature management  
+  MODERATOR = 'moderator',       // Content moderation
+  SUPPORT = 'support',           // Read-only + basic actions
+  AUDITOR = 'auditor'           // Read-only compliance access
+}
+
+// REQUIRED: Permission validation on every admin action
+const requireAdminRole = (minRole: AdminRole) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const userRole = await getUserAdminRole(req.user.id);
+    if (!hasPermission(userRole, minRole)) {
+      return res.status(403).json({ error: 'Insufficient admin privileges' });
+    }
+    next();
+  };
+};
+
+// FORBIDDEN: Basic isAdmin checks without role hierarchy
+app.post('/api/admin/critical-action', isAdmin, handler); // ❌ INSUFFICIENT
+app.post('/api/admin/critical-action', requireAdminRole(AdminRole.SUPER_ADMIN), handler); // ✅ SECURE
+```
+
+### **RULE 20: MANDATORY AUDIT TRAILS** 📋
+```typescript
+// MANDATORY: Log every admin action with full context
+const auditAdminAction = async (action: AdminAction) => {
+  await db.insert(adminAuditLog).values({
+    adminId: action.adminId,
+    action: action.type,
+    targetId: action.targetId,
+    targetType: action.targetType,
+    previousState: action.beforeState,
+    newState: action.afterState,
+    ipAddress: action.ipAddress,
+    userAgent: action.userAgent,
+    timestamp: new Date(),
+    sessionId: action.sessionId
+  });
+};
+
+// REQUIRED: Audit wrapper for all admin operations
+const withAudit = (actionType: string) => {
+  return (handler: AdminHandler) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      const beforeState = await captureCurrentState(req);
+      const result = await handler(req, res, next);
+      const afterState = await captureCurrentState(req);
+      
+      await auditAdminAction({
+        adminId: req.user.id,
+        type: actionType,
+        beforeState,
+        afterState,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        sessionId: req.sessionID
+      });
+      
+      return result;
+    };
+  };
+};
+
+// FORBIDDEN: Admin actions without audit logging
+app.delete('/api/admin/user/:id', isAdmin, deleteUserHandler); // ❌ NO AUDIT
+app.delete('/api/admin/user/:id', requireAdminRole(AdminRole.SUPER_ADMIN), withAudit('DELETE_USER'), deleteUserHandler); // ✅ AUDITED
+```
+
+### **RULE 21: ADMIN UI/UX STANDARDS** 🎨
+```typescript
+// MANDATORY: Modern, intuitive admin interface requirements
+interface AdminUIStandards {
+  navigation: {
+    sidebar: true;                    // Consistent left navigation
+    breadcrumbs: true;               // Clear navigation path
+    searchGlobal: true;              // Platform-wide search
+    quickActions: true;              // Frequent action shortcuts
+  };
+  
+  dataDisplay: {
+    tables: 'sortable,filterable';   // Interactive data tables
+    pagination: 'server-side';      // Performance optimization
+    realTimeUpdates: true;          // Live data refresh
+    exportOptions: true;            // Data export capabilities
+  };
+  
+  userExperience: {
+    responsiveDesign: true;          // Mobile-friendly admin
+    darkModeSupport: true;           // Theme options
+    keyboardShortcuts: true;         // Power user efficiency
+    confirmationDialogs: true;       // Destructive action protection
+  };
+  
+  performance: {
+    lazyLoading: true;              // Efficient component loading
+    caching: 'intelligent';         // Smart data caching
+    loadingStates: true;            // Clear progress indicators
+    errorBoundaries: true;          // Graceful error handling
+  };
+}
+
+// REQUIRED: Admin component structure
+const AdminFeatureTemplate = () => {
+  return (
+    <AdminLayout>
+      <AdminHeader title="Feature Management" actions={<QuickActions />} />
+      <AdminFilters onFilterChange={handleFilter} />
+      <AdminDataTable 
+        data={data}
+        loading={loading}
+        error={error}
+        actions={tableActions}
+        realTime={true}
+      />
+      <AdminPagination />
+    </AdminLayout>
+  );
+};
+
+// FORBIDDEN: Basic admin pages without modern UX
+const BasicAdminPage = () => <div>Admin stuff</div>; // ❌ POOR UX
+```
+
+**UI/UX ENFORCEMENT**:
+- All admin pages must use standardized AdminLayout component
+- Interactive elements require loading and error states
+- Destructive actions must have confirmation dialogs
+- Real-time updates for collaborative admin environments
+
+---
+
+## 📚 REFERENCE DOCUMENTATION
+
+### **Algorithm Reference**
+- **Source Document**: `PICKLE_PLUS_ALGORITHM_DOCUMENT.md`
+- **Implementation**: `shared/utils/algorithmValidation.ts`
+- **Calculator**: `shared/utils/matchPointsCalculator.ts`
+
+### **Admin Framework Reference**
+- **Security**: `server/admin/core/security.ts`
+- **Audit System**: `server/admin/core/audit.ts`
+- **UI Components**: `client/src/admin/core/components/`
+- **Development Templates**: `client/src/admin/templates/`
+
+### **Key Constants**
+```typescript
+// From algorithmValidation.ts
+export const SYSTEM_B_BASE_POINTS = { WIN: 3, LOSS: 1 };
+export const PICKLE_POINTS_MULTIPLIER = 1.5; // Per match earned
+export const AGE_GROUP_MULTIPLIERS = {
+  'SAME_GROUP': 1.0,
+  'CROSS_GROUP': 'calculated_differential'
+};
+
+// From adminSecurity.ts
+export const ADMIN_ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin', 
+  MODERATOR: 'moderator',
+  SUPPORT: 'support',
+  AUDITOR: 'auditor'
+};
+```
+
+**[End of Document - UDF v2.1.1 - Updated with Admin-First Development Framework]**

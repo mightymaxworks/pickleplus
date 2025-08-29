@@ -49,6 +49,37 @@ import { events, eventCheckIns, eventRegistrations, passportVerifications } from
 
 // Import event templates schema (PKL-278651-COMM-0035-EVENT - Enhanced Event Display and Management)
 
+// Import admin security schema - Role-based access control and audit logging
+import {
+  adminRoles,
+  adminPermissions,
+  rolePermissions,
+  adminAuditLog,
+  adminSessions,
+  adminRolesRelations,
+  adminAuditLogRelations,
+  adminSessionsRelations,
+  rolePermissionsRelations,
+  insertAdminRoleSchema,
+  insertAdminPermissionSchema,
+  insertAuditLogSchema,
+  insertAdminSessionSchema,
+  AdminRole,
+  AdminActionType,
+  DEFAULT_ROLE_PERMISSIONS,
+  type AdminRoleRecord,
+  type InsertAdminRole,
+  type AdminPermission,
+  type InsertAdminPermission,
+  type AdminAuditLogEntry,
+  type InsertAuditLogEntry,
+  type AdminSession,
+  type InsertAdminSession,
+  type RolePermission,
+  type AdminActionContext,
+  type AdminPermissionCheck
+} from './schema/admin-security';
+
 // Import admin match management schema - Admin system for competitions and matches
 import {
   competitions,
