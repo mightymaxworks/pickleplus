@@ -2485,3 +2485,34 @@ export const AGE_CATEGORIES = {
 export type AgeCategory = typeof AGE_CATEGORIES.ALL[number];
 export type YouthCategory = typeof AGE_CATEGORIES.YOUTH[number];
 export type AdultCategory = typeof AGE_CATEGORIES.ADULT[number];
+
+// Re-export Admin Security Schema - PKL-278651-ADMIN-SEC-001
+export {
+  adminRoles,
+  adminPermissions,
+  rolePermissions,
+  adminAuditLog,
+  adminSessions,
+  adminRolesRelations,
+  adminAuditLogRelations,
+  adminSessionsRelations,
+  rolePermissionsRelations,
+  insertAdminRoleSchema,
+  insertAdminPermissionSchema,
+  insertAuditLogSchema,
+  insertAdminSessionSchema,
+  AdminRole,
+  AdminActionType,
+  DEFAULT_ROLE_PERMISSIONS,
+  type AdminRoleRecord,
+  type InsertAdminRole,
+  type AdminPermission,
+  type InsertAdminPermission,
+  type AdminAuditLogEntry,
+  type InsertAuditLogEntry,
+  type AdminSession,
+  type InsertAdminSession,
+  type RolePermission,
+  type AdminActionContext,
+  type AdminPermissionCheck
+};
