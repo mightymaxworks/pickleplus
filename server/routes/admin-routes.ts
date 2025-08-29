@@ -2,11 +2,13 @@
  * Admin routes for the application
  * 
  * PKL-278651-ADMIN-0012-PERF - Framework 5.2 Update
- * Updated to fix dashboard data issue - removing placeholder route
- * that was overriding the actual dashboard data from dashboard.ts
+ * PKL-278651-ADMIN-API-001 - Unified Admin API Integration
+ * Updated to include new unified admin framework with security-first approach
+ * UDF Rule 18-21 Compliance - Admin-first development with comprehensive security
  */
 import express from 'express';
 import { isAuthenticated, isAdmin } from '../middleware/auth';
+import { createAdminAPIv1Router } from '../admin/api/v1/index';
 
 /**
  * Register admin routes with the Express application
@@ -15,8 +17,20 @@ import { isAuthenticated, isAdmin } from '../middleware/auth';
 export async function registerAdminRoutes(app: express.Express): Promise<void> {
   console.log("[API] Registering Admin API routes");
   
-  // NOTE: The previous sample dashboard route was removed to allow the
-  // actual dashboard implementation in routes/admin/dashboard.ts to function
+  // ===== NEW UNIFIED ADMIN API v1 SYSTEM =====
+  // UDF Rule 18-21 Compliance: Security-first admin framework
+  try {
+    const adminAPIv1Router = createAdminAPIv1Router();
+    app.use('/api/admin/v1', adminAPIv1Router);
+    console.log("[API] ✅ Unified Admin API v1 routes registered successfully");
+    console.log("[API] 🔒 Security: Role-based access control enabled");
+    console.log("[API] 📋 Audit: Comprehensive logging enabled");
+  } catch (error) {
+    console.error('[API] ❌ Error registering Admin API v1 routes:', error);
+  }
+  
+  // NOTE: Legacy admin routes maintained for backward compatibility
+  // TODO: Migrate these to new admin API v1 framework following UDF practices
   
   // Register Admin Match Management routes
   try {

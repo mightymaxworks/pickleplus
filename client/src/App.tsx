@@ -837,7 +837,7 @@ export default function App() {
                   <Route path="/admin">
                     {(params) => (
                       <AdminProtectedRoute>
-                        <LazyAdminDashboardPage />
+                        {React.createElement(lazyLoad(() => import('./admin/features/UnifiedAdminDashboard')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>
@@ -865,7 +865,7 @@ export default function App() {
                   <Route path="/admin/match-management">
                     {(params) => (
                       <AdminProtectedRoute>
-                        {React.createElement(lazyLoad(() => import('./pages/admin/EnhancedMatchManagement')))}
+                        {React.createElement(lazyLoad(() => import('./admin/features/MatchManagementAdmin')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>
@@ -918,6 +918,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* PKL-278651-ADMIN-ROLES-001 - Role Assignment System */}
+                  <Route path="/admin/roles">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./admin/features/RoleAssignmentAdmin')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   {/* PKL-278651-ADMIN-0015-USER - User Management Routes */}
                   <Route path="/admin/users/:id/edit">
                     {(params) => (
@@ -936,7 +944,7 @@ export default function App() {
                   <Route path="/admin/users">
                     {() => (
                       <AdminProtectedRoute>
-                        <LazyUsersPage />
+                        {React.createElement(lazyLoad(() => import('./admin/features/UserManagementAdmin')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>
@@ -982,6 +990,22 @@ export default function App() {
                     {() => (
                       <AdminProtectedRoute>
                         {React.createElement(lazyLoad(() => import('./pages/admin/charge-cards')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  {/* PKL-278651-ADMIN-TEST-001 - Admin Security Testing */}
+                  <Route path="/admin/security-testing">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./admin/features/AdminSecurityTesting')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  {/* PKL-278651-ADMIN-SYSTEM-001 - Unified System Tools */}
+                  <Route path="/admin/system-tools">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./admin/features/SystemToolsAdmin')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>

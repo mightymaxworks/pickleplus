@@ -12,7 +12,7 @@ import { AdminLayout } from '../core/AdminLayout';
 import { AdminDataTable } from '../core/AdminDataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,21 +39,21 @@ const createColumns = (
   {
     accessorKey: 'id',
     header: 'ID',
-    cell: ({ row }) => (
+    cell: ({ row }: { row: any }) => (
       <span className="font-mono text-sm">{row.getValue('id')}</span>
     ),
   },
   {
     accessorKey: 'name',
     header: 'Name',
-    cell: ({ row }) => (
+    cell: ({ row }: { row: any }) => (
       <span className="font-medium">{row.getValue('name')}</span>
     ),
   },
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => {
+    cell: ({ row }: { row: any }) => {
       const status = row.getValue('status') as string;
       return (
         <Badge 
@@ -70,7 +70,7 @@ const createColumns = (
   {
     accessorKey: 'createdAt',
     header: 'Created',
-    cell: ({ row }) => {
+    cell: ({ row }: { row: any }) => {
       const date = new Date(row.getValue('createdAt'));
       return <span className="text-sm text-gray-600">{date.toLocaleDateString()}</span>;
     },
@@ -78,7 +78,7 @@ const createColumns = (
   {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row }) => {
+    cell: ({ row }: { row: any }) => {
       const item = row.original;
       return (
         <div className="flex items-center space-x-2">
