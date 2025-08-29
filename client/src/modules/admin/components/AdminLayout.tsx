@@ -149,7 +149,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                     </Button>
                   </SheetTrigger>
                     <SheetContent side="left" className="w-[260px] sm:w-[300px] p-0">
-                      <div className="px-4 py-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                      <div className="px-4 py-4 flex items-center border-b border-gray-200 dark:border-gray-700">
                         <div 
                           className="flex items-center cursor-pointer" 
                           onClick={() => {
@@ -160,9 +160,6 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                           <Shield size={20} className="text-[#FF5722] mr-2" />
                           <h2 className="font-semibold">Admin Panel</h2>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
-                          <X size={18} />
-                        </Button>
                       </div>
                       <div className="px-2 py-4">
                         <nav className="space-y-4">
