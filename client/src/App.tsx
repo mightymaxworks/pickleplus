@@ -837,7 +837,7 @@ export default function App() {
                   <Route path="/admin">
                     {(params) => (
                       <AdminProtectedRoute>
-                        {React.createElement(lazyLoad(() => import('./admin/features/UnifiedAdminDashboard')))}
+                        {React.createElement(lazyLoad(() => import('./admin/features/ProfessionalAdminDashboard')))}
                       </AdminProtectedRoute>
                     )}
                   </Route>
