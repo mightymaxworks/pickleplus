@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
-import { users, coachStudentAssignments } from '@shared/schema';
+import { users, coachStudentAssignments } from '../../shared/schema';
 import { eq, and } from 'drizzle-orm';
-import { isAuthenticated } from '../middleware/auth';
+import { isAuthenticated } from '../auth';
 
 const router = Router();
 

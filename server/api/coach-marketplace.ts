@@ -4,6 +4,7 @@
 
 import { Router } from 'express';
 import { db } from '../db';
+import { isAuthenticated } from '../auth';
 import { 
   coachMarketplaceProfiles, 
   coachSearchHistory, 
@@ -14,7 +15,6 @@ import {
   type CoachSearchParams,
   type CoachWithMarketplaceData
 } from '../../shared/schema/coach-marketplace';
-import { coachProfiles } from '../../shared/schema/coach-management';
 import { users } from '../../shared/schema';
 import { eq, and, like, gte, lte, inArray, sql, desc, asc } from 'drizzle-orm';
 import { z } from 'zod';

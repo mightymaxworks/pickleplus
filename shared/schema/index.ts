@@ -13,3 +13,7 @@ export * from './audit';
 export * from './moderation';
 export * from './media';
 export * from './bounce';
+export * from './coach-marketplace';
+export * from './coach-management';
+export * from './coach-public-profiles';
+export * from './student-coach-connections';
