@@ -136,7 +136,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
   return (
     <AccessibilityProvider>
       <HelpProvider>
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
+        <div className="admin-interface bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
           {/* Admin Header */}
           <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
             <div className="container mx-auto px-4 py-3 flex items-center justify-between">

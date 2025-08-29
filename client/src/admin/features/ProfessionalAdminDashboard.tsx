@@ -99,12 +99,12 @@ export default function ProfessionalAdminDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
+    <div className="admin-interface space-y-6 p-6 bg-slate-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">System Dashboard</h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <h1 className="admin-heading text-2xl font-bold text-slate-900">System Dashboard</h1>
+          <p className="admin-body text-sm text-slate-600 mt-1">
             Real-time system metrics and administration
           </p>
         </div>
@@ -153,64 +153,64 @@ export default function ProfessionalAdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-white border border-slate-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Users</CardTitle>
+            <CardTitle className="admin-label text-sm font-medium text-slate-600">Total Users</CardTitle>
             <div className="h-8 w-8 rounded bg-blue-100 flex items-center justify-center">
               <Users className="h-4 w-4 text-blue-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="tabular-nums text-2xl font-bold text-slate-900">
               {data?.systemOverview.totalUsers?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              +{data?.userStatistics.newUsersThisPeriod || 0} this period
+<span className="tabular-nums">+{data?.userStatistics.newUsersThisPeriod || 0}</span> this period
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-slate-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Matches</CardTitle>
+            <CardTitle className="admin-label text-sm font-medium text-slate-600">Total Matches</CardTitle>
             <div className="h-8 w-8 rounded bg-green-100 flex items-center justify-center">
               <Trophy className="h-4 w-4 text-green-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="tabular-nums text-2xl font-bold text-slate-900">
               {data?.systemOverview.totalMatches?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              +{data?.matchStatistics.newMatchesThisPeriod || 0} this period
+<span className="tabular-nums">+{data?.matchStatistics.newMatchesThisPeriod || 0}</span> this period
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-slate-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Active Users</CardTitle>
+            <CardTitle className="admin-label text-sm font-medium text-slate-600">Active Users</CardTitle>
             <div className="h-8 w-8 rounded bg-purple-100 flex items-center justify-center">
               <Activity className="h-4 w-4 text-purple-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="tabular-nums text-2xl font-bold text-slate-900">
               {data?.userStatistics.activeUsersThisPeriod?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              {data?.userStatistics.userGrowthRate?.toFixed(1) || '0'}% growth rate
+<span className="tabular-nums">{data?.userStatistics.userGrowthRate?.toFixed(1) || '0'}%</span> growth rate
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-slate-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Tournaments</CardTitle>
+            <CardTitle className="admin-label text-sm font-medium text-slate-600">Tournaments</CardTitle>
             <div className="h-8 w-8 rounded bg-orange-100 flex items-center justify-center">
               <Database className="h-4 w-4 text-orange-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="tabular-nums text-2xl font-bold text-slate-900">
               {data?.systemOverview.totalTournaments?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-slate-500 mt-1">
@@ -225,7 +225,7 @@ export default function ProfessionalAdminDashboard() {
         {/* Quick Actions */}
         <Card className="bg-white border border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">Administrative Actions</CardTitle>
+            <CardTitle className="admin-heading text-lg font-semibold text-slate-900">Administrative Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 gap-2">
