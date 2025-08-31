@@ -199,7 +199,7 @@ export default function CoachAssessmentToolPage() {
   }, [studentIdFromUrl, selectedStudent]);
 
   return (
-    <div className="max-w-6xl mx-auto p-3 md:p-4 pb-20 md:pb-4 space-y-4 md:space-y-6">
+    <div className="max-w-6xl mx-auto p-3 md:p-4 pb-20 md:pb-4 space-y-4 md:space-y-6 mobile-overflow-safe coach-assessment-container">
       {/* Mobile-First Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <Button 
@@ -220,19 +220,19 @@ export default function CoachAssessmentToolPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-auto bg-muted/50">
-          <TabsTrigger value="select-student" className="flex-col py-3 px-2 text-xs md:text-sm data-[state=active]:bg-background">
-            <Users className="h-4 w-4 mb-1" />
-            <span className="hidden sm:inline">Select Student</span>
-            <span className="sm:hidden">Select</span>
+        <TabsList className="grid w-full grid-cols-3 h-auto bg-muted/50 overflow-hidden">
+          <TabsTrigger value="select-student" className="flex-col py-2 sm:py-3 px-1 sm:px-2 text-xs md:text-sm data-[state=active]:bg-background min-w-0">
+            <Users className="h-3 sm:h-4 w-3 sm:w-4 mb-1 shrink-0" />
+            <span className="hidden sm:inline truncate">Select Student</span>
+            <span className="sm:hidden text-xs truncate">Select</span>
           </TabsTrigger>
-          <TabsTrigger value="assessment" disabled={!selectedStudent} className="flex-col py-3 px-2 text-xs md:text-sm data-[state=active]:bg-background">
-            <Target className="h-4 w-4 mb-1" />
-            Assessment
+          <TabsTrigger value="assessment" disabled={!selectedStudent} className="flex-col py-2 sm:py-3 px-1 sm:px-2 text-xs md:text-sm data-[state=active]:bg-background min-w-0">
+            <Target className="h-3 sm:h-4 w-3 sm:w-4 mb-1 shrink-0" />
+            <span className="text-xs sm:text-sm truncate">Assessment</span>
           </TabsTrigger>
-          <TabsTrigger value="results" disabled={!assessmentComplete} className="flex-col py-3 px-2 text-xs md:text-sm data-[state=active]:bg-background">
-            <Activity className="h-4 w-4 mb-1" />
-            Results
+          <TabsTrigger value="results" disabled={!assessmentComplete} className="flex-col py-2 sm:py-3 px-1 sm:px-2 text-xs md:text-sm data-[state=active]:bg-background min-w-0">
+            <Activity className="h-3 sm:h-4 w-3 sm:w-4 mb-1 shrink-0" />
+            <span className="text-xs sm:text-sm truncate">Results</span>
           </TabsTrigger>
         </TabsList>
 

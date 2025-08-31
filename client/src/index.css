@@ -717,3 +717,56 @@
 .sage-markdown code {
   @apply bg-muted px-1 py-0.5 rounded text-xs;
 }
+
+/* Coach assessment mobile optimizations */
+.slider-mobile {
+  /* Enhanced touch targets for mobile sliders */
+  min-height: 32px;
+}
+
+.slider-mobile [data-radix-slider-thumb] {
+  /* Larger thumb for better mobile interaction */
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.slider-mobile [data-radix-slider-track] {
+  /* Thicker track for easier mobile interaction */
+  height: 6px !important;
+}
+
+/* Mobile-specific overflow handling for coach assessment */
+@media (max-width: 640px) {
+  .mobile-overflow-safe {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  .mobile-text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+    flex: 1;
+  }
+  
+  .mobile-flex-wrap {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .mobile-min-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .coach-assessment-container {
+    padding: 0.75rem;
+    overflow-x: hidden;
+  }
+  
+  .coach-assessment-slider {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
