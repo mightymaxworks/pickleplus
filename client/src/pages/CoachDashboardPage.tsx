@@ -80,8 +80,8 @@ export default function CoachDashboardPage() {
     );
   }
 
-  const profile: CoachProfile = dashboardData?.profile || { pcpLevel: 1, pcpBadge: '🥉', pcpName: 'Entry Coach', subscriptionTier: 'basic' };
-  const stats: DashboardStats = dashboardData?.stats || { 
+  const profile: CoachProfile = (dashboardData as any)?.profile || { pcpLevel: 1, pcpBadge: '🥉', pcpName: 'Entry Coach', subscriptionTier: 'basic' };
+  const stats: DashboardStats = (dashboardData as any)?.stats || { 
     totalSessions: 0, 
     totalEarnings: 0, 
     averageRating: 0, 
@@ -305,7 +305,7 @@ export default function CoachDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {dashboardData?.notifications?.map((notification: any, index: number) => (
+                    {(dashboardData as any)?.notifications?.map((notification: any, index: number) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
                         <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
                         <div>
