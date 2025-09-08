@@ -42,27 +42,129 @@ interface Player {
   ageGroup?: string;
 }
 
+// Enhanced interfaces for bulk upload
+interface ValidationError {
+  row: number;
+  type: 'missing_player' | 'invalid_score' | 'duplicate_match' | 'invalid_format';
+  message: string;
+  severity: 'critical' | 'warning' | 'info';
+  details?: any;
+}
+
+interface ValidationReport {
+  totalRows: number;
+  validMatches: number;
+  errors: ValidationError[];
+  warnings: ValidationError[];
+  missingPlayers: string[];
+  duplicateMatches: number;
+  canProceed: boolean;
+}
+
+interface UploadResults {
+  validationReport?: ValidationReport;
+  processedMatches?: number;
+  successCount?: number;
+  errorCount?: number;
+  totalProcessed?: number;
+  pointsAllocated?: number;
+  picklePointsAwarded?: number;
+  errors?: ValidationError[];
+}
+
 // Bulk Upload Tab Component
 const BulkUploadTab: React.FC = () => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadResults, setUploadResults] = useState<any>(null);
-  const [matchType, setMatchType] = useState<'casual' | 'tournament' | 'league'>('casual');
+  const [isValidating, setIsValidating] = useState(false);
+  const [uploadResults, setUploadResults] = useState<UploadResults | null>(null);
+  const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
+  const [matchType, setMatchType] = useState<'casual' | 'tournament' | 'league'>('tournament');
+  const [showValidationDetails, setShowValidationDetails] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
       setUploadResults(null);
+      setValidationReport(null);
+      
+      // Auto-validate when file is selected
+      handleValidation(file);
     }
   };
 
-  const handleUpload = async () => {
+  const handleValidation = async (file?: File) => {
+    const fileToValidate = file || selectedFile;
+    if (!fileToValidate) {
+      toast({
+        title: "No File Selected",
+        description: "Please select an Excel file to validate.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', fileToValidate);
+      formData.append('matchType', matchType);
+
+      const response = await fetch('/api/admin/bulk-upload/validate', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setValidationReport(result.validationReport);
+        setShowValidationDetails(true);
+        
+        if (result.validationReport.canProceed) {
+          toast({
+            title: "Validation Successful",
+            description: `${result.validationReport.validMatches} matches ready for processing.`,
+          });
+        } else {
+          toast({
+            title: "Validation Issues Found",
+            description: `Found ${result.validationReport.errors.length} issues that need attention.`,
+            variant: "destructive",
+          });
+        }
+      } else {
+        throw new Error(result.error || 'Validation failed');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Validation Failed",
+        description: error.message || "Failed to validate Excel file.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleUpload = async (skipValidation = false) => {
     if (!selectedFile) {
       toast({
         title: "No File Selected",
         description: "Please select an Excel file to upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if validation is required
+    if (!skipValidation && (!validationReport || !validationReport.canProceed)) {
+      toast({
+        title: "Validation Required",
+        description: "Please run validation first or fix the issues found.",
         variant: "destructive",
       });
       return;
@@ -73,8 +175,9 @@ const BulkUploadTab: React.FC = () => {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('matchType', matchType);
+      formData.append('skipValidation', skipValidation.toString());
 
-      const response = await fetch('/api/admin/bulk-upload/matches', {
+      const response = await fetch('/api/admin/bulk-upload/process', {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -85,16 +188,16 @@ const BulkUploadTab: React.FC = () => {
       if (response.ok) {
         setUploadResults(result);
         toast({
-          title: "Upload Successful",
-          description: `Successfully processed ${result.successCount} matches.`,
+          title: "Processing Complete",
+          description: `Successfully processed ${result.successCount} matches. ${result.pointsAllocated} ranking points and ${result.picklePointsAwarded} Pickle Points awarded.`,
         });
       } else {
-        throw new Error(result.error || 'Upload failed');
+        throw new Error(result.error || 'Processing failed');
       }
     } catch (error: any) {
       toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload matches.",
+        title: "Processing Failed",
+        description: error.message || "Failed to process matches.",
         variant: "destructive",
       });
     } finally {
@@ -191,59 +294,199 @@ const BulkUploadTab: React.FC = () => {
             )}
           </div>
 
-          <Button
-            onClick={handleUpload}
-            disabled={!selectedFile || isUploading}
-            className="w-full"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing Matches...
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Matches
-              </>
-            )}
-          </Button>
+          <div className="space-y-2">
+            <Button
+              onClick={() => handleValidation()}
+              disabled={!selectedFile || isValidating}
+              variant="outline"
+              className="w-full"
+            >
+              {isValidating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Validate Excel File
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={() => handleUpload(false)}
+              disabled={!selectedFile || isUploading || !validationReport?.canProceed}
+              className="w-full"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing Matches...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Process Matches
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Validation Report */}
+      {validationReport && (
+        <Card>
+          <CardHeader>
+            <CardTitle className={`flex items-center gap-2 ${validationReport.canProceed ? 'text-green-600' : 'text-orange-600'}`}>
+              {validationReport.canProceed ? (
+                <Trophy className="h-5 w-5" />
+              ) : (
+                <AlertCircle className="h-5 w-5" />
+              )}
+              Validation Report
+            </CardTitle>
+            <CardDescription>
+              {validationReport.canProceed 
+                ? "All checks passed - ready to process matches"
+                : "Issues found that need attention before processing"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{validationReport.totalRows}</div>
+                <div className="text-sm text-muted-foreground">Total Rows</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{validationReport.validMatches}</div>
+                <div className="text-sm text-muted-foreground">Valid Matches</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{validationReport.errors.length}</div>
+                <div className="text-sm text-muted-foreground">Critical Issues</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{validationReport.warnings.length}</div>
+                <div className="text-sm text-muted-foreground">Warnings</div>
+              </div>
+            </div>
+
+            {validationReport.errors.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-medium text-red-600 mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Critical Issues (Must Fix)
+                </h4>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {validationReport.errors.map((error, index) => (
+                    <div key={index} className="text-sm bg-red-50 p-3 rounded border-l-4 border-red-500">
+                      <div className="font-medium">Row {error.row}: {error.message}</div>
+                      {error.details && (
+                        <div className="text-xs text-red-600 mt-1">{error.details}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {validationReport.warnings.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-medium text-orange-600 mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Warnings (Review Recommended)
+                </h4>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {validationReport.warnings.map((warning, index) => (
+                    <div key={index} className="text-sm bg-orange-50 p-3 rounded border-l-4 border-orange-500">
+                      <div className="font-medium">Row {warning.row}: {warning.message}</div>
+                      {warning.details && (
+                        <div className="text-xs text-orange-600 mt-1">{warning.details}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {validationReport.missingPlayers.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-medium text-red-600 mb-2">Missing Players:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {validationReport.missingPlayers.map((player, index) => (
+                    <Badge key={index} variant="destructive" className="text-xs">
+                      {player}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {validationReport.canProceed ? (
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded">
+                <Trophy className="h-5 w-5" />
+                <span className="font-medium">Ready to process {validationReport.validMatches} matches!</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-orange-600 bg-orange-50 p-3 rounded">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="font-medium">Please resolve the issues above before processing.</span>
+                </div>
+                <Button 
+                  onClick={() => handleUpload(true)}
+                  variant="outline"
+                  size="sm"
+                  className="text-orange-600 border-orange-300"
+                >
+                  Process Anyway (Skip Issues)
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Processing Results */}
       {uploadResults && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-green-600">Upload Results</CardTitle>
+            <CardTitle className="text-green-600 flex items-center gap-2">
+              <Trophy className="h-5 w-5" />
+              Processing Complete
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Total Matches Processed:</span>
-                <span className="font-medium">{uploadResults.totalProcessed}</span>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{uploadResults.successCount || 0}</div>
+                <div className="text-sm text-muted-foreground">Matches Processed</div>
               </div>
-              <div className="flex justify-between">
-                <span>Successful:</span>
-                <span className="font-medium text-green-600">{uploadResults.successCount}</span>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{uploadResults.pointsAllocated || 0}</div>
+                <div className="text-sm text-muted-foreground">Ranking Points</div>
               </div>
-              <div className="flex justify-between">
-                <span>Failed:</span>
-                <span className="font-medium text-red-600">{uploadResults.errorCount}</span>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{uploadResults.picklePointsAwarded || 0}</div>
+                <div className="text-sm text-muted-foreground">Pickle Points</div>
               </div>
-              
-              {uploadResults.errors && uploadResults.errors.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="font-medium text-red-600 mb-2">Errors:</h4>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {uploadResults.errors.map((error: any, index: number) => (
-                      <div key={index} className="text-sm bg-red-50 p-2 rounded border-l-2 border-red-500">
-                        Row {error.row}: {error.message}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+            
+            {uploadResults.errors && uploadResults.errors.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-medium text-red-600 mb-2">Processing Errors:</h4>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {uploadResults.errors.map((error, index) => (
+                    <div key={index} className="text-sm bg-red-50 p-2 rounded border-l-2 border-red-500">
+                      Row {error.row}: {error.message}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
