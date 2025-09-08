@@ -250,11 +250,11 @@ const BulkUploadTab: React.FC = () => {
         <div className="flex gap-2">
           <Button onClick={() => downloadTemplate('en')} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Download Template (EN)
+            Bilingual Template (English Instructions)
           </Button>
           <Button onClick={() => downloadTemplate('zh')} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            下载模板 (中文)
+            双语模板 (中文说明)
           </Button>
         </div>
       </div>

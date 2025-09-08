@@ -880,14 +880,14 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
     const translations = {
       en: {
         headers: [
-          'Team_1_Player_1',
-          'Team_1_Player_2',
-          'Team_2_Player_1', 
-          'Team_2_Player_2',
-          'Team_1_Score',
-          'Team_2_Score',
-          'Date',
-          'Gender_Override'
+          'Team_1_Player_1 / 第一队选手一',
+          'Team_1_Player_2 / 第一队选手二',
+          'Team_2_Player_1 / 第二队选手一', 
+          'Team_2_Player_2 / 第二队选手二',
+          'Team_1_Score / 第一队得分',
+          'Team_2_Score / 第二队得分',
+          'Date / 比赛日期',
+          'Gender_Override / 性别覆盖'
         ],
         sampleData: [
           ['John_Smith', '', 'Jane_Doe', '', '11', '7', '2025-01-15', ''],
@@ -922,14 +922,14 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
       },
       zh: {
         headers: [
-          '第一队选手一',
-          '第一队选手二',
-          '第二队选手一',
-          '第二队选手二',
-          '第一队得分',
-          '第二队得分',
-          '比赛日期',
-          '性别覆盖'
+          'Team_1_Player_1 / 第一队选手一',
+          'Team_1_Player_2 / 第一队选手二',
+          'Team_2_Player_1 / 第二队选手一', 
+          'Team_2_Player_2 / 第二队选手二',
+          'Team_1_Score / 第一队得分',
+          'Team_2_Score / 第二队得分',
+          'Date / 比赛日期',
+          'Gender_Override / 性别覆盖'
         ],
         sampleData: [
           ['张伟', '', '李娜', '', '11', '7', '2025-01-15', ''],
@@ -964,7 +964,7 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
       }
     };
 
-    const t = translations[language] || translations.en;
+    const t = translations[language as keyof typeof translations] || translations.en;
 
     // Create worksheet data
     const worksheetData = [
@@ -976,14 +976,14 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
 
     // Set column widths
     worksheet['!cols'] = [
-      { wch: 20 }, // Team_1_Player_1 / 第一队选手一
-      { wch: 20 }, // Team_1_Player_2 / 第一队选手二
-      { wch: 20 }, // Team_2_Player_1 / 第二队选手一
-      { wch: 20 }, // Team_2_Player_2 / 第二队选手二
-      { wch: 12 }, // Team_1_Score / 第一队得分
-      { wch: 12 }, // Team_2_Score / 第二队得分
-      { wch: 12 }, // Date / 比赛日期
-      { wch: 15 }, // Gender_Override / 性别覆盖
+      { wch: 32 }, // Team_1_Player_1 / 第一队选手一
+      { wch: 32 }, // Team_1_Player_2 / 第一队选手二
+      { wch: 32 }, // Team_2_Player_1 / 第二队选手一
+      { wch: 32 }, // Team_2_Player_2 / 第二队选手二
+      { wch: 20 }, // Team_1_Score / 第一队得分
+      { wch: 20 }, // Team_2_Score / 第二队得分
+      { wch: 18 }, // Date / 比赛日期
+      { wch: 25 }, // Gender_Override / 性别覆盖
     ];
 
     const instructionsSheet = XLSX.utils.aoa_to_sheet(t.instructions);
