@@ -347,58 +347,68 @@ export default function CoachDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-4 md:space-y-6 overflow-hidden">
       {/* Enhanced Coach Header with Professional Design */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                <Award className="w-6 h-6 text-white" />
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 sm:p-4 md:p-6 border border-blue-200 shadow-sm overflow-hidden">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
+          <div className="space-y-2 md:space-y-3 min-w-0 flex-1">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-md shrink-0">
+                <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Coach Workspace</h1>
-                <p className="text-lg text-gray-600">Level {coachLevel} Coaching Platform</p>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Coach Workspace</h1>
+                <p className="text-sm sm:text-base md:text-lg text-gray-600 truncate">Level {coachLevel} Coaching Platform</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <Badge className={`${coachInfo.color} text-white px-3 py-1 shadow-sm`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <Badge className={`${coachInfo.color} text-white px-2 sm:px-3 py-1 shadow-sm text-xs sm:text-sm shrink-0`}>
                 {coachInfo.name}
               </Badge>
-              <span className="text-gray-700 font-medium">{coachInfo.focus}</span>
+              <span className="text-xs sm:text-sm text-gray-700 font-medium truncate">{coachInfo.focus}</span>
             </div>
             
-            <p className="text-sm text-gray-600 max-w-2xl">
+            <p className="text-xs sm:text-sm text-gray-600 max-w-2xl line-clamp-2 sm:line-clamp-none">
               Welcome to your enhanced coaching dashboard. Manage student assessments and track progress using our comprehensive 55-skill PCP evaluation system.
             </p>
           </div>
           
-          <div className="flex flex-col items-end gap-3">
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                <Users className="w-4 h-4" />
-                <span className="font-medium">{assignedStudents.length} Students</span>
+          <div className="flex flex-col items-start md:items-end gap-2 md:gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm w-full md:w-auto">
+              <div className="flex items-center gap-1 sm:gap-2 text-blue-600 bg-blue-100 px-2 sm:px-3 py-1 rounded-full">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                <span className="font-medium whitespace-nowrap">{assignedStudents.length} Students</span>
               </div>
-              <div className="flex items-center gap-2 text-green-600 bg-green-100 px-3 py-1 rounded-full">
-                <Star className="w-4 h-4" />
-                <span className="font-medium">{recentAssessments.length} Assessments</span>
+              <div className="flex items-center gap-1 sm:gap-2 text-green-600 bg-green-100 px-2 sm:px-3 py-1 rounded-full">
+                <Star className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                <span className="font-medium whitespace-nowrap">{recentAssessments.length} Assessments</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Calendar className="w-4 h-4" />
-              <span>Last updated: {new Date().toLocaleDateString()}</span>
+            <div className="flex items-center gap-1 sm:gap-2 text-xs text-gray-500">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Last updated: {new Date().toLocaleDateString()}</span>
             </div>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-100">
-          <TabsTrigger value="students" className="data-[state=active]:bg-white">My Students</TabsTrigger>
-          <TabsTrigger value="connections" className="data-[state=active]:bg-white">Connections</TabsTrigger>
-          <TabsTrigger value="assessments" className="data-[state=active]:bg-white">Recent Assessments</TabsTrigger>
-          <TabsTrigger value="progress" className="data-[state=active]:bg-white">Progress Tracking</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-100 h-auto">
+          <TabsTrigger value="students" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <span className="truncate">My Students</span>
+          </TabsTrigger>
+          <TabsTrigger value="connections" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <span className="truncate">Connections</span>
+          </TabsTrigger>
+          <TabsTrigger value="assessments" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <span className="hidden sm:inline">Recent Assessments</span>
+            <span className="sm:hidden">Assessments</span>
+          </TabsTrigger>
+          <TabsTrigger value="progress" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <span className="hidden sm:inline">Progress Tracking</span>
+            <span className="sm:hidden">Progress</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Enhanced Students Tab */}
@@ -444,56 +454,59 @@ export default function CoachDashboard() {
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                     {assignedStudents.map((student) => (
-                      <Card key={student.id} className="border-2 hover:border-blue-300 transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg">
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
-                                <User className="w-6 h-6 text-white" />
+                      <Card key={student.id} className="border-2 hover:border-blue-300 transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg overflow-hidden">
+                        <CardContent className="p-3 sm:p-4 md:p-6">
+                          <div className="flex flex-col space-y-3 sm:space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md shrink-0">
+                                  <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                </div>
+                                <div className="min-w-0 flex-1 overflow-hidden">
+                                  <h3 className="font-semibold text-sm sm:text-base md:text-lg truncate">{student.displayName}</h3>
+                                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                                    {student.currentRanking ? `Ranking: #${student.currentRanking}` : 'Unranked Player'}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <h3 className="font-semibold text-lg">{student.displayName}</h3>
-                                <p className="text-sm text-gray-600">
-                                  {student.currentRanking ? `Ranking: #${student.currentRanking}` : 'Unranked Player'}
-                                </p>
-                              </div>
+                              <Badge 
+                                variant={student.lastAssessment ? "default" : "secondary"}
+                                className={`text-xs shrink-0 ${student.lastAssessment ? "bg-green-100 text-green-800" : ""}`}
+                              >
+                                {student.lastAssessment ? 'Assessed' : 'New'}
+                              </Badge>
                             </div>
-                            <Badge 
-                              variant={student.lastAssessment ? "default" : "secondary"}
-                              className={student.lastAssessment ? "bg-green-100 text-green-800" : ""}
-                            >
-                              {student.lastAssessment ? 'Assessed' : 'New Student'}
-                            </Badge>
-                          </div>
                           
-                          <div className="space-y-3">
-                            <Button 
-                              className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm" 
-                              onClick={() => {
-                                console.log('Start Progressive Assessment clicked for student:', student.id);
-                                setSelectedStudent(student.id);
-                                setShowAssessment(true);
-                                console.log('Selected student set to:', student.id);
-                                // Scroll to assessment section after a brief delay
-                                setTimeout(() => {
-                                  assessmentSectionRef.current?.scrollIntoView({ 
-                                    behavior: 'smooth', 
-                                    block: 'start' 
-                                  });
-                                }, 100);
-                              }}
-                            >
-                              <BookOpen className="w-4 h-4 mr-2" />
-                              Start Progressive Assessment
-                            </Button>
+                            <div className="space-y-3">
+                              <Button 
+                                className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm py-2 sm:py-3" 
+                                onClick={() => {
+                                  console.log('Start Progressive Assessment clicked for student:', student.id);
+                                  setSelectedStudent(student.id);
+                                  setShowAssessment(true);
+                                  console.log('Selected student set to:', student.id);
+                                  // Scroll to assessment section after a brief delay
+                                  setTimeout(() => {
+                                    assessmentSectionRef.current?.scrollIntoView({ 
+                                      behavior: 'smooth', 
+                                      block: 'start' 
+                                    });
+                                  }, 100);
+                                }}
+                              >
+                                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">Start Progressive Assessment</span>
+                                <span className="sm:hidden">Start Assessment</span>
+                              </Button>
                             
-                            {student.lastAssessment && (
-                              <div className="text-xs text-gray-500 text-center bg-gray-50 rounded p-2">
-                                Last assessed: {new Date(student.lastAssessment).toLocaleDateString()}
-                              </div>
-                            )}
+                              {student.lastAssessment && (
+                                <div className="text-xs text-gray-500 text-center bg-gray-50 rounded p-2 break-words">
+                                  Last assessed: {new Date(student.lastAssessment).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
