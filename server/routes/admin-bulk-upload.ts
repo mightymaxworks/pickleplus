@@ -864,4 +864,146 @@ async function processMatches(validMatches: ParsedMatch[], matchType: string) {
   };
 }
 
+// Enhanced bilingual template (new format)
+router.get('/template-enhanced', isAuthenticated, async (req, res) => {
+  try {
+    // Check if user is admin
+    const user = req.user;
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const language = (req.query.lang as string) || 'en'; // Default to English
+    const workbook = XLSX.utils.book_new();
+    
+    // Bilingual headers and content
+    const translations = {
+      en: {
+        headers: [
+          'Team_1_Player_1',
+          'Team_1_Player_2',
+          'Team_2_Player_1', 
+          'Team_2_Player_2',
+          'Team_1_Score',
+          'Team_2_Score',
+          'Date',
+          'Gender_Override'
+        ],
+        sampleData: [
+          ['John_Smith', '', 'Jane_Doe', '', '11', '7', '2025-01-15', ''],
+          ['Mike_Johnson', 'Sarah_Wilson', 'Tom_Brown', 'Lisa_Chen', '11', '9', '2025-01-15', ''],
+          ['David_Lee', '', 'Emily_Davis', '', '8', '11', '2025-01-16', 'M'],
+        ],
+        instructions: [
+          ['Bulk Match Upload Instructions'],
+          [''],
+          ['Format Guidelines:'],
+          ['• Use exact player names (First_Last format preferred)'],
+          ['• Leave Team_1_Player_2 and Team_2_Player_2 empty for singles matches'],
+          ['• Use scores like: 11, 7, 15, 13 (games to points)'],
+          ['• Date format: YYYY-MM-DD (e.g., 2025-01-15)'],
+          ['• Gender_Override: M or F (optional, for cross-gender matches)'],
+          [''],
+          ['Examples:'],
+          ['Singles: John_Smith vs Jane_Doe, scores 11-7'],
+          ['Doubles: Mike_Johnson/Sarah_Wilson vs Tom_Brown/Lisa_Chen, scores 11-9'],
+          [''],
+          ['Validation will check:'],
+          ['• All players exist in the system'],
+          ['• Valid score formats'],
+          ['• No duplicate matches'],
+          ['• Proper date formatting'],
+        ],
+        sheetNames: {
+          data: 'Match Data',
+          instructions: 'Instructions'
+        },
+        filename: 'bulk-match-template.xlsx'
+      },
+      zh: {
+        headers: [
+          '第一队选手一',
+          '第一队选手二',
+          '第二队选手一',
+          '第二队选手二',
+          '第一队得分',
+          '第二队得分',
+          '比赛日期',
+          '性别覆盖'
+        ],
+        sampleData: [
+          ['张伟', '', '李娜', '', '11', '7', '2025-01-15', ''],
+          ['王强', '刘敏', '陈军', '赵静', '11', '9', '2025-01-15', ''],
+          ['杨涛', '', '孙丽', '', '8', '11', '2025-01-16', '男'],
+        ],
+        instructions: [
+          ['批量比赛上传说明'],
+          [''],
+          ['格式指南：'],
+          ['• 使用准确的选手姓名（建议使用姓_名格式）'],
+          ['• 单打比赛请将第一队选手二和第二队选手二留空'],
+          ['• 使用如下分数格式：11, 7, 15, 13（游戏比分）'],
+          ['• 日期格式：YYYY-MM-DD（例如：2025-01-15）'],
+          ['• 性别覆盖：男或女（可选，用于跨性别比赛）'],
+          [''],
+          ['示例：'],
+          ['单打：张伟 对 李娜，比分 11-7'],
+          ['双打：王强/刘敏 对 陈军/赵静，比分 11-9'],
+          [''],
+          ['验证将检查：'],
+          ['• 所有选手在系统中存在'],
+          ['• 有效的分数格式'],
+          ['• 无重复比赛'],
+          ['• 正确的日期格式'],
+        ],
+        sheetNames: {
+          data: '比赛数据',
+          instructions: '使用说明'
+        },
+        filename: '批量比赛模板.xlsx'
+      }
+    };
+
+    const t = translations[language] || translations.en;
+
+    // Create worksheet data
+    const worksheetData = [
+      t.headers,
+      ...t.sampleData
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 20 }, // Team_1_Player_1 / 第一队选手一
+      { wch: 20 }, // Team_1_Player_2 / 第一队选手二
+      { wch: 20 }, // Team_2_Player_1 / 第二队选手一
+      { wch: 20 }, // Team_2_Player_2 / 第二队选手二
+      { wch: 12 }, // Team_1_Score / 第一队得分
+      { wch: 12 }, // Team_2_Score / 第二队得分
+      { wch: 12 }, // Date / 比赛日期
+      { wch: 15 }, // Gender_Override / 性别覆盖
+    ];
+
+    const instructionsSheet = XLSX.utils.aoa_to_sheet(t.instructions);
+    instructionsSheet['!cols'] = [{ wch: 60 }];
+
+    // Add sheets to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, t.sheetNames.data);
+    XLSX.utils.book_append_sheet(workbook, instructionsSheet, t.sheetNames.instructions);
+
+    // Generate Excel buffer
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${t.filename}"`);
+    res.send(excelBuffer);
+
+  } catch (error: any) {
+    console.error('Error generating enhanced template:', error);
+    res.status(500).json({ error: 'Failed to generate enhanced template' });
+  }
+});
+
 export default router;

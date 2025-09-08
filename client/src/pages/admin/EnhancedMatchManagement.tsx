@@ -205,9 +205,9 @@ const BulkUploadTab: React.FC = () => {
     }
   };
 
-  const downloadTemplate = async () => {
+  const downloadTemplate = async (language: 'en' | 'zh' = 'en') => {
     try {
-      const response = await fetch('/api/admin/bulk-upload/template', {
+      const response = await fetch(`/api/admin/bulk-upload/template-enhanced?lang=${language}`, {
         credentials: 'include',
       });
 
@@ -216,15 +216,15 @@ const BulkUploadTab: React.FC = () => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'bulk-match-template.xlsx';
+        a.download = language === 'zh' ? '批量比赛模板.xlsx' : 'bulk-match-template.xlsx';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
         toast({
-          title: "Template Downloaded",
-          description: "Excel template downloaded successfully.",
+          title: language === 'zh' ? "模板已下载" : "Template Downloaded",
+          description: language === 'zh' ? "Excel模板下载成功" : "Excel template downloaded successfully.",
         });
       } else {
         throw new Error('Failed to download template');
@@ -247,10 +247,16 @@ const BulkUploadTab: React.FC = () => {
             Upload multiple matches at once using Excel files with proper date formatting (YYYY-MM-DD)
           </p>
         </div>
-        <Button onClick={downloadTemplate} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Download Template
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => downloadTemplate('en')} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Download Template (EN)
+          </Button>
+          <Button onClick={() => downloadTemplate('zh')} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            下载模板 (中文)
+          </Button>
+        </div>
       </div>
 
       <Card>
