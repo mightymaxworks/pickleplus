@@ -880,10 +880,10 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
     const translations = {
       en: {
         headers: [
-          'Team_1_Player_1 / 第一队选手一',
-          'Team_1_Player_2 / 第一队选手二',
-          'Team_2_Player_1 / 第二队选手一', 
-          'Team_2_Player_2 / 第二队选手二',
+          'Team_1_Player_1_Passport / 第一队选手一护照码',
+          'Team_1_Player_2_Passport / 第一队选手二护照码',
+          'Team_2_Player_1_Passport / 第二队选手一护照码', 
+          'Team_2_Player_2_Passport / 第二队选手二护照码',
           'Team_1_Score / 第一队得分',
           'Team_2_Score / 第二队得分',
           'Date / 比赛日期',
@@ -922,10 +922,10 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
       },
       zh: {
         headers: [
-          'Team_1_Player_1 / 第一队选手一',
-          'Team_1_Player_2 / 第一队选手二',
-          'Team_2_Player_1 / 第二队选手一', 
-          'Team_2_Player_2 / 第二队选手二',
+          'Team_1_Player_1_Passport / 第一队选手一护照码',
+          'Team_1_Player_2_Passport / 第一队选手二护照码',
+          'Team_2_Player_1_Passport / 第二队选手一护照码', 
+          'Team_2_Player_2_Passport / 第二队选手二护照码',
           'Team_1_Score / 第一队得分',
           'Team_2_Score / 第二队得分',
           'Date / 比赛日期',
@@ -976,10 +976,10 @@ router.get('/template-enhanced', isAuthenticated, async (req, res) => {
 
     // Set column widths
     worksheet['!cols'] = [
-      { wch: 32 }, // Team_1_Player_1 / 第一队选手一
-      { wch: 32 }, // Team_1_Player_2 / 第一队选手二
-      { wch: 32 }, // Team_2_Player_1 / 第二队选手一
-      { wch: 32 }, // Team_2_Player_2 / 第二队选手二
+      { wch: 40 }, // Team_1_Player_1_Passport / 第一队选手一护照码
+      { wch: 40 }, // Team_1_Player_2_Passport / 第一队选手二护照码
+      { wch: 40 }, // Team_2_Player_1_Passport / 第二队选手一护照码
+      { wch: 40 }, // Team_2_Player_2_Passport / 第二队选手二护照码
       { wch: 20 }, // Team_1_Score / 第一队得分
       { wch: 20 }, // Team_2_Score / 第二队得分
       { wch: 18 }, // Date / 比赛日期
