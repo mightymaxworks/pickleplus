@@ -65,6 +65,72 @@
   }
 }
 
+/* Enhanced Mobile Optimization for Assessment Tool */
+.mobile-overflow-safe {
+  overflow-x: hidden;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.coach-assessment-container {
+  min-width: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile-optimized slider styling */
+.slider-mobile {
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  width: 100%;
+}
+
+.slider-mobile [role="slider"] {
+  min-height: 24px;
+  min-width: 24px;
+  touch-action: manipulation;
+}
+
+/* Ensure text doesn't break out of containers */
+.truncate-mobile {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.break-words-mobile {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+/* Assessment card mobile optimizations */
+@media (max-width: 640px) {
+  .coach-assessment-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .coach-assessment-container .space-y-4 > * {
+    margin-top: 1rem;
+  }
+  
+  /* Enhanced touch targets for mobile */
+  button, [role="button"], .cursor-pointer {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Ensure slider has good touch area */
+  .slider-mobile [role="slider"] {
+    min-height: 32px;
+    min-width: 32px;
+  }
+}
+
 /* Mobile-first responsive fixes for community page */
 @media (max-width: 375px) {
   .community-page-container {

@@ -268,7 +268,7 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
   const dimensionalScores = calculateDimensionalScores();
 
   return (
-    <div className="space-y-4 md:space-y-6 mobile-overflow-safe">
+    <div className="space-y-4 md:space-y-6 mobile-overflow-safe overflow-hidden">
       {/* Mobile-First Assessment Overview */}
       <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10">
         <CardHeader className="pb-3">
@@ -283,7 +283,7 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {skillCategories.map(category => {
               const score = dimensionalScores[category.id as keyof typeof dimensionalScores];
               const colorClasses = {
@@ -293,10 +293,10 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
                 orange: 'text-orange-600 bg-orange-50 border-orange-200'
               };
               return (
-                <div key={category.id} className={`p-3 rounded-lg border ${colorClasses[category.color as keyof typeof colorClasses]}`}>
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <div key={category.id} className={`p-2 sm:p-3 rounded-lg border min-w-0 overflow-hidden ${colorClasses[category.color as keyof typeof colorClasses]}`}>
+                  <div className="flex items-center gap-1 sm:gap-2 mb-1">
                     <div className="shrink-0">{category.icon}</div>
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold min-w-0">
+                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold truncate">
                       {(score / 10).toFixed(1)}
                     </div>
                   </div>
@@ -338,36 +338,36 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
           };
 
           return (
-            <Card key={category.id} className={`border ${colorClasses[category.color as keyof typeof colorClasses]} transition-colors`}>
+            <Card key={category.id} className={`border ${colorClasses[category.color as keyof typeof colorClasses]} transition-colors overflow-hidden`}>
               <CardHeader 
                 className="cursor-pointer pb-3 active:scale-[0.98] transition-transform" 
                 onClick={() => toggleCategory(category.id)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                <div className="flex items-center justify-between min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-hidden">
                     <div className={`p-2 sm:p-2.5 rounded-xl shrink-0 ${categoryIconClasses[category.color as keyof typeof categoryIconClasses]}`}>
                       {category.icon}
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <CardTitle className="text-sm sm:text-base md:text-lg mb-1 truncate">{category.name}</CardTitle>
-                      <div className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                      <div className="text-xs md:text-sm text-muted-foreground truncate">
                         {category.skills.length} skills • {category.description}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-2">
                     <div className="text-right hidden sm:block">
                       <div className={`text-lg font-bold ${categoryScoreClasses[category.color as keyof typeof categoryScoreClasses]}`}>
                         {(categoryAvg / 10).toFixed(1)}
                       </div>
                       <Progress value={categoryAvg} className="w-12 sm:w-16 h-2" />
                     </div>
-                    <div className="sm:hidden">
-                      <div className={`text-base font-bold ${categoryScoreClasses[category.color as keyof typeof categoryScoreClasses]}`}>
+                    <div className="sm:hidden text-center">
+                      <div className={`text-sm font-bold ${categoryScoreClasses[category.color as keyof typeof categoryScoreClasses]}`}>
                         {(categoryAvg / 10).toFixed(1)}
                       </div>
                     </div>
-                    {isExpanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+                    {isExpanded ? <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" /> : <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />}
                   </div>
                 </div>
               </CardHeader>
@@ -387,23 +387,25 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
                         </div>
                         <div className="space-y-3">
                           {subcategorySkills.map(skill => (
-                            <div key={skill.id} className="p-3 md:p-4 bg-background/50 border rounded-lg hover:shadow-sm transition-shadow">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                                <div className="flex-1 min-w-0">
-                                  <label className="font-medium text-sm md:text-base block truncate">
-                                    {skill.name}
-                                  </label>
-                                  <div className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
-                                    {skill.description}
+                            <div key={skill.id} className="p-3 md:p-4 bg-background/50 border rounded-lg hover:shadow-sm transition-shadow overflow-hidden">
+                              <div className="flex flex-col space-y-2 mb-3">
+                                <div className="flex items-start justify-between gap-2 min-w-0">
+                                  <div className="flex-1 min-w-0 overflow-hidden">
+                                    <label className="font-medium text-sm md:text-base block truncate">
+                                      {skill.name}
+                                    </label>
+                                    <div className="text-xs md:text-sm text-muted-foreground mt-1 break-words">
+                                      {skill.description}
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="shrink-0 self-start sm:ml-3">
-                                  <div className="text-base sm:text-lg font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                                    {(skills[skill.id] / 10).toFixed(1)}
+                                  <div className="shrink-0 ml-2">
+                                    <div className="text-sm sm:text-base font-bold text-primary bg-primary/10 px-2 py-1 rounded min-w-[3rem] text-center">
+                                      {(skills[skill.id] / 10).toFixed(1)}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                              <div className="mt-2">
+                              <div className="mt-3">
                                 <Slider
                                   value={[skills[skill.id]]}
                                   onValueChange={(value) => handleSkillChange(skill.id, value)}
@@ -412,7 +414,7 @@ export const DetailedSkillAssessment: React.FC<DetailedSkillAssessmentProps> = (
                                   step={5}
                                   className="w-full touch-manipulation slider-mobile"
                                 />
-                                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                                <div className="flex justify-between text-xs text-muted-foreground mt-2 px-1">
                                   <span>1.0</span>
                                   <span className="hidden sm:inline">5.0</span>
                                   <span>10.0</span>
