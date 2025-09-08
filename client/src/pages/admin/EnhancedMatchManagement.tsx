@@ -15,6 +15,7 @@ import { Plus, Calendar, Trophy, Users, Target, Edit, Trash2, RefreshCw, Loader2
 import { Link } from 'wouter';
 import { QuickMatchRecorderStreamlined } from '@/components/match/QuickMatchRecorderStreamlined';
 import DUPRStyleMatchHistory from '@/components/match/DUPRStyleMatchHistory';
+import { Badge } from '@/components/ui/badge';
 
 interface Competition {
   id: number;

@@ -3,6 +3,9 @@ import multer from 'multer';
 import * as XLSX from 'xlsx';
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
+import { db } from '../db';
+import { users, matches } from '../../shared/schema';
+import { eq, and, or } from 'drizzle-orm';
 
 const router = Router();
 
@@ -485,6 +488,380 @@ async function updatePlayerStatsFromMatch(match: any) {
   } catch (error) {
     console.error('Error updating player stats:', error);
   }
+}
+
+// Enhanced interfaces for new format
+interface ValidationError {
+  row: number;
+  type: 'missing_player' | 'invalid_score' | 'duplicate_match' | 'invalid_format';
+  message: string;
+  severity: 'critical' | 'warning' | 'info';
+  details?: any;
+}
+
+interface ValidationReport {
+  totalRows: number;
+  validMatches: number;
+  errors: ValidationError[];
+  warnings: ValidationError[];
+  missingPlayers: string[];
+  duplicateMatches: number;
+  canProceed: boolean;
+}
+
+interface ParsedMatch {
+  row: number;
+  team1Player1: string;
+  team1Player2?: string;
+  team2Player1: string;
+  team2Player2?: string;
+  team1Score: number;
+  team2Score: number;
+  date: string;
+  genderOverride?: string;
+  isDoubles: boolean;
+}
+
+// Validate uploaded Excel file
+router.post('/validate', isAuthenticated, upload.single('file'), async (req, res) => {
+  try {
+    // Check if user is admin
+    const user = req.user;
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const matchType = req.body.matchType || 'tournament';
+    
+    // Parse Excel file
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    
+    // Convert to JSON
+    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    
+    if (rawData.length <= 1) {
+      return res.status(400).json({ error: 'Excel file must contain data rows beyond headers' });
+    }
+
+    // Parse and validate data
+    const { parsedMatches, validationReport } = await parseAndValidateMatches(rawData as any[][], matchType);
+
+    res.json({ 
+      validationReport,
+      matchCount: parsedMatches.length 
+    });
+
+  } catch (error: any) {
+    console.error('Error validating file:', error);
+    res.status(500).json({ error: 'Failed to validate file: ' + error.message });
+  }
+});
+
+// Process validated Excel file
+router.post('/process', isAuthenticated, upload.single('file'), async (req, res) => {
+  try {
+    // Check if user is admin
+    const user = req.user;
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const matchType = req.body.matchType || 'tournament';
+    const skipValidation = req.body.skipValidation === 'true';
+    
+    // Parse Excel file
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    // Parse and validate
+    const { parsedMatches, validationReport } = await parseAndValidateMatches(rawData as any[][], matchType);
+
+    // Check if we can proceed
+    if (!skipValidation && !validationReport.canProceed) {
+      return res.status(400).json({ 
+        error: 'Validation failed - fix issues before processing',
+        validationReport 
+      });
+    }
+
+    // Process valid matches
+    const results = await processMatches(parsedMatches.filter(m => m !== null), matchType);
+
+    res.json({
+      validationReport,
+      ...results
+    });
+
+  } catch (error: any) {
+    console.error('Error processing file:', error);
+    res.status(500).json({ error: 'Failed to process file: ' + error.message });
+  }
+});
+
+// Parse and validate Excel data
+async function parseAndValidateMatches(rawData: any[][], matchType: string): Promise<{
+  parsedMatches: (ParsedMatch | null)[];
+  validationReport: ValidationReport;
+}> {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationError[] = [];
+  const missingPlayers: Set<string> = new Set();
+  const parsedMatches: (ParsedMatch | null)[] = [];
+  
+  // Skip header row
+  const dataRows = rawData.slice(1);
+  
+  // Get all users for player lookup
+  const allUsers = await db.select({
+    id: users.id,
+    firstName: users.firstName,
+    lastName: users.lastName,
+    username: users.username,
+  }).from(users);
+
+  const userLookup = new Map<string, any>();
+  allUsers.forEach(user => {
+    const fullName = `${user.firstName}_${user.lastName}`;
+    const username = user.username;
+    userLookup.set(fullName.toLowerCase(), user);
+    userLookup.set(username.toLowerCase(), user);
+  });
+
+  for (let i = 0; i < dataRows.length; i++) {
+    const row = dataRows[i];
+    const rowNum = i + 2; // +2 for 1-based indexing and header row
+    
+    if (!row || row.length === 0 || !row[0]) {
+      continue; // Skip empty rows
+    }
+
+    try {
+      // Parse match data
+      const team1Player1 = String(row[0] || '').trim();
+      const team1Player2 = String(row[1] || '').trim();
+      const team2Player1 = String(row[2] || '').trim(); 
+      const team2Player2 = String(row[3] || '').trim();
+      const team1Score = parseInt(String(row[4] || '0'));
+      const team2Score = parseInt(String(row[5] || '0'));
+      const date = String(row[6] || '').trim();
+      const genderOverride = String(row[7] || '').trim();
+
+      // Determine if doubles
+      const isDoubles = !!(team1Player2 || team2Player2);
+
+      // Validate required fields
+      if (!team1Player1 || !team2Player1) {
+        errors.push({
+          row: rowNum,
+          type: 'missing_player',
+          message: 'Missing required player names',
+          severity: 'critical',
+          details: 'Team_1_Player_1 and Team_2_Player_1 are required'
+        });
+        parsedMatches.push(null);
+        continue;
+      }
+
+      // Validate scores
+      if (isNaN(team1Score) || isNaN(team2Score) || team1Score < 0 || team2Score < 0) {
+        errors.push({
+          row: rowNum,
+          type: 'invalid_score',
+          message: 'Invalid score format',
+          severity: 'critical',
+          details: 'Scores must be non-negative numbers'
+        });
+        parsedMatches.push(null);
+        continue;
+      }
+
+      // Validate date
+      if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        errors.push({
+          row: rowNum,
+          type: 'invalid_format',
+          message: 'Invalid date format',
+          severity: 'critical',
+          details: 'Date must be in YYYY-MM-DD format'
+        });
+        parsedMatches.push(null);
+        continue;
+      }
+
+      // Check if players exist
+      const playersToCheck = [team1Player1, team2Player1];
+      if (isDoubles) {
+        if (team1Player2) playersToCheck.push(team1Player2);
+        if (team2Player2) playersToCheck.push(team2Player2);
+      }
+
+      let playerNotFound = false;
+      for (const playerName of playersToCheck) {
+        if (!userLookup.has(playerName.toLowerCase())) {
+          missingPlayers.add(playerName);
+          playerNotFound = true;
+        }
+      }
+
+      if (playerNotFound) {
+        errors.push({
+          row: rowNum,
+          type: 'missing_player',
+          message: 'One or more players not found in system',
+          severity: 'critical',
+          details: 'All players must exist in the database'
+        });
+        parsedMatches.push(null);
+        continue;
+      }
+
+      // Validate gender override
+      if (genderOverride && !['M', 'F', 'm', 'f'].includes(genderOverride)) {
+        warnings.push({
+          row: rowNum,
+          type: 'invalid_format',
+          message: 'Invalid gender override format',
+          severity: 'warning',
+          details: 'Gender override should be M or F'
+        });
+      }
+
+      // Create parsed match
+      const parsedMatch: ParsedMatch = {
+        row: rowNum,
+        team1Player1,
+        team1Player2: team1Player2 || undefined,
+        team2Player1,
+        team2Player2: team2Player2 || undefined,
+        team1Score,
+        team2Score,
+        date,
+        genderOverride: genderOverride || undefined,
+        isDoubles
+      };
+
+      parsedMatches.push(parsedMatch);
+
+    } catch (error: any) {
+      errors.push({
+        row: rowNum,
+        type: 'invalid_format',
+        message: 'Error parsing row data',
+        severity: 'critical',
+        details: error.message
+      });
+      parsedMatches.push(null);
+    }
+  }
+
+  const validMatches = parsedMatches.filter(m => m !== null).length;
+  const canProceed = errors.length === 0 && validMatches > 0;
+
+  const validationReport: ValidationReport = {
+    totalRows: dataRows.length,
+    validMatches,
+    errors,
+    warnings,
+    missingPlayers: Array.from(missingPlayers),
+    duplicateMatches: 0, // TODO: Implement duplicate detection
+    canProceed
+  };
+
+  return { parsedMatches, validationReport };
+}
+
+// Process valid matches using UDF algorithm
+async function processMatches(validMatches: ParsedMatch[], matchType: string) {
+  let successCount = 0;
+  let errorCount = 0;
+  let totalPointsAllocated = 0;
+  let totalPicklePointsAwarded = 0;
+  const processingErrors: ValidationError[] = [];
+
+  // Get all users for lookup
+  const allUsers = await db.select().from(users);
+  const userLookup = new Map<string, any>();
+  allUsers.forEach(user => {
+    const fullName = `${user.firstName}_${user.lastName}`;
+    userLookup.set(fullName.toLowerCase(), user);
+    userLookup.set(user.username.toLowerCase(), user);
+  });
+
+  for (const match of validMatches) {
+    try {
+      // Get player objects
+      const team1Player1 = userLookup.get(match.team1Player1.toLowerCase());
+      const team2Player1 = userLookup.get(match.team2Player1.toLowerCase());
+      const team1Player2 = match.team1Player2 ? userLookup.get(match.team1Player2.toLowerCase()) : null;
+      const team2Player2 = match.team2Player2 ? userLookup.get(match.team2Player2.toLowerCase()) : null;
+
+      // Create match using storage interface
+      const matchRecord = {
+        playerOneId: team1Player1.id,
+        playerTwoId: team2Player1.id,
+        playerOnePartnerId: team1Player2?.id || null,
+        playerTwoPartnerId: team2Player2?.id || null,
+        scorePlayerOne: `${match.team1Score}`,
+        scorePlayerTwo: `${match.team2Score}`,
+        winnerId: match.team1Score > match.team2Score ? team1Player1.id : team2Player1.id,
+        matchType: matchType || 'casual',
+        formatType: match.isDoubles ? 'doubles' : 'singles',
+        validationStatus: 'completed',
+        validationCompletedAt: new Date(),
+        notes: `BULK UPLOAD - Date: ${match.date}${match.genderOverride ? ` - Gender Override: ${match.genderOverride}` : ''}`,
+        tournamentId: null,
+        scheduledDate: new Date(match.date),
+        pointsAwarded: match.team1Score > match.team2Score ? 3 : 1, // Winner gets 3, loser gets 1
+        category: match.isDoubles ? 'doubles' : 'singles'
+      };
+
+      const createdMatch = await storage.createMatch(matchRecord);
+
+      // Apply UDF algorithm points using existing system
+      await updatePlayerStatsFromMatch(createdMatch);
+
+      // Calculate points allocated (3 for winner, 1 for loser per UDF)
+      const pointsThisMatch = 4; // 3 + 1
+      totalPointsAllocated += pointsThisMatch;
+
+      // Calculate Pickle Points (1.5x multiplier per match for tournament)
+      const picklePointsThisMatch = matchType === 'tournament' ? pointsThisMatch * 1.5 : pointsThisMatch;
+      totalPicklePointsAwarded += picklePointsThisMatch;
+
+      successCount++;
+
+    } catch (error: any) {
+      console.error(`Error processing match at row ${match.row}:`, error);
+      processingErrors.push({
+        row: match.row,
+        type: 'invalid_format',
+        message: 'Failed to process match',
+        severity: 'critical',
+        details: error.message
+      });
+      errorCount++;
+    }
+  }
+
+  return {
+    successCount,
+    errorCount,
+    pointsAllocated: Math.round(totalPointsAllocated * 100) / 100, // 2 decimal places
+    picklePointsAwarded: Math.round(totalPicklePointsAwarded * 100) / 100,
+    errors: processingErrors
+  };
 }
 
 export default router;
