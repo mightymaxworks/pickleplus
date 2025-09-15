@@ -1440,6 +1440,9 @@ export const matches = pgTable("matches", {
   matchType: varchar("match_type", { length: 50 }).notNull().default("casual"), // casual, league, tournament
   eventTier: varchar("event_tier", { length: 50 }).default("local"), // local, regional, national, international
   
+  // Idempotency protection for bulk imports (UDF Rule 20)
+  idempotencyKey: varchar("idempotency_key", { length: 32 }), // SHA256 signature for duplicate prevention
+  
   // Context information
   location: varchar("location", { length: 255 }),
   tournamentId: integer("tournament_id").references(() => tournaments.id),

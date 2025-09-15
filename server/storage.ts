@@ -1,7 +1,7 @@
 import {
   users, type User, type InsertUser,
   profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
-  tournaments,
+  tournaments, type Tournament, type InsertTournament,
   type XpTransaction, type InsertXpTransaction,
   activities, type InsertActivity,
   chargeCardPurchases, chargeCardAllocations, chargeCardBalances, chargeCardTransactions, userFeatureFlags,
@@ -248,6 +248,7 @@ export interface IStorage extends CommunityStorage {
   getUserCount(): Promise<number>;
   getMatchCount(): Promise<number>;
   getTournamentCount(): Promise<number>;
+  createTournament(tournamentData: InsertTournament): Promise<Tournament>;
   createMatch(matchData: InsertMatch): Promise<Match>;
   getMatchesByUser(userId: number): Promise<Match[]>;
   getRecentMatches(playerIds: number[], afterDate: Date): Promise<Match[]>;
@@ -1032,6 +1033,11 @@ export class DatabaseStorage implements IStorage {
   async getTournamentCount(): Promise<number> {
     // Return placeholder count for tournaments
     return 0;
+  }
+
+  async createTournament(tournamentData: InsertTournament): Promise<Tournament> {
+    const result = await db.insert(tournaments).values(tournamentData).returning();
+    return result[0];
   }
 
   async createMatch(matchData: InsertMatch): Promise<Match> {

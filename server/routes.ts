@@ -759,6 +759,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error("[ROUTES] Error registering Admin Bulk Upload routes:", error);
   }
 
+  // === UDF-COMPLIANT BULK PROCESSOR (Rules 19-24) ===
+  console.log("[ROUTES] Registering UDF-Compliant Bulk Processor...");
+  try {
+    const udfCompliantBulkProcessor = await import('./routes/udf-compliant-bulk-processor');
+    app.use('/api/admin/udf-bulk', udfCompliantBulkProcessor.default);
+    console.log("[ROUTES] UDF-Compliant Bulk Processor registered successfully");
+  } catch (error) {
+    console.error("[ROUTES] Error registering UDF-Compliant Bulk Processor:", error);
+  }
+
   // === MODULAR ROUTE REGISTRATION ===
   console.log("[ROUTES] Registering modular route systems...");
   
