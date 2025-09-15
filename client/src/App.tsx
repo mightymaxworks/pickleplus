@@ -96,6 +96,11 @@ import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-2
 import CommunityDiscoveryPage from './pages/community-discover' // PKL-278651-COMM-0022-DISC
 import CommunityEngagementPage from './pages/community/CommunityEngagementPage' // PKL-278651-COMM-0021-ENGAGE
 
+// Import facility management pages (PKL-278651-FACILITY-MGMT-001)
+import FacilityDiscovery from './pages/facility-discovery'
+import FacilityBooking from './pages/facility-booking'
+import FacilityManagerDashboard from './pages/facility-manager-dashboard'
+
 // Import notification pages (PKL-278651-COMM-0028-NOTIF)
 import NotificationsPage from './pages/notifications-page'
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage'
@@ -825,6 +830,11 @@ export default function App() {
                     component={LazyCoachDashboardPage}
                     pageTitle="Coach Dashboard"
                   />
+                  {/* PKL-278651-FACILITY-MGMT-001 - Advanced Facility Management System */}
+                  <Route path="/facilities" component={FacilityDiscovery} />
+                  <Route path="/facility/:id/book" component={FacilityBooking} />
+                  <Route path="/facility-manager" component={FacilityManagerDashboard} />
+                  
                   {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management - DISABLED FOR DEPLOYMENT */}
                   {/* <ProtectedRouteWithLayout 
                     path="/training-center"

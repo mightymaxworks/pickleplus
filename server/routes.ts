@@ -30,6 +30,9 @@ import decayProtectionRoutes from './routes/decay-protection';
 import { studentCoachConnectionRoutes } from './routes/student-coach-connections';
 import { coachStudentRequestRoutes } from './routes/coach-student-requests';
 import coachWeightedAssessmentRoutes from './routes/coach-weighted-assessment';
+import facilityDiscoveryRoutes from './routes/facility-discovery-routes';
+import bookingRoutes from './routes/booking-routes';
+import facilityManagerRoutes from './routes/facility-manager-routes';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -818,6 +821,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Training Center routes...");
     app.use('/api/training-centers', trainingCenterRoutes);
     
+    // Facility Discovery
+    console.log("[ROUTES] Registering Facility Discovery routes...");
+    app.use('/api/facilities', facilityDiscoveryRoutes);
+    
     // WISE Payment System
     console.log("[ROUTES] Registering WISE Business routes...");
     app.use('/api/wise/business', wiseBusinessRoutes);
@@ -869,6 +876,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const bookingApiRoutes = await import('./api/booking-api');
     app.use('/api/booking', bookingApiRoutes.default);
     console.log("[ROUTES] Player-Coach Direct Booking System routes registered successfully");
+
+    // Facility Booking System - PKL-278651-FACILITY-MGMT-001
+    console.log("[ROUTES] Registering Facility Booking System routes...");
+    app.use('/api/facility-bookings', bookingRoutes);
+    console.log("[ROUTES] Facility Booking System routes registered successfully");
+
+    // Facility Manager Dashboard routes  
+    console.log("[ROUTES] Registering Facility Manager Dashboard routes...");
+    app.use('/api/facility-manager', facilityManagerRoutes);
+    console.log("[ROUTES] Facility Manager Dashboard routes registered successfully");
 
     // Decay Protection System routes
     console.log("[ROUTES] Registering Decay Protection routes...");

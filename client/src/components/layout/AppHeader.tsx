@@ -162,12 +162,13 @@ export function AppHeader({
   console.log("AppHeader - User coach level:", user?.coachLevel);
   console.log("AppHeader - User object keys:", user ? Object.keys(user) : "no user");
   
-  // V1.0 Launch Navigation - 5 core features including Pickle Points per user request
+  // V1.0 Launch Navigation - Core features including Facilities per user request
   const baseNavItems = [
     { label: 'Dashboard', icon: <Home size={18} />, path: '/' },
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/matches' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/rankings' },
-    { label: 'Pickle Points', icon: <Ticket size={18} />, path: '/pickle-points' },
+    { label: 'Facilities', icon: <Building2 size={18} />, path: '/facilities' },
+    { label: 'Manage Facility', icon: <Compass size={18} />, path: '/facility-manager' },
     { label: 'My Profile', icon: <Users size={18} />, path: '/profile' }
   ];
 

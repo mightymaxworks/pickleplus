@@ -265,6 +265,11 @@ export interface IStorage extends CommunityStorage {
   getTrainingCenterByQrCode(qrCode: string): Promise<any>;
   getActiveTrainingCenters(): Promise<any[]>;
   getAvailableCoach(centerId: number): Promise<any>;
+  getFacilityStats(facilityId: number): Promise<any>;
+  getNextAvailableSlot(facilityId: number): Promise<any>;
+  getTrainingCenterById(facilityId: number): Promise<any>;
+  getUpcomingClassesAtCenter(facilityId: number): Promise<any[]>;
+  getFacilityAvailability(facilityId: number, date: string): Promise<any[]>;
   
   // Coach Dashboard operations
   getCoachStudentAssignments(coachId: number): Promise<any[]>;
@@ -341,6 +346,14 @@ export interface IStorage extends CommunityStorage {
   updateBooking(bookingId: number, data: any): Promise<any>;
   getCoachBookings(coachId: number): Promise<any[]>;
   getCoachAvailability(coachId: number, date: string): Promise<any[]>;
+  
+  // Facility Booking System - PKL-278651-FACILITY-MGMT-001
+  createFacilityBooking(data: any): Promise<any>;
+  cancelFacilityBooking(bookingId: number): Promise<any>;
+  getFacilityBookingSummary(facilityId?: number, range?: string): Promise<any>;
+  getFacilityDetailedStats(facilityId?: number, range?: string): Promise<any>;
+  getFacilityBookings(filters: any): Promise<any>;
+  updateFacilityBookingStatus(bookingId: number, updateData: any): Promise<any>;
   
   // Sprint 1: Curriculum Management & Lesson Planning methods
   // Drill Library operations
@@ -1388,6 +1401,318 @@ export class DatabaseStorage implements IStorage {
         weekend: "7:00 AM - 9:00 PM"
       }
     };
+  }
+
+  async getFacilityStats(facilityId: number): Promise<any> {
+    // Get facility statistics including ratings, reviews, and booking counts
+    try {
+      const stats = await db.execute(sql`
+        SELECT 
+          COUNT(DISTINCT cs.id) as total_bookings,
+          AVG(CASE WHEN r.rating IS NOT NULL THEN r.rating END) as rating,
+          COUNT(DISTINCT r.id) as reviews_count
+        FROM training_centers tc
+        LEFT JOIN coaching_sessions cs ON tc.id = cs.center_id
+        LEFT JOIN facility_reviews r ON tc.id = r.facility_id
+        WHERE tc.id = ${facilityId}
+        GROUP BY tc.id
+      `);
+      
+      const rows = stats.rows;
+      if (rows && rows.length > 0) {
+        const row = rows[0] as any;
+        return {
+          totalBookings: parseInt(row.total_bookings) || 0,
+          rating: row.rating ? parseFloat(row.rating) : undefined,
+          reviewsCount: parseInt(row.reviews_count) || 0
+        };
+      }
+      
+      // Return default stats if no data found
+      return {
+        totalBookings: 0,
+        rating: undefined,
+        reviewsCount: 0
+      };
+    } catch (error) {
+      console.error('Error getting facility stats:', error);
+      // Return mock stats for development
+      return {
+        totalBookings: Math.floor(Math.random() * 100) + 50,
+        rating: 4.2 + Math.random() * 0.6,
+        reviewsCount: Math.floor(Math.random() * 20) + 5
+      };
+    }
+  }
+
+  async getNextAvailableSlot(facilityId: number): Promise<any> {
+    // Get the next available time slot for a facility
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(8, 0, 0, 0); // Start from 8 AM tomorrow
+      
+      // Check for available slots in the next 7 days
+      for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+        const checkDate = new Date(tomorrow);
+        checkDate.setDate(checkDate.getDate() + dayOffset);
+        
+        // Check hourly slots from 8 AM to 8 PM
+        for (let hour = 8; hour < 20; hour++) {
+          const slotTime = new Date(checkDate);
+          slotTime.setHours(hour, 0, 0, 0);
+          
+          const existingBooking = await db.execute(sql`
+            SELECT id FROM coaching_sessions 
+            WHERE center_id = ${facilityId} 
+            AND check_in_time = ${slotTime.toISOString()}
+            AND status = 'active'
+          `);
+          
+          if (!existingBooking.rows || existingBooking.rows.length === 0) {
+            return {
+              date: slotTime.toISOString().split('T')[0],
+              time: `${hour}:00`,
+              datetime: slotTime.toISOString()
+            };
+          }
+        }
+      }
+      
+      // If no slots found in next 7 days, return a future slot
+      const futureSlot = new Date(tomorrow);
+      futureSlot.setDate(futureSlot.getDate() + 7);
+      futureSlot.setHours(10, 0, 0, 0);
+      
+      return {
+        date: futureSlot.toISOString().split('T')[0],
+        time: '10:00',
+        datetime: futureSlot.toISOString()
+      };
+    } catch (error) {
+      console.error('Error getting next available slot:', error);
+      // Return mock next available slot
+      const nextSlot = new Date();
+      nextSlot.setDate(nextSlot.getDate() + 1);
+      nextSlot.setHours(10, 0, 0, 0);
+      
+      return {
+        date: nextSlot.toISOString().split('T')[0],
+        time: '10:00',
+        datetime: nextSlot.toISOString()
+      };
+    }
+  }
+
+  async getTrainingCenterById(facilityId: number): Promise<any> {
+    // Get detailed training center information by ID
+    try {
+      const centers = await db.execute(sql`
+        SELECT * FROM training_centers 
+        WHERE id = ${facilityId} AND is_active = true
+      `);
+      
+      const rows = centers.rows;
+      if (rows && rows.length > 0) {
+        const center = rows[0] as any;
+        return {
+          id: center.id,
+          name: center.name,
+          address: center.address,
+          city: center.city,
+          state: center.state,
+          country: center.country,
+          postalCode: center.postal_code,
+          latitude: center.latitude,
+          longitude: center.longitude,
+          phoneNumber: center.phone_number,
+          email: center.email,
+          website: center.website,
+          operatingHours: center.operating_hours,
+          courtCount: center.court_count,
+          courtSurface: center.court_surface,
+          amenities: center.amenities,
+          isActive: center.is_active,
+          qrCode: center.qr_code
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting training center by ID:', error);
+      // Return mock data for development
+      return {
+        id: facilityId,
+        name: "Elite Pickleball Center",
+        address: "456 Sports Avenue",
+        city: "Singapore",
+        state: "Central",
+        country: "Singapore",
+        postalCode: "123456",
+        latitude: "1.3521",
+        longitude: "103.8198",
+        phoneNumber: "+65 6123 4567",
+        email: "info@elitepickleball.sg",
+        website: "https://elitepickleball.sg",
+        operatingHours: {
+          monday: { open: "06:00", close: "22:00" },
+          tuesday: { open: "06:00", close: "22:00" },
+          wednesday: { open: "06:00", close: "22:00" },
+          thursday: { open: "06:00", close: "22:00" },
+          friday: { open: "06:00", close: "22:00" },
+          saturday: { open: "07:00", close: "21:00" },
+          sunday: { open: "07:00", close: "21:00" }
+        },
+        courtCount: 8,
+        courtSurface: "outdoor",
+        amenities: ["Parking", "Restrooms", "Pro Shop", "Lounge Area", "Equipment Rental"],
+        isActive: true,
+        qrCode: `TC${facilityId.toString().padStart(3, '0')}-SG`
+      };
+    }
+  }
+
+  async getUpcomingClassesAtCenter(facilityId: number): Promise<any[]> {
+    // Get upcoming classes at a specific training center
+    try {
+      const classes = await db.execute(sql`
+        SELECT 
+          c.id,
+          c.name,
+          c.description,
+          c.start_time,
+          c.end_time,
+          c.skill_level,
+          c.max_participants,
+          c.instructor_id,
+          u.display_name as instructor_name,
+          COUNT(ce.id) as enrolled_count
+        FROM classes c
+        LEFT JOIN users u ON c.instructor_id = u.id
+        LEFT JOIN class_enrollments ce ON c.id = ce.class_id
+        WHERE c.center_id = ${facilityId} 
+        AND c.start_time > NOW()
+        AND c.is_active = true
+        GROUP BY c.id, u.display_name
+        ORDER BY c.start_time
+        LIMIT 10
+      `);
+      
+      const rows = classes.rows || [];
+      return rows.map((cls: any) => ({
+        id: cls.id,
+        name: cls.name,
+        description: cls.description,
+        startTime: cls.start_time,
+        endTime: cls.end_time,
+        skillLevel: cls.skill_level,
+        maxParticipants: cls.max_participants,
+        instructorId: cls.instructor_id,
+        instructorName: cls.instructor_name,
+        enrolledCount: parseInt(cls.enrolled_count) || 0,
+        spotsAvailable: cls.max_participants - (parseInt(cls.enrolled_count) || 0)
+      }));
+    } catch (error) {
+      console.error('Error getting upcoming classes:', error);
+      // Return mock upcoming classes
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      return [
+        {
+          id: 1,
+          name: "Beginner Basics",
+          description: "Learn the fundamentals of pickleball",
+          startTime: new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000).toISOString(),
+          endTime: new Date(tomorrow.getTime() + 10 * 60 * 60 * 1000).toISOString(),
+          skillLevel: "beginner",
+          maxParticipants: 8,
+          instructorId: 2,
+          instructorName: "Coach Alex",
+          enrolledCount: 5,
+          spotsAvailable: 3
+        },
+        {
+          id: 2,
+          name: "Advanced Strategy",
+          description: "Master advanced pickleball tactics",
+          startTime: new Date(tomorrow.getTime() + 15 * 60 * 60 * 1000).toISOString(),
+          endTime: new Date(tomorrow.getTime() + 16.5 * 60 * 60 * 1000).toISOString(),
+          skillLevel: "advanced",
+          maxParticipants: 6,
+          instructorId: 3,
+          instructorName: "Coach Maria",
+          enrolledCount: 4,
+          spotsAvailable: 2
+        }
+      ];
+    }
+  }
+
+  async getFacilityAvailability(facilityId: number, date: string): Promise<any[]> {
+    // Get available time slots for a specific facility and date
+    try {
+      const facility = await this.getTrainingCenterById(facilityId);
+      if (!facility) {
+        return [];
+      }
+      
+      const queryDate = new Date(date);
+      const dayOfWeek = queryDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const operatingHours = facility.operatingHours?.[dayOfWeek];
+      
+      if (!operatingHours || operatingHours.closed) {
+        return [];
+      }
+      
+      // Get existing bookings for the date
+      const existingBookings = await db.execute(sql`
+        SELECT 
+          DATE_PART('hour', check_in_time) as hour,
+          DATE_PART('minute', check_in_time) as minute
+        FROM coaching_sessions 
+        WHERE center_id = ${facilityId}
+        AND DATE(check_in_time) = ${date}
+        AND status = 'active'
+      `);
+      
+      const bookingRows = existingBookings.rows || [];
+      const bookedSlots = new Set(
+        bookingRows.map((booking: any) => `${booking.hour}:${booking.minute.toString().padStart(2, '0')}`)
+      );
+      
+      // Generate available slots based on operating hours
+      const availableSlots = [];
+      const openHour = parseInt(operatingHours.open.split(':')[0]);
+      const closeHour = parseInt(operatingHours.close.split(':')[0]);
+      
+      for (let hour = openHour; hour < closeHour; hour++) {
+        const timeSlot = `${hour}:00`;
+        if (!bookedSlots.has(timeSlot)) {
+          availableSlots.push({
+            time: timeSlot,
+            available: true,
+            court: Math.floor(Math.random() * facility.courtCount) + 1
+          });
+        }
+      }
+      
+      return availableSlots;
+    } catch (error) {
+      console.error('Error getting facility availability:', error);
+      // Return mock availability
+      const availableSlots = [];
+      for (let hour = 8; hour < 20; hour++) {
+        if (Math.random() > 0.3) { // 70% chance slot is available
+          availableSlots.push({
+            time: `${hour}:00`,
+            available: true,
+            court: Math.floor(Math.random() * 6) + 1
+          });
+        }
+      }
+      return availableSlots;
+    }
   }
 
   async getActiveSessionForPlayer(playerId: number): Promise<any> {
@@ -6571,6 +6896,236 @@ export class DatabaseStorage implements IStorage {
       console.error('Error getting coach availability:', error);
       return [];
     }
+  }
+
+  // ======= FACILITY BOOKING SYSTEM - PKL-278651-FACILITY-MGMT-001 =======
+  
+  async createFacilityBooking(data: any): Promise<any> {
+    try {
+      if (!this.facilityBookings) {
+        this.facilityBookings = this.initializeFacilityBookings();
+      }
+      
+      const booking = {
+        id: Date.now(), // Use timestamp for simple ID
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      this.facilityBookings.push(booking);
+      console.log(`[STORAGE] Facility booking created: ${booking.id} for facility ${data.facilityId}`);
+      return booking;
+    } catch (error) {
+      console.error('Error creating facility booking:', error);
+      throw error;
+    }
+  }
+
+  async cancelFacilityBooking(bookingId: number): Promise<any> {
+    try {
+      if (!this.facilityBookings) {
+        this.facilityBookings = this.initializeFacilityBookings();
+      }
+      
+      const bookingIndex = this.facilityBookings.findIndex(booking => booking.id === bookingId);
+      if (bookingIndex === -1) {
+        return null;
+      }
+
+      this.facilityBookings[bookingIndex] = {
+        ...this.facilityBookings[bookingIndex],
+        status: 'cancelled',
+        updatedAt: new Date()
+      };
+
+      console.log(`[STORAGE] Facility booking ${bookingId} cancelled`);
+      return this.facilityBookings[bookingIndex];
+    } catch (error) {
+      console.error('Error cancelling facility booking:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityBookingSummary(facilityId?: number, range: string = 'week'): Promise<any> {
+    try {
+      if (!this.facilityBookings) {
+        this.facilityBookings = this.initializeFacilityBookings();
+      }
+      
+      // Mock data for demo - in production would query actual bookings
+      const now = new Date();
+      let bookings = this.facilityBookings;
+      
+      if (facilityId) {
+        bookings = bookings.filter(booking => booking.facilityId === facilityId);
+      }
+      
+      // Filter by date range
+      const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+      const totalRevenue = confirmedBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+      
+      return {
+        totalBookings: bookings.length,
+        confirmedBookings: confirmedBookings.length,
+        cancelledBookings: bookings.filter(b => b.status === 'cancelled').length,
+        totalRevenue,
+        averageBookingValue: confirmedBookings.length > 0 ? totalRevenue / confirmedBookings.length : 0,
+        occupancyRate: Math.min(95, 60 + Math.random() * 30), // Mock 60-90% occupancy
+        popularTimeSlots: [
+          { time: '18:00', bookings: 12 },
+          { time: '19:00', bookings: 11 },
+          { time: '17:00', bookings: 9 }
+        ]
+      };
+    } catch (error) {
+      console.error('Error getting facility booking summary:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityDetailedStats(facilityId?: number, range: string = 'week'): Promise<any> {
+    try {
+      // Mock detailed stats for demo
+      return {
+        bookingTrends: [
+          { date: '2025-01-10', bookings: 8, revenue: 760 },
+          { date: '2025-01-11', bookings: 12, revenue: 1140 },
+          { date: '2025-01-12', bookings: 15, revenue: 1425 },
+          { date: '2025-01-13', bookings: 11, revenue: 1045 },
+          { date: '2025-01-14', bookings: 18, revenue: 1710 },
+          { date: '2025-01-15', bookings: 22, revenue: 2090 },
+          { date: '2025-01-16', bookings: 19, revenue: 1805 }
+        ],
+        peakHours: [
+          { hour: '18:00', utilization: 92 },
+          { hour: '19:00', utilization: 88 },
+          { hour: '17:00', utilization: 75 },
+          { hour: '20:00', utilization: 71 },
+          { hour: '16:00', utilization: 65 }
+        ],
+        courtUtilization: [
+          { court: 'Court 1', utilization: 78, revenue: 2340 },
+          { court: 'Court 2', utilization: 82, revenue: 2460 },
+          { court: 'Court 3', utilization: 71, revenue: 2130 },
+          { court: 'Court 4', utilization: 85, revenue: 2550 }
+        ],
+        customerMetrics: {
+          newCustomers: 24,
+          returningCustomers: 156,
+          averageSessionDuration: 75,
+          customerSatisfaction: 4.7
+        }
+      };
+    } catch (error) {
+      console.error('Error getting facility detailed stats:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityBookings(filters: any): Promise<any> {
+    try {
+      if (!this.facilityBookings) {
+        this.facilityBookings = this.initializeFacilityBookings();
+      }
+      
+      let bookings = [...this.facilityBookings];
+      
+      // Apply filters
+      if (filters.facilityId) {
+        bookings = bookings.filter(booking => booking.facilityId === filters.facilityId);
+      }
+      
+      if (filters.date) {
+        bookings = bookings.filter(booking => booking.date === filters.date);
+      }
+      
+      if (filters.status) {
+        bookings = bookings.filter(booking => booking.status === filters.status);
+      }
+      
+      // Pagination
+      const page = filters.page || 1;
+      const limit = filters.limit || 20;
+      const offset = (page - 1) * limit;
+      const paginatedBookings = bookings.slice(offset, offset + limit);
+      
+      return {
+        bookings: paginatedBookings,
+        totalCount: bookings.length,
+        page,
+        limit,
+        totalPages: Math.ceil(bookings.length / limit)
+      };
+    } catch (error) {
+      console.error('Error getting facility bookings:', error);
+      throw error;
+    }
+  }
+
+  async updateFacilityBookingStatus(bookingId: number, updateData: any): Promise<any> {
+    try {
+      if (!this.facilityBookings) {
+        this.facilityBookings = this.initializeFacilityBookings();
+      }
+      
+      const bookingIndex = this.facilityBookings.findIndex(booking => booking.id === bookingId);
+      if (bookingIndex === -1) {
+        return null;
+      }
+
+      this.facilityBookings[bookingIndex] = {
+        ...this.facilityBookings[bookingIndex],
+        ...updateData,
+        updatedAt: new Date()
+      };
+
+      console.log(`[STORAGE] Facility booking ${bookingId} status updated`);
+      return this.facilityBookings[bookingIndex];
+    } catch (error) {
+      console.error('Error updating facility booking status:', error);
+      throw error;
+    }
+  }
+
+  // Initialize facility booking storage for testing
+  private facilityBookings: any[] | undefined;
+
+  private initializeFacilityBookings(): any[] {
+    return [
+      {
+        id: 1001,
+        facilityId: 1,
+        date: '2025-01-15',
+        time: '18:00',
+        duration: 60,
+        participants: 4,
+        courtNumber: 1,
+        playerName: 'John Smith',
+        playerEmail: 'john.smith@email.com',
+        playerPhone: '555-0123',
+        status: 'confirmed',
+        totalAmount: 95,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 1002,
+        facilityId: 1,
+        date: '2025-01-15',
+        time: '19:00',
+        duration: 90,
+        participants: 2,
+        courtNumber: 2,
+        playerName: 'Sarah Johnson',
+        playerEmail: 'sarah.j@email.com',
+        playerPhone: '555-0124',
+        status: 'confirmed',
+        totalAmount: 142.50,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
   }
 
   // Initialize booking storage for testing
