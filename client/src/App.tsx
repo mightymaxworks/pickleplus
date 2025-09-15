@@ -834,7 +834,7 @@ export default function App() {
                   />
                   {/* PKL-278651-FACILITY-MGMT-001 - Advanced Facility Management System */}
                   <Route path="/facilities" component={FacilityDiscovery} />
-                  <Route path="/facility/:id/book" component={FacilityBooking} />
+                  <Route path="/facility-booking/:id" component={FacilityBooking} />
                   <Route path="/facility/:facilityId/coaches" component={FacilityCoaches} />
                   <Route path="/facility-events" component={FacilityEvents} />
                   <Route path="/facility-manager" component={FacilityManagerDashboard} />

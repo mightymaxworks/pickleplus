@@ -103,7 +103,9 @@ const FacilityBooking: React.FC = () => {
     queryKey: ['/api/facilities', facilityId, 'availability', format(selectedDate, 'yyyy-MM-dd')],
     queryFn: async () => {
       const response = await apiRequest(`/api/facilities/${facilityId}/availability?date=${format(selectedDate, 'yyyy-MM-dd')}`);
-      return await response.json();
+      const data = await response.json();
+      // Ensure we return an array of time slots
+      return Array.isArray(data) ? data : (data?.availability || data?.timeSlots || []);
     },
     enabled: !!facilityId
   });
@@ -314,14 +316,14 @@ const FacilityBooking: React.FC = () => {
                     <div key={i} className="h-12 bg-gray-200 animate-pulse rounded"></div>
                   ))}
                 </div>
-              ) : availability?.length === 0 ? (
+              ) : !availability || availability.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No available time slots for this date</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto" data-testid="timeslots-list">
-                  {availability?.map((slot: TimeSlot, index: number) => (
+                  {(availability || []).map((slot: TimeSlot, index: number) => (
                     <Button
                       key={index}
                       variant={selectedTimeSlot?.time === slot.time ? "default" : "outline"}
@@ -566,7 +568,8 @@ const FacilityBooking: React.FC = () => {
         <WisePaymentForm
           amount={paymentData.amount}
           currency={paymentData.currency}
-          paymentType="coach_session"
+          paymentType="facility_booking"
+          resourceId={facilityId.toString()}
           recipientName={facility.name}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
