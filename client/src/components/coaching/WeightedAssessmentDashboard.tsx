@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import '@/styles/mobile-coaching.css';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -280,11 +281,11 @@ export function WeightedAssessmentDashboard() {
 
   if (error && !coachInfo) {
     return (
-      <Card className="max-w-2xl mx-auto">
-        <CardContent className="p-6">
+      <Card className="max-w-2xl mx-auto mx-4 sm:mx-auto">
+        <CardContent className="p-4 sm:p-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription className="text-sm sm:text-base">{error}</AlertDescription>
           </Alert>
         </CardContent>
       </Card>
@@ -292,22 +293,24 @@ export function WeightedAssessmentDashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Coach Weighted Assessment System</h1>
-        <p className="text-muted-foreground">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 overflow-hidden">
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">Coach Weighted Assessment System</h1>
+        <p className="text-sm sm:text-base text-muted-foreground px-2">
           Advanced PCP rating system with provisional/confirmed validation
         </p>
-        <div className="flex justify-center gap-4 mt-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-4 px-2">
           <Button
             variant={!showTesting ? "default" : "outline"}
             onClick={() => setShowTesting(false)}
+            className="w-full sm:w-auto text-sm"
           >
             Assessment Interface
           </Button>
           <Button
             variant={showTesting ? "default" : "outline"}
             onClick={() => setShowTesting(true)}
+            className="w-full sm:w-auto text-sm"
           >
             <TestTube className="w-4 h-4 mr-2" />
             Algorithm Testing
@@ -331,19 +334,20 @@ export function WeightedAssessmentDashboard() {
             <CardContent>
               <div className="grid gap-4">
                 {testScenarios.map((scenario, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">{scenario.name}</h4>
+                  <div key={index} className="border rounded-lg p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 sm:mb-2">
+                      <h4 className="font-semibold text-sm sm:text-base">{scenario.name}</h4>
                       <Button
                         size="sm"
                         onClick={() => runTestScenario(scenario)}
                         disabled={isRunningTest}
+                        className="w-full sm:w-auto text-xs sm:text-sm"
                       >
-                        <Play className="w-4 h-4 mr-2" />
+                        <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                         Run Test
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">{scenario.description}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2">{scenario.description}</p>
                     <div className="text-xs text-muted-foreground">
                       Assessments: {scenario.assessments.length} | 
                       Coach Levels: {scenario.assessments.map((a: any) => `L${a.coachLevel}`).join(', ')}
@@ -475,11 +479,11 @@ export function WeightedAssessmentDashboard() {
                         <Separator />
                         <div>
                           <h4 className="font-semibold mb-2">Quality Metrics</h4>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>Assessment Count: {testResults.weightedResult.qualityMetrics.assessmentCount}</div>
-                            <div>Avg Coach Level: L{testResults.weightedResult.qualityMetrics.averageCoachLevel.toFixed(1)}</div>
-                            <div>Total Weight: {testResults.weightedResult.qualityMetrics.totalWeight.toFixed(2)}</div>
-                            <div>Consensus: {(testResults.weightedResult.qualityMetrics.consensusScore * 100).toFixed(0)}%</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                            <div className="p-2 bg-muted/50 rounded">Assessment Count: {testResults.weightedResult.qualityMetrics.assessmentCount}</div>
+                            <div className="p-2 bg-muted/50 rounded">Avg Coach Level: L{testResults.weightedResult.qualityMetrics.averageCoachLevel.toFixed(1)}</div>
+                            <div className="p-2 bg-muted/50 rounded">Total Weight: {testResults.weightedResult.qualityMetrics.totalWeight.toFixed(2)}</div>
+                            <div className="p-2 bg-muted/50 rounded">Consensus: {(testResults.weightedResult.qualityMetrics.consensusScore * 100).toFixed(0)}%</div>
                           </div>
                         </div>
                       </>
@@ -508,30 +512,30 @@ export function WeightedAssessmentDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="text-center p-3 bg-primary/5 rounded-lg border">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   {coachInfo.assessmentCapabilities.baseWeight}x
                 </div>
-                <div className="text-sm text-muted-foreground">Base Weight</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Base Weight</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">
+              <div className="text-center p-3 bg-blue-50 rounded-lg border">
+                <div className="text-xl sm:text-2xl font-bold">
                   {(coachInfo.assessmentCapabilities.confidenceFactors.technical * 100).toFixed(0)}%
                 </div>
-                <div className="text-sm text-muted-foreground">Technical Confidence</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Technical</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">
+              <div className="text-center p-3 bg-purple-50 rounded-lg border">
+                <div className="text-xl sm:text-2xl font-bold">
                   {(coachInfo.assessmentCapabilities.confidenceFactors.tactical * 100).toFixed(0)}%
                 </div>
-                <div className="text-sm text-muted-foreground">Tactical Confidence</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Tactical</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">
+              <div className="text-center p-3 bg-orange-50 rounded-lg border">
+                <div className="text-xl sm:text-2xl font-bold">
                   {(coachInfo.assessmentCapabilities.confidenceFactors.mental * 100).toFixed(0)}%
                 </div>
-                <div className="text-sm text-muted-foreground">Mental Confidence</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Mental</div>
               </div>
             </div>
 
@@ -577,10 +581,10 @@ export function WeightedAssessmentDashboard() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {Object.entries(currentAssessment.skillRatings).map(([skill, rating]) => (
-              <div key={skill}>
-                <Label htmlFor={skill} className="capitalize">{skill} Skills</Label>
+              <div key={skill} className="space-y-2">
+                <Label htmlFor={skill} className="capitalize text-sm font-medium">{skill} Skills</Label>
                 <Input
                   id={skill}
                   type="number"
@@ -590,6 +594,7 @@ export function WeightedAssessmentDashboard() {
                   value={rating}
                   onChange={(e) => handleSkillRatingChange(skill, e.target.value)}
                   placeholder="0-10"
+                  className="w-full"
                 />
               </div>
             ))}
@@ -668,13 +673,13 @@ export function WeightedAssessmentDashboard() {
             <Separator />
 
             <div>
-              <h4 className="font-medium mb-2">Category Breakdown:</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <h4 className="font-medium mb-2 text-sm sm:text-base">Category Breakdown:</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {Object.entries(submissionResult.categoryBreakdown).map(([category, score]) => (
-                  <div key={category} className="space-y-1">
+                  <div key={category} className="space-y-2 p-3 bg-muted/30 rounded-lg">
                     <div className="flex justify-between text-sm">
-                      <span className="capitalize">{category}</span>
-                      <span>{score.toFixed(2)}</span>
+                      <span className="capitalize font-medium">{category}</span>
+                      <span className="font-bold text-primary">{score.toFixed(2)}</span>
                     </div>
                     <Progress value={score * 10} className="h-2" />
                   </div>
@@ -685,12 +690,12 @@ export function WeightedAssessmentDashboard() {
             <Separator />
 
             <div>
-              <h4 className="font-medium mb-2">Quality Metrics:</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>Assessment Count: {submissionResult.qualityMetrics.assessmentCount}</div>
-                <div>Average Coach Level: L{submissionResult.qualityMetrics.averageCoachLevel.toFixed(1)}</div>
-                <div>Total Weight: {submissionResult.qualityMetrics.totalWeight.toFixed(2)}</div>
-                <div>Consensus Score: {(submissionResult.qualityMetrics.consensusScore * 100).toFixed(0)}%</div>
+              <h4 className="font-medium mb-2 text-sm sm:text-base">Quality Metrics:</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                <div className="p-2 bg-muted/50 rounded">Assessment Count: {submissionResult.qualityMetrics.assessmentCount}</div>
+                <div className="p-2 bg-muted/50 rounded">Average Coach Level: L{submissionResult.qualityMetrics.averageCoachLevel.toFixed(1)}</div>
+                <div className="p-2 bg-muted/50 rounded">Total Weight: {submissionResult.qualityMetrics.totalWeight.toFixed(2)}</div>
+                <div className="p-2 bg-muted/50 rounded">Consensus Score: {(submissionResult.qualityMetrics.consensusScore * 100).toFixed(0)}%</div>
               </div>
             </div>
 
