@@ -30,8 +30,8 @@ export const coachAvailability = pgTable("coach_availability", {
   // individual, group, clinic, assessment
   
   // Pricing
-  pricePerStudent: decimal("price_per_student", { precision: 8, scale: 2 }).default(95.00),
-  groupDiscount: decimal("group_discount_percentage", { precision: 5, scale: 2 }).default(0),
+  pricePerStudent: decimal("price_per_student", { precision: 8, scale: 2 }).default("95.00"),
+  groupDiscount: decimal("group_discount_percentage", { precision: 5, scale: 2 }).default("0"),
   
   // Location and logistics
   location: varchar("location", { length: 255 }),
