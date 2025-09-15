@@ -12,7 +12,10 @@ import { isAuthenticated } from "../auth";
 
 const router = Router();
 
-// Get coaches available at a specific facility
+// Apply authentication to sensitive routes
+router.use(['/bookings', '/partnerships'], isAuthenticated);
+
+// Get coaches available at a specific facility (public - no auth needed)
 router.get("/facilities/:facilityId/coaches", async (req, res) => {
   try {
     const facilityId = parseInt(req.params.facilityId);

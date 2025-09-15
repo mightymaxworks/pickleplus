@@ -55,19 +55,22 @@
 
 ### 💰 Coach Marketplace Integration
 - [✅] **Backend Infrastructure**: All storage methods implemented (getCoachesAtFacility, partnerships, bookings)
-- [ ] **Coach Discovery at Facilities**: Find coaches available at specific facilities
-- [ ] **Coach-Facility Partnerships**: Revenue sharing setup and approval flow
-- [ ] **Coaching Session Bookings**: Integrated facility + coach booking interface
-- [ ] **Commission Tracking**: Facility commission on coach bookings
+- [✅] **Security Hardening**: Authentication required for bookings and sensitive operations
+- [✅] **API Contract Alignment**: Frontend/backend endpoints properly aligned
+- [✅] **Coach Discovery at Facilities**: Find coaches available at specific facilities (`/facility/:facilityId/coaches`)
+- [✅] **Coach-Facility Partnerships**: Revenue sharing setup and approval flow
+- [✅] **Coaching Session Bookings**: Integrated facility + coach booking interface
+- [ ] **Commission Tracking**: Facility commission on coach bookings (needs payment integration)
 - [ ] **Revenue Analytics**: Coach booking commission dashboard
 
 ### 🎪 Event Hosting System  
 - [✅] **Backend Infrastructure**: All storage methods implemented (events, registrations, revenue)
-- [ ] **Tournament Creation**: Facility-hosted tournaments creation interface
-- [ ] **Event Registration**: Player sign-ups and payments
-- [ ] **Facility Event Calendar**: Public event discovery
-- [ ] **Revenue Split**: Tournament entry fee distribution
-- [ ] **Event Management**: Organizer dashboard for events
+- [✅] **Security Hardening**: Authentication required for event creation and registration
+- [✅] **Tournament Creation Interface**: Complete event management system (`/facility-events`)
+- [✅] **Event Registration**: Player sign-ups and registration management
+- [✅] **Event Analytics**: Performance tracking and success metrics
+- [ ] **Payment Integration**: Stripe integration for entry fees (needs implementation)
+- [ ] **Revenue Split**: Automated tournament entry fee distribution
 
 ### 📊 Advanced Analytics & Reporting
 - [ ] **Revenue Forecasting**: Predictive analytics for facility income

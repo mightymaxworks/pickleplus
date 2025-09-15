@@ -2536,7 +2536,9 @@ export {
 // Export coach facility partnership schemas for Priority 2 development
 export {
   coachFacilityPartnerships, coachBookings, facilityEvents, 
-  eventRegistrations as facilityEventRegs, revenueAnalytics,
+  eventRegistrations as facilityEventRegs, 
+  eventRegistrations as facilityEventRegistrations,
+  revenueAnalytics,
   type CoachFacilityPartnership, type InsertCoachFacilityPartnership,
   type CoachBooking, type InsertCoachBooking,
   type FacilityEvent, type InsertFacilityEvent,

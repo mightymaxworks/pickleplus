@@ -168,6 +168,7 @@ export function AppHeader({
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/matches' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/rankings' },
     { label: 'Facilities', icon: <Building2 size={18} />, path: '/facilities' },
+    { label: 'Events', icon: <Calendar size={18} />, path: '/facility-events' },
     { label: 'Manage Facility', icon: <Compass size={18} />, path: '/facility-manager' },
     { label: 'My Profile', icon: <Users size={18} />, path: '/profile' }
   ];

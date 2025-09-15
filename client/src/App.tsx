@@ -100,6 +100,8 @@ import CommunityEngagementPage from './pages/community/CommunityEngagementPage' 
 import FacilityDiscovery from './pages/facility-discovery'
 import FacilityBooking from './pages/facility-booking'
 import FacilityManagerDashboard from './pages/facility-manager-dashboard'
+import FacilityCoaches from './pages/facility-coaches'
+import FacilityEvents from './pages/facility-events'
 
 // Import notification pages (PKL-278651-COMM-0028-NOTIF)
 import NotificationsPage from './pages/notifications-page'
@@ -833,6 +835,8 @@ export default function App() {
                   {/* PKL-278651-FACILITY-MGMT-001 - Advanced Facility Management System */}
                   <Route path="/facilities" component={FacilityDiscovery} />
                   <Route path="/facility/:id/book" component={FacilityBooking} />
+                  <Route path="/facility/:facilityId/coaches" component={FacilityCoaches} />
+                  <Route path="/facility-events" component={FacilityEvents} />
                   <Route path="/facility-manager" component={FacilityManagerDashboard} />
                   
                   {/* PKL-278651-TRAINING-CENTER-001 - Training Center Management - DISABLED FOR DEPLOYMENT */}
