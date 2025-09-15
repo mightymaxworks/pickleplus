@@ -41,5 +41,13 @@ waitForPort = 5000
 integrations = ["javascript_stripe==1.0.0", "javascript_sendgrid==1.0.0", "perplexity_v0==1.0.0", "javascript_slack==1.0.0", "javascript_websocket==1.0.0", "javascript_anthropic==1.0.0", "javascript_openai==1.0.0"]
 
 [[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 37667
+externalPort = 3000
+
+[[ports]]
 localPort = 45889
 externalPort = 80
