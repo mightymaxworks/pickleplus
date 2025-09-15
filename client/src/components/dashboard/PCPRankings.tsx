@@ -49,8 +49,8 @@ export function PCPRankings({ user }: PCPRankingsProps) {
   // Get user's ranking information
   const userStats = React.useMemo(() => {
     const points = format === 'singles' ? 
-      (user?.singles_ranking_points || 0) : 
-      (user?.doubles_ranking_points || 0);
+      (user?.singlesRankingPoints || 0) : 
+      (user?.doublesRankingPoints || 0);
     
     const rank = userRanking?.ranking || 0;
     const totalPlayers = rankingData?.totalCount || 0;
