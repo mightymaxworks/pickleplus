@@ -473,11 +473,7 @@ export function setupAuth(app: Express) {
       
       // Store the reset token
       try {
-        await storage.createPasswordResetToken({
-          token: resetToken,
-          userId: user.id,
-          expiresAt: expiresAt
-        });
+        await storage.createPasswordResetToken(user.id, resetToken, expiresAt);
         
         // Send password reset email
         const { sendPasswordResetEmail } = await import('./services/emailService');
@@ -1087,9 +1083,9 @@ export function setupAuth(app: Express) {
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
       
       // Store reset token
-      await storage.createPasswordResetToken(email, resetToken, expiresAt);
+      await storage.createPasswordResetToken(user.id, resetToken, expiresAt);
       
-      console.log(`[Auth] Password reset token generated for ${email}: ${resetToken}`);
+      console.log(`[Auth] Password reset token generated for user ID: ${user.id}`);
       
       // In production, you would send an email here
       // For now, we'll log the reset link

@@ -23,8 +23,6 @@ import {
   coachStudentAssignments
 
 } from "@shared/schema";
-// Import Drizzle operators
-import { eq, or, desc, count, isNull, and, gt, gte, sql, getTableColumns } from "drizzle-orm";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
 // Regular matches table uses inferred types
@@ -49,15 +47,6 @@ import {
   type StudentProgressOverview, type DrillCompletionRecord, type CoachProgressAnalytics
 } from "@shared/schema/student-progress";
 
-interface InsertCoachReview {
-  coachId: number;
-  studentId: number;
-  sessionId?: number;
-  rating: number;
-  reviewText?: string;
-  isVerified?: boolean;
-  isPublic?: boolean;
-}
 
 interface CoachingSession {
   id: number;
@@ -103,7 +92,8 @@ import { communityStorageImplementation, type CommunityStorage } from './storage
 import { generateUniquePassportCode } from './utils/passport-generator';
 import { enhanceChineseName, matchesChineseSearch } from './utils/chinese-name-utils';
 import { db } from "./db";
-import { eq, desc, asc, and, or, gte, lte, count, sum, avg, sql, ilike, like } from "drizzle-orm";
+// Consolidated Drizzle operators import
+import { eq, desc, asc, and, or, gte, lte, gt, count, sum, avg, sql, ilike, like, isNull, getTableColumns } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { sessionBookingMethods } from './storage-session-booking';
@@ -130,7 +120,7 @@ export interface IStorage extends CommunityStorage {
   getUsersWithRankingPoints(format?: 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women'): Promise<User[]>;
   
   // Password reset operations
-  createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void>;
+  createPasswordResetToken(userIdOrPayload: number | { userId: number; token: string; expiresAt: Date }, token?: string, expiresAt?: Date): Promise<void>;
   getPasswordResetToken(token: string): Promise<{ userId: number; expiresAt: Date } | undefined>;
   deletePasswordResetToken(token: string): Promise<void>;
   
@@ -945,11 +935,32 @@ export class DatabaseStorage implements IStorage {
 
 
   // Password reset operations - implemented using database
-  async createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<void> {
+  async createPasswordResetToken(
+    userIdOrPayload: number | { userId: number; token: string; expiresAt: Date }, 
+    token?: string, 
+    expiresAt?: Date
+  ): Promise<void> {
+    // Normalize inputs to handle both object and separate parameter forms
+    let userId: number;
+    let normalizedToken: string;
+    let normalizedExpiresAt: Date;
+
+    if (typeof userIdOrPayload === 'object') {
+      // Called with object form: { userId, token, expiresAt }
+      ({ userId, token: normalizedToken, expiresAt: normalizedExpiresAt } = userIdOrPayload);
+      console.log(`[Debug] Password reset token created with object form for userId: ${userId}`);
+    } else {
+      // Called with separate parameters: (userId, token, expiresAt)
+      userId = userIdOrPayload;
+      normalizedToken = token!;
+      normalizedExpiresAt = expiresAt!;
+      console.log(`[Debug] Password reset token created with tuple form for userId: ${userId}`);
+    }
+
     await db.insert(passwordResetTokens).values({
       userId,
-      token,
-      expiresAt,
+      token: normalizedToken,
+      expiresAt: normalizedExpiresAt,
     });
   }
 
