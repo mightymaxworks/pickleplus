@@ -24,16 +24,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CreditCard, DollarSign, Shield, Globe } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
-// Payment form schema
+// Payment form schema - Secure bank transfer flow (PCI compliant)
 const paymentSchema = z.object({
   amount: z.number().min(1, 'Amount must be at least $1'),
   currency: z.string().length(3, 'Invalid currency code'),
-  paymentType: z.enum(['coach_session', 'pcp_certification', 'subscription']),
-  cardNumber: z.string().regex(/^\d{16}$/, 'Invalid card number'),
-  expiryMonth: z.string().regex(/^(0[1-9]|1[0-2])$/, 'Invalid month'),
-  expiryYear: z.string().regex(/^\d{4}$/, 'Invalid year'),
-  cvv: z.string().regex(/^\d{3,4}$/, 'Invalid CVV'),
-  cardholderName: z.string().min(2, 'Cardholder name required')
+  paymentType: z.enum(['coach_session', 'pcp_certification', 'subscription', 'facility_booking', 'tournament_entry']),
+  senderName: z.string().min(2, 'Name is required'),
+  senderEmail: z.string().email('Valid email is required')
 });
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -41,7 +38,8 @@ type PaymentFormData = z.infer<typeof paymentSchema>;
 interface WisePaymentFormProps {
   amount: number;
   currency: string;
-  paymentType: 'coach_session' | 'pcp_certification' | 'subscription';
+  paymentType: 'coach_session' | 'pcp_certification' | 'subscription' | 'facility_booking' | 'tournament_entry';
+  resourceId: string; // Facility ID, Tournament ID, Coach ID, etc.
   recipientName?: string;
   onSuccess?: (paymentResult: any) => void;
   onError?: (error: string) => void;
@@ -51,6 +49,7 @@ export default function WisePaymentForm({
   amount,
   currency = 'USD',
   paymentType,
+  resourceId,
   recipientName,
   onSuccess,
   onError
@@ -65,18 +64,21 @@ export default function WisePaymentForm({
       amount,
       currency,
       paymentType,
-      cardNumber: '',
-      expiryMonth: '',
-      expiryYear: '',
-      cvv: '',
-      cardholderName: ''
+      senderName: '',
+      senderEmail: ''
     }
   });
 
   // Get payment quote
   const quoteMutation = useMutation({
     mutationFn: async (data: { amount: number; currency: string; paymentType: string }) => {
-      const response = await apiRequest('POST', '/api/wise/quote', data);
+      const quoteData = {
+        sourceAmount: data.amount,
+        sourceCurrency: data.currency,
+        targetCurrency: data.currency,
+        paymentType: data.paymentType
+      };
+      const response = await apiRequest('POST', '/api/wise/quote', quoteData);
       return response.json();
     },
     onSuccess: (data) => {
@@ -97,21 +99,19 @@ export default function WisePaymentForm({
     }
   });
 
-  // Process payment
+  // Process payment via secure bank transfer (PCI compliant)
   const paymentMutation = useMutation({
     mutationFn: async (paymentData: PaymentFormData) => {
       const response = await apiRequest('POST', '/api/wise/process', {
         quoteId: quote.id,
-        recipientId: 'coach_recipient_id', // Would be dynamic
         customerTransactionId: `pickle_${Date.now()}`,
+        paymentType: paymentType,
+        resourceId: resourceId, // Server will securely map to recipient
         paymentMethod: {
-          type: 'card',
+          type: 'bank_transfer',
           details: {
-            cardNumber: paymentData.cardNumber,
-            expiryMonth: paymentData.expiryMonth,
-            expiryYear: paymentData.expiryYear,
-            cvv: paymentData.cvv,
-            cardholderName: paymentData.cardholderName
+            senderName: paymentData.senderName,
+            senderEmail: paymentData.senderEmail
           }
         }
       });
@@ -152,11 +152,23 @@ export default function WisePaymentForm({
     paymentMutation.mutate(data);
   };
 
+  // Dynamic recipient ID based on payment type
+  const getRecipientId = () => {
+    switch (paymentType) {
+      case 'facility_booking': return `facility_${recipientName?.toLowerCase().replace(/\s+/g, '_') || 'default'}`;
+      case 'tournament_entry': return `tournament_${recipientName?.toLowerCase().replace(/\s+/g, '_') || 'default'}`;
+      case 'coach_session': return `coach_${recipientName?.toLowerCase().replace(/\s+/g, '_') || 'default'}`;
+      default: return 'default_recipient';
+    }
+  };
+
   const formatPaymentType = (type: string) => {
     switch (type) {
       case 'coach_session': return 'Coach Session';
       case 'pcp_certification': return 'PCP Certification';
       case 'subscription': return 'Premium Subscription';
+      case 'facility_booking': return 'Facility Booking';
+      case 'tournament_entry': return 'Tournament Entry';
       default: return type;
     }
   };
@@ -266,97 +278,64 @@ export default function WisePaymentForm({
 
         {step === 'payment' && (
           <form onSubmit={form.handleSubmit(handleProcessPayment)} className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">Secure Bank Transfer</span>
+              </div>
+              <p className="text-xs text-blue-700">
+                We'll provide you with secure bank transfer instructions. No credit card details required.
+              </p>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="cardNumber">Card Number</Label>
+              <Label htmlFor="senderName">Your Full Name</Label>
               <Input
-                id="cardNumber"
-                placeholder="1234 5678 9012 3456"
-                {...form.register('cardNumber')}
+                id="senderName"
+                placeholder="John Doe"
+                {...form.register('senderName')}
               />
-              {form.formState.errors.cardNumber && (
-                <p className="text-sm text-red-600">{form.formState.errors.cardNumber.message}</p>
+              {form.formState.errors.senderName && (
+                <p className="text-sm text-red-600">{form.formState.errors.senderName.message}</p>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="expiryMonth">Expiry Month</Label>
-                <Select onValueChange={(value) => form.setValue('expiryMonth', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="MM" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const month = String(i + 1).padStart(2, '0');
-                      return (
-                        <SelectItem key={month} value={month}>
-                          {month}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expiryYear">Expiry Year</Label>
-                <Select onValueChange={(value) => form.setValue('expiryYear', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="YYYY" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 10 }, (_, i) => {
-                      const year = String(new Date().getFullYear() + i);
-                      return (
-                        <SelectItem key={year} value={year}>
-                          {year}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="senderEmail">Email Address</Label>
+              <Input
+                id="senderEmail"
+                type="email"
+                placeholder="john@example.com"
+                {...form.register('senderEmail')}
+              />
+              {form.formState.errors.senderEmail && (
+                <p className="text-sm text-red-600">{form.formState.errors.senderEmail.message}</p>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cvv">CVV</Label>
-                <Input
-                  id="cvv"
-                  placeholder="123"
-                  {...form.register('cvv')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cardholderName">Cardholder Name</Label>
-                <Input
-                  id="cardholderName"
-                  placeholder="John Doe"
-                  {...form.register('cardholderName')}
-                />
-              </div>
+            <div className="bg-green-50 p-3 rounded-lg text-xs text-green-700">
+              <strong>Next:</strong> You'll receive secure payment instructions via email with bank details and reference number.
             </div>
 
             <Button 
               type="submit" 
               disabled={paymentMutation.isPending || step === 'processing'}
-              className="w-full"
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {step === 'processing' ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing Payment...
+                  Generating Payment Instructions...
                 </>
               ) : (
-                `Pay ${quote ? `$${quote.totalCost.toFixed(2)}` : `$${amount}`} ${currency}`
+                `Get Payment Instructions - ${quote ? `$${quote.totalCost.toFixed(2)}` : `$${amount}`} ${currency}`
               )}
             </Button>
           </form>
         )}
 
         <p className="text-xs text-gray-500 text-center">
-          Powered by Wise • Secure & regulated payment processing
+          Powered by Wise • PCI-compliant bank transfer • No card details stored
         </p>
       </CardContent>
     </Card>

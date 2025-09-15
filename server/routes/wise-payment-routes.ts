@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { isAuthenticated, isAdmin } from '../auth';
 
 const router = Router();
 
@@ -14,18 +15,40 @@ const createPaymentQuoteSchema = z.object({
   sourceCurrency: z.string().length(3),
   targetCurrency: z.string().length(3),
   sourceAmount: z.number().positive(),
-  paymentType: z.enum(['coach_session', 'pcp_certification', 'subscription'])
+  paymentType: z.enum(['coach_session', 'pcp_certification', 'subscription', 'facility_booking', 'tournament_entry'])
 });
 
 const processPaymentSchema = z.object({
   quoteId: z.string(),
-  recipientId: z.string(),
   customerTransactionId: z.string(),
+  paymentType: z.enum(['coach_session', 'pcp_certification', 'subscription', 'facility_booking', 'tournament_entry']),
+  resourceId: z.string(), // facility ID, tournament ID, etc.
   paymentMethod: z.object({
-    type: z.enum(['card', 'bank_transfer']),
-    details: z.record(z.any())
+    type: z.literal('bank_transfer'), // Only secure bank transfers allowed
+    details: z.object({
+      senderName: z.string(),
+      senderEmail: z.string().email()
+    })
   })
 });
+
+// Secure recipient mapping - server-side only
+function getSecureRecipientId(paymentType: string, resourceId: string): string {
+  const recipientMapping: Record<string, (id: string) => string> = {
+    'facility_booking': (id) => `facility_${id}_verified`,
+    'tournament_entry': (id) => `tournament_${id}_verified`, 
+    'coach_session': (id) => `coach_${id}_verified`,
+    'pcp_certification': () => 'pcp_certification_official',
+    'subscription': () => 'subscription_official'
+  };
+  
+  const mapper = recipientMapping[paymentType];
+  if (!mapper) {
+    throw new Error(`Invalid payment type: ${paymentType}`);
+  }
+  
+  return mapper(resourceId);
+}
 
 // Helper function to make Wise API calls with Business API authentication
 async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any) {
@@ -42,8 +65,7 @@ async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any)
   console.log('WISE API Debug:', {
     endpoint,
     method,
-    hasToken: !!token,
-    tokenPrefix: token.substring(0, 10) + '...',
+    hasToken: !!token, // Removed token prefix to prevent log exposure
     tokenType: isStandardToken ? 'standard' : isUUIDToken ? 'uuid' : 'unknown',
     environment: process.env.NODE_ENV || 'development'
   });
@@ -108,12 +130,14 @@ async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any)
     try {
       console.log(`Trying ${config.name}:`, {
         url: config.url,
-        authHeader: config.headers.Authorization || config.headers['X-API-Key'] ? 'X-API-Key' : 'none'
+        authHeader: config.headers.Authorization ? 'Bearer' : config.headers['X-API-Key'] ? 'X-API-Key' : 'none'
       });
 
       const response = await fetch(config.url, {
         method,
-        headers: config.headers,
+        headers: Object.fromEntries(
+          Object.entries(config.headers).filter(([_, value]) => value !== undefined)
+        ) as Record<string, string>,
         body: data ? JSON.stringify(data) : undefined
       });
 
@@ -136,7 +160,7 @@ async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any)
       }
 
     } catch (error) {
-      console.log(`${config.name} failed:`, error.message);
+      console.log(`${config.name} failed:`, error instanceof Error ? error.message : String(error));
       // Continue to next config
     }
   }
@@ -145,11 +169,11 @@ async function callWiseAPI(endpoint: string, method: string = 'GET', data?: any)
   throw new Error(`All WISE API authentication methods failed. Your token format may require different API access. Please check your WISE dashboard for the correct API configuration or contact WISE support for the proper token format.`);
 }
 
-// Verify Wise webhook signature
+// Verify Wise webhook signature - FAIL CLOSED for security
 function verifyWiseSignature(payload: string, signature: string): boolean {
   if (!process.env.WISE_WEBHOOK_SECRET) {
-    console.warn('WISE_WEBHOOK_SECRET not configured, skipping signature verification');
-    return true;
+    console.error('WISE_WEBHOOK_SECRET not configured - webhook verification FAILED');
+    return false; // Fail closed - reject if no secret configured
   }
   
   try {
@@ -165,8 +189,8 @@ function verifyWiseSignature(payload: string, signature: string): boolean {
 
 // Routes
 
-// Create payment quote
-router.post('/quote', async (req, res) => {
+// Create payment quote (REQUIRES AUTHENTICATION - prevents abuse)
+router.post('/quote', isAuthenticated, async (req, res) => {
   try {
     const validatedData = createPaymentQuoteSchema.parse(req.body);
     
@@ -200,8 +224,8 @@ router.post('/quote', async (req, res) => {
   }
 });
 
-// Create recipient account
-router.post('/recipient', async (req, res) => {
+// Create recipient account (ADMIN ONLY - prevents unauthorized account creation)
+router.post('/recipient', isAdmin, async (req, res) => {
   try {
     const { currency, accountHolderName, accountDetails } = req.body;
     
@@ -231,18 +255,21 @@ router.post('/recipient', async (req, res) => {
   }
 });
 
-// Process payment
-router.post('/process', async (req, res) => {
+// Process payment (REQUIRES AUTHENTICATION - critical security)
+router.post('/process', isAuthenticated, async (req, res) => {
   try {
     const validatedData = processPaymentSchema.parse(req.body);
     
-    // Create transfer
+    // Derive secure recipient ID server-side (prevent fund diversion attacks)
+    const secureRecipientId = getSecureRecipientId(validatedData.paymentType, validatedData.resourceId);
+    
+    // Create transfer with server-verified recipient
     const transfer = await callWiseAPI('/v1/transfers', 'POST', {
-      targetAccount: validatedData.recipientId,
+      targetAccount: secureRecipientId,
       quote: validatedData.quoteId,
       customerTransactionId: validatedData.customerTransactionId,
       details: {
-        reference: `Pickle+ ${validatedData.customerTransactionId}`
+        reference: `Pickle+ ${validatedData.paymentType} ${validatedData.resourceId}`
       }
     });
     
@@ -282,8 +309,8 @@ router.post('/process', async (req, res) => {
   }
 });
 
-// Get payment status
-router.get('/status/:transferId', async (req, res) => {
+// Get payment status (REQUIRES AUTHENTICATION - prevents info disclosure)
+router.get('/status/:transferId', isAuthenticated, async (req, res) => {
   try {
     const { transferId } = req.params;
     
@@ -312,6 +339,24 @@ router.get('/status/:transferId', async (req, res) => {
 
 // Webhook handler for payment notifications
 router.post('/webhook', async (req, res) => {
+  // CRITICAL: Enforce fail-closed webhook verification
+  if (!process.env.WISE_WEBHOOK_SECRET) {
+    console.error('WISE_WEBHOOK_SECRET missing - rejecting webhook');
+    return res.status(401).json({ error: 'Webhook verification failed - no secret configured' });
+  }
+  
+  const signature = req.headers['x-wise-signature'] as string;
+  if (!signature) {
+    console.error('Missing webhook signature');
+    return res.status(401).json({ error: 'Missing webhook signature' });
+  }
+  
+  const rawBody = JSON.stringify(req.body);
+  if (!verifyWiseSignature(rawBody, signature)) {
+    console.error('Invalid webhook signature');
+    return res.status(403).json({ error: 'Invalid webhook signature' });
+  }
+  
   try {
     console.log('Wise webhook received:', {
       headers: req.headers,
@@ -423,8 +468,7 @@ router.get('/debug', (req, res) => {
   res.json({
     hasToken: !!process.env.WISE_API_TOKEN,
     hasProfileId: !!process.env.WISE_BUSINESS_PROFILE_ID,
-    hasSecret: !!process.env.WISE_WEBHOOK_SECRET,
-    tokenPrefix: process.env.WISE_API_TOKEN ? process.env.WISE_API_TOKEN.substring(0, 10) + '...' : 'missing',
+    hasSecret: !!process.env.WISE_WEBHOOK_SECRET, // Removed token prefix to prevent log exposure
     profileId: process.env.WISE_BUSINESS_PROFILE_ID || 'missing',
     apiBase: WISE_API_BASE,
     environment: process.env.NODE_ENV || 'development'

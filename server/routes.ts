@@ -16,6 +16,7 @@ import { registerAdminRoutes } from "./routes/admin-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 import { registerCoachHubRoutes } from "./routes/coach-hub-routes";
 import sessionBookingRoutes from "./routes/session-booking-routes";
+import wisePaymentRoutes from "./routes/wise-payment-routes";
 import wiseBusinessRoutes from "./routes/wise-business-routes";
 import wiseDiagnosticRoutes from "./routes/wise-diagnostic-routes";
 import { trainingCenterRoutes } from "./routes/training-center-routes";
@@ -259,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pcpResult = null;
       if (Object.keys(assessmentData).length > 0) {
         try {
-          pcpResult = calculatePCPRating(assessmentData);
+          pcpResult = calculatePCPRating(assessmentData as any);
         } catch (error) {
           console.log('[PROGRESSIVE ASSESSMENT] PCP calculation with partial data - using provided rating');
           pcpResult = { pcpRating: pcpRating || 0 };
@@ -685,7 +686,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profileService = new ProfileService();
       
       // Calculate profile completion percentage
-      const profileCompletion = user ? profileService.calculateProfileCompletion(user) : { percentage: 0, milestones: [] };
+      const profileCompletion = user ? profileService.calculateProfileCompletion(user as any) : { percentage: 0, milestones: [] };
       
       // Return user with profile completion included
       res.json({
@@ -826,6 +827,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/facilities', facilityDiscoveryRoutes);
     
     // WISE Payment System
+    console.log("[ROUTES] Registering WISE Payment routes...");
+    app.use('/api/wise', wisePaymentRoutes);
+    
     console.log("[ROUTES] Registering WISE Business routes...");
     app.use('/api/wise/business', wiseBusinessRoutes);
     
