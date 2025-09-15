@@ -534,6 +534,266 @@ const COACH_WEIGHTS = {
 
 ---
 
+## 🎯 PRODUCTION DATA PROCESSING SAFEGUARDS
+*Added September 15, 2025 - Based on Chinese Tournament Data Processing*
+
+### **RULE 25: DATABASE SCHEMA PRE-FLIGHT VALIDATION** 🚨
+```typescript
+// MANDATORY: Validate database constraints before bulk operations
+interface SchemaValidation {
+  columnConstraints: Map<string, ColumnConstraint>;
+  dataTypeCompatibility: Map<string, DataType>;
+  foreignKeyRelationships: RelationshipMap;
+}
+
+async function validateDatabaseSchema(operationType: 'bulk_import' | 'migration'): Promise<ValidationResult> {
+  const constraints = await getColumnConstraints(['users', 'matches', 'tournaments']);
+  
+  // CRITICAL: Check idempotency key length limits
+  const idempotencyKeyConstraint = constraints.get('matches.idempotency_key');
+  if (idempotencyKeyConstraint.maxLength < 32) {
+    return {
+      isValid: false,
+      error: `Idempotency key column limited to ${idempotencyKeyConstraint.maxLength} chars`,
+      solution: 'Use .substring(0, 16) for hash keys or migrate column to larger size'
+    };
+  }
+  
+  // CRITICAL: Verify data type compatibility
+  const pointsConstraint = constraints.get('users.pickle_points');
+  if (pointsConstraint.dataType === 'integer' && operationType === 'bulk_import') {
+    return {
+      isValid: false,
+      error: 'Pickle points column expects integers, not decimals',
+      solution: 'Round pickle point calculations: Math.round(points * 1.5)'
+    };
+  }
+  
+  return { isValid: true };
+}
+```
+
+### **RULE 26: REAL-WORLD DATA CORRECTION FRAMEWORK**
+```typescript
+// MANDATORY: Standardized correction mapping for production data
+interface DataCorrectionMap {
+  playerCodeCorrections: Map<string, string>;
+  typoCorrections: Map<string, string>;
+  formatNormalizations: Array<(input: string) => string>;
+}
+
+// CRITICAL: Apply corrections during parsing, not after validation
+function applyProductionDataCorrections(rawData: ExcelRow[]): CorrectedData[] {
+  const CORRECTIONS = {
+    // Database position corrections (PKL-000XXX format)
+    'PKL-000238': 'OUNSK4',
+    'PKL-000239': 'TON83XY3',
+    
+    // Common typos in passport codes
+    '31JJ00': '31JJOO',
+    'A40DAZ': 'A4ODAZ',
+    'FOGBAM': 'F0GBAM',
+    'VOR7AU': 'VQR7AU'
+  };
+  
+  return rawData.map(row => {
+    const correctedPlayers = row.playerCodes.map(code => {
+      if (!code) return null;
+      const normalized = code.toString().toUpperCase().trim();
+      return CORRECTIONS[normalized] || normalized;
+    });
+    
+    return { ...row, correctedPlayerCodes: correctedPlayers };
+  });
+}
+```
+
+### **RULE 27: ENTERPRISE-GRADE BULK PROCESSING PROTOCOL**
+```typescript
+// MANDATORY: Production-ready bulk import with comprehensive safeguards
+class UDFCompliantBulkProcessor {
+  async processProductionData(
+    excelFile: Buffer, 
+    options: BulkProcessingOptions
+  ): Promise<ProcessingResult> {
+    
+    // PHASE 1: Pre-processing validation
+    const schemaValidation = await validateDatabaseSchema('bulk_import');
+    if (!schemaValidation.isValid) {
+      throw new UDFViolationError(schemaValidation.error);
+    }
+    
+    // PHASE 2: Data parsing with corrections
+    const parsedData = parseExcelWithCorrections(excelFile);
+    const playerValidation = await validateAllPlayersExist(parsedData.playerCodes);
+    if (!playerValidation.allFound) {
+      throw new UDFViolationError(`Missing players: ${playerValidation.missing.join(', ')}`);
+    }
+    
+    // PHASE 3: Algorithm compliance check
+    const algorithmValidation = validateBulkAlgorithmCompliance(parsedData);
+    if (!algorithmValidation.isValid) {
+      throw new UDFViolationError(algorithmValidation.errors.join(', '));
+    }
+    
+    // PHASE 4: Transaction-wrapped processing
+    return await this.executeTransactionalBulkUpdate(parsedData);
+  }
+  
+  private async executeTransactionalBulkUpdate(data: ParsedData): Promise<ProcessingResult> {
+    await this.db.query('BEGIN');
+    
+    try {
+      const processedMatches = 0;
+      const duplicatesSkipped = 0;
+      const pointsAwarded = { ranking: 0, pickle: 0 };
+      
+      for (const match of data.matches) {
+        // UDF Rule 21: Idempotency protection
+        const idempotencyKey = this.generateShortKey(match);
+        const exists = await this.checkMatchExists(idempotencyKey);
+        if (exists) { duplicatesSkipped++; continue; }
+        
+        // UDF Rule 22: Additive points only
+        const matchResult = await this.processMatchWithAdditivePoints(match);
+        processedMatches++;
+        pointsAwarded.ranking += matchResult.totalRankingPoints;
+        pointsAwarded.pickle += matchResult.totalPicklePoints;
+      }
+      
+      await this.db.query('COMMIT');
+      
+      return {
+        success: true,
+        processedMatches,
+        duplicatesSkipped,
+        pointsAwarded,
+        udfCompliance: 'VERIFIED'
+      };
+      
+    } catch (error) {
+      await this.db.query('ROLLBACK');
+      throw new UDFProcessingError(error.message);
+    }
+  }
+  
+  private generateShortKey(match: MatchData): string {
+    // CRITICAL: Accommodate database column constraints
+    const signature = `${match.tournament}-${match.players.sort().join(',')}-${match.scores.join('-')}`;
+    return crypto.createHash('sha256').update(signature).digest('hex').substring(0, 16);
+  }
+}
+```
+
+### **RULE 28: CROSS-GENDER BONUS DETECTION ENHANCEMENT**
+```typescript
+// ENHANCED: Robust cross-gender detection for international tournaments
+function detectCrossGenderMatch(players: PlayerData[]): CrossGenderAnalysis {
+  const genders = players
+    .map(p => p.gender?.toLowerCase())
+    .filter(g => g && ['male', 'female'].includes(g));
+    
+  const analysis = {
+    isCrossGender: genders.includes('male') && genders.includes('female'),
+    maleCount: genders.filter(g => g === 'male').length,
+    femaleCount: genders.filter(g => g === 'female').length,
+    unknownGenderCount: players.length - genders.length,
+    bonusEligiblePlayers: []
+  };
+  
+  // CRITICAL: Only apply bonus if cross-gender confirmed
+  if (analysis.isCrossGender) {
+    analysis.bonusEligiblePlayers = players.filter(p => 
+      p.gender === 'female' && 
+      (p.currentRankingPoints || 0) < 1000
+    );
+  }
+  
+  return analysis;
+}
+```
+
+### **RULE 29: PRODUCTION DATA IMPORT AUDIT TRAIL**
+```typescript
+// MANDATORY: Comprehensive audit logging for production imports
+interface ImportAuditLog {
+  timestamp: Date;
+  sourceFile: string;
+  operatorId: string;
+  dataCorrectionsApplied: DataCorrectionMap;
+  processingResults: {
+    totalMatches: number;
+    successfulMatches: number;
+    duplicatesSkipped: number;
+    errorsEncountered: number;
+  };
+  algorithmCompliance: {
+    systemBPointsAwarded: number;
+    genderBonusesApplied: number;
+    picklePointsCalculated: number;
+    additiveUpdatesVerified: boolean;
+  };
+  udfRulesValidated: string[];
+  postImportVerification: ValidationResult;
+}
+
+// CRITICAL: Log every production import for compliance tracking
+async function logProductionImport(
+  results: ProcessingResult, 
+  metadata: ImportMetadata
+): Promise<void> {
+  const auditEntry: ImportAuditLog = {
+    timestamp: new Date(),
+    sourceFile: metadata.filename,
+    operatorId: metadata.userId,
+    dataCorrectionsApplied: metadata.corrections,
+    processingResults: results.statistics,
+    algorithmCompliance: results.algorithmMetrics,
+    udfRulesValidated: ['19', '20', '21', '22', '23', '24', '25', '26', '27', '28'],
+    postImportVerification: await verifyImportIntegrity(results)
+  };
+  
+  await db.insert(importAuditLogs).values(auditEntry);
+}
+```
+
+### **RULE 30: POST-IMPORT VERIFICATION PROTOCOL**
+```typescript
+// MANDATORY: Verify data integrity after bulk operations
+async function verifyImportIntegrity(importResults: ProcessingResult): Promise<VerificationResult> {
+  const verification = {
+    pointsConsistency: await verifyPointCalculations(importResults.matchIds),
+    playerDataIntegrity: await verifyPlayerUpdates(importResults.affectedPlayers),
+    algorithmCompliance: await verifyAlgorithmApplication(importResults.matchIds),
+    auditTrailComplete: await verifyAuditTrail(importResults.operationId)
+  };
+  
+  const allPassed = Object.values(verification).every(check => check.passed);
+  
+  if (!allPassed) {
+    const failures = Object.entries(verification)
+      .filter(([_, check]) => !check.passed)
+      .map(([key, check]) => `${key}: ${check.error}`);
+      
+    throw new UDFPostImportValidationError(
+      `Import verification failed: ${failures.join(', ')}`
+    );
+  }
+  
+  return { passed: true, verificationResults: verification };
+}
+```
+
+**CRITICAL ENFORCEMENT**: 
+- All production data imports MUST use Rules 25-30 protocols
+- Schema validation MUST precede any bulk operations
+- Data corrections MUST be applied during parsing phase
+- Transaction integrity MUST be maintained throughout processing
+- Post-import verification MUST confirm data consistency
+- Audit trails MUST be preserved for all production imports
+
+---
+
 ## 🚨 CRITICAL LESSONS LEARNED - MATCH STATISTICS BUG
 *Added August 26, 2025 - Based on Production Bug Discovery*
 
