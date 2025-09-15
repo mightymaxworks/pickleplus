@@ -78,13 +78,19 @@ const FacilityBooking: React.FC = () => {
   // Fetch facility details
   const { data: facility, isLoading: facilityLoading } = useQuery({
     queryKey: ['/api/facilities', facilityId],
-    queryFn: () => apiRequest(`/api/facilities/${facilityId}`)
+    queryFn: async () => {
+      const response = await apiRequest(`/api/facilities/${facilityId}`);
+      return await response.json();
+    }
   });
 
   // Fetch availability for selected date
   const { data: availability, isLoading: availabilityLoading, refetch: refetchAvailability } = useQuery({
     queryKey: ['/api/facilities', facilityId, 'availability', format(selectedDate, 'yyyy-MM-dd')],
-    queryFn: () => apiRequest(`/api/facilities/${facilityId}/availability?date=${format(selectedDate, 'yyyy-MM-dd')}`),
+    queryFn: async () => {
+      const response = await apiRequest(`/api/facilities/${facilityId}/availability?date=${format(selectedDate, 'yyyy-MM-dd')}`);
+      return await response.json();
+    },
     enabled: !!facilityId
   });
 
@@ -230,14 +236,14 @@ const FacilityBooking: React.FC = () => {
                     <div key={i} className="h-12 bg-gray-200 animate-pulse rounded"></div>
                   ))}
                 </div>
-              ) : availability?.availability?.length === 0 ? (
+              ) : availability?.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No available time slots for this date</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto" data-testid="timeslots-list">
-                  {availability?.availability?.map((slot: TimeSlot, index: number) => (
+                  {availability?.map((slot: TimeSlot, index: number) => (
                     <Button
                       key={index}
                       variant={selectedTimeSlot?.time === slot.time ? "default" : "outline"}
