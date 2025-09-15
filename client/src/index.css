@@ -836,3 +836,13 @@
     touch-action: manipulation;
   }
 }
+
+/* Mobile-first utility classes for facility management */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* Prevent horizontal overflow on mobile */
+body {
+  overflow-x: hidden;
+}
