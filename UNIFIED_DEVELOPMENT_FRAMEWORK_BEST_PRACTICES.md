@@ -819,4 +819,404 @@ export const ADMIN_ROLES = {
 };
 ```
 
-**[End of Document - UDF v2.1.1 - Updated with Admin-First Development Framework]**
+---
+
+## 🚨 CRITICAL DATA IMPORT & INTEGRITY SAFEGUARDS
+*Added September 15, 2025 - Based on Data Integrity Crisis Recovery*
+
+**Context**: A major data corruption incident occurred when processing 89 matches without proper safeguards, resulting in duplicated data, corrupted rankings, and system-wide integrity failures. These rules are MANDATORY to prevent future occurrences.
+
+### **RULE 19: MANDATORY PRE-IMPORT DATABASE STATE ANALYSIS**
+```typescript
+// REQUIRED: Always analyze existing database state before ANY bulk import
+export async function mandatoryPreImportAudit(importType: 'matches' | 'players' | 'tournaments'): Promise<PreImportAuditResult> {
+  console.log('🔍 MANDATORY PRE-IMPORT DATABASE STATE ANALYSIS');
+  
+  const existingData = {
+    totalMatches: await db.select().from(matches).length,
+    totalPlayers: await db.select().from(users).length,
+    totalTournaments: await db.select().from(tournaments).length,
+    maxRankingPoints: await db.select().from(users).orderBy(desc(users.rankingPoints)).limit(1),
+    recentMatches: await db.select().from(matches).orderBy(desc(matches.createdAt)).limit(10)
+  };
+  
+  // CRITICAL: Document current state for rollback reference
+  console.log('📊 PRE-IMPORT BASELINE:', existingData);
+  
+  return {
+    baseline: existingData,
+    isCleanDatabase: existingData.totalMatches === 0 && existingData.totalPlayers === 0,
+    requiresIdempotencyProtection: existingData.totalMatches > 0,
+    rollbackPoint: new Date().toISOString()
+  };
+}
+```
+
+**ENFORCEMENT**: 
+- FORBIDDEN to process any bulk data without pre-import audit
+- All import operations must log baseline state for recovery
+- Clean vs existing database handling must be explicit
+
+### **RULE 20: DATABASE-LEVEL IDEMPOTENCY CONSTRAINTS**
+```typescript
+// MANDATORY: Database-level duplicate prevention for all bulk imports
+// FORBIDDEN: Relying only on application-level validation
+
+// 1. MATCHES IDEMPOTENCY SCHEMA
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(32);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_matches_idempotency_unique
+ON matches(idempotency_key) WHERE idempotency_key IS NOT NULL;
+
+// 2. CANONICAL MATCH SIGNATURE GENERATION
+export function generateMatchIdempotencyKey(match: {
+  tournamentId: number;
+  player1: string;
+  player2: string; 
+  player3?: string;
+  player4?: string;
+  scoreP1: string;
+  scoreP2: string;
+  matchDate: string;
+}): string {
+  // Normalize players (sort teams, sort within teams)
+  const team1 = [match.player1, match.player3].filter(Boolean).sort();
+  const team2 = [match.player2, match.player4].filter(Boolean).sort();
+  const normalizedTeams = [team1.join(','), team2.join(',')].sort();
+  
+  // Canonical signature: tournament + normalized teams + scores + date
+  const signature = `${match.tournamentId}-${normalizedTeams.join('|')}-${match.scoreP1}-${match.scoreP2}-${match.matchDate}`;
+  
+  return crypto.createHash('sha256').update(signature).digest('hex').substring(0, 32);
+}
+
+// 3. ATOMIC UPSERT PATTERN
+export async function safeMatchInsert(matchData: MatchInsertData): Promise<InsertResult> {
+  const idempotencyKey = generateMatchIdempotencyKey(matchData);
+  
+  try {
+    const result = await db.insert(matches).values({
+      ...matchData,
+      idempotencyKey
+    }).onConflictDoNothing().returning();
+    
+    if (result.length === 0) {
+      return { 
+        success: false, 
+        reason: 'DUPLICATE_DETECTED',
+        message: `Match with signature ${idempotencyKey} already exists`
+      };
+    }
+    
+    return { success: true, matchId: result[0].id };
+    
+  } catch (error) {
+    throw new Error(`Match insert failed: ${error.message}`);
+  }
+}
+```
+
+### **RULE 21: COMPREHENSIVE PRE-IMPORT VALIDATION**
+```typescript
+// MANDATORY: Validate import data before ANY database operations
+export async function validateBulkImportData(
+  importData: ImportData[], 
+  importType: 'matches' | 'players'
+): Promise<ValidationResult> {
+  
+  const validation = {
+    totalRecords: importData.length,
+    duplicatesWithinImport: 0,
+    invalidRecords: [] as ValidationError[],
+    expectedPlayers: new Set<string>(),
+    expectedTournaments: new Set<string>(),
+    expectedPointDistribution: 0
+  };
+  
+  // 1. DETECT INTERNAL DUPLICATES
+  const signatures = new Set<string>();
+  for (const record of importData) {
+    const signature = generateRecordSignature(record);
+    if (signatures.has(signature)) {
+      validation.duplicatesWithinImport++;
+    }
+    signatures.add(signature);
+  }
+  
+  // 2. VALIDATE EXPECTED TOTALS
+  if (importType === 'matches') {
+    for (const match of importData as MatchImportData[]) {
+      // Calculate expected point distribution
+      const playersInMatch = [match.player1, match.player2, match.player3, match.player4].filter(Boolean);
+      validation.expectedPlayers.add(...playersInMatch);
+      
+      // Base points: doubles = 8 points per match, singles = 4 points per match
+      validation.expectedPointDistribution += playersInMatch.length === 4 ? 8 : 4;
+    }
+  }
+  
+  // 3. VALIDATE PLAYER EXISTENCE
+  const existingPlayers = await db.select({ passportCode: users.passportCode }).from(users);
+  const existingPlayerCodes = new Set(existingPlayers.map(p => p.passportCode));
+  
+  const missingPlayers = [...validation.expectedPlayers].filter(p => !existingPlayerCodes.has(p));
+  if (missingPlayers.length > 0) {
+    validation.invalidRecords.push({
+      error: 'MISSING_PLAYERS',
+      details: `Players not found in database: ${missingPlayers.join(', ')}`,
+      count: missingPlayers.length
+    });
+  }
+  
+  return {
+    isValid: validation.invalidRecords.length === 0 && validation.duplicatesWithinImport === 0,
+    summary: validation,
+    mustFixBeforeImport: validation.invalidRecords.length > 0
+  };
+}
+```
+
+### **RULE 22: EXPECTED VS ACTUAL RECONCILIATION**
+```typescript
+// MANDATORY: Verify final results match expected calculations
+export async function mandatoryPostImportReconciliation(
+  importSummary: ImportSummary,
+  preImportBaseline: PreImportAuditResult
+): Promise<ReconciliationResult> {
+  
+  console.log('🔍 POST-IMPORT RECONCILIATION ANALYSIS');
+  
+  // 1. MATCH COUNT VERIFICATION
+  const currentMatchCount = await db.select().from(matches).length;
+  const expectedMatchCount = preImportBaseline.baseline.totalMatches + importSummary.successfulMatches;
+  
+  if (currentMatchCount !== expectedMatchCount) {
+    return {
+      passed: false,
+      criticalError: `MATCH COUNT MISMATCH: Expected ${expectedMatchCount}, found ${currentMatchCount}`,
+      recommendation: 'IMMEDIATE ROLLBACK REQUIRED'
+    };
+  }
+  
+  // 2. PLAYER PARTICIPATION VERIFICATION
+  const playersInMatches = await db.selectDistinct({ 
+    playerId: matches.playerOneId 
+  }).from(matches).union(
+    db.selectDistinct({ playerId: matches.playerTwoId }).from(matches)
+  );
+  
+  const expectedPlayerCount = importSummary.uniquePlayersInvolved;
+  if (playersInMatches.length < expectedPlayerCount) {
+    return {
+      passed: false,
+      criticalError: `PLAYER PARTICIPATION GAP: Expected ${expectedPlayerCount} players, found ${playersInMatches.length}`,
+      recommendation: 'DATA INTEGRITY AUDIT REQUIRED'
+    };
+  }
+  
+  // 3. POINT DISTRIBUTION VERIFICATION
+  const totalPointsAwarded = await db.select({ 
+    total: sql<number>`SUM(${users.rankingPoints})` 
+  }).from(users);
+  
+  const expectedPointRange = {
+    min: importSummary.expectedBasePoints,
+    max: importSummary.expectedBasePoints * 1.2 // Account for bonuses
+  };
+  
+  const actualTotal = totalPointsAwarded[0]?.total || 0;
+  if (actualTotal < expectedPointRange.min || actualTotal > expectedPointRange.max) {
+    return {
+      passed: false,
+      criticalError: `POINT DISTRIBUTION ANOMALY: Expected ${expectedPointRange.min}-${expectedPointRange.max}, found ${actualTotal}`,
+      recommendation: 'ALGORITHM VALIDATION REQUIRED'
+    };
+  }
+  
+  return {
+    passed: true,
+    summary: {
+      matchesProcessed: currentMatchCount - preImportBaseline.baseline.totalMatches,
+      playersAffected: playersInMatches.length,
+      pointsDistributed: actualTotal - preImportBaseline.baseline.totalRankingPoints,
+      integrityConfirmed: true
+    }
+  };
+}
+```
+
+### **RULE 23: SURGICAL RECOVERY PROCEDURES**
+```typescript
+// MANDATORY: Systematic recovery procedures for data corruption
+export async function emergencyDataRecovery(
+  corruptionType: 'duplicate_matches' | 'invalid_points' | 'orphaned_data',
+  affectedEntityIds: string[]
+): Promise<RecoveryResult> {
+  
+  console.log('🚨 EMERGENCY DATA RECOVERY INITIATED');
+  console.log(`Corruption Type: ${corruptionType}`);
+  console.log(`Affected Entities: ${affectedEntityIds.length}`);
+  
+  // 1. CREATE RECOVERY CHECKPOINT
+  const recoveryCheckpoint = `recovery_${Date.now()}`;
+  await createRecoveryCheckpoint(recoveryCheckpoint);
+  
+  try {
+    switch (corruptionType) {
+      case 'duplicate_matches':
+        return await removeDuplicateMatches(affectedEntityIds, recoveryCheckpoint);
+        
+      case 'invalid_points':
+        return await recalculateCorruptedPoints(affectedEntityIds, recoveryCheckpoint);
+        
+      case 'orphaned_data':
+        return await cleanupOrphanedData(affectedEntityIds, recoveryCheckpoint);
+        
+      default:
+        throw new Error(`Unknown corruption type: ${corruptionType}`);
+    }
+    
+  } catch (recoveryError) {
+    console.error('🚨 RECOVERY FAILED:', recoveryError.message);
+    
+    // Restore to recovery checkpoint
+    await executeRollback(recoveryCheckpoint);
+    
+    throw new Error(`Recovery failed with rollback: ${recoveryError.message}`);
+  }
+}
+```
+
+### **RULE 24: MANDATORY BULK IMPORT WORKFLOW**
+```typescript
+// REQUIRED: Standard workflow for ALL bulk data imports
+export class BulkImportProcessor {
+  async executeStandardImportWorkflow<T>(
+    importData: T[],
+    importType: string,
+    processingOptions: ImportOptions = {}
+  ): Promise<StandardImportResult> {
+    
+    console.log('🚀 STANDARD BULK IMPORT WORKFLOW INITIATED');
+    console.log(`Import Type: ${importType}`);
+    console.log(`Records: ${importData.length}`);
+    
+    try {
+      // STEP 1: MANDATORY PRE-IMPORT AUDIT
+      console.log('📋 Step 1: Pre-Import Database State Analysis');
+      const preImportAudit = await mandatoryPreImportAudit(importType);
+      
+      if (!preImportAudit.isCleanDatabase && !processingOptions.allowExistingData) {
+        throw new Error('SAFETY VIOLATION: Existing data detected without explicit permission');
+      }
+      
+      // STEP 2: COMPREHENSIVE DATA VALIDATION
+      console.log('🔍 Step 2: Import Data Validation');
+      const validation = await validateBulkImportData(importData, importType);
+      
+      if (!validation.isValid) {
+        throw new Error(`VALIDATION FAILED: ${validation.summary.invalidRecords.map(e => e.error).join(', ')}`);
+      }
+      
+      // STEP 3: IDEMPOTENCY-PROTECTED PROCESSING
+      console.log('⚡ Step 3: Atomic Import Processing');
+      const importResult = await atomicBulkImport(
+        importData,
+        (data, tx) => this.processRecord(data, tx, importType),
+        {
+          batchSize: processingOptions.batchSize || 50,
+          enableRollback: true,
+          rollbackPoint: preImportAudit.rollbackPoint
+        }
+      );
+      
+      // STEP 4: MANDATORY RECONCILIATION
+      console.log('🎯 Step 4: Results Reconciliation');
+      const reconciliation = await mandatoryPostImportReconciliation(
+        importResult.summary,
+        preImportAudit
+      );
+      
+      if (!reconciliation.passed) {
+        throw new Error(`RECONCILIATION FAILED: ${reconciliation.criticalError}`);
+      }
+      
+      console.log('🎉 BULK IMPORT COMPLETED SUCCESSFULLY');
+      
+      return {
+        success: true,
+        summary: {
+          recordsProcessed: importResult.processed,
+          errorsEncountered: importResult.errors,
+          baselineState: preImportAudit.baseline,
+          finalState: reconciliation.summary,
+          integrityConfirmed: true
+        },
+        checkpointId: importResult.checkpointId
+      };
+      
+    } catch (error) {
+      console.error('🚨 BULK IMPORT FAILED:', error.message);
+      
+      // Automatic recovery attempt
+      console.log('🔄 INITIATING EMERGENCY RECOVERY...');
+      await this.emergencyRecovery(error, importType);
+      
+      throw new Error(`Bulk import failed with recovery: ${error.message}`);
+    }
+  }
+}
+```
+
+**CRITICAL ENFORCEMENT REQUIREMENTS**:
+
+1. **ZERO TOLERANCE**: No bulk imports without following standard workflow
+2. **MANDATORY AUDITS**: Pre-import and post-import validation required
+3. **DATABASE CONSTRAINTS**: Idempotency keys enforced at database level
+4. **AUTOMATIC ROLLBACK**: System must restore on any critical failure
+5. **RECONCILIATION VERIFICATION**: Expected vs actual results must match
+6. **INTEGRITY PROTECTION**: Comprehensive validation at every step
+
+**VIOLATION CONSEQUENCES**:
+- Immediate code rejection for non-compliant bulk imports
+- Mandatory re-development with proper safeguards
+- Data corruption incidents trigger emergency recovery procedures
+- Repeated violations result in architecture review and additional training
+
+**SUCCESS METRICS**:
+- Zero data corruption incidents from bulk imports
+- 100% rollback success rate on failed imports
+- Complete audit trail for all bulk operations
+- Automated prevention of duplicate data
+- Systematic recovery from any integrity failures
+
+---
+
+## 📚 LESSONS LEARNED SUMMARY
+
+### **ROOT CAUSES OF DATA INTEGRITY CRISIS**
+1. **Assumption Error**: Assumed empty database without verification
+2. **Missing Safeguards**: No idempotency protection or duplicate prevention
+3. **Incomplete Validation**: Failed to verify expected vs actual totals
+4. **No Recovery Plan**: Lacked systematic rollback procedures
+5. **Insufficient Analysis**: No pre-import database state assessment
+
+### **PREVENTION FRAMEWORK**
+1. **Mandatory Pre-Import Audits**: Always analyze existing data state
+2. **Database-Level Constraints**: Enforce uniqueness at schema level
+3. **Comprehensive Validation**: Verify all expected totals and counts
+4. **Atomic Processing**: Use transactions with automatic rollback
+5. **Post-Import Reconciliation**: Validate final results match expectations
+6. **Emergency Recovery**: Systematic procedures for data corruption
+
+### **ZERO-TOLERANCE ENFORCEMENT**
+- All bulk imports MUST follow the standard workflow
+- Database constraints MUST prevent duplicates at schema level
+- Failed imports MUST trigger automatic rollback procedures
+- Data corruption incidents MUST activate emergency recovery
+- Violations MUST result in immediate code rejection
+
+**This framework ensures that the data integrity crisis of September 15, 2025 never occurs again.**
+
+---
+
+**[End of Document - UDF v2.2.0 - Updated with Critical Data Import & Integrity Safeguards]**
