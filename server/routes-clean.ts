@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth, isAuthenticated, handleMightymaxLogin } from "./auth";
+import { setupAuth, isAuthenticated } from "./auth";
 import passport from "passport";
 import { storage } from "./storage";
 
@@ -57,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Login route with proper authentication
-  app.post('/api/login', handleMightymaxLogin, passport.authenticate('local'), (req: Request, res: Response) => {
+  app.post('/api/login', passport.authenticate('local'), (req: Request, res: Response) => {
     console.log(`[API][Login] User ${req.user?.username} logged in successfully via passport`);
     
     res.json({

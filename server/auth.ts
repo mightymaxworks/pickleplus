@@ -107,8 +107,8 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) {
     const user = req.user as any;
     
-    // Framework 5.3 direct solution: Special handling for known admin user 'mightymax'
-    if (user.username === 'mightymax' || user.isAdmin) {
+    // Check if user has admin privileges from database roles
+    if (user.isAdmin) {
       console.log(`[Auth] Admin access granted to ${user.username} for ${req.path}`);
       return next();
     }
@@ -148,13 +148,7 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
 
 // Enhanced secure version requiring recent login for critical admin operations
 export function isSecureAdmin(req: Request, res: Response, next: NextFunction) {
-  // Framework 5.3 direct solution: Special handling for known admin user 'mightymax'
-  if (req.isAuthenticated() && (req.user as any).username === 'mightymax') {
-    console.log(`[Auth] Secure admin access granted to ${(req.user as any).username} for ${req.path}`);
-    return next();
-  }
-  
-  // Use the enhanced admin check with recent login requirement for other admins
+  // Use the enhanced admin check with recent login requirement for all admins
   return isAdminWithRecentLogin(4)(req, res, next);
 }
 
@@ -168,8 +162,8 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   // Check admin privileges
   const user = req.user as any;
   
-  // Framework 5.3 direct solution: Special handling for known admin user 'mightymax'
-  if (user.username === 'mightymax' || user.isAdmin) {
+  // Check if user has admin privileges from database roles
+  if (user.isAdmin) {
     console.log(`[Auth] Admin access granted to ${user.username} for ${req.path}`);
     return next();
   }
@@ -187,89 +181,6 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 // Setup authentication for the application
-/**
- * Framework 5.3 Direct Solution: Super-Admin Override
- * Directly handles login requests for the mightymax super-admin user
- */
-export async function handleMightymaxLogin(req: Request, res: Response, next: NextFunction) {
-  try {
-    console.log('[SuperAdmin] Checking for mightymax special login');
-    
-    // Check if this is a request for the special user
-    const { username, password } = req.body;
-    
-    if (username !== 'mightymax') {
-      return next(); // Not mightymax, continue with regular auth
-    }
-    
-    console.log('[SuperAdmin] mightymax login attempt detected');
-    
-    // Find the user
-    const user = await storage.getUserByUsername('mightymax');
-    
-    if (!user) {
-      console.log('[SuperAdmin] mightymax user not found in database');
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-    
-    // Validate password with detailed logging
-    console.log('[SuperAdmin] Testing password for mightymax');
-    console.log('[SuperAdmin] Password received:', password ? `"${password}" (length: ${password.length})` : 'undefined/empty');
-    console.log('[SuperAdmin] Stored hash:', user.password ? `"${user.password}" (length: ${user.password.length})` : 'undefined/empty');
-    
-    const passwordValid = await comparePasswords(password, user.password);
-    console.log('[SuperAdmin] Password validation result:', passwordValid);
-    
-    if (!passwordValid) {
-      console.log('[SuperAdmin] Password validation failed for mightymax');
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-    
-    // Force admin privileges regardless of database values
-    const enhancedUser = {
-      ...user,
-      isAdmin: true,
-      isFoundingMember: true
-    };
-    
-    console.log('[SuperAdmin] Enhanced user with admin privileges: isAdmin=true, isFoundingMember=true');
-    
-    // Log the user in with enhanced privileges
-    req.login(enhancedUser, (err) => {
-      if (err) {
-        console.error('[SuperAdmin] Login error:', err);
-        return next(err);
-      }
-      
-      console.log('[SuperAdmin] mightymax login successful');
-      console.log('[SuperAdmin] Session ID:', req.sessionID);
-      
-      // Create audit log for successful admin login
-      storage.createAuditLog({
-        timestamp: new Date(),
-        userId: enhancedUser.id,
-        action: AuditAction.ADMIN_LOGIN,
-        resource: AuditResource.USER,
-        resourceId: enhancedUser.id.toString(),
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.headers['user-agent'] || null,
-        statusCode: 200,
-        additionalData: {
-          method: "special-admin-login",
-          enhancedPrivileges: true
-        }
-      }).catch(err => console.error('Failed to log admin login:', err));
-      
-      // Return the user data without the password
-      const { password, ...userWithoutPassword } = enhancedUser;
-      res.status(200).json(userWithoutPassword);
-    });
-  } catch (error) {
-    console.error('[SuperAdmin] Error in special admin handler:', error);
-    next(error);
-  }
-}
-
 export function setupAuth(app: Express) {
   // Production-optimized session configuration
   const isProduction = process.env.NODE_ENV === 'production';
@@ -405,10 +316,7 @@ export function setupAuth(app: Express) {
         };
         
         // Check specific role flags for backward compatibility
-        // e.g., mightymax user has ADMIN role hardcoded
-        if (user.username === 'mightymax' || 
-            user.username.includes('admin') ||
-            enhancedUser.roles.some(r => r.name === 'ADMIN')) {
+        if (enhancedUser.roles.some(r => r.name === 'ADMIN')) {
           enhancedUser.isAdmin = true;
         }
         
@@ -881,7 +789,7 @@ export function setupAuth(app: Express) {
   });
 
   // Login route
-  app.post("/api/auth/login", handleMightymaxLogin, (req, res, next) => {
+  app.post("/api/auth/login", (req, res, next) => {
     try {
       console.log('[Login] Login attempt:', { 
         username: req.body.username,
@@ -891,7 +799,6 @@ export function setupAuth(app: Express) {
         bodyData: req.body
       });
       
-      // If we get here, it's not mightymax or the special handler passed to next()
       // Validate login data with better error handling
       try {
         loginSchema.parse(req.body);
@@ -913,12 +820,7 @@ export function setupAuth(app: Express) {
           return res.status(401).json({ message: "Invalid username or password" });
         }
         
-        // Check for mightymax username as a backup and force admin privileges
-        if (user.username === 'mightymax') {
-          console.log('[Login] mightymax detected in regular login flow, enforcing admin privileges');
-          user.isAdmin = true;
-          user.isFoundingMember = true;
-        }
+        // User authenticated successfully - admin privileges are determined by database roles
         
         req.login(user, (err) => {
           if (err) {
@@ -1171,66 +1073,6 @@ export function setupAuth(app: Express) {
     res.json({ csrfToken: req.session.csrfToken });
   });
 
-  // Special direct login endpoint for mightymax admin
-  app.get("/api/auth/special-login", async (req, res) => {
-    console.log("[API][Auth] Special login endpoint accessed");
-    const { username } = req.query;
-    
-    if (username !== 'mightymax') {
-      console.log(`[API][Auth] Special login attempted with invalid username: ${username}`);
-      return res.status(403).json({ message: "Access denied" });
-    }
-    
-    try {
-      // Get mightymax user from database
-      const user = await storage.getUserByUsername('mightymax');
-      
-      if (!user) {
-        console.error('[API][Auth] Critical error: mightymax user not found in database');
-        return res.status(500).json({ message: "Error retrieving user" });
-      }
-      
-      // Force admin privileges
-      const enhancedUser = {
-        ...user,
-        isAdmin: true,
-        isFoundingMember: true
-      };
-      
-      // Log the user in
-      req.login(enhancedUser, (err) => {
-        if (err) {
-          console.error('[API][Auth] Special login error:', err);
-          return res.status(500).json({ message: "Login failed" });
-        }
-        
-        console.log('[API][Auth] Special login successful for mightymax');
-        console.log('[API][Auth] Session ID:', req.sessionID);
-        
-        // Create audit log entry
-        storage.createAuditLog({
-          timestamp: new Date(),
-          userId: enhancedUser.id,
-          action: AuditAction.ADMIN_LOGIN,
-          resource: AuditResource.USER,
-          resourceId: enhancedUser.id.toString(),
-          ipAddress: req.ip || 'unknown',
-          userAgent: req.headers['user-agent'] || null,
-          statusCode: 200,
-          additionalData: {
-            method: "special-direct-login",
-            enhancedPrivileges: true
-          }
-        }).catch(err => console.error('Failed to log special login:', err));
-        
-        // Redirect to admin dashboard after successful login
-        res.redirect('/admin');
-      });
-    } catch (error) {
-      console.error('[API][Auth] Error in special login endpoint:', error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
 
   // Current user route
   app.get("/api/auth/current-user", async (req, res) => {
@@ -1250,29 +1092,14 @@ export function setupAuth(app: Express) {
     }
     
     try {
-      // Get user data - first check if it's a special user that needs direct DB access
+      // Get user data using standard method for all users
       const userId = (req.user as User).id;
       const username = (req.user as User).username;
       
-      // Special handling for admin users to ensure admin privileges are preserved
-      let freshUserData;
-      if (username === 'mightymax' || username === 'admin_test') {
-        console.log(`[Auth] Special handling for admin user: ${username}`);
-        freshUserData = await storage.getUserByUsername(username);
-        
-        // Verify admin privileges are set correctly in the database
-        if (freshUserData) {
-          console.log(`[Auth] ${username} admin status in DB: isAdmin=${freshUserData.isAdmin}, isFoundingMember=${freshUserData.isFoundingMember}`);
-          
-          // Framework 5.3 direct solution: Force admin privileges for admin users regardless of DB values
-          freshUserData.isAdmin = true;
-          freshUserData.isFoundingMember = true;
-          console.log(`[Auth] Force-enabled admin privileges for ${username}`);
-        }
-      } else {
-        // For all other users, use standard method
-        freshUserData = await storage.getUser(userId);
-      }
+      // Get fresh user data from database for all users
+      const freshUserData = await storage.getUser(userId);
+      
+      console.log(`[Auth] Retrieved user data for ${username} with admin status: ${freshUserData?.isAdmin}`);
       
       if (!freshUserData) {
         console.log("User authenticated but not found in database:", userId);
