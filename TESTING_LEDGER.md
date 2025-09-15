@@ -17,7 +17,13 @@
 - [ ] **Coach Selection**: Optional coach booking integration
 - [ ] **Confirmation**: Booking creation, confirmation codes
 - [ ] **Error Handling**: Invalid dates, fully booked slots
-- [ ] **Payment Integration**: (Future - not implemented yet)
+- [✅] **Payment Integration**: Wise payment system integrated with 4-step process
+
+### 💳 4-Step Booking Payment Process (COMPLETED)
+- [✅] **Step 1 - Date/Time**: Calendar selection and availability checking
+- [✅] **Step 2 - Details**: User information form with validation
+- [✅] **Step 3 - Payment**: Wise payment form with secure processing
+- [✅] **Step 4 - Confirmation**: Booking confirmation with payment receipt
 
 ### 📊 Facility Manager Dashboard
 - [ ] **Authentication**: Only authenticated users can access
@@ -37,11 +43,17 @@
 - [ ] **GET /api/facilities**: Facility discovery with filters
 - [ ] **GET /api/facilities/:id**: Individual facility details
 - [ ] **GET /api/facilities/:id/availability**: Real-time availability
-- [ ] **POST /api/facility-bookings**: Booking creation
+- [ ] **POST /api/facility-bookings**: Booking creation with payment processing
 - [ ] **GET /api/facility-bookings/my-bookings**: User booking history
 - [ ] **GET /api/facility-manager/summary**: Dashboard metrics
 - [ ] **GET /api/facility-manager/stats**: Detailed analytics
 - [ ] **PATCH /api/facility-bookings/:id/cancel**: Booking cancellation
+
+### 💳 Payment Integration Endpoints (COMPLETED)
+- [✅] **POST /api/wise/quote**: Create payment quote for booking/events
+- [✅] **POST /api/wise/process**: Process Wise payment transactions
+- [✅] **POST /api/wise/webhook**: Handle payment status webhooks
+- [✅] **GET /api/wise/business**: Business profile and account information
 
 ### 🔒 Security & Performance
 - [ ] **Authentication Middleware**: Facility manager route protection
@@ -60,8 +72,8 @@
 - [✅] **Coach Discovery at Facilities**: Find coaches available at specific facilities (`/facility/:facilityId/coaches`)
 - [✅] **Coach-Facility Partnerships**: Revenue sharing setup and approval flow
 - [✅] **Coaching Session Bookings**: Integrated facility + coach booking interface
-- [ ] **Commission Tracking**: Facility commission on coach bookings (needs payment integration)
-- [ ] **Revenue Analytics**: Coach booking commission dashboard
+- [✅] **Commission Tracking**: Facility commission on coach bookings via integrated Wise payments
+- [ ] **Revenue Analytics**: Coach booking commission dashboard (needs testing)
 
 ### 🎪 Event Hosting System  
 - [✅] **Backend Infrastructure**: All storage methods implemented (events, registrations, revenue)
@@ -69,8 +81,8 @@
 - [✅] **Tournament Creation Interface**: Complete event management system (`/facility-events`)
 - [✅] **Event Registration**: Player sign-ups and registration management
 - [✅] **Event Analytics**: Performance tracking and success metrics
-- [ ] **Payment Integration**: Stripe integration for entry fees (needs implementation)
-- [ ] **Revenue Split**: Automated tournament entry fee distribution
+- [✅] **Payment Integration**: Wise payment system for tournament entry fees and event registration
+- [✅] **Revenue Split**: Automated tournament entry fee distribution with payment processing
 
 ### 📊 Advanced Analytics & Reporting
 - [ ] **Revenue Forecasting**: Predictive analytics for facility income
@@ -81,13 +93,35 @@
 - [ ] **Commission Dashboard**: Coach booking commissions
 - [ ] **Event Revenue Tracking**: Tournament and event income
 - [ ] **Forecasting**: Revenue prediction and trends
-- [ ] **Payment Processing**: Stripe integration for all transactions
+- [✅] **Payment Processing**: Wise integration for all facility and event transactions
 
 ### 🔄 Advanced Booking Features
 - [ ] **Recurring Bookings**: Weekly/monthly facility reservations
 - [ ] **Group Bookings**: Multi-court reservations
 - [ ] **Membership Integration**: Facility membership discounts
 - [ ] **Dynamic Pricing**: Peak/off-peak pricing models
+
+### 🏆 Tournament Payment Integration (COMPLETED)
+- [✅] **Tournament Registration**: Payment-enabled tournament sign-ups
+- [✅] **Entry Fee Processing**: Wise payment integration for tournament fees
+- [✅] **Payment Dialog**: Modal payment interface for tournaments
+- [✅] **Registration Completion**: Post-payment tournament registration
+- [ ] **Tournament Payout**: Winner prize distribution (needs testing)
+
+### 🎯 Testing Routes for Payment Integration
+**Facility Booking Routes:**
+- [ ] `/facility-booking/1` - Test 4-step booking process with payment
+- [ ] `/facility-discovery` - Test facility search and booking access
+- [ ] `/facility-manager-dashboard` - Test manager analytics with revenue data
+
+**Tournament/Event Routes:**
+- [ ] `/tournaments/:id` - Test tournament registration with entry fees
+- [ ] `/facility-events` - Test event creation and payment setup
+- [ ] `/facility-coaches` - Test coach marketplace with commission tracking
+
+**Payment System Routes:**
+- [ ] All `/api/wise/*` endpoints - Test payment processing and webhooks
+- [ ] Payment success/failure flows - Test error handling and confirmations
 
 ---
 
