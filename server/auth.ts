@@ -447,7 +447,7 @@ export function setupAuth(app: Express) {
 
   // Authentication routes
   
-  // Password reset request endpoint - Admin assisted
+  // Password reset request endpoint - Email automated
   app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
@@ -462,30 +462,45 @@ export function setupAuth(app: Express) {
       if (!user) {
         // Don't reveal whether email exists for security
         return res.status(200).json({ 
-          message: "Your password reset request has been submitted to our admin team" 
+          message: "If an account with that email exists, you will receive a password reset email shortly." 
         });
       }
       
-      // Create a password reset request for admin processing
-      const resetRequest = {
-        userId: user.id,
-        email: email,
-        requestedAt: new Date(),
-        status: 'pending'
-      };
+      // Generate secure reset token
+      const crypto = await import('crypto');
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
       
-      // Store the request (you'll need to create this table/method)
+      // Store the reset token
       try {
-        await storage.createPasswordResetRequest(resetRequest);
+        await storage.createPasswordResetToken({
+          token: resetToken,
+          userId: user.id,
+          expiresAt: expiresAt
+        });
+        
+        // Send password reset email
+        const { sendPasswordResetEmail } = await import('./services/emailService');
+        const emailSent = await sendPasswordResetEmail(
+          user.email!, 
+          resetToken, 
+          user.displayName || user.username
+        );
+        
+        if (!emailSent) {
+          console.error('[Auth] Failed to send password reset email');
+          return res.status(500).json({ message: "Failed to send password reset email" });
+        }
+        
+        console.log(`[Auth] Password reset email sent to ${email} (User ID: ${user.id})`);
+        
       } catch (error) {
-        console.log('[Auth] Password reset request stored in memory for admin processing');
+        console.error('[Auth] Error creating password reset token or sending email:', error);
+        return res.status(500).json({ message: "Failed to process password reset request" });
       }
       
-      // Log for admin to see the request
-      console.log(`[Auth] Password reset request submitted for ${email} (User ID: ${user.id})`);
-      
       res.status(200).json({ 
-        message: "Your password reset request has been submitted to our admin team. You'll be contacted within 24 hours."
+        message: "If an account with that email exists, you will receive a password reset email shortly."
       });
     } catch (error) {
       console.error('[Auth] Error in forgot-password:', error);

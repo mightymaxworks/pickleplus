@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">Request Submitted</CardTitle>
             <CardDescription className="text-gray-600">
-              Your password reset request has been submitted to our admin team. You'll be contacted within 24 hours with a temporary password.
+              We've sent you an email with instructions to reset your password. Please check your inbox and follow the link provided.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -98,14 +98,14 @@ export default function ForgotPasswordPage() {
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Password Reset</CardTitle>
           <CardDescription className="text-gray-600">
-            Enter your email address and we'll help you reset your password through our admin team.
+            Enter your email address and we'll send you a secure link to reset your password.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription>
-              Since we don't have email service configured, our admin team will manually assist with password resets. 
-              This typically takes less than 24 hours.
+              Enter your email address and we'll send you a secure link to reset your password. 
+              The reset link will expire in 24 hours for security.
             </AlertDescription>
           </Alert>
 
