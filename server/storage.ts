@@ -20,7 +20,14 @@ import {
   type InsertUserAgeGroupRanking,
   type AgeCategory,
   // Coach Student Assignments
-  coachStudentAssignments
+  coachStudentAssignments,
+  // Coach Facility Partnership imports (using aliased import to avoid conflict)
+  coachFacilityPartnerships, coachBookings, facilityEvents, facilityEventRegistrations as facilityEventRegs, revenueAnalytics,
+  type CoachFacilityPartnership, type InsertCoachFacilityPartnership,
+  type CoachBooking, type InsertCoachBooking,
+  type FacilityEvent, type InsertFacilityEvent,
+  type FacilityEventRegistration, type InsertFacilityEventRegistration,
+  type RevenueAnalytics, type InsertRevenueAnalytics
 
 } from "@shared/schema";
 // Import regular matches table and types from main schema
@@ -429,6 +436,25 @@ export interface IStorage extends CommunityStorage {
     adminUserId: number;
     reviewComments?: string;
   }): Promise<any>;
+  
+  // Coach Marketplace Integration Methods (PKL-278651-FACILITY-MGMT-002)
+  getCoachesAtFacility(facilityId: number): Promise<any[]>;
+  getCoachPartnerships(coachId: number): Promise<any[]>;
+  createCoachPartnership(data: any): Promise<any>;
+  getCoachPartnership(partnershipId: number): Promise<any>;
+  createCoachBooking(data: any): Promise<any>;
+  getFacilityRevenueAnalytics(facilityId: number, range: string): Promise<any>;
+  getCoachBookings(filters: { coachId: number; status?: string; page?: number; limit?: number; }): Promise<any[]>;
+  
+  // Event Hosting System Methods (PKL-278651-FACILITY-MGMT-002) 
+  getFacilityEvents(facilityId: number, options: { status?: string; upcoming?: boolean; }): Promise<any[]>;
+  createFacilityEvent(data: any): Promise<any>;
+  getFacilityEvent(eventId: number): Promise<any>;
+  createEventRegistration(data: any): Promise<any>;
+  updateEventRegistrationCount(eventId: number, count: number): Promise<void>;
+  getEventRegistrations(eventId: number): Promise<any[]>;
+  updateFacilityEvent(eventId: number, data: any): Promise<any>;
+  getEventRevenueAnalytics(eventId: number): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -7658,6 +7684,389 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating coach-student assignment:', error);
       throw error;
+    }
+  }
+
+  // Coach Marketplace Integration Methods (PKL-278651-FACILITY-MGMT-002)
+  async getCoachesAtFacility(facilityId: number): Promise<any[]> {
+    try {
+      const coaches = await db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          email: users.email,
+          hourlyRate: coachFacilityPartnerships.coachRate,
+          specializations: coachFacilityPartnerships.specializations,
+          availableSlots: coachFacilityPartnerships.availableSlots,
+          commissionRate: coachFacilityPartnerships.commissionRate,
+          partnershipType: coachFacilityPartnerships.partnershipType,
+          minimumBookingDuration: coachFacilityPartnerships.minimumBookingDuration,
+          isExclusive: coachFacilityPartnerships.isExclusive
+        })
+        .from(coachFacilityPartnerships)
+        .innerJoin(users, eq(coachFacilityPartnerships.coachId, users.id))
+        .where(
+          and(
+            eq(coachFacilityPartnerships.facilityId, facilityId),
+            eq(coachFacilityPartnerships.status, 'active')
+          )
+        );
+      
+      return coaches;
+    } catch (error) {
+      console.error('Error fetching coaches at facility:', error);
+      return [];
+    }
+  }
+
+  async getCoachPartnerships(coachId: number): Promise<any[]> {
+    try {
+      const partnerships = await db
+        .select()
+        .from(coachFacilityPartnerships)
+        .where(eq(coachFacilityPartnerships.coachId, coachId))
+        .orderBy(desc(coachFacilityPartnerships.createdAt));
+      
+      return partnerships;
+    } catch (error) {
+      console.error('Error fetching coach partnerships:', error);
+      return [];
+    }
+  }
+
+  async createCoachPartnership(data: any): Promise<any> {
+    try {
+      const [partnership] = await db
+        .insert(coachFacilityPartnerships)
+        .values({
+          facilityId: data.facilityId,
+          coachId: data.coachId,
+          partnershipType: data.partnershipType,
+          commissionRate: data.commissionRate.toString(),
+          coachRate: data.coachRate.toString(),
+          minimumBookingDuration: data.minimumBookingDuration,
+          isExclusive: data.isExclusive,
+          specializations: data.specializations,
+          availableSlots: data.availableSlots,
+          terms: data.terms,
+          startDate: new Date(data.startDate),
+          endDate: data.endDate ? new Date(data.endDate) : null,
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return partnership;
+    } catch (error) {
+      console.error('Error creating coach partnership:', error);
+      throw error;
+    }
+  }
+
+  async getCoachPartnership(partnershipId: number): Promise<any> {
+    try {
+      const [partnership] = await db
+        .select()
+        .from(coachFacilityPartnerships)
+        .where(eq(coachFacilityPartnerships.id, partnershipId))
+        .limit(1);
+      
+      return partnership;
+    } catch (error) {
+      console.error('Error fetching coach partnership:', error);
+      return null;
+    }
+  }
+
+  async createCoachBooking(data: any): Promise<any> {
+    try {
+      const [booking] = await db
+        .insert(coachBookings)
+        .values({
+          partnershipId: data.partnershipId,
+          playerId: data.playerId,
+          coachId: data.coachId,
+          facilityId: data.facilityId,
+          sessionDate: new Date(data.sessionDate),
+          duration: data.duration,
+          courtNumber: data.courtNumber,
+          totalAmount: data.totalAmount,
+          coachEarnings: data.coachEarnings,
+          facilityCommission: data.facilityCommission,
+          platformFee: data.platformFee,
+          sessionType: data.sessionType,
+          specialRequests: data.specialRequests,
+          status: data.status,
+          paymentStatus: data.paymentStatus,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return booking;
+    } catch (error) {
+      console.error('Error creating coach booking:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityRevenueAnalytics(facilityId: number, range: string): Promise<any> {
+    try {
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch (range) {
+        case 'day':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        default:
+          startDate.setDate(now.getDate() - 7);
+      }
+
+      const analytics = await db
+        .select({
+          totalRevenue: sum(revenueAnalytics.totalRevenue),
+          netRevenue: sum(revenueAnalytics.netRevenue),
+          bookingCount: sum(revenueAnalytics.bookingCount),
+          participantCount: sum(revenueAnalytics.participantCount)
+        })
+        .from(revenueAnalytics)
+        .where(
+          and(
+            eq(revenueAnalytics.facilityId, facilityId),
+            gte(revenueAnalytics.recordDate, startDate)
+          )
+        );
+      
+      return analytics[0] || { totalRevenue: 0, netRevenue: 0, bookingCount: 0, participantCount: 0 };
+    } catch (error) {
+      console.error('Error fetching facility revenue analytics:', error);
+      return { totalRevenue: 0, netRevenue: 0, bookingCount: 0, participantCount: 0 };
+    }
+  }
+
+  async getCoachBookings(filters: { coachId: number; status?: string; page?: number; limit?: number; }): Promise<any[]> {
+    try {
+      const page = filters.page || 1;
+      const limit = filters.limit || 20;
+      const offset = (page - 1) * limit;
+      
+      let query = db
+        .select()
+        .from(coachBookings)
+        .where(eq(coachBookings.coachId, filters.coachId));
+      
+      if (filters.status) {
+        query = query.where(and(eq(coachBookings.coachId, filters.coachId), eq(coachBookings.status, filters.status)));
+      }
+      
+      const bookings = await query
+        .orderBy(desc(coachBookings.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return bookings;
+    } catch (error) {
+      console.error('Error fetching coach bookings:', error);
+      return [];
+    }
+  }
+
+  // Event Hosting System Methods (PKL-278651-FACILITY-MGMT-002)
+  async getFacilityEvents(facilityId: number, options: { status?: string; upcoming?: boolean; }): Promise<any[]> {
+    try {
+      let query = db
+        .select()
+        .from(facilityEvents)
+        .where(eq(facilityEvents.facilityId, facilityId));
+      
+      if (options.status) {
+        query = query.where(and(eq(facilityEvents.facilityId, facilityId), eq(facilityEvents.status, options.status)));
+      }
+      
+      if (options.upcoming) {
+        query = query.where(and(eq(facilityEvents.facilityId, facilityId), gt(facilityEvents.startDateTime, new Date())));
+      }
+      
+      const events = await query.orderBy(asc(facilityEvents.startDateTime));
+      return events;
+    } catch (error) {
+      console.error('Error fetching facility events:', error);
+      return [];
+    }
+  }
+
+  async createFacilityEvent(data: any): Promise<any> {
+    try {
+      const [event] = await db
+        .insert(facilityEvents)
+        .values({
+          facilityId: data.facilityId,
+          organizerId: data.organizerId,
+          eventType: data.eventType,
+          title: data.title,
+          description: data.description,
+          startDateTime: new Date(data.startDateTime),
+          endDateTime: new Date(data.endDateTime),
+          maxParticipants: data.maxParticipants,
+          currentRegistrations: data.currentRegistrations,
+          entryFee: data.entryFee.toString(),
+          facilityRevenue: data.facilityRevenue,
+          organizerRevenue: data.organizerRevenue,
+          prizePool: data.prizePool.toString(),
+          courtRequirements: data.courtRequirements,
+          equipment: data.equipment,
+          skillLevel: data.skillLevel,
+          ageGroups: data.ageGroups,
+          registrationDeadline: new Date(data.registrationDeadline),
+          cancellationPolicy: data.cancellationPolicy,
+          rules: data.rules,
+          imageUrl: data.imageUrl,
+          status: data.status,
+          isPublished: data.isPublished,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return event;
+    } catch (error) {
+      console.error('Error creating facility event:', error);
+      throw error;
+    }
+  }
+
+  async getFacilityEvent(eventId: number): Promise<any> {
+    try {
+      const [event] = await db
+        .select()
+        .from(facilityEvents)
+        .where(eq(facilityEvents.id, eventId))
+        .limit(1);
+      
+      return event;
+    } catch (error) {
+      console.error('Error fetching facility event:', error);
+      return null;
+    }
+  }
+
+  async createEventRegistration(data: any): Promise<any> {
+    try {
+      const [registration] = await db
+        .insert(facilityEventRegs)
+        .values({
+          eventId: data.eventId,
+          playerId: data.playerId,
+          amountPaid: data.amountPaid,
+          paymentStatus: data.paymentStatus,
+          teamPartners: data.teamPartners,
+          emergencyContact: data.emergencyContact,
+          dietaryRestrictions: data.dietaryRestrictions,
+          specialRequests: data.specialRequests,
+          status: data.status,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return registration;
+    } catch (error) {
+      console.error('Error creating event registration:', error);
+      throw error;
+    }
+  }
+
+  async updateEventRegistrationCount(eventId: number, count: number): Promise<void> {
+    try {
+      await db
+        .update(facilityEvents)
+        .set({ 
+          currentRegistrations: count,
+          updatedAt: new Date()
+        })
+        .where(eq(facilityEvents.id, eventId));
+    } catch (error) {
+      console.error('Error updating event registration count:', error);
+      throw error;
+    }
+  }
+
+  async getEventRegistrations(eventId: number): Promise<any[]> {
+    try {
+      const registrations = await db
+        .select()
+        .from(facilityEventRegs)
+        .where(eq(facilityEventRegs.eventId, eventId))
+        .orderBy(desc(facilityEventRegs.createdAt));
+      
+      return registrations;
+    } catch (error) {
+      console.error('Error fetching event registrations:', error);
+      return [];
+    }
+  }
+
+  async updateFacilityEvent(eventId: number, data: any): Promise<any> {
+    try {
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.isPublished !== undefined) updateData.isPublished = data.isPublished;
+      if (data.currentRegistrations !== undefined) updateData.currentRegistrations = data.currentRegistrations;
+      
+      const [event] = await db
+        .update(facilityEvents)
+        .set(updateData)
+        .where(eq(facilityEvents.id, eventId))
+        .returning();
+      
+      return event;
+    } catch (error) {
+      console.error('Error updating facility event:', error);
+      throw error;
+    }
+  }
+
+  async getEventRevenueAnalytics(eventId: number): Promise<any> {
+    try {
+      // Get event details
+      const event = await this.getFacilityEvent(eventId);
+      if (!event) {
+        return null;
+      }
+      
+      // Get registration count
+      const registrations = await this.getEventRegistrations(eventId);
+      
+      const totalRevenue = parseFloat(event.entryFee) * registrations.length;
+      const facilityRevenue = parseFloat(event.facilityRevenue);
+      const organizerRevenue = parseFloat(event.organizerRevenue);
+      
+      return {
+        eventId,
+        eventTitle: event.title,
+        totalRegistrations: registrations.length,
+        maxParticipants: event.maxParticipants,
+        entryFee: event.entryFee,
+        totalRevenue,
+        facilityRevenue,
+        organizerRevenue,
+        prizePool: event.prizePool,
+        registrationRate: (registrations.length / event.maxParticipants) * 100
+      };
+    } catch (error) {
+      console.error('Error fetching event revenue analytics:', error);
+      return null;
     }
   }
 }

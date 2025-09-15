@@ -45,7 +45,7 @@ import {
 import './match-statistics-schema';
 
 // Import event schema (PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System)
-import { events, eventCheckIns, eventRegistrations, passportVerifications } from './schema/events';
+import { events, eventCheckIns, eventRegistrations as generalEventRegistrations, passportVerifications } from './schema/events';
 
 // Import event templates schema (PKL-278651-COMM-0035-EVENT - Enhanced Event Display and Management)
 
@@ -188,6 +188,34 @@ import {
   type CreateConnectionRequest,
   type ProcessConnectionRequest
 } from './schema/student-coach-connections';
+
+// Import coach-facility partnerships schema (PKL-278651-FACILITY-MGMT-002)
+import {
+  coachFacilityPartnerships,
+  coachBookings,
+  facilityEvents,
+  eventRegistrations as facilityEventRegistrations,
+  revenueAnalytics,
+  coachFacilityPartnershipsRelations,
+  coachBookingsRelations,
+  facilityEventsRelations,
+  eventRegistrationsRelations as facilityEventRegistrationsRelations,
+  insertCoachFacilityPartnershipSchema,
+  insertCoachBookingSchema,
+  insertFacilityEventSchema,
+  insertEventRegistrationSchema as insertFacilityEventRegistrationSchema,
+  insertRevenueAnalyticsSchema,
+  type CoachFacilityPartnership,
+  type InsertCoachFacilityPartnership,
+  type CoachBooking,
+  type InsertCoachBooking,
+  type FacilityEvent,
+  type InsertFacilityEvent,
+  type EventRegistration as FacilityEventRegistration,
+  type InsertEventRegistration as InsertFacilityEventRegistration,
+  type RevenueAnalytics,
+  type InsertRevenueAnalytics
+} from './schema/coach-facility-partnerships';
 
 // XP system schema imports temporarily removed for deployment fix
 
@@ -379,9 +407,6 @@ import {
   coachCertifications,
   coachProfiles,
   coachReviews,
-  coachApplicationsRelations,
-  coachProfilesRelations,
-  coachReviewsRelations,
   insertCoachApplicationSchema,
   insertCoachCertificationSchema,
   insertCoachProfileSchema,
@@ -393,10 +418,7 @@ import {
   type CoachProfile,
   type InsertCoachProfile,
   type CoachReview,
-  type InsertCoachReview,
-  type CoachApplicationStatusType,
-  type CoachTypeType,
-  type VerificationLevelType
+  type InsertCoachReview
 } from './schema/coach-management';
 
 // Import Coach Marketplace Discovery system schema (UDF: Coach Marketplace Discovery)
@@ -2265,21 +2287,21 @@ export {
 // Export training center schemas (PKL-278651-TRAINING-CENTER-001)
 export {
   trainingCenters,
-  coachingSessions,
+  sageCoachingSessions,
   challenges,
   challengeCompletions,
   digitalBadges,
   playerBadges,
   insertTrainingCenterSchema,
-  insertCoachingSessionSchema,
+  insertSageCoachingSessionSchema,
   insertChallengeSchema,
   insertChallengeCompletionSchema,
   insertDigitalBadgeSchema,
   insertPlayerBadgeSchema,
   type TrainingCenter,
   type InsertTrainingCenter,
-  type CoachingSession,
-  type InsertCoachingSession,
+  type SageCoachingSession,
+  type InsertSageCoachingSession,
   type Challenge,
   type InsertChallenge,
   type ChallengeCompletion,
@@ -2510,3 +2532,14 @@ export {
   type AdminActionContext,
   type AdminPermissionCheck
 };
+
+// Export coach facility partnership schemas for Priority 2 development
+export {
+  coachFacilityPartnerships, coachBookings, facilityEvents, 
+  eventRegistrations as facilityEventRegs, revenueAnalytics,
+  type CoachFacilityPartnership, type InsertCoachFacilityPartnership,
+  type CoachBooking, type InsertCoachBooking,
+  type FacilityEvent, type InsertFacilityEvent,
+  type EventRegistration as FacilityEventRegistration, type InsertEventRegistration as InsertFacilityEventRegistration,
+  type RevenueAnalytics, type InsertRevenueAnalytics
+} from './schema/coach-facility-partnerships';
