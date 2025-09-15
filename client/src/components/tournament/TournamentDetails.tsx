@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
+import WisePaymentForm from "@/components/payments/WisePaymentForm";
 
 import {
   Card,
@@ -17,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Calendar,
@@ -64,6 +66,8 @@ export default function TournamentDetails({ tournamentId }: TournamentDetailsPro
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   // Fetch tournament details
   const { data: tournament, isLoading, error } = useQuery({
@@ -137,7 +141,68 @@ export default function TournamentDetails({ tournamentId }: TournamentDetailsPro
   });
 
   const handleRegister = () => {
-    registerMutation.mutate();
+    // Check if tournament has entry fee
+    if (tournament?.entryFee && tournament.entryFee > 0 && !paymentCompleted) {
+      // Show payment form for paid tournaments
+      setShowPayment(true);
+    } else {
+      // Free tournament or payment already completed
+      registerMutation.mutate();
+    }
+  };
+
+  const handlePaymentSuccess = (paymentResult: any) => {
+    console.log('Tournament entry payment successful:', paymentResult);
+    setPaymentCompleted(true);
+    setShowPayment(false);
+    
+    toast({
+      title: "Payment Successful",
+      description: "Your tournament entry fee has been processed. Completing registration...",
+    });
+
+    // Register for tournament with payment information
+    registerTournamentWithPayment(paymentResult);
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Tournament payment failed:', error);
+    setShowPayment(false);
+    toast({
+      title: "Payment Failed",
+      description: error || "There was an error processing your payment. Please try again.",
+      variant: "destructive",
+    });
+  };
+
+  const registerTournamentWithPayment = async (paymentResult: any) => {
+    try {
+      const response = await apiRequest("POST", `/api/tournaments/${tournamentId}/register`, {
+        paymentData: {
+          transactionId: paymentResult.transactionId || paymentResult.id,
+          amount: tournament?.entryFee || 0,
+          currency: 'USD',
+          paymentMethod: 'wise'
+        }
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Registration successful",
+          description: "You have been successfully registered for this tournament with payment processed.",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/tournaments", tournamentId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/tournaments", tournamentId, "registration"] });
+      } else {
+        throw new Error('Registration failed after payment');
+      }
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: "Payment was processed but registration failed. Please contact support.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleWithdraw = () => {
@@ -604,6 +669,37 @@ export default function TournamentDetails({ tournamentId }: TournamentDetailsPro
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Tournament Entry Fee</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-lg mb-2">{tournament?.name}</h3>
+              <p className="text-gray-600 mb-4">
+                This tournament requires an entry fee of <strong>${tournament?.entryFee}</strong>
+              </p>
+              <div className="text-sm text-gray-500">
+                Processing secure payment through Wise
+              </div>
+            </div>
+
+            {tournament?.entryFee && (
+              <WisePaymentForm
+                amount={tournament.entryFee}
+                currency="USD"
+                paymentType="coach_session"
+                recipientName={tournament.organizer || "Tournament Organizer"}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

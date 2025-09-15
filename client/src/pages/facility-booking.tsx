@@ -74,6 +74,20 @@ const FacilityBooking: React.FC = () => {
   const [participants, setParticipants] = useState(1);
   const [bookingStep, setBookingStep] = useState<'datetime' | 'details' | 'payment' | 'confirmation'>('datetime');
   const [bookingData, setBookingData] = useState<Partial<BookingData>>({});
+  
+  const [paymentData, setPaymentData] = useState<{
+    amount: number;
+    currency: string;
+    transactionId?: string;
+  } | null>(null);
+
+  const [bookingDetails, setBookingDetails] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    notes: ''
+  });
 
   // Fetch facility details
   const { data: facility, isLoading: facilityLoading } = useQuery({
@@ -96,7 +110,7 @@ const FacilityBooking: React.FC = () => {
 
   // Create booking mutation
   const createBookingMutation = useMutation({
-    mutationFn: (data: BookingData) => apiRequest('/api/facility-bookings', {
+    mutationFn: (data: BookingData & { paymentData?: any }) => apiRequest('/api/facility-bookings', {
       method: 'POST',
       body: JSON.stringify(data)
     }),
@@ -105,7 +119,7 @@ const FacilityBooking: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/facilities', facilityId, 'availability'] });
       toast({
         title: "Booking Confirmed!",
-        description: "Your court booking has been successfully confirmed.",
+        description: "Your court booking has been successfully confirmed with payment processed.",
         variant: "default"
       });
     },
@@ -141,15 +155,79 @@ const FacilityBooking: React.FC = () => {
   };
 
   const handleBookingSubmit = (formData: any) => {
-    const finalBookingData: BookingData = {
-      ...bookingData as BookingData,
-      playerName: formData.playerName,
-      playerEmail: formData.playerEmail,
-      playerPhone: formData.playerPhone,
-      specialRequests: formData.specialRequests
-    };
+    // Update booking details state
+    setBookingDetails({
+      firstName: formData.firstName || '',
+      lastName: formData.lastName || '',
+      email: formData.playerEmail || formData.email || '',
+      phone: formData.playerPhone || formData.phone || '',
+      notes: formData.specialRequests || formData.notes || ''
+    });
 
-    createBookingMutation.mutate(finalBookingData);
+    // Check if payment is required (if price > 0)
+    if (selectedTimeSlot && selectedTimeSlot.price > 0) {
+      // Go to payment step
+      setPaymentData({
+        amount: selectedTimeSlot.price,
+        currency: 'USD'
+      });
+      setBookingStep('payment');
+    } else {
+      // No payment required, proceed directly to booking
+      const finalBookingData: BookingData = {
+        ...bookingData as BookingData,
+        playerName: formData.playerName || `${formData.firstName} ${formData.lastName}`,
+        playerEmail: formData.playerEmail || formData.email,
+        playerPhone: formData.playerPhone || formData.phone,
+        specialRequests: formData.specialRequests || formData.notes
+      };
+
+      createBookingMutation.mutate(finalBookingData);
+    }
+  };
+
+  const handlePaymentSuccess = (paymentResult: any) => {
+    console.log('Payment successful:', paymentResult);
+    
+    // Update payment data with transaction info
+    setPaymentData(prev => prev ? {
+      ...prev,
+      transactionId: paymentResult.transactionId || paymentResult.id
+    } : null);
+
+    // Create booking with payment information
+    if (selectedDate && selectedTimeSlot && facility) {
+      const bookingDataWithPayment: BookingData & { paymentData?: any } = {
+        facilityId,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        time: selectedTimeSlot.time,
+        duration: selectedTimeSlot.duration,
+        participants,
+        courtNumber: selectedTimeSlot.courtNumber,
+        coachId: selectedTimeSlot.coachId,
+        playerName: `${bookingDetails.firstName} ${bookingDetails.lastName}`,
+        playerEmail: bookingDetails.email,
+        playerPhone: bookingDetails.phone,
+        specialRequests: bookingDetails.notes,
+        paymentData: {
+          transactionId: paymentResult.transactionId || paymentResult.id,
+          amount: selectedTimeSlot.price,
+          currency: 'USD',
+          paymentMethod: 'wise'
+        }
+      };
+      
+      createBookingMutation.mutate(bookingDataWithPayment);
+    }
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Payment failed:', error);
+    toast({
+      title: "Payment Failed",
+      description: error || "There was an error processing your payment. Please try again.",
+      variant: "destructive"
+    });
   };
 
   if (facilityLoading) {
@@ -431,6 +509,84 @@ const FacilityBooking: React.FC = () => {
     </form>
   );
 
+  const renderPaymentStep = () => {
+    if (!paymentData || !selectedTimeSlot) {
+      return <div>Payment data not available</div>;
+    }
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-xl font-semibold mb-2">Payment Information</h3>
+          <p className="text-gray-600">
+            Complete your booking by securely processing payment through Wise.
+          </p>
+        </div>
+
+        {/* Booking Summary */}
+        <Card className="bg-gray-50">
+          <CardHeader>
+            <CardTitle className="text-lg">Booking Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between">
+              <span>Facility:</span>
+              <span className="font-medium">{facility.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Date & Time:</span>
+              <span className="font-medium">
+                {format(selectedDate, 'MMM d, yyyy')} at {selectedTimeSlot.time}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Duration:</span>
+              <span className="font-medium">{selectedTimeSlot.duration} minutes</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Participants:</span>
+              <span className="font-medium">{participants} player{participants > 1 ? 's' : ''}</span>
+            </div>
+            {selectedTimeSlot.coachName && (
+              <div className="flex justify-between">
+                <span>Coach:</span>
+                <span className="font-medium">{selectedTimeSlot.coachName}</span>
+              </div>
+            )}
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total:</span>
+                <span>${paymentData.amount}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Form */}
+        <WisePaymentForm
+          amount={paymentData.amount}
+          currency={paymentData.currency}
+          paymentType="coach_session"
+          recipientName={facility.name}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
+
+        {/* Navigation */}
+        <div className="flex justify-between pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setBookingStep('details')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Details
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   const renderConfirmation = () => (
     <div className="text-center space-y-6">
       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -522,17 +678,20 @@ const FacilityBooking: React.FC = () => {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center gap-4">
-            {['datetime', 'details', 'confirmation'].map((step, index) => (
+            {['datetime', 'details', 'payment', 'confirmation'].map((step, index) => (
               <div key={step} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   bookingStep === step ? 'bg-primary text-white' : 
-                  (bookingStep === 'confirmation' && index < 2) || 
+                  (bookingStep === 'confirmation' && index < 3) || 
+                  (bookingStep === 'payment' && index < 2) || 
                   (bookingStep === 'details' && index === 0) ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600'
                 }`}>
                   {index + 1}
                 </div>
-                <span className="text-sm font-medium capitalize">{step.replace('datetime', 'Date & Time')}</span>
-                {index < 2 && <ChevronRight className="w-4 h-4 text-gray-400 ml-2" />}
+                <span className="text-sm font-medium capitalize">
+                  {step.replace('datetime', 'Date & Time').replace('payment', 'Payment')}
+                </span>
+                {index < 3 && <ChevronRight className="w-4 h-4 text-gray-400 ml-2" />}
               </div>
             ))}
           </div>
@@ -543,6 +702,7 @@ const FacilityBooking: React.FC = () => {
           <CardContent className="p-6">
             {bookingStep === 'datetime' && renderDateTimeSelection()}
             {bookingStep === 'details' && renderBookingDetails()}
+            {bookingStep === 'payment' && renderPaymentStep()}
             {bookingStep === 'confirmation' && renderConfirmation()}
           </CardContent>
         </Card>
