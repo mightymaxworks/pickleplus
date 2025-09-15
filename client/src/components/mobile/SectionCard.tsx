@@ -36,25 +36,13 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       className
     )}>
       {/* Header */}
-      {(title || actions) && (
-        <div className="flex items-center justify-between mb-3">
-          <div className="min-w-0 flex-1">
-            {title && (
-              <h3 className="text-base font-medium text-gray-900 truncate">
-                {title}
-              </h3>
-            )}
-            {subtitle && (
-              <p className="text-sm text-gray-500 mt-1 break-words">
-                {subtitle}
-              </p>
-            )}
+      {(title || subtitle || actions) && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between gap-2">
+            {title && <h3 className="text-base font-semibold text-gray-900 truncate">{title}</h3>}
+            {actions && <div className="flex-shrink-0">{actions}</div>}
           </div>
-          {actions && (
-            <div className="ml-3 flex-shrink-0">
-              {actions}
-            </div>
-          )}
+          {subtitle && <p className="text-sm text-gray-500 mt-1 break-words">{subtitle}</p>}
         </div>
       )}
 
