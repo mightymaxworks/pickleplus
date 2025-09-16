@@ -12,10 +12,24 @@ const worksheet = workbook.Sheets['第二周比赛登记'];
 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
 // Extract match data (skip first 2 rows - title and headers)
-const allRows = jsonData.slice(2).filter(row => row.length >= 5 && row[0] != null);
+const allRows = jsonData.slice(2).filter(row => row.length >= 2 && row[0] != null);
 
 console.log(`📊 RAW DATA ANALYSIS`);
 console.log(`Total rows found: ${allRows.length}`);
+
+// DEBUG: Print last 20 rows to see the structure
+console.log(`\n🔍 DEBUG: LAST 20 ROWS OF EXCEL DATA:`);
+const lastRows = allRows.slice(-20);
+lastRows.forEach((row, index) => {
+    const rowIndex = allRows.length - 20 + index;
+    console.log(`Row ${rowIndex + 1}: [${row.map(cell => `"${cell}"`).join(', ')}] (Length: ${row.length})`);
+});
+
+console.log(`\n🔍 DEBUG: CHECKING FOR SINGLES PATTERN (rows with 2-4 columns):`);
+const potentialSingles = allRows.filter(row => row.length >= 2 && row.length <= 4 && row[0] && row[1]);
+potentialSingles.forEach((row, index) => {
+    console.log(`Potential Singles ${index + 1}: [${row.map(cell => `"${cell}"`).join(', ')}] (Length: ${row.length})`);
+});
 
 // Analyze match types
 const doublesMatches = [];
@@ -41,16 +55,17 @@ allRows.forEach((row, index) => {
             date: row[6],
             rawRow: row
         });
-    } else if (row[0] && row[1] && !row[3]) {
-        // Singles match: Player1, Player2, Score1, Score2, Date (columns 3&4 are scores, column 5 is date)
+    } else if (row[0] && !row[1] && row[2] && !row[3] && row[4] !== undefined && row[5] !== undefined) {
+        // Singles match: Player1, empty, Player2, empty, Score1, Score2, Date
+        // Pattern: ["NJUESZ", , "80IYHC", , "15", "8", "45914"]
         singlesMatches.push({
             matchId: `S${index + 1}`,
             format: 'singles',
             player1: row[0]?.toString().trim().toUpperCase(),
-            player2: row[1]?.toString().trim().toUpperCase(),
-            score1: row[2],
-            score2: row[3],
-            date: row[4],
+            player2: row[2]?.toString().trim().toUpperCase(),
+            score1: row[4],
+            score2: row[5],
+            date: row[6],
             rawRow: row
         });
     }
