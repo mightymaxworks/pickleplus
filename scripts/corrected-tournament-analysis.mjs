@@ -34,6 +34,7 @@ potentialSingles.forEach((row, index) => {
 // Analyze match types
 const doublesMatches = [];
 const singlesMatches = [];
+const playerMatchCounts = new Map(); // Track matches per player for additive validation
 
 allRows.forEach((row, index) => {
     // Check if row has 4 player codes (doubles) or 2 player codes (singles)
@@ -75,6 +76,29 @@ console.log(`\n📊 MATCH FORMAT BREAKDOWN:`);
 console.log(`Doubles Matches: ${doublesMatches.length}`);
 console.log(`Singles Matches: ${singlesMatches.length}`);
 console.log(`Total Matches: ${doublesMatches.length + singlesMatches.length}`);
+
+// Track multiple matches per player for additive validation
+singlesMatches.forEach(match => {
+    const p1 = match.player1;
+    const p2 = match.player2;
+    
+    playerMatchCounts.set(p1, (playerMatchCounts.get(p1) || 0) + 1);
+    playerMatchCounts.set(p2, (playerMatchCounts.get(p2) || 0) + 1);
+});
+
+console.log(`\n🚨 ADDITIVE POINTS VALIDATION:`);
+console.log(`Players with multiple singles matches:`);
+for (const [player, count] of playerMatchCounts.entries()) {
+    if (count > 1) {
+        const playerMatches = singlesMatches.filter(m => m.player1 === player || m.player2 === player);
+        const totalPoints = playerMatches.reduce((sum, match) => {
+            if (match.player1 === player) return sum + (match.player1Points || 0);
+            if (match.player2 === player) return sum + (match.player2Points || 0);  
+            return sum;
+        }, 0);
+        console.log(`  ${player}: ${count} matches, ${totalPoints} total points should be awarded additively`);
+    }
+}
 
 // Extract all passport codes with corrected mappings
 const allPassportCodes = new Set();
