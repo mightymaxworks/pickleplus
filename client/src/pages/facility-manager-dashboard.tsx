@@ -5,11 +5,11 @@
  */
 
 import React, { useState } from 'react';
-import { StandardLayout } from '@/components/layout/StandardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MobilePage, SectionCard, ResponsiveGrid, DataListItem } from '@/components/mobile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { 
@@ -28,9 +28,11 @@ import {
   ArrowDownRight,
   Eye,
   Settings,
-  Plus
+  Plus,
+  MoreHorizontal,
+  ChevronDown
 } from 'lucide-react';
-import { format, subDays, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 
 interface BookingSummary {
   totalBookings: number;
@@ -59,35 +61,32 @@ interface FacilityStats {
   customerSatisfaction: { rating: number; reviews: number };
 }
 
-const StatCard: React.FC<{
+const MobileStatCard: React.FC<{
   title: string;
   value: string | number;
   change?: number;
   changeLabel?: string;
   icon: React.ReactNode;
   color?: string;
-}> = ({ title, value, change, changeLabel, icon, color = "text-primary" }) => (
-  <Card className="hover:shadow-md transition-shadow">
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {change !== undefined && (
-            <p className={`text-sm flex items-center gap-1 ${
-              change >= 0 ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {change >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {Math.abs(change)}% {changeLabel}
-            </p>
-          )}
-        </div>
-        <div className={`p-3 rounded-full bg-primary/10 ${color}`}>
-          {icon}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+  testId?: string;
+}> = ({ title, value, change, changeLabel, icon, color = "text-primary", testId }) => (
+  <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-medium text-gray-600 truncate">{title}</p>
+      <p className="text-xl font-bold text-gray-900" data-testid={testId}>{value}</p>
+      {change !== undefined && (
+        <p className={`text-xs flex items-center gap-1 mt-1 ${
+          change >= 0 ? 'text-green-600' : 'text-red-600'
+        }`}>
+          {change >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+          {Math.abs(change)}% {changeLabel}
+        </p>
+      )}
+    </div>
+    <div className={`p-3 rounded-full bg-primary/10 flex-shrink-0 ml-3 ${color}`}>
+      {icon}
+    </div>
+  </div>
 );
 
 const FacilityManagerDashboard: React.FC = () => {
@@ -96,265 +95,297 @@ const FacilityManagerDashboard: React.FC = () => {
   // Fetch facility booking summary
   const { data: bookingSummary, isLoading: summaryLoading } = useQuery<BookingSummary>({
     queryKey: ['/api/facility-manager/summary', selectedTimeRange],
-    queryFn: () => apiRequest(`/api/facility-manager/summary?range=${selectedTimeRange}`)
+    queryFn: async () => {
+      const response = await apiRequest(`/api/facility-manager/summary?range=${selectedTimeRange}`);
+      return await response.json();
+    }
   });
 
   // Fetch detailed facility stats
   const { data: facilityStats, isLoading: statsLoading } = useQuery<FacilityStats>({
     queryKey: ['/api/facility-manager/stats', selectedTimeRange],
-    queryFn: () => apiRequest(`/api/facility-manager/stats?range=${selectedTimeRange}`)
+    queryFn: async () => {
+      const response = await apiRequest(`/api/facility-manager/stats?range=${selectedTimeRange}`);
+      return await response.json();
+    }
   });
 
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
 
-  const renderOverviewTab = () => (
-    <div className="space-y-6">
-      
-      {/* Key Metrics */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Key Metrics</h3>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={selectedTimeRange === 'today' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedTimeRange('today')}
-            >
-              Today
-            </Button>
-            <Button
-              variant={selectedTimeRange === 'week' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedTimeRange('week')}
-            >
-              This Week
-            </Button>
-            <Button
-              variant={selectedTimeRange === 'month' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedTimeRange('month')}
-            >
-              This Month
-            </Button>
-          </div>
-        </div>
+  const renderTimeRangeFilter = () => (
+    <div className="flex overflow-x-auto gap-2 pb-2">
+      <Button
+        variant={selectedTimeRange === 'today' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setSelectedTimeRange('today')}
+        className="whitespace-nowrap min-w-[80px] min-h-[44px]"
+        data-testid="button-range-today"
+      >
+        Today
+      </Button>
+      <Button
+        variant={selectedTimeRange === 'week' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setSelectedTimeRange('week')}
+        className="whitespace-nowrap min-w-[80px] min-h-[44px]"
+        data-testid="button-range-week"
+      >
+        Week
+      </Button>
+      <Button
+        variant={selectedTimeRange === 'month' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setSelectedTimeRange('month')}
+        className="whitespace-nowrap min-w-[80px] min-h-[44px]"
+        data-testid="button-range-month"
+      >
+        Month
+      </Button>
+    </div>
+  );
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Total Revenue"
-            value={formatCurrency(bookingSummary?.totalRevenue || 0)}
-            change={15.2}
-            changeLabel="from last period"
-            icon={<DollarSign className="w-5 h-5" />}
-            color="text-green-600"
-          />
-          <StatCard
-            title="Total Bookings"
-            value={bookingSummary?.totalBookings || 0}
-            change={8.4}
-            changeLabel="from last period"
-            icon={<Calendar className="w-5 h-5" />}
-            color="text-blue-600"
-          />
-          <StatCard
-            title="Court Utilization"
-            value={`${bookingSummary?.utilizationRate || 0}%`}
-            change={3.1}
-            changeLabel="utilization rate"
-            icon={<BarChart3 className="w-5 h-5" />}
-            color="text-purple-600"
-          />
-          <StatCard
-            title="Average Rating"
-            value={`${bookingSummary?.averageRating || 0}/5`}
-            change={0.2}
-            changeLabel="rating improvement"
-            icon={<Star className="w-5 h-5" />}
-            color="text-yellow-600"
-          />
-        </div>
-      </div>
+  const renderKeyMetrics = () => (
+    <SectionCard 
+      title="Key Metrics" 
+      actions={renderTimeRangeFilter()}
+    >
+      <ResponsiveGrid colsSm={1} colsMd={2} gap="sm">
+        <MobileStatCard
+          title="Total Revenue"
+          value={formatCurrency(bookingSummary?.totalRevenue || 0)}
+          change={15.2}
+          changeLabel="from last period"
+          icon={<DollarSign className="w-5 h-5" />}
+          color="text-green-600"
+          testId="text-metric-revenue"
+        />
+        <MobileStatCard
+          title="Total Bookings"
+          value={bookingSummary?.totalBookings || 0}
+          change={8.4}
+          changeLabel="from last period"
+          icon={<Calendar className="w-5 h-5" />}
+          color="text-blue-600"
+          testId="text-metric-bookings"
+        />
+        <MobileStatCard
+          title="Court Utilization"
+          value={`${bookingSummary?.utilizationRate || 0}%`}
+          change={3.1}
+          changeLabel="utilization rate"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="text-purple-600"
+          testId="text-metric-utilization"
+        />
+        <MobileStatCard
+          title="Average Rating"
+          value={`${bookingSummary?.averageRating || 0}/5`}
+          change={0.2}
+          changeLabel="rating improvement"
+          icon={<Star className="w-5 h-5" />}
+          color="text-yellow-600"
+          testId="text-metric-rating"
+        />
+      </ResponsiveGrid>
+    </SectionCard>
 
-      {/* Recent Activity */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        
-        {/* Recent Bookings */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Recent Bookings</CardTitle>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View All
-                </Button>
+  );
+
+  const renderRecentBookings = () => (
+    <SectionCard 
+      title="Recent Bookings" 
+      actions={
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="min-h-[44px] min-w-[44px]"
+          data-testid="button-view-all-bookings"
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          View All
+        </Button>
+      }
+    >
+      {summaryLoading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="animate-pulse flex items-center space-x-4 p-3 rounded-lg">
+              <div className="rounded-full bg-gray-200 h-10 w-10 flex-shrink-0"></div>
+              <div className="space-y-2 flex-1 min-w-0">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </div>
-            </CardHeader>
-            <CardContent>
-              {summaryLoading ? (
-                <div className="space-y-4">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="animate-pulse flex items-center space-x-4">
-                      <div className="rounded-full bg-gray-200 h-10 w-10"></div>
-                      <div className="space-y-2 flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                      <div className="h-6 bg-gray-200 rounded w-16"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4" data-testid="recent-bookings-list">
-                  {bookingSummary?.recentBookings?.map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Users className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{booking.playerName}</p>
-                          <p className="text-sm text-gray-500">
-                            {format(new Date(booking.date), 'MMM d')} at {booking.time} • {booking.duration}min
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(booking.amount)}</p>
-                        <Badge 
-                          variant={booking.status === 'confirmed' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {booking.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <div className="h-6 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+            </div>
+          ))}
         </div>
+      ) : (
+        <div className="space-y-3" data-testid="recent-bookings-list">
+          {bookingSummary?.recentBookings?.map((booking) => (
+            <div key={booking.id} data-testid={`row-booking-${booking.id}`}>
+              <DataListItem
+                icon={<Users className="w-5 h-5 text-primary" />}
+                title={booking.playerName}
+                subtitle={`${format(new Date(booking.date), 'MMM d')} at ${booking.time} • ${booking.duration}min`}
+                value={formatCurrency(booking.amount)}
+                badge={
+                  <Badge 
+                    variant={booking.status === 'confirmed' ? 'default' : 'secondary'}
+                    className="text-xs"
+                    data-testid={`badge-status-${booking.status}`}
+                  >
+                    {booking.status}
+                  </Badge>
+                }
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
 
-        {/* Popular Time Slots */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Popular Time Slots</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {summaryLoading ? (
+  const renderPopularTimeSlots = () => (
+    <SectionCard title="Popular Time Slots">
+      {summaryLoading ? (
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="flex justify-between items-center mb-2">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 bg-gray-200 rounded w-8"></div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4" data-testid="popular-timeslots">
+          {bookingSummary?.popularTimeSlots?.slice(0, 4).map((slot) => (
+            <div key={slot.time} data-testid={`row-timeslot-${slot.time.replace(':', '-')}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">{slot.time}</span>
+                <span className="text-sm text-gray-500">{slot.bookings} bookings</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full"
+                  style={{ width: `${(slot.bookings / (bookingSummary?.popularTimeSlots?.[0]?.bookings || 1)) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+
+  );
+
+  const renderQuickActions = () => (
+    <SectionCard 
+      title="Quick Actions"
+      actions={
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="min-h-[44px] min-w-[44px]"
+              data-testid="trigger-quick-actions"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-block-time-slot">
+              <Plus className="w-4 h-4" />
+              Block Time Slot
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-view-schedule">
+              <Calendar className="w-4 h-4" />
+              View Schedule
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-facility-settings">
+              <Settings className="w-4 h-4" />
+              Facility Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-view-reports">
+              <Activity className="w-4 h-4" />
+              View Reports
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      }
+    >
+      <ResponsiveGrid colsSm={2} colsMd={2} gap="sm">
+        <Button 
+          variant="outline" 
+          className="h-16 flex-col gap-2 min-h-[64px]"
+          data-testid="button-quick-add-booking"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="text-sm">Add Booking</span>
+        </Button>
+        <Button 
+          variant="outline" 
+          className="h-16 flex-col gap-2 min-h-[64px]"
+          data-testid="button-quick-schedule"
+        >
+          <Calendar className="w-5 h-5" />
+          <span className="text-sm">Schedule</span>
+        </Button>
+      </ResponsiveGrid>
+    </SectionCard>
+  );
+
+  const renderAnalytics = () => (
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value="analytics">
+        <AccordionTrigger 
+          className="text-base font-medium min-h-[44px]"
+          data-testid="accordion-analytics"
+        >
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analytics & Reports
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-4 pt-2">
+          {/* Revenue Analytics */}
+          <SectionCard title="Revenue Analytics">
+            <div className="h-48 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="text-center">
+                <BarChart3 className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Revenue chart coming soon</p>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Court Utilization */}
+          <SectionCard title="Court Utilization">
+            {statsLoading ? (
               <div className="space-y-3">
-                {[...Array(6)].map((_, i) => (
+                {[...Array(3)].map((_, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="flex justify-between items-center mb-2">
                       <div className="h-4 bg-gray-200 rounded w-20"></div>
-                      <div className="h-4 bg-gray-200 rounded w-8"></div>
+                      <div className="h-4 bg-gray-200 rounded w-12"></div>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2"></div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="space-y-4" data-testid="popular-timeslots">
-                {bookingSummary?.popularTimeSlots?.map((slot, index) => (
-                  <div key={slot.time}>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">{slot.time}</span>
-                      <span className="text-sm text-gray-500">{slot.bookings} bookings</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{ width: `${(slot.bookings / (bookingSummary?.popularTimeSlots?.[0]?.bookings || 1)) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <Plus className="w-5 h-5" />
-              <span>Block Time</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <Calendar className="w-5 h-5" />
-              <span>View Schedule</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <Settings className="w-5 h-5" />
-              <span>Facility Settings</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <Activity className="w-5 h-5" />
-              <span>View Reports</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderAnalyticsTab = () => (
-    <div className="space-y-6">
-      
-      {/* Revenue Analytics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Revenue Analytics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="text-center">
-              <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">Revenue chart coming soon</p>
-              <p className="text-sm text-gray-400">Integration with charts library in progress</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        
-        {/* Court Utilization */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Court Utilization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? (
-              <div className="space-y-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="h-4 bg-gray-200 rounded w-20"></div>
-                      <div className="h-4 bg-gray-200 rounded w-12"></div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4" data-testid="court-utilization">
-                {facilityStats?.courtUtilization?.map((court, index) => (
-                  <div key={court.court}>
-                    <div className="flex justify-between items-center mb-2">
+              <div className="space-y-3" data-testid="court-utilization">
+                {facilityStats?.courtUtilization?.slice(0, 3).map((court) => (
+                  <div key={court.court} data-testid={`row-court-${court.court}`}>
+                    <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">Court {court.court}</span>
                       <span className="text-sm text-gray-500">{court.utilization}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className={`h-3 rounded-full ${
+                        className={`h-2 rounded-full ${
                           court.utilization > 80 ? 'bg-green-500' : 
                           court.utilization > 60 ? 'bg-yellow-500' : 'bg-red-500'
                         }`}
@@ -365,24 +396,19 @@ const FacilityManagerDashboard: React.FC = () => {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </SectionCard>
 
-        {/* Customer Satisfaction */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Customer Satisfaction</CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* Customer Satisfaction */}
+          <SectionCard title="Customer Satisfaction">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">
+              <div className="text-2xl font-bold text-primary mb-2">
                 {facilityStats?.customerSatisfaction?.rating || 4.8}/5
               </div>
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-2">
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 ${
                       i < Math.floor(facilityStats?.customerSatisfaction?.rating || 4.8) 
                         ? 'fill-yellow-400 text-yellow-400' 
                         : 'text-gray-300'
@@ -390,56 +416,54 @@ const FacilityManagerDashboard: React.FC = () => {
                   />
                 ))}
               </div>
-              <p className="text-sm text-gray-500">
-                Based on {facilityStats?.customerSatisfaction?.reviews || 127} reviews
+              <p className="text-xs text-gray-500">
+                {facilityStats?.customerSatisfaction?.reviews || 127} reviews
               </p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </SectionCard>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 
   return (
-    <StandardLayout>
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Facility Dashboard</h1>
-            <p className="text-gray-600 mt-1">Manage your facility operations and track performance</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Booking
-            </Button>
-          </div>
+    <MobilePage 
+      title="Facility Dashboard"
+      stickyActions={
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex-1 min-h-[44px]"
+            data-testid="button-sticky-settings"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Button>
+          <Button 
+            className="flex-1 min-h-[44px] bg-primary hover:bg-primary/90"
+            data-testid="button-sticky-add-booking"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Booking
+          </Button>
         </div>
-
-        {/* Dashboard Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics" data-testid="tab-analytics">Analytics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {renderOverviewTab()}
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            {renderAnalyticsTab()}
-          </TabsContent>
-        </Tabs>
-
-      </div>
-    </StandardLayout>
+      }
+    >
+      {/* Key Metrics */}
+      {renderKeyMetrics()}
+      
+      {/* Recent Activity */}
+      {renderRecentBookings()}
+      
+      {/* Popular Time Slots */}
+      {renderPopularTimeSlots()}
+      
+      {/* Quick Actions */}
+      {renderQuickActions()}
+      
+      {/* Analytics - Collapsible */}
+      {renderAnalytics()}
+    </MobilePage>
   );
 };
 
