@@ -1,0 +1,2706 @@
+{
+  "tournamentInfo": {
+    "name": "9.8-9.14 Weekly Tournament",
+    "totalMatches": 122,
+    "uniquePlayers": 43,
+    "dateRange": "September 8-14, 2024"
+  },
+  "allPassportCodes": [
+    "1FSR3A",
+    "2L8TU0",
+    "31JJ00",
+    "42SWC6",
+    "5XKD06",
+    "5ZJ2B2",
+    "7NZQFP",
+    "805BZ6",
+    "80IYHC",
+    "B2T4T8",
+    "CJM9CP",
+    "CXGSCH",
+    "F50WO8",
+    "FOGBAM",
+    "GTKS9W",
+    "J0U9ZU",
+    "JN110L",
+    "K1LJLP",
+    "KTPF1I",
+    "L059JK",
+    "L7PHES",
+    "NJUESZ",
+    "NNJJPS",
+    "OCD6W7",
+    "P49EXT",
+    "PKL-000249",
+    "PZGEOT",
+    "Q37Z96",
+    "Q9IJKU",
+    "QLJDLI",
+    "T8EOPH",
+    "UMYZYI",
+    "VOR7AU",
+    "VR97YK",
+    "W9YINQ",
+    "XQ5V4N",
+    "YSJ09R",
+    "ZL2NXC",
+    "ZTO1ZR",
+    "第一队选手一护照码",
+    "第一队选手二护照码",
+    "第二队选手一护照码",
+    "第二队选手二护照码"
+  ],
+  "playerStats": {
+    "J0U9ZU": {
+      "matchesPlayed": 18,
+      "wins": 6,
+      "losses": 12,
+      "draws": 0,
+      "totalPoints": 30,
+      "totalScoreFor": 211,
+      "totalScoreAgainst": 249
+    },
+    "5XKD06": {
+      "matchesPlayed": 11,
+      "wins": 9,
+      "losses": 2,
+      "draws": 0,
+      "totalPoints": 29,
+      "totalScoreFor": 162,
+      "totalScoreAgainst": 123
+    },
+    "VOR7AU": {
+      "matchesPlayed": 18,
+      "wins": 10,
+      "losses": 8,
+      "draws": 0,
+      "totalPoints": 38,
+      "totalScoreFor": 285,
+      "totalScoreAgainst": 269
+    },
+    "GTKS9W": {
+      "matchesPlayed": 11,
+      "wins": 5,
+      "losses": 6,
+      "draws": 0,
+      "totalPoints": 21,
+      "totalScoreFor": 138,
+      "totalScoreAgainst": 139
+    },
+    "7NZQFP": {
+      "matchesPlayed": 11,
+      "wins": 8,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 27,
+      "totalScoreFor": 153,
+      "totalScoreAgainst": 132
+    },
+    "Q37Z96": {
+      "matchesPlayed": 18,
+      "wins": 10,
+      "losses": 8,
+      "draws": 0,
+      "totalPoints": 38,
+      "totalScoreFor": 263,
+      "totalScoreAgainst": 256
+    },
+    "5ZJ2B2": {
+      "matchesPlayed": 11,
+      "wins": 2,
+      "losses": 9,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": 102,
+      "totalScoreAgainst": 159
+    },
+    "PZGEOT": {
+      "matchesPlayed": 11,
+      "wins": 5,
+      "losses": 6,
+      "draws": 0,
+      "totalPoints": 21,
+      "totalScoreFor": 139,
+      "totalScoreAgainst": 136
+    },
+    "L7PHES": {
+      "matchesPlayed": 18,
+      "wins": 7,
+      "losses": 11,
+      "draws": 0,
+      "totalPoints": 32,
+      "totalScoreFor": 256,
+      "totalScoreAgainst": 274
+    },
+    "JN110L": {
+      "matchesPlayed": 18,
+      "wins": 6,
+      "losses": 12,
+      "draws": 0,
+      "totalPoints": 30,
+      "totalScoreFor": 215,
+      "totalScoreAgainst": 242
+    },
+    "2L8TU0": {
+      "matchesPlayed": 11,
+      "wins": 8,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 27,
+      "totalScoreFor": 150,
+      "totalScoreAgainst": 122
+    },
+    "K1LJLP": {
+      "matchesPlayed": 18,
+      "wins": 11,
+      "losses": 7,
+      "draws": 0,
+      "totalPoints": 40,
+      "totalScoreFor": 287,
+      "totalScoreAgainst": 248
+    },
+    "第一队选手一护照码": {
+      "matchesPlayed": 5,
+      "wins": 0,
+      "losses": 5,
+      "draws": 0,
+      "totalPoints": 5,
+      "totalScoreFor": "0第一队得分第一队得分第一队得分第一队得分第一队得分",
+      "totalScoreAgainst": "0第二队得分第二队得分第二队得分第二队得分第二队得分"
+    },
+    "第一队选手二护照码": {
+      "matchesPlayed": 5,
+      "wins": 0,
+      "losses": 5,
+      "draws": 0,
+      "totalPoints": 5,
+      "totalScoreFor": "0第一队得分第一队得分第一队得分第一队得分第一队得分",
+      "totalScoreAgainst": "0第二队得分第二队得分第二队得分第二队得分第二队得分"
+    },
+    "第二队选手一护照码": {
+      "matchesPlayed": 5,
+      "wins": 5,
+      "losses": 0,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": "0第二队得分第二队得分第二队得分第二队得分第二队得分",
+      "totalScoreAgainst": "0第一队得分第一队得分第一队得分第一队得分第一队得分"
+    },
+    "第二队选手二护照码": {
+      "matchesPlayed": 5,
+      "wins": 5,
+      "losses": 0,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": "0第二队得分第二队得分第二队得分第二队得分第二队得分",
+      "totalScoreAgainst": "0第一队得分第一队得分第一队得分第一队得分第一队得分"
+    },
+    "Q9IJKU": {
+      "matchesPlayed": 7,
+      "wins": 0,
+      "losses": 7,
+      "draws": 0,
+      "totalPoints": 7,
+      "totalScoreFor": 64,
+      "totalScoreAgainst": 105
+    },
+    "42SWC6": {
+      "matchesPlayed": 7,
+      "wins": 5,
+      "losses": 2,
+      "draws": 0,
+      "totalPoints": 17,
+      "totalScoreFor": 100,
+      "totalScoreAgainst": 78
+    },
+    "F50WO8": {
+      "matchesPlayed": 14,
+      "wins": 8,
+      "losses": 6,
+      "draws": 0,
+      "totalPoints": 30,
+      "totalScoreFor": 185,
+      "totalScoreAgainst": 156
+    },
+    "31JJ00": {
+      "matchesPlayed": 22,
+      "wins": 15,
+      "losses": 7,
+      "draws": 0,
+      "totalPoints": 52,
+      "totalScoreFor": 348,
+      "totalScoreAgainst": 266
+    },
+    "PKL-000249": {
+      "matchesPlayed": 7,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": 87,
+      "totalScoreAgainst": 80
+    },
+    "NJUESZ": {
+      "matchesPlayed": 14,
+      "wins": 8,
+      "losses": 6,
+      "draws": 0,
+      "totalPoints": 30,
+      "totalScoreFor": 173,
+      "totalScoreAgainst": 175
+    },
+    "CXGSCH": {
+      "matchesPlayed": 7,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": 94,
+      "totalScoreAgainst": 83
+    },
+    "CJM9CP": {
+      "matchesPlayed": 7,
+      "wins": 5,
+      "losses": 2,
+      "draws": 0,
+      "totalPoints": 17,
+      "totalScoreFor": 89,
+      "totalScoreAgainst": 87
+    },
+    "VR97YK": {
+      "matchesPlayed": 7,
+      "wins": 7,
+      "losses": 0,
+      "draws": 0,
+      "totalPoints": 21,
+      "totalScoreFor": 105,
+      "totalScoreAgainst": 64
+    },
+    "B2T4T8": {
+      "matchesPlayed": 7,
+      "wins": 7,
+      "losses": 0,
+      "draws": 0,
+      "totalPoints": 21,
+      "totalScoreFor": 105,
+      "totalScoreAgainst": 64
+    },
+    "FOGBAM": {
+      "matchesPlayed": 15,
+      "wins": 2,
+      "losses": 13,
+      "draws": 0,
+      "totalPoints": 19,
+      "totalScoreFor": 196,
+      "totalScoreAgainst": 259
+    },
+    "ZL2NXC": {
+      "matchesPlayed": 7,
+      "wins": 1,
+      "losses": 6,
+      "draws": 0,
+      "totalPoints": 9,
+      "totalScoreFor": 78,
+      "totalScoreAgainst": 96
+    },
+    "YSJ09R": {
+      "matchesPlayed": 7,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": 90,
+      "totalScoreAgainst": 94
+    },
+    "805BZ6": {
+      "matchesPlayed": 7,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": 90,
+      "totalScoreAgainst": 94
+    },
+    "W9YINQ": {
+      "matchesPlayed": 8,
+      "wins": 4,
+      "losses": 4,
+      "draws": 0,
+      "totalPoints": 16,
+      "totalScoreFor": 150,
+      "totalScoreAgainst": 133
+    },
+    "80IYHC": {
+      "matchesPlayed": 15,
+      "wins": 4,
+      "losses": 11,
+      "draws": 0,
+      "totalPoints": 23,
+      "totalScoreFor": 179,
+      "totalScoreAgainst": 252
+    },
+    "XQ5V4N": {
+      "matchesPlayed": 8,
+      "wins": 4,
+      "losses": 4,
+      "draws": 0,
+      "totalPoints": 16,
+      "totalScoreFor": 123,
+      "totalScoreAgainst": 152
+    },
+    "L059JK": {
+      "matchesPlayed": 8,
+      "wins": 5,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 18,
+      "totalScoreFor": 156,
+      "totalScoreAgainst": 124
+    },
+    "T8EOPH": {
+      "matchesPlayed": 8,
+      "wins": 4,
+      "losses": 4,
+      "draws": 0,
+      "totalPoints": 16,
+      "totalScoreFor": 136,
+      "totalScoreAgainst": 139
+    },
+    "OCD6W7": {
+      "matchesPlayed": 7,
+      "wins": 0,
+      "losses": 7,
+      "draws": 0,
+      "totalPoints": 7,
+      "totalScoreFor": 100,
+      "totalScoreAgainst": 149
+    },
+    "P49EXT": {
+      "matchesPlayed": 7,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "totalPoints": 15,
+      "totalScoreFor": 116,
+      "totalScoreAgainst": 134
+    },
+    "QLJDLI": {
+      "matchesPlayed": 7,
+      "wins": 2,
+      "losses": 5,
+      "draws": 0,
+      "totalPoints": 11,
+      "totalScoreFor": 113,
+      "totalScoreAgainst": 127
+    },
+    "UMYZYI": {
+      "matchesPlayed": 7,
+      "wins": 5,
+      "losses": 2,
+      "draws": 0,
+      "totalPoints": 17,
+      "totalScoreFor": 144,
+      "totalScoreAgainst": 113
+    },
+    "ZTO1ZR": {
+      "matchesPlayed": 7,
+      "wins": 2,
+      "losses": 5,
+      "draws": 0,
+      "totalPoints": 11,
+      "totalScoreFor": 61,
+      "totalScoreAgainst": 96
+    },
+    "KTPF1I": {
+      "matchesPlayed": 7,
+      "wins": 5,
+      "losses": 2,
+      "draws": 0,
+      "totalPoints": 17,
+      "totalScoreFor": 99,
+      "totalScoreAgainst": 58
+    },
+    "NNJJPS": {
+      "matchesPlayed": 7,
+      "wins": 6,
+      "losses": 1,
+      "draws": 0,
+      "totalPoints": 19,
+      "totalScoreFor": 104,
+      "totalScoreAgainst": 63
+    },
+    "1FSR3A": {
+      "matchesPlayed": 7,
+      "wins": 0,
+      "losses": 7,
+      "draws": 0,
+      "totalPoints": 7,
+      "totalScoreFor": 49,
+      "totalScoreAgainst": 105
+    }
+  },
+  "matchDetails": [
+    {
+      "matchId": 1,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "VOR7AU",
+        "player2": "GTKS9W",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 2,
+      "team1": {
+        "player1": "7NZQFP",
+        "player2": "Q37Z96",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "5ZJ2B2",
+        "player2": "PZGEOT",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 3,
+      "team1": {
+        "player1": "L7PHES",
+        "player2": "JN110L",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "2L8TU0",
+        "player2": "J0U9ZU",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 4,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "5ZJ2B2",
+        "score": 5,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "PZGEOT",
+        "player2": "K1LJLP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 5,
+      "team1": {
+        "player1": "JN110L",
+        "player2": "Q37Z96",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "7NZQFP",
+        "player2": "GTKS9W",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 6,
+      "team1": {
+        "player1": "5ZJ2B2",
+        "player2": "L7PHES",
+        "score": 6,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "2L8TU0",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 7,
+      "team1": {
+        "player1": "JN110L",
+        "player2": "J0U9ZU",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "7NZQFP",
+        "player2": "K1LJLP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 8,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "Q37Z96",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "5XKD06",
+        "player2": "GTKS9W",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 9,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "L7PHES",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "5ZJ2B2",
+        "player2": "JN110L",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 10,
+      "team1": {
+        "player1": "PZGEOT",
+        "player2": "J0U9ZU",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "5XKD06",
+        "player2": "K1LJLP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 11,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "2L8TU0",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "PZGEOT",
+        "player2": "Q37Z96",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 12,
+      "team1": {
+        "player1": "JN110L",
+        "player2": "7NZQFP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "GTKS9W",
+        "score": 5,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 13,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "K1LJLP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "VOR7AU",
+        "player2": "J0U9ZU",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 14,
+      "team1": {
+        "player1": "5ZJ2B2",
+        "player2": "7NZQFP",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 15,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "PZGEOT",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "JN110L",
+        "player2": "GTKS9W",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 16,
+      "team1": {
+        "player1": "L7PHES",
+        "player2": "K1LJLP",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "5ZJ2B2",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 17,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "PZGEOT",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "Q37Z96",
+        "player2": "J0U9ZU",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 18,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "5ZJ2B2",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "GTKS9W",
+        "player2": "K1LJLP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 19,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "5XKD06",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "PZGEOT",
+        "player2": "7NZQFP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 20,
+      "team1": {
+        "player1": "JN110L",
+        "player2": "K1LJLP",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "Q37Z96",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 21,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "L7PHES",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "J0U9ZU",
+        "player2": "GTKS9W",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 22,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "7NZQFP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "JN110L",
+        "player2": "5XKD06",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 23,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "GTKS9W",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "5ZJ2B2",
+        "player2": "Q37Z96",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 24,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "K1LJLP",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "7NZQFP",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 25,
+      "team1": {
+        "player1": "5ZJ2B2",
+        "player2": "GTKS9W",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "PZGEOT",
+        "player2": "JN110L",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 26,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "7NZQFP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "VOR7AU",
+        "player2": "K1LJLP",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 27,
+      "team1": {
+        "player1": "L7PHES",
+        "player2": "J0U9ZU",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "PZGEOT",
+        "player2": "GTKS9W",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 28,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "Q37Z96",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "2L8TU0",
+        "player2": "K1LJLP",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 29,
+      "team1": {
+        "player1": "L7PHES",
+        "player2": "PZGEOT",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "7NZQFP",
+        "player2": "J0U9ZU",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 30,
+      "team1": {
+        "player1": "5ZJ2B2",
+        "player2": "K1LJLP",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VOR7AU",
+        "player2": "JN110L",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 31,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "GTKS9W",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "PZGEOT",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 32,
+      "team1": {
+        "player1": "2L8TU0",
+        "player2": "JN110L",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "5ZJ2B2",
+        "player2": "J0U9ZU",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 33,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "5XKD06",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "7NZQFP",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-08",
+      "isDraw": false
+    },
+    {
+      "matchId": 34,
+      "team1": {
+        "player1": "第一队选手一护照码",
+        "player2": "第一队选手二护照码",
+        "score": "第一队得分",
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "第二队选手一护照码",
+        "player2": "第二队选手二护照码",
+        "score": "第二队得分",
+        "won": true,
+        "points": 3
+      },
+      "date": "Unknown",
+      "isDraw": false
+    },
+    {
+      "matchId": 35,
+      "team1": {
+        "player1": "Q9IJKU",
+        "player2": "42SWC6",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "player2": "31JJ00",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 36,
+      "team1": {
+        "player1": "PKL-000249",
+        "player2": "NJUESZ",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "CXGSCH",
+        "player2": "CJM9CP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 37,
+      "team1": {
+        "player1": "CXGSCH",
+        "player2": "42SWC6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "Q9IJKU",
+        "player2": "CJM9CP",
+        "score": 5,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 38,
+      "team1": {
+        "player1": "F50WO8",
+        "player2": "PKL-000249",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "NJUESZ",
+        "player2": "31JJ00",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 39,
+      "team1": {
+        "player1": "Q9IJKU",
+        "player2": "PKL-000249",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "player2": "CJM9CP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 40,
+      "team1": {
+        "player1": "NJUESZ",
+        "player2": "42SWC6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "CXGSCH",
+        "player2": "31JJ00",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 41,
+      "team1": {
+        "player1": "NJUESZ",
+        "player2": "CJM9CP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "Q9IJKU",
+        "player2": "31JJ00",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 42,
+      "team1": {
+        "player1": "CXGSCH",
+        "player2": "PKL-000249",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "player2": "42SWC6",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 43,
+      "team1": {
+        "player1": "Q9IJKU",
+        "player2": "CXGSCH",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "PKL-000249",
+        "player2": "31JJ00",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 44,
+      "team1": {
+        "player1": "F50WO8",
+        "player2": "NJUESZ",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "CJM9CP",
+        "player2": "42SWC6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 45,
+      "team1": {
+        "player1": "PKL-000249",
+        "player2": "42SWC6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "Q9IJKU",
+        "player2": "NJUESZ",
+        "score": 6,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 46,
+      "team1": {
+        "player1": "F50WO8",
+        "player2": "CXGSCH",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "31JJ00",
+        "player2": "CJM9CP",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 47,
+      "team1": {
+        "player1": "31JJ00",
+        "player2": "42SWC6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "PKL-000249",
+        "player2": "CJM9CP",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 48,
+      "team1": {
+        "player1": "F50WO8",
+        "player2": "Q9IJKU",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "CXGSCH",
+        "player2": "NJUESZ",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 49,
+      "team1": {
+        "player1": "第一队选手一护照码",
+        "player2": "第一队选手二护照码",
+        "score": "第一队得分",
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "第二队选手一护照码",
+        "player2": "第二队选手二护照码",
+        "score": "第二队得分",
+        "won": true,
+        "points": 3
+      },
+      "date": "Unknown",
+      "isDraw": false
+    },
+    {
+      "matchId": 50,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 51,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 52,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 53,
+      "team1": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 5,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 54,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 55,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 6,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 56,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 4,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 57,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 58,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 59,
+      "team1": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 60,
+      "team1": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 61,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 62,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "ZL2NXC",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "J0U9ZU",
+        "player2": "JN110L",
+        "score": 6,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 63,
+      "team1": {
+        "player1": "YSJ09R",
+        "player2": "805BZ6",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VR97YK",
+        "player2": "B2T4T8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-10",
+      "isDraw": false
+    },
+    {
+      "matchId": 64,
+      "team1": {
+        "player1": "第一队选手一护照码",
+        "player2": "第一队选手二护照码",
+        "score": "第一队得分",
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "第二队选手一护照码",
+        "player2": "第二队选手二护照码",
+        "score": "第二队得分",
+        "won": true,
+        "points": 3
+      },
+      "date": "Unknown",
+      "isDraw": false
+    },
+    {
+      "matchId": 65,
+      "team1": {
+        "player1": "W9YINQ",
+        "player2": "80IYHC",
+        "score": 16,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "XQ5V4N",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 66,
+      "team1": {
+        "player1": "L059JK",
+        "player2": "T8EOPH",
+        "score": 16,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "FOGBAM",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 67,
+      "team1": {
+        "player1": "XQ5V4N",
+        "player2": "80IYHC",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "W9YINQ",
+        "player2": "T8EOPH",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 68,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "XQ5V4N",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "L059JK",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 69,
+      "team1": {
+        "player1": "T8EOPH",
+        "player2": "80IYHC",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "W9YINQ",
+        "player2": "L059JK",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 70,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "XQ5V4N",
+        "score": 11,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "T8EOPH",
+        "player2": "80IYHC",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 71,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "L059JK",
+        "score": 19,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "W9YINQ",
+        "player2": "XQ5V4N",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 72,
+      "team1": {
+        "player1": "W9YINQ",
+        "player2": "L059JK",
+        "score": 16,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "80IYHC",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 73,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "80IYHC",
+        "score": 16,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "XQ5V4N",
+        "player2": "T8EOPH",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 74,
+      "team1": {
+        "player1": "FOGBAM",
+        "player2": "T8EOPH",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "W9YINQ",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 75,
+      "team1": {
+        "player1": "L059JK",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "XQ5V4N",
+        "player2": "80IYHC",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 76,
+      "team1": {
+        "player1": "W9YINQ",
+        "player2": "T8EOPH",
+        "score": 17,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "XQ5V4N",
+        "player2": "L059JK",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 77,
+      "team1": {
+        "player1": "W9YINQ",
+        "player2": "FOGBAM",
+        "score": 17,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "T8EOPH",
+        "player2": "31JJ00",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 78,
+      "team1": {
+        "player1": "L059JK",
+        "player2": "80IYHC",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "FOGBAM",
+        "player2": "31JJ00",
+        "score": 17,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-13",
+      "isDraw": false
+    },
+    {
+      "matchId": 79,
+      "team1": {
+        "player1": "第一队选手一护照码",
+        "player2": "第一队选手二护照码",
+        "score": "第一队得分",
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "第二队选手一护照码",
+        "player2": "第二队选手二护照码",
+        "score": "第二队得分",
+        "won": true,
+        "points": 3
+      },
+      "date": "Unknown",
+      "isDraw": false
+    },
+    {
+      "matchId": 80,
+      "team1": {
+        "player1": "OCD6W7",
+        "player2": "P49EXT",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "QLJDLI",
+        "player2": "K1LJLP",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 81,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "UMYZYI",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "Q37Z96",
+        "score": 18,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 82,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "OCD6W7",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "P49EXT",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 83,
+      "team1": {
+        "player1": "QLJDLI",
+        "player2": "UMYZYI",
+        "score": 18,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VOR7AU",
+        "player2": "K1LJLP",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 84,
+      "team1": {
+        "player1": "P49EXT",
+        "player2": "UMYZYI",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "QLJDLI",
+        "score": 17,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 85,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "OCD6W7",
+        "score": 18,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "Q37Z96",
+        "player2": "K1LJLP",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 86,
+      "team1": {
+        "player1": "L7PHES",
+        "player2": "VOR7AU",
+        "score": 19,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "P49EXT",
+        "player2": "K1LJLP",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 87,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "UMYZYI",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "QLJDLI",
+        "player2": "OCD6W7",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 88,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "P49EXT",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "K1LJLP",
+        "player2": "UMYZYI",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 89,
+      "team1": {
+        "player1": "VOR7AU",
+        "player2": "QLJDLI",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "OCD6W7",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 90,
+      "team1": {
+        "player1": "OCD6W7",
+        "player2": "UMYZYI",
+        "score": 21,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "VOR7AU",
+        "player2": "P49EXT",
+        "score": 23,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 91,
+      "team1": {
+        "player1": "Q37Z96",
+        "player2": "QLJDLI",
+        "score": 17,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "K1LJLP",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 92,
+      "team1": {
+        "player1": "OCD6W7",
+        "player2": "K1LJLP",
+        "score": 18,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "L7PHES",
+        "player2": "UMYZYI",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 93,
+      "team1": {
+        "player1": "QLJDLI",
+        "player2": "P49EXT",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "Q37Z96",
+        "player2": "VOR7AU",
+        "score": 21,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 94,
+      "team1": {
+        "player1": "第一队选手一护照码",
+        "player2": "第一队选手二护照码",
+        "score": "第一队得分",
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "第二队选手一护照码",
+        "player2": "第二队选手二护照码",
+        "score": "第二队得分",
+        "won": true,
+        "points": 3
+      },
+      "date": "Unknown",
+      "isDraw": false
+    },
+    {
+      "matchId": 95,
+      "team1": {
+        "player1": "ZTO1ZR",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "80IYHC",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 96,
+      "team1": {
+        "player1": "KTPF1I",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "31JJ00",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 97,
+      "team1": {
+        "player1": "NNJJPS",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "1FSR3A",
+        "score": 4,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 98,
+      "team1": {
+        "player1": "NJUESZ",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 99,
+      "team1": {
+        "player1": "1FSR3A",
+        "score": 13,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "80IYHC",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 100,
+      "team1": {
+        "player1": "KTPF1I",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "NJUESZ",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 101,
+      "team1": {
+        "player1": "F50WO8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "NNJJPS",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 102,
+      "team1": {
+        "player1": "31JJ00",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "ZTO1ZR",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 103,
+      "team1": {
+        "player1": "NJUESZ",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "80IYHC",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 104,
+      "team1": {
+        "player1": "ZTO1ZR",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "1FSR3A",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 105,
+      "team1": {
+        "player1": "F50WO8",
+        "score": 8,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "KTPF1I",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 106,
+      "team1": {
+        "player1": "NNJJPS",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "31JJ00",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 107,
+      "team1": {
+        "player1": "ZTO1ZR",
+        "score": 12,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "NJUESZ",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 108,
+      "team1": {
+        "player1": "80IYHC",
+        "score": 9,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "NNJJPS",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 109,
+      "team1": {
+        "player1": "1FSR3A",
+        "score": 6,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 110,
+      "team1": {
+        "player1": "NJUESZ",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "31JJ00",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 111,
+      "team1": {
+        "player1": "KTPF1I",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "ZTO1ZR",
+        "score": 3,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 112,
+      "team1": {
+        "player1": "80IYHC",
+        "score": 4,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 113,
+      "team1": {
+        "player1": "KTPF1I",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "1FSR3A",
+        "score": 4,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 114,
+      "team1": {
+        "player1": "NJUESZ",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "NNJJPS",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 115,
+      "team1": {
+        "player1": "31JJ00",
+        "score": 10,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "F50WO8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 116,
+      "team1": {
+        "player1": "80IYHC",
+        "score": 5,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "KTPF1I",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 117,
+      "team1": {
+        "player1": "31JJ00",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "1FSR3A",
+        "score": 1,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 118,
+      "team1": {
+        "player1": "NNJJPS",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "ZTO1ZR",
+        "score": 4,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 119,
+      "team1": {
+        "player1": "1FSR3A",
+        "score": 7,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "NJUESZ",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 120,
+      "team1": {
+        "player1": "F50WO8",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "ZTO1ZR",
+        "score": 4,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 121,
+      "team1": {
+        "player1": "80IYHC",
+        "score": 6,
+        "won": false,
+        "points": 1
+      },
+      "team2": {
+        "player1": "31JJ00",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    },
+    {
+      "matchId": 122,
+      "team1": {
+        "player1": "NNJJPS",
+        "score": 15,
+        "won": true,
+        "points": 3
+      },
+      "team2": {
+        "player1": "KTPF1I",
+        "score": 14,
+        "won": false,
+        "points": 1
+      },
+      "date": "2025-09-14",
+      "isDraw": false
+    }
+  ]
+}
