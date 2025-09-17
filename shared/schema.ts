@@ -2533,6 +2533,170 @@ export {
   type AdminPermissionCheck
 };
 
+// =============================================================================
+// DIGITAL CURRENCY SYSTEM - SPRINT 1: UDF-COMPLIANT PICKLE CREDITS
+// =============================================================================
+
+// Digital Currency Accounts - Individual user credit balances
+export const digitalCreditsAccounts = pgTable("digital_credits_accounts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  balance: integer("balance").notNull().default(0), // Balance in credits (dollars * 100 for precision)
+  totalPurchased: integer("total_purchased").notNull().default(0), // Lifetime purchased credits
+  totalSpent: integer("total_spent").notNull().default(0), // Lifetime spent credits
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Digital Currency Transactions - Complete audit trail of all credit activity
+export const digitalCreditsTransactions = pgTable("digital_credits_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(), // Amount in credits (positive for credit, negative for debit)
+  type: varchar("type", { length: 50 }).notNull(), // 'top_up', 'program_purchase', 'gift_redemption', 'transfer_in', 'transfer_out'
+  referenceId: integer("reference_id"), // Reference to related transaction/purchase
+  referenceType: varchar("reference_type", { length: 100 }), // Type of reference: 'wise_payment', 'gift_card', 'program_enrollment'
+  wiseTransactionId: varchar("wise_transaction_id", { length: 100 }), // Wise API transaction reference
+  wiseTransferState: varchar("wise_transfer_state", { length: 50 }), // Wise transfer status: 'processing', 'completed', 'failed'
+  description: text("description"), // Human-readable description
+  balanceAfter: integer("balance_after").notNull(), // UDF Requirement: Track balance after each transaction
+  picklePointsAwarded: integer("pickle_points_awarded").default(0), // 3:1 ratio points awarded
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Digital Gift Cards - Purchase, generation, and redemption system
+export const digitalGiftCards = pgTable("digital_gift_cards", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 20 }).notNull().unique(), // Auto-generated gift card code
+  amount: integer("amount").notNull(), // Gift card value in credits
+  remainingBalance: integer("remaining_balance").notNull(), // Current balance (allows partial redemption)
+  purchaserId: integer("purchaser_id").notNull().references(() => users.id),
+  recipientEmail: varchar("recipient_email", { length: 255 }),
+  recipientUserId: integer("recipient_user_id").references(() => users.id),
+  wiseTransactionId: varchar("wise_transaction_id", { length: 100 }), // Original purchase transaction
+  isRedeemed: boolean("is_redeemed").notNull().default(false),
+  redeemedAt: timestamp("redeemed_at"),
+  expiresAt: timestamp("expires_at"), // Optional expiry (null = no expiry)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Digital Currency Transfers - User-to-user credit transfers
+export const digitalCreditsTransfers = pgTable("digital_credits_transfers", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(),
+  message: text("message"), // Optional message from sender
+  status: varchar("status", { length: 20 }).notNull().default('pending'), // 'pending', 'completed', 'cancelled'
+  senderTransactionId: integer("sender_transaction_id").references(() => digitalCreditsTransactions.id),
+  recipientTransactionId: integer("recipient_transaction_id").references(() => digitalCreditsTransactions.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+// Relations for Digital Currency System
+export const digitalCreditsAccountsRelations = relations(digitalCreditsAccounts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [digitalCreditsAccounts.userId],
+    references: [users.id],
+  }),
+  transactions: many(digitalCreditsTransactions),
+}));
+
+export const digitalCreditsTransactionsRelations = relations(digitalCreditsTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [digitalCreditsTransactions.userId],
+    references: [users.id],
+  }),
+  account: one(digitalCreditsAccounts, {
+    fields: [digitalCreditsTransactions.userId],
+    references: [digitalCreditsAccounts.userId],
+  }),
+}));
+
+export const digitalGiftCardsRelations = relations(digitalGiftCards, ({ one }) => ({
+  purchaser: one(users, {
+    fields: [digitalGiftCards.purchaserId],
+    references: [users.id],
+  }),
+  recipient: one(users, {
+    fields: [digitalGiftCards.recipientUserId],
+    references: [users.id],
+  }),
+}));
+
+export const digitalCreditsTransfersRelations = relations(digitalCreditsTransfers, ({ one }) => ({
+  sender: one(users, {
+    fields: [digitalCreditsTransfers.senderId],
+    references: [users.id],
+  }),
+  recipient: one(users, {
+    fields: [digitalCreditsTransfers.recipientId],
+    references: [users.id],
+  }),
+  senderTransaction: one(digitalCreditsTransactions, {
+    fields: [digitalCreditsTransfers.senderTransactionId],
+    references: [digitalCreditsTransactions.id],
+  }),
+  recipientTransaction: one(digitalCreditsTransactions, {
+    fields: [digitalCreditsTransfers.recipientTransactionId],
+    references: [digitalCreditsTransactions.id],
+  }),
+}));
+
+// Zod schemas for Digital Currency System
+export const insertDigitalCreditsAccountSchema = createInsertSchema(digitalCreditsAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDigitalCreditsTransactionSchema = createInsertSchema(digitalCreditsTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDigitalGiftCardSchema = createInsertSchema(digitalGiftCards).omit({
+  id: true,
+  createdAt: true,
+  isRedeemed: true,
+  redeemedAt: true,
+});
+
+export const insertDigitalCreditsTransferSchema = createInsertSchema(digitalCreditsTransfers).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+  status: true,
+  senderTransactionId: true,
+  recipientTransactionId: true,
+});
+
+// TypeScript types for Digital Currency System
+export type DigitalCreditsAccount = typeof digitalCreditsAccounts.$inferSelect;
+export type InsertDigitalCreditsAccount = z.infer<typeof insertDigitalCreditsAccountSchema>;
+export type DigitalCreditsTransaction = typeof digitalCreditsTransactions.$inferSelect;
+export type InsertDigitalCreditsTransaction = z.infer<typeof insertDigitalCreditsTransactionSchema>;
+export type DigitalGiftCard = typeof digitalGiftCards.$inferSelect;
+export type InsertDigitalGiftCard = z.infer<typeof insertDigitalGiftCardSchema>;
+export type DigitalCreditsTransfer = typeof digitalCreditsTransfers.$inferSelect;
+export type InsertDigitalCreditsTransfer = z.infer<typeof insertDigitalCreditsTransferSchema>;
+
+// UDF Algorithm Validation Types
+export type CreditTransactionValidation = {
+  userId: number;
+  amount: number;
+  type: string;
+  currentBalance: number;
+  expectedBalanceAfter: number;
+};
+
+export type PicklePointsCalculation = {
+  creditsAmount: number;
+  pointsRatio: number; // Should always be 3.0 for 3:1 ratio
+  expectedPoints: number;
+};
+
 // Export coach facility partnership schemas for Priority 2 development
 export {
   coachFacilityPartnerships, coachBookings, facilityEvents, 
