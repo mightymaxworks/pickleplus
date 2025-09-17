@@ -74,7 +74,8 @@ export enum CreditTransactionType {
   TRANSFER_IN = 'transfer_in',
   TRANSFER_OUT = 'transfer_out',
   GIFT_CARD_PURCHASE = 'gift_card_purchase',
-  BONUS_CREDIT = 'bonus_credit'
+  BONUS_CREDIT = 'bonus_credit',
+  PICKLE_POINTS_MATCH_REWARD = 'pickle_points_match_reward'
 }
 
 export interface GiftCardValidation {

@@ -871,6 +871,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/gift-cards', giftCardRoutes);
     console.log("[ROUTES] Gift Card routes registered successfully");
     
+    // Pickle Points Integration System (Sprint 1: Pickle Points Integration)
+    console.log("[ROUTES] Registering Pickle Points routes...");
+    const { picklePointsRoutes } = await import('./routes/picklePointsRoutes.ts');
+    app.use('/api/pickle-points', picklePointsRoutes);
+    console.log("[ROUTES] Pickle Points routes registered successfully");
+    
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
     await registerAdminRoutes(app);
