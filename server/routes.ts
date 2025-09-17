@@ -34,6 +34,7 @@ import coachWeightedAssessmentRoutes from './routes/coach-weighted-assessment';
 import facilityDiscoveryRoutes from './routes/facility-discovery-routes';
 import bookingRoutes from './routes/booking-routes';
 import facilityManagerRoutes from './routes/facility-manager-routes';
+import { digitalCurrencyRoutes } from './routes/digitalCurrency';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -835,6 +836,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     console.log("[ROUTES] Registering WISE Diagnostic routes...");
     app.use('/api/wise-diagnostic', wiseDiagnosticRoutes);
+    
+    // Digital Currency System (Sprint 1: Foundation & Digital Currency Core)
+    console.log("[ROUTES] Registering Digital Currency routes...");
+    app.use('/api/credits', digitalCurrencyRoutes);
+    console.log("[ROUTES] Digital Currency routes registered successfully");
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");

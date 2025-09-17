@@ -14,7 +14,8 @@
  * - System enforces financial data integrity and compliance
  */
 
-import { algorithmValidation } from './algorithmValidation';
+// Digital currency validation utilities can operate independently from algorithm validation
+// Future integration with algorithmValidation utilities can be added as needed
 
 // ========================================
 // DIGITAL CURRENCY CONSTANTS (IMMUTABLE)
@@ -375,3 +376,6 @@ export const digitalCurrencyUDF = {
     CreditTransactionType,
   }
 } as const;
+
+// Functions and constants are already exported as named exports above
+// digitalCurrencyUDF provides a convenient grouped export for easier importing
