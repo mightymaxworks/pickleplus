@@ -19,7 +19,13 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { digitalCurrencyService } from '../services/digitalCurrencyService';
 import { digitalCurrencyUDF } from '../../shared/utils/digitalCurrencyValidation';
-import { parseRawBody, verifyWiseSignature, ensureIdempotency } from '../middleware/webhookSecurity';
+import { 
+  parseWebhookRawBody, 
+  verifyWiseWebhookSignature, 
+  ensurePersistentIdempotency, 
+  markEventProcessing, 
+  markEventCompleted 
+} from '../middleware/productionWebhookSecurity';
 
 const router = Router();
 
@@ -402,9 +408,10 @@ router.get('/limits', requireAuth, async (req: any, res: any) => {
  * CRITICAL: Uses middleware for signature verification, raw body parsing, and idempotency
  */
 router.post('/webhooks/wise', 
-  parseRawBody(),
-  verifyWiseSignature(),
-  ensureIdempotency(),
+  parseWebhookRawBody(),
+  verifyWiseWebhookSignature(),
+  ensurePersistentIdempotency(),
+  markEventProcessing(),
   async (req: any, res: any) => {
     try {
       const event = req.wiseEvent;
@@ -427,6 +434,9 @@ router.post('/webhooks/wise',
           console.log(`[WISE WEBHOOK] Unhandled event type: ${event.type}`);
       }
       
+      // Mark event as completed in database
+      await markEventCompleted(event.eventId, true);
+      
       // Acknowledge successful processing
       res.status(200).json({ 
         received: true,
@@ -436,6 +446,12 @@ router.post('/webhooks/wise',
       
     } catch (error) {
       console.error('[WISE WEBHOOK] Processing error:', error);
+      
+      // Mark event as failed in database
+      if (req.wiseEvent?.eventId) {
+        await markEventCompleted(req.wiseEvent.eventId, false);
+      }
+      
       res.status(500).json({ 
         error: 'Webhook processing failed',
         eventId: req.wiseEvent?.eventId

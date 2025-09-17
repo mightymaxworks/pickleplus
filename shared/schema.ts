@@ -1,5 +1,5 @@
 // Main schema file for Pickle+ global types and tables
-import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -2594,6 +2594,24 @@ export const digitalCreditsTransfers = pgTable("digital_credits_transfers", {
   completedAt: timestamp("completed_at"),
 });
 
+// Webhook Events Table for Production-Grade Idempotency
+export const webhookEvents = pgTable("webhook_events", {
+  id: serial("id").primaryKey(),
+  eventId: varchar("event_id", { length: 255 }).notNull().unique(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  provider: varchar("provider", { length: 50 }).notNull().default('wise'),
+  payload: jsonb("payload").notNull(),
+  signatureVerified: boolean("signature_verified").notNull().default(false),
+  processingStatus: varchar("processing_status", { length: 50 }).notNull().default('received'),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: uniqueIndex("webhook_events_event_id_unique").on(table.eventId),
+  providerTypeIdx: index("webhook_events_provider_type_idx").on(table.provider, table.eventType),
+  statusIdx: index("webhook_events_status_idx").on(table.processingStatus, table.createdAt)
+}));
+
 // Relations for Digital Currency System
 export const digitalCreditsAccountsRelations = relations(digitalCreditsAccounts, ({ one, many }) => ({
   user: one(users, {
@@ -2672,6 +2690,12 @@ export const insertDigitalCreditsTransferSchema = createInsertSchema(digitalCred
   recipientTransactionId: true,
 });
 
+export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // TypeScript types for Digital Currency System
 export type DigitalCreditsAccount = typeof digitalCreditsAccounts.$inferSelect;
 export type InsertDigitalCreditsAccount = z.infer<typeof insertDigitalCreditsAccountSchema>;
@@ -2681,6 +2705,8 @@ export type DigitalGiftCard = typeof digitalGiftCards.$inferSelect;
 export type InsertDigitalGiftCard = z.infer<typeof insertDigitalGiftCardSchema>;
 export type DigitalCreditsTransfer = typeof digitalCreditsTransfers.$inferSelect;
 export type InsertDigitalCreditsTransfer = z.infer<typeof insertDigitalCreditsTransferSchema>;
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
 
 // UDF Algorithm Validation Types
 export type CreditTransactionValidation = {
