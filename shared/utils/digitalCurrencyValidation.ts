@@ -41,6 +41,9 @@ export const PICKLE_CREDITS_CONSTANTS = {
   // Transaction limits (daily, in cents)
   DAILY_INDIVIDUAL_LIMIT: 100000, // $1,000
   DAILY_CORPORATE_LIMIT: 5000000, // $50,000
+  
+  // Gift card specific limits
+  MIN_REDEMPTION_AMOUNT: 100 // $1.00 minimum redemption
 } as const;
 
 // ========================================
@@ -376,6 +379,28 @@ export const digitalCurrencyUDF = {
     CreditTransactionType,
   }
 } as const;
+
+// ========================================
+// GIFT CARD CODE GENERATION UTILITY
+// ========================================
+export function generateGiftCardCode(): string {
+  // SECURITY: Use cryptographically secure random generation
+  const crypto = require('crypto');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const segments = [];
+  
+  // Generate 3 segments of 4 characters each: XXXX-XXXX-XXXX
+  for (let i = 0; i < 3; i++) {
+    let segment = '';
+    for (let j = 0; j < 4; j++) {
+      const randomIndex = crypto.randomInt(0, chars.length);
+      segment += chars.charAt(randomIndex);
+    }
+    segments.push(segment);
+  }
+  
+  return segments.join('-');
+}
 
 // Functions and constants are already exported as named exports above
 // digitalCurrencyUDF provides a convenient grouped export for easier importing

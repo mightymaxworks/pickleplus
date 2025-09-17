@@ -864,6 +864,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { individualCreditRoutes } = await import('./routes/individualCreditRoutes.ts');
     app.use('/api/individual-credits', individualCreditRoutes);
     console.log("[ROUTES] Individual Credit routes registered successfully");
+
+    // Gift Card System (Sprint 1: Gift Card Features)
+    console.log("[ROUTES] Registering Gift Card routes...");
+    const { giftCardRoutes } = await import('./routes/giftCardRoutes.ts');
+    app.use('/api/gift-cards', giftCardRoutes);
+    console.log("[ROUTES] Gift Card routes registered successfully");
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
