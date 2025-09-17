@@ -198,49 +198,54 @@ export function ensurePersistentIdempotency() {
     const { eventId, type, resource } = req.wiseEvent;
 
     try {
-      // Check if event already exists using database transaction
+      // ATOMIC: Use INSERT with ON CONFLICT to prevent race conditions
       const result = await db.transaction(async (tx) => {
-        // Look for existing event
-        const existingEvents = await tx
-          .select()
-          .from(webhookEvents)
-          .where(eq(webhookEvents.eventId, eventId))
-          .limit(1);
-
-        if (existingEvents.length > 0) {
-          const existingEvent = existingEvents[0];
-          console.log('[WEBHOOK SECURITY] Duplicate event detected:', {
+        try {
+          // Attempt atomic insert with unique constraint enforcement
+          const newEventData: InsertWebhookEvent = {
             eventId,
-            existingStatus: existingEvent.processingStatus,
-            existingTimestamp: existingEvent.createdAt
-          });
-
-          // Return duplicate status with proper response
-          return {
-            isDuplicate: true,
-            existingEvent
+            eventType: type,
+            provider: 'wise',
+            payload: req.body,
+            signatureVerified: true,
+            processingStatus: 'received'
           };
+
+          const createdEvents = await tx
+            .insert(webhookEvents)
+            .values(newEventData)
+            .returning();
+
+          // Success: new event created
+          return {
+            isDuplicate: false,
+            webhookRecord: createdEvents[0]
+          };
+
+        } catch (insertError: any) {
+          // Check if this is a unique constraint violation (duplicate eventId)
+          if (insertError.code === '23505' && insertError.constraint?.includes('event_id')) {
+            console.log('[WEBHOOK SECURITY] Duplicate event detected via constraint:', {
+              eventId,
+              constraintName: insertError.constraint
+            });
+
+            // Fetch the existing event for proper response
+            const existingEvents = await tx
+              .select()
+              .from(webhookEvents)
+              .where(eq(webhookEvents.eventId, eventId))
+              .limit(1);
+
+            return {
+              isDuplicate: true,
+              existingEvent: existingEvents[0] || null
+            };
+          }
+          
+          // Re-throw other database errors
+          throw insertError;
         }
-
-        // Create new webhook event record
-        const newEventData: InsertWebhookEvent = {
-          eventId,
-          eventType: type,
-          provider: 'wise',
-          payload: req.body,
-          signatureVerified: true,
-          processingStatus: 'received'
-        };
-
-        const createdEvents = await tx
-          .insert(webhookEvents)
-          .values(newEventData)
-          .returning();
-
-        return {
-          isDuplicate: false,
-          webhookRecord: createdEvents[0]
-        };
       });
 
       if (result.isDuplicate) {

@@ -9,7 +9,9 @@ import { setupSecurity } from './security';
 import { initializeBounceModule } from './modules/bounce';
 
 const app = express();
-app.use(express.json());
+
+// CRITICAL SECURITY: Do NOT apply express.json() globally - it breaks webhook raw body parsing
+// JSON parsing is applied selectively to non-webhook routes in registerRoutes()
 app.use(express.urlencoded({ extended: false }));
 
 // Configure CORS to allow credentials

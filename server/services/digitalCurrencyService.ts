@@ -208,8 +208,7 @@ export class DigitalCurrencyService {
           .update(digitalCreditsAccounts)
           .set({
             balance: newBalance,
-            totalPurchased: newTotalPurchased,
-            updatedAt: new Date()
+            totalPurchased: newTotalPurchased
           })
           .where(eq(digitalCreditsAccounts.userId, request.userId));
 
@@ -696,8 +695,7 @@ export class DigitalCurrencyService {
           .update(digitalCreditsAccounts)
           .set({
             balance: newBalance,
-            totalPurchased: newTotalPurchased,
-            updatedAt: new Date()
+            totalPurchased: newTotalPurchased
           })
           .where(eq(digitalCreditsAccounts.userId, userId));
 
@@ -708,8 +706,7 @@ export class DigitalCurrencyService {
             wiseTransferState: 'completed',
             balanceAfter: newBalance,
             picklePointsAwarded: picklePointsAwarded,
-            description: transaction.description.replace('(pending confirmation)', '(confirmed)'),
-            updatedAt: new Date()
+            description: transaction.description ? transaction.description.replace('(pending confirmation)', '(confirmed)') : 'Transaction confirmed'
           })
           .where(eq(digitalCreditsTransactions.id, transactionId));
 
@@ -736,8 +733,7 @@ export class DigitalCurrencyService {
         .update(digitalCreditsTransactions)
         .set({
           wiseTransferState: 'failed',
-          description: sql`${digitalCreditsTransactions.description} || ' (payment failed)'`,
-          updatedAt: new Date()
+          description: sql`${digitalCreditsTransactions.description} || ' (payment failed)'`
         })
         .where(eq(digitalCreditsTransactions.id, transactionId));
 

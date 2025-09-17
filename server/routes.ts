@@ -93,6 +93,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   console.log("[AUTH] Authentication setup complete");
 
+  // CRITICAL SECURITY: Apply JSON parsing selectively - exclude webhook paths to preserve raw body
+  app.use((req, res, next) => {
+    if (req.path.includes('/webhooks/')) {
+      // Skip JSON parsing for webhook routes - they need raw body for signature verification
+      console.log(`[WEBHOOK SECURITY] Preserving raw body for webhook path: ${req.path}`);
+      return next();
+    }
+    // Apply JSON parsing for all other routes
+    import('express').then(express => {
+      express.json()(req, res, next);
+    }).catch(() => {
+      // Fallback if import fails
+      require('express').json()(req, res, next);
+    });
+  });
+  console.log("[SECURITY] Selective JSON parsing middleware configured");
+
   // Register basic API routes
   console.log("[ROUTES] Registering basic API routes...");
   const { registerMatchRoutes } = await import('./routes/match-routes');
@@ -841,6 +858,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Digital Currency routes...");
     app.use('/api/credits', digitalCurrencyRoutes);
     console.log("[ROUTES] Digital Currency routes registered successfully");
+    
+    // Individual Credit System (Sprint 1: Individual Credit Features)
+    console.log("[ROUTES] Registering Individual Credit routes...");
+    const { individualCreditRoutes } = await import('./routes/individualCreditRoutes.ts');
+    app.use('/api/individual-credits', individualCreditRoutes);
+    console.log("[ROUTES] Individual Credit routes registered successfully");
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
