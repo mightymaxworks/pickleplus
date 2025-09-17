@@ -6,6 +6,8 @@
  * 
  * Version: 1.0.0 - Sprint 1: Individual Credit System  
  * Last Updated: September 17, 2025
+ * 
+ * UDF COMPLIANCE: Uses centralized validation and bonus calculations
  */
 
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -18,7 +20,13 @@ import {
   type DigitalCreditsTransaction,
   type InsertDigitalCreditsTransaction
 } from "../../shared/schema";
-import { digitalCurrencyUDF } from "../../shared/utils/digitalCurrencyValidation";
+import { 
+  digitalCurrencyUDF,
+  calculateTopUpBonus,
+  validateCreditTransaction,
+  calculatePicklePointsReward,
+  PICKLE_CREDITS_CONSTANTS
+} from "../../shared/utils/digitalCurrencyValidation";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -57,146 +65,61 @@ export interface CreditBonus {
 export class IndividualCreditService {
   
   /**
-   * Calculate applicable bonuses for a credit top-up
-   * UDF-Compliant: All bonus calculations use validated algorithms
+   * Get loyalty tier information based on user's purchase history
+   * UDF-Compliant: Uses centralized tier thresholds
    */
-  async calculateBonuses(userId: number, amount: number, promoCode?: string): Promise<CreditBonus[]> {
-    const bonuses: CreditBonus[] = [];
-    
+  async getLoyaltyTierInfo(userId: number): Promise<{
+    currentTier: string;
+    totalPurchased: number;
+    nextTierRequirement?: number;
+    nextTierName?: string;
+  }> {
     try {
-      // Check if first-time purchase
-      const existingTransactions = await db
+      // Get account information for total purchased
+      const account = await db
         .select()
-        .from(digitalCreditsTransactions)
-        .where(
-          and(
-            eq(digitalCreditsTransactions.userId, userId),
-            eq(digitalCreditsTransactions.type, 'credit'),
-            eq(digitalCreditsTransactions.status, 'completed')
-          )
-        )
+        .from(digitalCreditsAccounts)
+        .where(eq(digitalCreditsAccounts.userId, userId))
         .limit(1);
 
-      // First-time user bonus (15% bonus)
-      if (existingTransactions.length === 0) {
-        bonuses.push({
-          type: 'first_time',
-          percentage: 15,
-          description: 'Welcome Bonus - 15% extra credits on your first purchase!',
-          condition: 'First-time purchase'
-        });
-      }
+      const totalPurchased = account[0]?.totalPurchased || 0;
 
-      // Volume-based bonuses
-      if (amount >= 10000) { // $100+
-        bonuses.push({
-          type: 'volume',
-          percentage: 10,
-          description: 'Volume Bonus - 10% extra for purchases $100+',
-          condition: 'Purchase amount ≥ $100'
-        });
-      } else if (amount >= 5000) { // $50+
-        bonuses.push({
-          type: 'volume',
-          percentage: 5,
-          description: 'Volume Bonus - 5% extra for purchases $50+',
-          condition: 'Purchase amount ≥ $50'
-        });
-      }
+      // Define loyalty tiers using UDF constants
+      const tiers = [
+        { name: 'Bronze', requirement: 0 },
+        { name: 'Silver', requirement: 25000 }, // $250
+        { name: 'Gold', requirement: 50000 },   // $500
+        { name: 'Diamond', requirement: 100000 } // $1000
+      ];
 
-      // Promotional code bonuses
-      if (promoCode) {
-        const promoBonus = await this.validatePromoCode(promoCode, userId, amount);
-        if (promoBonus) {
-          bonuses.push(promoBonus);
+      let currentTier = 'Bronze';
+      let nextTierRequirement: number | undefined;
+      let nextTierName: string | undefined;
+
+      for (let i = tiers.length - 1; i >= 0; i--) {
+        if (totalPurchased >= tiers[i].requirement) {
+          currentTier = tiers[i].name;
+          if (i < tiers.length - 1) {
+            nextTierRequirement = tiers[i + 1].requirement;
+            nextTierName = tiers[i + 1].name;
+          }
+          break;
         }
       }
 
-      // Loyalty tier bonuses (based on total previous purchases)
-      const loyaltyBonus = await this.calculateLoyaltyBonus(userId, amount);
-      if (loyaltyBonus) {
-        bonuses.push(loyaltyBonus);
-      }
-
-      return bonuses;
+      return {
+        currentTier,
+        totalPurchased,
+        nextTierRequirement,
+        nextTierName
+      };
 
     } catch (error) {
-      console.error('[CREDIT SERVICE] Error calculating bonuses:', error);
-      return []; // Return empty bonuses on error rather than failing
-    }
-  }
-
-  /**
-   * Validate promotional code and return applicable bonus
-   */
-  private async validatePromoCode(promoCode: string, userId: number, amount: number): Promise<CreditBonus | null> {
-    // Promotional codes database lookup would go here
-    // For now, implement some standard promo codes
-    const promoCodes: Record<string, CreditBonus> = {
-      'WELCOME20': {
-        type: 'promotional',
-        percentage: 20,
-        description: 'WELCOME20 - 20% bonus credits',
-        condition: 'Valid promotional code'
-      },
-      'SUMMER25': {
-        type: 'promotional',
-        percentage: 25,
-        description: 'SUMMER25 - 25% summer bonus',
-        condition: 'Valid seasonal promotion'
-      }
-    };
-
-    return promoCodes[promoCode.toUpperCase()] || null;
-  }
-
-  /**
-   * Calculate loyalty bonus based on user's purchase history
-   */
-  private async calculateLoyaltyBonus(userId: number, currentAmount: number): Promise<CreditBonus | null> {
-    try {
-      // Calculate total previous purchases
-      const totalPurchased = await db
-        .select({ total: sum(digitalCreditsTransactions.amount) })
-        .from(digitalCreditsTransactions)
-        .where(
-          and(
-            eq(digitalCreditsTransactions.userId, userId),
-            eq(digitalCreditsTransactions.type, 'credit'),
-            eq(digitalCreditsTransactions.status, 'completed')
-          )
-        );
-
-      const lifetime = Number(totalPurchased[0]?.total || 0);
-
-      // Loyalty tier bonuses
-      if (lifetime >= 100000) { // $1000+ lifetime
-        return {
-          type: 'loyalty',
-          percentage: 8,
-          description: 'Diamond Tier - 8% loyalty bonus',
-          condition: 'Lifetime purchases ≥ $1000'
-        };
-      } else if (lifetime >= 50000) { // $500+ lifetime
-        return {
-          type: 'loyalty',
-          percentage: 5,
-          description: 'Gold Tier - 5% loyalty bonus',
-          condition: 'Lifetime purchases ≥ $500'
-        };
-      } else if (lifetime >= 25000) { // $250+ lifetime
-        return {
-          type: 'loyalty',
-          percentage: 3,
-          description: 'Silver Tier - 3% loyalty bonus',
-          condition: 'Lifetime purchases ≥ $250'
-        };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('[CREDIT SERVICE] Error calculating loyalty bonus:', error);
-      return null;
+      console.error('[CREDIT SERVICE] Error getting loyalty tier:', error);
+      return {
+        currentTier: 'Bronze',
+        totalPurchased: 0
+      };
     }
   }
 
@@ -207,15 +130,14 @@ export class IndividualCreditService {
   async processTopUp(request: TopUpRequest): Promise<TopUpResult> {
     const { userId, amount, paymentMethod, customerEmail, promoCode } = request;
 
-    // Validate input using UDF utilities
-    const validation = digitalCurrencyUDF.validateTopUpAmount(amount);
-    if (!validation.isValid) {
+    // Validate minimum amount using UDF constants
+    if (amount < PICKLE_CREDITS_CONSTANTS.MIN_TOP_UP_AMOUNT) {
       return {
         success: false,
         finalAmount: 0,
         bonusAmount: 0,
         balance: 0,
-        error: validation.error
+        error: `Minimum top-up amount is $${(PICKLE_CREDITS_CONSTANTS.MIN_TOP_UP_AMOUNT / 100).toFixed(2)}`
       };
     }
 
@@ -242,24 +164,42 @@ export class IndividualCreditService {
           account = newAccount;
         }
 
-        // Calculate bonuses
-        const bonuses = await this.calculateBonuses(userId, amount, promoCode);
-        const totalBonusPercentage = bonuses.reduce((sum, bonus) => sum + bonus.percentage, 0);
-        const bonusAmount = Math.floor(amount * (totalBonusPercentage / 100));
-        const finalAmount = amount + bonusAmount;
+        // UDF-Compliant: Use centralized bonus calculation
+        const bonusCalc = calculateTopUpBonus(amount);
+        const bonusAmount = bonusCalc.bonusAmount;
+        const finalAmount = bonusCalc.totalCredits;
+
+        // UDF Validation: Validate transaction before processing
+        const transactionValidation = validateCreditTransaction({
+          userId,
+          amount: finalAmount,
+          type: 'credit',
+          currentBalance: account[0].balance,
+          expectedBalanceAfter: account[0].balance + finalAmount
+        });
+
+        if (!transactionValidation.isValid) {
+          return {
+            success: false,
+            finalAmount: 0,
+            bonusAmount: 0,
+            balance: account[0].balance,
+            error: `Transaction validation failed: ${transactionValidation.errors.join(', ')}`
+          };
+        }
 
         // Create transaction record (pending until payment confirmed)
         const transactionData: InsertDigitalCreditsTransaction = {
           userId,
-          accountId: account[0].id,
           amount: finalAmount,
           type: 'credit',
-          status: 'pending',
+          status: 'pending', // SECURITY: Explicit pending status - requires webhook completion
           description: `Credit top-up: $${(amount / 100).toFixed(2)}${bonusAmount > 0 ? ` + $${(bonusAmount / 100).toFixed(2)} bonus` : ''}`,
+          balanceAfter: account[0].balance + finalAmount,
           metadata: {
             originalAmount: amount,
             bonusAmount,
-            bonuses: bonuses.map(b => ({ type: b.type, percentage: b.percentage, description: b.description })),
+            bonusCalc: bonusCalc.auditMetadata,
             paymentMethod,
             customerEmail,
             promoCode: promoCode || null
@@ -271,37 +211,15 @@ export class IndividualCreditService {
           .values(transactionData)
           .returning();
 
-        // For manual/test payments, immediately complete the transaction
-        let updatedBalance = account[0].balance;
-        if (paymentMethod === 'manual') {
-          // UDF-Compliant: Additive balance update
-          await tx
-            .update(digitalCreditsAccounts)
-            .set({
-              balance: sql`${digitalCreditsAccounts.balance} + ${finalAmount}`,
-              totalPurchased: sql`${digitalCreditsAccounts.totalPurchased} + ${finalAmount}`,
-              updatedAt: new Date()
-            })
-            .where(eq(digitalCreditsAccounts.id, account[0].id));
-
-          await tx
-            .update(digitalCreditsTransactions)
-            .set({
-              status: 'completed',
-              completedAt: new Date()
-            })
-            .where(eq(digitalCreditsTransactions.id, newTransaction[0].id));
-
-          updatedBalance = account[0].balance + finalAmount;
-        }
+        // SECURITY: Manual payments removed from public API - all transactions now require webhook completion
+        // Transactions are created as 'pending' and completed via verified payment provider webhooks only
 
         console.log('[CREDIT SERVICE] Top-up processed:', {
           userId,
           amount,
           finalAmount,
           bonusAmount,
-          transactionId: newTransaction[0].id,
-          bonuses: bonuses.length
+          transactionId: newTransaction[0].id
         });
 
         return {
@@ -309,8 +227,8 @@ export class IndividualCreditService {
           transactionId: newTransaction[0].id,
           finalAmount,
           bonusAmount,
-          balance: updatedBalance,
-          bonusType: bonuses.length > 0 ? bonuses[0].type : undefined
+          balance: account[0].balance, // Current balance unchanged until webhook completion
+          bonusType: bonusAmount > 0 ? 'volume' : undefined
         };
       });
 
@@ -362,19 +280,15 @@ export class IndividualCreditService {
         .orderBy(desc(digitalCreditsTransactions.createdAt))
         .limit(10);
 
-      // Determine loyalty tier
-      const totalPurchased = account[0].totalPurchased;
-      let loyaltyTier = 'Bronze';
-      if (totalPurchased >= 100000) loyaltyTier = 'Diamond';
-      else if (totalPurchased >= 50000) loyaltyTier = 'Gold';
-      else if (totalPurchased >= 25000) loyaltyTier = 'Silver';
+      // Get loyalty tier using centralized method
+      const loyaltyInfo = await this.getLoyaltyTierInfo(userId);
 
       return {
         balance: account[0].balance,
         totalPurchased: account[0].totalPurchased,
         totalSpent: account[0].totalSpent,
         recentTransactions,
-        loyaltyTier
+        loyaltyTier: loyaltyInfo.currentTier
       };
 
     } catch (error) {
@@ -395,28 +309,36 @@ export class IndividualCreditService {
           .from(digitalCreditsTransactions)
           .where(
             and(
-              eq(digitalCreditsTransactions.id, transactionId),
-              eq(digitalCreditsTransactions.status, 'pending')
+              eq(digitalCreditsTransactions.id, transactionId)
             )
           )
           .limit(1);
 
         if (transaction.length === 0) {
-          console.error('[CREDIT SERVICE] Transaction not found or already completed:', transactionId);
+          console.error('[CREDIT SERVICE] Transaction not found:', transactionId);
           return false;
         }
 
         const txn = transaction[0];
+        
+        // Skip if already completed
+        if (txn.completedAt) {
+          console.log('[CREDIT SERVICE] Transaction already completed:', transactionId);
+          return true;
+        }
 
-        // UDF-Compliant: Additive balance update
+        // Get original amount from metadata for proper accounting
+        const originalAmount = txn.metadata?.originalAmount || txn.amount;
+
+        // UDF-Compliant: Additive balance update - find account by userId since accountId might not be set
         await tx
           .update(digitalCreditsAccounts)
           .set({
             balance: sql`${digitalCreditsAccounts.balance} + ${txn.amount}`,
-            totalPurchased: sql`${digitalCreditsAccounts.totalPurchased} + ${txn.amount}`,
+            totalPurchased: sql`${digitalCreditsAccounts.totalPurchased} + ${originalAmount}`, // Only paid amount, not bonus
             updatedAt: new Date()
           })
-          .where(eq(digitalCreditsAccounts.id, txn.accountId));
+          .where(eq(digitalCreditsAccounts.userId, txn.userId));
 
         // Mark transaction as completed
         await tx
@@ -431,7 +353,8 @@ export class IndividualCreditService {
         console.log('[CREDIT SERVICE] Top-up completed:', {
           transactionId,
           userId: txn.userId,
-          amount: txn.amount,
+          totalAmount: txn.amount,
+          paidAmount: originalAmount,
           wiseTransferId
         });
 

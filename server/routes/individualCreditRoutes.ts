@@ -6,15 +6,19 @@
  * 
  * Version: 1.0.0 - Sprint 1: Individual Credit System
  * Last Updated: September 17, 2025
+ * 
+ * UDF COMPLIANCE: Uses centralized validation and service layer
  */
 
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
+import { individualCreditService } from '../services/individualCreditService';
+import { PICKLE_CREDITS_CONSTANTS } from '../../shared/utils/digitalCurrencyValidation';
 
 const router = Router();
 
-// Rate limiting for credit operations
+// Rate limiting for credit operations - enhanced security
 const creditRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 credit operations per window
@@ -23,56 +27,42 @@ const creditRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-// Validation schemas
+// Validation schemas using UDF constants
 const topUpSchema = z.object({
-  amount: z.number().min(500, 'Minimum top-up amount is $5.00'),
+  amount: z.number().min(PICKLE_CREDITS_CONSTANTS.MIN_TOP_UP_AMOUNT, `Minimum top-up amount is $${(PICKLE_CREDITS_CONSTANTS.MIN_TOP_UP_AMOUNT / 100).toFixed(2)}`),
   customerEmail: z.string().email('Valid email required'),
-  paymentMethod: z.enum(['wise', 'stripe', 'manual']).default('wise'),
+  paymentMethod: z.enum(['wise', 'stripe']).default('wise'), // SECURITY: Removed 'manual' - requires admin privileges
   promoCode: z.string().optional(),
 });
 
-/**
- * AUTHENTICATED ROUTE MIDDLEWARE
- */
-function requireAuth(req: any, res: any, next: any) {
-  if (!req.user || !req.user.id) {
-    return res.status(401).json({ 
-      success: false, 
-      error: 'Authentication required',
-      code: 'AUTH_REQUIRED'
-    });
-  }
-  next();
-}
+// Import authentication middleware - consistent with existing system
+import { isAuthenticated } from '../auth';
 
 /**
  * GET /api/individual-credits/account
  * Get user's credit account summary with balance and transaction history
  */
-router.get('/account', requireAuth, async (req: any, res: any) => {
+router.get('/account', isAuthenticated, async (req: any, res: any) => {
+
   try {
     const userId = req.user.id;
-    
-    // Mock response for now - will be replaced with actual service call
-    const mockSummary = {
-      balance: 0,
-      totalPurchased: 0,
-      totalSpent: 0,
-      loyaltyTier: 'Bronze',
-      recentTransactions: []
-    };
+    const summary = await individualCreditService.getUserCreditSummary(userId);
 
     res.json({
       success: true,
       data: {
-        balance: mockSummary.balance,
-        balanceFormatted: `$${(mockSummary.balance / 100).toFixed(2)}`,
-        totalPurchased: mockSummary.totalPurchased,
-        totalPurchasedFormatted: `$${(mockSummary.totalPurchased / 100).toFixed(2)}`,
-        totalSpent: mockSummary.totalSpent,
-        totalSpentFormatted: `$${(mockSummary.totalSpent / 100).toFixed(2)}`,
-        loyaltyTier: mockSummary.loyaltyTier,
-        recentTransactions: mockSummary.recentTransactions
+        balance: summary.balance,
+        balanceFormatted: `$${(summary.balance / 100).toFixed(2)}`,
+        totalPurchased: summary.totalPurchased,
+        totalPurchasedFormatted: `$${(summary.totalPurchased / 100).toFixed(2)}`,
+        totalSpent: summary.totalSpent,
+        totalSpentFormatted: `$${(summary.totalSpent / 100).toFixed(2)}`,
+        loyaltyTier: summary.loyaltyTier,
+        recentTransactions: summary.recentTransactions.map(txn => ({
+          ...txn,
+          amountFormatted: `$${(txn.amount / 100).toFixed(2)}`,
+          createdAt: txn.createdAt
+        }))
       }
     });
 
@@ -87,57 +77,36 @@ router.get('/account', requireAuth, async (req: any, res: any) => {
 
 /**
  * POST /api/individual-credits/calculate-bonus
- * Calculate potential bonuses for a top-up amount
+ * Calculate potential bonuses for a top-up amount using UDF-compliant calculations
  */
-router.post('/calculate-bonus', requireAuth, async (req: any, res: any) => {
+router.post('/calculate-bonus', isAuthenticated, async (req: any, res: any) => {
+
   try {
-    const { amount, promoCode } = req.body;
+    const { amount } = req.body;
     const userId = req.user.id;
 
-    if (!amount || amount < 500) {
+    if (!amount || amount < PICKLE_CREDITS_CONSTANTS.MIN_TOP_UP_AMOUNT) {
       return res.status(400).json({
         success: false,
-        error: 'Minimum top-up amount is $5.00'
+        error: `Minimum top-up amount is $${(PICKLE_CREDITS_CONSTANTS.MIN_TOP_UP_AMOUNT / 100).toFixed(2)}`
       });
     }
 
-    // Mock bonus calculation - will be replaced with actual service call
-    let bonusPercentage = 0;
-    const bonuses = [];
-
-    // Volume bonus
-    if (amount >= 10000) { // $100+
-      bonusPercentage += 10;
-      bonuses.push({
-        type: 'volume',
-        percentage: 10,
-        description: 'Volume Bonus - 10% extra for purchases $100+',
-        condition: 'Purchase amount ≥ $100'
-      });
-    } else if (amount >= 5000) { // $50+
-      bonusPercentage += 5;
-      bonuses.push({
-        type: 'volume',
-        percentage: 5,
-        description: 'Volume Bonus - 5% extra for purchases $50+',
-        condition: 'Purchase amount ≥ $50'
-      });
-    }
-
-    const bonusAmount = Math.floor(amount * (bonusPercentage / 100));
-    const finalAmount = amount + bonusAmount;
+    // Use UDF-compliant bonus calculation
+    const { calculateTopUpBonus } = await import('../../shared/utils/digitalCurrencyValidation');
+    const bonusCalc = calculateTopUpBonus(amount);
 
     res.json({
       success: true,
       data: {
         originalAmount: amount,
         originalAmountFormatted: `$${(amount / 100).toFixed(2)}`,
-        bonusAmount,
-        bonusAmountFormatted: `$${(bonusAmount / 100).toFixed(2)}`,
-        finalAmount,
-        finalAmountFormatted: `$${(finalAmount / 100).toFixed(2)}`,
-        totalBonusPercentage: bonusPercentage,
-        bonuses
+        bonusAmount: bonusCalc.bonusAmount,
+        bonusAmountFormatted: `$${(bonusCalc.bonusAmount / 100).toFixed(2)}`,
+        finalAmount: bonusCalc.totalCredits,
+        finalAmountFormatted: `$${(bonusCalc.totalCredits / 100).toFixed(2)}`,
+        bonusRate: bonusCalc.bonusRate,
+        auditMetadata: bonusCalc.auditMetadata
       }
     });
 
@@ -152,36 +121,42 @@ router.post('/calculate-bonus', requireAuth, async (req: any, res: any) => {
 
 /**
  * POST /api/individual-credits/top-up
- * Process a credit top-up with bonus calculations
+ * Process a credit top-up with UDF-compliant bonus calculations
  */
-router.post('/top-up', requireAuth, creditRateLimit, async (req: any, res: any) => {
+router.post('/top-up', isAuthenticated, creditRateLimit, async (req: any, res: any) => {
+
   try {
     const userId = req.user.id;
     const validatedData = topUpSchema.parse(req.body);
 
-    // Mock top-up processing - will be replaced with actual service call
-    const amount = validatedData.amount;
-    const bonusAmount = Math.floor(amount * 0.05); // 5% bonus for mock
-    const finalAmount = amount + bonusAmount;
-
-    console.log('[INDIVIDUAL CREDITS] Mock top-up processed:', {
+    const topUpRequest = {
       userId,
-      amount,
-      finalAmount,
-      bonusAmount
-    });
+      amount: validatedData.amount,
+      paymentMethod: validatedData.paymentMethod,
+      customerEmail: validatedData.customerEmail,
+      promoCode: validatedData.promoCode
+    };
+
+    const result = await individualCreditService.processTopUp(topUpRequest);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error || 'Top-up processing failed'
+      });
+    }
 
     res.json({
       success: true,
       data: {
-        transactionId: Date.now(),
-        finalAmount,
-        finalAmountFormatted: `$${(finalAmount / 100).toFixed(2)}`,
-        bonusAmount,
-        bonusAmountFormatted: `$${(bonusAmount / 100).toFixed(2)}`,
-        balance: finalAmount,
-        balanceFormatted: `$${(finalAmount / 100).toFixed(2)}`,
-        bonusType: 'volume'
+        transactionId: result.transactionId,
+        finalAmount: result.finalAmount,
+        finalAmountFormatted: `$${(result.finalAmount / 100).toFixed(2)}`,
+        bonusAmount: result.bonusAmount,
+        bonusAmountFormatted: `$${(result.bonusAmount / 100).toFixed(2)}`,
+        balance: result.balance,
+        balanceFormatted: `$${(result.balance / 100).toFixed(2)}`,
+        wiseTransferId: result.wiseTransferId
       },
       message: 'Credit top-up processed successfully!'
     });
@@ -208,8 +183,12 @@ router.post('/top-up', requireAuth, creditRateLimit, async (req: any, res: any) 
  * GET /api/individual-credits/tiers
  * Get information about loyalty tiers and requirements
  */
-router.get('/tiers', requireAuth, async (req: any, res: any) => {
+router.get('/tiers', isAuthenticated, async (req: any, res: any) => {
+
   try {
+    const userId = req.user.id;
+    const loyaltyInfo = await individualCreditService.getLoyaltyTierInfo(userId);
+
     const tiers = [
       {
         name: 'Bronze',
@@ -217,7 +196,7 @@ router.get('/tiers', requireAuth, async (req: any, res: any) => {
         requirementFormatted: '$0',
         benefits: 'Standard credit rates',
         bonus: 0,
-        current: true
+        current: loyaltyInfo.currentTier === 'Bronze'
       },
       {
         name: 'Silver',
@@ -225,7 +204,7 @@ router.get('/tiers', requireAuth, async (req: any, res: any) => {
         requirementFormatted: '$250',
         benefits: '3% bonus on all purchases',
         bonus: 3,
-        current: false
+        current: loyaltyInfo.currentTier === 'Silver'
       },
       {
         name: 'Gold',
@@ -233,7 +212,7 @@ router.get('/tiers', requireAuth, async (req: any, res: any) => {
         requirementFormatted: '$500',
         benefits: '5% bonus on all purchases',
         bonus: 5,
-        current: false
+        current: loyaltyInfo.currentTier === 'Gold'
       },
       {
         name: 'Diamond',
@@ -241,16 +220,18 @@ router.get('/tiers', requireAuth, async (req: any, res: any) => {
         requirementFormatted: '$1,000',
         benefits: '8% bonus on all purchases',
         bonus: 8,
-        current: false
+        current: loyaltyInfo.currentTier === 'Diamond'
       }
     ];
 
     res.json({
       success: true,
       data: {
-        currentTier: 'Bronze',
-        totalPurchased: 0,
-        totalPurchasedFormatted: '$0.00',
+        currentTier: loyaltyInfo.currentTier,
+        totalPurchased: loyaltyInfo.totalPurchased,
+        totalPurchasedFormatted: `$${(loyaltyInfo.totalPurchased / 100).toFixed(2)}`,
+        nextTierRequirement: loyaltyInfo.nextTierRequirement,
+        nextTierName: loyaltyInfo.nextTierName,
         tiers
       }
     });
