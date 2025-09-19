@@ -1,6 +1,6 @@
 // Main schema file for Pickle+ global types and tables
-import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb, index, uniqueIndex, pgEnum, check } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -2722,6 +2722,371 @@ export type PicklePointsCalculation = {
   pointsRatio: number; // Should always be 3.0 for 3:1 ratio
   expectedPoints: number;
 };
+
+// =============================================================================
+// CORPORATE ACCOUNTS SYSTEM - SPRINT 2: MULTI-LEVEL ADMIN HIERARCHY
+// =============================================================================
+
+// Corporate Account Status Enum
+export const corporateAccountStatusEnum = pgEnum('corporate_account_status', [
+  'active',
+  'suspended', 
+  'archived'
+]);
+
+// Corporate Accounts - Master company accounts for 50-200 employee organizations
+export const corporateAccounts = pgTable("corporate_accounts", {
+  id: serial("id").primaryKey(),
+  companyName: varchar("company_name", { length: 255 }).notNull(),
+  companyDomain: varchar("company_domain", { length: 255 }), // email domain for auto-association
+  masterAdminId: integer("master_admin_id").notNull().references(() => users.id),
+  totalCredits: integer("total_credits").notNull().default(0), // Total credits owned by corporation
+  totalPurchased: integer("total_purchased").notNull().default(0), // Lifetime purchased credits
+  totalAllocated: integer("total_allocated").notNull().default(0), // Credits allocated to employees
+  totalSpent: integer("total_spent").notNull().default(0), // Credits spent by employees
+  employeeCount: integer("employee_count").notNull().default(0), // Current active employees
+  maxEmployees: integer("max_employees").notNull().default(200), // Max allowed employees
+  annualCommitment: boolean("annual_commitment").notNull().default(false), // 5% annual discount
+  status: corporateAccountStatusEnum("status").notNull().default('active'),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  // Performance indexes for high-traffic queries
+  companyDomainIdx: index("corporate_accounts_domain_idx").on(table.companyDomain),
+  masterAdminIdx: index("corporate_accounts_master_admin_idx").on(table.masterAdminId),
+  statusIdx: index("corporate_accounts_status_idx").on(table.status),
+  
+  // Data integrity constraints
+  validEmployeeCount: check("valid_employee_count", sql`employee_count >= 0 AND employee_count <= max_employees`),
+  positiveCredits: check("positive_credits", sql`total_credits >= 0 AND total_purchased >= 0 AND total_allocated >= 0 AND total_spent >= 0`),
+  validMaxEmployees: check("valid_max_employees", sql`max_employees >= 1 AND max_employees <= 1000`),
+  logicalTotals: check("logical_totals", sql`total_allocated <= total_credits AND total_spent <= total_allocated`),
+}));
+
+// Corporate Account Enums with Database Validation
+export const corporateRoleEnum = pgEnum('corporate_role', [
+  'master_admin',
+  'department_admin', 
+  'team_lead',
+  'budget_controller',
+  'employee'
+]);
+
+// Corporate Hierarchy - 4-level admin system (Master Admin, Department Admin, Team Lead, Budget Controller)
+export const corporateHierarchy = pgTable("corporate_hierarchy", {
+  id: serial("id").primaryKey(),
+  corporateAccountId: integer("corporate_account_id").notNull().references(() => corporateAccounts.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: corporateRoleEnum("role").notNull(), // Enforced enum values
+  department: varchar("department", { length: 100 }), // HR, Operations, Engineering, Sales, etc.
+  team: varchar("team", { length: 100 }), // Specific team within department
+  spendingLimit: integer("spending_limit").notNull().default(0), // Monthly spending limit in credits
+  canAllocateCredits: boolean("can_allocate_credits").notNull().default(false), // Can allocate to subordinates
+  canViewReports: boolean("can_view_reports").notNull().default(true), // Can access analytics
+  canManageUsers: boolean("can_manage_users").notNull().default(false), // Can add/remove users
+  supervisorId: integer("supervisor_id").references(() => corporateHierarchy.id), // Self-reference with integrity
+  isActive: boolean("is_active").notNull().default(true),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  lastActiveAt: timestamp("last_active_at").defaultNow().notNull(),
+}, (table) => ({
+  // Unique constraints for data integrity
+  corporateUserIdx: uniqueIndex("corporate_hierarchy_corp_user_unique").on(table.corporateAccountId, table.userId),
+  masterAdminUnique: uniqueIndex("corporate_hierarchy_master_admin_unique")
+    .on(table.corporateAccountId)
+    .where(sql`role = 'master_admin' AND is_active = true`),
+  
+  // Critical performance indexes for 50-200 employee scaling
+  corporateAccountIdx: index("corporate_hierarchy_corp_account_idx").on(table.corporateAccountId),
+  roleIdx: index("corporate_hierarchy_role_idx").on(table.role, table.isActive),
+  departmentTeamIdx: index("corporate_hierarchy_dept_team_idx").on(table.corporateAccountId, table.department, table.team),
+  supervisorIdx: index("corporate_hierarchy_supervisor_idx").on(table.supervisorId),
+  userIdx: index("corporate_hierarchy_user_idx").on(table.userId),
+  
+  // CRITICAL SECURITY: Data integrity checks prevent cross-account privilege escalation
+  noSelfSupervision: check("no_self_supervision", sql`supervisor_id != id`),
+  masterAdminNoSupervisor: check("master_admin_no_supervisor", 
+    sql`(role = 'master_admin' AND supervisor_id IS NULL) OR (role != 'master_admin')`),
+  nonMasterHasSupervisor: check("non_master_has_supervisor",
+    sql`(role = 'master_admin') OR (role != 'master_admin' AND supervisor_id IS NOT NULL)`),
+  validSpendingLimit: check("valid_spending_limit", sql`spending_limit >= 0`),
+  
+  // CRITICAL SECURITY FIX: Prevent cross-account supervision (blocks cross-tenant privilege escalation)
+  sameCorporateAccountSupervision: check("same_corporate_account_supervision", 
+    sql`supervisor_id IS NULL OR EXISTS (
+      SELECT 1 FROM corporate_hierarchy s 
+      WHERE s.id = supervisor_id 
+      AND s.corporate_account_id = corporate_account_id
+    )`),
+  
+  // Additional data validation constraints  
+  departmentRequired: check("department_required", 
+    sql`(role IN ('master_admin', 'employee')) OR (role NOT IN ('master_admin', 'employee') AND department IS NOT NULL)`),
+  
+  // Role-based permission constraints to prevent misconfiguration
+  masterAdminPermissions: check("master_admin_permissions",
+    sql`(role != 'master_admin') OR (role = 'master_admin' AND can_allocate_credits = true AND can_manage_users = true)`),
+  employeePermissions: check("employee_permissions", 
+    sql`(role != 'employee') OR (role = 'employee' AND can_allocate_credits = false AND can_manage_users = false)`),
+}));
+
+// Corporate Transactions - All credit transactions at corporate level
+export const corporateTransactions = pgTable("corporate_transactions", {
+  id: serial("id").primaryKey(),
+  corporateAccountId: integer("corporate_account_id").notNull().references(() => corporateAccounts.id),
+  initiatorId: integer("initiator_id").notNull().references(() => users.id), // Who initiated the transaction
+  recipientId: integer("recipient_id").references(() => users.id), // For credit allocations
+  amount: integer("amount").notNull(), // Amount in credits (positive for purchase/allocation, negative for spending)
+  type: varchar("type", { length: 50 }).notNull(), // 'bulk_purchase', 'credit_allocation', 'employee_spending', 'refund'
+  approvedBy: integer("approved_by").references(() => users.id), // Admin who approved transaction
+  wiseTransactionId: varchar("wise_transaction_id", { length: 100 }), // For bulk purchases
+  wiseTransferState: varchar("wise_transfer_state", { length: 50 }),
+  description: text("description"),
+  balanceAfter: integer("balance_after").notNull(), // Corporate balance after transaction
+  department: varchar("department", { length: 100 }), // Department involved in transaction
+  budgetCategory: varchar("budget_category", { length: 100 }), // Wellness, Training, Events, etc.
+  isRecurring: boolean("is_recurring").notNull().default(false),
+  recurringPeriod: varchar("recurring_period", { length: 20 }), // 'monthly', 'quarterly', 'annual'
+  // Critical audit fields for integrity
+  idempotencyKey: varchar("idempotency_key", { length: 255 }), // Prevent duplicate transactions
+  sourceType: varchar("source_type", { length: 100 }), // 'wise_payment', 'manual_allocation', 'system_adjustment'
+  sourceReferenceId: varchar("source_reference_id", { length: 255 }), // External reference
+  metadata: jsonb("metadata"), // Additional transaction context
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // Performance indexes for high-traffic queries
+  corporateTypeIdx: index("corporate_transactions_corp_type_idx").on(table.corporateAccountId, table.type),
+  corporateDateIdx: index("corporate_transactions_corp_date_idx").on(table.corporateAccountId, table.createdAt),
+  initiatorIdx: index("corporate_transactions_initiator_idx").on(table.initiatorId),
+  recipientIdx: index("corporate_transactions_recipient_idx").on(table.recipientId),
+  departmentIdx: index("corporate_transactions_department_idx").on(table.department, table.budgetCategory),
+  
+  // Integrity constraints
+  idempotencyUnique: uniqueIndex("corporate_transactions_idempotency_unique").on(table.idempotencyKey),
+}));
+
+// Corporate Budget Allocations - Department and team budget management
+export const corporateBudgetAllocations = pgTable("corporate_budget_allocations", {
+  id: serial("id").primaryKey(),
+  corporateAccountId: integer("corporate_account_id").notNull().references(() => corporateAccounts.id),
+  allocatedBy: integer("allocated_by").notNull().references(() => users.id), // Admin who set the budget
+  department: varchar("department", { length: 100 }), 
+  team: varchar("team", { length: 100 }),
+  budgetCategory: varchar("budget_category", { length: 100 }).notNull(), // Wellness, Training, Events
+  allocatedAmount: integer("allocated_amount").notNull(), // Total budget allocated
+  spentAmount: integer("spent_amount").notNull().default(0), // Amount spent so far
+  remainingAmount: integer("remaining_amount").notNull(), // Calculated: allocated - spent
+  period: varchar("period", { length: 20 }).notNull().default('monthly'), // 'monthly', 'quarterly', 'annual'
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  autoRenew: boolean("auto_renew").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  // Performance indexes for budget queries and rollups
+  corporatePeriodIdx: index("corporate_budget_corp_period_idx").on(table.corporateAccountId, table.period, table.isActive),
+  departmentBudgetIdx: index("corporate_budget_department_idx").on(table.department, table.budgetCategory),
+  corporateDeptTeamIdx: index("corporate_budget_corp_dept_team_idx").on(table.corporateAccountId, table.department, table.team),
+  activeBudgetIdx: index("corporate_budget_active_idx").on(table.isActive, table.startDate, table.endDate),
+  allocatorIdx: index("corporate_budget_allocator_idx").on(table.allocatedBy),
+}));
+
+// Corporate Discount Tiers - Volume discounts based on purchase amounts (Global tiers for all corporate accounts)
+export const corporateDiscountTiers = pgTable("corporate_discount_tiers", {
+  id: serial("id").primaryKey(),
+  minPurchaseAmount: integer("min_purchase_amount").notNull(), // Minimum purchase in credits ($5000 = 500000 credits)
+  discountPercentage: integer("discount_percentage").notNull(), // 10 = 10%
+  additionalBonusCredits: integer("additional_bonus_credits").notNull().default(0), // Extra credits awarded
+  tierName: varchar("tier_name", { length: 50 }).notNull(), // 'Bronze', 'Silver', 'Gold', 'Platinum'
+  description: text("description"),
+  requiresAnnualCommitment: boolean("requires_annual_commitment").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  effectiveDate: timestamp("effective_date").defaultNow().notNull(),
+  expiryDate: timestamp("expiry_date"),
+}, (table) => ({
+  // Performance indexes
+  tierAmountIdx: index("corporate_discount_tier_amount_idx").on(table.minPurchaseAmount, table.isActive),
+  tierNameIdx: uniqueIndex("corporate_discount_tier_name_unique").on(table.tierName),
+  effectivePeriodIdx: index("corporate_discount_effective_period_idx").on(table.effectiveDate, table.expiryDate, table.isActive),
+  
+  // Integrity constraints to prevent overlapping tiers
+  validDiscountRange: check("valid_discount_range", sql`discount_percentage >= 0 AND discount_percentage <= 100`),
+  positiveMinAmount: check("positive_min_amount", sql`min_purchase_amount > 0`),
+  validDateRange: check("valid_date_range", sql`expiry_date IS NULL OR expiry_date > effective_date`),
+}));
+
+// Corporate Audit Log - Complete audit trail for all corporate operations (CRITICAL for security & compliance)
+export const corporateAuditLog = pgTable("corporate_audit_log", {
+  id: serial("id").primaryKey(),
+  corporateAccountId: integer("corporate_account_id").notNull().references(() => corporateAccounts.id),
+  actorId: integer("actor_id").notNull().references(() => users.id), // Who performed the action
+  targetId: integer("target_id").references(() => users.id), // User being acted upon (if applicable)
+  action: varchar("action", { length: 100 }).notNull(), // 'create_account', 'allocate_credits', 'add_employee', 'change_role', etc.
+  entityType: varchar("entity_type", { length: 50 }).notNull(), // 'corporate_account', 'corporate_hierarchy', 'corporate_transaction'
+  entityId: integer("entity_id"), // ID of the affected entity
+  previousValues: jsonb("previous_values"), // Before state (for updates)
+  newValues: jsonb("new_values"), // After state
+  metadata: jsonb("metadata"), // Additional context (IP, user agent, etc.)
+  idempotencyKey: varchar("idempotency_key", { length: 255 }), // Prevent duplicate operations
+  isSuccessful: boolean("is_successful").notNull().default(true), // Track failed attempts too
+  errorMessage: text("error_message"), // If operation failed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // Performance indexes for audit queries
+  corporateAccountIdx: index("corporate_audit_corp_account_idx").on(table.corporateAccountId, table.createdAt),
+  actorIdx: index("corporate_audit_actor_idx").on(table.actorId, table.createdAt),
+  actionIdx: index("corporate_audit_action_idx").on(table.action, table.entityType),
+  targetIdx: index("corporate_audit_target_idx").on(table.targetId),
+  entityIdx: index("corporate_audit_entity_idx").on(table.entityType, table.entityId),
+  
+  // Idempotency constraint - CRITICAL for preventing duplicate operations
+  idempotencyUnique: uniqueIndex("corporate_audit_idempotency_unique").on(table.idempotencyKey),
+}));
+
+// Relations for Corporate Account System
+export const corporateAccountsRelations = relations(corporateAccounts, ({ one, many }) => ({
+  masterAdmin: one(users, {
+    fields: [corporateAccounts.masterAdminId],
+    references: [users.id],
+  }),
+  hierarchy: many(corporateHierarchy),
+  transactions: many(corporateTransactions),
+  budgetAllocations: many(corporateBudgetAllocations),
+}));
+
+export const corporateHierarchyRelations = relations(corporateHierarchy, ({ one, many }) => ({
+  corporateAccount: one(corporateAccounts, {
+    fields: [corporateHierarchy.corporateAccountId],
+    references: [corporateAccounts.id],
+  }),
+  user: one(users, {
+    fields: [corporateHierarchy.userId],
+    references: [users.id],
+  }),
+  supervisor: one(corporateHierarchy, {
+    fields: [corporateHierarchy.supervisorId],
+    references: [corporateHierarchy.id],
+    relationName: "hierarchySupervision"
+  }),
+  subordinates: many(corporateHierarchy, {
+    relationName: "hierarchySupervision"
+  }),
+}));
+
+export const corporateTransactionsRelations = relations(corporateTransactions, ({ one }) => ({
+  corporateAccount: one(corporateAccounts, {
+    fields: [corporateTransactions.corporateAccountId],
+    references: [corporateAccounts.id],
+  }),
+  initiator: one(users, {
+    fields: [corporateTransactions.initiatorId],
+    references: [users.id],
+  }),
+  recipient: one(users, {
+    fields: [corporateTransactions.recipientId],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [corporateTransactions.approvedBy],
+    references: [users.id],
+  }),
+}));
+
+export const corporateBudgetAllocationsRelations = relations(corporateBudgetAllocations, ({ one }) => ({
+  corporateAccount: one(corporateAccounts, {
+    fields: [corporateBudgetAllocations.corporateAccountId],
+    references: [corporateAccounts.id],
+  }),
+  allocator: one(users, {
+    fields: [corporateBudgetAllocations.allocatedBy],
+    references: [users.id],
+  }),
+}));
+
+export const corporateDiscountTiersRelations = relations(corporateDiscountTiers, ({ many }) => ({
+  // No direct relations, used for calculation logic
+}));
+
+export const corporateAuditLogRelations = relations(corporateAuditLog, ({ one }) => ({
+  corporateAccount: one(corporateAccounts, {
+    fields: [corporateAuditLog.corporateAccountId],
+    references: [corporateAccounts.id],
+  }),
+  actor: one(users, {
+    fields: [corporateAuditLog.actorId],
+    references: [users.id],
+  }),
+  target: one(users, {
+    fields: [corporateAuditLog.targetId],
+    references: [users.id],
+  }),
+}));
+
+export const CorporateRole = {
+  MASTER_ADMIN: 'master_admin',
+  DEPARTMENT_ADMIN: 'department_admin', 
+  TEAM_LEAD: 'team_lead',
+  BUDGET_CONTROLLER: 'budget_controller',
+  EMPLOYEE: 'employee'
+} as const;
+
+export const CorporateTransactionType = {
+  BULK_PURCHASE: 'bulk_purchase',
+  CREDIT_ALLOCATION: 'credit_allocation',
+  EMPLOYEE_SPENDING: 'employee_spending',
+  BUDGET_ADJUSTMENT: 'budget_adjustment',
+  REFUND: 'refund'
+} as const;
+
+export const CorporateBudgetCategory = {
+  WELLNESS: 'wellness',
+  TRAINING: 'training', 
+  TEAM_EVENTS: 'team_events',
+  FACILITIES: 'facilities',
+  GENERAL: 'general'
+} as const;
+
+// Zod schemas for corporate accounts (extending UDF validation patterns)
+export const insertCorporateAccountSchema = createInsertSchema(corporateAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCorporateHierarchySchema = createInsertSchema(corporateHierarchy).omit({
+  id: true,
+  joinedAt: true,
+  lastActiveAt: true,
+});
+
+export const insertCorporateTransactionSchema = createInsertSchema(corporateTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCorporateBudgetAllocationSchema = createInsertSchema(corporateBudgetAllocations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCorporateAuditLogSchema = createInsertSchema(corporateAuditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+// TypeScript types for corporate accounts system
+export type CorporateAccount = typeof corporateAccounts.$inferSelect;
+export type InsertCorporateAccount = typeof insertCorporateAccountSchema._type;
+export type CorporateHierarchy = typeof corporateHierarchy.$inferSelect;
+export type InsertCorporateHierarchy = typeof insertCorporateHierarchySchema._type;
+export type CorporateTransaction = typeof corporateTransactions.$inferSelect;
+export type InsertCorporateTransaction = typeof insertCorporateTransactionSchema._type;
+export type CorporateBudgetAllocation = typeof corporateBudgetAllocations.$inferSelect;
+export type InsertCorporateBudgetAllocation = typeof insertCorporateBudgetAllocationSchema._type;
+export type CorporateDiscountTier = typeof corporateDiscountTiers.$inferSelect;
+export type CorporateAuditLog = typeof corporateAuditLog.$inferSelect;
+export type InsertCorporateAuditLog = typeof insertCorporateAuditLogSchema._type;
 
 // Export coach facility partnership schemas for Priority 2 development
 export {
