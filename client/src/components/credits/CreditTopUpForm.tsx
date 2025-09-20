@@ -149,10 +149,11 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
   // Top-up mutation
   const topUpMutation = useMutation({
     mutationFn: async (data: TopUpFormData) => {
-      return apiRequest('/api/credits/top-up', {
+      const response = await apiRequest('/api/credits/top-up', {
         method: 'POST',
         body: JSON.stringify(data)
       });
+      return await response.json();
     },
     onSuccess: (result) => {
       setPaymentResult(result);
