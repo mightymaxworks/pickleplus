@@ -36,6 +36,7 @@ import bookingRoutes from './routes/booking-routes';
 import facilityManagerRoutes from './routes/facility-manager-routes';
 import { digitalCurrencyRoutes } from './routes/digitalCurrency';
 import corporateAccountRoutes from './routes/corporateAccount';
+import bulkCreditPurchaseRoutes from './routes/bulkCreditPurchase';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -882,6 +883,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Corporate Account routes...");
     app.use('/api/corporate', corporateAccountRoutes);
     console.log("[ROUTES] Corporate Account routes registered successfully");
+    
+    // Bulk Credit Purchase System (Sprint 2: Corporate Bulk Purchase System)
+    console.log("[ROUTES] Registering Bulk Credit Purchase routes...");
+    app.use('/api/bulk-credits', bulkCreditPurchaseRoutes);
+    console.log("[ROUTES] Bulk Credit Purchase routes registered successfully");
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
