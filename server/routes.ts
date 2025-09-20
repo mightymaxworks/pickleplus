@@ -39,6 +39,7 @@ import corporateAccountRoutes from './routes/corporateAccount';
 import bulkCreditPurchaseRoutes from './routes/bulkCreditPurchase';
 import corporateDashboardRoutes from './routes/corporateDashboard';
 import employeeControlsRoutes from './routes/employeeControls';
+import corporateOnboardingRoutes from './routes/corporateOnboarding';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -900,6 +901,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("[ROUTES] Registering Employee Controls routes...");
     app.use('/api/employee-controls', employeeControlsRoutes);
     console.log("[ROUTES] Employee Controls routes registered successfully");
+    
+    // Corporate Onboarding System (Sprint 2: Enterprise Customer Acquisition & Pilot Programs)
+    console.log("[ROUTES] Registering Corporate Onboarding routes...");
+    app.use('/api/corporate-onboarding', corporateOnboardingRoutes);
+    console.log("[ROUTES] Corporate Onboarding routes registered successfully");
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
