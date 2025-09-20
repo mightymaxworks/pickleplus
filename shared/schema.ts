@@ -1,5 +1,5 @@
 // Main schema file for Pickle+ global types and tables
-import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb, index, uniqueIndex, pgEnum, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb, index, uniqueIndex, pgEnum, check, foreignKey } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -2784,7 +2784,8 @@ export const corporateHierarchy = pgTable("corporate_hierarchy", {
   canAllocateCredits: boolean("can_allocate_credits").notNull().default(false), // Can allocate to subordinates
   canViewReports: boolean("can_view_reports").notNull().default(true), // Can access analytics
   canManageUsers: boolean("can_manage_users").notNull().default(false), // Can add/remove users
-  supervisorId: integer("supervisor_id").references(() => corporateHierarchy.id), // Self-reference with integrity
+  supervisorId: integer("supervisor_id"),
+  supervisorCorporateAccountId: integer("supervisor_corporate_account_id"), // Must match corporateAccountId for same-tenant supervision
   isActive: boolean("is_active").notNull().default(true),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
   lastActiveAt: timestamp("last_active_at").defaultNow().notNull(),
@@ -2810,17 +2811,23 @@ export const corporateHierarchy = pgTable("corporate_hierarchy", {
     sql`(role = 'master_admin') OR (role != 'master_admin' AND supervisor_id IS NOT NULL)`),
   validSpendingLimit: check("valid_spending_limit", sql`spending_limit >= 0`),
   
-  // CRITICAL SECURITY FIX: Prevent cross-account supervision (blocks cross-tenant privilege escalation)
-  sameCorporateAccountSupervision: check("same_corporate_account_supervision", 
-    sql`supervisor_id IS NULL OR EXISTS (
-      SELECT 1 FROM corporate_hierarchy s 
-      WHERE s.id = supervisor_id 
-      AND s.corporate_account_id = corporate_account_id
-    )`),
+  // CRITICAL SECURITY FIX: Composite unique constraint required for composite foreign key
+  hierarchyIdAccountUnique: uniqueIndex("corporate_hierarchy_id_account_unique").on(table.id, table.corporateAccountId),
+  
+  // CRITICAL SECURITY FIX: Composite foreign key prevents cross-account supervision  
+  compositeSupervisorFk: foreignKey({
+    columns: [table.supervisorId, table.supervisorCorporateAccountId],
+    foreignColumns: [table.id, table.corporateAccountId],
+    name: "corporate_hierarchy_supervisor_fk"
+  }),
   
   // Additional data validation constraints  
   departmentRequired: check("department_required", 
     sql`(role IN ('master_admin', 'employee')) OR (role NOT IN ('master_admin', 'employee') AND department IS NOT NULL)`),
+  
+  // CRITICAL SECURITY FIX: Supervisor must belong to same corporate account
+  sameTenantSupervision: check("same_tenant_supervision", 
+    sql`supervisor_id IS NULL OR supervisor_corporate_account_id = corporate_account_id`),
   
   // Role-based permission constraints to prevent misconfiguration
   masterAdminPermissions: check("master_admin_permissions",

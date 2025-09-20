@@ -35,6 +35,7 @@ import facilityDiscoveryRoutes from './routes/facility-discovery-routes';
 import bookingRoutes from './routes/booking-routes';
 import facilityManagerRoutes from './routes/facility-manager-routes';
 import { digitalCurrencyRoutes } from './routes/digitalCurrency';
+import corporateAccountRoutes from './routes/corporateAccount';
 
 // Helper function to calculate category averages from assessment data
 function calculateCategoryAverage(assessmentData: Record<string, number>, category: string): number {
@@ -876,6 +877,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { picklePointsRoutes } = await import('./routes/picklePointsRoutes.ts');
     app.use('/api/pickle-points', picklePointsRoutes);
     console.log("[ROUTES] Pickle Points routes registered successfully");
+    
+    // Corporate Account Management System (Sprint 2: Corporate Account Management APIs)
+    console.log("[ROUTES] Registering Corporate Account routes...");
+    app.use('/api/corporate', corporateAccountRoutes);
+    console.log("[ROUTES] Corporate Account routes registered successfully");
     
     // Admin System
     console.log("[ROUTES] Registering Admin routes...");
