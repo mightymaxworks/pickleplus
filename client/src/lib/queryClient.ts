@@ -167,16 +167,10 @@ export async function apiRequest(
       }
     }
   
-    // Prepare body data with token
-    if (data || method !== "GET") {
-      const dataWithToken = data ? { ...data } : {};
-      
-      // Always include CSRF token if this is a non-GET request
-      if (method !== "GET" && csrfToken) {
-        dataWithToken._csrf = csrfToken;
-      }
-      
-      options.body = JSON.stringify(dataWithToken);
+    // Prepare body data
+    if (data && method !== "GET") {
+      // For POST/PUT/PATCH requests with data, set the body
+      options.body = JSON.stringify(data);
     }
   
     console.log(`Making ${method} request to ${url} with credentials included`);
