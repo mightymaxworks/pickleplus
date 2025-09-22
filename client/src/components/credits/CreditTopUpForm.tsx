@@ -130,27 +130,45 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
 
   // Fetch supported currencies on component mount
   useEffect(() => {
+    console.log('[CREDITS] Fetching currencies...');
+    
     const fetchCurrencies = async () => {
       try {
         const response = await apiRequest('/api/credits/currencies');
-        if (response.success) {
+        console.log('[CREDITS] Currency API response:', response);
+        
+        if (response.success && response.data && response.data.currencies) {
+          console.log('[CREDITS] Setting currencies from API:', response.data.currencies);
           setCurrencies(response.data.currencies);
+        } else {
+          console.log('[CREDITS] Invalid API response, using fallback currencies');
+          setFallbackCurrencies();
         }
       } catch (error) {
-        console.error('Failed to fetch currencies:', error);
-        // Set fallback currencies
-        setCurrencies([
-          { code: 'USD', name: 'US Dollar', symbol: '$' },
-          { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
-          { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-          { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' },
-          { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' }
-        ]);
+        console.error('[CREDITS] Failed to fetch currencies:', error);
+        setFallbackCurrencies();
       }
+    };
+    
+    const setFallbackCurrencies = () => {
+      const fallbackCurrencies = [
+        { code: 'USD', name: 'US Dollar', symbol: '$' },
+        { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+        { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+        { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' },
+        { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' }
+      ];
+      console.log('[CREDITS] Setting fallback currencies:', fallbackCurrencies);
+      setCurrencies(fallbackCurrencies);
     };
     
     fetchCurrencies();
   }, []);
+
+  // Debug effect to track currencies state changes
+  useEffect(() => {
+    console.log('[CREDITS] Currencies state changed:', currencies, 'Length:', currencies.length);
+  }, [currencies]);
 
   const form = useForm<TopUpFormData>({
     resolver: zodResolver(topUpSchema),
@@ -276,11 +294,15 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {currencies.map((currency) => (
-                      <SelectItem key={currency.code} value={currency.code}>
-                        {currency.symbol} {currency.name} ({currency.code})
-                      </SelectItem>
-                    ))}
+                    {currencies.length === 0 ? (
+                      <SelectItem value="loading" disabled>Loading currencies...</SelectItem>
+                    ) : (
+                      currencies.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.name} ({currency.code})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 {form.formState.errors.currency && (
