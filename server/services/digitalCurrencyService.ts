@@ -767,8 +767,8 @@ export class DigitalCurrencyService {
         .where(
           and(
             eq(digitalCreditsTransactions.userId, userId),
-            sql`${digitalCreditsTransactions.createdAt} >= ${today}`,
-            sql`${digitalCreditsTransactions.createdAt} < ${tomorrow}`,
+            sql`${digitalCreditsTransactions.createdAt} >= ${today.toISOString()}`,
+            sql`${digitalCreditsTransactions.createdAt} < ${tomorrow.toISOString()}`,
             sql`${digitalCreditsTransactions.amount} > 0` // Only count positive amounts (top-ups)
           )
         );

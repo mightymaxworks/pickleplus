@@ -630,7 +630,7 @@ export default function App() {
                   {/* Achievements Page */}
                   <ProtectedRouteWithLayout
                     path="/achievements"
-                    component={lazyLoad(() => import('./pages/achievements'))}
+                    component={lazyLoad(() => import('./pages/Achievements'))}
                     pageTitle="Achievements"
                   />
                   

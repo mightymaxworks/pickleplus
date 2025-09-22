@@ -75,10 +75,19 @@ export default function CreditsPage() {
   });
 
   // Fetch transaction history
-  const { data: transactions, isLoading: historyLoading } = useQuery<CreditTransaction[]>({
+  const { data: historyData, isLoading: historyLoading } = useQuery<{
+    data: {
+      transactions: CreditTransaction[];
+      totalCount: number;
+      currentBalance: number;
+      pagination: any;
+    }
+  }>({
     queryKey: ['/api/credits/history'],
     enabled: !!account,
   });
+  
+  const transactions = historyData?.data?.transactions || [];
 
   // Fetch daily limits
   const { data: limits } = useQuery<DailyLimits>({
