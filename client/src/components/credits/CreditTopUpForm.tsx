@@ -8,7 +8,7 @@
  * Last Updated: September 17, 2025
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -120,7 +120,8 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
     
     const fetchCurrencies = async () => {
       try {
-        const responseData = await apiRequest('/api/credits/currencies');
+        const response = await apiRequest('/api/credits/currencies');
+        const responseData = await response.json();
         console.log('[CREDITS] Currency API response:', responseData);
         
         if (responseData.success && responseData.data && responseData.data.currencies) {
