@@ -41,6 +41,7 @@ import { apiRequest } from '@/lib/queryClient';
 // Form validation schema
 const topUpSchema = z.object({
   amount: z.number().min(2500, 'Minimum top-up is $25').max(50000, 'Maximum top-up is $500'),
+  currency: z.enum(['USD', 'SGD', 'AUD', 'MYR', 'CNY']).default('USD'),
   customerEmail: z.string().email('Valid email address required'),
 });
 
@@ -98,16 +99,50 @@ const PRESET_AMOUNTS = [
   }
 ];
 
+// Currency data interface
+interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+}
+
 export default function CreditTopUpForm({ account, onSuccess, onError }: CreditTopUpFormProps) {
   const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState<number>(10000); // Default $100
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
   const [step, setStep] = useState<'amount' | 'payment' | 'processing' | 'complete'>('amount');
   const [paymentResult, setPaymentResult] = useState<any>(null);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+
+  // Fetch supported currencies on component mount
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        const response = await apiRequest('/api/credits/currencies');
+        if (response.success) {
+          setCurrencies(response.data.currencies);
+        }
+      } catch (error) {
+        console.error('Failed to fetch currencies:', error);
+        // Set fallback currencies
+        setCurrencies([
+          { code: 'USD', name: 'US Dollar', symbol: '$' },
+          { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+          { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+          { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' },
+          { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' }
+        ]);
+      }
+    };
+    
+    fetchCurrencies();
+  }, []);
 
   const form = useForm<TopUpFormData>({
     resolver: zodResolver(topUpSchema),
     defaultValues: {
       amount: selectedAmount,
+      currency: 'USD',
       customerEmail: ''
     }
   });
@@ -189,7 +224,13 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
     topUpMutation.mutate(data);
   };
 
-  const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  // Dynamic currency formatter that adapts to selected currency
+  const formatCurrency = (cents: number, currencyCode?: string) => {
+    const currency = currencyCode || selectedCurrency;
+    const selectedCurrencyInfo = currencies.find(c => c.code === currency);
+    const symbol = selectedCurrencyInfo?.symbol || '$';
+    return `${symbol}${(cents / 100).toFixed(2)}`;
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -319,6 +360,33 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
             </CardHeader>
             <CardContent>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <div>
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select 
+                    value={selectedCurrency} 
+                    onValueChange={(value) => {
+                      setSelectedCurrency(value);
+                      form.setValue('currency', value as any);
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-currency">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.name} ({currency.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.currency && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.currency.message}
+                    </p>
+                  )}
+                </div>
+                
                 <div>
                   <Label htmlFor="email">Email Address</Label>
                   <Input

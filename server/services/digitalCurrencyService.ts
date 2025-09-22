@@ -39,6 +39,8 @@ import {
   type GiftCardValidation
 } from "../../shared/utils/digitalCurrencyValidation";
 
+import { currencyService, SUPPORTED_CURRENCIES, type SupportedCurrency } from './currencyService';
+
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is required");
@@ -52,8 +54,8 @@ const db = drizzle(sql_client);
  * Secure wrapper for Wise API calls with UDF validation
  */
 interface WisePaymentRequest {
-  amount: number; // Amount in cents
-  currency: 'USD';
+  amount: number; // Amount in local currency (not cents)
+  currency: SupportedCurrency; // Now supports all defined currencies
   userId: number;
   customerEmail: string;
   description: string;
@@ -119,6 +121,7 @@ export class DigitalCurrencyService {
   async processTopUp(request: {
     userId: number;
     amount: number;
+    currency?: SupportedCurrency; // Add currency support
     wiseTransactionId: string;
     customerEmail: string;
   }): Promise<{

@@ -19,6 +19,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { digitalCurrencyService } from '../services/digitalCurrencyService';
 import { digitalCurrencyUDF } from '../../shared/utils/digitalCurrencyValidation';
+import { currencyService, SUPPORTED_CURRENCIES, type SupportedCurrency } from '../services/currencyService';
 import { 
   parseWebhookRawBody, 
   verifyWiseWebhookSignature, 
@@ -41,6 +42,7 @@ const financialRateLimit = rateLimit({
 // Validation schemas
 const topUpSchema = z.object({
   amount: z.number().min(digitalCurrencyUDF.constants.MIN_TOP_UP_AMOUNT, 'Minimum top-up amount not met'),
+  currency: z.enum(['USD', 'SGD', 'AUD', 'MYR', 'CNY']).default('USD'),
   customerEmail: z.string().email('Valid email required'),
 });
 
@@ -459,5 +461,113 @@ router.post('/webhooks/wise',
     }
   }
 );
+
+/**
+ * CURRENCY EXCHANGE RATE ENDPOINTS
+ * Public endpoints for getting supported currencies and exchange rates
+ */
+
+// GET /api/currencies - Get all supported currencies
+router.get('/currencies', async (req, res) => {
+  try {
+    const currencies = Object.entries(SUPPORTED_CURRENCIES).map(([code, info]) => ({
+      code,
+      ...info
+    }));
+    
+    res.json({
+      success: true,
+      data: {
+        currencies,
+        default: 'USD'
+      }
+    });
+  } catch (error) {
+    console.error('[CURRENCY API] Failed to get currencies:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve supported currencies'
+    });
+  }
+});
+
+// GET /api/currencies/rates - Get current exchange rates
+router.get('/currencies/rates', async (req, res) => {
+  try {
+    const baseCurrency = (req.query.base as SupportedCurrency) || 'USD';
+    
+    if (!Object.keys(SUPPORTED_CURRENCIES).includes(baseCurrency)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid base currency'
+      });
+    }
+    
+    const rates: Record<string, number> = {};
+    
+    for (const currency of Object.keys(SUPPORTED_CURRENCIES) as SupportedCurrency[]) {
+      try {
+        rates[currency] = await currencyService.getExchangeRate(baseCurrency, currency);
+      } catch (error) {
+        console.error(`[CURRENCY API] Failed to get rate for ${currency}:`, error);
+        rates[currency] = 1; // Fallback
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        baseCurrency,
+        rates,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('[CURRENCY API] Failed to get exchange rates:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve exchange rates'
+    });
+  }
+});
+
+// POST /api/currencies/convert - Convert between currencies
+router.post('/currencies/convert', async (req, res) => {
+  try {
+    const { amount, fromCurrency, toCurrency } = req.body;
+    
+    if (!amount || !fromCurrency || !toCurrency) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount, fromCurrency, and toCurrency are required'
+      });
+    }
+    
+    if (!Object.keys(SUPPORTED_CURRENCIES).includes(fromCurrency) || 
+        !Object.keys(SUPPORTED_CURRENCIES).includes(toCurrency)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid currency codes'
+      });
+    }
+    
+    const conversion = await currencyService.convertCurrency(
+      parseFloat(amount),
+      fromCurrency as SupportedCurrency,
+      toCurrency as SupportedCurrency
+    );
+    
+    res.json({
+      success: true,
+      data: conversion
+    });
+  } catch (error) {
+    console.error('[CURRENCY API] Failed to convert currency:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to convert currency'
+    });
+  }
+});
 
 export { router as digitalCurrencyRoutes };
