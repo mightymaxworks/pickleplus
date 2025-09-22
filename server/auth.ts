@@ -7,7 +7,7 @@ declare module 'express-session' {
 
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express, Request, Response, NextFunction } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
@@ -182,6 +182,9 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 
 // Setup authentication for the application
 export function setupAuth(app: Express) {
+  // Add JSON parsing middleware for auth routes only
+  app.use('/api/auth/*', express.json());
+  
   // Production-optimized session configuration
   const isProduction = process.env.NODE_ENV === 'production';
   const sessionSettings: session.SessionOptions = {

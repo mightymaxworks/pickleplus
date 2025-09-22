@@ -106,12 +106,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return next();
     }
     // Apply JSON parsing for all other routes
-    import('express').then(express => {
-      express.json()(req, res, next);
-    }).catch(() => {
-      // Fallback if import fails
-      require('express').json()(req, res, next);
-    });
+    const express = require('express');
+    express.json()(req, res, next);
   });
   console.log("[SECURITY] Selective JSON parsing middleware configured");
 
