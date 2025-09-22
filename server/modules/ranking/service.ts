@@ -24,20 +24,21 @@ export class MultiDimensionalRankingService {
     ageDivision: AgeDivision = '19plus',
     ratingTierId?: number
   ) {
-    let query = db.select().from(playerRankings)
-      .where(
-        and(
-          eq(playerRankings.userId, userId),
-          eq(playerRankings.format, format),
-          eq(playerRankings.ageDivision, ageDivision)
-        )
-      );
+    // FIXED: Build all conditions at once to prevent predicate override bug
+    const conditions = [
+      eq(playerRankings.userId, userId),
+      eq(playerRankings.format, format),
+      eq(playerRankings.ageDivision, ageDivision)
+    ];
     
+    // Add rating tier filter if provided
     if (ratingTierId) {
-      query = query.where(eq(playerRankings.ratingTierId, ratingTierId));
+      conditions.push(eq(playerRankings.ratingTierId, ratingTierId));
     }
     
-    const rankings = await query;
+    const rankings = await db.select().from(playerRankings)
+      .where(and(...conditions));
+      
     return rankings.length > 0 ? rankings[0] : null;
   }
 
