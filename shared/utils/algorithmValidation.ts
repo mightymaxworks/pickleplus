@@ -4,8 +4,8 @@
  * MANDATORY IMPORT: All match calculation components MUST import and use these utilities
  * to ensure compliance with the official Pickle+ Algorithm Document.
  * 
- * Version: 2.0.0 - Differential Age Multiplier System
- * Last Updated: August 25, 2025
+ * Version: 3.0.0 - Multi-Age Group Ranking Updates
+ * Last Updated: September 22, 2025
  * Source of Truth: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
  * 
  * CRITICAL VALIDATION: ALL POINT OPERATIONS MUST BE ADDITIVE
@@ -36,6 +36,9 @@ export enum AgeGroup {
   SIXTY_PLUS = '60+',
   SEVENTY_PLUS = '70+'
 }
+
+// Multi-dimensional ranking age divisions
+export type AgeDivision = 'U12' | 'U14' | 'U16' | 'U19' | '19plus' | '35plus' | '50plus' | '60plus' | '70plus';
 
 export const AGE_GROUP_MULTIPLIERS = {
   [AgeGroup.OPEN]: 1.0,
@@ -101,6 +104,83 @@ export function calculateDifferentialAgeMultipliers(players: EnhancedPlayer[]): 
     acc[player.id] = AGE_GROUP_MULTIPLIERS[ageGroup];
     return acc;
   }, {} as Record<string, number>);
+}
+
+/**
+ * MULTI-AGE GROUP ELIGIBILITY DETECTION
+ * 
+ * Determines ALL age divisions a player is eligible to compete in
+ * based on their date of birth. Used for cross-age group ranking updates.
+ * 
+ * EXAMPLES:
+ * - 42-year-old: eligible for Open (19+) AND 35+
+ * - 65-year-old: eligible for Open (19+), 35+, 50+, AND 60+
+ * - 25-year-old: eligible for Open (19+) only
+ */
+export function getEligibleAgeGroups(dateOfBirth: Date | string): AgeDivision[] {
+  const age = calculateAge(dateOfBirth);
+  const eligible: AgeDivision[] = [];
+  
+  // All adult players (19+) are eligible for Open division
+  if (age >= 19) {
+    eligible.push('19plus');
+  }
+  
+  // Youth categories (standalone systems)
+  if (age < 19) {
+    if (age < 12) eligible.push('U12');
+    if (age < 14) eligible.push('U14');
+    if (age < 16) eligible.push('U16');
+    if (age < 19) eligible.push('U19');
+    return eligible; // Youth only compete in youth divisions
+  }
+  
+  // Adult age group eligibility (cumulative)
+  if (age >= 35) eligible.push('35plus');
+  if (age >= 50) eligible.push('50plus');
+  if (age >= 60) eligible.push('60plus');
+  if (age >= 70) eligible.push('70plus');
+  
+  return eligible;
+}
+
+/**
+ * MULTI-AGE GROUP RANKING UPDATE VALIDATOR
+ * 
+ * Validates that a match result will update ALL eligible age group rankings
+ * for each player, ensuring algorithm compliance.
+ */
+export function validateMultiAgeGroupUpdate(
+  playerId: string,
+  dateOfBirth: Date | string,
+  eventAgeGroup: AgeDivision,
+  updatedRankings: AgeDivision[]
+): {
+  isCompliant: boolean;
+  missingUpdates: AgeDivision[];
+  explanation: string;
+} {
+  const eligibleGroups = getEligibleAgeGroups(dateOfBirth);
+  const age = calculateAge(dateOfBirth);
+  
+  // For adult players competing in any age-eligible event
+  if (age >= 19 && eligibleGroups.includes(eventAgeGroup)) {
+    const missingUpdates = eligibleGroups.filter(group => !updatedRankings.includes(group));
+    
+    if (missingUpdates.length > 0) {
+      return {
+        isCompliant: false,
+        missingUpdates,
+        explanation: `Player (age ${age}) competing in ${eventAgeGroup} should update ALL eligible rankings: ${eligibleGroups.join(', ')}. Missing: ${missingUpdates.join(', ')}`
+      };
+    }
+  }
+  
+  return {
+    isCompliant: true,
+    missingUpdates: [],
+    explanation: `All eligible age group rankings updated correctly for ${eventAgeGroup} event`
+  };
 }
 
 /**
