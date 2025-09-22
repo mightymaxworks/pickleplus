@@ -1066,6 +1066,21 @@ export default function App() {
                     pageTitle="Pickle Points"
                   />
                   <ProtectedRouteWithLayout
+                    path="/CreditsPage"
+                    component={React.lazy(() => import('./pages/CreditsPage'))}
+                    pageTitle="Credits"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/PicklePointsPage"
+                    component={React.lazy(() => import('./pages/PicklePointsPage'))}
+                    pageTitle="Pickle Points"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/AdminDashboardPage"
+                    component={React.lazy(() => import('./pages/AdminDashboardPage'))}
+                    pageTitle="Admin Dashboard"
+                  />
+                  <ProtectedRouteWithLayout
                     path="/mastery-paths"
                     component={LazyMasteryPathsPage}
                     pageTitle="Mastery Paths"
