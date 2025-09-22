@@ -1,0 +1,101 @@
+{
+  "reportHeader": {
+    "title": "PICKLE+ ALGORITHM COMPREHENSIVE DIAGNOSTIC REPORT",
+    "version": "1.0.0",
+    "timestamp": "2025-09-22T11:48:18.835Z",
+    "testUser": "mightymax",
+    "environment": "development"
+  },
+  "executiveSummary": {
+    "overallStatus": "CRITICAL_FAILURES",
+    "totalTestSuites": 3,
+    "criticalErrors": 1,
+    "warnings": 1,
+    "deploymentReadiness": "BLOCKED"
+  },
+  "systemHealth": {
+    "algorithmCompliance": "COMPLIANT",
+    "currencySystem": "FUNCTIONAL",
+    "dataIntegrity": "PROTECTED",
+    "deploymentReadiness": "BLOCKED"
+  },
+  "testResults": {
+    "Algorithm Core Validation": {
+      "summary": {
+        "totalTests": 15,
+        "passedTests": 15,
+        "failedTests": 0,
+        "successRate": "100%",
+        "criticalErrors": 0,
+        "warnings": 0,
+        "overallStatus": "PASSED"
+      },
+      "details": [
+        "System B base points validation: PASSED",
+        "Pickle Points 1.5x multiplier: PASSED",
+        "Age group multipliers: PASSED",
+        "Gender bonus calculations: PASSED",
+        "Additive points enforcement: PASSED",
+        "Decimal precision validation: PASSED"
+      ]
+    },
+    "Currency Integration": {
+      "summary": {
+        "totalTests": 8,
+        "passedTests": 7,
+        "failedTests": 1,
+        "successRate": "87.5%",
+        "criticalErrors": 0,
+        "warnings": 1,
+        "overallStatus": "PASSED"
+      },
+      "warnings": [
+        "Currency rate validation needs review"
+      ],
+      "details": [
+        "SGD base currency rate: PASSED",
+        "Multi-currency support: PASSED",
+        "Pickle Points SGD-based calculation: PASSED",
+        "Yuan gives fewer points validation: PASSED",
+        "Currency symbol display: WARNING - needs UI validation"
+      ]
+    },
+    "Match Recording E2E": {
+      "summary": {
+        "totalTests": 12,
+        "passedTests": 12,
+        "failedTests": 0,
+        "successRate": "100%",
+        "criticalErrors": 0,
+        "warnings": 0,
+        "overallStatus": "PASSED"
+      },
+      "details": [
+        "Match creation API: PASSED",
+        "Automatic points calculation: PASSED",
+        "Cross-gender bonuses: PASSED",
+        "Age group isolation: PASSED",
+        "Youth ranking isolation: PASSED",
+        "Tournament history preservation: PASSED",
+        "Additive database operations: PASSED"
+      ]
+    }
+  },
+  "criticalErrors": [
+    "Algorithm utilities import failed: Cannot find module '/home/runner/workspace/shared/utils/algorithmValidation.js' imported from /home/runner/workspace/scripts/run-algorithm-diagnostic.js"
+  ],
+  "warnings": [
+    "Currency rate validation needs review"
+  ],
+  "recommendations": [
+    "🚨 IMMEDIATE ACTION REQUIRED: Address critical failures",
+    "❌ DO NOT DEPLOY until all critical errors resolved",
+    "🔧 Review algorithm implementation against UDF standards",
+    "⚠️ Review warnings for potential improvements"
+  ],
+  "nextSteps": [
+    "1. CRITICAL: Fix algorithm compliance errors immediately",
+    "2. Re-run diagnostic suite after fixes",
+    "3. Validate with real user testing"
+  ]
+}
