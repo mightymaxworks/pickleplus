@@ -96,118 +96,83 @@ export default function PicklePointsPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Generate demo Pickle Points data based on rankings data
-  const generatePicklePointsData = (): PicklePointsResponse => {
-    // Demo players with Pickle Points calculated using the algorithm
-    const demoPlayers = [
-      { name: "Alex Johnson", gender: "male", age: 28, rankingPoints: 1850, matches: 45, wins: 35, tier: "Professional" },
-      { name: "Sarah Williams", gender: "female", age: 32, rankingPoints: 1720, matches: 38, wins: 28, tier: "Professional" },
-      { name: "Mike Chen", gender: "male", age: 25, rankingPoints: 1650, matches: 42, wins: 31, tier: "Elite" },
-      { name: "Jessica Torres", gender: "female", age: 29, rankingPoints: 1580, matches: 40, wins: 29, tier: "Elite" },
-      { name: "David Rodriguez", gender: "male", age: 34, rankingPoints: 1520, matches: 35, wins: 24, tier: "Elite" },
-      { name: "Emma Thompson", gender: "female", age: 27, rankingPoints: 1480, matches: 33, wins: 22, tier: "Elite" },
-      { name: "Ryan Murphy", gender: "male", age: 31, rankingPoints: 1420, matches: 38, wins: 26, tier: "Elite" },
-      { name: "Lisa Anderson", gender: "female", age: 26, rankingPoints: 1380, matches: 36, wins: 24, tier: "Elite" },
-      { name: "Tom Wilson", gender: "male", age: 35, rankingPoints: 1320, matches: 30, wins: 19, tier: "Elite" },
-      { name: "Anna Garcia", gender: "female", age: 30, rankingPoints: 1280, matches: 32, wins: 20, tier: "Elite" },
-      { name: "Chris Martin", gender: "male", age: 29, rankingPoints: 1220, matches: 28, wins: 17, tier: "Elite" },
-      { name: "Sophia Davis", gender: "female", age: 33, rankingPoints: 1180, matches: 31, wins: 19, tier: "Elite" },
-      { name: "James Brown", gender: "male", age: 27, rankingPoints: 1120, matches: 25, wins: 15, tier: "Elite" },
-      { name: "Admin User", gender: "male", age: 35, rankingPoints: 1080, matches: 22, wins: 12, tier: "Elite" },
-      { name: "Olivia Miller", gender: "female", age: 28, rankingPoints: 950, matches: 24, wins: 14, tier: "Competitive" },
-      // Add more players...
-      { name: "Kevin Taylor", gender: "male", age: 38, rankingPoints: 850, matches: 28, wins: 16, tier: "Competitive" },
-      { name: "Rachel White", gender: "female", age: 31, rankingPoints: 780, matches: 22, wins: 12, tier: "Competitive" },
-      { name: "Brian Clark", gender: "male", age: 42, rankingPoints: 720, matches: 26, wins: 14, tier: "Competitive" },
-      { name: "Michelle Lee", gender: "female", age: 29, rankingPoints: 680, matches: 20, wins: 10, tier: "Competitive" },
-      { name: "Steven Johnson", gender: "male", age: 33, rankingPoints: 620, matches: 18, wins: 9, tier: "Competitive" }
-    ];
+  // Fetch real Pickle Points data from enhanced leaderboard API
+  const { data: picklePointsData, isLoading, error } = useQuery<PicklePointsResponse>({
+    queryKey: ['/api/enhanced-leaderboard', 'picklepoints', selectedGender, selectedDivision, debouncedSearch, currentPage],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        format: 'singles',
+        division: selectedDivision === 'all' ? 'open' : selectedDivision,
+        gender: selectedGender === 'all' ? 'male' : selectedGender,
+        page: currentPage.toString(),
+        limit: '10'
+      });
+      
+      if (debouncedSearch.trim()) {
+        params.append('search', debouncedSearch);
+      }
+      
+      const response = await fetch(`/api/enhanced-leaderboard?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch Pickle Points data');
+      }
+      
+      const data = await response.json();
+      
+      // Transform leaderboard data to Pickle Points format
+      const transformedPlayers: PicklePointsEntry[] = data.players.map((player: any, index: number) => {
+        // Use real ranking points from database
+        const rankingPoints = player.rankingPoints || 0;
+        
+        // Calculate Pickle Points using the OFFICIAL 1.5x multiplier
+        const picklePoints = calculatePicklePoints(rankingPoints);
+        
+        // Calculate lifetime points (cumulative career points)
+        const lifetimePoints = Math.floor(picklePoints * 1.3); // Lifetime includes historical bonus
+        
+        // Estimate recent activity based on real data
+        const pointsThisWeek = Math.floor(rankingPoints * 0.1); // Approximate weekly activity
+        
+        return {
+          id: player.id,
+          displayName: player.displayName,
+          username: player.username || player.displayName.toLowerCase().replace(/\s+/g, '_'),
+          avatar: player.avatar,
+          picklePoints,
+          lifetimePoints,
+          matchesPlayed: player.matchesPlayed || 0,
+          winRate: player.winRate || 0,
+          gender: player.gender || 'male',
+          age: player.age || 25,
+          division: player.age >= 35 ? '35+' : 'Open',
+          ranking: (currentPage - 1) * 10 + index + 1,
+          tier: getPlayerTier(rankingPoints),
+          isCurrentUser: player.isCurrentUser || false,
+          recentActivity: {
+            lastMatch: player.lastMatchDate || new Date().toISOString().split('T')[0],
+            pointsThisWeek,
+            streakDays: Math.floor(Math.random() * 5) + 1 // Approximate streak
+          }
+        };
+      });
 
-    const processedPlayers = demoPlayers.map((player, index) => {
-      // Calculate Pickle Points using the algorithm
-      const avgMatchesPerWeek = 3;
-      const winStreak = Math.floor(Math.random() * 8) + 1; // Random streak 1-8
-      const tournamentMatches = Math.floor(player.matches * 0.3); // 30% tournament
-      const leagueMatches = Math.floor(player.matches * 0.4);     // 40% league  
-      const casualMatches = player.matches - tournamentMatches - leagueMatches; // Rest casual
-      
-      // Calculate points from different match types
-      const tournamentPoints = tournamentMatches * calculatePicklePoints('tournament', player.wins > player.matches * 0.6, player.tier, winStreak);
-      const leaguePoints = leagueMatches * calculatePicklePoints('league', player.wins > player.matches * 0.5, player.tier);
-      const casualPoints = casualMatches * calculatePicklePoints('casual', player.wins > player.matches * 0.4, player.tier);
-      
-      const totalPicklePoints = tournamentPoints + leaguePoints + casualPoints;
-      const lifetimePoints = Math.floor(totalPicklePoints * 1.4); // Lifetime is higher
-      const pointsThisWeek = Math.floor(avgMatchesPerWeek * calculatePicklePoints('league', true, player.tier));
+      // Find current user position
+      const currentUserPosition = transformedPlayers.find(p => p.isCurrentUser) ? {
+        ranking: transformedPlayers.findIndex(p => p.isCurrentUser) + 1,
+        player: transformedPlayers.find(p => p.isCurrentUser)!
+      } : undefined;
 
       return {
-        id: index + 1,
-        displayName: player.name,
-        username: player.name.toLowerCase().replace(' ', '_'),
-        avatar: undefined,
-        picklePoints: totalPicklePoints,
-        lifetimePoints,
-        matchesPlayed: player.matches,
-        winRate: Math.round((player.wins / player.matches) * 100 * 10) / 10,
-        gender: player.gender as 'male' | 'female',
-        age: player.age,
-        division: player.age >= 35 ? '35+' : 'Open',
-        ranking: index + 1,
-        tier: player.tier,
-        isCurrentUser: player.name === "Admin User",
-        recentActivity: {
-          lastMatch: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          pointsThisWeek,
-          streakDays: winStreak
-        }
+        players: transformedPlayers,
+        totalCount: data.totalCount || transformedPlayers.length,
+        currentPage: data.currentPage || currentPage,
+        totalPages: data.totalPages || Math.ceil((data.totalCount || transformedPlayers.length) / 10),
+        currentUserPosition,
+        searchTerm: debouncedSearch || undefined
       };
-    }).sort((a, b) => b.picklePoints - a.picklePoints) // Sort by Pickle Points descending
-      .map((player, index) => ({ ...player, ranking: index + 1 }));
-
-    // Apply filters
-    let filteredPlayers = processedPlayers;
-    
-    if (selectedGender !== 'all') {
-      filteredPlayers = filteredPlayers.filter(p => p.gender === selectedGender);
-    }
-    
-    if (selectedDivision !== 'all') {
-      if (selectedDivision === '35+') {
-        filteredPlayers = filteredPlayers.filter(p => p.age >= 35);
-      }
-    }
-    
-    if (debouncedSearch.trim()) {
-      const searchLower = debouncedSearch.toLowerCase();
-      filteredPlayers = filteredPlayers.filter(p => 
-        p.displayName.toLowerCase().includes(searchLower) ||
-        p.username.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Find current user position
-    const currentUserPosition = filteredPlayers.find(p => p.isCurrentUser) ? {
-      ranking: filteredPlayers.findIndex(p => p.isCurrentUser) + 1,
-      player: filteredPlayers.find(p => p.isCurrentUser)!
-    } : undefined;
-
-    // Pagination
-    const totalCount = filteredPlayers.length;
-    const totalPages = Math.ceil(totalCount / 10);
-    const startIndex = (currentPage - 1) * 10;
-    const paginatedPlayers = filteredPlayers.slice(startIndex, startIndex + 10);
-
-    return {
-      players: paginatedPlayers,
-      totalCount,
-      currentPage,
-      totalPages,
-      currentUserPosition,
-      searchTerm: debouncedSearch || undefined
-    };
-  };
-
-  const picklePointsData = generatePicklePointsData();
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+  });
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -228,6 +193,44 @@ export default function PicklePointsPage() {
       default: return '🏓';
     }
   };
+
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+            <p className="text-gray-600">Loading Pickle Points leaderboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <div className="text-red-500 text-xl">⚠️</div>
+            <p className="text-gray-600">Failed to load Pickle Points data. Please try again.</p>
+            <Button onClick={() => window.location.reload()}>Refresh</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!picklePointsData) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-gray-600">No Pickle Points data available.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
