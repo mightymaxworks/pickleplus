@@ -40,7 +40,7 @@ import { apiRequest } from '@/lib/queryClient';
 
 // Form validation schema
 const topUpSchema = z.object({
-  amount: z.number().min(2500, 'Minimum top-up is $25').max(50000, 'Maximum top-up is $500'),
+  amount: z.number().min(2500, 'Minimum top-up is $25').max(250000, 'Maximum top-up is $2500'),
   currency: z.enum(['USD', 'SGD', 'AUD', 'MYR', 'CNY']).default('USD'),
   customerEmail: z.string().email('Valid email address required'),
 });
@@ -95,6 +95,20 @@ const PRESET_AMOUNTS = [
     label: '$500',
     bonus: 6250, // $62.50 bonus
     picklePoints: 1688, // Includes bonus
+    popular: false
+  },
+  { 
+    value: 100000, // $1000
+    label: '$1000',
+    bonus: 15000, // $150 bonus
+    picklePoints: 3450, // Includes bonus
+    popular: false
+  },
+  { 
+    value: 250000, // $2500
+    label: '$2500',
+    bonus: 50000, // $500 bonus
+    picklePoints: 8250, // Includes bonus
     popular: false
   }
 ];
@@ -241,15 +255,42 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Select Amount
+                Select Amount & Currency
               </CardTitle>
               <CardDescription>
-                Choose how much you'd like to add to your credit balance
+                Choose your currency and how much you'd like to add to your credit balance
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Currency Selector - Moved to top */}
+              <div className="mb-6">
+                <Label htmlFor="currency" className="text-base font-medium">Currency</Label>
+                <Select 
+                  value={selectedCurrency} 
+                  onValueChange={(value) => {
+                    setSelectedCurrency(value);
+                    form.setValue('currency', value as any);
+                  }}
+                >
+                  <SelectTrigger data-testid="select-currency" className="mt-2">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.symbol} {currency.name} ({currency.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.currency && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.currency.message}
+                  </p>
+                )}
+              </div>
               {/* Preset Amount Buttons */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {PRESET_AMOUNTS.map((preset) => (
                   <button
                     key={preset.value}
@@ -282,14 +323,14 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
 
               {/* Custom Amount Input */}
               <div className="space-y-3">
-                <Label htmlFor="custom-amount">Custom Amount ($25 - $500)</Label>
+                <Label htmlFor="custom-amount">Custom Amount ($25 - $2500)</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="custom-amount"
                     type="number"
                     min={25}
-                    max={500}
+                    max={2500}
                     step={0.01}
                     placeholder="Enter amount..."
                     className="pl-9"
@@ -360,33 +401,6 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
             </CardHeader>
             <CardContent>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <div>
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select 
-                    value={selectedCurrency} 
-                    onValueChange={(value) => {
-                      setSelectedCurrency(value);
-                      form.setValue('currency', value as any);
-                    }}
-                  >
-                    <SelectTrigger data-testid="select-currency">
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies.map((currency) => (
-                        <SelectItem key={currency.code} value={currency.code}>
-                          {currency.symbol} {currency.name} ({currency.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.currency && (
-                    <p className="text-sm text-destructive mt-1">
-                      {form.formState.errors.currency.message}
-                    </p>
-                  )}
-                </div>
-                
                 <div>
                   <Label htmlFor="email">Email Address</Label>
                   <Input
