@@ -1,18 +1,19 @@
 /**
- * Standardized Ranking Points Service - FINAL ALGORITHM
+ * Standardized Ranking Points Service - ENHANCED ALGORITHM
  * 
- * System B with Option B (Open Age Group) multipliers and Dual Ranking System
+ * System B with Multi-Age Group Ranking Updates
  * 
  * Features:
  * - Base Points: 3 win / 1 loss
  * - Age multipliers always applied (18-34: 1.0x to 70+: 1.6x)
- * - Dual Rankings: Open Rankings (age-multiplied) + Age Group Rankings (base points)
+ * - MULTI-AGE GROUP UPDATES: Players update ALL eligible age rankings
+ * - Example: 42-year-old in Open event updates BOTH Open (19+) AND 35+ rankings
  * - Tournament tiers: Club (1.0x) to International (4.0x)
  * - Points decay: Tier-based (1%/2%/5%/7% weekly) with activity-responsive adjustments
  * 
  * @framework Framework5.3
- * @version 2.0.0 - FINALIZED ALGORITHM
- * @lastModified 2025-08-06
+ * @version 3.0.0 - MULTI-AGE GROUP COMPLIANCE
+ * @lastModified September 22, 2025
  */
 
 import { db } from "../db";
@@ -20,6 +21,7 @@ import { users, matches, rankingTransactions, type User } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { DecayProtectionService } from "./DecayProtectionService";
 import { GenderBalanceService, Player, Team } from "./GenderBalanceService";
+import { getEligibleAgeGroups, validateMultiAgeGroupUpdate, type AgeDivision } from "@shared/utils/algorithmValidation";
 
 // Define Match type inline since it may not be exported
 interface Match {
@@ -191,7 +193,10 @@ export class StandardizedRankingService {
   }
 
   /**
-   * Process match and award ranking points to both players with dual ranking system
+   * ENHANCED: Process match and award ranking points with multi-age group support
+   * 
+   * CRITICAL ENHANCEMENT: Now updates ALL eligible age group rankings
+   * Example: 42-year-old in Open event updates BOTH Open (19+) AND 35+ rankings
    */
   static async processMatchRankingPoints(
     match: Match,
@@ -200,7 +205,15 @@ export class StandardizedRankingService {
   ): Promise<{
     winnerCalculation: RankingPointsCalculation;
     loserCalculation: RankingPointsCalculation;
+    multiAgeGroupResults: {
+      winnerEligibleGroups: AgeDivision[];
+      loserEligibleGroups: AgeDivision[];
+      winnerValidation: { isCompliant: boolean; explanation: string };
+      loserValidation: { isCompliant: boolean; explanation: string };
+    };
   }> {
+    
+    console.log(`[StandardizedRanking] Processing multi-age group match: Winner ${winnerId} vs Loser ${loserId}`);
     
     // Get player data for age calculations
     const [winner, loser] = await Promise.all([
@@ -213,14 +226,28 @@ export class StandardizedRankingService {
     }
 
     if (!winner.dateOfBirth || !loser.dateOfBirth) {
-      throw new Error('Player date of birth required for age multiplier calculation');
+      throw new Error('Player date of birth required for multi-age group calculations');
     }
+
+    // Determine eligible age groups for each player
+    const winnerEligibleGroups = getEligibleAgeGroups(winner.dateOfBirth);
+    const loserEligibleGroups = getEligibleAgeGroups(loser.dateOfBirth);
+    
+    console.log(`[StandardizedRanking] Winner eligible for: ${winnerEligibleGroups.join(', ')}`);
+    console.log(`[StandardizedRanking] Loser eligible for: ${loserEligibleGroups.join(', ')}`);
+
+    // Calculate gender multipliers for cross-gender matches
+    const winnerGenderMultiplier = this.calculateGenderMultiplier(winner.gender as 'male' | 'female', winner.rankingPoints || 0);
+    const loserGenderMultiplier = this.calculateGenderMultiplier(loser.gender as 'male' | 'female', loser.rankingPoints || 0);
 
     // Calculate points for winner
     const winnerCalculation = this.calculateRankingPoints(
       true,
       match.matchType as 'casual' | 'league' | 'tournament',
       winner.dateOfBirth,
+      winner.gender as 'male' | 'female',
+      winner.rankingPoints || 0,
+      winnerGenderMultiplier,
       match.eventTier as keyof TierMultipliers
     );
     winnerCalculation.userId = winnerId;
@@ -230,19 +257,115 @@ export class StandardizedRankingService {
       false,
       match.matchType as 'casual' | 'league' | 'tournament',
       loser.dateOfBirth,
+      loser.gender as 'male' | 'female',
+      loser.rankingPoints || 0,
+      loserGenderMultiplier,
       match.eventTier as keyof TierMultipliers
     );
     loserCalculation.userId = loserId;
 
-    // Award points to both players in dual ranking system
-    await this.awardDualRankingPoints(winnerCalculation, match.id);
-    await this.awardDualRankingPoints(loserCalculation, match.id);
+    // Award points to both players in ALL eligible age groups
+    const winnerUpdatedGroups = await this.awardMultiAgeGroupPoints(winnerCalculation, match.id, winner.dateOfBirth);
+    const loserUpdatedGroups = await this.awardMultiAgeGroupPoints(loserCalculation, match.id, loser.dateOfBirth);
+    
+    // Validate multi-age group compliance
+    const winnerValidation = validateMultiAgeGroupUpdate(
+      winnerId.toString(),
+      winner.dateOfBirth,
+      '19plus', // Assume Open event for validation
+      winnerUpdatedGroups
+    );
+    
+    const loserValidation = validateMultiAgeGroupUpdate(
+      loserId.toString(),
+      loser.dateOfBirth,
+      '19plus', // Assume Open event for validation
+      loserUpdatedGroups
+    );
+    
+    console.log(`[StandardizedRanking] Multi-age updates complete - Winner: ${winnerUpdatedGroups.length} groups, Loser: ${loserUpdatedGroups.length} groups`);
 
-    return { winnerCalculation, loserCalculation };
+    return { 
+      winnerCalculation, 
+      loserCalculation,
+      multiAgeGroupResults: {
+        winnerEligibleGroups,
+        loserEligibleGroups,
+        winnerValidation,
+        loserValidation
+      }
+    };
   }
 
   /**
-   * Award ranking points to dual ranking system
+   * Calculate gender multiplier for cross-gender matches
+   */
+  private static calculateGenderMultiplier(gender: 'male' | 'female', rankingPoints: number): number {
+    // Apply 1.15x bonus for female players under 1000 points in cross-gender matches
+    if (gender === 'female' && rankingPoints < 1000) {
+      return 1.15;
+    }
+    return 1.0;
+  }
+
+  /**
+   * ENHANCED: Award ranking points to ALL eligible age groups (multi-age group system)
+   */
+  private static async awardMultiAgeGroupPoints(
+    calculation: RankingPointsCalculation,
+    matchId: number,
+    playerDateOfBirth: string
+  ): Promise<AgeDivision[]> {
+    
+    const eligibleAgeGroups = getEligibleAgeGroups(playerDateOfBirth);
+    const updatedGroups: AgeDivision[] = [];
+    
+    // Update primary user ranking points (main display)
+    await db.update(users)
+      .set({
+        rankingPoints: sql`${users.rankingPoints} + ${calculation.openRankingPoints}`,
+      })
+      .where(eq(users.id, calculation.userId));
+
+    // Create transaction record for each eligible age group
+    for (const ageGroup of eligibleAgeGroups) {
+      try {
+        await db.insert(rankingTransactions)
+          .values({
+            userId: calculation.userId,
+            amount: calculation.openRankingPoints,
+            source: `${calculation.matchType} match ${calculation.isWinner ? 'win' : 'participation'} (${ageGroup})`,
+            matchId,
+            metadata: {
+              algorithm: 'System B + Multi-Age Group Compliance',
+              basePoints: calculation.basePoints,
+              ageMultiplier: calculation.ageMultiplier,
+              genderMultiplier: calculation.genderMultiplier,
+              openRankingPoints: calculation.openRankingPoints,
+              ageGroupRankingPoints: calculation.ageGroupRankingPoints,
+              breakdown: calculation.breakdown,
+              matchType: calculation.matchType,
+              tournamentTier: calculation.tournamentTier,
+              tierMultiplier: calculation.tierMultiplier,
+              ageGroup,
+              multiAgeGroupUpdate: true
+            }
+          });
+        
+        updatedGroups.push(ageGroup);
+        console.log(`[Multi-Age Award] User ${calculation.userId}: ${ageGroup} ranking updated (+${calculation.openRankingPoints})`);
+        
+      } catch (error) {
+        console.error(`[Multi-Age Award] Failed to update ${ageGroup} for user ${calculation.userId}:`, error);
+      }
+    }
+    
+    return updatedGroups;
+  }
+
+  /**
+   * Legacy method: Award ranking points to dual ranking system
+   * @deprecated Use awardMultiAgeGroupPoints for algorithm compliance
    */
   private static async awardDualRankingPoints(
     calculation: RankingPointsCalculation,

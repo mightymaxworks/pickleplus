@@ -9,6 +9,7 @@ import {
   PlayFormat,
   AgeDivision
 } from "../../../shared/multi-dimensional-rankings";
+import { getEligibleAgeGroups, validateMultiAgeGroupUpdate } from "../../../shared/utils/algorithmValidation";
 import { users } from "../../../shared/schema";
 import { ratingTiers } from "../../../shared/courtiq-schema";
 import { playerRankings, rankingHistory } from "./schema";
@@ -126,7 +127,87 @@ export class MultiDimensionalRankingService {
   }
 
   /**
-   * Processes ranking points from a match result
+   * Update multiple age group rankings for a single player
+   * CRITICAL: Ensures algorithm compliance for cross-age group eligibility
+   */
+  async updateMultiAgeGroupRankings(
+    userId: number,
+    userDateOfBirth: string,
+    format: PlayFormat = 'singles',
+    eventAgeGroup: AgeDivision = '19plus',
+    pointsToAdd: number,
+    matchId?: number,
+    tournamentId?: number,
+    reason: string = "match_participation"
+  ): Promise<{
+    updatedRankings: AgeDivision[];
+    validationResult: { isCompliant: boolean; missingUpdates: AgeDivision[]; explanation: string };
+  }> {
+    
+    // Get all eligible age groups for this player
+    const eligibleAgeGroups = getEligibleAgeGroups(userDateOfBirth);
+    const updatedRankings: AgeDivision[] = [];
+    
+    // Update rankings for ALL eligible age groups
+    for (const ageGroup of eligibleAgeGroups) {
+      try {
+        // Get current ranking for this age group
+        const currentRanking = await this.getUserRanking(userId, format, ageGroup) || { rankingPoints: 0, ratingTierId: null };
+        
+        // Calculate new total (additive system)
+        const newTotal = currentRanking.rankingPoints + pointsToAdd;
+        
+        // Update this age group ranking
+        const updatedRanking = await this.updateUserRanking(
+          userId,
+          format,
+          ageGroup,
+          currentRanking.ratingTierId || null,
+          newTotal
+        );
+        
+        // Add history entry
+        await this.addRankingHistoryEntry(
+          userId,
+          format,
+          ageGroup,
+          currentRanking.ratingTierId || null,
+          currentRanking.rankingPoints,
+          newTotal,
+          `${reason} (event: ${eventAgeGroup})`,
+          matchId,
+          tournamentId
+        );
+        
+        updatedRankings.push(ageGroup);
+        
+        console.log(`[Multi-Age Update] User ${userId}: ${ageGroup} ranking updated from ${currentRanking.rankingPoints} to ${newTotal} (+${pointsToAdd})`);
+        
+      } catch (error) {
+        console.error(`[Multi-Age Update] Failed to update ${ageGroup} ranking for user ${userId}:`, error);
+      }
+    }
+    
+    // Validate compliance
+    const validationResult = validateMultiAgeGroupUpdate(
+      userId.toString(),
+      userDateOfBirth,
+      eventAgeGroup,
+      updatedRankings
+    );
+    
+    if (!validationResult.isCompliant) {
+      console.warn(`[ALGORITHM COMPLIANCE WARNING] ${validationResult.explanation}`);
+    }
+    
+    return { updatedRankings, validationResult };
+  }
+
+  /**
+   * ENHANCED: Processes ranking points from a match result with multi-age group support
+   * 
+   * CRITICAL CHANGE: Now updates ALL eligible age group rankings per algorithm requirements
+   * Example: 42-year-old in Open (19+) event updates BOTH Open AND 35+ rankings
    */
   async processMatchRankingPoints(
     winnerId: number,
@@ -137,40 +218,54 @@ export class MultiDimensionalRankingService {
     matchId?: number,
     tournamentId?: number
   ) {
-    // Get current rankings
-    const winnerRanking = await this.getUserRanking(winnerId, format, ageDivision) || { rankingPoints: 0 };
-    const loserRanking = await this.getUserRanking(loserId, format, ageDivision) || { rankingPoints: 0 };
+    console.log(`[Multi-Age Ranking] Processing match: Winner ${winnerId} vs Loser ${loserId} in ${ageDivision} ${format}`);
     
-    // Calculate points - winner gets points, loser doesn't lose points in this system
-    const pointsAwarded = basePoints;
+    // Get player birth dates for age eligibility calculation
+    const [winnerUser, loserUser] = await Promise.all([
+      db.query.users.findFirst({ where: eq(users.id, winnerId) }),
+      db.query.users.findFirst({ where: eq(users.id, loserId) })
+    ]);
     
-    // Update winner's ranking
-    const updatedWinnerRanking = await this.updateUserRanking(
+    if (!winnerUser?.dateOfBirth || !loserUser?.dateOfBirth) {
+      throw new Error('Player date of birth required for multi-age group ranking updates');
+    }
+    
+    // Process multi-age group updates for winner (gets points)
+    const winnerResult = await this.updateMultiAgeGroupRankings(
       winnerId,
+      winnerUser.dateOfBirth,
       format,
       ageDivision,
-      winnerRanking.ratingTierId || null,
-      winnerRanking.rankingPoints + pointsAwarded
-    );
-    
-    // Add history entry for winner
-    await this.addRankingHistoryEntry(
-      winnerId,
-      format,
-      ageDivision,
-      winnerRanking.ratingTierId || null,
-      winnerRanking.rankingPoints,
-      updatedWinnerRanking.rankingPoints,
-      "match_win",
+      basePoints,
       matchId,
-      tournamentId
+      tournamentId,
+      "match_win"
     );
+    
+    // Process multi-age group updates for loser (also gets participation points in System B)
+    const participationPoints = 1; // System B: 1 point for loss
+    const loserResult = await this.updateMultiAgeGroupRankings(
+      loserId,
+      loserUser.dateOfBirth,
+      format,
+      ageDivision,
+      participationPoints,
+      matchId,
+      tournamentId,
+      "match_participation"
+    );
+    
+    console.log(`[Multi-Age Ranking] Complete - Winner: ${winnerResult.updatedRankings.length} rankings updated, Loser: ${loserResult.updatedRankings.length} rankings updated`);
     
     return {
       winnerId,
-      winnerOldPoints: winnerRanking.rankingPoints,
-      winnerNewPoints: updatedWinnerRanking.rankingPoints,
-      pointsAwarded
+      winnerUpdatedRankings: winnerResult.updatedRankings,
+      winnerValidation: winnerResult.validationResult,
+      loserId,
+      loserUpdatedRankings: loserResult.updatedRankings,
+      loserValidation: loserResult.validationResult,
+      pointsAwarded: basePoints,
+      participationPoints
     };
   }
 
