@@ -657,10 +657,14 @@ export function setupAuth(app: Express) {
         console.log("[DEBUG AUTH] User created successfully with ID:", user.id);
         
         // PKL-278651-COMM-0020-DEFGRP - Auto-join default communities
-        try {
-          const { db } = require('./db');
-          const { communities, communityMembers } = require('@shared/schema/community');
-          const { eq } = require('drizzle-orm');
+        Promise.all([
+          import('./db'),
+          import('@shared/schema/community'),
+          import('drizzle-orm')
+        ]).then(async ([dbModule, communityModule, drizzleModule]) => {
+          const { db } = dbModule;
+          const { communities, communityMembers } = communityModule;
+          const { eq } = drizzleModule;
           
           // Find all default communities
           const defaultCommunities = await db.select().from(communities).where(eq(communities.isDefault, true));
@@ -687,47 +691,49 @@ export function setupAuth(app: Express) {
           } else {
             console.log(`[PKL-278651-COMM-0020-DEFGRP] No default communities found for auto-join`);
           }
-        } catch (error) {
+        }).catch((error) => {
           // Don't block registration if adding to default communities fails
           console.error("[PKL-278651-COMM-0020-DEFGRP] Error adding user to default communities:", error);
-        }
+        });
 
         // Award XP to referrer if valid
-        try {
-          if (referrerId) {
-            // Check if referrer exists
-            const referrer = await storage.getUser(referrerId);
-            if (referrer) {
-              // Import XP service
-              const { xpService } = require('./modules/xp/xp-service');
-              
-              // Define XP constants at the top of the function or file
-              const XP_SOURCE_REFERRAL = 'REFERRAL';
-              
-              // Generate a random XP reward between 20-40
-              const minXP = 20;
-              const maxXP = 40;
-              const randomXpReward = Math.floor(Math.random() * (maxXP - minXP + 1)) + minXP;
-              
-              // Award XP to the referrer
-              await xpService.awardXp({
-                userId: referrerId,
-                amount: randomXpReward,
-                source: XP_SOURCE_REFERRAL,
-                sourceType: 'USER_REGISTRATION',
-                sourceId: user.id.toString(),
-                description: `Invited user ${user.username} who registered`
-              });
-              
-              console.log(`[REFERRAL] Awarded ${randomXpReward} XP to user ${referrerId} for referring ${user.username}`);
-            } else {
-              console.log(`[REFERRAL] Referrer with ID ${referrerId} not found, no XP awarded`);
+        (async () => {
+          try {
+            if (referrerId) {
+              // Check if referrer exists
+              const referrer = await storage.getUser(referrerId);
+              if (referrer) {
+                // Import XP service
+                const { xpService } = await import('./modules/xp/xp-service');
+                
+                // Define XP constants at the top of the function or file
+                const XP_SOURCE_REFERRAL = 'REFERRAL';
+                
+                // Generate a random XP reward between 20-40
+                const minXP = 20;
+                const maxXP = 40;
+                const randomXpReward = Math.floor(Math.random() * (maxXP - minXP + 1)) + minXP;
+                
+                // Award XP to the referrer
+                await xpService.awardXp({
+                  userId: referrerId,
+                  amount: randomXpReward,
+                  source: XP_SOURCE_REFERRAL,
+                  sourceType: 'USER_REGISTRATION',
+                  sourceId: user.id.toString(),
+                  description: `Invited user ${user.username} who registered`
+                });
+                
+                console.log(`[REFERRAL] Awarded ${randomXpReward} XP to user ${referrerId} for referring ${user.username}`);
+              } else {
+                console.log(`[REFERRAL] Referrer with ID ${referrerId} not found, no XP awarded`);
+              }
             }
+          } catch (error) {
+            // Don't block registration if XP award fails
+            console.error("[REFERRAL] Error awarding XP to referrer:", error);
           }
-        } catch (error) {
-          // Don't block registration if XP award fails
-          console.error("[REFERRAL] Error awarding XP to referrer:", error);
-        }
+        })();
 
         // Log the user in automatically after registration
         req.login(user, (err) => {
@@ -745,21 +751,16 @@ export function setupAuth(app: Express) {
           console.log('[DEBUG AUTH] Session data:', req.session);
           
           // Start the onboarding process for the new user
-          try {
-            // Directly import the onboarding service
-            const { onboardingService } = require('./modules/onboarding/onboardingService');
-            // Use Promise handling instead of await
-            onboardingService.startOrResumeOnboarding(user.id)
-              .then(() => {
-                console.log('[DEBUG AUTH] Onboarding process started for user:', user.id);
-              })
-              .catch((err) => {
-                console.error('[DEBUG AUTH] Failed to start onboarding process:', err);
-              });
-          } catch (onboardingError) {
-            // Don't block registration if onboarding initialization fails
-            console.error('[DEBUG AUTH] Failed to start onboarding service:', onboardingError);
-          }
+          import('./modules/onboarding/onboardingService')
+            .then(({ onboardingService }) => {
+              return onboardingService.startOrResumeOnboarding(user.id);
+            })
+            .then(() => {
+              console.log('[DEBUG AUTH] Onboarding process started for user:', user.id);
+            })
+            .catch((err) => {
+              console.error('[DEBUG AUTH] Failed to start onboarding service:', err);
+            });
           
           // Return the user data without the password
           const { password, ...userWithoutPassword } = user;
