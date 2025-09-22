@@ -124,15 +124,44 @@ export function registerMatchRoutes(app: express.Express): void {
         xpAwarded: 0
       });
 
-      // Use enhanced MatchRewardService for UDF algorithm compliance
+      // ENHANCED: Use Multi-Age Group Ranking Service for UDF algorithm compliance
       try {
-        const { MatchRewardService } = await import('../services/MatchRewardService');
-        const matchRewardService = new MatchRewardService();
+        const { MultiDimensionalRankingService } = await import('../modules/ranking/service');
+        const multiDimensionalRankingService = new MultiDimensionalRankingService();
         
-        console.log('[UDF COMPLIANCE] Using enhanced MatchRewardService for points calculation');
+        console.log('[MULTI-AGE COMPLIANCE] Using enhanced MultiDimensionalRankingService for points calculation');
         
-        // Process match for each player using the UDF-compliant service
+        // Process match using multi-age group ranking updates
         const playerOneIdResolved = playerOneId || (req.user as any)?.id;
+        const isPlayerOneWinner = winnerId === playerOneIdResolved;
+        const isPlayerTwoWinner = winnerId === playerTwoId;
+        
+        // Determine format and age division for ranking updates
+        const format = formatType === 'doubles' ? 'doubles' : 'singles';
+        const ageDivision = '19plus'; // Default to Open division for multi-age eligibility
+        
+        // Process multi-age group updates for both players
+        const rankingResults = await multiDimensionalRankingService.processMatchRankingPoints(
+          winnerId,
+          winnerId === playerOneIdResolved ? playerTwoId : playerOneIdResolved, // loserId
+          format as any,
+          ageDivision as any,
+          3, // System B base points for winner
+          newMatch.id
+        );
+        
+        console.log(`[MULTI-AGE COMPLIANCE] Winner updated rankings: ${rankingResults.winnerUpdatedRankings?.join(', ') || 'none'}`);
+        console.log(`[MULTI-AGE COMPLIANCE] Loser updated rankings: ${rankingResults.loserUpdatedRankings?.join(', ') || 'none'}`);
+        
+        // Validate multi-age group compliance
+        if (rankingResults.winnerValidation && !rankingResults.winnerValidation.isCompliant) {
+          console.warn(`[ALGORITHM COMPLIANCE WARNING] Winner: ${rankingResults.winnerValidation.explanation}`);
+        }
+        if (rankingResults.loserValidation && !rankingResults.loserValidation.isCompliant) {
+          console.warn(`[ALGORITHM COMPLIANCE WARNING] Loser: ${rankingResults.loserValidation.explanation}`);
+        }
+        
+        // Process all players (including partners in doubles)
         const allPlayerIds = [
           playerOneIdResolved,
           playerTwoId,
@@ -141,46 +170,52 @@ export function registerMatchRoutes(app: express.Express): void {
         ].filter(id => id); // Remove null/undefined values
 
         for (const playerId of allPlayerIds) {
+          // Skip primary players as they were already processed by MultiDimensionalRankingService
+          if (playerId === winnerId || playerId === (winnerId === playerOneIdResolved ? playerTwoId : playerOneIdResolved)) {
+            continue;
+          }
+          
           const playerData = await storage.getUser(playerId);
           if (!playerData) {
-            console.log(`[UDF COMPLIANCE] Skipping player ${playerId} - user not found`);
+            console.log(`[MULTI-AGE COMPLIANCE] Skipping partner ${playerId} - user not found`);
             continue;
           }
 
-          // Calculate points using System B (3 points win, 1 point loss) with age/gender multipliers
-          const isWinner = winnerId === playerId;
-          const basePoints = isWinner ? 3 : 1;
+          // Process partners (in doubles) using multi-age group updates
+          const isPartnerWinner = (winnerId === playerOneIdResolved && playerId === playerOnePartnerId) ||
+                                  (winnerId === playerTwoId && playerId === playerTwoPartnerId);
           
-          // Apply age multiplier based on player age
-          let ageMultiplier = 1.0;
           if (playerData.dateOfBirth) {
-            const age = new Date().getFullYear() - new Date(playerData.dateOfBirth).getFullYear();
-            if (age >= 35 && age < 50) ageMultiplier = 1.2;
-            else if (age >= 50 && age < 60) ageMultiplier = 1.3;
-            else if (age >= 60 && age < 70) ageMultiplier = 1.4;
-            else if (age >= 70) ageMultiplier = 1.6;
+            const partnerResults = await multiDimensionalRankingService.updateMultiAgeGroupRankings(
+              playerId,
+              playerData.dateOfBirth,
+              format as any,
+              ageDivision as any,
+              isPartnerWinner ? 3 : 1, // System B points
+              newMatch.id,
+              undefined,
+              isPartnerWinner ? "match_win" : "match_participation"
+            );
+            
+            console.log(`[MULTI-AGE COMPLIANCE] Partner ${playerId} updated rankings: ${partnerResults.updatedRankings.join(', ')}`);
+            
+            if (!partnerResults.validationResult.isCompliant) {
+              console.warn(`[ALGORITHM COMPLIANCE WARNING] Partner ${playerId}: ${partnerResults.validationResult.explanation}`);
+            }
           }
           
-          // Apply gender bonus for women under 1000 points in cross-gender matches
-          let genderMultiplier = 1.0;
-          if (playerData.gender === 'female' && (playerData.rankingPoints || 0) < 1000) {
-            genderMultiplier = 1.15;
-          }
-          
-          const rankingPointsToAdd = Number((basePoints * ageMultiplier * genderMultiplier).toFixed(2));
-          const picklePointsToAdd = Math.round(rankingPointsToAdd * 1.5);
-          
-          // Apply the calculated points (prevents double counting)
-          await storage.updateUserRankingPoints(playerId, rankingPointsToAdd, formatType === 'doubles' ? 'doubles' : 'singles');
+          // Update pickle points (1.5x multiplier per match)
+          const basePoints = isPartnerWinner ? 3 : 1;
+          const picklePointsToAdd = Math.round(basePoints * 1.5);
           await storage.updateUserPicklePoints(playerId, picklePointsToAdd);
           
-          // CRITICAL FIX: Update match statistics to fix win percentage calculation
-          await storage.updateUserMatchStatistics(playerId, isWinner);
+          // Update match statistics
+          await storage.updateUserMatchStatistics(playerId, isPartnerWinner);
           
-          console.log(`[UDF COMPLIANCE] Player ${playerId}: +${rankingPointsToAdd} ranking points, +${picklePointsToAdd} pickle points (Age: ${ageMultiplier}x, Gender: ${genderMultiplier}x)`);
+          console.log(`[MULTI-AGE COMPLIANCE] Partner ${playerId}: +${picklePointsToAdd} pickle points`);
         }
         
-        console.log('[UDF COMPLIANCE] Successfully processed all player rewards with enhanced algorithm');
+        console.log('[MULTI-AGE COMPLIANCE] Successfully processed all player rewards with multi-age group algorithm');
       } catch (error) {
         console.error(`[UDF COMPLIANCE] Error using enhanced MatchRewardService: ${(error as Error).message}`);
         // Fallback to basic points to ensure match creation doesn't fail
