@@ -221,7 +221,7 @@ export class MultiDimensionalRankingService {
   ) {
     console.log(`[Multi-Age Ranking] Processing match: Winner ${winnerId} vs Loser ${loserId} in ${ageDivision} ${format}`);
     
-    // Get player birth dates for age eligibility calculation
+    // Get player birth dates and data for bonus calculations
     const [winnerUser, loserUser] = await Promise.all([
       db.query.users.findFirst({ where: eq(users.id, winnerId) }),
       db.query.users.findFirst({ where: eq(users.id, loserId) })
@@ -230,27 +230,57 @@ export class MultiDimensionalRankingService {
     if (!winnerUser?.dateOfBirth || !loserUser?.dateOfBirth) {
       throw new Error('Player date of birth required for multi-age group ranking updates');
     }
+
+    // CRITICAL FIX: Calculate proper points WITH age/gender bonuses
+    const { calculateMatchPoints } = await import('../../../shared/utils/matchPointsCalculator');
     
-    // Process multi-age group updates for winner (gets points)
+    // Prepare player data for bonus calculations
+    const winnerMatchData = {
+      playerId: winnerId,
+      username: winnerUser.username,
+      isWin: true,
+      ageGroup: this.getPlayerAgeGroup(winnerUser.dateOfBirth),
+      gender: winnerUser.gender as 'male' | 'female' | undefined,
+      currentRankingPoints: winnerUser.rankingPoints || 0,
+      eventType: 'casual' as const
+    };
+    
+    const loserMatchData = {
+      playerId: loserId,
+      username: loserUser.username,
+      isWin: false,
+      ageGroup: this.getPlayerAgeGroup(loserUser.dateOfBirth),
+      gender: loserUser.gender as 'male' | 'female' | undefined,
+      currentRankingPoints: loserUser.rankingPoints || 0,
+      eventType: 'casual' as const
+    };
+    
+    // Calculate points WITH all bonuses applied
+    const matchResults = calculateMatchPoints([winnerMatchData, loserMatchData], format === 'mixed' ? 'doubles' : format);
+    const winnerCalculation = matchResults.find(r => r.playerId === winnerId)!;
+    const loserCalculation = matchResults.find(r => r.playerId === loserId)!;
+    
+    console.log(`[BONUS CALCULATION] Winner: ${winnerCalculation.calculationDetails}`);
+    console.log(`[BONUS CALCULATION] Loser: ${loserCalculation.calculationDetails}`);
+    
+    // Process multi-age group updates with CALCULATED points (including bonuses)
     const winnerResult = await this.updateMultiAgeGroupRankings(
       winnerId,
       winnerUser.dateOfBirth,
       format,
       ageDivision,
-      basePoints,
+      winnerCalculation.rankingPointsEarned, // Using calculated points with bonuses!
       matchId,
       tournamentId,
       "match_win"
     );
     
-    // Process multi-age group updates for loser (also gets participation points in System B)
-    const participationPoints = 1; // System B: 1 point for loss
     const loserResult = await this.updateMultiAgeGroupRankings(
       loserId,
       loserUser.dateOfBirth,
       format,
       ageDivision,
-      participationPoints,
+      loserCalculation.rankingPointsEarned, // Using calculated points with bonuses!
       matchId,
       tournamentId,
       "match_participation"
@@ -265,9 +295,30 @@ export class MultiDimensionalRankingService {
       loserId,
       loserUpdatedRankings: loserResult.updatedRankings,
       loserValidation: loserResult.validationResult,
-      pointsAwarded: basePoints,
-      participationPoints
+      pointsAwarded: winnerCalculation.rankingPointsEarned,
+      participationPoints: loserCalculation.rankingPointsEarned,
+      // Enhanced response with bonus breakdown
+      winnerCalculationDetails: winnerCalculation.calculationDetails,
+      loserCalculationDetails: loserCalculation.calculationDetails
     };
+  }
+
+  /**
+   * Get age group for a player based on date of birth
+   * Maps to match calculator age group format
+   */
+  private getPlayerAgeGroup(dateOfBirth: Date | string): string {
+    const birthDate = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth;
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear() - 
+               (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate()) ? 1 : 0);
+    
+    if (age >= 70) return '70+';
+    if (age >= 60) return '60+';
+    if (age >= 50) return '50+';
+    if (age >= 35) return '35+';
+    if (age < 19) return 'U19';
+    return 'Open';
   }
 
   /**
@@ -280,7 +331,17 @@ export class MultiDimensionalRankingService {
     limit: number = 100,
     offset: number = 0
   ): Promise<LeaderboardEntry[]> {
-    let query = db.select({
+    // Build conditions array
+    const conditions = [
+      eq(playerRankings.format, format),
+      eq(playerRankings.ageDivision, ageDivision)
+    ];
+    
+    if (ratingTierId) {
+      conditions.push(eq(playerRankings.ratingTierId, ratingTierId));
+    }
+
+    const leaderboard = await db.select({
       id: playerRankings.id,
       userId: playerRankings.userId,
       username: users.username,
@@ -290,21 +351,10 @@ export class MultiDimensionalRankingService {
     })
     .from(playerRankings)
     .innerJoin(users, eq(playerRankings.userId, users.id))
-    .where(
-      and(
-        eq(playerRankings.format, format),
-        eq(playerRankings.ageDivision, ageDivision)
-      )
-    )
+    .where(and(...conditions))
     .orderBy(desc(playerRankings.rankingPoints))
     .limit(limit)
     .offset(offset);
-    
-    if (ratingTierId) {
-      query = query.where(eq(playerRankings.ratingTierId, ratingTierId));
-    }
-
-    const leaderboard = await query;
     
     // Add rank number based on order
     return leaderboard.map((entry, index) => ({

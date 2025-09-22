@@ -4,6 +4,9 @@
 import express from 'express';
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
+import { db } from '../db';
+import { matches } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * Register match routes with the Express application
@@ -152,6 +155,25 @@ export function registerMatchRoutes(app: express.Express): void {
         
         console.log(`[MULTI-AGE COMPLIANCE] Winner updated rankings: ${rankingResults.winnerUpdatedRankings?.join(', ') || 'none'}`);
         console.log(`[MULTI-AGE COMPLIANCE] Loser updated rankings: ${rankingResults.loserUpdatedRankings?.join(', ') || 'none'}`);
+        
+        // CRITICAL FIX: Update match record with calculated points and multiplier
+        if (rankingResults.pointsAwarded && rankingResults.pointsAwarded !== 3) {
+          // Calculate multiplier based on awarded points vs base points
+          const calculatedMultiplier = Math.round((rankingResults.pointsAwarded / 3) * 100);
+          
+          // Update match with calculated values
+          await db.update(matches)
+            .set({
+              pointsAwarded: rankingResults.pointsAwarded,
+              rankingPointMultiplier: calculatedMultiplier,
+              notes: `${notes || ''} [Game Scores: ${detailedScores}] [BONUS APPLIED: Winner ${rankingResults.winnerCalculationDetails || 'N/A'}, Loser ${rankingResults.loserCalculationDetails || 'N/A'}]`.trim()
+            })
+            .where(eq(matches.id, newMatch.id));
+            
+          console.log(`[BONUS INTEGRATION] Match ${newMatch.id} updated - Points: ${rankingResults.pointsAwarded}, Multiplier: ${calculatedMultiplier}%`);
+          console.log(`[BONUS INTEGRATION] Winner: ${rankingResults.winnerCalculationDetails}`);
+          console.log(`[BONUS INTEGRATION] Loser: ${rankingResults.loserCalculationDetails}`);
+        }
         
         // Validate multi-age group compliance
         if (rankingResults.winnerValidation && !rankingResults.winnerValidation.isCompliant) {
