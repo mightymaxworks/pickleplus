@@ -121,8 +121,8 @@ export default function PicklePointsPage() {
       
       // Transform leaderboard data to Pickle Points format
       const transformedPlayers: PicklePointsEntry[] = data.players.map((player: any, index: number) => {
-        // Use real ranking points from database
-        const rankingPoints = player.rankingPoints || 0;
+        // Use real ranking points from database (API returns 'points', not 'rankingPoints')
+        const rankingPoints = player.points || 0;
         
         // Calculate Pickle Points using the OFFICIAL 1.5x multiplier
         const picklePoints = calculatePicklePoints(rankingPoints);
