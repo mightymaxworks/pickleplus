@@ -65,6 +65,34 @@ import {
 
 **ENFORCEMENT**: Pre-commit hooks will reject any match calculation files without these imports.
 
+### **RULE 1.5: PICKLE POINTS PARTICIPANT INCLUSION**
+```typescript
+// CRITICAL: Pickle Points must include ALL players who have participated in matches
+// FORBIDDEN: Filtering by rankingPoints > 0 for Pickle Points systems
+
+// ❌ WRONG: Only shows players with current ranking points
+const allUsers = await storage.getUsersWithRankingPoints(format);
+
+// ✅ CORRECT: Shows ALL players who have participated in matches (for Pickle Points)
+const allUsers = await storage.getAllPlayersWithMatches(format);
+
+// ❌ WRONG: Database query filtering by points > 0
+.where(gt(users.singlesRankingPoints, 0))
+
+// ✅ CORRECT: Database query including all match participants
+.innerJoin(matches, or(
+  eq(matches.playerOneId, users.id),
+  eq(matches.playerTwoId, users.id)
+))
+.having(sql`COUNT(DISTINCT ${matches.id}) > 0`)
+```
+
+**ALGORITHM COMPLIANCE**: Every player who participates in league matches or tournaments earns Pickle Points (1.5x multiplier per match), regardless of their current ranking point total. The system MUST show ALL 47+ match participants, not just the 13 players with ranking points > 0.
+
+**CRITICAL BUG PREVENTION**: This rule prevents the systematic exclusion of players who have participated in matches but may have 0 current ranking points, ensuring proper Pickle Points distribution and leaderboard completeness.
+
+**ENFORCEMENT**: Any Pickle Points query MUST use `getAllPlayersWithMatches()` instead of `getUsersWithRankingPoints()`.
+
 ### **RULE 2: PRE-CALCULATION VALIDATION**
 ```typescript
 // MANDATORY: Validate before ANY point allocation

@@ -125,6 +125,7 @@ export interface IStorage extends CommunityStorage {
   updateUserPicklePoints(userId: number, pointsToAdd: number): Promise<void>;
   searchPlayersByMultipleFields(searchTerm: string): Promise<User[]>;
   getUsersWithRankingPoints(format?: 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women'): Promise<User[]>;
+  getAllPlayersWithMatches(format?: 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women'): Promise<User[]>;
   
   // Password reset operations
   createPasswordResetToken(userIdOrPayload: number | { userId: number; token: string; expiresAt: Date }, token?: string, expiresAt?: Date): Promise<void>;
@@ -923,6 +924,60 @@ export class DatabaseStorage implements IStorage {
     }
     
     console.log('[STORAGE] Found users with ranking points:', filteredResults.length);
+    return filteredResults;
+  }
+
+  // NEW FUNCTION: Get ALL players who have participated in matches (for Pickle Points)
+  // This includes players with 0 ranking points who still deserve Pickle Points for participation
+  async getAllPlayersWithMatches(format?: 'singles' | 'mens-doubles' | 'womens-doubles' | 'mixed-doubles-men' | 'mixed-doubles-women'): Promise<User[]> {
+    const isProduction = process.env.NODE_ENV === 'production';
+    console.log(`[STORAGE] Getting ALL players who have participated in matches, format: ${format} (Production: ${isProduction})`);
+    
+    // Enhanced query with match statistics for ALL players who have played matches
+    const query = db
+      .select({
+        ...getTableColumns(users),
+        totalMatches: sql<number>`COUNT(DISTINCT ${matches.id})`.as('total_matches'),
+        matchesWon: sql<number>`SUM(CASE WHEN ${matches.winnerId} = ${users.id} THEN 1 ELSE 0 END)`.as('matches_won')
+      })
+      .from(users)
+      .innerJoin(matches, or(  // INNER JOIN ensures only players who have matches
+        eq(matches.playerOneId, users.id),
+        eq(matches.playerTwoId, users.id),
+        eq(matches.playerOnePartnerId, users.id),
+        eq(matches.playerTwoPartnerId, users.id)
+      ))
+      .groupBy(users.id)
+      .having(sql`COUNT(DISTINCT ${matches.id}) > 0`); // Only players with at least 1 match
+    
+    // Order by format-specific ranking points (or total ranking points for legacy)
+    let orderedQuery;
+    if (format === 'singles') {
+      orderedQuery = query.orderBy(desc(users.singlesRankingPoints));
+    } else if (format === 'mens-doubles') {
+      orderedQuery = query.orderBy(desc(users.mensDoublesRankingPoints));
+    } else if (format === 'womens-doubles') {
+      orderedQuery = query.orderBy(desc(users.womensDoublesRankingPoints));
+    } else if (format === 'mixed-doubles-men') {
+      orderedQuery = query.orderBy(desc(users.mixedDoublesMenRankingPoints));
+    } else if (format === 'mixed-doubles-women') {
+      orderedQuery = query.orderBy(desc(users.mixedDoublesWomenRankingPoints));
+    } else {
+      // Legacy: order by total ranking points
+      orderedQuery = query.orderBy(desc(users.rankingPoints));
+    }
+    
+    const allResults = await orderedQuery;
+    
+    // Apply production filtering
+    const filteredResults = allResults.filter(user => this.isProductionUserFilter(user));
+    
+    const excludedCount = allResults.length - filteredResults.length;
+    if (isProduction && excludedCount > 0) {
+      console.log(`[STORAGE] Production mode: Excluded ${excludedCount} test/development users from match participants query`);
+    }
+    
+    console.log('[STORAGE] Found ALL players with matches:', filteredResults.length);
     return filteredResults;
   }
 

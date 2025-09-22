@@ -105,7 +105,8 @@ export default function PicklePointsPage() {
         division: selectedDivision === 'all' ? 'open' : selectedDivision,
         gender: selectedGender === 'all' ? 'male' : selectedGender,
         page: currentPage.toString(),
-        limit: '10'
+        limit: '10',
+        picklePointsMode: 'true' // NEW: Get ALL players with matches, not just those with ranking points > 0
       });
       
       if (debouncedSearch.trim()) {

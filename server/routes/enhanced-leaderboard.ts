@@ -414,8 +414,12 @@ async function getRealLeaderboardData(
       formatParam = format; // singles, mens-doubles, womens-doubles, etc.
     }
     
-    // Get all users with format-specific ranking points
-    const allUsers = await storage.getUsersWithRankingPoints(formatParam);
+    // PICKLE POINTS FIX: Use different query based on mode
+    // For Pickle Points, get ALL players who have participated in matches (not just those with ranking points > 0)
+    const isPicklePointsMode = req.query.picklePointsMode === 'true';
+    const allUsers = isPicklePointsMode 
+      ? await storage.getAllPlayersWithMatches(formatParam)
+      : await storage.getUsersWithRankingPoints(formatParam);
     
     let usersWithStats = await Promise.all(allUsers.map(async (user, index) => {
         const age = user.dateOfBirth ? 
