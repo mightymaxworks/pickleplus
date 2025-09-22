@@ -511,12 +511,20 @@ async function getRealLeaderboardData(
         // Filter by division with cross-category participation support
         const eligibleDivisions = getEligibleDivisionsFromAge(player.age);
         
+        // FIX: Handle division parameter formatting inconsistencies
+        // Convert "35plus" to "35+" for proper matching
+        let normalizedDivision = division;
+        if (division === '35plus') normalizedDivision = '35+';
+        if (division === '50plus') normalizedDivision = '50+';
+        if (division === '60plus') normalizedDivision = '60+';
+        if (division === '70plus') normalizedDivision = '70+';
+        
         // DEBUG: Log age group filtering for troubleshooting
         if (player.displayName.toLowerCase().includes('darren') || player.age >= 35) {
-          console.log(`[AGE GROUP DEBUG] Player: ${player.displayName}, Age: ${player.age}, Division: ${division}, Eligible: [${eligibleDivisions.join(', ')}], Included: ${eligibleDivisions.includes(division)}`);
+          console.log(`[AGE GROUP DEBUG] Player: ${player.displayName}, Age: ${player.age}, Division: ${division} -> ${normalizedDivision}, Eligible: [${eligibleDivisions.join(', ')}], Included: ${eligibleDivisions.includes(normalizedDivision)}`);
         }
         
-        return eligibleDivisions.includes(division);
+        return eligibleDivisions.includes(normalizedDivision);
       })
       .sort((a, b) => {
         // Sort by points descending (primary), then by win rate, then by matches played
