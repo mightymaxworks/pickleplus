@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import passport from "passport";
@@ -106,7 +106,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return next();
     }
     // Apply JSON parsing for all other routes
-    const express = require('express');
     express.json()(req, res, next);
   });
   console.log("[SECURITY] Selective JSON parsing middleware configured");
