@@ -60,55 +60,41 @@ interface CreditTopUpFormProps {
   onError?: (error: string) => void;
 }
 
-// Predefined credit amounts with bonus calculations
-const PRESET_AMOUNTS = [
+// Base preset amounts (in cents, will be adjusted per currency)
+const BASE_PRESET_AMOUNTS = [
   { 
-    value: 2500, // $25
-    label: '$25',
-    bonus: 0,
-    picklePoints: 75, // 3:1 ratio
+    baseValue: 2500, // $25 SGD equivalent
+    baseBonusPercent: 0,
     popular: false
   },
   { 
-    value: 5000, // $50
-    label: '$50', 
-    bonus: 250, // $2.50 bonus
-    picklePoints: 158, // Includes bonus
+    baseValue: 5000, // $50 SGD equivalent
+    baseBonusPercent: 5, // 5% bonus
     popular: false
   },
   { 
-    value: 10000, // $100
-    label: '$100',
-    bonus: 750, // $7.50 bonus
-    picklePoints: 323, // Includes bonus
+    baseValue: 10000, // $100 SGD equivalent
+    baseBonusPercent: 7.5, // 7.5% bonus
     popular: true
   },
   { 
-    value: 25000, // $250
-    label: '$250',
-    bonus: 2500, // $25 bonus
-    picklePoints: 825, // Includes bonus
+    baseValue: 25000, // $250 SGD equivalent
+    baseBonusPercent: 10, // 10% bonus
     popular: false
   },
   { 
-    value: 50000, // $500
-    label: '$500',
-    bonus: 6250, // $62.50 bonus
-    picklePoints: 1688, // Includes bonus
+    baseValue: 50000, // $500 SGD equivalent
+    baseBonusPercent: 12.5, // 12.5% bonus
     popular: false
   },
   { 
-    value: 100000, // $1000
-    label: '$1000',
-    bonus: 15000, // $150 bonus
-    picklePoints: 3450, // Includes bonus
+    baseValue: 100000, // $1000 SGD equivalent
+    baseBonusPercent: 15, // 15% bonus
     popular: false
   },
   { 
-    value: 250000, // $2500
-    label: '$2500',
-    bonus: 50000, // $500 bonus
-    picklePoints: 8250, // Includes bonus
+    baseValue: 250000, // $2500 SGD equivalent
+    baseBonusPercent: 20, // 20% bonus
     popular: false
   }
 ];
@@ -134,12 +120,12 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
     
     const fetchCurrencies = async () => {
       try {
-        const response = await apiRequest('/api/credits/currencies');
-        console.log('[CREDITS] Currency API response:', response);
+        const responseData = await apiRequest('/api/credits/currencies');
+        console.log('[CREDITS] Currency API response:', responseData);
         
-        if (response.success && response.data && response.data.currencies) {
-          console.log('[CREDITS] Setting currencies from API:', response.data.currencies);
-          setCurrencies(response.data.currencies);
+        if (responseData.success && responseData.data && responseData.data.currencies) {
+          console.log('[CREDITS] Setting currencies from API:', responseData.data.currencies);
+          setCurrencies(responseData.data.currencies);
         } else {
           console.log('[CREDITS] Invalid API response, using fallback currencies');
           setFallbackCurrencies();
@@ -184,34 +170,40 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
     form.setValue('amount', selectedAmount);
   }, [selectedAmount, form]);
 
-  // Use server-side bonus calculations when available, fall back to client estimation
-  const getAmountDetails = (amount: number) => {
-    const preset = PRESET_AMOUNTS.find(p => p.value === amount);
+
+  // Calculate bonus and pickle points for current amount
+  const currentDetails = useMemo(() => {
+    const presetAmounts = getPresetAmounts();
+    const preset = presetAmounts.find(p => p.value === selectedAmount);
     if (preset) {
       return preset;
     }
     
-    // Client-side estimation for preview (server will provide accurate values)
-    let bonus = 0;
-    if (amount >= 5000) bonus = Math.floor(amount * 0.05); // 5% bonus for $50+
-    if (amount >= 10000) bonus = Math.floor(amount * 0.075); // 7.5% bonus for $100+
-    if (amount >= 25000) bonus = Math.floor(amount * 0.1); // 10% bonus for $250+
-    if (amount >= 50000) bonus = Math.floor(amount * 0.125); // 12.5% bonus for $500+
+    // For custom amounts, calculate based on SGD equivalent tiers
+    const currencyRate = getCurrencyRate(selectedCurrency);
+    const sgdEquivalent = selectedAmount / currencyRate; // Convert to SGD equivalent
     
-    const totalCredits = amount + bonus;
-    const picklePoints = Math.floor(totalCredits * 3); // 3:1 ratio
+    let bonusPercent = 0;
+    if (sgdEquivalent >= 50000) bonusPercent = 12.5; // $500+ SGD gets 12.5%
+    else if (sgdEquivalent >= 25000) bonusPercent = 10; // $250+ SGD gets 10%
+    else if (sgdEquivalent >= 10000) bonusPercent = 7.5; // $100+ SGD gets 7.5%
+    else if (sgdEquivalent >= 5000) bonusPercent = 5; // $50+ SGD gets 5%
+    
+    const bonus = Math.round(selectedAmount * (bonusPercent / 100));
+    const totalCredits = selectedAmount + bonus;
+    
+    // Pickle Points based on SGD equivalent, not adjusted currency value
+    const sgdTotalCredits = sgdEquivalent + (sgdEquivalent * (bonusPercent / 100));
+    const picklePoints = Math.round(sgdTotalCredits / 100 * 3); // 3:1 ratio based on SGD
     
     return {
-      value: amount,
-      label: `$${(amount / 100).toFixed(2)}`,
+      value: selectedAmount,
+      label: formatCurrency(selectedAmount),
       bonus,
       picklePoints,
-      popular: false,
-      note: "Final amounts will be calculated by server"
+      popular: false
     };
-  };
-
-  const currentDetails = getAmountDetails(selectedAmount);
+  }, [selectedAmount, selectedCurrency, currencies]);
 
   // Top-up mutation
   const topUpMutation = useMutation({
@@ -254,6 +246,43 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
   const handleSubmit = (data: TopUpFormData) => {
     setStep('processing');
     topUpMutation.mutate(data);
+  };
+
+  // Get currency conversion rates (SGD-based)
+  const getCurrencyRate = (currencyCode: string) => {
+    const rates = {
+      'USD': 1.35, // 1 SGD = 1.35 USD (approximate)
+      'SGD': 1.0,  // Base currency
+      'AUD': 1.1,  // 1 SGD = 1.1 AUD (approximate)
+      'MYR': 3.5,  // 1 SGD = 3.5 MYR (approximate)
+      'CNY': 5.4   // 1 SGD = 5.4 CNY (approximate)
+    };
+    return rates[currencyCode as keyof typeof rates] || 1.0;
+  };
+
+  // Generate currency-adjusted preset amounts
+  const getPresetAmounts = () => {
+    const currencyRate = getCurrencyRate(selectedCurrency);
+    const selectedCurrencyInfo = currencies.find(c => c.code === selectedCurrency);
+    const symbol = selectedCurrencyInfo?.symbol || '$';
+    
+    return BASE_PRESET_AMOUNTS.map(preset => {
+      const adjustedValue = Math.round(preset.baseValue * currencyRate);
+      const bonus = Math.round(adjustedValue * (preset.baseBonusPercent / 100));
+      const totalCredits = adjustedValue + bonus;
+      
+      // Pickle Points based on SGD value (not adjusted currency value)
+      const sgdEquivalent = preset.baseValue + Math.round(preset.baseValue * (preset.baseBonusPercent / 100));
+      const picklePoints = Math.round(sgdEquivalent / 100 * 3); // 3:1 ratio based on SGD
+      
+      return {
+        value: adjustedValue,
+        label: `${symbol}${(adjustedValue / 100).toFixed(0)}`,
+        bonus,
+        picklePoints,
+        popular: preset.popular
+      };
+    });
   };
 
   // Dynamic currency formatter that adapts to selected currency
@@ -313,7 +342,7 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
               </div>
               {/* Preset Amount Buttons */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                {PRESET_AMOUNTS.map((preset) => (
+                {getPresetAmounts().map((preset) => (
                   <button
                     key={preset.value}
                     type="button"
@@ -345,7 +374,7 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
 
               {/* Custom Amount Input */}
               <div className="space-y-3">
-                <Label htmlFor="custom-amount">Custom Amount ($25 - $2500)</Label>
+                <Label htmlFor="custom-amount">Custom Amount ({formatCurrency(2500)} - {formatCurrency(250000)})</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -356,10 +385,11 @@ export default function CreditTopUpForm({ account, onSuccess, onError }: CreditT
                     step={0.01}
                     placeholder="Enter amount..."
                     className="pl-9"
-                    value={selectedAmount / 100}
+                    value={selectedAmount / 100 / getCurrencyRate(selectedCurrency)}
                     onChange={(e) => {
-                      const dollars = parseFloat(e.target.value) || 0;
-                      setSelectedAmount(Math.round(dollars * 100));
+                      const inputValue = parseFloat(e.target.value) || 0;
+                      const currencyRate = getCurrencyRate(selectedCurrency);
+                      setSelectedAmount(Math.round(inputValue * 100 * currencyRate));
                     }}
                     data-testid="input-custom-amount"
                   />
