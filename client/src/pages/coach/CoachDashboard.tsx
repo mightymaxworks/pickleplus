@@ -673,7 +673,20 @@ export default function CoachDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProvisionalRatingManagement />
+              <div className="space-y-4">
+                {/* Anti-Abuse Status Indicator */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-medium text-green-800">Anti-Abuse System Active</span>
+                  </div>
+                  <p className="text-sm text-green-700 mt-1">
+                    Rate limiting, anomaly detection, and admin review queues are monitoring all assessment activities.
+                  </p>
+                </div>
+                
+                <ProvisionalRatingManagement />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
