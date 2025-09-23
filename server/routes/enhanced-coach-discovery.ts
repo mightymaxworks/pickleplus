@@ -23,9 +23,11 @@ import {
   coachInviteCodes, 
   coachRateLimits, 
   coachAssessmentAbuseLog,
+  assessmentSessions,
   insertCoachStudentDiscoverySchema,
   insertCoachInviteCodeSchema,
   insertCoachRateLimitsSchema,
+  insertAssessmentSessionSchema,
   COACH_LEVEL_DAILY_LIMITS,
   COACH_LEVEL_WEIGHTS 
 } from '../../shared/schema/enhanced-coach-assessment';
@@ -887,8 +889,8 @@ const startAssessmentSessionSchema = z.object({
   coachId: z.number().int().positive(),
   studentId: z.number().int().positive(),
   connectionId: z.number().int().positive().optional(),
-  sessionType: z.enum(['quick_mode', 'full_assessment']),
-  plannedSkillsCount: z.number().int().min(1).max(55)
+  sessionType: z.enum(['quick_mode', 'full_assessment']).default('full_assessment'),
+  plannedSkillsCount: z.number().int().min(10).max(55).default(55)
 });
 
 const updateAssessmentSessionSchema = z.object({
@@ -1004,15 +1006,15 @@ router.get('/assessment-session/:coachId/:studentId', async (req, res) => {
     // Find active assessment session
     const [session] = await db
       .select()
-      .from(coachAssessmentSessions)
+      .from(assessmentSessions)
       .where(
         and(
-          eq(coachAssessmentSessions.coachId, coachIdNum),
-          eq(coachAssessmentSessions.studentId, studentIdNum),
-          eq(coachAssessmentSessions.status, 'in_progress')
+          eq(assessmentSessions.coachId, coachIdNum),
+          eq(assessmentSessions.studentId, studentIdNum),
+          eq(assessmentSessions.status, 'in_progress')
         )
       )
-      .orderBy(desc(coachAssessmentSessions.createdAt))
+      .orderBy(desc(assessmentSessions.createdAt))
       .limit(1);
 
     if (!session) {
