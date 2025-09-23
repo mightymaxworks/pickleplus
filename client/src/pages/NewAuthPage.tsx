@@ -115,7 +115,11 @@ export default function NewAuthPage() {
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await login({ username: data.username, password: data.password });
+      await login({ 
+        username: data.username, 
+        password: data.password,
+        rememberMe: data.rememberMe || false
+      });
       toast({
         title: "Welcome back!",
         description: "Successfully logged in to your player passport.",
