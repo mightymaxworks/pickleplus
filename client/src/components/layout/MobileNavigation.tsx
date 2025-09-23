@@ -35,7 +35,7 @@ export function MobileNavigation() {
     { 
       icon: <Home size={20} />, 
       label: 'Dashboard', 
-      path: '/',
+      path: '/dashboard',
       id: 'dashboard'
     },
     { 

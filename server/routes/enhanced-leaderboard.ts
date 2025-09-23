@@ -21,7 +21,7 @@ router.get('/test-production', async (req, res) => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     
-    const fullLeaderboardData = await getRealLeaderboardData('singles', 'open', 'male', '', req.user?.id);
+    const fullLeaderboardData = await getRealLeaderboardData('singles', 'open', 'male', '', req.user?.id, req);
     
     // Restore original environment
     process.env.NODE_ENV = originalEnv;
@@ -196,11 +196,13 @@ router.get('/', async (req, res) => {
           displayName: enhancedDisplayName,
           username: ranking.user.username,
           avatar: ranking.user.avatarUrl || undefined,
-          points: Number((format === 'singles' ? ranking.singlesPoints : ranking.doublesPoints).toFixed(2)), // Ensure 2 decimal precision
+          points: Number((format === 'singles' ? (ranking.singlesPoints || 0) : (ranking.doublesPoints || 0)).toFixed(2)), // Ensure 2 decimal precision
           matchesPlayed: ranking.totalMatches || 0,
-          winRate: ranking.totalMatches > 0 ? Math.round(((ranking.matchesWon / ranking.totalMatches) * 100) * 100) / 100 : 0, // Ensure 2 decimal precision for win rate
-          gender: ranking.user.gender,
-          age: ranking.user.age || 0,
+          winRate: (ranking.totalMatches || 0) > 0 ? Math.round((((ranking.matchesWon || 0) / (ranking.totalMatches || 0)) * 100) * 100) / 100 : 0, // Ensure 2 decimal precision for win rate
+          gender: (ranking.user.gender || 'male') as 'male' | 'female',
+          age: ranking.user.dateOfBirth ? 
+            Math.floor((new Date().getTime() - new Date(ranking.user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
+            25,
           division: ranking.ageCategory,
           ranking: offset + index + 1,
           isCurrentUser: req.user?.id === ranking.user.id
@@ -236,7 +238,7 @@ router.get('/', async (req, res) => {
 
     // For adult categories, use the real leaderboard data from database
     const currentUserId = req.user?.id;
-    const fullLeaderboardData = await getRealLeaderboardData(format as string, division as string, gender as string, search as string, currentUserId);
+    const fullLeaderboardData = await getRealLeaderboardData(format as string, division as string, gender as string, search as string, currentUserId, req);
     
     // Find current user position in full dataset (before pagination)
     let currentUserPosition = undefined;
@@ -397,7 +399,8 @@ async function getRealLeaderboardData(
   division: string, 
   gender: string, 
   searchTerm?: string,
-  currentUserId?: number
+  currentUserId?: number,
+  req?: any
 ): Promise<LeaderboardEntry[]> {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -416,10 +419,10 @@ async function getRealLeaderboardData(
     
     // PICKLE POINTS FIX: Use different query based on mode
     // For Pickle Points, get ALL players who have participated in matches (not just those with ranking points > 0)
-    const isPicklePointsMode = req.query.picklePointsMode === 'true';
+    const isPicklePointsMode = req?.query?.picklePointsMode === 'true';
     const allUsers = isPicklePointsMode 
-      ? await storage.getAllPlayersWithMatches(formatParam)
-      : await storage.getUsersWithRankingPoints(formatParam);
+      ? await storage.getAllPlayersWithMatches(formatParam as any)
+      : await storage.getUsersWithRankingPoints(formatParam as any);
     
     let usersWithStats = await Promise.all(allUsers.map(async (user, index) => {
         const age = user.dateOfBirth ? 
@@ -586,7 +589,7 @@ router.get('/:format', async (req, res) => {
     const limitNum = parseInt(limit, 10);
 
     // Get real leaderboard data from database
-    const fullLeaderboardData = await getRealLeaderboardData(format, division, gender, search, currentUserId);
+    const fullLeaderboardData = await getRealLeaderboardData(format, division, gender, search, currentUserId, req);
     
     // Find current user position in full dataset (before pagination)
     let currentUserPosition = undefined;
