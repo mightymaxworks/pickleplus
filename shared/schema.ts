@@ -453,6 +453,42 @@ import {
   type CoachWithMarketplaceData
 } from './schema/coach-marketplace';
 
+// Import Enhanced Coach Assessment System (Mobile-first, Coach Weighting, Discovery)
+import {
+  coachStudentDiscovery,
+  coachInviteCodes,
+  assessmentSessions,
+  coachAssessmentWeights,
+  assessmentRatingStatus,
+  coachAssessmentAbuseLog,
+  coachRateLimits,
+  assessmentConfidenceMetrics,
+  insertCoachStudentDiscoverySchema,
+  insertCoachInviteCodeSchema,
+  insertAssessmentSessionSchema,
+  insertAssessmentRatingStatusSchema,
+  insertCoachRateLimitsSchema,
+  COACH_LEVEL_WEIGHTS,
+  COACH_LEVEL_DAILY_LIMITS,
+  ASSESSMENT_CONFIDENCE_LEVELS,
+  type CoachStudentDiscovery,
+  type InsertCoachStudentDiscovery,
+  type CoachInviteCode,
+  type InsertCoachInviteCode,
+  type AssessmentSession,
+  type InsertAssessmentSession,
+  type CoachAssessmentWeight,
+  type InsertCoachAssessmentWeight,
+  type AssessmentRatingStatus,
+  type InsertAssessmentRatingStatus,
+  type CoachAssessmentAbuseLog,
+  type InsertCoachAssessmentAbuseLog,
+  type CoachRateLimit,
+  type InsertCoachRateLimit,
+  type AssessmentConfidenceMetrics,
+  type InsertAssessmentConfidenceMetrics
+} from './schema/enhanced-coach-assessment';
+
 // Commented out duplicate import to fix conflicts
 // Using the earlier import from admin-match-management instead
 
