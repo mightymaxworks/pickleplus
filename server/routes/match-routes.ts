@@ -139,8 +139,31 @@ export function registerMatchRoutes(app: express.Express): void {
         const isPlayerOneWinner = winnerId === playerOneIdResolved;
         const isPlayerTwoWinner = winnerId === playerTwoId;
         
-        // Determine format and age division for ranking updates
-        const format = formatType === 'doubles' ? 'doubles' : 'singles';
+        // CRITICAL UDF RULE 27: Mixed doubles detection and classification
+        let detectedFormat = formatType;
+        if (formatType === 'doubles' && playerOnePartnerId && playerTwoPartnerId) {
+          // Check if this is actually a mixed doubles match
+          const p1 = await storage.getUser(playerOneIdResolved);
+          const p1Partner = await storage.getUser(playerOnePartnerId);
+          const p2 = await storage.getUser(playerTwoId);
+          const p2Partner = await storage.getUser(playerTwoPartnerId);
+          
+          const isMixedDoubles = (p1?.gender !== p1Partner?.gender) || (p2?.gender !== p2Partner?.gender);
+          
+          if (isMixedDoubles) {
+            console.log(`[MIXED DOUBLES DETECTION] Match ${newMatch.id} detected as mixed doubles - updating format`);
+            detectedFormat = 'mixed-doubles';
+            
+            // Update the match record with correct format
+            await db.update(matches)
+              .set({ formatType: 'mixed-doubles' })
+              .where(eq(matches.id, newMatch.id));
+          }
+        }
+        
+        // Determine format and age division for ranking updates  
+        const format = detectedFormat === 'singles' ? 'singles' : 
+                      detectedFormat === 'mixed-doubles' ? 'mixed' : 'doubles';
         const ageDivision = '19plus'; // Default to Open division for multi-age eligibility
         
         // Process multi-age group updates for both players
