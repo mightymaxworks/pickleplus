@@ -3510,4 +3510,345 @@ async function validateCalculationAccuracy() {
 
 ---
 
-**[End of Document - UDF v3.2.1 - Enhanced with Over-Crediting Prevention and Match-History-Based Synchronization]**
+### **RULE 31: COACH LEVEL WEIGHTING VALIDATION SYSTEM** 🎓 **TRANSPARENT COACH ASSESSMENT AUTHORITY**
+*Added September 23, 2025 - Enhanced Coach Assessment System Foundation*
+
+```typescript
+// MANDATORY: All coach assessment calculations must implement transparent weighting system
+interface CoachLevelWeightingRequirement {
+  coachLevel: number;                      // 1-5 verified coach certification level
+  weightingMultiplier: number;             // L1:0.7x, L2:1.0x, L3:1.8x, L4:3.2x, L5:3.8x
+  transparentWeightDisplay: boolean;       // Students see actual coach impact
+  categoryConfidenceFactors: boolean;      // Different weights per skill category
+  historicalWeightTracking: boolean;       // Audit trail of weight applications
+}
+
+// MANDATORY: Use official coach level weighting constants
+import { COACH_LEVEL_WEIGHTS } from '@shared/schema/enhanced-coach-assessment';
+
+// ❌ CRITICAL FAILURE: Hardcoded or missing coach weighting
+async function calculateStudentPCP(assessments: Assessment[]) {
+  // WRONG: Treating all coaches equally
+  const avgRating = assessments.reduce((sum, a) => sum + a.rating, 0) / assessments.length;
+  return avgRating;
+}
+
+// ✅ CORRECT: Transparent coach level weighting with audit trail
+async function calculateWeightedStudentPCP(studentId: number, assessments: CoachAssessment[]) {
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
+  const weightingDetails: CoachWeightingDetail[] = [];
+  
+  for (const assessment of assessments) {
+    // Validate coach level certification
+    const coachLevel = await validateCoachLevel(assessment.coachId);
+    const weight = COACH_LEVEL_WEIGHTS[coachLevel];
+    
+    // Apply category-specific confidence factors
+    const categoryWeight = calculateCategoryConfidence(assessment.category, coachLevel);
+    const finalWeight = weight * categoryWeight;
+    
+    totalWeightedScore += assessment.rating * finalWeight;
+    totalWeight += finalWeight;
+    
+    // Audit trail tracking
+    weightingDetails.push({
+      coachId: assessment.coachId,
+      coachLevel,
+      baseWeight: weight,
+      categoryConfidence: categoryWeight,
+      finalWeight,
+      contribution: assessment.rating * finalWeight,
+      assessmentDate: assessment.createdAt
+    });
+  }
+  
+  // Store weighting calculation details for transparency
+  await storeCoachWeightingHistory(studentId, weightingDetails);
+  
+  const weightedPCP = totalWeightedScore / totalWeight;
+  return {
+    calculatedPCP: Number(weightedPCP.toFixed(2)),
+    weightingBreakdown: weightingDetails,
+    totalWeight,
+    confidenceLevel: calculateOverallConfidence(weightingDetails)
+  };
+}
+```
+
+**CRITICAL WEIGHTING REQUIREMENTS**:
+- ✅ **L1-L3 Assessments**: Create PROVISIONAL ratings (60-90 day expiry)
+- ✅ **L4+ Assessments**: Create CONFIRMED ratings (120 day expiry)
+- ✅ **Transparent Display**: Students see exact coach level impact
+- ✅ **Weight Validation**: All weights verified against certification database
+- ✅ **Category Confidence**: Different weights for Technical vs Tactical vs Physical
+- ✅ **Audit Trail**: Complete history of weight applications for compliance
+- ❌ **Equal Weighting**: FORBIDDEN - All coaches treated identically
+- ❌ **Hidden Weights**: FORBIDDEN - Weight calculations must be transparent to students
+
+**ENFORCEMENT**: All coach assessment systems must implement transparent weighting by October 15, 2025.
+
+---
+
+### **RULE 32: PROVISIONAL VS CONFIRMED RATING SYSTEM** ⚖️ **TOURNAMENT-GRADE ASSESSMENT VALIDATION**
+*Added September 23, 2025 - Enhanced Rating Reliability & Tournament Eligibility*
+
+```typescript
+// MANDATORY: All student PCP ratings must be classified as PROVISIONAL or CONFIRMED
+interface AssessmentRatingClassification {
+  ratingStatus: 'PROVISIONAL' | 'CONFIRMED';
+  highestCoachLevel: number;               // Highest level coach who assessed
+  confirmingCoachId?: number;              // L4+ coach who confirmed rating
+  expiryDate: Date;                        // When rating expires
+  tournamentEligible: boolean;             // Can use in official tournaments
+  confidenceScore: number;                 // 0.70-0.95 based on assessment mode
+}
+
+// ✅ CORRECT: Proper rating classification with validation authority
+async function processCoachAssessmentRating(
+  studentId: number,
+  coachId: number, 
+  assessmentData: AssessmentSubmission
+): Promise<RatingClassificationResult> {
+  
+  const coachLevel = await validateCoachLevel(coachId);
+  const assessmentMode = assessmentData.sessionType; // 'quick_mode' or 'full_assessment'
+  
+  // Calculate weighted PCP with coach authority
+  const weightedResult = await calculateWeightedStudentPCP(studentId, [assessmentData]);
+  
+  // Determine rating classification based on coach authority
+  let ratingClassification: AssessmentRatingClassification;
+  
+  if (coachLevel >= 4) {
+    // L4+ coaches can create CONFIRMED ratings
+    ratingClassification = {
+      ratingStatus: 'CONFIRMED',
+      highestCoachLevel: coachLevel,
+      confirmingCoachId: coachId,
+      expiryDate: addDays(new Date(), 120), // 120 days for confirmed
+      tournamentEligible: true,
+      confidenceScore: assessmentMode === 'full_assessment' ? 0.95 : 0.82
+    };
+  } else {
+    // L1-L3 coaches create PROVISIONAL ratings
+    const expiryDays = calculateProvisionalExpiryDays(coachLevel); // 60-90 days
+    ratingClassification = {
+      ratingStatus: 'PROVISIONAL',
+      highestCoachLevel: coachLevel,
+      expiryDate: addDays(new Date(), expiryDays),
+      tournamentEligible: false, // Must be confirmed by L4+ for tournaments
+      confidenceScore: assessmentMode === 'full_assessment' ? 0.78 : 0.65
+    };
+  }
+  
+  // Store rating with classification
+  await storeRatingWithClassification(studentId, {
+    calculatedPCP: weightedResult.calculatedPCP,
+    classification: ratingClassification,
+    assessmentDetails: weightedResult.weightingBreakdown
+  });
+  
+  return {
+    newPCP: weightedResult.calculatedPCP,
+    classification: ratingClassification,
+    nextSteps: generateRatingNextSteps(ratingClassification)
+  };
+}
+```
+
+**CRITICAL RATING CLASSIFICATION REQUIREMENTS**:
+- ✅ **L1-L3 Authority**: Create PROVISIONAL ratings only (60-90 day expiry)
+- ✅ **L4+ Authority**: Create CONFIRMED ratings (120 day expiry)
+- ✅ **Tournament Gates**: Only CONFIRMED ratings eligible for official tournaments
+- ✅ **Expiry Management**: Automatic notifications and eligibility updates
+- ❌ **Universal Access**: FORBIDDEN - L1-L3 coaches creating tournament-eligible ratings
+
+**ENFORCEMENT**: All rating systems must implement classification by November 1, 2025.
+
+---
+
+### **RULE 33: COACH DISCOVERY ANTI-ABUSE CONTROLS** 🛡️ **SECURE COACH-STUDENT CONNECTION SYSTEM**
+*Added September 23, 2025 - Mobile-First Discovery with Fraud Prevention*
+
+```typescript
+// MANDATORY: All coach discovery systems must implement comprehensive anti-abuse controls
+interface CoachDiscoveryAbusePreventionRequirement {
+  rateLimiting: boolean;                   // Daily assessment limits by coach level
+  mutualConsentWorkflow: boolean;          // Both parties must approve connection
+  anomalyDetection: boolean;               // Flag suspicious assessment patterns
+  deviceFingerprinting: boolean;           // Track assessment devices/IPs
+  adminReviewQueue: boolean;               // Human review of flagged activities
+  auditTrailLogging: boolean;              // Complete assessment history
+}
+
+// MANDATORY: Coach rate limiting by certification level
+import { COACH_LEVEL_DAILY_LIMITS } from '@shared/schema/enhanced-coach-assessment';
+
+// ✅ CORRECT: Comprehensive anti-abuse coach discovery system
+async function initiateSecureCoachConnection(
+  coachId: number, 
+  studentId: number,
+  connectionMethod: 'qr_scan' | 'invite_code' | 'facility_referral',
+  contextData: ConnectionContext
+): Promise<SecureConnectionResult> {
+  
+  // STEP 1: Rate limiting validation
+  const rateLimitCheck = await validateCoachRateLimit(coachId);
+  if (!rateLimitCheck.allowed) {
+    throw new Error(`RATE_LIMIT_EXCEEDED: Coach ${coachId} has reached daily limit (${rateLimitCheck.used}/${rateLimitCheck.limit})`);
+  }
+  
+  // STEP 2: Anomaly detection screening
+  const anomalyScore = await calculateCoachAnomalyScore(coachId, {
+    targetStudentId: studentId,
+    connectionMethod,
+    ipAddress: contextData.ipAddress,
+    deviceFingerprint: contextData.deviceFingerprint,
+    timeSinceLastAssessment: contextData.timeSinceLastAssessment
+  });
+  
+  if (anomalyScore >= 7.0) {
+    await flagForAdminReview(coachId, studentId, {
+      anomalyScore,
+      flagReason: 'High risk assessment pattern detected',
+      contextData
+    });
+    throw new Error(`CONNECTION_BLOCKED: Assessment flagged for admin review (Score: ${anomalyScore})`);
+  }
+  
+  // STEP 3: Mutual consent workflow initiation
+  const discoveryRecord = await createCoachStudentDiscovery({
+    coachId,
+    studentId,
+    connectionType: connectionMethod,
+    discoveryContext: contextData,
+    status: 'pending',
+    expiresAt: addHours(new Date(), 24), // 24-hour expiry for QR/invite codes
+    ipAddress: contextData.ipAddress,
+    deviceFingerprint: contextData.deviceFingerprint
+  });
+  
+  return {
+    connectionId: discoveryRecord.id,
+    status: 'awaiting_mutual_consent',
+    expiresAt: discoveryRecord.expiresAt
+  };
+}
+```
+
+**CRITICAL ANTI-ABUSE REQUIREMENTS**:
+- ✅ **Rate Limiting**: Coach level-based daily assessment limits (L1:3 → L5:10)
+- ✅ **Mutual Consent**: Both coach and student must approve connections
+- ✅ **Anomaly Detection**: Automated scoring and flagging (threshold: 7.0/10)
+- ✅ **Device Tracking**: IP address and device fingerprinting for assessment sessions
+- ✅ **Admin Review**: Human oversight for high-risk activities (score ≥ 7.0)
+- ✅ **Audit Trail**: Complete logging of all discovery and assessment activities
+- ❌ **Unlimited Access**: FORBIDDEN - Coaches bypassing daily assessment limits
+- ❌ **Auto-Connect**: FORBIDDEN - Connections without explicit student consent
+
+**ENFORCEMENT**: All coach discovery systems must implement anti-abuse controls by October 30, 2025.
+
+---
+
+### **RULE 34: MULTI-COACH WEIGHTED AGGREGATION ALGORITHM** 🧮 **ADVANCED ASSESSMENT SYNTHESIS**
+*Added September 23, 2025 - Statistical Confidence & Time Decay Integration*
+
+```typescript
+// MANDATORY: All multi-coach PCP calculations must implement weighted aggregation with time decay
+interface MultiCoachAggregationRequirement {
+  timeDecayFactors: boolean;               // Newer assessments weighted higher
+  coachLevelWeighting: boolean;            // L1:0.7x → L5:3.8x integration
+  categoryConfidenceFactors: boolean;      // Category-specific coach expertise
+  statisticalConfidence: boolean;          // Overall rating confidence calculation
+  assessmentModeAdjustment: boolean;       // Quick vs Full assessment weighting
+  outlierDetection: boolean;               // Identify and handle assessment outliers
+}
+
+// ✅ CORRECT: Advanced multi-coach weighted aggregation algorithm
+async function calculateMultiCoachWeightedPCP(
+  studentId: number,
+  timeWindowDays: number = 180
+): Promise<AdvancedPCPCalculationResult> {
+  
+  // STEP 1: Retrieve all assessments within time window
+  const assessments = await getStudentAssessmentsInWindow(studentId, timeWindowDays);
+  
+  if (assessments.length === 0) {
+    throw new Error(`NO_ASSESSMENT_DATA: Student ${studentId} has no assessments in ${timeWindowDays} days`);
+  }
+  
+  // STEP 2: Calculate weighted contributions for each assessment
+  const weightedAssessments: WeightedAssessmentContribution[] = [];
+  const currentDate = new Date();
+  
+  for (const assessment of assessments) {
+    // Time decay calculation (linear decay over 180 days)
+    const daysSinceAssessment = differenceInDays(currentDate, assessment.assessmentDate);
+    const timeDecayFactor = Math.max(0.5, 1 - (daysSinceAssessment / 180)); // Min 0.5, max 1.0
+    
+    // Coach level weighting
+    const coachLevel = await validateCoachLevel(assessment.coachId);
+    const coachWeight = COACH_LEVEL_WEIGHTS[coachLevel];
+    
+    // Assessment mode adjustment
+    const modeMultiplier = assessment.sessionType === 'full_assessment' ? 1.0 : 0.85; // 15% penalty for quick mode
+    
+    // Calculate final weight for this assessment
+    const finalWeight = timeDecayFactor * coachWeight * modeMultiplier;
+    
+    weightedAssessments.push({
+      assessmentId: assessment.id,
+      coachId: assessment.coachId,
+      coachLevel,
+      assessmentDate: assessment.assessmentDate,
+      timeDecayFactor,
+      coachWeight,
+      modeMultiplier,
+      finalWeight,
+      totalContribution: assessment.overallRating * finalWeight
+    });
+  }
+  
+  // STEP 3: Outlier detection and handling
+  const outlierDetection = await detectAssessmentOutliers(weightedAssessments);
+  const validAssessments = filterOutliers(weightedAssessments, outlierDetection);
+  
+  // STEP 4: Calculate final weighted PCP
+  const totalWeightedScore = validAssessments.reduce((sum, wa) => sum + wa.totalContribution, 0);
+  const totalWeight = validAssessments.reduce((sum, wa) => sum + wa.finalWeight, 0);
+  const weightedPCP = totalWeightedScore / totalWeight;
+  
+  // STEP 5: Statistical confidence calculation
+  const confidenceMetrics = calculateStatisticalConfidence(validAssessments);
+  
+  return {
+    studentId,
+    calculatedPCP: Number(weightedPCP.toFixed(2)),
+    overallConfidence: confidenceMetrics.overallConfidence,
+    assessmentSummary: {
+      totalAssessments: assessments.length,
+      validAssessments: validAssessments.length,
+      outliersRemoved: outlierDetection.outlierCount,
+      timeWindow: timeWindowDays,
+      highestCoachLevel: Math.max(...validAssessments.map(wa => wa.coachLevel)),
+      mostRecentAssessment: Math.max(...validAssessments.map(wa => wa.assessmentDate.getTime()))
+    }
+  };
+}
+```
+
+**CRITICAL MULTI-COACH AGGREGATION REQUIREMENTS**:
+- ✅ **Time Decay**: Newer assessments weighted higher (linear decay over 180 days, min 0.5x)
+- ✅ **Coach Weighting**: L1:0.7x → L5:3.8x integration with transparency
+- ✅ **Mode Adjustment**: Quick mode 15% penalty, Full assessment standard weighting
+- ✅ **Outlier Detection**: Statistical and pattern-based anomaly removal
+- ✅ **Statistical Confidence**: Comprehensive confidence scoring (0.30-0.98)
+- ❌ **Simple Averaging**: FORBIDDEN - All assessments weighted equally
+- ❌ **Indefinite Validity**: FORBIDDEN - Assessments older than 180 days excluded
+
+**ENFORCEMENT**: All multi-coach aggregation systems must implement advanced weighting by November 15, 2025.
+
+---
+
+**[End of Document - UDF v3.3.0 - Enhanced Coach Assessment System Integration]**
