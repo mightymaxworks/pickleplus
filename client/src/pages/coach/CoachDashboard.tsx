@@ -18,8 +18,10 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { SimpleProgressiveAssessment } from '@/components/coaching/SimpleProgressiveAssessment';
+import { MobileFirstProgressiveAssessment } from '@/components/coaching/MobileFirstProgressiveAssessment';
 import { CoachStudentRequests } from '@/components/coaching/CoachStudentRequests';
+import { ProvisionalRatingManagement } from '@/components/coaching/ProvisionalRatingManagement';
+import { CoachAntiAbuseManagement } from '@/components/admin/CoachAntiAbuseManagement';
 import { useToast } from '@/hooks/use-toast';
 
 // 55-Skill PCP Assessment Interface Component
@@ -394,12 +396,20 @@ export default function CoachDashboard() {
       </div>
 
       <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-100 h-auto">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 bg-gray-100 h-auto">
           <TabsTrigger value="students" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
             <span className="truncate">My Students</span>
           </TabsTrigger>
           <TabsTrigger value="connections" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
             <span className="truncate">Connections</span>
+          </TabsTrigger>
+          <TabsTrigger value="discover" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <span className="hidden sm:inline">Coach Connect</span>
+            <span className="sm:hidden">Discover</span>
+          </TabsTrigger>
+          <TabsTrigger value="ratings" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
+            <span className="hidden sm:inline">Rating Management</span>
+            <span className="sm:hidden">Ratings</span>
           </TabsTrigger>
           <TabsTrigger value="assessments" className="data-[state=active]:bg-white py-2 px-1 sm:px-3 text-xs sm:text-sm">
             <span className="hidden sm:inline">Recent Assessments</span>
@@ -576,10 +586,65 @@ export default function CoachDashboard() {
           <CoachStudentRequests />
         </TabsContent>
 
-        {/* Simple Progressive Assessment Interface */}
+        {/* Coach Connect Discovery Tab */}
+        <TabsContent value="discover" className="space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Coach Connect Discovery
+              </CardTitle>
+              <CardDescription>
+                Discover and connect with players using QR codes or invite codes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-blue-800 mb-2">New Enhanced Discovery System</h4>
+                <p className="text-sm text-blue-700">
+                  Use our mobile-first coach discovery system with secure authentication, 
+                  anti-abuse controls, and mutual consent protocols.
+                </p>
+              </div>
+              <div className="text-center py-8 text-gray-500">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">Enhanced Discovery Features</h3>
+                <p className="text-sm mb-4">Visit the comprehensive testing dashboard to explore all features:</p>
+                <Link href="/coach-system-test">
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Target className="w-4 h-4 mr-2" />
+                    Access Full Discovery System
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Rating Management Tab */}
+        <TabsContent value="ratings" className="space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                Rating Management
+              </CardTitle>
+              <CardDescription>
+                Manage PROVISIONAL and CONFIRMED ratings with L4+ validation system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProvisionalRatingManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Mobile-First Progressive Assessment Interface */}
         {showAssessment && selectedStudent && (
           <div className="mt-6" ref={assessmentSectionRef}>
-            <SimpleProgressiveAssessment
+            <MobileFirstProgressiveAssessment
               coachId={currentUser?.id || 0}
               studentId={selectedStudent}
               studentName={assignedStudents.find(s => s.id === selectedStudent)?.displayName || ""}
