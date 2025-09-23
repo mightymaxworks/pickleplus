@@ -691,10 +691,10 @@ export default function CoachDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Mobile-First Progressive Assessment Interface */}
+        {/* Working Skills Assessment Interface */}
         {showAssessment && selectedStudent && (
           <div className="mt-6" ref={assessmentSectionRef}>
-            <MobileFirstProgressiveAssessment
+            <SkillAssessmentInterface
               coachId={currentUser?.id || 0}
               studentId={selectedStudent}
               studentName={assignedStudents.find(s => s.id === selectedStudent)?.displayName || ""}

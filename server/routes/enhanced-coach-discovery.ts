@@ -24,6 +24,8 @@ import {
   coachRateLimits, 
   coachAssessmentAbuseLog,
   assessmentSessions,
+  coachAssessmentWeights,
+  coachWeightingHistory,
   insertCoachStudentDiscoverySchema,
   insertCoachInviteCodeSchema,
   insertCoachRateLimitsSchema,
@@ -32,7 +34,7 @@ import {
   COACH_LEVEL_WEIGHTS 
 } from '../../shared/schema/enhanced-coach-assessment';
 import { users } from '../../shared/schema';
-import { eq, and, sql, desc, lt, gte } from 'drizzle-orm';
+import { eq, and, sql, desc, lt, gte, isNotNull } from 'drizzle-orm';
 import { isAuthenticated } from '../auth';
 import { createId } from '@paralleldrive/cuid2';
 import crypto from 'crypto';
