@@ -809,14 +809,6 @@ export default function App() {
                     pageTitle="My Coach"
                   />
 
-                  {/* Coach Public Profiles System - Phase 5C */}
-                  <Route path="/coach/:slug" component={lazyLoad(() => import('./pages/CoachPublicProfile'))} />
-                  <ProtectedRouteWithLayout 
-                    path="/profile-editor"
-                    component={lazyLoad(() => import('./pages/CoachProfileEditor'))}
-                    pageTitle="Profile Editor"
-                  />
-
                   {/* PCP Coach Onboarding & Dashboard (PKL-278651-PCP-BASIC-TIER) */}
                   <ProtectedRouteWithLayout 
                     path="/pcp-coach/onboarding"
@@ -827,6 +819,14 @@ export default function App() {
                     path="/coach/dashboard"
                     component={LazyCoachDashboardPage}
                     pageTitle="Coach Dashboard"
+                  />
+
+                  {/* Coach Public Profiles System - Phase 5C */}
+                  <Route path="/coach/:slug" component={lazyLoad(() => import('./pages/CoachPublicProfile'))} />
+                  <ProtectedRouteWithLayout 
+                    path="/profile-editor"
+                    component={lazyLoad(() => import('./pages/CoachProfileEditor'))}
+                    pageTitle="Profile Editor"
                   />
                   {/* PKL-278651-FACILITY-MGMT-001 - Advanced Facility Management System */}
                   <Route path="/facilities" component={FacilityDiscovery} />
