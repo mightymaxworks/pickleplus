@@ -12,26 +12,27 @@ const router = Router();
 
 // Coach Application Schema
 const coachApplicationSchema = z.object({
-  coachType: z.enum(['independent', 'facility', 'volunteer', 'guest']),
-  experienceYears: z.number().min(1).max(50),
-  teachingPhilosophy: z.string().min(50).max(500),
-  specializations: z.array(z.string()).min(1),
-  availabilityData: z.record(z.any()).default({}),
-  previousExperience: z.string().min(20),
+  experience: z.string().min(50).max(2000), // This maps to required database field
+  motivation: z.string().min(100).max(2000), // This maps to required database field
+  coachType: z.enum(['independent', 'facility', 'volunteer', 'guest']).optional(),
+  experienceYears: z.number().min(1).max(50).optional(),
+  teachingPhilosophy: z.string().min(50).max(500).optional(),
+  specializations: z.array(z.string()).min(1).optional(),
+  availability: z.record(z.any()).default({}), // Maps to 'availability' not 'availabilityData'
   references: z.array(z.object({
     name: z.string().min(1),
     email: z.string().email(),
     phone: z.string().optional(),
     relationship: z.string().optional()
-  })).min(1),
+  })).min(1).optional(),
   backgroundCheckConsent: z.boolean().refine(val => val === true, {
     message: "Background check consent is required"
-  }),
+  }).optional(),
   emergencyContact: z.object({
     name: z.string().min(1),
     phone: z.string().min(1),
     relationship: z.string().optional()
-  }),
+  }).optional(),
   certifications: z.array(z.object({
     certificationType: z.string(),
     issuingOrganization: z.string(),
@@ -57,7 +58,10 @@ router.post('/apply', async (req, res) => {
 
     const application = await storage.createCoachApplication({
       userId,
-      ...validatedData
+      experience: validatedData.experience,
+      motivation: validatedData.motivation,
+      certifications: JSON.stringify(validatedData.certifications || []),
+      availability: JSON.stringify(validatedData.availability || {})
     });
 
     res.status(201).json({
@@ -104,13 +108,10 @@ router.post('/applications', async (req, res) => {
     // Create the application
     const applicationData = {
       userId,
-      ...validatedData,
-      applicationStatus: 'pending' as const,
-      submittedAt: new Date(),
-      specializations: JSON.stringify(validatedData.specializations),
-      availabilityData: JSON.stringify(validatedData.availabilityData),
-      references: JSON.stringify(validatedData.references),
-      emergencyContact: JSON.stringify(validatedData.emergencyContact)
+      experience: validatedData.experience,
+      motivation: validatedData.motivation,
+      certifications: JSON.stringify(validatedData.certifications || []),
+      availability: JSON.stringify(validatedData.availability || {})
     };
 
     const application = await storage.createCoachApplication?.(applicationData);
@@ -121,10 +122,11 @@ router.post('/applications', async (req, res) => {
         if (cert.certificationType && cert.issuingOrganization) {
           await storage.addCoachCertification?.({
             applicationId: application!.id,
-            ...cert,
-            notes: null,
-            issuedDate: cert.issuedDate ? new Date(cert.issuedDate) : null,
-            expirationDate: cert.expirationDate ? new Date(cert.expirationDate) : null
+            certificationType: cert.certificationType,
+            issuingOrganization: cert.issuingOrganization,
+            certificationNumber: cert.certificationNumber || null,
+            issuedAt: cert.issuedDate ? new Date(cert.issuedDate) : new Date(),
+            expiresAt: cert.expirationDate ? new Date(cert.expirationDate) : null
           });
         }
       }
@@ -178,10 +180,8 @@ router.get('/applications/my', async (req, res) => {
     res.json({
       application: {
         ...application,
-        specializations: JSON.parse(application.specializations as string || '[]'),
-        availabilityData: JSON.parse(application.availabilityData as string || '{}'),
-        references: JSON.parse(application.refContacts as string || '[]'),
-        emergencyContact: JSON.parse(application.emergencyContact as string || '{}')
+        certifications: JSON.parse(application.certifications as string || '[]'),
+        availability: JSON.parse(application.availability as string || '{}')
       },
       certifications
     });
