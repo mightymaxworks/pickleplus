@@ -1,10 +1,16 @@
 # UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES
 ## Algorithm Compliance & Framework Integration Standards
 
-**Version**: 3.1.0 - Cross-Gender Match Detection  
+**Version**: 3.1.1 - Ranking System Synchronization  
 **Last Updated**: September 23, 2025  
 **Mandatory Compliance**: ALL match calculation components  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md  
+
+### **CHANGELOG v3.1.1** 📋
+*September 23, 2025 - Critical Ranking System Synchronization*
+
+**ADDED**:
+- **RULE 26**: Mandatory Ranking System Synchronization - Critical requirement for maintaining consistency between multi-dimensional and legacy ranking systems
 
 ### **CHANGELOG v3.1.0** 📋
 *September 23, 2025 - Critical Cross-Gender Match Detection*
@@ -3170,4 +3176,84 @@ const completedCorrections = {
 
 ---
 
-**[End of Document - UDF v3.1.1 - Enhanced with Comprehensive Cross-Gender Compliance Prevention]**
+### **RULE 26: MANDATORY RANKING SYSTEM SYNCHRONIZATION** 🚨 **CRITICAL SYSTEM INTEGRITY**
+*Added September 23, 2025 - Based on Singles Ranking Synchronization Failure*
+
+```typescript
+// MANDATORY: All match processing systems must synchronize both ranking tables
+interface RankingSynchronizationRequirement {
+  multiDimensionalRanking: boolean;    // playerRankings table
+  legacyRankingFields: boolean;        // users.singles_ranking_points, users.doubles_ranking_points
+  crossSystemValidation: boolean;      // Verify both systems are updated
+}
+
+// ❌ CRITICAL FAILURE: Only updating one ranking system
+async function processMatchRankingPoints(winnerId: number, loserId: number, format: string) {
+  // DANGEROUS: Only updates playerRankings table - leaderboard won't reflect changes!
+  await this.updateMultiAgeGroupRankings(winnerId, winnerUser.dateOfBirth, format, ...);
+  await this.updateMultiAgeGroupRankings(loserId, loserUser.dateOfBirth, format, ...);
+  
+  // MISSING: Legacy user table update - CAUSES LEADERBOARD DESYNCHRONIZATION
+}
+
+// ✅ CORRECT: Synchronize both ranking systems mandatorily
+async function processMatchRankingPoints(winnerId: number, loserId: number, format: string) {
+  // STEP 1: Update multi-dimensional ranking system
+  const winnerResult = await this.updateMultiAgeGroupRankings(winnerId, winnerUser.dateOfBirth, format, ...);
+  const loserResult = await this.updateMultiAgeGroupRankings(loserId, loserUser.dateOfBirth, format, ...);
+  
+  // STEP 2: MANDATORY - Update main users table that leaderboard reads from
+  try {
+    const { storage } = await import('../../storage');
+    await storage.updateUserRankingPoints(winnerId, winnerCalculation.rankingPointsEarned, format);
+    await storage.updateUserRankingPoints(loserId, loserCalculation.rankingPointsEarned, format);
+    console.log(`[MAIN TABLE UPDATE] Synchronized - Winner: +${winnerCalculation.rankingPointsEarned} ${format} points`);
+  } catch (error) {
+    // CRITICAL: Synchronization failure must be handled
+    console.error(`[CRITICAL SYNC FAILURE] Main users table not updated:`, error);
+    throw new Error(`Ranking synchronization failed for match ${matchId} - both systems must be updated`);
+  }
+  
+  // STEP 3: Validate both systems updated successfully
+  await this.validateRankingSynchronization(winnerId, loserId, format, matchId);
+}
+
+// MANDATORY: Post-update synchronization validation
+async function validateRankingSynchronization(winnerId: number, loserId: number, format: string, matchId: number) {
+  const multiDimensionalRanking = await this.getUserRanking(winnerId, format);
+  const legacyRanking = await storage.getUser(winnerId);
+  
+  const formatField = format === 'singles' ? 'singlesRankingPoints' : 'doublesRankingPoints';
+  
+  if (!multiDimensionalRanking || !legacyRanking[formatField]) {
+    throw new Error(`SYNC VALIDATION FAILURE: Match ${matchId} - ${format} ranking not reflected in both systems`);
+  }
+  
+  console.log(`✅ SYNC VALIDATED: Match ${matchId} - Both ranking systems updated for ${format}`);
+}
+```
+
+**CRITICAL SYNCHRONIZATION REQUIREMENTS**:
+- **Dual System Updates**: EVERY match processing function must update BOTH the `playerRankings` table AND the `users` table format-specific fields
+- **Format-Specific Fields**: Singles matches MUST update `users.singles_ranking_points`, doubles matches MUST update appropriate doubles fields
+- **Transaction Safety**: Both updates must succeed or both must fail - no partial synchronization allowed
+- **Validation Mandatory**: Post-update validation must confirm both systems reflect the same ranking changes
+- **Error Handling**: Synchronization failures must halt match processing and alert administrators
+
+**BUG PREVENTION**: This rule prevents the critical failure where recent singles matches were recorded but players' leaderboard rankings weren't updated because only one of two ranking systems was being maintained.
+
+**ENFORCEMENT**: 
+- All match processing functions in `MultiDimensionalRankingService`, enhanced admin tools, and bulk processors MUST call both ranking update systems
+- Pre-deployment validation must verify dual-system update calls are present
+- Automated tests must validate synchronization between ranking systems
+- Monthly sync audits must compare playerRankings with users table format-specific fields
+
+**CRITICAL FAILURE EXAMPLE RESOLVED**: 
+- Issue: Recent singles matches showed in database but rankings unchanged in leaderboard
+- Root Cause: `processMatchRankingPoints()` only updated `playerRankings` table, never updated `users.singles_ranking_points` field
+- Resolution: Added mandatory call to `storage.updateUserRankingPoints()` for main table synchronization
+- Prevention: This UDF rule now mandates both systems must always be synchronized
+
+---
+
+**[End of Document - UDF v3.1.1 - Enhanced with Ranking System Synchronization Prevention]**
