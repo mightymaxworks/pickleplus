@@ -288,6 +288,16 @@ export class MultiDimensionalRankingService {
     
     console.log(`[Multi-Age Ranking] Complete - Winner: ${winnerResult.updatedRankings.length} rankings updated, Loser: ${loserResult.updatedRankings.length} rankings updated`);
     
+    // CRITICAL FIX: Also update the main users table that the leaderboard reads from
+    try {
+      const { storage } = await import('../../storage');
+      await storage.updateUserRankingPoints(winnerId, winnerCalculation.rankingPointsEarned, format === 'mixed' ? 'doubles' : format);
+      await storage.updateUserRankingPoints(loserId, loserCalculation.rankingPointsEarned, format === 'mixed' ? 'doubles' : format);
+      console.log(`[MAIN TABLE UPDATE] Updated main users table - Winner: +${winnerCalculation.rankingPointsEarned} ${format} points, Loser: +${loserCalculation.rankingPointsEarned} ${format} points`);
+    } catch (error) {
+      console.error(`[MAIN TABLE UPDATE] Error updating main users table:`, error);
+    }
+    
     return {
       winnerId,
       winnerUpdatedRankings: winnerResult.updatedRankings,
