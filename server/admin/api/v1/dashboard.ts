@@ -7,11 +7,24 @@
 import { Router } from 'express';
 import { db } from '../../../db';
 import { eq, sql, desc, and, gte, lte } from 'drizzle-orm';
-// Simplified admin auth - use existing isAdmin field for now
+// Fixed admin auth middleware that works with session authentication
 const simpleAdminAuth = (req: any, res: any, next: any) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(401).json({ error: 'Admin access required' });
+  console.log('[ADMIN DASHBOARD AUTH] Checking admin access for user:', req.user?.username);
+  console.log('[ADMIN DASHBOARD AUTH] User isAdmin status:', req.user?.isAdmin);
+  console.log('[ADMIN DASHBOARD AUTH] Session exists:', !!req.session);
+  console.log('[ADMIN DASHBOARD AUTH] User authenticated:', !!req.user);
+  
+  if (!req.user) {
+    console.log('[ADMIN DASHBOARD AUTH] No authenticated user found');
+    return res.status(401).json({ error: 'Authentication required' });
   }
+  
+  if (!req.user.isAdmin) {
+    console.log('[ADMIN DASHBOARD AUTH] User is not admin');
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  console.log('[ADMIN DASHBOARD AUTH] Admin access granted');
   next();
 };
 import { users, matches, tournaments, userRankings } from '../../../../shared/schema';

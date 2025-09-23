@@ -6,11 +6,27 @@
  * UDF Rule 18-20 Compliance - Admin controls, security, and audit trails
  */
 import express from 'express';
-// Simplified admin auth - use existing isAdmin field for now
+// Import proper auth middleware
+import { isAuthenticated, isAdmin } from '../../middleware/auth';
+
+// Fixed admin auth middleware that works with session authentication
 const simpleAdminAuth = (req: any, res: any, next: any) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(401).json({ error: 'Admin access required' });
+  console.log('[ADMIN AUTH] Checking admin access for user:', req.user?.username);
+  console.log('[ADMIN AUTH] User isAdmin status:', req.user?.isAdmin);
+  console.log('[ADMIN AUTH] Session exists:', !!req.session);
+  console.log('[ADMIN AUTH] User authenticated:', !!req.user);
+  
+  if (!req.user) {
+    console.log('[ADMIN AUTH] No authenticated user found');
+    return res.status(401).json({ error: 'Authentication required' });
   }
+  
+  if (!req.user.isAdmin) {
+    console.log('[ADMIN AUTH] User is not admin');
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  console.log('[ADMIN AUTH] Admin access granted');
   next();
 };
 
