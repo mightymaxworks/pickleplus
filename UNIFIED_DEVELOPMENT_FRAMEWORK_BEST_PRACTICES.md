@@ -1,10 +1,18 @@
 # UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES
 ## Algorithm Compliance & Framework Integration Standards
 
-**Version**: 3.0.0 - Multi-Age Group Compliance  
-**Last Updated**: September 22, 2025  
+**Version**: 3.1.0 - Cross-Gender Match Detection  
+**Last Updated**: September 23, 2025  
 **Mandatory Compliance**: ALL match calculation components  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md  
+
+### **CHANGELOG v3.1.0** 📋
+*September 23, 2025 - Critical Cross-Gender Match Detection*
+
+**ADDED**:
+- **RULE 20**: Mandatory Cross-Gender Match Detection - Critical requirement for automatic gender bonus detection and allocation
+- **RULE 21**: Gender Data Validation - Pre-match validation requirements for competitive fairness
+- **RULE 22**: Cross-Gender Bonus Calculation Enforcement - Automatic 1.15x multiplier application for eligible female players
 
 ### **CHANGELOG v3.0.1** 📋
 *September 23, 2025 - Tournament Data Format Documentation*
@@ -2572,6 +2580,221 @@ const typoResolutions = [
 - [ ] Administrative review workflow for missing player matches
 - [ ] Documentation updated for tournament organizers on unified template usage
 
+### **RULE 20: MANDATORY CROSS-GENDER MATCH DETECTION** 🚨 **CRITICAL FOR COMPETITIVE FAIRNESS**
+*Added September 23, 2025 - Based on Qi Wang Mixed Gender Match Analysis*
+
+```typescript
+// MANDATORY: All match processing must include automatic cross-gender detection
+interface CrossGenderDetection {
+  // CRITICAL: Gender validation before match processing
+  validatePlayerGenders: (players: Player[]) => GenderValidationResult;
+  
+  // MANDATORY: Automatic cross-gender match detection
+  detectCrossGenderMatch: (player1: Player, player2: Player) => boolean;
+  detectCrossGenderTeamMatch: (team1: Player[], team2: Player[]) => boolean;
+  
+  // CRITICAL: Female player <1000 points bonus calculation
+  calculateCrossGenderBonus: (player: Player, opponent: Player) => number;
+}
+
+// ✅ CORRECT: Comprehensive cross-gender detection
+function processMatchWithGenderDetection(match: Match): MatchResult {
+  // Step 1: Validate all players have gender data
+  const genderValidation = validatePlayerGenders(match.players);
+  if (!genderValidation.isValid) {
+    throw new Error(`Missing gender data: ${genderValidation.missingPlayers.join(', ')}`);
+  }
+  
+  // Step 2: Detect cross-gender matches
+  const isCrossGender = detectCrossGenderMatch(match.player1, match.player2);
+  
+  // Step 3: Calculate points with gender bonus
+  match.players.forEach(player => {
+    let basePoints = player.won ? 3 : 1; // System B
+    let ageMultiplier = getAgeMultiplier(player.age);
+    let genderMultiplier = 1.0;
+    
+    // CRITICAL: Apply 1.15x bonus for female players <1000 points in cross-gender matches
+    if (isCrossGender && player.gender === 'female' && player.rankingPoints < 1000) {
+      genderMultiplier = 1.15;
+    }
+    
+    // Final calculation
+    const rankingPoints = basePoints * ageMultiplier * genderMultiplier;
+    const picklePoints = rankingPoints * 1.5;
+    
+    // Validate calculation compliance
+    validateCrossGenderCalculation(player, basePoints, ageMultiplier, genderMultiplier);
+  });
+}
+
+// MANDATORY: Gender validation interface
+interface GenderValidationResult {
+  isValid: boolean;
+  missingPlayers: string[];
+  invalidGenders: string[];
+}
+
+// EXAMPLES OF CROSS-GENDER CALCULATIONS:
+const crossGenderExamples = [
+  {
+    scenario: 'Qi Wang (female, 36yo, <1000pts) vs Ocean Mak (male, 42yo)',
+    calculation: {
+      qiWang: 'WIN: 3 × 1.2 × 1.15 = 4.14 ranking, 6.21 pickle',
+      oceanMak: 'LOSS: 1 × 1.2 × 1.0 = 1.2 ranking, 1.8 pickle'
+    }
+  },
+  {
+    scenario: 'Female player >1000pts vs Male player',
+    calculation: {
+      female: 'No gender bonus (>1000 points)',
+      male: 'Standard calculation (no bonus)'
+    }
+  }
+];
+```
+
+**CRITICAL COMPLIANCE REQUIREMENTS**:
+- **Gender Data Mandatory**: ALL players must have gender field populated before match processing
+- **Automatic Detection**: System MUST detect cross-gender matches without manual intervention
+- **1.15x Bonus Enforcement**: Female players <1000 points MUST receive cross-gender bonus
+- **Calculation Validation**: Every cross-gender calculation must be validated for accuracy
+- **Retroactive Correction**: Existing matches with missing bonuses must be recalculated
+
+### **RULE 21: GENDER DATA VALIDATION** 📋 **PRE-MATCH REQUIREMENTS**
+*Added September 23, 2025 - Critical Data Integrity Enforcement*
+
+```typescript
+// MANDATORY: Pre-match gender data validation
+async function validateGenderDataBeforeMatch(players: Player[]): Promise<void> {
+  const missingGenderPlayers = players.filter(p => !p.gender || p.gender === '');
+  
+  if (missingGenderPlayers.length > 0) {
+    // HALT match processing - missing gender data
+    throw new MatchProcessingError(
+      `Cannot process match: Missing gender data for players: ${
+        missingGenderPlayers.map(p => p.passportCode).join(', ')
+      }`
+    );
+  }
+  
+  // Validate gender values
+  const validGenders = ['male', 'female', 'non-binary'];
+  const invalidGenders = players.filter(p => !validGenders.includes(p.gender));
+  
+  if (invalidGenders.length > 0) {
+    throw new MatchProcessingError(
+      `Invalid gender values: ${invalidGenders.map(p => `${p.passportCode}:${p.gender}`).join(', ')}`
+    );
+  }
+}
+
+// CRITICAL: Database constraints for gender field
+const genderFieldRequirements = {
+  column: 'gender',
+  type: 'VARCHAR(20)',
+  allowedValues: ['male', 'female', 'non-binary'],
+  nullable: false,
+  defaultValue: null, // Force explicit setting
+  updateRequired: 'ALL existing NULL values must be populated'
+};
+
+// IDENTIFIED MISSING GENDER DATA (IMMEDIATE ACTION REQUIRED):
+const missingGenderPlayers = [
+  { code: '22DHV6', name: '利利 谢', id: 371, inference: 'Likely female (李丽 pattern)' },
+  { code: '31JJ00', name: 'User 360', id: 360, inference: 'Unknown - requires manual verification' },
+  { code: '4TCYK9', name: '陈 炯翰', id: 374, inference: 'Likely male (炯翰 pattern)' },
+  { code: '5XKDO6', name: '元 柳', id: 345, inference: 'Ambiguous - requires verification' },
+  { code: 'PZCNFC', name: '斐 韩', id: 359, inference: 'Likely male (韩 pattern)' },
+  { code: 'ZTO1ZR', name: 'User 363', id: 363, inference: 'Unknown - requires manual verification' }
+];
+```
+
+**ENFORCEMENT REQUIREMENTS**:
+- **Pre-Match Blocking**: Matches cannot be processed without complete gender data
+- **Database Migration**: All NULL gender fields must be populated immediately
+- **Name-Based Inference**: Use cultural naming patterns as initial suggestion (require confirmation)
+- **Manual Verification**: Administrative review required for ambiguous cases
+
+### **RULE 22: CROSS-GENDER BONUS CALCULATION ENFORCEMENT** ⚡ **AUTOMATIC BONUS APPLICATION**
+*Added September 23, 2025 - Competitive Fairness Guarantee*
+
+```typescript
+// MANDATORY: Automatic cross-gender bonus calculation
+function calculateCrossGenderBonus(
+  player: Player, 
+  opponent: Player, 
+  matchType: 'singles' | 'doubles'
+): MultiplierResult {
+  
+  // Detect cross-gender match
+  const isCrossGender = player.gender !== opponent.gender;
+  
+  if (!isCrossGender) {
+    return { genderMultiplier: 1.0, bonusApplied: false, reason: 'Same gender match' };
+  }
+  
+  // Apply female bonus for players <1000 points
+  if (player.gender === 'female' && player.rankingPoints < 1000) {
+    return { 
+      genderMultiplier: 1.15, 
+      bonusApplied: true, 
+      reason: 'Female <1000pts cross-gender bonus',
+      calculation: 'base × age × 1.15 × 1.5 pickle'
+    };
+  }
+  
+  // Mixed doubles team bonus (if applicable)
+  if (matchType === 'doubles' && isMixedTeam(player.team)) {
+    // Additional mixed doubles logic as per algorithm
+    return calculateMixedDoublesBonus(player, opponent);
+  }
+  
+  return { genderMultiplier: 1.0, bonusApplied: false, reason: 'No bonus applicable' };
+}
+
+// CRITICAL: Retroactive correction for missing bonuses
+const retroactiveCorrections = {
+  qiWang: {
+    playerId: 236,
+    matches: 5,
+    missingRankingPoints: 1.3,
+    missingPicklePoints: 1.9,
+    correctionSQL: `
+      -- Qi Wang cross-gender bonus correction
+      UPDATE users SET 
+        ranking_points = ranking_points + 1.3,
+        pickle_points = pickle_points + 1.9
+      WHERE id = 236;
+    `
+  }
+  // Add other players as identified
+};
+
+// MANDATORY: Cross-gender match logging
+interface CrossGenderMatchLog {
+  matchId: string;
+  players: Player[];
+  crossGenderDetected: boolean;
+  bonusesApplied: BonusApplication[];
+  calculationDetails: CalculationBreakdown[];
+}
+```
+
+**CRITICAL ENFORCEMENT CHECKLIST**:
+- [ ] All match processors updated with cross-gender detection
+- [ ] Gender data populated for all 6 missing players
+- [ ] Qi Wang retroactive correction applied (+1.3 ranking, +1.9 pickle)
+- [ ] Pre-match gender validation implemented
+- [ ] Cross-gender match logging activated
+- [ ] Algorithm compliance testing with mixed gender scenarios
+
+**COMPETITIVE FAIRNESS IMPACT**:
+- **Equal Competition**: Ensures female players receive appropriate bonuses
+- **Data Accuracy**: Eliminates calculation errors in cross-gender matches
+- **Transparent System**: All bonus applications logged and auditable
+- **Retroactive Fairness**: Past matches corrected to maintain competitive integrity
+
 ---
 
-**[End of Document - UDF v3.0.1 - Enhanced with Tournament Data Format Standards]**
+**[End of Document - UDF v3.1.0 - Enhanced with Critical Cross-Gender Match Detection]**
