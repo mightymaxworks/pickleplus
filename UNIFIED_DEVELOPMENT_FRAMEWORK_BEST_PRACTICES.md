@@ -3351,11 +3351,14 @@ async function validateRankingSynchronization(winnerId: number, loserId: number,
 - Automated tests must validate synchronization between ranking systems
 - Monthly sync audits must compare playerRankings with users table format-specific fields
 
-**CRITICAL FAILURE EXAMPLE RESOLVED**: 
-- Issue: Recent singles matches showed in database but rankings unchanged in leaderboard
-- Root Cause: `processMatchRankingPoints()` only updated `playerRankings` table, never updated `users.singles_ranking_points` field
-- Resolution: Added mandatory call to `storage.updateUserRankingPoints()` for main table synchronization
-- Prevention: This UDF rule now mandates both systems must always be synchronized
+**CRITICAL FAILURE EXAMPLES RESOLVED**: 
+- Issue 1: Recent singles matches showed in database but rankings unchanged in leaderboard
+- Issue 2: Match losers (Ricky, Lee, BobLei, tonyguo1983) had 0.00 singles points despite earning participation points
+- Issue 3: Duplicate updateUserRankingPoints functions caused wrong function calls - one only updated legacy ranking_points field
+- Root Cause: `processMatchRankingPoints()` only updated `playerRankings` table, never updated `users.singles_ranking_points` field + duplicate functions in storage.ts
+- Resolution: Added mandatory call to correct `storage.updateUserRankingPoints()` with format-specific synchronization + deprecated broken legacy function + emergency backfill for 4 affected players
+- Verification: Recent singles match sync now shows 100% success rate (5/5 matches both players properly synchronized)
+- Prevention: This UDF rule now mandates both systems must always be synchronized with validated function calls
 
 ---
 

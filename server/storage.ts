@@ -1279,7 +1279,10 @@ export class DatabaseStorage implements IStorage {
     return user?.picklePoints || 0;
   }
 
-  async updateUserRankingPoints(userId: number, pointsToAdd: number, format: 'singles' | 'doubles'): Promise<void> {
+  // DEPRECATED: This old version only updated ranking_points - replaced by format-specific version above
+  // Keeping for backward compatibility but should not be used for new code
+  async updateUserRankingPointsLegacy(userId: number, pointsToAdd: number, format: 'singles' | 'doubles'): Promise<void> {
+    console.warn(`[DEPRECATED] updateUserRankingPointsLegacy called - use format-specific updateUserRankingPoints instead`);
     try {
       await db.update(users)
         .set({
@@ -1287,7 +1290,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId));
       
-      console.log(`[POINTS UPDATE] User ${userId}: +${pointsToAdd} ranking points (${format})`);
+      console.log(`[LEGACY POINTS UPDATE] User ${userId}: +${pointsToAdd} ranking points (${format})`);
     } catch (error) {
       console.error(`Error updating ranking points for user ${userId}:`, error);
       throw error;
