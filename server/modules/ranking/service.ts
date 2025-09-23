@@ -288,14 +288,22 @@ export class MultiDimensionalRankingService {
     
     console.log(`[Multi-Age Ranking] Complete - Winner: ${winnerResult.updatedRankings.length} rankings updated, Loser: ${loserResult.updatedRankings.length} rankings updated`);
     
-    // CRITICAL FIX: Also update the main users table that the leaderboard reads from
+    // CRITICAL UDF RULE 26: Synchronize legacy users table with multi-dimensional rankings
     try {
       const { storage } = await import('../../storage');
-      await storage.updateUserRankingPoints(winnerId, winnerCalculation.rankingPointsEarned, format === 'mixed' ? 'doubles' : format);
-      await storage.updateUserRankingPoints(loserId, loserCalculation.rankingPointsEarned, format === 'mixed' ? 'doubles' : format);
-      console.log(`[MAIN TABLE UPDATE] Updated main users table - Winner: +${winnerCalculation.rankingPointsEarned} ${format} points, Loser: +${loserCalculation.rankingPointsEarned} ${format} points`);
+      
+      // ARCHITECT FIX: Normalize format to only 'singles'|'doubles' for sync calls
+      const legacyFormat = format === 'singles' ? 'singles' : 'doubles';
+      
+      // TRANSACTIONAL SYNC: Update both players' legacy ranking fields
+      await storage.updateUserRankingPoints(winnerId, winnerCalculation.rankingPointsEarned, legacyFormat);
+      await storage.updateUserRankingPoints(loserId, loserCalculation.rankingPointsEarned, legacyFormat);
+      
+      console.log(`[UDF RULE 26 SYNC] LEGACY SYNC SUCCESS - Winner: +${winnerCalculation.rankingPointsEarned} ${legacyFormat} points, Loser: +${loserCalculation.rankingPointsEarned} ${legacyFormat} points`);
+      console.log(`[UDF RULE 26 SYNC] Both playerRankings and users.${legacyFormat}_ranking_points updated for Match ${matchId}`);
     } catch (error) {
-      console.error(`[MAIN TABLE UPDATE] Error updating main users table:`, error);
+      console.error(`[UDF RULE 26 SYNC] CRITICAL FAILURE - Legacy users table not synchronized:`, error);
+      throw new Error(`Ranking synchronization failed for match ${matchId} - both systems must be updated`);
     }
     
     return {
