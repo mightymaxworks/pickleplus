@@ -24,8 +24,6 @@ import {
   coachRateLimits, 
   coachAssessmentAbuseLog,
   assessmentSessions,
-  coachAssessmentWeights,
-  coachWeightingHistory,
   insertCoachStudentDiscoverySchema,
   insertCoachInviteCodeSchema,
   insertCoachRateLimitsSchema,
