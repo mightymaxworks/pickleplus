@@ -815,11 +815,13 @@ export default function App() {
                     component={LazyPCPCoachOnboardingPage}
                     pageTitle="PCP Coach Onboarding"
                   />
-                  <ProtectedRouteWithLayout 
-                    path="/coach/dashboard"
-                    component={LazyCoachDashboardPage}
-                    pageTitle="Coach Dashboard"
-                  />
+                  {/* Redirect /coach/dashboard to unified /coach hub */}
+                  <Route path="/coach/dashboard">
+                    {() => { 
+                      window.location.replace('/coach');
+                      return null;
+                    }}
+                  </Route>
 
                   {/* Coach Public Profiles System - Phase 5C */}
                   <Route path="/coach/:slug" component={lazyLoad(() => import('./pages/CoachPublicProfile'))} />
