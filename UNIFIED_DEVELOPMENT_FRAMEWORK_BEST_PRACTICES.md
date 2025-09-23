@@ -3176,6 +3176,109 @@ const completedCorrections = {
 
 ---
 
+### **RULE 27: MANDATORY MIXED DOUBLES FORMAT DETECTION** 🚨 **CRITICAL DATA INTEGRITY**
+*Added September 23, 2025 - Based on Mixed Doubles Classification Failure*
+
+```typescript
+// MANDATORY: All doubles match processing must detect and classify mixed doubles
+interface MixedDoublesDetectionRequirement {
+  formatDetection: boolean;        // Automatic gender-based format detection
+  databaseReclassification: boolean; // Update match.format_type to 'mixed-doubles'
+  rankingRedirection: boolean;     // Route points to correct ranking tables
+}
+
+// ❌ CRITICAL FAILURE: Binary format logic ignores mixed doubles
+async function createMatch(formatType: string) {
+  // DANGEROUS: Misses 31+ mixed doubles matches stored as 'doubles'!
+  const format = formatType === 'doubles' ? 'doubles' : 'singles';
+  
+  // MISSING: Gender composition analysis - CAUSES RANKING MISALLOCATION
+}
+
+// ✅ CORRECT: Comprehensive mixed doubles detection and classification
+async function createMatch(formatType: string, playerIds: number[]) {
+  let detectedFormat = formatType;
+  
+  // STEP 1: MANDATORY mixed doubles detection for all doubles matches
+  if (formatType === 'doubles' && playerOnePartnerId && playerTwoPartnerId) {
+    const players = await Promise.all([
+      storage.getUser(playerOneId),
+      storage.getUser(playerOnePartnerId),
+      storage.getUser(playerTwoId),  
+      storage.getUser(playerTwoPartnerId)
+    ]);
+    
+    // CRITICAL: Check gender composition of both teams
+    const team1Mixed = players[0]?.gender !== players[1]?.gender;
+    const team2Mixed = players[2]?.gender !== players[3]?.gender;
+    const isMixedDoubles = team1Mixed || team2Mixed;
+    
+    if (isMixedDoubles) {
+      console.log(`[MIXED DOUBLES DETECTION] Match detected as mixed doubles - reclassifying`);
+      detectedFormat = 'mixed-doubles';
+      
+      // STEP 2: Update database record with correct format
+      await db.update(matches)
+        .set({ formatType: 'mixed-doubles' })
+        .where(eq(matches.id, matchId));
+        
+      console.log(`[FORMAT CORRECTION] Match ${matchId} updated from 'doubles' to 'mixed-doubles'`);
+    }
+  }
+  
+  // STEP 3: Map to ranking system format
+  const rankingFormat = detectedFormat === 'singles' ? 'singles' : 
+                       detectedFormat === 'mixed-doubles' ? 'mixed' : 'doubles';
+  
+  // STEP 4: Process with correct ranking allocation
+  await processMatchRankingPoints(winnerId, loserId, rankingFormat, matchId);
+}
+
+// MANDATORY: Validation that mixed doubles points go to correct tables
+async function validateMixedDoublesRankingAllocation(matchId: number) {
+  const match = await getMatch(matchId);
+  
+  if (match.formatType === 'mixed-doubles') {
+    // Verify points went to mixed doubles ranking fields
+    const players = await getMatchPlayers(matchId);
+    
+    for (const player of players) {
+      const fieldToCheck = player.gender === 'male' ? 
+        'mixedDoublesMenRankingPoints' : 'mixedDoublesWomenRankingPoints';
+        
+      if (!player[fieldToCheck] || player[fieldToCheck] === 0) {
+        throw new Error(`MIXED DOUBLES VALIDATION FAILURE: Match ${matchId} - ${player.gender} player ${player.id} missing mixed doubles ranking points`);
+      }
+    }
+    
+    console.log(`✅ MIXED DOUBLES VALIDATED: Match ${matchId} - All players have correct mixed doubles rankings`);
+  }
+}
+```
+
+**CRITICAL DETECTION REQUIREMENTS**:
+- **Gender Composition Analysis**: Every doubles match MUST analyze team gender composition before format assignment
+- **Database Reclassification**: Detected mixed doubles MUST update `matches.format_type` to 'mixed-doubles'
+- **Ranking Allocation**: Mixed doubles points MUST go to `mixed_doubles_men_ranking_points` and `mixed_doubles_women_ranking_points` fields
+- **Validation Mandatory**: Post-match validation must confirm points allocated to correct ranking tables
+- **Error Handling**: Format detection failures must halt match processing and alert administrators
+
+**DATA INTEGRITY IMPACT**: This rule prevents the critical failure where 31+ mixed doubles matches were misclassified as regular doubles, causing incorrect ranking point allocation and corrupted leaderboard data.
+
+**ENFORCEMENT**: 
+- All match creation endpoints MUST implement gender-based format detection
+- Pre-deployment validation must verify mixed doubles detection logic is present
+- Automated tests must validate mixed vs same-gender team classification
+- Monthly audits must compare actual team compositions with stored format_type values
+
+**CRITICAL FAILURE EXAMPLE RESOLVED**: 
+- Issue: 31 out of 60 doubles matches were mixed gender but stored as format_type='doubles'
+- Root Cause: Binary logic `formatType === 'doubles' ? 'doubles' : 'singles'` ignored gender composition
+- Resolution: Added comprehensive gender composition analysis and automatic format reclassification
+- Prevention: This UDF rule now mandates mixed doubles detection for all doubles match processing
+
+---
+
 ### **RULE 26: MANDATORY RANKING SYSTEM SYNCHRONIZATION** 🚨 **CRITICAL SYSTEM INTEGRITY**
 *Added September 23, 2025 - Based on Singles Ranking Synchronization Failure*
 
