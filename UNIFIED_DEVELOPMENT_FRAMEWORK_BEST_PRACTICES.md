@@ -1,10 +1,16 @@
 # UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES
 ## Algorithm Compliance & Framework Integration Standards
 
-**Version**: 3.2.0 - Match-History-Based Synchronization  
+**Version**: 3.2.1 - Over-Crediting Prevention  
 **Last Updated**: September 23, 2025  
 **Mandatory Compliance**: ALL match calculation components  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md  
+
+### **CHANGELOG v3.2.1** 📋
+*September 23, 2025 - Over-Crediting Prevention*
+
+**ENHANCED**:
+- **RULE 30**: Enhanced with over-crediting detection and mathematical floor enforcement - prevents players from having ranking points with zero match history
 
 ### **CHANGELOG v3.2.0** 📋
 *September 23, 2025 - Match-History-Based Synchronization*
@@ -3426,7 +3432,7 @@ async function syncSinglesPointsFromHistory() {
   await validateCalculationAccuracy();
 }
 
-// MANDATORY: Post-synchronization validation
+// MANDATORY: Post-synchronization validation with over-crediting detection
 async function validateCalculationAccuracy() {
   const validationQuery = await database.execute(`
     SELECT 
@@ -3439,9 +3445,11 @@ async function validateCalculationAccuracy() {
       (COUNT(CASE WHEN m.winner_id = u.id THEN 1 END) * 3 + 
        COUNT(CASE WHEN m.winner_id != u.id THEN 1 END) * 1) as expected_points,
       CASE 
+        WHEN u.singles_ranking_points > 0 AND COUNT(m.id) = 0 THEN 'OVER_CREDITED_ZERO_MATCHES'
         WHEN u.singles_ranking_points != (COUNT(CASE WHEN m.winner_id = u.id THEN 1 END) * 3 + 
                                           COUNT(CASE WHEN m.winner_id != u.id THEN 1 END) * 1)
         THEN 'CALCULATION_ERROR'
+        WHEN u.singles_ranking_points < COUNT(m.id) THEN 'UNDER_MINIMUM_FLOOR'
         ELSE 'CORRECT'
       END as validation_status
     FROM users u
@@ -3449,14 +3457,17 @@ async function validateCalculationAccuracy() {
                        AND m.format_type = 'singles'
     WHERE u.singles_ranking_points > 0
     GROUP BY u.id, u.username, u.display_name, u.singles_ranking_points
-    HAVING validation_status = 'CALCULATION_ERROR'
+    HAVING validation_status != 'CORRECT'
   `);
   
   if (validationQuery.length > 0) {
-    throw new Error(`CALCULATION VALIDATION FAILURE: ${validationQuery.length} players have incorrect points`);
+    const errorDetails = validationQuery.map(row => 
+      `${row.username}: ${row.validation_status} (${row.singles_ranking_points} points, ${row.actual_singles_matches} matches)`
+    ).join('; ');
+    throw new Error(`CALCULATION VALIDATION FAILURE: ${validationQuery.length} players have errors - ${errorDetails}`);
   }
   
-  console.log(`✅ CALCULATION VALIDATED: All players' points match their actual match history`);
+  console.log(`✅ CALCULATION VALIDATED: All players' points match their actual match history with no over-crediting`);
 }
 ```
 
@@ -3481,6 +3492,11 @@ async function validateCalculationAccuracy() {
   - **Actual History**: 7 singles matches (3 wins, 4 losses) = 13 points using System B
   - **Resolution**: Recalculated all players from actual singles match history
   - **Result**: Paul Chen now shows correct 13.00 singles points
+- **Over-Credited Players Case**: 6 players had singles points with ZERO singles match history
+  - **Players Affected**: testcoach1 (1.00 points), Player_ZTO1ZR (12.00 points), Player_31JJ00 (15.00 points), etc.
+  - **Root Cause**: Phantom points assigned without corresponding match history - mathematically impossible under System B
+  - **Detection**: Comprehensive audit revealed players with `singles_ranking_points > 0` but `COUNT(singles_matches) = 0`
+  - **Resolution**: Reset over-credited players to 0.00 points, achieved 100% System B compliance (23/23 players correct)
 - **Widespread Impact**: 15+ players had significantly reduced points due to copying instead of calculating
 - **Prevention**: This UDF rule now mandates match-history-based calculation for all synchronization operations
 
@@ -3488,7 +3504,10 @@ async function validateCalculationAccuracy() {
 - All future synchronization operations must include validation queries that verify calculated points match actual match performance
 - Any discrepancy between calculated points and match history constitutes a critical data integrity failure
 - Synchronization operations must be rolled back if validation fails
+- **ZERO-MATCH VALIDATION**: All players with format-specific ranking points > 0 MUST have corresponding match history in that format
+- **MATHEMATICAL FLOOR ENFORCEMENT**: All players with N matches in a format MUST have at least N points (minimum 1 point per loss under System B)
+- **OVER-CREDITING DETECTION**: Systematic audits must identify and correct players with points but no supporting match data
 
 ---
 
-**[End of Document - UDF v3.2.0 - Enhanced with Match-History-Based Synchronization Prevention]**
+**[End of Document - UDF v3.2.1 - Enhanced with Over-Crediting Prevention and Match-History-Based Synchronization]**
