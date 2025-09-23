@@ -10,9 +10,10 @@
 *September 22, 2025 - Multi-Age Group Ranking Compliance*
 
 **ADDED**: 
-- **RULE 14**: Multi-Age Group Ranking Updates - Mandatory cross-age eligibility updates
-- **RULE 15**: Age Group Eligibility Detection - Automatic detection of ALL eligible age categories
-- **RULE 16**: Cross-Age Group Validation - Compliance verification for multi-age participation
+- **RULE 13**: Bonus Calculation Integration Mandate - Critical persistence validation for age/gender bonuses  
+- **RULE 16**: Multi-Age Group Ranking Updates - Mandatory cross-age eligibility updates
+- **RULE 17**: Age Group Eligibility Detection - Automatic detection of ALL eligible age categories
+- **RULE 18**: Cross-Age Group Validation - Compliance verification for multi-age participation
 - Enhanced algorithm validation utilities with multi-age group support
 - Comprehensive multi-age group ranking update implementation
 
@@ -168,7 +169,7 @@ UPDATE users SET ranking_points = ${newTotal}; // ❌ DESTROYS HISTORY
 UPDATE users SET ranking_points = ranking_points + ${newPoints}; // ✅ PRESERVES HISTORY
 ```
 
-### **RULE 14: SYSTEM B BASE POINTS COMPLIANCE**
+### **RULE 15: SYSTEM B BASE POINTS COMPLIANCE**
 ```typescript
 // MANDATORY: Use immutable constants
 import { SYSTEM_B_BASE_POINTS } from '@shared/utils/algorithmValidation';
@@ -502,7 +503,444 @@ async function processTournamentWithValidation(tournament: Tournament) {
 - [ ] Algorithm version verified as current (4.0+)
 - [ ] Audit trail initialized BEFORE any point allocations
 
-### **RULE 13: ALGORITHM DOCUMENTATION SYNCHRONIZATION** 📋 **SINGLE SOURCE OF TRUTH**
+### **RULE 13: BONUS CALCULATION INTEGRATION MANDATE** ⚡ **CRITICAL PERSISTENCE VALIDATION**
+*Added September 22, 2025 - Based on Bonus Integration Gap Resolution*
+
+```typescript
+// MANDATORY: Per-participant bonus persistence with transactional integrity
+interface PlayerBonusCalculation {
+  playerId: string;
+  basePoints: number;           // System B base points (3 win, 1 loss)
+  ageMultiplier: number;        // Individual age group multiplier (1.0x, 1.2x, 1.3x, 1.5x, 1.6x)
+  genderMultiplier: number;     // Individual gender bonus multiplier (1.0x or 1.15x)
+  eventMultiplier: number;      // Event tier multiplier (usually 1.0x)
+  finalRankingPoints: number;   // Final calculated ranking points
+  finalPicklePoints: number;    // Final pickle points (1.5x multiplier)
+}
+
+interface StructuredBonusAudit {
+  matchId: number;
+  timestamp: string;
+  algorithmVersion: string;
+  playerCalculations: PlayerBonusCalculation[];
+  crossAgeDetected: boolean;
+  crossGenderDetected: boolean;
+  processingValidated: boolean;
+}
+
+interface BonusIntegrationValidation {
+  bonusesCalculated: boolean;         // MultiDimensionalRankingService executed
+  perPlayerDataPersisted: boolean;    // Individual player bonuses stored
+  structuredAuditCreated: boolean;    // JSON audit trail generated
+  transactionCompleted: boolean;      // All operations atomic
+  playerPointsUpdated: boolean;       // User records reflect bonus points
+}
+
+// MANDATORY: Storage contract must support per-player bonus persistence with transactions
+interface IStorage {
+  // REQUIRED: Enhanced createMatch with per-player bonus support and transaction context
+  createMatch(data: MatchCreationData & {
+    playerBonusCalculations: PlayerBonusCalculation[];
+    structuredBonusAudit: StructuredBonusAudit;
+  }, options?: { transaction?: Transaction }): Promise<Match>;
+  
+  // REQUIRED: Bonus audit update within transaction context
+  updateMatchBonusAudit(matchId: number, audit: StructuredBonusAudit, options?: { transaction?: Transaction }): Promise<void>;
+  
+  // REQUIRED: Bonus audit retrieval for validation
+  getMatchBonusAudit(matchId: number): Promise<StructuredBonusAudit | null>;
+  
+  // REQUIRED: Player point updates within transaction context
+  updatePlayerPointsWithBonuses(bonusResults: BonusCalculationResults, options?: { transaction?: Transaction }): Promise<void>;
+  
+  // REQUIRED: Transaction management
+  beginTransaction(): Promise<Transaction>;
+}
+
+// MANDATORY: Database schema must support per-player bonus persistence
+interface RequiredDatabaseSchema {
+  // OPTION 1: Normalized table for per-player match calculations
+  match_player_calculations: {
+    id: number;                    // Primary key
+    match_id: number;             // Foreign key to matches table
+    player_id: string;            // Player identifier
+    base_points: number;          // System B base points (3 win, 1 loss)
+    age_multiplier: number;       // Individual age multiplier (1.0x, 1.2x, 1.3x, 1.5x, 1.6x)
+    gender_multiplier: number;    // Individual gender multiplier (1.0x, 1.15x)
+    event_multiplier: number;     // Event tier multiplier
+    final_ranking_points: number; // Calculated ranking points
+    final_pickle_points: number;  // Calculated pickle points
+    created_at: timestamp;
+  };
+  
+  // OPTION 2: JSON column with check constraints (if normalized table not feasible)
+  matches: {
+    // ... existing columns ...
+    player_bonus_calculations: json; // PlayerBonusCalculation[] with NOT NULL constraint
+    structured_bonus_audit: json;    // StructuredBonusAudit with NOT NULL constraint
+  };
+}
+
+// MANDATORY: Type-level enforcement of storage contract compliance
+type CreateMatchPayload = MatchCreationData & {
+  playerBonusCalculations: PlayerBonusCalculation[];
+  structuredBonusAudit: StructuredBonusAudit;
+};
+
+// COMPILE-TIME CHECK: Verify storage contract matches required interface
+type StorageContractCheck = IStorage['createMatch'] extends (data: CreateMatchPayload, options?: any) => Promise<Match> ? true : never;
+
+// ❌ WRONG: Single multiplier storage loses per-player fidelity
+async function createMatch(matchData: MatchCreationData) {
+  const bonusResults = await rankingService.calculateBonuses(players);
+  
+  // WRONG: Using Math.max loses individual player multipliers
+  const singleMultiplier = Math.max(...Object.values(bonusResults.ageMultipliers));
+  const maxPoints = Math.max(bonusResults.winnerRankingPoints, bonusResults.loserRankingPoints);
+  
+  // WRONG: No transactional guarantees, no per-player persistence
+  const match = await storage.createMatch({
+    ...matchData,
+    rankingPointMultiplier: singleMultiplier * 100, // LOSES INDIVIDUAL DATA!
+    pointsAwarded: maxPoints                        // INCORRECT WHEN PLAYERS DIFFER!
+  });
+}
+
+// ✅ CORRECT: Per-participant persistence with transactional integrity
+async function createMatchWithBonusIntegration(matchData: MatchCreationData): Promise<BonusIntegrationValidation> {
+  const validation: BonusIntegrationValidation = {
+    bonusesCalculated: false,
+    perPlayerDataPersisted: false,
+    structuredAuditCreated: false, 
+    transactionCompleted: false,
+    playerPointsUpdated: false
+  };
+
+  // STEP 1: Calculate per-player bonuses
+  const bonusResults = await multiDimensionalRankingService.calculateMatchRewards(players);
+  validation.bonusesCalculated = true;
+  
+  // STEP 2: Build per-player calculation records
+  const playerCalculations: PlayerBonusCalculation[] = players.map(player => ({
+    playerId: player.id.toString(),
+    basePoints: player.id === winnerId ? SYSTEM_B_BASE_POINTS.WIN : SYSTEM_B_BASE_POINTS.LOSS,
+    ageMultiplier: bonusResults.ageMultipliers[player.id] || 1.0,
+    genderMultiplier: bonusResults.genderMultipliers[player.id] || 1.0,
+    eventMultiplier: bonusResults.eventMultipliers[player.id] || 1.0,
+    finalRankingPoints: bonusResults.playerRankingPoints[player.id],
+    finalPicklePoints: bonusResults.playerPicklePoints[player.id]
+  }));
+  
+  // STEP 3: Create structured audit payload
+  const structuredAudit: StructuredBonusAudit = {
+    matchId: 0, // Will be set after match creation
+    timestamp: new Date().toISOString(),
+    algorithmVersion: '4.0-UDF-COMPLIANT',
+    playerCalculations,
+    crossAgeDetected: bonusResults.crossAgeDetected,
+    crossGenderDetected: bonusResults.crossGenderDetected,
+    processingValidated: true
+  };
+  validation.structuredAuditCreated = true;
+
+  // STEP 4: Execute atomic transaction with rollback protection
+  const transaction = await database.beginTransaction();
+  try {
+    // Create match with per-player bonus data
+    const match = await storage.createMatch({
+      ...matchData,
+      playerBonusCalculations: playerCalculations,
+      structuredBonusAudit: { ...structuredAudit, matchId: 0 } // ID updated post-creation
+    }, { transaction });
+    
+    // Update structured audit with actual match ID
+    structuredAudit.matchId = match.id;
+    await storage.updateMatchBonusAudit(match.id, structuredAudit, { transaction });
+    
+    // Update player points with calculated bonuses
+    await storage.updatePlayerPointsWithBonuses(bonusResults, { transaction });
+    
+    // Commit all operations atomically
+    await transaction.commit();
+    validation.transactionCompleted = true;
+    validation.perPlayerDataPersisted = true;
+    validation.playerPointsUpdated = true;
+    
+    console.log(`✅ ATOMIC BONUS INTEGRATION: Match ${match.id} with ${playerCalculations.length} player calculations`);
+    
+    return validation;
+    
+  } catch (error) {
+    // Rollback on any failure to prevent inconsistent state
+    await transaction.rollback();
+    throw new Error(`BONUS INTEGRATION TRANSACTION FAILED: ${error.message}`);
+  }
+}
+
+// MANDATORY: Structured validation against persisted JSON audit
+async function validateBonusIntegrationConsistency(matchId: number, expectedResults: BonusCalculationResults): Promise<void> {
+  // STEP 1: Retrieve structured audit data
+  const auditRecord = await storage.getMatchBonusAudit(matchId);
+  if (!auditRecord) {
+    throw new Error(`CRITICAL: No structured audit found for match ${matchId}`);
+  }
+  
+  // STEP 2: Validate per-player calculation consistency
+  for (const expectedPlayer of Object.keys(expectedResults.playerRankingPoints)) {
+    const auditedPlayer = auditRecord.playerCalculations.find(p => p.playerId === expectedPlayer);
+    if (!auditedPlayer) {
+      throw new Error(`AUDIT FAILURE: Player ${expectedPlayer} missing from structured audit`);
+    }
+    
+    // STEP 3: Verify individual multipliers match calculations
+    const expectedAge = expectedResults.ageMultipliers[expectedPlayer] || 1.0;
+    const expectedGender = expectedResults.genderMultipliers[expectedPlayer] || 1.0;
+    const expectedPoints = expectedResults.playerRankingPoints[expectedPlayer];
+    
+    if (Math.abs(auditedPlayer.ageMultiplier - expectedAge) > 0.001) {
+      throw new Error(`AGE MULTIPLIER MISMATCH: Player ${expectedPlayer} audit shows ${auditedPlayer.ageMultiplier}, expected ${expectedAge}`);
+    }
+    
+    if (Math.abs(auditedPlayer.genderMultiplier - expectedGender) > 0.001) {
+      throw new Error(`GENDER MULTIPLIER MISMATCH: Player ${expectedPlayer} audit shows ${auditedPlayer.genderMultiplier}, expected ${expectedGender}`);
+    }
+    
+    if (Math.abs(auditedPlayer.finalRankingPoints - expectedPoints) > 0.01) {
+      throw new Error(`POINTS MISMATCH: Player ${expectedPlayer} audit shows ${auditedPlayer.finalRankingPoints}, expected ${expectedPoints}`);
+    }
+  }
+  
+  // STEP 4: Validate cross-group detection flags
+  if (auditRecord.crossAgeDetected !== expectedResults.crossAgeDetected) {
+    throw new Error(`CROSS-AGE DETECTION MISMATCH: Audit shows ${auditRecord.crossAgeDetected}, expected ${expectedResults.crossAgeDetected}`);
+  }
+  
+  console.log(`✅ STRUCTURED AUDIT VALIDATION: Match ${matchId} per-player calculations verified`);
+}
+```
+
+**CRITICAL COMPLIANCE REQUIREMENTS**:
+- **Per-Player Persistence**: Individual player bonus calculations MUST be stored, not aggregated values
+- **Transactional Atomicity**: Match creation, structured bonus audit write, and player point updates MUST occur within a single database transaction
+- **Structured Audit Trails**: JSON audit records MUST contain per-player multiplier breakdown
+- **Storage Contract Updates**: IStorage interface MUST support per-player bonus data structures with transaction context
+- **Type-Level Guarantees**: Compile-time checks MUST validate bonus integration contract compliance
+- **Database Constraints**: NOT NULL constraints MUST be enforced on player_bonus_calculations and structured_bonus_audit columns
+
+**ENFORCEMENT CHECKLIST**:
+- [ ] Storage contracts updated with complete IStorage interface including transaction support
+- [ ] Database schema supports normalized per-player calculations or JSON columns with constraints
+- [ ] Match creation uses atomic transactions for bonus integration (createMatch, updateMatchBonusAudit, updatePlayerPointsWithBonuses)
+- [ ] Per-player multipliers persisted individually (never Math.max aggregation)
+- [ ] Structured JSON audit trails generated for every match with bonuses
+- [ ] Post-creation validation verifies individual player calculation consistency
+- [ ] TypeScript compile-time checks validate storage contract compliance (StorageContractCheck type)
+- [ ] CI gate blocks merges on failed bonus integration tests
+
+**MANDATORY CI/CD TEST ENFORCEMENT**:
+```typescript
+// REQUIRED: CI pipeline must execute and pass ALL of these tests before merge
+describe('MANDATORY_BONUS_INTEGRATION_TESTS', () => {
+  // TEST GATE 1: Per-player multiplier persistence verification
+  test('should persist individual age multipliers for each player', async () => {
+    // CRITICAL: Validates that age multipliers are stored per-player, not aggregated
+    // Must verify auditRecord.playerCalculations[0].ageMultiplier === expectedAgeMultiplier
+    // Must verify auditRecord.playerCalculations[1].ageMultiplier === differentExpectedMultiplier
+  });
+
+  // TEST GATE 2: Gender bonus per-player persistence verification  
+  test('should persist individual gender bonuses per player', async () => {
+    // CRITICAL: Validates that gender multipliers are stored per-player in cross-gender matches
+    // Must verify femalePlayer gets 1.15x, malePlayer gets 1.0x stored individually
+  });
+
+  // TEST GATE 3: Transactional rollback integrity
+  test('should rollback all operations on validation failure', async () => {
+    // CRITICAL: Validates atomic transaction behavior
+    // Must verify NO match record created, NO audit record created, NO player points updated on failure
+    // Must test mid-transaction failure scenarios (match created but audit fails)
+  });
+
+  // TEST GATE 4: Structured audit consistency validation
+  test('should validate structured audit against calculations', async () => {
+    // CRITICAL: Validates persisted audit matches calculation engine output
+    // Must verify crossAgeDetected, crossGenderDetected flags accurate
+    // Must verify per-player finalRankingPoints match calculation engine
+  });
+
+  // TEST GATE 5: Storage contract conformance
+  test('should enforce storage contract requirements', async () => {
+    // CRITICAL: Validates IStorage contract implementation
+    // Must verify all required methods exist: createMatch, updateMatchBonusAudit, getMatchBonusAudit
+    // Must verify transaction context support on all operations
+  });
+});
+
+// REQUIRED: TypeScript compile-time contract enforcement
+type ContractEnforcement = {
+  // MUST compile without errors if storage contract matches requirements
+  createMatchTypeCheck: IStorage['createMatch'] extends (data: CreateMatchPayload, options?: { transaction?: Transaction }) => Promise<Match> ? true : never;
+  
+  // MUST enforce NOT NULL database constraints at schema level
+  requiredSchemaConstraints: RequiredDatabaseSchema['matches']['player_bonus_calculations'] extends json ? true : never;
+};
+
+// REQUIRED: CI/CD Pipeline Configuration (jest.config.js or similar)
+module.exports = {
+  testMatch: ['**/*bonus-integration*.test.{js,ts}'],
+  testFailureExitCode: 1, // Block merge on test failure
+  collectCoverage: true,
+  coverageThreshold: {
+    global: {
+      statements: 100, // 100% coverage required for bonus integration paths
+      branches: 100,   // All bonus calculation branches must be tested
+      functions: 100,  // All bonus integration functions must be covered
+      lines: 100
+    }
+  },
+  // CRITICAL: Fail CI if any MANDATORY_BONUS_INTEGRATION_TESTS fail
+  testNamePattern: 'MANDATORY_BONUS_INTEGRATION_TESTS'
+};
+
+// REQUIRED: Pre-commit hook enforcement
+const REQUIRED_TESTS_PASSED = [
+  'should persist individual age multipliers for each player',
+  'should persist individual gender bonuses per player', 
+  'should rollback all operations on validation failure',
+  'should validate structured audit against calculations',
+  'should enforce storage contract requirements'
+];
+
+// Block commit if tests not passing
+function preCommitHook() {
+  const testResults = execSync('npm test -- --testNamePattern="MANDATORY_BONUS_INTEGRATION_TESTS"');
+  const allTestsPassed = REQUIRED_TESTS_PASSED.every(test => 
+    testResults.toString().includes(`✓ ${test}`)
+  );
+  
+  if (!allTestsPassed) {
+    console.error('❌ BONUS INTEGRATION TESTS FAILED - COMMIT BLOCKED');
+    process.exit(1);
+  }
+  
+  console.log('✅ All mandatory bonus integration tests passed');
+}
+```
+
+**PREVENTION OF FUTURE INTEGRATION GAPS**:
+This rule prevents the critical gap where bonus calculations were performed correctly but not integrated into match record persistence, creating audit inconsistencies and masking the effectiveness of the bonus system.
+
+**MANDATORY TESTING PROTOCOL FOR BONUS INTEGRATION**:
+```typescript
+// REQUIRED: Comprehensive per-player bonus integration test suite
+describe('UDF Per-Player Bonus Integration Compliance', () => {
+  
+  // TEST 1: Per-Player Age Multiplier Persistence
+  it('should persist individual age multipliers for each player', async () => {
+    const validation = await createMatchWithBonusIntegration({
+      playerOneId: olderPlayer.id, // 57yo (50+ = 1.3x)
+      playerTwoId: youngerPlayer.id, // 33yo (Open = 1.0x)
+      games: [{ playerOneScore: 11, playerTwoScore: 9 }]
+    });
+    
+    // VERIFY: Individual player calculations persisted
+    const auditRecord = await storage.getMatchBonusAudit(match.id);
+    expect(auditRecord.playerCalculations).toHaveLength(2);
+    
+    // VERIFY: Winner (older player) has correct multipliers
+    const winnerCalc = auditRecord.playerCalculations.find(p => p.playerId === olderPlayer.id.toString());
+    expect(winnerCalc.ageMultiplier).toBe(1.3);
+    expect(winnerCalc.finalRankingPoints).toBe(3.9); // 3 × 1.3
+    
+    // VERIFY: Loser (younger player) has correct multipliers  
+    const loserCalc = auditRecord.playerCalculations.find(p => p.playerId === youngerPlayer.id.toString());
+    expect(loserCalc.ageMultiplier).toBe(1.0);
+    expect(loserCalc.finalRankingPoints).toBe(1.0); // 1 × 1.0
+  });
+  
+  // TEST 2: Cross-Gender Per-Player Bonus Persistence
+  it('should persist individual gender bonuses per player', async () => {
+    const validation = await createMatchWithBonusIntegration({
+      playerOneId: femalePlayer.id, // <1000 points = 1.15x
+      playerTwoId: malePlayer.id,   // >1000 points = 1.0x
+      games: [{ playerOneScore: 11, playerTwoScore: 8 }]
+    });
+    
+    const auditRecord = await storage.getMatchBonusAudit(validation.matchId);
+    
+    // VERIFY: Female winner gets gender bonus
+    const femaleCalc = auditRecord.playerCalculations.find(p => p.playerId === femalePlayer.id.toString());
+    expect(femaleCalc.genderMultiplier).toBe(1.15);
+    expect(femaleCalc.finalRankingPoints).toBe(3.45); // 3 × 1.15
+    
+    // VERIFY: Male loser gets no gender bonus
+    const maleCalc = auditRecord.playerCalculations.find(p => p.playerId === malePlayer.id.toString());
+    expect(maleCalc.genderMultiplier).toBe(1.0);
+    expect(maleCalc.finalRankingPoints).toBe(1.0); // 1 × 1.0
+  });
+  
+  // TEST 3: Transactional Integrity with Rollback
+  it('should rollback all operations on validation failure', async () => {
+    // Mock validation failure scenario
+    const originalValidation = validateBonusIntegrationConsistency;
+    validateBonusIntegrationConsistency = jest.fn().mockRejectedValue(new Error('VALIDATION_FAILURE'));
+    
+    try {
+      await createMatchWithBonusIntegration(complexMatchData);
+      fail('Expected transaction to rollback');
+    } catch (error) {
+      expect(error.message).toContain('BONUS INTEGRATION TRANSACTION FAILED');
+      
+      // VERIFY: No match record created
+      const matchCount = await storage.countMatches();
+      expect(matchCount).toBe(0);
+      
+      // VERIFY: No player points updated
+      const player1 = await getPlayer(complexMatchData.playerOneId);
+      const player2 = await getPlayer(complexMatchData.playerTwoId);
+      expect(player1.rankingPoints).toBe(0); // Unchanged
+      expect(player2.rankingPoints).toBe(0); // Unchanged
+    } finally {
+      validateBonusIntegrationConsistency = originalValidation;
+    }
+  });
+  
+  // TEST 4: Structured Audit JSON Validation
+  it('should validate structured audit against calculations', async () => {
+    const validation = await createMatchWithBonusIntegration(multiPlayerMatchData);
+    
+    // VERIFY: Structured audit consistency
+    await validateBonusIntegrationConsistency(validation.matchId, expectedBonusResults);
+    
+    // VERIFY: Cross-detection flags accurate
+    const auditRecord = await storage.getMatchBonusAudit(validation.matchId);
+    expect(auditRecord.crossAgeDetected).toBe(true);
+    expect(auditRecord.crossGenderDetected).toBe(false);
+    expect(auditRecord.algorithmVersion).toBe('4.0-UDF-COMPLIANT');
+  });
+  
+  // TEST 5: Contract Compliance Validation
+  it('should enforce storage contract requirements', async () => {
+    // VERIFY: Storage contract supports required methods
+    expect(typeof storage.getMatchBonusAudit).toBe('function');
+    expect(typeof storage.updateMatchBonusAudit).toBe('function');
+    
+    // VERIFY: Type-level validation at compile time
+    const playerCalcs: PlayerBonusCalculation[] = [/* test data */];
+    const auditData: StructuredBonusAudit = { /* test data */ };
+    
+    // This should compile without errors if contracts are properly defined
+    const match = await storage.createMatch({
+      playerBonusCalculations: playerCalcs,
+      structuredBonusAudit: auditData
+    });
+    
+    expect(match).toBeDefined();
+  });
+});
+```
+
+### **RULE 14: ALGORITHM DOCUMENTATION SYNCHRONIZATION** 📋 **SINGLE SOURCE OF TRUTH**
 *Added September 16, 2025 - Based on Implementation Deviation from Algorithm*
 
 ```typescript
@@ -1889,7 +2327,7 @@ export class BulkImportProcessor {
 
 ## 🎯 **MULTI-AGE GROUP COMPLIANCE RULES (v3.0)**
 
-### **RULE 14: MULTI-AGE GROUP RANKING UPDATES** 🏆
+### **RULE 16: MULTI-AGE GROUP RANKING UPDATES** 🏆
 ```typescript
 // CRITICAL: Players must update ALL eligible age group rankings
 // Example: 42-year-old in Open (19+) event updates BOTH Open AND 35+ rankings
@@ -1922,7 +2360,7 @@ if (!results.validationResult.isCompliant) {
 
 **ENFORCEMENT**: All match processing must use `updateMultiAgeGroupRankings()` method and validate compliance.
 
-### **RULE 15: AGE GROUP ELIGIBILITY DETECTION** 🔍
+### **RULE 17: AGE GROUP ELIGIBILITY DETECTION** 🔍
 ```typescript
 // MANDATORY: Use official age group detection utilities
 import { getEligibleAgeGroups, validateMultiAgeGroupUpdate } from '@shared/utils/algorithmValidation';
@@ -1941,7 +2379,7 @@ console.log(`Player eligible for: ${eligibleGroups.join(', ')}`);
 
 **ADULT CUMULATIVE**: Adult players (19+) are eligible for Open plus any age-specific categories they qualify for.
 
-### **RULE 16: CROSS-AGE GROUP VALIDATION** ✅
+### **RULE 18: CROSS-AGE GROUP VALIDATION** ✅
 ```typescript
 // MANDATORY: Validate multi-age group updates after match processing
 const validation = validateMultiAgeGroupUpdate(
