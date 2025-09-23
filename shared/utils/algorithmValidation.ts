@@ -4,14 +4,19 @@
  * MANDATORY IMPORT: All match calculation components MUST import and use these utilities
  * to ensure compliance with the official Pickle+ Algorithm Document.
  * 
- * Version: 3.0.0 - Multi-Age Group Ranking Updates
- * Last Updated: September 22, 2025
+ * Version: 3.2.0 - Match-History-Based Synchronization
+ * Last Updated: September 23, 2025
  * Source of Truth: PICKLE_PLUS_ALGORITHM_DOCUMENT.md
  * 
  * CRITICAL VALIDATION: ALL POINT OPERATIONS MUST BE ADDITIVE
  * - validateAdditivePointsOperation() prevents destructive point replacement
  * - All database operations must use: currentPoints + newPoints
  * - System protects against tournament history loss
+ * 
+ * UDF RULE 30 ENFORCEMENT: MATCH-HISTORY-BASED SYNCHRONIZATION
+ * - validateSynchronizationCalculation() ensures points calculated from actual match history
+ * - Never copy existing potentially incorrect values during synchronization
+ * - All backfill operations must calculate from format-specific match records
  */
 
 import { differenceInYears } from 'date-fns';
@@ -759,4 +764,103 @@ export function validatePointCalculationAccuracy(
   }
   
   return { isValid: true };
+}
+
+// ========================================
+// UDF RULE 30: MATCH-HISTORY-BASED SYNCHRONIZATION VALIDATION
+// ========================================
+
+export interface SynchronizationValidationResult {
+  isValid: boolean;
+  errors: string[];
+  calculatedPoints: number;
+  actualMatchHistory: {
+    totalMatches: number;
+    wins: number;
+    losses: number;
+    expectedPoints: number;
+  };
+}
+
+/**
+ * UDF RULE 30: Validates that point synchronization is based on actual match history
+ * 
+ * CRITICAL: This function ensures that all synchronization operations calculate points
+ * from actual match records using System B scoring, never copying existing values.
+ * 
+ * @param userId - Player ID to validate
+ * @param format - Format to validate ('singles', 'doubles', etc.)
+ * @param synchronizedPoints - The points that were synchronized
+ * @param matchHistory - Array of matches for validation
+ */
+export function validateSynchronizationCalculation(
+  userId: string,
+  format: string,
+  synchronizedPoints: number,
+  matchHistory: Array<{
+    winnerId: string;
+    formatType: string;
+  }>
+): SynchronizationValidationResult {
+  const validationErrors: string[] = [];
+  
+  // Filter matches for the specific format
+  const formatMatches = matchHistory.filter(match => match.formatType === format);
+  
+  if (formatMatches.length === 0 && synchronizedPoints > 0) {
+    validationErrors.push(`UDF RULE 30 VIOLATION: Player has ${synchronizedPoints} ${format} points but no ${format} match history`);
+  }
+  
+  // Calculate expected points using System B scoring
+  const wins = formatMatches.filter(match => match.winnerId === userId).length;
+  const losses = formatMatches.length - wins;
+  const expectedPoints = (wins * SYSTEM_B_BASE_POINTS.WIN) + (losses * SYSTEM_B_BASE_POINTS.LOSS);
+  
+  // Validate calculation accuracy
+  if (Math.abs(synchronizedPoints - expectedPoints) > 0.01) {
+    validationErrors.push(
+      `UDF RULE 30 VIOLATION: Synchronized ${format} points (${synchronizedPoints}) don't match calculated points (${expectedPoints}) from match history. ` +
+      `Expected: ${wins} wins × 3 + ${losses} losses × 1 = ${expectedPoints} points`
+    );
+  }
+  
+  return {
+    isValid: validationErrors.length === 0,
+    errors: validationErrors,
+    calculatedPoints: expectedPoints,
+    actualMatchHistory: {
+      totalMatches: formatMatches.length,
+      wins,
+      losses,
+      expectedPoints
+    }
+  };
+}
+
+/**
+ * UDF RULE 30: Validates that synchronization operations never copy existing values
+ * 
+ * CRITICAL: This function detects dangerous synchronization patterns that copy
+ * potentially incorrect accumulated values instead of calculating from match history.
+ */
+export function validateNoDataCopying(
+  operation: 'singles' | 'doubles',
+  sourceValue: number,
+  targetValue: number,
+  matchHistoryCalculation: number
+): boolean {
+  // Check if target value exactly matches source value (indicates copying)
+  const isDirectCopy = Math.abs(targetValue - sourceValue) < 0.01;
+  
+  // Check if target value matches proper calculation
+  const isProperCalculation = Math.abs(targetValue - matchHistoryCalculation) < 0.01;
+  
+  if (isDirectCopy && !isProperCalculation) {
+    throw new Error(
+      `UDF RULE 30 VIOLATION: ${operation} synchronization appears to be copying existing value (${sourceValue}) ` +
+      `instead of calculating from match history (${matchHistoryCalculation})`
+    );
+  }
+  
+  return isProperCalculation;
 }
