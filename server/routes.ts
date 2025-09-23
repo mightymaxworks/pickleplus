@@ -30,6 +30,7 @@ import coachMarketplaceProfilesRouter from './api/coach-marketplace-profiles';
 import decayProtectionRoutes from './routes/decay-protection';
 import { studentCoachConnectionRoutes } from './routes/student-coach-connections';
 import { coachStudentRequestRoutes } from './routes/coach-student-requests';
+import { enhancedCoachDiscoveryRoutes } from './routes/enhanced-coach-discovery';
 import coachWeightedAssessmentRoutes from './routes/coach-weighted-assessment';
 import facilityDiscoveryRoutes from './routes/facility-discovery-routes';
 import bookingRoutes from './routes/booking-routes';
@@ -967,6 +968,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api', studentCoachConnectionRoutes);
     app.use('/api', coachStudentRequestRoutes);
     console.log("[ROUTES] Student-Coach Connection routes registered successfully");
+    
+    // Enhanced Coach Discovery System (Mobile-first, Anti-abuse, QR codes)
+    console.log("[ROUTES] Registering Enhanced Coach Discovery routes...");
+    app.use('/api/coach-discovery', enhancedCoachDiscoveryRoutes);
+    console.log("[ROUTES] Enhanced Coach Discovery routes registered successfully");
     
     console.log("[ROUTES] All modular route systems registered successfully");
     
