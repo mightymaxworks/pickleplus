@@ -6,6 +6,13 @@
 **Mandatory Compliance**: ALL match calculation components  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md  
 
+### **CHANGELOG v3.0.1** 📋
+*September 23, 2025 - Tournament Data Format Documentation*
+
+**ADDED**:
+- **RULE 19**: Tournament Data Format Standards - Documentation of doubles template usage for both singles and doubles matches
+- Player similarity matching guidelines for resolving passport code typos
+
 ### **CHANGELOG v3.0.0** 📋
 *September 22, 2025 - Multi-Age Group Ranking Compliance*
 
@@ -2473,4 +2480,98 @@ const transitioningPlayer = { dateOfBirth: '2005-12-01', turnsNineteen: true };
 
 ---
 
-**[End of Document - UDF v3.0.0 - Enhanced with Multi-Age Group Compliance Requirements]**
+### **RULE 19: TOURNAMENT DATA FORMAT STANDARDS** 📊 **DOUBLES TEMPLATE UNIVERSALITY**
+*Added September 23, 2025 - Based on Tournament Data Processing Analysis*
+
+```typescript
+// MANDATORY: Tournament Excel format must support both doubles and singles using unified template
+interface TournamentDataFormat {
+  // DOUBLES TEMPLATE (used for both formats)
+  columns: {
+    playerOne: string;        // Team1/Player1 passport code
+    playerTwo: string;        // Team1/Player2 passport code (EMPTY for singles)
+    playerThree: string;      // Team2/Player1 passport code  
+    playerFour: string;       // Team2/Player2 passport code (EMPTY for singles)
+    scoreOne: number;         // Team1/Player1 score
+    scoreTwo: number;         // Team2/Player2 score
+    matchDate: number;        // Excel serial date
+  };
+}
+
+// ✅ CORRECT: Doubles match format
+const doublesMatch = {
+  playerOne: 'PZCNFC',     // Team 1 Player 1
+  playerTwo: 'XMZPKV',     // Team 1 Player 2
+  playerThree: 'Q9IJKU',   // Team 2 Player 1
+  playerFour: 'G6VLXJ',    // Team 2 Player 2
+  scoreOne: 9,             // Team 1 score
+  scoreTwo: 15,            // Team 2 score
+  matchDate: 45915         // Excel date
+};
+
+// ✅ CORRECT: Singles match format (using same template)
+const singlesMatch = {
+  playerOne: 'SBNWAK',     // Player 1
+  playerTwo: '',           // EMPTY - No partner
+  playerThree: '6X527E',   // Player 2
+  playerFour: '',          // EMPTY - No partner
+  scoreOne: 12,            // Player 1 score
+  scoreTwo: 15,            // Player 2 score
+  matchDate: 45922         // Excel date
+};
+
+// MANDATORY: Singles/doubles detection logic
+function detectMatchFormat(row: TournamentRow): 'singles' | 'doubles' {
+  const hasPartners = !!(row.playerTwo && row.playerFour);
+  return hasPartners ? 'doubles' : 'singles';
+}
+
+// MANDATORY: Player similarity matching for typo detection
+interface PlayerSimilarityMatch {
+  missingCode: string;
+  candidateCode: string;
+  levenshteinDistance: number;
+  similarity: number;        // Percentage 0-100
+  recommendation: 'high' | 'medium' | 'low';
+}
+
+function findSimilarPassportCodes(missingCode: string, existingCodes: string[]): PlayerSimilarityMatch[] {
+  return existingCodes
+    .map(candidate => ({
+      missingCode,
+      candidateCode: candidate,
+      levenshteinDistance: calculateLevenshteinDistance(missingCode, candidate),
+      similarity: calculateSimilarity(missingCode, candidate),
+      recommendation: getRecommendationLevel(missingCode, candidate)
+    }))
+    .filter(match => 
+      match.levenshteinDistance <= 2 ||  // Max 2 character changes
+      match.similarity >= 70             // Min 70% similarity
+    )
+    .sort((a, b) => b.similarity - a.similarity);
+}
+
+// EXAMPLES OF COMMON TYPOS RESOLVED:
+const typoResolutions = [
+  { tournament: '5XKD06', database: '5XKDO6', issue: 'O vs 0 confusion', user: 'Yuan Liu' },
+  { tournament: 'PKL-000249', database: 'LT57DN', issue: 'Tournament ID vs passport code', user: 'Luka' }
+];
+```
+
+**CRITICAL COMPLIANCE REQUIREMENTS**:
+- **Unified Template**: Both singles and doubles MUST use the same Excel column structure
+- **Empty Partner Columns**: Singles matches MUST leave playerTwo and playerFour columns empty
+- **Format Detection**: System MUST auto-detect singles vs doubles based on partner column presence
+- **Typo Detection**: MANDATORY similarity matching for missing passport codes before processing
+- **Manual Review**: All matches with missing players MUST be reviewed for potential typos
+
+**ENFORCEMENT CHECKLIST**:
+- [ ] Tournament processors handle both singles/doubles with unified template parsing
+- [ ] Empty partner column validation implemented for singles detection
+- [ ] Levenshtein distance algorithm integrated for passport code similarity matching
+- [ ] Administrative review workflow for missing player matches
+- [ ] Documentation updated for tournament organizers on unified template usage
+
+---
+
+**[End of Document - UDF v3.0.1 - Enhanced with Tournament Data Format Standards]**
