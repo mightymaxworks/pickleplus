@@ -116,6 +116,9 @@ import ReferralPage from './pages/ReferralPage'
 // Import Progressive Assessment Test Page
 import ProgressiveAssessmentTestPage from './pages/progressive-assessment-test'
 
+// Import Coach Assessment System Test Suite
+import TestSuitePage from './pages/TestSuitePage'
+
 // Import PCP Coach Onboarding Components (PKL-278651-PCP-BASIC-TIER)
 import { LazyPCPCoachOnboardingPage, LazyCoachDashboardPage } from './components/coach/LazyPCPCoachOnboardingPage'
 
@@ -1228,6 +1231,15 @@ export default function App() {
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">
                     {/* {(params) => <TestLoginPage />} - TestLoginPage removed */}
+                  </Route>
+                  
+                  {/* Coach Assessment System Test Suite - Admin and Coach Access */}
+                  <Route path="/coach-system-test">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        <TestSuitePage />
+                      </AdminProtectedRoute>
+                    )}
                   </Route>
                   
                   <Route component={LazyNotFoundPage} />
