@@ -673,14 +673,7 @@ export default function App() {
                     {() => <RoleProtectedRoute component={RoleProtectedDemoPage} path="/roles/demo" />}
                   </Route>
                   
-                  {/* Coach-specific route example */}
-                  <Route path="/coach/dashboard">
-                    {() => <RoleProtectedRoute 
-                      component={RoleProtectedDemoPage} 
-                      path="/coach/dashboard" 
-                      requiredRole={UserRole.COACH} 
-                    />}
-                  </Route>
+                  {/* Coach-specific route example - REMOVED: Replaced by actual coach dashboard at line 833+ */}
                   
                   {/* Referee-specific route example */}
                   <Route path="/referee/matches">
