@@ -231,39 +231,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[COACH API DEBUG] Extracted skillData:', JSON.stringify(skillData, null, 2));
 
-      // Map quick assessment skill names to official PCP algorithm skill names
-      const skillMapping: Record<string, string> = {
-        // Power & Serves
-        'Serve Power': 'Serve Power', // Already matches
-        'Forehand Drive': 'Forehand Flat Drive', // Map to official name
-        
-        // Soft Game
-        'Third Shot Drop': 'Forehand Third Shot Drop',
+      // Enhanced skill mapping system for both quick and full assessments
+      const quickToOfficialMapping: Record<string, string> = {
+        // Quick assessment simplified names → Official algorithm names
+        'Forehand Drive': 'Forehand Flat Drive',
+        'Third Shot Drop': 'Forehand Third Shot Drop', 
         'Forehand Dink': 'Forehand Topspin Dink',
-        
-        // Net Play
-        'Forehand Volley': 'Forehand Punch Volley', 
+        'Forehand Volley': 'Forehand Punch Volley',
         'Overhead Smash': 'Forehand Overhead Smash',
-        
-        // Movement
         'Court Positioning': 'Kitchen Line Positioning',
         'Transition Speed': 'Transition Speed (Baseline to Kitchen)',
-        
-        // Mental Game
-        'Focus & Concentration': 'Staying Present',
-        'Pressure Handling': 'Pressure Handling' // Already matches
+        'Focus & Concentration': 'Staying Present'
+        // Note: 'Serve Power' and 'Pressure Handling' already match official names
       };
 
       // Create mapped skill data for PCP calculation
       const mappedSkillData: Record<string, number> = {};
-      Object.entries(skillData).forEach(([quickName, rating]) => {
-        const officialName = skillMapping[quickName];
-        if (officialName) {
-          mappedSkillData[officialName] = rating;
-          console.log(`[SKILL MAPPING] ${quickName} -> ${officialName} = ${rating}`);
+      Object.entries(skillData).forEach(([skillName, rating]) => {
+        let officialName: string;
+        
+        // Check if this is a quick assessment skill that needs mapping
+        if (quickToOfficialMapping[skillName]) {
+          officialName = quickToOfficialMapping[skillName];
+          console.log(`[SKILL MAPPING] Quick → Official: ${skillName} -> ${officialName} = ${rating}`);
         } else {
-          console.log(`[SKILL MAPPING WARNING] No mapping found for: ${quickName}`);
+          // Full assessment skills (and some quick skills) already use official names
+          officialName = skillName;
+          console.log(`[SKILL MAPPING] Using official name: ${skillName} = ${rating}`);
         }
+        
+        mappedSkillData[officialName] = rating;
       });
 
       console.log('[COACH API DEBUG] Mapped skillData for PCP:', JSON.stringify(mappedSkillData, null, 2));
