@@ -215,15 +215,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Extract skill names from composite keys for calculation
+      // Extract skill names from composite keys for calculation (decode HTML entities)
       const skillData: Record<string, number> = {};
       Object.entries(assessmentData).forEach(([key, value]) => {
-        const parts = key.split('_');
+        // Decode HTML entities (e.g., &amp; -> &)
+        const decodedKey = key.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+        const parts = decodedKey.split('_');
         if (parts.length >= 2) {
           const skillName = parts.slice(1).join('_');
           skillData[skillName] = value as number;
         }
       });
+      
+      console.log('[COACH API DEBUG] Extracted skillData:', JSON.stringify(skillData, null, 2));
 
       // Calculate PCP rating using official algorithm
       const pcpResult = calculatePCPFromAssessment(skillData);
