@@ -1,322 +1,284 @@
 /**
  * Coach Level Weighted Assessment API Routes
  * 
- * Implements the sophisticated coach-weighted PCP assessment system
- * with proper validation, authorization, and quality metrics.
+ * Implements the sophisticated multi-coach weighted PCP assessment system
+ * with proper database integration, validation, authorization, and quality metrics.
  */
 
 import { Router } from 'express';
 import { z } from 'zod';
+import { db } from '../db';
+import { eq, desc } from 'drizzle-orm';
+import { matchAssessments } from '@shared/schema/courtiq';
 import { 
-  calculateWeightedPCP,
-  validateAssessmentRequirements,
-  getNextAssessmentRecommendation,
-  getAssessmentsRequiringValidation,
-  type CoachAssessment 
-} from '@shared/utils/coachWeightedAssessment';
-import { requireCoachLevel, requireCoach } from '../middleware/coaching';
+  aggregateMultiCoachRatings,
+  getOfficialPCPRating,
+  validateNewAssessment,
+  type AssessmentRecord 
+} from '@shared/utils/multiCoachAggregation';
+import { isAuthenticated } from '../auth';
 
 const router = Router();
 
 // Validation schemas
-const assessmentSubmissionSchema = z.object({
-  studentId: z.number(),
-  scores: z.object({
-    technical: z.number().min(0).max(10),
-    tactical: z.number().min(0).max(10),
-    physical: z.number().min(0).max(10),
-    mental: z.number().min(0).max(10)
-  }),
-  skillRatings: z.record(z.string(), z.number().min(1).max(10)),
-  sessionNotes: z.string().optional()
-});
-
-const weightedPCPRequestSchema = z.object({
-  studentId: z.number(),
-  includeHistorical: z.boolean().default(true),
-  maxDaysBack: z.number().default(180)
-});
+const studentIdSchema = z.string().refine((val) => {
+  const num = parseInt(val);
+  return !isNaN(num) && num > 0;
+}, "Student ID must be a positive integer");
 
 /**
- * Submit a new coach assessment with automatic weighting
- * POST /api/coach-weighted-assessment/submit
+ * Helper function to convert database records to AssessmentRecord format
  */
-router.post('/submit', requireCoach, async (req, res) => {
-  try {
-    const validatedData = assessmentSubmissionSchema.parse(req.body);
-    const coachId = req.user!.id;
-    const coachLevel = req.user!.coachLevel || 0;
-
-    // Create assessment record
-    const newAssessment: CoachAssessment = {
-      id: `assessment_${Date.now()}_${coachId}`,
-      coachId,
-      coachLevel,
-      studentId: validatedData.studentId,
-      assessmentDate: new Date(),
-      scores: validatedData.scores,
-      skillRatings: validatedData.skillRatings,
-      sessionNotes: validatedData.sessionNotes
-    };
-
-    // Store in database (implementation depends on your storage system)
-    // await storage.createCoachAssessment(newAssessment);
-
-    // Get all assessments for this student to calculate weighted PCP
-    // const studentAssessments = await storage.getStudentAssessments(validatedData.studentId);
-
-    // For demonstration, creating mock data
-    const studentAssessments: CoachAssessment[] = [newAssessment];
-
-    // Calculate weighted PCP
-    const weightedPCP = calculateWeightedPCP(studentAssessments);
-
-    // Update student's PCP rating in main system
-    // await storage.updateStudentPCPRating(validatedData.studentId, weightedPCP.finalPCPRating);
-
-    res.status(201).json({
-      success: true,
-      assessment: {
-        id: newAssessment.id,
-        coachLevel,
-        submittedAt: newAssessment.assessmentDate
-      },
-      weightedPCP,
-      message: `Assessment submitted successfully. Coach L${coachLevel} weighting applied.`
-    });
-
-  } catch (error) {
-    console.error('Assessment submission error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(400).json({
-      success: false,
-      error: error instanceof z.ZodError ? 'Validation failed' : 'Assessment submission failed',
-      details: error instanceof z.ZodError ? error.errors : errorMessage
-    });
-  }
-});
+function mapDbToAssessmentRecord(dbRecord: any): AssessmentRecord {
+  return {
+    id: dbRecord.id,
+    studentId: dbRecord.studentId,
+    coachId: dbRecord.coachId,
+    coachName: dbRecord.coachName || 'Unknown Coach',
+    coachLevel: dbRecord.coachLevel || 2, // Default to L2 if missing
+    assessmentMode: dbRecord.assessmentMode as 'quick' | 'full' || 'full',
+    pcpRating: dbRecord.pcpRating,
+    assessmentData: dbRecord.assessmentData || {},
+    assessmentDate: new Date(dbRecord.assessmentDate),
+    totalSkills: dbRecord.totalSkills || 55
+  };
+}
 
 /**
- * Calculate weighted PCP for a student based on all coach assessments
- * GET /api/coach-weighted-assessment/calculate/:studentId
+ * Get aggregated PCP rating for a student using multi-coach weighting
+ * GET /api/pcp/aggregate/:studentId
  */
-router.get('/calculate/:studentId', requireCoach, async (req, res) => {
+router.get('/aggregate/:studentId', isAuthenticated, async (req, res) => {
   try {
-    const studentId = parseInt(req.params.studentId);
-    const query = weightedPCPRequestSchema.parse(req.query);
+    const studentId = studentIdSchema.parse(req.params.studentId);
+    const studentIdNum = parseInt(studentId);
 
-    // Get all assessments for the student
-    // const assessments = await storage.getStudentAssessments(
-    //   studentId, 
-    //   query.includeHistorical, 
-    //   query.maxDaysBack
-    // );
+    // Query all assessments for the student from database
+    const dbAssessments = await db
+      .select()
+      .from(matchAssessments)
+      .where(eq(matchAssessments.studentId, studentIdNum))
+      .orderBy(desc(matchAssessments.assessmentDate));
 
-    // Mock data for demonstration
-    const assessments: CoachAssessment[] = [
-      {
-        id: 'assessment_1',
-        coachId: 101,
-        coachLevel: 2,
-        studentId,
-        assessmentDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-        scores: { technical: 7.5, tactical: 6.8, physical: 8.2, mental: 7.0 },
-        skillRatings: { serve_execution: 7, return_technique: 8 }
-      },
-      {
-        id: 'assessment_2',
-        coachId: 102,
-        coachLevel: 4,
-        studentId,
-        assessmentDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        scores: { technical: 8.0, tactical: 7.5, physical: 8.0, mental: 7.8 },
-        skillRatings: { serve_execution: 8, return_technique: 8 }
-      }
-    ];
-
-    if (assessments.length === 0) {
+    if (dbAssessments.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'No assessments found for this student'
+        error: 'NO_ASSESSMENTS',
+        message: 'No assessments found for this student'
       });
     }
 
-    // Validate assessment requirements
-    const validation = validateAssessmentRequirements(assessments);
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        error: validation.reason,
-        requiresHigherLevelValidation: validation.requiresHigherLevelValidation,
-        assessmentsRequiringValidation: getAssessmentsRequiringValidation(assessments)
-      });
-    }
+    // Convert database records to AssessmentRecord format
+    const assessmentRecords = dbAssessments.map(mapDbToAssessmentRecord);
 
-    // Calculate weighted PCP
-    const weightedPCP = calculateWeightedPCP(assessments);
+    // Calculate aggregated rating using multi-coach weighting
+    const aggregatedRating = aggregateMultiCoachRatings(assessmentRecords);
+    const officialRating = getOfficialPCPRating(aggregatedRating);
 
-    // Get next assessment recommendation
-    const nextAssessment = getNextAssessmentRecommendation(assessments);
+    console.log(`[API] Aggregated rating for student ${studentId}: ${aggregatedRating.finalPCPRating} (${aggregatedRating.ratingStatus})`);
 
     res.json({
       success: true,
-      studentId,
-      weightedPCP,
-      nextAssessment,
-      assessmentSummary: {
-        totalAssessments: assessments.length,
-        coachLevels: assessments.map(a => a.coachLevel),
-        dateRange: {
-          earliest: Math.min(...assessments.map(a => a.assessmentDate.getTime())),
-          latest: Math.max(...assessments.map(a => a.assessmentDate.getTime()))
-        }
-      }
+      studentId: studentIdNum,
+      aggregated: aggregatedRating,
+      official: officialRating,
+      latestAssessment: {
+        pcpRating: dbAssessments[0].pcpRating,
+        assessmentDate: dbAssessments[0].assessmentDate,
+        coachLevel: dbAssessments[0].coachLevel
+      },
+      totalAssessments: dbAssessments.length
     });
 
   } catch (error) {
-    console.error('Weighted PCP calculation error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Aggregated rating calculation error:', error);
+    
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_STUDENT_ID',
+        message: 'Student ID must be a positive integer'
+      });
+    }
+
     res.status(500).json({
       success: false,
-      error: 'Failed to calculate weighted PCP',
-      details: errorMessage
+      error: 'Failed to calculate aggregated rating',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
 /**
- * Get assessment requirements and validation status for a student
- * GET /api/coach-weighted-assessment/validation-status/:studentId
+ * Get assessment history for a student
+ * GET /api/coach/student-assessment-history/:studentId
  */
-router.get('/validation-status/:studentId', requireCoach, async (req, res) => {
+router.get('/history/:studentId', isAuthenticated, async (req, res) => {
   try {
-    const studentId = parseInt(req.params.studentId);
-
-    // Get student assessments
-    // const assessments = await storage.getStudentAssessments(studentId);
-
-    // Mock data
-    const assessments: CoachAssessment[] = [
-      {
-        id: 'assessment_1',
-        coachId: 101,
-        coachLevel: 1,
-        studentId,
-        assessmentDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
-        scores: { technical: 6.5, tactical: 6.0, physical: 7.5, mental: 6.2 },
-        skillRatings: {}
-      }
-    ];
-
-    const validation = validateAssessmentRequirements(assessments);
-    const requiresValidation = getAssessmentsRequiringValidation(assessments);
-    const nextAssessment = getNextAssessmentRecommendation(assessments);
-
+    const studentId = studentIdSchema.parse(req.params.studentId);
+    const studentIdNum = parseInt(studentId);
+    
+    // Query assessment history from database
+    const dbAssessments = await db
+      .select()
+      .from(matchAssessments)
+      .where(eq(matchAssessments.studentId, studentIdNum))
+      .orderBy(desc(matchAssessments.assessmentDate));
+    
+    // Format assessments for frontend display
+    const assessments = dbAssessments.map(assessment => ({
+      id: assessment.id,
+      coachId: assessment.coachId,
+      coachName: assessment.coachName || 'Unknown Coach',
+      coachLevel: assessment.coachLevel || 2,
+      assessmentMode: assessment.assessmentMode || 'full',
+      pcpRating: assessment.pcpRating,
+      assessmentDate: assessment.assessmentDate,
+      totalSkills: assessment.totalSkills || 55
+    }));
+    
+    // Get latest assessment for summary
+    const latestAssessment = assessments[0] || null;
+    
     res.json({
       success: true,
-      studentId,
-      validation: {
-        isValid: validation.isValid,
-        reason: validation.reason,
-        requiresHigherLevelValidation: validation.requiresHigherLevelValidation
-      },
-      assessmentsRequiringValidation: requiresValidation.map(a => ({
-        id: a.id,
-        coachId: a.coachId,
-        coachLevel: a.coachLevel,
-        daysSinceAssessment: Math.floor((Date.now() - a.assessmentDate.getTime()) / (1000 * 60 * 60 * 24))
-      })),
-      nextAssessment,
-      currentStatus: {
+      studentId: studentIdNum,
+      assessments,
+      latestAssessment: latestAssessment ? {
+        pcpRating: latestAssessment.pcpRating,
+        assessmentDate: latestAssessment.assessmentDate,
+        coachLevel: latestAssessment.coachLevel
+      } : null,
+      summary: {
         totalAssessments: assessments.length,
-        highestCoachLevel: Math.max(...assessments.map(a => a.coachLevel)),
-        latestAssessmentAge: assessments.length > 0 
-          ? Math.floor((Date.now() - Math.max(...assessments.map(a => a.assessmentDate.getTime()))) / (1000 * 60 * 60 * 24))
+        uniqueCoaches: [...new Set(assessments.map(a => a.coachId))].length,
+        coachLevels: assessments.map(a => a.coachLevel),
+        averagePCP: assessments.length > 0 
+          ? (assessments.reduce((sum, a) => sum + a.pcpRating, 0) / assessments.length).toFixed(2)
           : null
       }
     });
-
+    
   } catch (error) {
-    console.error('Validation status error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error fetching assessment history:', error);
+    
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_STUDENT_ID',
+        message: 'Student ID must be a positive integer'
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      error: 'Failed to get validation status',
-      details: errorMessage
+      error: 'Failed to fetch assessment history',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
 /**
- * Get coach weighting information and capabilities
- * GET /api/coach-weighted-assessment/coach-info
+ * Validate a new assessment before submission
+ * POST /api/coach-weighted-assessment/validate
  */
-router.get('/coach-info', requireCoach, async (req, res) => {
+router.post('/validate', isAuthenticated, async (req, res) => {
   try {
-    const coachLevel = req.user!.coachLevel || 0;
-    const coachId = req.user!.id;
+    const { studentId, coachId } = req.body;
+    
+    if (!studentId || !coachId) {
+      return res.status(400).json({
+        success: false,
+        error: 'MISSING_PARAMETERS',
+        message: 'Student ID and Coach ID are required'
+      });
+    }
 
-    // Get coach's weighting information
-    const coachInfo = {
+    // Get existing assessments for the student
+    const dbAssessments = await db
+      .select()
+      .from(matchAssessments)
+      .where(eq(matchAssessments.studentId, parseInt(studentId)))
+      .orderBy(desc(matchAssessments.assessmentDate));
+
+    const existingAssessments = dbAssessments.map(mapDbToAssessmentRecord);
+
+    // Validate the new assessment
+    const validation = validateNewAssessment(existingAssessments, {
       coachId,
-      coachLevel,
-      assessmentCapabilities: {
-        baseWeight: coachLevel === 1 ? 0.7 : 
-                   coachLevel === 2 ? 1.0 :
-                   coachLevel === 3 ? 1.8 :
-                   coachLevel === 4 ? 3.2 : 3.8,
-        confidenceFactors: {
-          technical: coachLevel === 1 ? 0.8 : 
-                    coachLevel === 2 ? 0.9 :
-                    coachLevel === 3 ? 0.95 :
-                    coachLevel === 4 ? 0.98 : 1.0,
-          tactical: coachLevel === 1 ? 0.7 : 
-                   coachLevel === 2 ? 0.8 :
-                   coachLevel === 3 ? 0.9 :
-                   coachLevel === 4 ? 0.95 : 0.98,
-          physical: coachLevel === 1 ? 0.9 : 
-                   coachLevel === 2 ? 0.9 :
-                   coachLevel === 3 ? 0.9 :
-                   coachLevel === 4 ? 0.92 : 0.95,
-          mental: coachLevel === 1 ? 0.6 : 
-                 coachLevel === 2 ? 0.7 :
-                 coachLevel === 3 ? 0.8 :
-                 coachLevel === 4 ? 0.9 : 0.95
-        },
-        validationAuthority: {
-          canValidateL1L2: coachLevel >= 3,
-          canProvideFinalAssessment: coachLevel >= 3,
-          requiresValidation: coachLevel <= 2,
-          assessmentValidityDays: coachLevel >= 3 ? 90 : 30
-        }
+      studentId: parseInt(studentId)
+    });
+
+    res.json({
+      success: true,
+      validation: {
+        valid: validation.valid,
+        reason: validation.reason || 'Assessment can proceed'
       },
-      specializations: coachLevel >= 4 ? [
-        'Advanced tactical pattern recognition',
-        'High-pressure performance analysis', 
-        'Complex technical fault diagnosis'
-      ] : coachLevel >= 3 ? [
-        'Multi-dimensional skill correlation',
-        'Game situation assessment',
-        'Strategic development planning'
-      ] : [
-        'Basic technical execution',
-        'Fundamental physical attributes',
-        'Observable behavioral traits'
-      ]
+      existingAssessments: existingAssessments.length,
+      recentCoachAssessments: existingAssessments
+        .filter(a => a.coachId === coachId)
+        .slice(0, 3)
+        .map(a => ({
+          id: a.id,
+          assessmentDate: a.assessmentDate,
+          pcpRating: a.pcpRating
+        }))
+    });
+
+  } catch (error) {
+    console.error('Assessment validation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to validate assessment',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Get coach weighting information and multi-coach system status
+ * GET /api/coach-weighted-assessment/system-status
+ */
+router.get('/system-status', isAuthenticated, async (req, res) => {
+  try {
+    // Import coach level weights
+    const { COACH_LEVEL_WEIGHTS } = await import('@shared/utils/multiCoachAggregation');
+    
+    const systemStatus = {
+      multiCoachAggregationEnabled: true,
+      coachLevelWeights: COACH_LEVEL_WEIGHTS,
+      ratingSystem: {
+        provisional: 'L1-L3 coaches provide provisional ratings',
+        verified: 'L4+ coaches provide verified ratings',
+        skillFloors: 'Players cannot drop below achieved skill thresholds',
+        dynamicWeighting: 'Skill category weights adapt by player level'
+      },
+      confidenceLevels: {
+        LOW: 'Single assessment or low total weight',
+        MODERATE: 'Multiple assessments or moderate weight',
+        HIGH: 'Strong assessment weight or L4+ validation',
+        EXPERT: 'L4+ coach with significant total weight'
+      },
+      antiAbuseControls: {
+        coachCooldown: '24 hours between assessments from same coach',
+        minimumAssessments: '1 assessment minimum for rating',
+        maxAssessmentAge: 'No expiration on historical assessments'
+      }
     };
 
     res.json({
       success: true,
-      coachInfo
+      timestamp: new Date().toISOString(),
+      systemStatus
     });
 
   } catch (error) {
-    console.error('Coach info error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('System status error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get coach information',
-      details: errorMessage
+      error: 'Failed to get system status',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

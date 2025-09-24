@@ -44,31 +44,45 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, coachLevel,
   const [historyLoading, setHistoryLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch assessment history for the student
+  // Fetch assessment history and aggregated rating for the student
   const fetchAssessmentHistory = async () => {
     if (historyLoading) return;
     
     setHistoryLoading(true);
     try {
-      const response = await fetch(`/api/coach/student-assessment-history/${studentId}`, {
+      // Fetch assessment history
+      const historyResponse = await fetch(`/api/coach-weighted-assessment/history/${studentId}`, {
         credentials: 'include'
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setAssessmentHistory(data.assessments || []);
-        
-        // Set current PCP from latest assessment for skill floor calculations
-        if (data.latestAssessment?.pcpRating) {
-          setStudentCurrentPCP(data.latestAssessment.pcpRating);
-        }
-        
-        console.log(`[ASSESSMENT HISTORY] Loaded ${data.assessments?.length || 0} assessments for student ${studentId}`);
-      } else {
-        console.error('Failed to fetch assessment history');
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setAssessmentHistory(historyData.assessments || []);
+        console.log(`[ASSESSMENT HISTORY] Loaded ${historyData.assessments?.length || 0} assessments for student ${studentId}`);
       }
+      
+      // Fetch aggregated PCP rating for skill floor calculations
+      const aggregateResponse = await fetch(`/api/coach-weighted-assessment/aggregate/${studentId}`, {
+        credentials: 'include'
+      });
+      
+      if (aggregateResponse.ok) {
+        const aggregateData = await aggregateResponse.json();
+        
+        // Use aggregated rating for skill floor calculations
+        if (aggregateData.aggregated?.finalPCPRating) {
+          setStudentCurrentPCP(aggregateData.aggregated.finalPCPRating);
+          console.log(`[MULTI-COACH AGGREGATION] Current aggregated PCP: ${aggregateData.aggregated.finalPCPRating} (${aggregateData.aggregated.ratingStatus})`);
+          console.log(`[MULTI-COACH AGGREGATION] Confidence: ${aggregateData.aggregated.confidenceLevel}, ${aggregateData.aggregated.contributingAssessments} assessments`);
+        } else if (aggregateData.latestAssessment?.pcpRating) {
+          setStudentCurrentPCP(aggregateData.latestAssessment.pcpRating);
+        }
+      } else if (aggregateResponse.status === 404) {
+        console.log(`[MULTI-COACH AGGREGATION] No assessments found for student ${studentId}`);
+      }
+      
     } catch (error) {
-      console.error('Error fetching assessment history:', error);
+      console.error('Error fetching assessment data:', error);
     } finally {
       setHistoryLoading(false);
     }
