@@ -163,9 +163,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
-      const { studentId, coachId, assessmentData, totalSkills } = req.body;
+      console.log('[COACH API DEBUG] Request body received:', JSON.stringify(req.body, null, 2));
+      
+      const { studentId, coachId, assessmentData, totalSkills, assessmentMode } = req.body;
+      
+      console.log('[COACH API DEBUG] Extracted data:', { 
+        studentId, 
+        coachId, 
+        assessmentData: typeof assessmentData,
+        assessmentDataKeys: assessmentData ? Object.keys(assessmentData) : 'null',
+        totalSkills,
+        assessmentMode
+      });
       
       if (!studentId || !coachId || !assessmentData) {
+        console.log('[COACH API DEBUG] Missing required data validation failed');
         return res.status(400).json({ error: 'Missing required assessment data' });
       }
 
