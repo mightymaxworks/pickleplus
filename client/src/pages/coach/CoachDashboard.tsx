@@ -26,10 +26,11 @@ import { useToast } from '@/hooks/use-toast';
 import { SKILL_CATEGORIES, calculatePCPFromAssessment, getCategoryWeight, type CategoryName } from '@shared/utils/pcpCalculationSimple';
 
 // Enhanced Mobile-Optimized Assessment Interface Component
-const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete, onCancel }: {
+const SkillAssessmentInterface = ({ studentId, coachId, studentName, coachLevel, onComplete, onCancel }: {
   studentId: number;
   coachId: number;
   studentName: string;
+  coachLevel: number;
   onComplete: () => void;
   onCancel: () => void;
 }) => {
@@ -37,6 +38,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   const [currentCategory, setCurrentCategory] = useState(0);
   const [assessmentData, setAssessmentData] = useState<Record<string, number>>({});
   const [currentPCPRating, setCurrentPCPRating] = useState<number | null>(null);
+  const [studentCurrentPCP, setStudentCurrentPCP] = useState<number | undefined>(undefined);
   const { toast } = useToast();
 
   // Rating descriptions for tooltip guidance
@@ -225,12 +227,17 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
     return mappedSkillData;
   };
 
-  // Calculate real-time PCP rating using official algorithm (2.0-8.0 scale)
-  const calculateCurrentPCP = (): number | null => {
+  // Calculate real-time PCP rating using new dynamic algorithm with coach level weighting
+  const calculateCurrentPCP = (coachLevel?: number, currentStudentPCP?: number): number | null => {
     if (Object.keys(assessmentData).length === 0) return null;
     
     const mappedSkillData = processAssessmentData(assessmentData);
-    const result = calculatePCPFromAssessment(mappedSkillData);
+    const result = calculatePCPFromAssessment(mappedSkillData, {
+      coachLevel: coachLevel as 1 | 2 | 3 | 4 | 5 || 2, // Default to L2
+      assessmentMode: assessmentMode || 'full',
+      currentPCP: currentStudentPCP,
+      previousPCP: currentStudentPCP // For skill floor protection
+    });
     return result.pcpRating;
   };
 
@@ -241,9 +248,14 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
         [`${activeCategories[currentCategory].name}_${skillName}`]: rating
       };
       
-      // Calculate PCP rating with the updated data immediately using same mapping
+      // Calculate PCP rating with updated data using new dynamic algorithm
       const mappedSkillData = processAssessmentData(updated);
-      const result = calculatePCPFromAssessment(mappedSkillData);
+      const result = calculatePCPFromAssessment(mappedSkillData, {
+        coachLevel: Math.max(1, Math.min(5, coachLevel)) as 1 | 2 | 3 | 4 | 5, // Ensure valid coach level 1-5
+        assessmentMode: assessmentMode || 'full',
+        currentPCP: studentCurrentPCP, // Current student PCP for progression context
+        previousPCP: studentCurrentPCP // For skill floor protection
+      });
       setCurrentPCPRating(result.pcpRating);
       
       return updated;
@@ -1018,6 +1030,7 @@ export default function CoachDashboard() {
               coachId={currentUser?.id || 0}
               studentId={selectedStudent}
               studentName={assignedStudents.find(s => s.id === selectedStudent)?.displayName || ""}
+              coachLevel={coachLevel}
               onComplete={() => {
                 setShowAssessment(false);
                 setSelectedStudent(null);

@@ -265,10 +265,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('[COACH API DEBUG] Mapped skillData for PCP:', JSON.stringify(mappedSkillData, null, 2));
 
-      // Calculate PCP rating using official algorithm  
-      const pcpResult = calculatePCPFromAssessment(mappedSkillData);
+      // Get coach level from user profile for weighting calculations
+      const coach = await storage.getUser(coachId);
+      const coachLevel = Math.max(1, Math.min(5, coach?.coachLevel || 2)) as 1 | 2 | 3 | 4 | 5;
+      
+      // Get student's current PCP rating for skill floor protection (TODO: implement getCurrentPCPRating)
+      const studentCurrentPCP = undefined; // Will implement proper PCP retrieval later
+      
+      console.log(`[COACH API DEBUG] Coach level: ${coachLevel}, Student current PCP: ${studentCurrentPCP}`);
 
-      // Store the assessment using the existing createAssessment method with PCP data
+      // Calculate PCP rating using new dynamic algorithm with coach level weighting
+      const pcpResult = calculatePCPFromAssessment(mappedSkillData, {
+        coachLevel: coachLevel,
+        assessmentMode: assessmentMode === 'quick' ? 'quick' : 'full',
+        currentPCP: studentCurrentPCP || undefined,
+        previousPCP: studentCurrentPCP || undefined
+      });
+
+      console.log(`[COACH API DEBUG] PCP calculation result:`, {
+        pcpRating: pcpResult.pcpRating,
+        rawPcpBeforeModifiers: pcpResult.rawPcpBeforeModifiers,
+        weightLevel: pcpResult.weightLevel,
+        coachWeight: pcpResult.coachWeight,
+        skillFloorApplied: pcpResult.skillFloorApplied
+      });
+
+      // Store the assessment using the existing createAssessment method with enhanced PCP data
       const assessmentRecord = await storage.createAssessment({
         coach_id: coachId,
         student_id: studentId,
@@ -281,7 +303,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pcp_rating: pcpResult.pcpRating,
         raw_weighted_score: pcpResult.rawScore,
         calculation_timestamp: new Date().toISOString(),
-        notes: `${assessmentMode === 'quick' ? '10-skill Quick' : '55-skill Full'} assessment completed: ${pcpResult.skillCount}/55 skills evaluated - PCP Rating: ${pcpResult.pcpRating}`,
+        notes: `${assessmentMode === 'quick' ? '10-skill Quick' : '55-skill Full'} assessment by L${coachLevel} coach - Weight Level: ${pcpResult.weightLevel} - PCP Rating: ${pcpResult.pcpRating} (${pcpResult.skillCount} skills evaluated)${pcpResult.skillFloorApplied ? ' - Skill Floor Applied' : ''}`,
+        coach_level: coachLevel, // Store coach level for historical tracking
+        assessment_mode: assessmentMode === 'quick' ? 'quick' : 'full', // Store assessment type
+        weight_level_used: pcpResult.weightLevel, // Store which weight level was applied
+        coach_weighting_factor: pcpResult.coachWeight, // Store coach weighting impact
+        skill_floor_applied: pcpResult.skillFloorApplied || false, // Track if skill floor was applied
         ...assessmentData
       });
 
