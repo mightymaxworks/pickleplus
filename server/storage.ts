@@ -6297,7 +6297,7 @@ export class DatabaseStorage implements IStorage {
       
       // Use existing match_assessments table structure  
       const result = await db.insert(matchAssessments).values({
-        matchId: assessmentData.session_id || 0, // Use 0 for progressive assessments without match
+        matchId: assessmentData.session_id || null, // Use null for progressive assessments without match
         assessorId: assessmentData.coach_id,
         targetId: assessmentData.student_id,
         technicalRating: Math.round(assessmentData.pcp_rating || 5), // Store PCP rating in technical field
