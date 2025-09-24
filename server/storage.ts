@@ -32,6 +32,7 @@ import {
 } from "@shared/schema";
 // Import regular matches table and types from main schema
 import { matches } from "@shared/schema";
+import { matchAssessments } from "@shared/schema/courtiq";
 // Regular matches table uses inferred types
 type Match = typeof matches.$inferSelect;
 type InsertMatch = typeof matches.$inferInsert;
