@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const parts = key.split('_');
         if (parts.length >= 2) {
           const skillName = parts.slice(1).join('_');
-          skillData[skillName] = value;
+          skillData[skillName] = value as number;
         }
       });
 
@@ -227,23 +227,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         physical_rating: pcpResult.categoryAverages.athletic,
         mental_rating: pcpResult.categoryAverages.mental,
         pcp_rating: pcpResult.pcpRating,
-        raw_weighted_score: pcpResult.rawWeightedScore,
-        calculation_timestamp: pcpResult.calculationTimestamp,
-        notes: `55-skill assessment completed: ${pcpResult.totalSkillsAssessed}/55 skills evaluated - PCP Rating: ${pcpResult.pcpRating}`,
+        raw_weighted_score: pcpResult.rawScore,
+        calculation_timestamp: new Date().toISOString(),
+        notes: `${assessmentMode === 'quick' ? '10-skill Quick' : '55-skill Full'} assessment completed: ${pcpResult.skillCount}/55 skills evaluated - PCP Rating: ${pcpResult.pcpRating}`,
         ...assessmentData
       });
 
-      console.log(`[COACH API] UDF-compliant assessment submitted for student ${studentId} by coach ${coachId} - PCP Rating: ${pcpResult.pcpRating}`);
+      console.log(`[COACH API] Assessment submitted for student ${studentId} by coach ${coachId} - PCP Rating: ${pcpResult.pcpRating}`);
       
       res.json({ 
         success: true, 
         assessmentId: assessmentRecord.id,
         pcpRating: pcpResult.pcpRating,
         categoryBreakdown: pcpResult.categoryAverages,
-        rawWeightedScore: pcpResult.rawWeightedScore,
-        totalSkillsAssessed: pcpResult.totalSkillsAssessed,
-        isComplete: pcpResult.isComplete,
-        message: 'UDF-compliant assessment submitted successfully'
+        rawWeightedScore: pcpResult.rawScore,
+        totalSkillsAssessed: pcpResult.skillCount,
+        message: `${assessmentMode === 'quick' ? 'Quick' : 'Full'} assessment submitted successfully`
       });
     } catch (error) {
       console.error('Error submitting assessment:', error);

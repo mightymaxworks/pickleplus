@@ -218,9 +218,20 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
         ...prev,
         [`${activeCategories[currentCategory].name}_${skillName}`]: rating
       };
-      // Update PCP rating in real-time using official algorithm
-      const newRating = calculateCurrentPCP();
-      setCurrentPCPRating(newRating);
+      
+      // Calculate PCP rating with the updated data immediately
+      const formattedData: Record<string, number> = {};
+      Object.entries(updated).forEach(([key, value]) => {
+        const parts = key.split('_');
+        if (parts.length >= 2) {
+          const skillName = parts.slice(1).join('_');
+          formattedData[skillName] = value;
+        }
+      });
+      
+      const result = calculatePCPFromAssessment(formattedData);
+      setCurrentPCPRating(result.pcpRating);
+      
       return updated;
     });
   };
