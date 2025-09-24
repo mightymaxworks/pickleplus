@@ -95,6 +95,24 @@ function calculateCategoryAverage(category: CategoryName, assessmentData: Assess
   return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
 }
 
+// Skill floors prevent major backtracking once players reach weight level thresholds
+export const SKILL_FLOORS = {
+  BEGINNER: 0,      // No floor - can start anywhere
+  INTERMEDIATE: 2.8, // Once you reach intermediate, floor at 2.8
+  ADVANCED: 3.8,    // Once touch becomes dominant, floor at 3.8
+  EXPERT: 4.8,      // Touch mastery achieved, floor at 4.8
+  MASTER: 5.8       // Elite level achieved, floor at 5.8
+} as const;
+
+// Coach Level Weightings - Impact on player rating assessments
+export const COACH_LEVEL_WEIGHTS = {
+  1: 0.7,   // L1: Limited experience, reduced weighting
+  2: 1.0,   // L2: Standard weighting baseline
+  3: 1.8,   // L3: Experienced coach, higher trust
+  4: 3.2,   // L4: Expert coach, significant authority
+  5: 3.8    // L5: Master coach, maximum authority
+} as const;
+
 /**
  * Determine PCP weight level based on current or previous PCP rating
  */
@@ -110,13 +128,34 @@ function getPCPWeightLevel(currentPCP?: number, previousPCP?: number): keyof typ
 }
 
 /**
- * Calculate PCP rating using dynamic progressive weighting system
+ * Apply skill floor protection to prevent major backtracking
+ */
+function applySkillFloor(newPCP: number, previousPCP: number, weightLevel: keyof typeof DYNAMIC_PCP_WEIGHTS): number {
+  const floor = SKILL_FLOORS[weightLevel];
+  
+  // Apply skill floor - players cannot drop below their achieved level threshold
+  const flooredPCP = Math.max(newPCP, floor);
+  
+  // Allow minor decline but prevent major regression (max 0.3 points per assessment)
+  const maxDeclinePerAssessment = 0.3;
+  const minimumAllowed = Math.max(floor, previousPCP - maxDeclinePerAssessment);
+  
+  return Math.max(flooredPCP, minimumAllowed);
+}
+
+/**
+ * Calculate PCP rating with coach level weighting and skill floor protection
  * Algorithm: PCP = 2.0 + (weighted_average - 1.0) * (6.0/9.0)
  * Range: 2.0 to 8.0
  */
 export function calculatePCPFromAssessment(
   assessmentData: AssessmentData, 
-  context?: { currentPCP?: number; previousPCP?: number }
+  context?: { 
+    currentPCP?: number; 
+    previousPCP?: number;
+    coachLevel?: 1 | 2 | 3 | 4 | 5;
+    assessmentMode?: 'quick' | 'full';
+  }
 ) {
   // Calculate category averages from individual skills
   const categoryAverages = {
@@ -141,15 +180,123 @@ export function calculatePCPFromAssessment(
   );
 
   // Convert to PCP rating scale (2.0 to 8.0)
-  const pcpRating = 2.0 + (rawScore - 1.0) * (6.0 / 9.0);
+  let pcpRating = 2.0 + (rawScore - 1.0) * (6.0 / 9.0);
+
+  // Apply coach level weighting to the assessment
+  const coachLevel = context?.coachLevel || 2; // Default to L2 (1.0x)
+  const coachWeight = COACH_LEVEL_WEIGHTS[coachLevel];
+  
+  // Coach weighting affects the confidence/impact of the assessment
+  // Higher level coaches have more authority in rating changes
+  const assessmentImpact = coachWeight;
+  
+  // If there's a previous PCP, blend the new assessment with coach authority
+  if (context?.previousPCP) {
+    // Higher level coaches can make bigger changes, lower level coaches make smaller changes
+    const changeAmount = (pcpRating - context.previousPCP) * assessmentImpact;
+    pcpRating = context.previousPCP + changeAmount;
+    
+    // Apply skill floor protection
+    pcpRating = applySkillFloor(pcpRating, context.previousPCP, weightLevel);
+  }
+
+  // Apply assessment mode modifier (quick vs full assessment)
+  const assessmentMode = context?.assessmentMode || 'full';
+  const modeModifier = assessmentMode === 'quick' ? 0.85 : 1.0; // Quick mode 15% penalty
+  
+  // Final PCP rating with all modifiers applied
+  const finalPCP = Math.round(pcpRating * modeModifier * 100) / 100;
 
   return {
-    pcpRating: Math.round(pcpRating * 100) / 100, // 2 decimal places
+    pcpRating: finalPCP,
+    rawPcpBeforeModifiers: Math.round(pcpRating * 100) / 100,
     categoryAverages,
     skillCount: Object.keys(assessmentData).length,
     rawScore,
     weightLevel,
-    weightsUsed: weights
+    weightsUsed: weights,
+    coachLevel,
+    coachWeight: assessmentImpact,
+    assessmentMode,
+    modeModifier,
+    skillFloorApplied: context?.previousPCP ? pcpRating !== (context.previousPCP + (pcpRating - context.previousPCP) * assessmentImpact) : false
+  };
+}
+
+/**
+ * Calculate multi-coach weighted PCP from multiple assessments
+ * Implements time decay and coach level weighting aggregation
+ */
+export function calculateMultiCoachWeightedPCP(
+  assessments: Array<{
+    pcpRating: number;
+    coachLevel: 1 | 2 | 3 | 4 | 5;
+    assessmentDate: Date;
+    assessmentMode: 'quick' | 'full';
+  }>,
+  timeWindowDays: number = 180
+): {
+  weightedPCP: number;
+  confidenceScore: number;
+  assessmentSummary: {
+    totalAssessments: number;
+    highestCoachLevel: number;
+    timeSpan: number;
+    averageCoachLevel: number;
+  };
+} {
+  if (assessments.length === 0) {
+    throw new Error('NO_ASSESSMENTS: Cannot calculate PCP without assessment data');
+  }
+
+  const currentDate = new Date();
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
+
+  for (const assessment of assessments) {
+    // Time decay calculation (linear decay over time window)
+    const daysSinceAssessment = Math.floor(
+      (currentDate.getTime() - assessment.assessmentDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const timeDecayFactor = Math.max(0.5, 1 - (daysSinceAssessment / timeWindowDays)); // Min 0.5, max 1.0
+
+    // Coach level weighting
+    const coachWeight = COACH_LEVEL_WEIGHTS[assessment.coachLevel];
+
+    // Assessment mode adjustment
+    const modeMultiplier = assessment.assessmentMode === 'full' ? 1.0 : 0.85; // 15% penalty for quick mode
+
+    // Calculate final weight for this assessment
+    const finalWeight = timeDecayFactor * coachWeight * modeMultiplier;
+
+    totalWeightedScore += assessment.pcpRating * finalWeight;
+    totalWeight += finalWeight;
+  }
+
+  const weightedPCP = totalWeightedScore / totalWeight;
+  
+  // Calculate confidence score based on assessment quality
+  const highestCoachLevel = Math.max(...assessments.map(a => a.coachLevel));
+  const averageCoachLevel = assessments.reduce((sum, a) => sum + a.coachLevel, 0) / assessments.length;
+  const fullAssessmentRatio = assessments.filter(a => a.assessmentMode === 'full').length / assessments.length;
+  
+  // Confidence increases with higher coach levels, more assessments, and full assessment ratio
+  const confidenceScore = Math.min(0.98, 
+    0.3 + // Base confidence
+    (averageCoachLevel / 5) * 0.4 + // Coach level component (0-0.4)
+    Math.min(assessments.length / 5, 1) * 0.2 + // Assessment count component (0-0.2)
+    fullAssessmentRatio * 0.08 // Full assessment bonus (0-0.08)
+  );
+
+  return {
+    weightedPCP: Math.round(weightedPCP * 100) / 100,
+    confidenceScore: Math.round(confidenceScore * 100) / 100,
+    assessmentSummary: {
+      totalAssessments: assessments.length,
+      highestCoachLevel,
+      timeSpan: timeWindowDays,
+      averageCoachLevel: Math.round(averageCoachLevel * 10) / 10
+    }
   };
 }
 
