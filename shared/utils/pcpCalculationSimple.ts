@@ -3,14 +3,47 @@
  * 55-Skill Individual Tracking System
  */
 
-// PCP Category Weights (must sum to 1.0)
-export const PCP_WEIGHTS = {
-  TOUCH: 0.30,      // Dinks/Resets - Most critical for competitive play
-  TECHNICAL: 0.25,  // Groundstrokes/Serves - Foundation skills
-  MENTAL: 0.20,     // Mental Game - Separates good from great players
-  ATHLETIC: 0.15,   // Footwork/Fitness - Enables all other skills
-  POWER: 0.10       // Volleys/Smashes - Important but situational
+// PCP Dynamic Category Weights - Progressive based on player level
+export const DYNAMIC_PCP_WEIGHTS = {
+  BEGINNER: {     // PCP < 3.0 - Foundation Phase
+    TECHNICAL: 0.45,  // Must master fundamentals first
+    ATHLETIC: 0.25,   // Movement foundation critical
+    TOUCH: 0.15,      // Basic dinking introduction
+    MENTAL: 0.10,     // Simple focus concepts
+    POWER: 0.05       // Not relevant yet
+  },
+  INTERMEDIATE: { // PCP 3.0-4.0 - Development Phase
+    TECHNICAL: 0.35,  // Still refining fundamentals
+    TOUCH: 0.25,      // Soft game becoming important
+    ATHLETIC: 0.20,   // Better movement patterns
+    MENTAL: 0.15,     // Basic strategy awareness
+    POWER: 0.05       // Still minimal
+  },
+  ADVANCED: {     // PCP 4.0-5.0 - Touch-Dominant Phase
+    TOUCH: 0.45,      // TOUCH BECOMES DOMINANT - soft game mastery critical
+    MENTAL: 0.25,     // Strategy & psychology important
+    ATHLETIC: 0.15,   // Fitness enables touch execution
+    POWER: 0.10,      // Tactical power usage
+    TECHNICAL: 0.05   // MICRO WEIGHTAGE - fundamentals already mastered
+  },
+  EXPERT: {       // PCP 5.0-6.0 - Touch Mastery + Mental
+    TOUCH: 0.50,      // TOUCH MASTERY - separation factor at elite level
+    MENTAL: 0.30,     // Psychology of winning critical
+    ATHLETIC: 0.15,   // Peak physical performance
+    POWER: 0.03,      // Precise tactical power
+    TECHNICAL: 0.02   // MICRO WEIGHTAGE - perfected fundamentals
+  },
+  MASTER: {       // PCP 6.0+ - Touch Perfection + Mental Toughness
+    TOUCH: 0.55,      // TOUCH PERFECTION - ultimate differentiator
+    MENTAL: 0.30,     // Elite mental game
+    ATHLETIC: 0.14,   // Peak conditioning
+    POWER: 0.01,      // Surgical precision only
+    TECHNICAL: 0.00   // ZERO - completely mastered
+  }
 };
+
+// Legacy static weights for backward compatibility
+export const PCP_WEIGHTS = DYNAMIC_PCP_WEIGHTS.INTERMEDIATE;
 
 // 55-Skill Categories
 export const SKILL_CATEGORIES = {
@@ -63,11 +96,28 @@ function calculateCategoryAverage(category: CategoryName, assessmentData: Assess
 }
 
 /**
- * Calculate PCP rating from assessment data using weighted category averages
+ * Determine PCP weight level based on current or previous PCP rating
+ */
+function getPCPWeightLevel(currentPCP?: number, previousPCP?: number): keyof typeof DYNAMIC_PCP_WEIGHTS {
+  // Use previous PCP for context if available, otherwise use estimated level
+  const referencePCP = previousPCP || currentPCP || 2.5; // Default to beginner if no context
+  
+  if (referencePCP < 3.0) return 'BEGINNER';
+  if (referencePCP < 4.0) return 'INTERMEDIATE';  
+  if (referencePCP < 5.0) return 'ADVANCED';
+  if (referencePCP < 6.0) return 'EXPERT';
+  return 'MASTER';
+}
+
+/**
+ * Calculate PCP rating using dynamic progressive weighting system
  * Algorithm: PCP = 2.0 + (weighted_average - 1.0) * (6.0/9.0)
  * Range: 2.0 to 8.0
  */
-export function calculatePCPFromAssessment(assessmentData: AssessmentData) {
+export function calculatePCPFromAssessment(
+  assessmentData: AssessmentData, 
+  context?: { currentPCP?: number; previousPCP?: number }
+) {
   // Calculate category averages from individual skills
   const categoryAverages = {
     touch: calculateCategoryAverage('Dinks and Resets', assessmentData),
@@ -77,7 +127,47 @@ export function calculatePCPFromAssessment(assessmentData: AssessmentData) {
     power: calculateCategoryAverage('Volleys and Smashes', assessmentData)
   };
 
-  // Calculate weighted average
+  // Determine appropriate weight level based on player progression
+  const weightLevel = getPCPWeightLevel(context?.currentPCP, context?.previousPCP);
+  const weights = DYNAMIC_PCP_WEIGHTS[weightLevel];
+
+  // Calculate weighted average using dynamic weights
+  const rawScore = (
+    categoryAverages.touch * weights.TOUCH +
+    categoryAverages.technical * weights.TECHNICAL +
+    categoryAverages.mental * weights.MENTAL +
+    categoryAverages.athletic * weights.ATHLETIC +
+    categoryAverages.power * weights.POWER
+  );
+
+  // Convert to PCP rating scale (2.0 to 8.0)
+  const pcpRating = 2.0 + (rawScore - 1.0) * (6.0 / 9.0);
+
+  return {
+    pcpRating: Math.round(pcpRating * 100) / 100, // 2 decimal places
+    categoryAverages,
+    skillCount: Object.keys(assessmentData).length,
+    rawScore,
+    weightLevel,
+    weightsUsed: weights
+  };
+}
+
+/**
+ * Calculate PCP rating from assessment data using legacy static weights
+ * For backward compatibility - use calculatePCPFromAssessment for new implementations
+ */
+export function calculatePCPFromAssessmentLegacy(assessmentData: AssessmentData) {
+  // Calculate category averages from individual skills
+  const categoryAverages = {
+    touch: calculateCategoryAverage('Dinks and Resets', assessmentData),
+    technical: calculateCategoryAverage('Groundstrokes and Serves', assessmentData),
+    mental: calculateCategoryAverage('Mental Game', assessmentData),
+    athletic: calculateCategoryAverage('Footwork & Fitness', assessmentData),
+    power: calculateCategoryAverage('Volleys and Smashes', assessmentData)
+  };
+
+  // Calculate weighted average using static weights
   const rawScore = (
     categoryAverages.touch * PCP_WEIGHTS.TOUCH +
     categoryAverages.technical * PCP_WEIGHTS.TECHNICAL +
