@@ -436,48 +436,99 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           </div>
         </div>
         
-        {/* Real-time PCP Display - Official 2.0-8.0 Scale */}
-        {currentPCPRating !== null && Object.keys(assessmentData).length > 0 && (
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 sm:p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="font-semibold text-green-800 text-sm sm:text-base flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+        {/* Enhanced Live PCP Display - Persistent & Visually Rich */}
+        <div className="sticky top-4 z-10 bg-gradient-to-r from-emerald-100 via-blue-100 to-purple-100 border-2 border-emerald-300 rounded-xl p-4 sm:p-6 shadow-xl backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="relative">
+                  <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
+                </div>
+                <h4 className="font-bold text-emerald-800 text-lg sm:text-xl">
                   Live PCP Rating
                 </h4>
-                <p className="text-xs sm:text-sm text-green-600 mt-1">
-                  Based on {Object.keys(assessmentData).length} skills • Scale: 2.0-8.0
+                <div className="flex-1 border-t border-emerald-300 ml-2"></div>
+              </div>
+              
+              <div className="space-y-3">
+                <p className="text-sm sm:text-base text-emerald-700 font-medium">
+                  📊 Assessment Progress: {Object.keys(assessmentData).length} of {assessmentMode === 'quick' ? 10 : 55} skills rated
                 </p>
-                <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2 relative">
+                
+                {/* Enhanced Progress Bar */}
+                <div className="relative">
+                  <div className="w-full bg-gradient-to-r from-gray-200 to-gray-300 rounded-full h-3 shadow-inner">
                     <div 
-                      className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out" 
-                      style={{ width: `${((currentPCPRating - 2.0) / 6.0) * 100}%` }}
-                    ></div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>2.0</span>
-                      <span>5.0</span>
-                      <span>8.0</span>
+                      className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 h-3 rounded-full transition-all duration-700 ease-out shadow-lg relative overflow-hidden" 
+                      style={{ width: `${currentPCPRating ? ((currentPCPRating - 2.0) / 6.0) * 100 : 0}%` }}
+                    >
+                      <div className="absolute inset-0 bg-white opacity-30 animate-pulse"></div>
                     </div>
+                  </div>
+                  <div className="flex justify-between text-xs font-semibold text-gray-600 mt-2">
+                    <span className="bg-white px-2 py-1 rounded shadow-sm">2.0</span>
+                    <span className="bg-white px-2 py-1 rounded shadow-sm">5.0</span>
+                    <span className="bg-white px-2 py-1 rounded shadow-sm">8.0</span>
                   </div>
                 </div>
               </div>
-              <div className="text-right ml-4">
-                <div className="text-2xl sm:text-3xl font-bold text-green-700">
-                  {currentPCPRating.toFixed(1)}
+            </div>
+            
+            {/* Enhanced Rating Display */}
+            <div className="text-center ml-6 bg-white rounded-xl p-4 shadow-lg border border-emerald-200">
+              <div className="relative">
+                <div className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {currentPCPRating ? currentPCPRating.toFixed(1) : '-.--'}
                 </div>
-                <div className="text-xs text-green-600">PCP Rating</div>
-                <div className="text-xs text-gray-500">
-                  {currentPCPRating >= 7.0 ? 'Expert' : 
-                   currentPCPRating >= 6.0 ? 'Advanced' :
-                   currentPCPRating >= 5.0 ? 'Intermediate' :
-                   currentPCPRating >= 4.0 ? 'Developing' :
-                   currentPCPRating >= 3.0 ? 'Beginner+' : 'Beginner'}
-                </div>
+                {currentPCPRating && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-bounce"></div>
+                )}
+              </div>
+              
+              <div className="text-xs font-bold text-emerald-600 mt-1 tracking-wide">
+                PCP RATING
+              </div>
+              
+              <div className={`text-xs font-medium mt-1 px-2 py-1 rounded-full text-white shadow-sm ${
+                !currentPCPRating ? 'bg-gray-400' :
+                currentPCPRating >= 7.0 ? 'bg-purple-600' : 
+                currentPCPRating >= 6.0 ? 'bg-blue-600' :
+                currentPCPRating >= 5.0 ? 'bg-emerald-600' :
+                currentPCPRating >= 4.0 ? 'bg-yellow-600' :
+                currentPCPRating >= 3.0 ? 'bg-orange-600' : 'bg-red-600'
+              }`}>
+                {!currentPCPRating ? 'PENDING' :
+                 currentPCPRating >= 7.0 ? 'EXPERT' : 
+                 currentPCPRating >= 6.0 ? 'ADVANCED' :
+                 currentPCPRating >= 5.0 ? 'INTERMEDIATE' :
+                 currentPCPRating >= 4.0 ? 'DEVELOPING' :
+                 currentPCPRating >= 3.0 ? 'BEGINNER+' : 'BEGINNER'}
               </div>
             </div>
           </div>
-        )}
+          
+          {/* Skill Categories Progress Indicators */}
+          {Object.keys(assessmentData).length > 0 && (
+            <div className="mt-4 pt-4 border-t border-emerald-200">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                {['Power & Serves', 'Soft Game', 'Net Play', 'Movement', 'Mental Game'].map((category, idx) => {
+                  const categorySkills = Object.keys(assessmentData).filter(key => key.startsWith(activeCategories[idx]?.name || ''));
+                  const totalInCategory = activeCategories[idx]?.skills?.length || 1;
+                  const progress = (categorySkills.length / totalInCategory) * 100;
+                  
+                  return (
+                    <div key={category} className="text-center">
+                      <div className={`w-full h-1.5 rounded-full ${progress === 100 ? 'bg-emerald-500' : progress > 0 ? 'bg-yellow-400' : 'bg-gray-300'}`}></div>
+                      <span className="text-emerald-700 font-medium mt-1 block">{category}</span>
+                      <span className="text-emerald-600">{categorySkills.length}/{totalInCategory}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
         
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button variant="outline" onClick={onCancel} className="order-3 sm:order-1">
