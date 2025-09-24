@@ -23,6 +23,7 @@ import { CoachStudentRequests } from '@/components/coaching/CoachStudentRequests
 import { ProvisionalRatingManagement } from '@/components/coaching/ProvisionalRatingManagement';
 import { CoachAntiAbuseManagement } from '@/components/admin/CoachAntiAbuseManagement';
 import { useToast } from '@/hooks/use-toast';
+import { SKILL_CATEGORIES, calculatePCPFromAssessment, getCategoryWeight, type CategoryName } from '@shared/utils/pcpCalculationSimple';
 
 // Enhanced Mobile-Optimized Assessment Interface Component
 const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete, onCancel }: {
@@ -35,7 +36,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   const [assessmentMode, setAssessmentMode] = useState<'quick' | 'full'>('quick');
   const [currentCategory, setCurrentCategory] = useState(0);
   const [assessmentData, setAssessmentData] = useState<Record<string, number>>({});
-  const [currentPCPRating, setCurrentPCPRating] = useState(0);
+  const [currentPCPRating, setCurrentPCPRating] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Rating descriptions for tooltip guidance
@@ -192,13 +193,23 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   const categoryProgress = (currentCategory + 1) / activeCategories.length * 100;
   const totalSkills = assessmentMode === 'quick' ? 10 : 55;
 
-  // Calculate real-time PCP rating based on current assessments
-  const calculateCurrentPCP = () => {
-    const ratings = Object.values(assessmentData);
-    if (ratings.length === 0) return 0;
-    const average = ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
-    const scaledRating = (average / 10) * 1000; // Scale to 0-1000 PCP points
-    return Math.round(scaledRating);
+  // Calculate real-time PCP rating using official algorithm (2.0-8.0 scale)
+  const calculateCurrentPCP = (): number | null => {
+    if (Object.keys(assessmentData).length === 0) return null;
+    
+    // Convert assessment data format to match algorithm expectations
+    const formattedData: Record<string, number> = {};
+    Object.entries(assessmentData).forEach(([key, value]) => {
+      // Extract skill name from the composite key (categoryName_skillName)
+      const parts = key.split('_');
+      if (parts.length >= 2) {
+        const skillName = parts.slice(1).join('_'); // Handle skill names with underscores
+        formattedData[skillName] = value;
+      }
+    });
+    
+    const result = calculatePCPFromAssessment(formattedData);
+    return result.pcpRating;
   };
 
   const handleRatingChange = (skillName: string, rating: number) => {
@@ -207,7 +218,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
         ...prev,
         [`${activeCategories[currentCategory].name}_${skillName}`]: rating
       };
-      // Update PCP rating in real-time
+      // Update PCP rating in real-time using official algorithm
       const newRating = calculateCurrentPCP();
       setCurrentPCPRating(newRating);
       return updated;
@@ -240,7 +251,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
       if (response.ok) {
         toast({
           title: `${assessmentMode === 'quick' ? '10-Skill Quick' : '55-Skill Full'} Assessment Complete`,
-          description: `Successfully assessed ${studentName} across ${totalSkills} PCP skills. Final PCP Rating: ${calculateCurrentPCP()}`,
+          description: `Successfully assessed ${studentName} across ${totalSkills} PCP skills. Final PCP Rating: ${currentPCPRating?.toFixed(1) || 'N/A'}`,
         });
         onComplete();
       } else {
@@ -326,9 +337,11 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
             <Badge className="bg-blue-600 text-white text-xs">
               Progress: {Math.round(categoryProgress)}%
             </Badge>
-            <Badge className="bg-green-600 text-white text-xs">
-              PCP: {calculateCurrentPCP()}
-            </Badge>
+            {currentPCPRating !== null && (
+              <Badge className="bg-green-600 text-white text-xs">
+                PCP: {currentPCPRating.toFixed(1)}
+              </Badge>
+            )}
           </div>
         </div>
         
@@ -417,19 +430,44 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           </div>
         </div>
         
-        {/* Real-time PCP Display */}
-        {Object.keys(assessmentData).length > 0 && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+        {/* Real-time PCP Display - Official 2.0-8.0 Scale */}
+        {currentPCPRating !== null && Object.keys(assessmentData).length > 0 && (
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 sm:p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-semibold text-green-800 text-sm sm:text-base">Real-time PCP Rating</h4>
-                <p className="text-xs sm:text-sm text-green-600">
-                  Based on {Object.keys(assessmentData).length} skills assessed so far
+              <div className="flex-1">
+                <h4 className="font-semibold text-green-800 text-sm sm:text-base flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  Live PCP Rating
+                </h4>
+                <p className="text-xs sm:text-sm text-green-600 mt-1">
+                  Based on {Object.keys(assessmentData).length} skills • Scale: 2.0-8.0
                 </p>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2 relative">
+                    <div 
+                      className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out" 
+                      style={{ width: `${((currentPCPRating - 2.0) / 6.0) * 100}%` }}
+                    ></div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>2.0</span>
+                      <span>5.0</span>
+                      <span>8.0</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-lg sm:text-2xl font-bold text-green-700">{calculateCurrentPCP()}</div>
-                <div className="text-xs text-green-600">PCP Points</div>
+              <div className="text-right ml-4">
+                <div className="text-2xl sm:text-3xl font-bold text-green-700">
+                  {currentPCPRating.toFixed(1)}
+                </div>
+                <div className="text-xs text-green-600">PCP Rating</div>
+                <div className="text-xs text-gray-500">
+                  {currentPCPRating >= 7.0 ? 'Expert' : 
+                   currentPCPRating >= 6.0 ? 'Advanced' :
+                   currentPCPRating >= 5.0 ? 'Intermediate' :
+                   currentPCPRating >= 4.0 ? 'Developing' :
+                   currentPCPRating >= 3.0 ? 'Beginner+' : 'Beginner'}
+                </div>
               </div>
             </div>
           </div>
@@ -885,7 +923,7 @@ export default function CoachDashboard() {
                   </p>
                 </div>
                 
-                <ProvisionalRatingManagement />
+                <ProvisionalRatingManagement userId={currentUser?.id || 0} userRole="coach" />
               </div>
             </CardContent>
           </Card>
