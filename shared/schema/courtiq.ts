@@ -85,7 +85,7 @@ export const courtiqRatingImpacts = pgTable("courtiq_rating_impacts", {
 // Match Assessments table
 export const matchAssessments = pgTable("match_assessments", {
   id: serial("id").primaryKey(),
-  matchId: integer("match_id").notNull().references(() => matches.id),
+  matchId: integer("match_id").references(() => matches.id),
   assessorId: integer("assessor_id").notNull().references(() => users.id),
   targetId: integer("target_id").notNull().references(() => users.id),
   technicalRating: integer("technical_rating").notNull(),
