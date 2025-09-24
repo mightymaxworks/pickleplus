@@ -6295,22 +6295,24 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Storage] Creating progressive assessment for coach ${assessmentData.coach_id}, student ${assessmentData.student_id}`);
       
       // Use existing match_assessments table structure  
-      const result = await db.insert(matchPcpAssessments).values({
+      const result = await db.insert(matchAssessments).values({
         matchId: assessmentData.session_id || 0, // Use 0 for progressive assessments without match
         assessorId: assessmentData.coach_id,
         targetId: assessmentData.student_id,
-        technicalRating: Math.round(assessmentData.technical_rating || 5),
-        tacticalRating: Math.round(assessmentData.tactical_rating || 5),
-        physicalRating: Math.round(assessmentData.physical_rating || 5),
-        mentalRating: Math.round(assessmentData.mental_rating || 5),
-        consistencyRating: Math.round(assessmentData.consistency_rating || 5),
-        notes: assessmentData.notes || "Progressive assessment completed",
-        assessmentType: assessmentData.assessment_type || "progressive",
+        technicalRating: Math.round(assessmentData.pcp_rating || 5), // Store PCP rating in technical field
+        tacticalRating: Math.round(assessmentData.pcp_rating || 5),
+        physicalRating: Math.round(assessmentData.pcp_rating || 5),
+        mentalRating: Math.round(assessmentData.pcp_rating || 5),
+        consistencyRating: Math.round(assessmentData.pcp_rating || 5),
+        notes: `PCP Assessment - Mode: ${assessmentData.assessment_mode}, Skills: ${assessmentData.total_skills}, PCP Rating: ${assessmentData.pcp_rating}`,
+        assessmentType: 'progressive_pcp',
         matchContext: {
-          skills: assessmentData.skills || [],
-          pcpRating: assessmentData.pcp_rating || 0,
-          assessmentType: assessmentData.assessment_type,
-          sessionNotes: assessmentData.session_notes
+          assessment_mode: assessmentData.assessment_mode,
+          total_skills: assessmentData.total_skills,
+          pcp_rating: assessmentData.pcp_rating,
+          category_averages: assessmentData.category_averages,
+          skill_mapping_applied: true,
+          timestamp: new Date().toISOString()
         },
         isComplete: true
       }).returning();

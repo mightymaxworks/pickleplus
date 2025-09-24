@@ -193,22 +193,44 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   const categoryProgress = (currentCategory + 1) / activeCategories.length * 100;
   const totalSkills = assessmentMode === 'quick' ? 10 : 55;
 
+  // Enhanced skill mapping system (matches backend)
+  const quickToOfficialMapping: Record<string, string> = {
+    'Forehand Drive': 'Forehand Flat Drive',
+    'Third Shot Drop': 'Forehand Third Shot Drop', 
+    'Forehand Dink': 'Forehand Topspin Dink',
+    'Forehand Volley': 'Forehand Punch Volley',
+    'Overhead Smash': 'Forehand Overhead Smash',
+    'Court Positioning': 'Kitchen Line Positioning',
+    'Transition Speed': 'Transition Speed (Baseline to Kitchen)',
+    'Focus & Concentration': 'Staying Present'
+  };
+
+  // Helper function to process assessment data with mapping
+  const processAssessmentData = (data: Record<string, number>): Record<string, number> => {
+    const mappedSkillData: Record<string, number> = {};
+    Object.entries(data).forEach(([key, value]) => {
+      // Decode HTML entities
+      const decodedKey = key.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+      const parts = decodedKey.split('_');
+      if (parts.length >= 2) {
+        let skillName = parts.slice(1).join('_');
+        // Also decode HTML entities in skill name
+        skillName = skillName.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+        
+        // Apply skill mapping for quick assessment
+        const officialName = quickToOfficialMapping[skillName] || skillName;
+        mappedSkillData[officialName] = value;
+      }
+    });
+    return mappedSkillData;
+  };
+
   // Calculate real-time PCP rating using official algorithm (2.0-8.0 scale)
   const calculateCurrentPCP = (): number | null => {
     if (Object.keys(assessmentData).length === 0) return null;
     
-    // Convert assessment data format to match algorithm expectations
-    const formattedData: Record<string, number> = {};
-    Object.entries(assessmentData).forEach(([key, value]) => {
-      // Extract skill name from the composite key (categoryName_skillName)
-      const parts = key.split('_');
-      if (parts.length >= 2) {
-        const skillName = parts.slice(1).join('_'); // Handle skill names with underscores
-        formattedData[skillName] = value;
-      }
-    });
-    
-    const result = calculatePCPFromAssessment(formattedData);
+    const mappedSkillData = processAssessmentData(assessmentData);
+    const result = calculatePCPFromAssessment(mappedSkillData);
     return result.pcpRating;
   };
 
@@ -219,17 +241,9 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
         [`${activeCategories[currentCategory].name}_${skillName}`]: rating
       };
       
-      // Calculate PCP rating with the updated data immediately
-      const formattedData: Record<string, number> = {};
-      Object.entries(updated).forEach(([key, value]) => {
-        const parts = key.split('_');
-        if (parts.length >= 2) {
-          const skillName = parts.slice(1).join('_');
-          formattedData[skillName] = value;
-        }
-      });
-      
-      const result = calculatePCPFromAssessment(formattedData);
+      // Calculate PCP rating with the updated data immediately using same mapping
+      const mappedSkillData = processAssessmentData(updated);
+      const result = calculatePCPFromAssessment(mappedSkillData);
       setCurrentPCPRating(result.pcpRating);
       
       return updated;
