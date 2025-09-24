@@ -24,7 +24,7 @@ import { ProvisionalRatingManagement } from '@/components/coaching/ProvisionalRa
 import { CoachAntiAbuseManagement } from '@/components/admin/CoachAntiAbuseManagement';
 import { useToast } from '@/hooks/use-toast';
 
-// 55-Skill PCP Assessment Interface Component
+// Enhanced Mobile-Optimized Assessment Interface Component
 const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete, onCancel }: {
   studentId: number;
   coachId: number;
@@ -32,11 +32,75 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   onComplete: () => void;
   onCancel: () => void;
 }) => {
+  const [assessmentMode, setAssessmentMode] = useState<'quick' | 'full'>('quick');
   const [currentCategory, setCurrentCategory] = useState(0);
   const [assessmentData, setAssessmentData] = useState<Record<string, number>>({});
+  const [currentPCPRating, setCurrentPCPRating] = useState(0);
   const { toast } = useToast();
 
-  const categories = [
+  // Rating descriptions for tooltip guidance
+  const getRatingDescription = (rating: number): string => {
+    const descriptions = {
+      1: "Beginner - Needs significant improvement",
+      2: "Developing - Basic understanding, inconsistent execution", 
+      3: "Progressing - Shows improvement, occasional success",
+      4: "Competent - Reliable execution in practice",
+      5: "Intermediate - Consistent performance under normal conditions",
+      6: "Good - Solid skill level, performs well most of the time",
+      7: "Advanced - Strong execution, reliable under pressure",
+      8: "Excellent - High-level performance, few weaknesses",
+      9: "Expert - Near-professional level execution",
+      10: "Masterful - Exceptional skill, professional level"
+    };
+    return descriptions[rating as keyof typeof descriptions] || "";
+  };
+
+  // Quick 10-skill assessment (2 from each category)
+  const quickCategories = [
+    {
+      name: "Power & Serves",
+      description: "Essential power shots - 2 core skills",
+      skills: [
+        { name: "Serve Power", desc: "Ability to generate pace on serve consistently" },
+        { name: "Forehand Drive", desc: "Aggressive forehand with pace and control" }
+      ]
+    },
+    {
+      name: "Soft Game", 
+      description: "Dinking and control - 2 core skills",
+      skills: [
+        { name: "Forehand Dink", desc: "Soft forehand placement near the net" },
+        { name: "Third Shot Drop", desc: "Neutral third shot to advance position" }
+      ]
+    },
+    {
+      name: "Net Play",
+      description: "Volleys and finishing - 2 core skills", 
+      skills: [
+        { name: "Forehand Volley", desc: "Quick exchanges at the net" },
+        { name: "Overhead Smash", desc: "Power finishing shot from above" }
+      ]
+    },
+    {
+      name: "Movement",
+      description: "Court coverage and fitness - 2 core skills",
+      skills: [
+        { name: "Court Positioning", desc: "Optimal positioning and movement" },
+        { name: "Transition Speed", desc: "Quick movement from baseline to net" }
+      ]
+    },
+    {
+      name: "Mental Game",
+      description: "Psychological skills - 2 core skills",
+      skills: [
+        { name: "Focus & Concentration", desc: "Maintaining attention during points" },
+        { name: "Pressure Handling", desc: "Performance under competitive stress" }
+      ]
+    }
+  ];
+
+  // Full 55-skill assessment
+  const fullCategories = [
     {
       name: "Groundstrokes and Serves",
       description: "Power shots, placement accuracy, and serve mechanics - 11 skills total",
@@ -122,15 +186,32 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
     }
   ];
 
-  const currentSkills = categories[currentCategory]?.skills || [];
-  const isLastCategory = currentCategory === categories.length - 1;
-  const categoryProgress = (currentCategory + 1) / categories.length * 100;
+  const activeCategories = assessmentMode === 'quick' ? quickCategories : fullCategories;
+  const currentSkills = activeCategories[currentCategory]?.skills || [];
+  const isLastCategory = currentCategory === activeCategories.length - 1;
+  const categoryProgress = (currentCategory + 1) / activeCategories.length * 100;
+  const totalSkills = assessmentMode === 'quick' ? 10 : 55;
+
+  // Calculate real-time PCP rating based on current assessments
+  const calculateCurrentPCP = () => {
+    const ratings = Object.values(assessmentData);
+    if (ratings.length === 0) return 0;
+    const average = ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
+    const scaledRating = (average / 10) * 1000; // Scale to 0-1000 PCP points
+    return Math.round(scaledRating);
+  };
 
   const handleRatingChange = (skillName: string, rating: number) => {
-    setAssessmentData(prev => ({
-      ...prev,
-      [`${categories[currentCategory].name}_${skillName}`]: rating
-    }));
+    setAssessmentData(prev => {
+      const updated = {
+        ...prev,
+        [`${activeCategories[currentCategory].name}_${skillName}`]: rating
+      };
+      // Update PCP rating in real-time
+      const newRating = calculateCurrentPCP();
+      setCurrentPCPRating(newRating);
+      return updated;
+    });
   };
 
   const handleNext = () => {
@@ -151,14 +232,15 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           studentId,
           coachId,
           assessmentData,
-          totalSkills: 55
+          assessmentMode,
+          totalSkills
         })
       });
 
       if (response.ok) {
         toast({
-          title: "55-Skill Assessment Complete",
-          description: `Successfully assessed ${studentName} across all 55 PCP skills in 5 categories.`,
+          title: `${assessmentMode === 'quick' ? '10-Skill Quick' : '55-Skill Full'} Assessment Complete`,
+          description: `Successfully assessed ${studentName} across ${totalSkills} PCP skills. Final PCP Rating: ${calculateCurrentPCP()}`,
         });
         onComplete();
       } else {
@@ -173,22 +255,81 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
     }
   };
 
+  // Assessment mode selection screen
+  if (!assessmentMode || currentCategory === -1) {
+    return (
+      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-blue-800 flex items-center gap-2">
+            <Star className="w-6 h-6" />
+            Choose Assessment Type for {studentName}
+          </CardTitle>
+          <CardDescription className="text-blue-600">
+            Select the assessment depth that matches your coaching goals
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card 
+              className="border-2 border-green-200 hover:border-green-400 cursor-pointer transition-all p-4 bg-green-50"
+              onClick={() => setAssessmentMode('quick')}
+            >
+              <div className="text-center space-y-2">
+                <div className="text-green-600 font-bold text-lg">⚡ Quick Assessment</div>
+                <div className="text-sm text-green-700">
+                  <strong>10 Core Skills</strong> across 5 categories<br/>
+                  Perfect for: Initial evaluation, time-limited sessions
+                </div>
+                <Badge className="bg-green-600 text-white">~15 minutes</Badge>
+              </div>
+            </Card>
+            
+            <Card 
+              className="border-2 border-purple-200 hover:border-purple-400 cursor-pointer transition-all p-4 bg-purple-50"
+              onClick={() => setAssessmentMode('full')}
+            >
+              <div className="text-center space-y-2">
+                <div className="text-purple-600 font-bold text-lg">🎯 Full Assessment</div>
+                <div className="text-sm text-purple-700">
+                  <strong>All 55 Skills</strong> comprehensive evaluation<br/>
+                  Perfect for: Detailed coaching plans, competitive players
+                </div>
+                <Badge className="bg-purple-600 text-white">~45 minutes</Badge>
+              </div>
+            </Card>
+          </div>
+          
+          <div className="flex gap-3 mt-6">
+            <Button variant="outline" onClick={onCancel} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <Star className="w-6 h-6" />
-              55-Skill PCP Assessment: {studentName}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-blue-800 flex items-center gap-2 text-lg sm:text-xl">
+              <Star className="w-5 h-5 sm:w-6 sm:h-6" />
+              {assessmentMode === 'quick' ? '⚡ Quick' : '🎯 Full'} Assessment: {studentName}
             </CardTitle>
-            <CardDescription className="text-blue-600 mt-1">
-              {categories[currentCategory]?.description} - Category {currentCategory + 1}/5
+            <CardDescription className="text-blue-600 mt-1 text-sm">
+              {activeCategories[currentCategory]?.description} - Category {currentCategory + 1}/{activeCategories.length}
             </CardDescription>
           </div>
-          <Badge className="bg-blue-600 text-white">
-            Progress: {Math.round(categoryProgress)}%
-          </Badge>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Badge className="bg-blue-600 text-white text-xs">
+              Progress: {Math.round(categoryProgress)}%
+            </Badge>
+            <Badge className="bg-green-600 text-white text-xs">
+              PCP: {calculateCurrentPCP()}
+            </Badge>
+          </div>
         </div>
         
         <div className="w-full bg-blue-200 rounded-full h-2 mt-3">
@@ -199,61 +340,120 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
-          <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5 text-blue-600" />
-            {categories[currentCategory]?.name} Skills Assessment
+      <CardContent className="space-y-4 sm:space-y-6">
+        <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-200 shadow-sm">
+          <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            {activeCategories[currentCategory]?.name} Skills Assessment
           </h4>
           
-          <div className="grid gap-4">
-            {currentSkills.map((skill, index) => (
-              <div key={skill.name} className="flex flex-col p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-800">{skill.name}</span>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                      <Button
-                        key={rating}
-                        variant={assessmentData[`${categories[currentCategory].name}_${skill.name}`] === rating ? "default" : "outline"}
-                        size="sm"
-                        className={`w-8 h-8 p-0 ${
-                          assessmentData[`${categories[currentCategory].name}_${skill.name}`] === rating 
-                            ? "bg-blue-600 text-white" 
-                            : "hover:bg-blue-100"
-                        }`}
-                        onClick={() => handleRatingChange(skill.name, rating)}
-                      >
-                        {rating}
-                      </Button>
-                    ))}
+          <div className="space-y-3 sm:space-y-4">
+            {currentSkills.map((skill, index) => {
+              const currentRating = assessmentData[`${activeCategories[currentCategory].name}_${skill.name}`];
+              return (
+                <div key={skill.name} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="font-semibold text-gray-800 text-sm sm:text-base">{skill.name}</span>
+                      {currentRating && (
+                        <Badge className="bg-green-100 text-green-800 text-xs w-fit">
+                          {currentRating}/10 - {getRatingDescription(currentRating).split(' - ')[1]}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Mobile-optimized rating buttons - 2 rows of 5 */}
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                        {[1, 2, 3, 4, 5].map((rating) => (
+                          <Button
+                            key={rating}
+                            variant={currentRating === rating ? "default" : "outline"}
+                            size="sm"
+                            className={`h-8 sm:h-10 text-xs sm:text-sm ${
+                              currentRating === rating 
+                                ? "bg-blue-600 text-white" 
+                                : "hover:bg-blue-100"
+                            }`}
+                            onClick={() => handleRatingChange(skill.name, rating)}
+                            title={getRatingDescription(rating)}
+                          >
+                            {rating}
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                        {[6, 7, 8, 9, 10].map((rating) => (
+                          <Button
+                            key={rating}
+                            variant={currentRating === rating ? "default" : "outline"}
+                            size="sm"
+                            className={`h-8 sm:h-10 text-xs sm:text-sm ${
+                              currentRating === rating 
+                                ? "bg-blue-600 text-white" 
+                                : "hover:bg-blue-100"
+                            }`}
+                            onClick={() => handleRatingChange(skill.name, rating)}
+                            title={getRatingDescription(rating)}
+                          >
+                            {rating}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs sm:text-sm text-gray-600 italic">{skill.desc}</p>
+                    
+                    {/* Rating help text */}
+                    {currentRating && (
+                      <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border">
+                        <strong>Rating {currentRating}:</strong> {getRatingDescription(currentRating)}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 italic">{skill.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onCancel} className="flex-1">
+        {/* Real-time PCP Display */}
+        {Object.keys(assessmentData).length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-green-800 text-sm sm:text-base">Real-time PCP Rating</h4>
+                <p className="text-xs sm:text-sm text-green-600">
+                  Based on {Object.keys(assessmentData).length} skills assessed so far
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-lg sm:text-2xl font-bold text-green-700">{calculateCurrentPCP()}</div>
+                <div className="text-xs text-green-600">PCP Points</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="outline" onClick={onCancel} className="order-3 sm:order-1">
             Cancel Assessment
           </Button>
           {currentCategory > 0 && (
             <Button 
               variant="outline" 
               onClick={() => setCurrentCategory(prev => prev - 1)}
-              className="flex-1"
+              className="order-2"
             >
               Previous Category
             </Button>
           )}
           <Button 
             onClick={handleNext}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-            disabled={currentSkills.some(skill => !assessmentData[`${categories[currentCategory].name}_${skill.name}`])}
+            className="bg-green-600 hover:bg-green-700 order-1 sm:order-3 flex-1 sm:flex-initial"
+            disabled={currentSkills.some(skill => !assessmentData[`${activeCategories[currentCategory].name}_${skill.name}`])}
           >
-            {isLastCategory ? "Submit Assessment" : "Next Category"}
+            {isLastCategory ? `Submit ${assessmentMode === 'quick' ? 'Quick' : 'Full'} Assessment` : "Next Category"}
           </Button>
         </div>
       </CardContent>
