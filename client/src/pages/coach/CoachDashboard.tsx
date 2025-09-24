@@ -33,7 +33,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   onComplete: () => void;
   onCancel: () => void;
 }) => {
-  const [assessmentMode, setAssessmentMode] = useState<'quick' | 'full'>('quick');
+  const [assessmentMode, setAssessmentMode] = useState<'quick' | 'full' | null>(null);
   const [currentCategory, setCurrentCategory] = useState(0);
   const [assessmentData, setAssessmentData] = useState<Record<string, number>>({});
   const [currentPCPRating, setCurrentPCPRating] = useState<number | null>(null);
@@ -267,7 +267,7 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
   };
 
   // Assessment mode selection screen
-  if (!assessmentMode || currentCategory === -1) {
+  if (!assessmentMode) {
     return (
       <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg">
         <CardHeader>
@@ -283,7 +283,10 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card 
               className="border-2 border-green-200 hover:border-green-400 cursor-pointer transition-all p-4 bg-green-50"
-              onClick={() => setAssessmentMode('quick')}
+              onClick={() => {
+                setAssessmentMode('quick');
+                setCurrentCategory(0);
+              }}
             >
               <div className="text-center space-y-2">
                 <div className="text-green-600 font-bold text-lg">⚡ Quick Assessment</div>
@@ -297,7 +300,10 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, onComplete,
             
             <Card 
               className="border-2 border-purple-200 hover:border-purple-400 cursor-pointer transition-all p-4 bg-purple-50"
-              onClick={() => setAssessmentMode('full')}
+              onClick={() => {
+                setAssessmentMode('full');
+                setCurrentCategory(0);
+              }}
             >
               <div className="text-center space-y-2">
                 <div className="text-purple-600 font-bold text-lg">🎯 Full Assessment</div>
