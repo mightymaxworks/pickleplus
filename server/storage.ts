@@ -6294,8 +6294,8 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`[Storage] Creating progressive assessment for coach ${assessmentData.coach_id}, student ${assessmentData.student_id}`);
       
-      // Use existing match_assessments table structure
-      const result = await this.db.insert(matchPcpAssessments).values({
+      // Use existing match_assessments table structure  
+      const result = await db.insert(matchPcpAssessments).values({
         matchId: assessmentData.session_id || 0, // Use 0 for progressive assessments without match
         assessorId: assessmentData.coach_id,
         targetId: assessmentData.student_id,

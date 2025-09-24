@@ -222,15 +222,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const decodedKey = key.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
         const parts = decodedKey.split('_');
         if (parts.length >= 2) {
-          const skillName = parts.slice(1).join('_');
+          let skillName = parts.slice(1).join('_');
+          // Also decode HTML entities in the skill name itself
+          skillName = skillName.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
           skillData[skillName] = value as number;
         }
       });
       
       console.log('[COACH API DEBUG] Extracted skillData:', JSON.stringify(skillData, null, 2));
 
-      // Calculate PCP rating using official algorithm
-      const pcpResult = calculatePCPFromAssessment(skillData);
+      // Map quick assessment skill names to official PCP algorithm skill names
+      const skillMapping: Record<string, string> = {
+        // Power & Serves
+        'Serve Power': 'Serve Power', // Already matches
+        'Forehand Drive': 'Forehand Flat Drive', // Map to official name
+        
+        // Soft Game
+        'Third Shot Drop': 'Forehand Third Shot Drop',
+        'Forehand Dink': 'Forehand Topspin Dink',
+        
+        // Net Play
+        'Forehand Volley': 'Forehand Punch Volley', 
+        'Overhead Smash': 'Forehand Overhead Smash',
+        
+        // Movement
+        'Court Positioning': 'Kitchen Line Positioning',
+        'Transition Speed': 'Transition Speed (Baseline to Kitchen)',
+        
+        // Mental Game
+        'Focus & Concentration': 'Staying Present',
+        'Pressure Handling': 'Pressure Handling' // Already matches
+      };
+
+      // Create mapped skill data for PCP calculation
+      const mappedSkillData: Record<string, number> = {};
+      Object.entries(skillData).forEach(([quickName, rating]) => {
+        const officialName = skillMapping[quickName];
+        if (officialName) {
+          mappedSkillData[officialName] = rating;
+          console.log(`[SKILL MAPPING] ${quickName} -> ${officialName} = ${rating}`);
+        } else {
+          console.log(`[SKILL MAPPING WARNING] No mapping found for: ${quickName}`);
+        }
+      });
+
+      console.log('[COACH API DEBUG] Mapped skillData for PCP:', JSON.stringify(mappedSkillData, null, 2));
+
+      // Calculate PCP rating using official algorithm  
+      const pcpResult = calculatePCPFromAssessment(mappedSkillData);
 
       // Store the assessment using the existing createAssessment method with PCP data
       const assessmentRecord = await storage.createAssessment({
