@@ -182,22 +182,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Import UDF-compliant PCP calculation utilities
-      const { calculatePCPRating, validateAssessmentData, calculateCategoryAverage } = await import('../shared/utils/pcpCalculation.ts');
+      const { calculatePCPFromAssessment } = await import('../shared/utils/pcpCalculationSimple.ts');
       
-      // Validate assessment data using UDF standards
-      const validation = validateAssessmentData(assessmentData);
-      if (!validation.isValid) {
+      // Basic validation - ensure we have assessment data
+      if (!assessmentData || typeof assessmentData !== 'object' || Object.keys(assessmentData).length === 0) {
         return res.status(400).json({ 
-          error: 'Invalid assessment data',
-          details: {
-            missingSkills: validation.missingSkills,
-            invalidRatings: validation.invalidRatings
-          }
+          error: 'Invalid assessment data - no skills assessed'
         });
       }
 
-      // Calculate PCP rating using official UDF algorithm
-      const pcpResult = calculatePCPRating(assessmentData);
+      // Validate rating values (1-10)
+      const invalidRatings = Object.entries(assessmentData).filter(([skill, rating]) => 
+        typeof rating !== 'number' || rating < 1 || rating > 10
+      );
+      
+      if (invalidRatings.length > 0) {
+        return res.status(400).json({ 
+          error: 'Invalid rating values - all ratings must be between 1-10',
+          invalidRatings: invalidRatings.map(([skill]) => skill)
+        });
+      }
+
+      // Extract skill names from composite keys for calculation
+      const skillData: Record<string, number> = {};
+      Object.entries(assessmentData).forEach(([key, value]) => {
+        const parts = key.split('_');
+        if (parts.length >= 2) {
+          const skillName = parts.slice(1).join('_');
+          skillData[skillName] = value;
+        }
+      });
+
+      // Calculate PCP rating using official algorithm
+      const pcpResult = calculatePCPFromAssessment(skillData);
 
       // Store the assessment using the existing createAssessment method with PCP data
       const assessmentRecord = await storage.createAssessment({
