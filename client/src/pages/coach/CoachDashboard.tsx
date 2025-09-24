@@ -39,7 +39,45 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, coachLevel,
   const [assessmentData, setAssessmentData] = useState<Record<string, number>>({});
   const [currentPCPRating, setCurrentPCPRating] = useState<number | null>(null);
   const [studentCurrentPCP, setStudentCurrentPCP] = useState<number | undefined>(undefined);
+  const [assessmentHistory, setAssessmentHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const { toast } = useToast();
+
+  // Fetch assessment history for the student
+  const fetchAssessmentHistory = async () => {
+    if (historyLoading) return;
+    
+    setHistoryLoading(true);
+    try {
+      const response = await fetch(`/api/coach/student-assessment-history/${studentId}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAssessmentHistory(data.assessments || []);
+        
+        // Set current PCP from latest assessment for skill floor calculations
+        if (data.latestAssessment?.pcpRating) {
+          setStudentCurrentPCP(data.latestAssessment.pcpRating);
+        }
+        
+        console.log(`[ASSESSMENT HISTORY] Loaded ${data.assessments?.length || 0} assessments for student ${studentId}`);
+      } else {
+        console.error('Failed to fetch assessment history');
+      }
+    } catch (error) {
+      console.error('Error fetching assessment history:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Load assessment history when component mounts
+  useEffect(() => {
+    fetchAssessmentHistory();
+  }, [studentId]);
 
   // Rating descriptions for tooltip guidance
   const getRatingDescription = (rating: number): string => {
@@ -317,6 +355,70 @@ const SkillAssessmentInterface = ({ studentId, coachId, studentName, coachLevel,
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Assessment History Section */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-purple-800 text-sm sm:text-base flex items-center gap-2">
+                📋 Assessment History: {studentName}
+                {historyLoading && <Clock className="w-4 h-4 animate-spin" />}
+              </h4>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-purple-600 hover:text-purple-800 text-xs sm:text-sm font-medium underline"
+              >
+                {showHistory ? 'Hide' : 'Show'} History ({assessmentHistory.length})
+              </button>
+            </div>
+            
+            {/* Assessment History Summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm text-purple-700 mb-3">
+              <div>
+                <strong>Total Assessments:</strong> {assessmentHistory.length}
+              </div>
+              <div>
+                <strong>Latest PCP:</strong> {studentCurrentPCP?.toFixed(1) || 'No previous rating'}
+              </div>
+              <div>
+                <strong>Assessment Trend:</strong> {
+                  assessmentHistory.length >= 2 
+                    ? assessmentHistory[0]?.pcpRating > assessmentHistory[1]?.pcpRating ? '📈 Improving' 
+                    : assessmentHistory[0]?.pcpRating < assessmentHistory[1]?.pcpRating ? '📉 Declining'
+                    : '➖ Stable'
+                    : 'No trend data'
+                }
+              </div>
+            </div>
+
+            {/* Detailed History (Expandable) */}
+            {showHistory && assessmentHistory.length > 0 && (
+              <div className="max-h-48 overflow-y-auto border border-purple-200 rounded p-2 bg-white space-y-2">
+                {assessmentHistory.map((assessment, index) => (
+                  <div key={assessment.id} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
+                    <div className="flex-1">
+                      <div className="font-medium">
+                        {new Date(assessment.assessmentDate).toLocaleDateString()} - L{assessment.coachLevel} {assessment.coachName}
+                      </div>
+                      <div className="text-gray-600">
+                        {assessment.assessmentMode === 'quick' ? '⚡ Quick' : '🎯 Full'} Assessment • 
+                        PCP: {assessment.pcpRating?.toFixed(1)} • 
+                        {assessment.totalSkills} skills
+                      </div>
+                    </div>
+                    <div className="ml-2">
+                      {index === 0 && <Badge className="bg-green-100 text-green-800 text-xs">Latest</Badge>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {showHistory && assessmentHistory.length === 0 && (
+              <div className="text-center text-purple-600 py-4">
+                No previous assessments found for this student.
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card 
               className="border-2 border-green-200 hover:border-green-400 cursor-pointer transition-all p-4 bg-green-50"

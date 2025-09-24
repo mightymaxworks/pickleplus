@@ -4,7 +4,8 @@ import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import passport from "passport";
 import { storage } from "./storage";
 import { db } from "./db";
-import { sql } from "drizzle-orm";
+import { sql, eq, desc } from "drizzle-orm";
+import { matchAssessments } from "@shared/schema/courtiq";
 
 // Import existing modular route systems
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes";
@@ -326,6 +327,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error submitting assessment:', error);
       res.status(500).json({ error: 'Failed to submit assessment' });
+    }
+  });
+
+  // Get Student Assessment History Route - Shows all assessments for a student
+  app.get('/api/coach/student-assessment-history/:studentId', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const studentId = parseInt(req.params.studentId);
+      if (isNaN(studentId)) {
+        return res.status(400).json({ error: 'Invalid student ID' });
+      }
+
+      // Verify coach has access to this student
+      const assignments = await storage.getCoachStudentAssignments(userId);
+      const hasAssignment = assignments.some(assignment => assignment.id === studentId);
+      if (!hasAssignment) {
+        return res.status(403).json({ error: 'No active coach-student assignment found' });
+      }
+
+      // Get all assessments for this student from matchAssessments table
+      const assessmentHistory = await db
+        .select({
+          id: matchAssessments.id,
+          assessorId: matchAssessments.assessorId,
+          assessmentDate: matchAssessments.createdAt,
+          technicalRating: matchAssessments.technicalRating,
+          tacticalRating: matchAssessments.tacticalRating,
+          physicalRating: matchAssessments.physicalRating,
+          mentalRating: matchAssessments.mentalRating,
+          consistencyRating: matchAssessments.consistencyRating,
+          notes: matchAssessments.notes,
+          assessmentType: matchAssessments.assessmentType,
+          matchContext: matchAssessments.matchContext,
+          isComplete: matchAssessments.isComplete
+        })
+        .from(matchAssessments)
+        .where(eq(matchAssessments.targetId, studentId))
+        .orderBy(desc(matchAssessments.createdAt))
+        .limit(50);
+
+      // Get coach information for each assessment
+      const assessmentWithCoachInfo = await Promise.all(
+        assessmentHistory.map(async (assessment) => {
+          const coach = await storage.getUser(assessment.assessorId);
+          const matchContextData = assessment.matchContext as any;
+
+          return {
+            id: assessment.id,
+            assessmentDate: assessment.assessmentDate,
+            coachId: assessment.assessorId,
+            coachName: coach?.displayName || coach?.username || 'Unknown Coach',
+            coachLevel: coach?.coachLevel || 1,
+            assessmentMode: matchContextData?.assessment_mode || 'unknown',
+            pcpRating: matchContextData?.pcp_rating || assessment.technicalRating,
+            categoryAverages: matchContextData?.category_averages || {
+              technical: assessment.technicalRating,
+              tactical: assessment.tacticalRating,
+              physical: assessment.physicalRating,
+              mental: assessment.mentalRating,
+              consistency: assessment.consistencyRating
+            },
+            totalSkills: matchContextData?.total_skills || 5,
+            notes: assessment.notes,
+            assessmentType: assessment.assessmentType,
+            isComplete: assessment.isComplete
+          };
+        })
+      );
+
+      console.log(`[COACH API] Retrieved ${assessmentWithCoachInfo.length} assessment records for student ${studentId}`);
+      
+      res.json({
+        studentId,
+        assessmentCount: assessmentWithCoachInfo.length,
+        assessments: assessmentWithCoachInfo,
+        latestAssessment: assessmentWithCoachInfo[0] || null
+      });
+
+    } catch (error) {
+      console.error('Error fetching student assessment history:', error);
+      res.status(500).json({ error: 'Failed to fetch assessment history' });
     }
   });
 
