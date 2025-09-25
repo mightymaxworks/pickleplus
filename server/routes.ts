@@ -165,6 +165,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // WeChat OAuth routes (Custom Implementation)
+  app.get('/auth/wechat', (req, res) => {
+    const appId = process.env.WECHAT_APP_ID;
+    const redirectUri = encodeURIComponent(`${req.protocol}://${req.get('host')}/auth/wechat/callback`);
+    const scope = 'snsapi_userinfo';
+    const state = Math.random().toString(36).substring(7); // Generate random state for security
+    
+    // Store state in session for verification
+    req.session.wechatState = state;
+    
+    const wechatAuthUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}#wechat_redirect`;
+    
+    console.log('[WeChat OAuth] Redirecting to WeChat authorization:', wechatAuthUrl);
+    res.redirect(wechatAuthUrl);
+  });
+
+  app.get('/auth/wechat/callback', async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      
+      // Verify state parameter for security
+      if (state !== req.session.wechatState) {
+        console.error('[WeChat OAuth] Invalid state parameter');
+        return res.redirect('/login?error=invalid_state');
+      }
+      
+      if (!code) {
+        console.error('[WeChat OAuth] No authorization code received');
+        return res.redirect('/login?error=no_code');
+      }
+      
+      console.log(`[WeChat OAuth] Processing callback with code: ${code}`);
+      
+      // Step 1: Exchange authorization code for access token
+      const tokenResponse = await axios.post('https://api.weixin.qq.com/sns/oauth2/access_token', null, {
+        params: {
+          appid: process.env.WECHAT_APP_ID,
+          secret: process.env.WECHAT_APP_SECRET,
+          code: code,
+          grant_type: 'authorization_code'
+        }
+      });
+      
+      const { access_token, openid, unionid } = tokenResponse.data;
+      
+      if (!access_token || !openid) {
+        console.error('[WeChat OAuth] Failed to get access token or openid:', tokenResponse.data);
+        return res.redirect('/login?error=token_failed');
+      }
+      
+      // Step 2: Get user information using access token
+      const userResponse = await axios.get('https://api.weixin.qq.com/sns/userinfo', {
+        params: {
+          access_token: access_token,
+          openid: openid,
+          lang: 'en'
+        }
+      });
+      
+      const wechatUser = userResponse.data;
+      console.log('[WeChat OAuth] Retrieved user info:', { openid: wechatUser.openid, nickname: wechatUser.nickname });
+      
+      // Step 3: Create or update user in database
+      let user = await storage.getUser(openid);
+      
+      if (user) {
+        // Update existing user's WeChat data
+        const updatedUser = await storage.upsertUser({
+          id: user.id.toString(),
+          wechatOpenId: openid,
+          wechatUnionId: unionid,
+          profileImageUrl: wechatUser.headimgurl || user.profileImageUrl,
+          lastSocialLogin: new Date(),
+          socialLoginCount: (user.socialLoginCount || 0) + 1,
+          primaryOauthProvider: user.primaryOauthProvider || 'wechat'
+        });
+        console.log(`[WeChat OAuth] Updated existing user: ${updatedUser.id}`);
+        
+        // Log the user in
+        req.login(updatedUser, (err) => {
+          if (err) {
+            console.error('[WeChat OAuth] Login error:', err);
+            return res.redirect('/login?error=login_failed');
+          }
+          console.log('[WeChat OAuth] Successful authentication, redirecting to dashboard');
+          res.redirect('/');
+        });
+      } else {
+        // Create new user from WeChat profile
+        const newUser = await storage.upsertUser({
+          email: `wechat_${openid}@pickle.app`, // WeChat doesn't provide email by default
+          firstName: wechatUser.nickname || 'WeChat',
+          lastName: 'User',
+          profileImageUrl: wechatUser.headimgurl,
+          wechatOpenId: openid,
+          wechatUnionId: unionid,
+          primaryOauthProvider: 'wechat',
+          socialLoginCount: 1,
+          lastSocialLogin: new Date(),
+          socialDataConsentLevel: 'basic'
+        });
+        console.log(`[WeChat OAuth] Created new user: ${newUser.id}`);
+        
+        // Log the user in
+        req.login(newUser, (err) => {
+          if (err) {
+            console.error('[WeChat OAuth] Login error:', err);
+            return res.redirect('/login?error=login_failed');
+          }
+          console.log('[WeChat OAuth] Successful authentication, redirecting to dashboard');
+          res.redirect('/');
+        });
+      }
+      
+    } catch (error) {
+      console.error('[WeChat OAuth] Error in callback:', error);
+      res.redirect('/login?error=oauth_failed');
+    }
+  });
+
   // Register basic API routes
   console.log("[ROUTES] Registering basic API routes...");
   const { registerMatchRoutes } = await import('./routes/match-routes');

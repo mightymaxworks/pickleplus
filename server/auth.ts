@@ -13,6 +13,7 @@ import { Strategy as LineStrategy } from "passport-line";
 import express, { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcryptjs from "bcryptjs";
+import axios from "axios";
 import { storage } from "./storage";
 import { User, InsertUser, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
@@ -489,6 +490,13 @@ export function setupAuth(app: Express) {
     console.log('[Line OAuth] Line strategy configured');
   } else {
     console.log('[Line OAuth] Line OAuth disabled - missing environment variables');
+  }
+
+  // Configure WeChat OAuth (Custom Implementation)
+  if (process.env.WECHAT_APP_ID && process.env.WECHAT_APP_SECRET) {
+    console.log('[WeChat OAuth] WeChat OAuth configured');
+  } else {
+    console.log('[WeChat OAuth] WeChat OAuth disabled - missing environment variables');
   }
 
   // Configure Passport serialization and deserialization
