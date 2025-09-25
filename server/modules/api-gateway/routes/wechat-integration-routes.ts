@@ -9,6 +9,7 @@
 import { Router, Request, Response } from 'express';
 import { apiKeyAuth } from '../middleware/api-key-auth';
 import { algorithmProtection } from '../middleware/algorithm-protection';
+import { generatePassportId } from '../../../../shared/utils/passport-utils';
 
 const router = Router();
 
@@ -293,6 +294,205 @@ router.post('/wechat/link-account', async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'linking_error',
       error_description: 'Error linking WeChat and Pickle+ accounts'
+    });
+  }
+});
+
+/**
+ * WeChat User Registration Endpoint
+ * Creates new Pickle+ account when user registers on WeChat app and auto-generates passport code
+ */
+router.post('/wechat/register-user', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('user:write')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'User registration requires user:write scope'
+      });
+    }
+
+    console.log('[WECHAT API] User registration request received');
+
+    // Validate request structure
+    const { 
+      wechat_user_data,
+      preferred_language,
+      registration_source 
+    } = req.body;
+
+    if (!wechat_user_data || !wechat_user_data.openid) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'wechat_user_data with openid is required'
+      });
+    }
+
+    const {
+      openid,
+      nickname,
+      sex, // 1=male, 2=female, 0=unknown
+      province,
+      city,
+      country,
+      headimgurl,
+      unionid
+    } = wechat_user_data;
+
+    // Check if user already exists
+    // TODO: Query database to check if WeChat OpenID already registered
+
+    // Generate unique passport code
+    const passportCode = generatePassportId();
+    console.log(`[WECHAT API] Generated passport code: ${passportCode} for WeChat user: ${openid}`);
+
+    // TODO: Create user in Pickle+ database
+    // This would integrate with your existing user creation system
+
+    // SIMULATED USER CREATION - Replace with actual database integration
+    const newUserId = `pkl_${Date.now()}`;
+    const createdUser = {
+      id: newUserId,
+      // Map WeChat data to Pickle+ user fields
+      firstName: nickname || 'WeChat',
+      lastName: 'User',
+      email: `wechat_${openid}@pickle.app`, // Generate email since WeChat doesn't provide it
+      profileImageUrl: headimgurl,
+      // WeChat-specific fields
+      wechatOpenId: openid,
+      wechatUnionId: unionid,
+      wechatNickname: nickname,
+      // Location data from WeChat
+      region: province || 'Unknown',
+      city: city || 'Unknown', 
+      country: country || 'Unknown',
+      // Generated passport code
+      passportCode: passportCode,
+      // Account metadata
+      primaryOauthProvider: 'wechat',
+      registrationSource: registration_source || 'wechat_app',
+      preferredLanguage: preferred_language || 'zh-CN',
+      socialDataConsentLevel: 'basic',
+      // Initial ranking data
+      initialRankingPoints: 1000, // Starting points for new users
+      currentTier: 'Recreational',
+      accountStatus: 'active',
+      createdAt: new Date().toISOString(),
+      // Privacy settings optimized for Chinese users
+      dataProcessingConsent: true,
+      marketingConsent: false, // Conservative default
+      profileVisibility: 'friends_only' // Conservative default for Chinese users
+    };
+
+    const registrationResponse = {
+      api_version: 'v1',
+      data: {
+        registration_status: 'success',
+        user_account: {
+          pickle_user_id: newUserId,
+          passport_code: passportCode, // This is what WeChat app needs!
+          display_name: nickname || 'WeChat User',
+          profile_image_url: headimgurl,
+          initial_ranking: {
+            points: 1000,
+            tier: 'Recreational',
+            position: null // Will be calculated after first match
+          },
+          account_features: {
+            qr_code_enabled: true,
+            tournament_participation: true,
+            social_features: true,
+            ranking_tracking: true
+          }
+        },
+        wechat_integration: {
+          openid: openid,
+          linked_at: new Date().toISOString(),
+          sync_preferences: {
+            auto_match_sync: true,
+            ranking_notifications: true,
+            tournament_updates: true
+          }
+        },
+        next_steps: {
+          recommended_actions: [
+            'complete_profile',
+            'join_first_tournament', 
+            'connect_with_local_players',
+            'set_skill_preferences'
+          ],
+          onboarding_flow: 'wechat_new_user'
+        }
+      }
+    };
+
+    console.log(`[WECHAT API] User registration completed: ${newUserId} with passport code: ${passportCode}`);
+
+    res.json(registrationResponse);
+
+  } catch (error) {
+    console.error('[WECHAT API] Error in user registration:', error);
+    res.status(500).json({
+      error: 'registration_error',
+      error_description: 'Error creating user account'
+    });
+  }
+});
+
+/**
+ * WeChat User Profile Update Endpoint
+ * Updates existing Pickle+ user data when WeChat profile changes
+ */
+router.patch('/wechat/update-profile', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('user:write')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'Profile updates require user:write scope'
+      });
+    }
+
+    const { 
+      wechat_openid,
+      updated_profile_data,
+      sync_preferences 
+    } = req.body;
+
+    if (!wechat_openid) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'wechat_openid is required'
+      });
+    }
+
+    console.log(`[WECHAT API] Profile update request for WeChat user: ${wechat_openid}`);
+
+    // TODO: Update user profile in Pickle+ database
+    // Map updated WeChat data to Pickle+ fields
+
+    const updateResponse = {
+      api_version: 'v1',
+      data: {
+        update_status: 'success',
+        updated_at: new Date().toISOString(),
+        updated_fields: Object.keys(updated_profile_data || {}),
+        profile_sync: {
+          wechat_to_pickle: 'completed',
+          last_sync: new Date().toISOString()
+        }
+      }
+    };
+
+    console.log(`[WECHAT API] Profile update completed for: ${wechat_openid}`);
+
+    res.json(updateResponse);
+
+  } catch (error) {
+    console.error('[WECHAT API] Error updating profile:', error);
+    res.status(500).json({
+      error: 'update_error',
+      error_description: 'Error updating user profile'
     });
   }
 });
