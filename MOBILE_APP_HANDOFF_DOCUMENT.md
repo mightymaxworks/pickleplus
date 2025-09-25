@@ -361,6 +361,301 @@ function calculateCardRarity(player) {
 
 ---
 
+## ⚖️ COMPREHENSIVE ALGORITHM SPECIFICATIONS
+
+### **CRITICAL: PICKLE+ ALGORITHM COMPLIANCE - SINGLE SOURCE OF TRUTH**
+
+**Algorithm Authority**: All calculations MUST follow `PICKLE_PLUS_ALGORITHM_DOCUMENT.md` specifications exactly. NO component-specific variations allowed.
+
+### **System B Base Points - MANDATORY STANDARD**
+```javascript
+// REQUIRED: Use official constants only
+const SYSTEM_B_BASE_POINTS = {
+  WIN: 3,    // Conservative, sustainable scoring
+  LOSS: 1    // Participation reward (33% of win)
+};
+
+// FORBIDDEN: Variable points, doubles bonuses, or streak bonuses
+// Implementation errors to REMOVE: +0.5 doubles bonus, streak calculations
+```
+
+### **MANDATORY ADDITIVE POINTS SYSTEM** ⚠️ **CRITICAL COMPLIANCE**
+```javascript
+// ✅ CORRECT: Always ADD to existing career totals
+UPDATE users SET ranking_points = ranking_points + new_points WHERE id = player_id;
+
+// ❌ FORBIDDEN: Replacing/overwriting existing point balances
+UPDATE users SET ranking_points = new_total; // DESTROYS TOURNAMENT HISTORY!
+
+// Example: Player has 25.5 points, earns 8.2 → Final: 33.7 points (preserved history)
+```
+
+### **Age Group Multipliers - Differential System**
+```javascript
+const AGE_MULTIPLIERS = {
+  'Pro': 1.0,       // Professional players (ignored in initial implementation)
+  'Open': 1.0,      // Standard baseline (19+ adults)
+  'U12': 1.0,       // Standalone youth system
+  'U14': 1.0,       // Standalone youth system  
+  'U16': 1.0,       // Standalone youth system
+  'U18': 1.0,       // Standalone youth system
+  '35+': 1.2,       // Early career professionals bonus
+  '50+': 1.3,       // Masters division enhancement
+  '60+': 1.5,       // Senior division significant boost
+  '70+': 1.6        // Super senior maximum enhancement
+};
+
+// CRITICAL: Differential application
+// Same age group: Both players get 1.0x (equal treatment)
+// Different age groups: Each player gets individual multiplier
+```
+
+### **Gender Balance Algorithm - Elite Threshold System**
+```javascript
+// Gender multipliers ONLY apply in cross-gender matches for players <1000 points
+const GENDER_MULTIPLIERS = {
+  MALE: 1.0,           // Baseline competitive standard
+  FEMALE: 1.15,        // <1000 points only in cross-gender matches
+  MIXED_TEAM: 1.075    // <1000 points only, average composition
+};
+
+// Elite Threshold Logic (CRITICAL):
+// - Players ≥1000 points: NO gender bonuses (proven competitive ability)
+// - Players <1000 points: Gender bonuses apply in cross-gender competition
+// - Same-gender matches: Always 1.0x for all players
+```
+
+### **Format-Specific Rankings - Separate Competitive Pools**
+```javascript
+// MANDATORY: Five independent ranking systems
+const RANKING_FIELDS = {
+  SINGLES: 'singlesRankingPoints',
+  MENS_DOUBLES: 'mensDoublesRankingPoints', 
+  WOMENS_DOUBLES: 'womensDoublesRankingPoints',
+  MIXED_DOUBLES_MEN: 'mixedDoublesMenRankingPoints',
+  MIXED_DOUBLES_WOMEN: 'mixedDoublesWomenRankingPoints'
+};
+
+// Points allocation by match type:
+// Mixed vs Mixed: Men→mixed_men field, Women→mixed_women field
+// Men's vs Men's: Both→mens_doubles field
+// Cross-format matches: Each team→their respective fields
+```
+
+### **Pickle Points 1.5x Multiplier - PER MATCH CALCULATION**
+```javascript
+// CRITICAL: 1.5x applied PER MATCH when earned, NOT to total points
+const PICKLE_POINTS_MULTIPLIER = 1.5;
+
+// ✅ CORRECT: Per-match application
+const matchRankingPoints = 3; // Win in tournament
+const picklePointsEarned = matchRankingPoints * PICKLE_POINTS_MULTIPLIER; // 4.5 Pickle Points
+
+// ❌ WRONG: Blanket conversion of total ranking points
+const totalPicklePoints = totalRankingPoints * 1.5; // INCORRECT ALGORITHM!
+```
+
+### **Decimal Precision Standard - 2 Decimal Places**
+```javascript
+// MANDATORY: All point calculations use 2 decimal precision
+const finalPoints = Number((calculatedPoints).toFixed(2));
+
+// FORBIDDEN: Rounding or Math.ceil operations
+const finalPoints = Math.round(calculatedPoints); // ❌ LOSES FAIRNESS
+```
+
+### **Complete Match Calculation Formula**
+```javascript
+// Official calculation sequence (EXACT ORDER REQUIRED)
+const finalPoints = basePoints × ageMultiplier × genderMultiplier × tournamentTier × matchTypeWeight;
+
+// Example: 60+ female vs 25-year-old male, Provincial Tournament
+// Female winner: 3 × 1.5 × 1.15 × 2.0 × 1.0 = 10.35 points
+// Male winner: 3 × 1.0 × 1.0 × 2.0 × 1.0 = 6.0 points
+```
+
+### **UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES**
+
+### **RULE 0: Mandatory Algorithm Validation Import**
+```typescript
+// REQUIRED: Every match calculation file must import
+import { 
+  validateEnhancedMatchCalculation, 
+  createValidatedMatchCalculation,
+  calculateDifferentialAgeMultipliers,
+  calculateGenderBonus,
+  SYSTEM_B_BASE_POINTS,
+  PICKLE_POINTS_MULTIPLIER
+} from '@shared/utils/algorithmValidation';
+```
+
+### **RULE 1: Pre-Calculation Validation Gates**
+```typescript
+// MANDATORY: Validate before ANY point allocation
+const validation = validateEnhancedMatchCalculation(players, results);
+if (!validation.isValid) {
+  throw new Error(`Algorithm violation: ${validation.errors.join(', ')}`);
+}
+```
+
+### **RULE 2: Cross-Gender Match Detection**
+```typescript
+// MANDATORY: Automatic detection and bonus application
+const genderBonus = calculateGenderBonus(players, isEliteMatch);
+// Automatically applies 1.15x for eligible female players in cross-gender matches
+```
+
+### **RULE 3: Multi-Age Group Ranking Updates**
+```typescript
+// MANDATORY: Update ALL eligible age categories
+// Example: 42-year-old in Open tournament → Update both Open AND 35+ rankings
+const eligibleCategories = getEligibleAgeCategories(player.age);
+eligibleCategories.forEach(category => updateRanking(playerId, points, category));
+```
+
+### **PCP RATING SYSTEM - 55-Skill Assessment Framework**
+
+### **Progressive Assessment Model**
+```javascript
+// 55-Skill Individual Tracking System
+const SKILL_CATEGORIES = {
+  TECHNICAL: 11,    // Groundstrokes/Serves
+  TOUCH: 16,        // Dinks/Resets  
+  POWER: 6,         // Volleys/Smashes
+  ATHLETIC: 10,     // Footwork/Fitness
+  MENTAL: 10        // Mental Game
+};
+
+// Category Weighting (Strategic Importance)
+const PCP_WEIGHTS = {
+  TOUCH: 0.30,      // Most critical for competitive play
+  TECHNICAL: 0.25,  // Foundation skills
+  MENTAL: 0.20,     // Separates good from great
+  ATHLETIC: 0.15,   // Enables all other skills  
+  POWER: 0.10       // Important but situational
+};
+```
+
+### **Coach Level Weighted Assessment Algorithm**
+```javascript
+// L1-L5 Coach Influence Multipliers
+const COACH_WEIGHTS = {
+  L1: 0.7,    // Minimal influence - foundational assessment
+  L2: 1.0,    // Standard baseline - enhanced technical knowledge
+  L3: 1.8,    // 80% increase - advanced tactical understanding
+  L4: 3.2,    // 220% increase - expert-level analysis  
+  L5: 3.8     // 280% increase - master-level assessment authority
+};
+
+// CRITICAL REQUIREMENT: Only L4+ coaches provide CONFIRMED ratings
+// L1-L3 coaches can only provide PROVISIONAL ratings requiring L4+ validation
+```
+
+### **Database Schema Requirements for Mobile**
+```sql
+-- Users table with format-specific ranking fields
+CREATE TABLE users (
+  id UUID PRIMARY KEY,
+  username VARCHAR UNIQUE NOT NULL,
+  email VARCHAR UNIQUE NOT NULL,
+  wallet_address VARCHAR,  -- Future blockchain integration
+  passport_code VARCHAR(8) UNIQUE NOT NULL,
+  
+  -- Format-specific ranking points (decimal precision)
+  singles_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  mens_doubles_ranking_points DECIMAL(8,2) DEFAULT 0.00, 
+  womens_doubles_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  mixed_doubles_men_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  mixed_doubles_women_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  
+  -- Age-specific rankings
+  open_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  age_35_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  age_50_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  age_60_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  age_70_ranking_points DECIMAL(8,2) DEFAULT 0.00,
+  
+  -- Pickle Points (separate from ranking points)
+  pickle_points DECIMAL(8,2) DEFAULT 0.00,
+  
+  -- Coach assessment data
+  pcp_rating DECIMAL(3,1), -- 2.0-8.0 range
+  assessment_status VARCHAR DEFAULT 'none', -- 'provisional', 'confirmed'
+  
+  date_of_birth DATE NOT NULL,
+  gender VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Match recording with algorithm compliance
+CREATE TABLE matches (
+  id UUID PRIMARY KEY,
+  match_type VARCHAR NOT NULL, -- 'singles', 'mens_doubles', 'womens_doubles', 'mixed_doubles'
+  tournament_tier DECIMAL(3,1) NOT NULL, -- 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0
+  
+  -- Player points awarded (additive calculations)
+  player_one_points_awarded DECIMAL(8,2) NOT NULL,
+  player_two_points_awarded DECIMAL(8,2) NOT NULL,
+  
+  -- Algorithm calculation audit trail
+  age_multipliers_applied JSONB,
+  gender_multipliers_applied JSONB,
+  calculation_algorithm_version VARCHAR DEFAULT '4.0',
+  
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### **Validation Utilities Implementation**
+```typescript
+// algorithmValidation.ts - MANDATORY UTILITIES
+export function validateEnhancedMatchCalculation(players: Player[], results: MatchResult[]): ValidationResult {
+  // Comprehensive pre-calculation validation
+  return {
+    isValid: boolean,
+    errors: string[],
+    warnings: string[]
+  };
+}
+
+export function calculateDifferentialAgeMultipliers(players: Player[]): Record<string, number> {
+  // Returns individual age multipliers per player
+  // Same age group: all get 1.0x
+  // Different age groups: individual multipliers apply
+}
+
+export function calculateGenderBonus(players: Player[], eliteThreshold: number = 1000): GenderBonusResult {
+  // Automatic cross-gender detection and bonus calculation
+  // <1000 points: Apply bonuses in cross-gender matches
+  // ≥1000 points: No bonuses (elite threshold)
+}
+```
+
+### **Error Prevention Protocols**
+```typescript
+// MANDATORY: Match calculation wrapper with full validation
+export async function recordMatchWithValidation(matchData: MatchInput): Promise<MatchResult> {
+  // 1. Pre-calculation validation
+  const validation = validateEnhancedMatchCalculation(matchData.players, matchData.results);
+  if (!validation.isValid) {
+    throw new AlgorithmComplianceError(validation.errors);
+  }
+  
+  // 2. Calculate with official utilities
+  const calculation = createValidatedMatchCalculation(matchData);
+  
+  // 3. Apply additive point updates only  
+  const updates = await applyAdditivePointUpdates(calculation);
+  
+  // 4. Audit trail logging
+  await logAlgorithmCompliance(calculation, updates);
+  
+  return updates;
+}
+```
+
+---
+
 ## 🔗 BLOCKCHAIN READINESS ARCHITECTURE
 
 ### Blockchain Integration Strategy:
