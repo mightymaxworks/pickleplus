@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, User, Award, Calendar, Clock, QrCode, Copy, Check, Users } from "lucide-react";
+import { CheckCircle, XCircle, User, Award, Calendar, Clock, QrCode, Copy, Check, Users, UserCheck } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -23,6 +23,20 @@ interface CoachRequest {
   certifications: string[];
 }
 
+interface CoachConnection {
+  id: number;
+  status: string;
+  studentRequestDate: string;
+  coachApprovedDate?: string;
+  coach: {
+    id: number;
+    displayName: string;
+    username: string;
+    passportCode: string;
+    coachLevel: number;
+  };
+}
+
 interface PassportConnectionsTabProps {
   user: any;
   qrCodeData: string;
@@ -37,6 +51,11 @@ export default function PassportConnectionsTab({ user, qrCodeData, passportId }:
   // Fetch pending coach requests - using default fetcher with credentials
   const { data: requestsData, isLoading: isLoadingRequests } = useQuery({
     queryKey: ['/api/student/coach-requests']
+  });
+
+  // Fetch all coach connections (pending + active)
+  const { data: connectionsData, isLoading: isLoadingConnections } = useQuery({
+    queryKey: ['/api/student/coach-connections']
   });
 
   // Accept coach request mutation
@@ -139,20 +158,34 @@ export default function PassportConnectionsTab({ user, qrCodeData, passportId }:
   const requests = ((requestsData as any)?.requests ?? (requestsData as any)?.data?.requests ?? (Array.isArray(requestsData) ? requestsData : []));
   const pendingRequestsCount = requests.length;
 
+  // Handle connections data
+  const connections = Array.isArray(connectionsData) ? connectionsData : [];
+  const activeConnections = connections.filter((conn: CoachConnection) => conn.status === 'active');
+  const activeConnectionsCount = activeConnections.length;
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="qr-code" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="qr-code" className="flex items-center gap-2">
             <QrCode className="h-4 w-4" />
             QR Code
           </TabsTrigger>
           <TabsTrigger value="coach-requests" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Coach Requests
+            Requests
             {pendingRequestsCount > 0 && (
               <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0.5">
                 {pendingRequestsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="my-connections" className="flex items-center gap-2">
+            <UserCheck className="h-4 w-4" />
+            Connected
+            {activeConnectionsCount > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0.5">
+                {activeConnectionsCount}
               </Badge>
             )}
           </TabsTrigger>
@@ -317,6 +350,89 @@ export default function PassportConnectionsTab({ user, qrCodeData, passportId }:
                       >
                         <XCircle className="h-4 w-4 mr-2" />
                         {rejectMutation.isPending ? 'Rejecting...' : 'Reject'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="my-connections" className="space-y-4 mt-6">
+          {isLoadingConnections ? (
+            <Card>
+              <CardContent className="pt-12 pb-12 text-center">
+                <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-orange-500" />
+                <p className="text-gray-600">Loading connections...</p>
+              </CardContent>
+            </Card>
+          ) : activeConnections.length === 0 ? (
+            <Card>
+              <CardContent className="pt-12 pb-12 text-center">
+                <UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Active Connections</h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  You haven't connected with any coaches yet. Accept pending requests or scan a coach's QR code to start building your network.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {activeConnections.map((connection: CoachConnection) => (
+                <Card key={connection.id} className="border border-gray-200">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {connection.coach.displayName?.charAt(0) || 'C'}
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl font-bold text-gray-900" data-testid={`text-connected-coach-${connection.id}`}>
+                            {connection.coach.displayName || 'Coach'}
+                          </CardTitle>
+                          <p className="text-sm text-gray-600">@{connection.coach.username}</p>
+                          <p className="text-xs text-gray-500">ID: {connection.coach.passportCode}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Connected
+                        </Badge>
+                        {connection.coach.coachLevel && connection.coach.coachLevel > 0 && (
+                          <Badge variant={getLevelBadgeVariant(`L${connection.coach.coachLevel}`)}>
+                            <Award className="h-3 w-3 mr-1" />
+                            L{connection.coach.coachLevel}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-3">
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">Connected Since:</span>
+                        <span className="ml-2 text-gray-600">{formatDate(connection.coachApprovedDate || connection.studentRequestDate)}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Status:</span>
+                        <span className="ml-2 text-green-600 font-semibold">Active Connection</span>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex-1"
+                        data-testid={`button-view-coach-${connection.id}`}
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        View Profile
                       </Button>
                     </div>
                   </CardContent>
