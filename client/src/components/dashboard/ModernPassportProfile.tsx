@@ -21,6 +21,7 @@ import { RecentMatchesWidget } from "@/components/dashboard/RecentMatchesWidget"
 import { StudentCoachingWidget } from "@/components/dashboard/StudentCoachingWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import PassportConnectionsTab from "@/components/passport/PassportConnectionsTab";
 
 interface ModernPassportProfileProps {
   user: any;
@@ -1153,51 +1154,11 @@ export default function ModernPassportProfile({
           )}
           
           <TabsContent value="connect" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Connect & Network</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <div className="bg-white p-4 rounded-lg shadow-md inline-block mb-4">
-                    <QRCodeSVG
-                      value={qrCodeData}
-                      size={128}
-                      level="M"
-                      className="block"
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Scan to connect and view full profile
-                  </p>
-                  
-                  {/* Passport ID Section */}
-                  <div className="bg-gray-50 rounded-lg p-4 max-w-sm mx-auto">
-                    <div className="flex items-center justify-between">
-                      <div className="text-left">
-                        <p className="text-xs text-muted-foreground mb-1">Passport ID</p>
-                        <p className="font-mono text-lg font-semibold text-gray-900">{passportId}</p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopyPassportId}
-                        className="ml-3"
-                      >
-                        {copiedPassportId ? (
-                          <Check className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Your unique player identifier
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <PassportConnectionsTab 
+              user={user}
+              qrCodeData={qrCodeData}
+              passportId={passportId}
+            />
           </TabsContent>
         </Tabs>
       </div>

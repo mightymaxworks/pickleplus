@@ -509,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student-facing coach request endpoints
-  app.get('/api/student/coach-requests', requireAuth, async (req, res) => {
+  app.get('/api/student/coach-requests', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       
@@ -532,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/student/coach-requests/:requestId/accept', requireAuth, async (req, res) => {
+  app.post('/api/student/coach-requests/:requestId/accept', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       const requestId = parseInt(req.params.requestId);
@@ -561,7 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/student/coach-requests/:requestId/reject', requireAuth, async (req, res) => {
+  app.post('/api/student/coach-requests/:requestId/reject', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       const requestId = parseInt(req.params.requestId);

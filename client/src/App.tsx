@@ -62,6 +62,7 @@ import {
   LazySageCoachingPage,
   // PKL-278651-COACH-001 - Coach Management System
   LazyCoachApplicationPage,
+  LazyStudentCoachRequestsPage,
   LazyReportsPage,
   LazySettingsPage,
   LazyEnhancedBulkMatchUpload,
