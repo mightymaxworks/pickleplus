@@ -1206,7 +1206,7 @@ export default function CoachDashboard() {
                           <div className="text-right">
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 text-yellow-500" />
-                              <span className="font-medium">PCP {assessment.pcpRating.toFixed(1)}</span>
+                              <span className="font-medium">PCP {assessment.pcpRating?.toFixed(1) || 'N/A'}</span>
                             </div>
                             <p className="text-xs text-gray-500">
                               {assessment.daysAgo === 0 ? 'Today' : assessment.daysAgo === 1 ? 'Yesterday' : `${assessment.daysAgo} days ago`}
