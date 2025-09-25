@@ -4783,7 +4783,123 @@ const OptimizedCard = React.memo<CardProps>(({ cardData, onSwipe }) => {
 });
 ```
 
-### **RULE 45: ACCESSIBILITY REQUIREMENTS FOR CARD INTERFACES** ♿ **INCLUSIVE DESIGN**
+### **RULE 45: TRADING CARD TYPOGRAPHY SYSTEM** 🎨 **AUTHENTIC CARD AESTHETICS**
+
+```typescript
+// MANDATORY: Typography hierarchy for trading card authenticity
+interface TradingCardTypography {
+  fontFamilies: {
+    display: 'Oswald' | 'Bebas Neue',     // Card names, major stats
+    ui: 'Inter',                          // Body text, descriptions  
+    accent: 'Fredoka One' | 'Righteous'   // Celebrations, achievements
+  };
+  
+  rarityTypography: {
+    common: {
+      cardName: { font: 'Inter', weight: 600, size: '18px' },
+      cardStats: { font: 'Inter', weight: 500, size: '14px' },
+      textShadow: 'none',
+      color: 'var(--neutral-700)'
+    },
+    uncommon: {
+      cardName: { font: 'Oswald', weight: 600, size: '20px' },
+      cardStats: { font: 'Inter', weight: 600, size: '15px' },
+      textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+      color: 'var(--blue-600)'
+    },
+    rare: {
+      cardName: { font: 'Oswald', weight: 700, size: '22px' },
+      cardStats: { font: 'Oswald', weight: 600, size: '16px' },
+      textShadow: '0 2px 4px rgba(255,193,7,0.3)',
+      letterSpacing: '0.02em',
+      color: 'var(--amber-600)'
+    },
+    epic: {
+      cardName: { font: 'Oswald', weight: 800, size: '24px' },
+      cardStats: { font: 'Oswald', weight: 700, size: '18px' },
+      textShadow: '0 0 10px rgba(156,39,176,0.4), 0 2px 4px rgba(0,0,0,0.3)',
+      letterSpacing: '0.03em',
+      textTransform: 'uppercase',
+      color: 'var(--purple-600)'
+    },
+    legendary: {
+      cardName: { font: 'Oswald', weight: 900, size: '26px' },
+      cardStats: { font: 'Oswald', weight: 800, size: '20px' },
+      background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1)',
+      backgroundClip: 'text',
+      textFillColor: 'transparent',
+      textShadow: '0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.3)',
+      letterSpacing: '0.05em',
+      textTransform: 'uppercase',
+      animation: 'legendary-text-glow 3s ease-in-out infinite'
+    }
+  };
+}
+
+// ✅ CORRECT: Rarity-based typography component
+const CardTypography: React.FC<CardTypographyProps> = ({ 
+  rarity, 
+  element, 
+  children 
+}) => {
+  const typographyStyles = rarityTypographyMap[rarity][element];
+  
+  return (
+    <span 
+      className={`card-${element} rarity-${rarity}`}
+      style={typographyStyles}
+    >
+      {children}
+    </span>
+  );
+};
+
+// MANDATORY: Responsive typography scaling
+const responsiveCardTypography = css`
+  .card-name {
+    font-size: clamp(16px, 4vw, 24px);
+    line-height: 1.2;
+  }
+  
+  .card-stats {
+    font-size: clamp(12px, 3vw, 18px);
+  }
+  
+  .card-legendary .card-name {
+    font-size: clamp(18px, 5vw, 22px);
+  }
+`;
+```
+
+**TYPOGRAPHY REQUIREMENTS**:
+- **Authentic Trading Card Feel**: Typography must evoke physical trading card aesthetics
+- **Rarity Visual Hierarchy**: Typography weight/effects increase with card rarity
+- **Mobile-First Legibility**: Perfect readability on all screen sizes  
+- **Performance Optimization**: Font loading strategy for smooth experience
+- **Brand Integration**: Harmonious with existing Pickle+ professional identity
+
+**FONT LOADING STRATEGY**:
+```css
+/* MANDATORY: Optimized font loading */
+@font-face {
+  font-family: 'Oswald';
+  src: url('./fonts/oswald-variable.woff2') format('woff2-variations');
+  font-weight: 200 900;
+  font-display: swap;
+}
+
+.card-display-text {
+  font-family: 'Oswald', 'Arial Narrow', 'Arial Black', sans-serif;
+}
+```
+
+**ACCESSIBILITY REQUIREMENTS**:
+- **WCAG AA Compliance**: All typography meets contrast requirements
+- **Dyslexia-Friendly**: Inter for body text, generous spacing
+- **High Contrast Mode**: Typography hierarchy works without color
+- **Internationalization**: Support for accented characters and RTL languages
+
+### **RULE 46: ACCESSIBILITY REQUIREMENTS FOR CARD INTERFACES** ♿ **INCLUSIVE DESIGN**
 
 ```typescript
 // MANDATORY: Full accessibility support for card system
@@ -4897,4 +5013,8 @@ const handleKeyboardNavigation = (event: KeyboardEvent) => {
 
 ---
 
-**[End of Document - UDF v4.0.0 - Trading Card Platform Architecture + Algorithm Compliance Standards]**
+**ENFORCEMENT**: All card components must pass WCAG 2.1 AA accessibility standards and implement rarity-based typography hierarchy before deployment.
+
+---
+
+**[End of Document - UDF v4.0.0 - Trading Card Platform Architecture + Typography System + Algorithm Compliance Standards]**
