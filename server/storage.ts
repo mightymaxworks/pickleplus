@@ -8150,9 +8150,9 @@ export class DatabaseStorage implements IStorage {
           u.display_name as coach_name,
           u.email as coach_email,
           u.coach_level,
-          COALESCE(cp.specializations, '[]'::text) as specializations,
-          COALESCE(cp.years_experience, 0) as years_experience,
-          COALESCE(cp.certifications, '[]'::text) as certifications
+          COALESCE(cp.specialties, '{}'::text[]) as specializations,
+          COALESCE(cp.experience_years, 0) as years_experience,
+          COALESCE(cp.certifications, '{}'::text[]) as certifications
         FROM coach_student_assignments csa
         JOIN users u ON csa.coach_id = u.id
         LEFT JOIN coach_profiles cp ON u.id = cp.user_id
