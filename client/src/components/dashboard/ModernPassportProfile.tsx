@@ -303,6 +303,19 @@ export default function ModernPassportProfile({
                   <QrCode className="h-3 w-3 mx-auto mb-1" />
                   <span className="block">Connect</span>
                 </div>
+                {/* Passport Code - Quick Access */}
+                <div className="bg-gray-50 rounded px-2 py-1 max-w-[80px]">
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground mb-1">ID</div>
+                    <div 
+                      className="font-mono text-[10px] font-semibold text-gray-900 cursor-pointer hover:text-orange-600 transition-colors"
+                      onClick={handleCopyPassportId}
+                      title="Click to copy passport ID"
+                    >
+                      {passportId}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
