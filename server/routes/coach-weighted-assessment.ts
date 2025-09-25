@@ -9,7 +9,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
 import { eq, desc } from 'drizzle-orm';
-import { matchAssessments } from '@shared/schema/courtiq';
+import { pcpAssessmentResults } from '@shared/schema/progressive-assessment';
+import { users } from '@shared/schema';
 import { 
   aggregateMultiCoachRatings,
   getOfficialPCPRating,
@@ -31,16 +32,16 @@ const studentIdSchema = z.string().refine((val) => {
  */
 function mapDbToAssessmentRecord(dbRecord: any): AssessmentRecord {
   return {
-    id: dbRecord.id,
-    studentId: dbRecord.studentId,
+    id: dbRecord.id.toString(),
+    studentId: dbRecord.playerId,
     coachId: dbRecord.coachId,
-    coachName: dbRecord.coachName || 'Unknown Coach',
+    coachName: dbRecord.coachDisplayName || `Coach ${dbRecord.coachId}`,
     coachLevel: dbRecord.coachLevel || 2, // Default to L2 if missing
-    assessmentMode: dbRecord.assessmentMode as 'quick' | 'full' || 'full',
-    pcpRating: dbRecord.pcpRating,
-    assessmentData: dbRecord.assessmentData || {},
-    assessmentDate: new Date(dbRecord.assessmentDate),
-    totalSkills: dbRecord.totalSkills || 55
+    assessmentMode: dbRecord.isCompleteAssessment ? 'full' : 'quick',
+    pcpRating: parseFloat(dbRecord.calculatedPcpRating),
+    assessmentData: {}, // Will be populated from skill data if needed
+    assessmentDate: new Date(dbRecord.createdAt),
+    totalSkills: dbRecord.skillsAssessedCount || 55
   };
 }
 
@@ -53,12 +54,23 @@ router.get('/aggregate/:studentId', isAuthenticated, async (req, res) => {
     const studentId = studentIdSchema.parse(req.params.studentId);
     const studentIdNum = parseInt(studentId);
 
-    // Query all assessments for the student from database
+    // Query all assessments for the student from database with coach info
     const dbAssessments = await db
-      .select()
-      .from(matchAssessments)
-      .where(eq(matchAssessments.studentId, studentIdNum))
-      .orderBy(desc(matchAssessments.assessmentDate));
+      .select({
+        id: pcpAssessmentResults.id,
+        playerId: pcpAssessmentResults.playerId,
+        coachId: pcpAssessmentResults.coachId,
+        calculatedPcpRating: pcpAssessmentResults.calculatedPcpRating,
+        skillsAssessedCount: pcpAssessmentResults.skillsAssessedCount,
+        isCompleteAssessment: pcpAssessmentResults.isCompleteAssessment,
+        createdAt: pcpAssessmentResults.createdAt,
+        coachDisplayName: users.displayName,
+        coachLevel: users.coachLevel
+      })
+      .from(pcpAssessmentResults)
+      .leftJoin(users, eq(pcpAssessmentResults.coachId, users.id))
+      .where(eq(pcpAssessmentResults.playerId, studentIdNum))
+      .orderBy(desc(pcpAssessmentResults.createdAt));
 
     if (dbAssessments.length === 0) {
       return res.status(404).json({
@@ -83,9 +95,9 @@ router.get('/aggregate/:studentId', isAuthenticated, async (req, res) => {
       aggregated: aggregatedRating,
       official: officialRating,
       latestAssessment: {
-        pcpRating: dbAssessments[0].pcpRating,
-        assessmentDate: dbAssessments[0].assessmentDate,
-        coachLevel: dbAssessments[0].coachLevel
+        pcpRating: parseFloat(dbAssessments[0].calculatedPcpRating),
+        assessmentDate: dbAssessments[0].createdAt,
+        coachLevel: dbAssessments[0].coachLevel || 2
       },
       totalAssessments: dbAssessments.length
     });
@@ -118,23 +130,34 @@ router.get('/history/:studentId', isAuthenticated, async (req, res) => {
     const studentId = studentIdSchema.parse(req.params.studentId);
     const studentIdNum = parseInt(studentId);
     
-    // Query assessment history from database
+    // Query assessment history from database with coach info
     const dbAssessments = await db
-      .select()
-      .from(matchAssessments)
-      .where(eq(matchAssessments.studentId, studentIdNum))
-      .orderBy(desc(matchAssessments.assessmentDate));
+      .select({
+        id: pcpAssessmentResults.id,
+        playerId: pcpAssessmentResults.playerId,
+        coachId: pcpAssessmentResults.coachId,
+        calculatedPcpRating: pcpAssessmentResults.calculatedPcpRating,
+        skillsAssessedCount: pcpAssessmentResults.skillsAssessedCount,
+        isCompleteAssessment: pcpAssessmentResults.isCompleteAssessment,
+        createdAt: pcpAssessmentResults.createdAt,
+        coachDisplayName: users.displayName,
+        coachLevel: users.coachLevel
+      })
+      .from(pcpAssessmentResults)
+      .leftJoin(users, eq(pcpAssessmentResults.coachId, users.id))
+      .where(eq(pcpAssessmentResults.playerId, studentIdNum))
+      .orderBy(desc(pcpAssessmentResults.createdAt));
     
     // Format assessments for frontend display
     const assessments = dbAssessments.map(assessment => ({
       id: assessment.id,
       coachId: assessment.coachId,
-      coachName: assessment.coachName || 'Unknown Coach',
+      coachName: assessment.coachDisplayName || `Coach ${assessment.coachId}`,
       coachLevel: assessment.coachLevel || 2,
-      assessmentMode: assessment.assessmentMode || 'full',
-      pcpRating: assessment.pcpRating,
-      assessmentDate: assessment.assessmentDate,
-      totalSkills: assessment.totalSkills || 55
+      assessmentMode: assessment.isCompleteAssessment ? 'full' : 'quick',
+      pcpRating: parseFloat(assessment.calculatedPcpRating),
+      assessmentDate: assessment.createdAt,
+      totalSkills: assessment.skillsAssessedCount || 55
     }));
     
     // Get latest assessment for summary
@@ -151,7 +174,7 @@ router.get('/history/:studentId', isAuthenticated, async (req, res) => {
       } : null,
       summary: {
         totalAssessments: assessments.length,
-        uniqueCoaches: [...new Set(assessments.map(a => a.coachId))].length,
+        uniqueCoaches: Array.from(new Set(assessments.map(a => a.coachId))).length,
         coachLevels: assessments.map(a => a.coachLevel),
         averagePCP: assessments.length > 0 
           ? (assessments.reduce((sum, a) => sum + a.pcpRating, 0) / assessments.length).toFixed(2)
@@ -196,17 +219,25 @@ router.post('/validate', isAuthenticated, async (req, res) => {
 
     // Get existing assessments for the student
     const dbAssessments = await db
-      .select()
-      .from(matchAssessments)
-      .where(eq(matchAssessments.studentId, parseInt(studentId)))
-      .orderBy(desc(matchAssessments.assessmentDate));
+      .select({
+        id: pcpAssessmentResults.id,
+        playerId: pcpAssessmentResults.playerId,
+        coachId: pcpAssessmentResults.coachId,
+        calculatedPcpRating: pcpAssessmentResults.calculatedPcpRating,
+        skillsAssessedCount: pcpAssessmentResults.skillsAssessedCount,
+        isCompleteAssessment: pcpAssessmentResults.isCompleteAssessment,
+        createdAt: pcpAssessmentResults.createdAt,
+      })
+      .from(pcpAssessmentResults)
+      .where(eq(pcpAssessmentResults.playerId, parseInt(studentId)))
+      .orderBy(desc(pcpAssessmentResults.createdAt));
 
     const existingAssessments = dbAssessments.map(mapDbToAssessmentRecord);
 
     // Validate the new assessment
     const validation = validateNewAssessment(existingAssessments, {
       coachId,
-      studentId: parseInt(studentId)
+      studentId: studentId
     });
 
     res.json({
@@ -278,6 +309,161 @@ router.get('/system-status', isAuthenticated, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get system status',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Get recent assessments for a coach (replaces the empty endpoint)
+ * GET /api/coach/recent-assessments
+ */
+router.get('/recent-assessments', isAuthenticated, async (req, res) => {
+  try {
+    const coachId = (req.user as any)?.id;
+    
+    if (!coachId) {
+      return res.status(401).json({
+        success: false,
+        error: 'UNAUTHORIZED',
+        message: 'Coach authentication required'
+      });
+    }
+
+    // Get recent assessments performed by this coach (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentAssessments = await db
+      .select({
+        id: pcpAssessmentResults.id,
+        playerId: pcpAssessmentResults.playerId,
+        coachId: pcpAssessmentResults.coachId,
+        calculatedPcpRating: pcpAssessmentResults.calculatedPcpRating,
+        skillsAssessedCount: pcpAssessmentResults.skillsAssessedCount,
+        isCompleteAssessment: pcpAssessmentResults.isCompleteAssessment,
+        createdAt: pcpAssessmentResults.createdAt,
+        studentName: users.displayName
+      })
+      .from(pcpAssessmentResults)
+      .leftJoin(users, eq(pcpAssessmentResults.playerId, users.id))
+      .where(eq(pcpAssessmentResults.coachId, coachId))
+      .orderBy(desc(pcpAssessmentResults.createdAt))
+      .limit(10);
+
+    const formattedAssessments = recentAssessments.map(assessment => ({
+      id: assessment.id,
+      studentId: assessment.playerId,
+      studentName: assessment.studentName || `Student ${assessment.playerId}`,
+      pcpRating: parseFloat(assessment.calculatedPcpRating),
+      assessmentMode: assessment.isCompleteAssessment ? 'full' : 'quick',
+      skillsAssessed: assessment.skillsAssessedCount,
+      assessmentDate: assessment.createdAt,
+      daysAgo: Math.floor((Date.now() - new Date(assessment.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    }));
+
+    console.log(`[RECENT ASSESSMENTS] Coach ${coachId} has ${formattedAssessments.length} recent assessments`);
+
+    res.json(formattedAssessments);
+    
+  } catch (error) {
+    console.error('Error fetching recent assessments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch recent assessments',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Get assessment history for current player (allows players to see their own assessments)
+ * GET /api/player/my-assessment-history
+ */
+router.get('/player/my-assessment-history', isAuthenticated, async (req, res) => {
+  try {
+    const playerId = (req.user as any)?.id;
+    
+    if (!playerId) {
+      return res.status(401).json({
+        success: false,
+        error: 'UNAUTHORIZED',
+        message: 'Player authentication required'
+      });
+    }
+
+    // Get all assessments for the current player with coach info
+    const playerAssessments = await db
+      .select({
+        id: pcpAssessmentResults.id,
+        playerId: pcpAssessmentResults.playerId,
+        coachId: pcpAssessmentResults.coachId,
+        calculatedPcpRating: pcpAssessmentResults.calculatedPcpRating,
+        skillsAssessedCount: pcpAssessmentResults.skillsAssessedCount,
+        isCompleteAssessment: pcpAssessmentResults.isCompleteAssessment,
+        createdAt: pcpAssessmentResults.createdAt,
+        coachDisplayName: users.displayName,
+        coachLevel: users.coachLevel
+      })
+      .from(pcpAssessmentResults)
+      .leftJoin(users, eq(pcpAssessmentResults.coachId, users.id))
+      .where(eq(pcpAssessmentResults.playerId, playerId))
+      .orderBy(desc(pcpAssessmentResults.createdAt));
+
+    const assessments = playerAssessments.map(assessment => ({
+      id: assessment.id,
+      coachId: assessment.coachId,
+      coachName: assessment.coachDisplayName || `Coach ${assessment.coachId}`,
+      coachLevel: assessment.coachLevel || 2,
+      assessmentMode: assessment.isCompleteAssessment ? 'full' : 'quick',
+      pcpRating: parseFloat(assessment.calculatedPcpRating),
+      assessmentDate: assessment.createdAt,
+      skillsAssessed: assessment.skillsAssessedCount || 55,
+      daysAgo: Math.floor((Date.now() - new Date(assessment.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    }));
+
+    // Get aggregated rating using multi-coach weighting if multiple assessments exist
+    let aggregatedInfo = null;
+    if (assessments.length > 0) {
+      try {
+        const assessmentRecords = playerAssessments.map(mapDbToAssessmentRecord);
+        const aggregatedRating = aggregateMultiCoachRatings(assessmentRecords);
+        const officialRating = getOfficialPCPRating(aggregatedRating);
+        
+        aggregatedInfo = {
+          currentPCPRating: aggregatedRating.finalPCPRating,
+          ratingStatus: aggregatedRating.ratingStatus,
+          confidenceLevel: aggregatedRating.confidenceLevel,
+          totalAssessments: aggregatedRating.contributingAssessments,
+          isOfficial: officialRating.isOfficial
+        };
+      } catch (error) {
+        console.error('Error calculating aggregated rating for player:', error);
+      }
+    }
+
+    console.log(`[PLAYER ASSESSMENTS] Player ${playerId} has ${assessments.length} assessments`);
+
+    res.json({
+      success: true,
+      playerId,
+      assessments,
+      aggregatedInfo,
+      summary: {
+        totalAssessments: assessments.length,
+        uniqueCoaches: Array.from(new Set(assessments.map(a => a.coachId))).length,
+        latestAssessment: assessments[0] || null,
+        averagePCP: assessments.length > 0 
+          ? (assessments.reduce((sum, a) => sum + a.pcpRating, 0) / assessments.length).toFixed(2)
+          : null
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching player assessment history:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch player assessment history',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

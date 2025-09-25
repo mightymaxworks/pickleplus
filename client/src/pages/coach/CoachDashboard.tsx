@@ -763,9 +763,9 @@ export default function CoachDashboard() {
     enabled: !!currentUser?.id
   });
 
-  // Fetch recent assessments
+  // Fetch recent assessments using new multi-coach weighted assessment endpoint
   const { data: recentAssessments = [], isLoading: assessmentsLoading } = useQuery<RecentAssessment[]>({
-    queryKey: ['/api/coach/recent-assessments'],
+    queryKey: ['/api/coach-weighted-assessment/recent-assessments'],
     enabled: !!currentUser?.id
   });
 
