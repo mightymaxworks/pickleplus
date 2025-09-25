@@ -27,7 +27,7 @@ const simpleAdminAuth = (req: any, res: any, next: any) => {
   console.log('[ADMIN DASHBOARD AUTH] Admin access granted');
   next();
 };
-import { users, matches, tournaments, userRankings } from '../../../../shared/schema';
+import { users, matches, tournaments } from '../../../../shared/schema';
 // Simple types for dashboard (avoiding complex imports for now)
 interface SystemOverview {
   totalUsers: number;
@@ -275,14 +275,14 @@ router.get('/test', (req, res) => {
 // Quick stats endpoint
 router.get('/stats', simpleAdminAuth, async (req, res) => {
   try {
-    const [users, matches] = await Promise.all([
+    const [userCount, matchCount] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(users),
       db.select({ count: sql<number>`count(*)` }).from(matches)
     ]);
     
     res.json({
-      totalUsers: users[0]?.count || 0,
-      totalMatches: matches[0]?.count || 0,
+      totalUsers: userCount[0]?.count || 0,
+      totalMatches: matchCount[0]?.count || 0,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
