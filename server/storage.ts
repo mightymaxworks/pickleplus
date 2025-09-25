@@ -461,6 +461,12 @@ export interface IStorage extends CommunityStorage {
   // Coach-Student Connection Management
   findCoachStudentRequest(coachId: number, studentId: number): Promise<any>;
   createCoachStudentRequest(data: { coachId: number; studentId: number; status: string; studentRequestDate: string }): Promise<any>;
+  
+  // Student-side coach request management
+  getStudentCoachRequests(studentId: number): Promise<any[]>;
+  acceptCoachRequest(requestId: number, studentId: number): Promise<any>;
+  rejectCoachRequest(requestId: number, studentId: number): Promise<any>;
+  createCoachStudentAssignment(coachId: number, studentId: number): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -8131,6 +8137,101 @@ export class DatabaseStorage implements IStorage {
       return result.rows[0];
     } catch (error) {
       console.error('Error creating coach-student request:', error);
+      throw error;
+    }
+  }
+
+  // Student-side coach request management methods
+  async getStudentCoachRequests(studentId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          csr.*,
+          u.full_name as coach_name,
+          u.email as coach_email,
+          cp.coach_level,
+          cp.specializations,
+          cp.years_experience,
+          cp.certifications
+        FROM coach_student_requests csr
+        JOIN users u ON csr.coach_id = u.id
+        LEFT JOIN coach_profiles cp ON u.id = cp.user_id
+        WHERE csr.student_id = ${studentId} AND csr.status = 'pending'
+        ORDER BY csr.student_request_date DESC
+      `);
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching student coach requests:', error);
+      return [];
+    }
+  }
+
+  async acceptCoachRequest(requestId: number, studentId: number): Promise<any> {
+    try {
+      // First verify the request belongs to this student and is pending
+      const request = await db.execute(sql`
+        SELECT * FROM coach_student_requests 
+        WHERE id = ${requestId} AND student_id = ${studentId} AND status = 'pending'
+      `);
+      
+      if (request.rows.length === 0) {
+        throw new Error('Request not found or not pending');
+      }
+      
+      const requestData = request.rows[0] as any;
+      
+      // Update request status to accepted
+      const updatedRequest = await db.execute(sql`
+        UPDATE coach_student_requests 
+        SET status = 'accepted', updated_at = NOW()
+        WHERE id = ${requestId}
+        RETURNING *
+      `);
+      
+      // Create coach-student assignment
+      await this.createCoachStudentAssignment(requestData.coach_id, studentId);
+      
+      return updatedRequest.rows[0];
+    } catch (error) {
+      console.error('Error accepting coach request:', error);
+      throw error;
+    }
+  }
+
+  async rejectCoachRequest(requestId: number, studentId: number): Promise<any> {
+    try {
+      // Verify the request belongs to this student and is pending
+      const result = await db.execute(sql`
+        UPDATE coach_student_requests 
+        SET status = 'rejected', updated_at = NOW()
+        WHERE id = ${requestId} AND student_id = ${studentId} AND status = 'pending'
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        throw new Error('Request not found or not pending');
+      }
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error rejecting coach request:', error);
+      throw error;
+    }
+  }
+
+  async createCoachStudentAssignment(coachId: number, studentId: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO coach_student_assignments (coach_id, student_id, created_at)
+        VALUES (${coachId}, ${studentId}, NOW())
+        ON CONFLICT (coach_id, student_id) DO NOTHING
+        RETURNING *
+      `);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating coach-student assignment:', error);
       throw error;
     }
   }

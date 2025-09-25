@@ -508,6 +508,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student-facing coach request endpoints
+  app.get('/api/student/coach-requests', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      console.log(`[STUDENT API] Fetching coach requests for student ${userId}`);
+
+      const requests = await storage.getStudentCoachRequests(userId);
+      
+      res.json({
+        success: true,
+        requests: requests
+      });
+
+    } catch (error) {
+      console.error('[STUDENT API] Error fetching coach requests:', error);
+      res.status(500).json({ message: 'Failed to fetch coach requests' });
+    }
+  });
+
+  app.post('/api/student/coach-requests/:requestId/accept', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const requestId = parseInt(req.params.requestId);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      if (isNaN(requestId)) {
+        return res.status(400).json({ message: 'Invalid request ID' });
+      }
+
+      console.log(`[STUDENT API] Student ${userId} accepting coach request ${requestId}`);
+
+      const result = await storage.acceptCoachRequest(requestId, userId);
+      
+      res.json({
+        success: true,
+        message: 'Coach request accepted successfully',
+        request: result
+      });
+
+    } catch (error) {
+      console.error('[STUDENT API] Error accepting coach request:', error);
+      res.status(500).json({ message: 'Failed to accept coach request' });
+    }
+  });
+
+  app.post('/api/student/coach-requests/:requestId/reject', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const requestId = parseInt(req.params.requestId);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      if (isNaN(requestId)) {
+        return res.status(400).json({ message: 'Invalid request ID' });
+      }
+
+      console.log(`[STUDENT API] Student ${userId} rejecting coach request ${requestId}`);
+
+      const result = await storage.rejectCoachRequest(requestId, userId);
+      
+      res.json({
+        success: true,
+        message: 'Coach request rejected',
+        request: result
+      });
+
+    } catch (error) {
+      console.error('[STUDENT API] Error rejecting coach request:', error);
+      res.status(500).json({ message: 'Failed to reject coach request' });
+    }
+  });
+
   // Progressive Assessment Submission Route - Enhanced CoachingAssessmentValidator Integration
   app.post('/api/coaching/progressive-assessment', isAuthenticated, async (req: Request, res: Response) => {
     try {
