@@ -1117,6 +1117,42 @@ export const users = pgTable("users", {
   bannerUrl: text("banner_url"),
   bannerPattern: varchar("banner_pattern", { length: 50 }),
   
+  // Social Authentication Fields (PKL-278651-AUTH-SOCIAL)
+  // OAuth Provider Tracking
+  oauthProviders: varchar("oauth_providers", { length: 500 }), // Comma-separated: "google,facebook,apple"
+  primaryOauthProvider: varchar("primary_oauth_provider", { length: 50 }), // Which provider they primarily use
+  googleId: varchar("google_id", { length: 255 }),
+  facebookId: varchar("facebook_id", { length: 255 }),
+  appleId: varchar("apple_id", { length: 255 }),
+  githubId: varchar("github_id", { length: 255 }),
+  xTwitterId: varchar("x_twitter_id", { length: 255 }),
+  kakaoId: varchar("kakao_id", { length: 255 }),
+  lineId: varchar("line_id", { length: 255 }),
+  
+  // Social Profile Data (Progressive Enhancement)
+  profileImageUrl: varchar("profile_image_url", { length: 500 }), // From social login
+  socialBio: text("social_bio"), // Rich bio from social platforms
+  socialLocation: varchar("social_location", { length: 255 }), // Location from social platforms
+  languagePreference: varchar("language_preference", { length: 10 }).default("en"), // Language from social context
+  timezone: varchar("timezone", { length: 50 }), // Timezone from social/device data
+  
+  // Progressive Data Enrichment
+  socialInterests: text("social_interests"), // JSON array of interests from social platforms
+  socialNetworks: jsonb("social_networks"), // Network graph data for community matching
+  verifiedSocialProfiles: jsonb("verified_social_profiles"), // Verified social media profiles
+  socialEngagementLevel: integer("social_engagement_level").default(0), // 0-100 based on social activity
+  
+  // Trading Card Ecosystem Data
+  cardCollectionSizeHint: integer("card_collection_size_hint").default(0), // From external trading card apps
+  preferredCardAesthetics: varchar("preferred_card_aesthetics", { length: 100 }), // "realistic,fantasy,retro"
+  socialSharingPreferences: jsonb("social_sharing_preferences"), // What they're willing to share socially
+  
+  // Data Consent & Privacy (Granular Control)
+  socialDataConsentLevel: varchar("social_data_consent_level", { length: 20 }).default("basic"), // "none,basic,enhanced,full"
+  socialDataLastUpdated: timestamp("social_data_last_updated"),
+  socialLoginCount: integer("social_login_count").default(0), // Track usage patterns
+  lastSocialLogin: timestamp("last_social_login"),
+  
   // System fields
   createdAt: timestamp("created_at").defaultNow(),
   lastUpdated: timestamp("last_updated").defaultNow()
