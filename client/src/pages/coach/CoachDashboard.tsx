@@ -1191,20 +1191,22 @@ export default function CoachDashboard() {
               ) : (
                 <div className="space-y-3">
                   {recentAssessments.map((assessment) => (
-                    <Card key={assessment.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                    <Card key={assessment.id} className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedStudent(assessment.studentId)}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium">{assessment.studentName}</h4>
-                            <p className="text-sm text-gray-600">{assessment.assessmentType}</p>
+                            <p className="text-sm text-gray-600">
+                              {assessment.assessmentMode === 'full' ? '🎯 Full Assessment' : '⚡ Quick Assessment'} • {assessment.skillsAssessed} skills
+                            </p>
                           </div>
                           <div className="text-right">
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 text-yellow-500" />
-                              <span className="font-medium">{assessment.overallRating}/10</span>
+                              <span className="font-medium">PCP {assessment.pcpRating.toFixed(1)}</span>
                             </div>
                             <p className="text-xs text-gray-500">
-                              {new Date(assessment.createdAt).toLocaleDateString()}
+                              {assessment.daysAgo === 0 ? 'Today' : assessment.daysAgo === 1 ? 'Yesterday' : `${assessment.daysAgo} days ago`}
                             </p>
                           </div>
                         </div>
