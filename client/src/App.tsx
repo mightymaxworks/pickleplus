@@ -21,6 +21,7 @@ import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute' // PKL
 import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-CORE
 // Onboarding complete page removed - onboarding system disabled
 import RoleProtectedDemoPage from './pages/RoleProtectedDemoPage' // PKL-278651-AUTH-0008-ROLES
+import CardAestheticComparison from '@/components/card-prototypes/CardAestheticComparison';
 import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
 import { LanguageProvider } from '@/contexts/LanguageContext' // Language internationalization
 import { SmartFeatureGuide } from '@/components/onboarding/SmartFeatureGuide' // Smart feature discovery
@@ -672,6 +673,11 @@ export default function App() {
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
                   <Route path="/roles/demo">
                     {() => <RoleProtectedRoute component={RoleProtectedDemoPage} path="/roles/demo" />}
+                  </Route>
+
+                  {/* Card Aesthetic Prototypes */}
+                  <Route path="/card-prototypes">
+                    <CardAestheticComparison />
                   </Route>
                   
                   {/* Coach-specific route example - REMOVED: Replaced by actual coach dashboard at line 833+ */}
