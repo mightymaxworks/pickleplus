@@ -113,9 +113,13 @@ export interface IStorage extends CommunityStorage {
   
   // User operations
   getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>; // OAuth support (string IDs)
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByPassportCode(passportCode: string): Promise<User | undefined>;
+  
+  // OAuth User operations (Required by Replit Auth)
+  upsertUser(user: UpsertUser): Promise<User>;
   createUser(insertUser: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User>;
   updateUserProfile(id: number, profileData: Partial<InsertUser>): Promise<User>;
@@ -693,6 +697,76 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
+  }
+
+  // OAuth support - getUser by string ID (for OAuth provider IDs)
+  async getUser(id: string): Promise<User | undefined> {
+    // First try to find by OAuth provider IDs
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        or(
+          eq(users.googleId, id),
+          eq(users.facebookId, id),
+          eq(users.appleId, id),
+          eq(users.githubId, id),
+          eq(users.xTwitterId, id),
+          eq(users.kakaoId, id),
+          eq(users.lineId, id)
+        )
+      );
+    return user || undefined;
+  }
+
+  // OAuth User upsert (Required by Replit Auth)
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    try {
+      // For OAuth users, we need to handle both creation and updates
+      const existingUser = userData.id ? await this.getUser(Number(userData.id)) : null;
+      
+      if (existingUser) {
+        // Update existing user with OAuth data
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            ...userData,
+            lastSocialLogin: new Date(),
+            socialLoginCount: sql`${users.socialLoginCount} + 1`,
+            lastUpdated: new Date()
+          })
+          .where(eq(users.id, existingUser.id))
+          .returning();
+        return updatedUser;
+      } else {
+        // Create new OAuth user
+        const newUserData = {
+          ...userData,
+          // Generate username if not provided
+          username: userData.username || userData.email?.split('@')[0] || `user_${Date.now()}`,
+          // Set default password for OAuth users (they won't use it)
+          password: userData.password || 'oauth_user_no_password',
+          // Generate passport code
+          passportCode: await generateUniquePassportCode(),
+          // Set OAuth tracking fields
+          primaryOauthProvider: userData.primaryOauthProvider || 'replit',
+          socialLoginCount: 1,
+          lastSocialLogin: new Date(),
+          socialDataConsentLevel: 'basic',
+          createdAt: new Date(),
+          lastUpdated: new Date()
+        };
+
+        const [newUser] = await db
+          .insert(users)
+          .values(newUserData)
+          .returning();
+        return newUser;
+      }
+    } catch (error) {
+      console.error('[OAuth Storage] Error upserting user:', error);
+      throw error;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {

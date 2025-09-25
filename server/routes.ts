@@ -1,6 +1,7 @@
 import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth as setupReplitAuth, isAuthenticated as isAuthenticatedOAuth } from "./replitAuth";
 import passport from "passport";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -96,9 +97,13 @@ function calculateCategoryAverage(assessmentData: Record<string, number>, catego
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[ROUTES] Setting up modular route architecture...");
   
-  // Set up authentication first
-  setupAuth(app);
-  console.log("[AUTH] Authentication setup complete");
+  // Set up authentication systems
+  setupAuth(app); // Traditional username/password auth
+  console.log("[AUTH] Traditional authentication setup complete");
+  
+  // Set up OAuth authentication (Replit Auth + Social Logins)
+  await setupReplitAuth(app);
+  console.log("[AUTH] OAuth authentication setup complete");
 
   // CRITICAL SECURITY: Apply JSON parsing selectively - exclude webhook paths to preserve raw body
   app.use((req, res, next) => {
@@ -111,6 +116,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     express.json()(req, res, next);
   });
   console.log("[SECURITY] Selective JSON parsing middleware configured");
+
+  // Register OAuth API routes (Required by Replit Auth)
+  app.get('/api/auth/user', isAuthenticatedOAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching OAuth user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // Register basic API routes
   console.log("[ROUTES] Registering basic API routes...");
