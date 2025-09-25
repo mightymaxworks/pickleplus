@@ -10,7 +10,8 @@ import { z } from 'zod';
 import { db } from '../db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { pcpAssessmentResults } from '@shared/schema/progressive-assessment';
-import { users, matchAssessments } from '@shared/schema';
+import { users } from '@shared/schema';
+import { matchAssessments } from '@shared/schema/courtiq';
 import { 
   aggregateMultiCoachRatings,
   getOfficialPCPRating,
@@ -356,16 +357,9 @@ router.get('/recent-assessments', isAuthenticated, async (req, res) => {
         id: matchAssessments.id,
         playerId: matchAssessments.targetId,
         coachId: matchAssessments.assessorId,
-        calculatedPcpRating: sql<string>`CASE 
-          WHEN ${matchAssessments.matchContext}::text LIKE '%pcp_rating%' 
-          THEN (${matchAssessments.matchContext}::json->>'pcp_rating')::text 
-          ELSE ((${matchAssessments.technicalRating} + ${matchAssessments.tacticalRating} + ${matchAssessments.physicalRating} + ${matchAssessments.mentalRating} + ${matchAssessments.consistencyRating}) / 5.0)::text
-        END`,
+        calculatedPcpRating: sql<string>`((${matchAssessments.technicalRating} + ${matchAssessments.tacticalRating} + ${matchAssessments.physicalRating} + ${matchAssessments.mentalRating} + ${matchAssessments.consistencyRating}) / 5.0)::text`,
         skillsAssessedCount: sql<number>`55`,
-        isCompleteAssessment: sql<boolean>`CASE 
-          WHEN ${matchAssessments.matchContext}::json->>'assessment_mode' = 'quick' THEN false 
-          ELSE true 
-        END`,
+        isCompleteAssessment: sql<boolean>`true`,
         createdAt: matchAssessments.createdAt,
         studentName: users.displayName,
         source: sql<string>`'legacy'`
@@ -377,7 +371,11 @@ router.get('/recent-assessments', isAuthenticated, async (req, res) => {
 
     // Combine and sort all assessments by date
     const recentAssessments = [...newAssessments, ...legacyAssessments]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })
       .slice(0, 10);
 
     const formattedAssessments = recentAssessments.map(assessment => ({
