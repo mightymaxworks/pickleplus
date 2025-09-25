@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import RealisticSportsCard from './RealisticSportsCard';
 import FantasyGamingCard from './FantasyGamingCard';
+import FantasyGamingCardPCP from './FantasyGamingCardPCP';
 import { Palette, Gamepad2, Users, Trophy } from 'lucide-react';
 
 interface CardAestheticComparisonProps {
@@ -207,18 +208,18 @@ export default function CardAestheticComparison({ user }: CardAestheticCompariso
           </div>
         </div>
 
-        {/* Fantasy Gaming Card */}
+        {/* Fantasy Gaming Card with Real PCP Data */}
         <div className="space-y-4">
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2">
                 <Gamepad2 className="w-5 h-5 text-slate-600" />
-                Fantasy Gaming Style
+                Fantasy Gaming Style (Real PCP Data)
               </CardTitle>
-              <Badge variant="outline" className="mx-auto">Alternative Style</Badge>
+              <Badge variant="outline" className="mx-auto">User Preferred</Badge>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <FantasyGamingCard user={currentUser} variant={cardSide} />
+              <FantasyGamingCardPCP user={currentUser} variant={cardSide} />
             </CardContent>
           </Card>
 
@@ -226,40 +227,42 @@ export default function CardAestheticComparison({ user }: CardAestheticCompariso
           <div className="bg-slate-50 rounded-lg p-4">
             <h4 className="font-semibold text-slate-700 mb-2">Design Features:</h4>
             <ul className="text-sm text-slate-600 space-y-1">
-              <li>• Modern gaming-inspired design</li>
-              <li>• Bold neon glows and gradients</li>
-              <li>• RPG-style stats (Power, Agility, Wisdom)</li>
-              <li>• Animated particles and effects</li>
-              <li>• Level-based progression display</li>
-              <li>• High contrast dark theme</li>
-              <li>• Battle arena aesthetic</li>
+              <li>• Modern gaming-inspired visual design</li>
+              <li>• Bold neon glows and high contrast</li>
+              <li>• Real PCP data: Rankings, Skills, Match Stats</li>
+              <li>• Player tiers: Professional, Elite, Competitive, Recreational</li>
+              <li>• Skill bars: Forehand, Backhand, Serve, Dink, Court Coverage</li>
+              <li>• Animated particles and gradient effects</li>
+              <li>• Easy to read with excellent contrast</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Recommendation Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-800 mb-3">Recommendation: Realistic Sports Card</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+      {/* Updated Recommendation */}
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-purple-800 mb-3">User Choice: Fantasy Gaming Style with Real PCP Data</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-purple-700">
           <div>
-            <h4 className="font-semibold mb-2">Why Realistic Works Better:</h4>
+            <h4 className="font-semibold mb-2">Why Fantasy Gaming Works Better:</h4>
             <ul className="space-y-1">
-              <li>• Authentic collectible card experience</li>
-              <li>• Appeals to traditional sports card collectors</li>
-              <li>• Professional, premium presentation</li>
-              <li>• Timeless design that won't feel dated</li>
-              <li>• Focuses on real achievement and skill</li>
+              <li>• Much cooler visual aesthetic</li>
+              <li>• Significantly easier to read and understand</li>
+              <li>• High contrast design for mobile optimization</li>
+              <li>• Modern, engaging user experience</li>
+              <li>• Appeals to younger, tech-savvy players</li>
+              <li>• Distinctive brand identity for Pickle+</li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-2">Implementation Notes:</h4>
+            <h4 className="font-semibold mb-2">Real PCP Integration:</h4>
             <ul className="space-y-1">
-              <li>• Subtle effects enhance without overwhelming</li>
-              <li>• Rich detail creates collectible value</li>
-              <li>• Easy toggle to classic passport view</li>
-              <li>• Purple-gold mythic treatment is distinctive</li>
-              <li>• Coach special treatment maintains hierarchy</li>
+              <li>• Uses actual ranking points and skill data</li>
+              <li>• Player tiers based on real PCP classification</li>
+              <li>• Skill assessments: Forehand, Backhand, Serve, etc.</li>
+              <li>• Match performance and win rate display</li>
+              <li>• Coach levels and Pickle Points integration</li>
+              <li>• Purple-gold mythic treatment preserved</li>
             </ul>
           </div>
         </div>
