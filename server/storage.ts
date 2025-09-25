@@ -8113,7 +8113,7 @@ export class DatabaseStorage implements IStorage {
   async findCoachStudentRequest(coachId: number, studentId: number): Promise<any> {
     try {
       const result = await db.execute(sql`
-        SELECT * FROM coach_student_requests 
+        SELECT * FROM coach_student_assignments 
         WHERE coach_id = ${coachId} AND student_id = ${studentId}
         ORDER BY student_request_date DESC 
         LIMIT 1
@@ -8129,8 +8129,8 @@ export class DatabaseStorage implements IStorage {
   async createCoachStudentRequest(data: { coachId: number; studentId: number; status: string; studentRequestDate: string }): Promise<any> {
     try {
       const result = await db.execute(sql`
-        INSERT INTO coach_student_requests (coach_id, student_id, status, student_request_date)
-        VALUES (${data.coachId}, ${data.studentId}, ${data.status}, ${data.studentRequestDate})
+        INSERT INTO coach_student_assignments (coach_id, student_id, status, student_request_date, initiated_by_student, created_at, updated_at)
+        VALUES (${data.coachId}, ${data.studentId}, ${data.status}, ${data.studentRequestDate}, true, NOW(), NOW())
         RETURNING *
       `);
       
@@ -8146,18 +8146,18 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db.execute(sql`
         SELECT 
-          csr.*,
-          u.full_name as coach_name,
+          csa.*,
+          u.display_name as coach_name,
           u.email as coach_email,
-          cp.coach_level,
-          cp.specializations,
-          cp.years_experience,
-          cp.certifications
-        FROM coach_student_requests csr
-        JOIN users u ON csr.coach_id = u.id
+          u.coach_level,
+          COALESCE(cp.specializations, '[]'::text) as specializations,
+          COALESCE(cp.years_experience, 0) as years_experience,
+          COALESCE(cp.certifications, '[]'::text) as certifications
+        FROM coach_student_assignments csa
+        JOIN users u ON csa.coach_id = u.id
         LEFT JOIN coach_profiles cp ON u.id = cp.user_id
-        WHERE csr.student_id = ${studentId} AND csr.status = 'pending'
-        ORDER BY csr.student_request_date DESC
+        WHERE csa.student_id = ${studentId} AND csa.status = 'pending'
+        ORDER BY csa.student_request_date DESC
       `);
       
       return result.rows;
@@ -8171,7 +8171,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // First verify the request belongs to this student and is pending
       const request = await db.execute(sql`
-        SELECT * FROM coach_student_requests 
+        SELECT * FROM coach_student_assignments 
         WHERE id = ${requestId} AND student_id = ${studentId} AND status = 'pending'
       `);
       
@@ -8181,16 +8181,13 @@ export class DatabaseStorage implements IStorage {
       
       const requestData = request.rows[0] as any;
       
-      // Update request status to accepted
+      // Update request status to active (accepted)
       const updatedRequest = await db.execute(sql`
-        UPDATE coach_student_requests 
-        SET status = 'accepted', updated_at = NOW()
+        UPDATE coach_student_assignments 
+        SET status = 'active', coach_approved_date = NOW(), updated_at = NOW(), is_active = true
         WHERE id = ${requestId}
         RETURNING *
       `);
-      
-      // Create coach-student assignment
-      await this.createCoachStudentAssignment(requestData.coach_id, studentId);
       
       return updatedRequest.rows[0];
     } catch (error) {
@@ -8203,7 +8200,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Verify the request belongs to this student and is pending
       const result = await db.execute(sql`
-        UPDATE coach_student_requests 
+        UPDATE coach_student_assignments 
         SET status = 'rejected', updated_at = NOW()
         WHERE id = ${requestId} AND student_id = ${studentId} AND status = 'pending'
         RETURNING *
