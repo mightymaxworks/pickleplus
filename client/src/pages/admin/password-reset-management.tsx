@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Key, UserCheck, Clock, Shield } from "lucide-react";
+import { Search, Key, UserCheck, Clock, Shield, Mail, AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -31,6 +31,7 @@ export default function PasswordResetManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [tempPassword, setTempPassword] = useState("");
+  const [emailForReset, setEmailForReset] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -57,7 +58,7 @@ export default function PasswordResetManagement() {
     onSuccess: (data) => {
       toast({
         title: "Temporary Password Generated",
-        description: `Temporary password set for user. They can now log in and change their password.`,
+        description: `Temporary password: ${data.tempPassword}. Share this securely with the user.`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/password-reset-requests'] });
       setSelectedUser(null);
@@ -66,6 +67,27 @@ export default function PasswordResetManagement() {
     onError: (error: Error) => {
       toast({
         title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Test email delivery mutation
+  const testEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await apiRequest('POST', '/api/auth/forgot-password', { email });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Check system logs for delivery details. If user doesn't receive email, use temporary password below.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Email Send Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -115,6 +137,83 @@ export default function PasswordResetManagement() {
           <p className="text-gray-600">Manage password reset requests and generate temporary passwords</p>
         </div>
       </div>
+
+      {/* Email Delivery Troubleshooting */}
+      <Card className="mb-6 border-orange-200 bg-orange-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-orange-800">
+            <AlertTriangle className="w-5 h-5" />
+            Email Delivery Troubleshooting
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-white p-4 rounded-lg border border-orange-200">
+            <h3 className="font-medium text-orange-800 mb-3">If users aren't receiving password reset emails:</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</div>
+                <div>
+                  <p className="font-medium">Check SendGrid Email Activity</p>
+                  <p className="text-gray-600">Monitor actual delivery status (not just API acceptance)</p>
+                  <a 
+                    href="https://app.sendgrid.com/email_activity" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-orange-600 hover:text-orange-700 mt-1"
+                  >
+                    Open SendGrid Dashboard <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</div>
+                <div>
+                  <p className="font-medium">Check for Suppression Lists</p>
+                  <p className="text-gray-600">User might be on bounce/block/spam suppression lists</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</div>
+                <div>
+                  <p className="font-medium">Use Temporary Password (Immediate Solution)</p>
+                  <p className="text-gray-600">Generate a temp password and share via secure channel (phone/in-person)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="emailTest">Test Email Delivery</Label>
+            <div className="flex gap-2">
+              <Input
+                id="emailTest"
+                placeholder="Enter email to test password reset..."
+                value={emailForReset}
+                onChange={(e) => setEmailForReset(e.target.value)}
+                type="email"
+              />
+              <Button
+                onClick={() => testEmailMutation.mutate(emailForReset)}
+                disabled={!emailForReset || testEmailMutation.isPending}
+                variant="outline"
+                size="sm"
+              >
+                {testEmailMutation.isPending ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4" />
+                )}
+                Test Email
+              </Button>
+            </div>
+            <p className="text-xs text-gray-600">
+              This will trigger a password reset email and log delivery details in the system logs.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Search & Manual Reset */}
@@ -197,13 +296,20 @@ export default function PasswordResetManagement() {
                   </div>
                 </div>
 
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-yellow-800">
+                    <strong>⚠️ Security Note:</strong> Share this temporary password through a secure channel (phone call, in-person, secure messaging). 
+                    Instruct the user to change it immediately after logging in.
+                  </p>
+                </div>
+
                 <Button
                   onClick={() => generateTempPasswordMutation.mutate({
                     userId: selectedUser.id,
                     tempPassword,
                   })}
                   disabled={!tempPassword || generateTempPasswordMutation.isPending}
-                  className="w-full"
+                  className="w-full bg-orange-600 hover:bg-orange-700"
                 >
                   {generateTempPasswordMutation.isPending ? (
                     <>

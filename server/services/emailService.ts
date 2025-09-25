@@ -15,7 +15,7 @@ interface EmailParams {
   html?: string;
 }
 
-export async function sendEmail(params: EmailParams): Promise<boolean> {
+export async function sendEmail(params: EmailParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const emailData: any = {
       to: params.to,
@@ -26,12 +26,35 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     if (params.text) emailData.text = params.text;
     if (params.html) emailData.html = params.html;
     
-    await mailService.send(emailData);
+    console.log(`[EmailService] Attempting to send email to: ${params.to}`);
+    console.log(`[EmailService] From: ${params.from}`);
+    console.log(`[EmailService] Subject: ${params.subject}`);
+    console.log(`[EmailService] SendGrid API Key configured: ${process.env.SENDGRID_API_KEY ? 'Yes' : 'No'}`);
+    
+    const response = await mailService.send(emailData);
+    const messageId = response && response[0] && response[0].headers ? response[0].headers['x-message-id'] : 'unknown';
+    
     console.log(`[EmailService] Email sent successfully to: ${params.to}`);
-    return true;
-  } catch (error) {
+    console.log(`[EmailService] SendGrid Message ID: ${messageId}`);
+    console.log(`[EmailService] Response status: ${response && response[0] ? response[0].statusCode : 'unknown'}`);
+    
+    // Log critical delivery information
+    console.log(`[EmailService] ⚠️  IMPORTANT: SendGrid acceptance ≠ delivery. Check SendGrid dashboard for actual delivery status.`);
+    console.log(`[EmailService] Monitor delivery at: https://app.sendgrid.com/email_activity`);
+    
+    return { success: true, messageId };
+  } catch (error: any) {
     console.error('[EmailService] SendGrid email error:', error);
-    return false;
+    console.error('[EmailService] Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.body || 'No response body'
+    });
+    
+    return { 
+      success: false, 
+      error: error.message || 'Unknown SendGrid error'
+    };
   }
 }
 
@@ -110,11 +133,24 @@ This email was sent from Pickle+ password reset system. Please do not reply to t
     return false;
   }
 
-  return await sendEmail({
+  const result = await sendEmail({
     to: userEmail,
     from: process.env.SENDGRID_FROM_EMAIL,
     subject: 'Reset Your Pickle+ Password',
     text: textContent,
     html: htmlContent
   });
+
+  if (result.success) {
+    console.log(`[EmailService] Password reset email queued for delivery. Message ID: ${result.messageId}`);
+    console.log(`[EmailService] 🔍 Troubleshooting: If user doesn't receive email, check:`);
+    console.log(`[EmailService] 1. SendGrid Email Activity: https://app.sendgrid.com/email_activity`);
+    console.log(`[EmailService] 2. Search for recipient: ${userEmail}`);
+    console.log(`[EmailService] 3. Check for bounces, blocks, or spam reports`);
+    console.log(`[EmailService] 4. Verify domain authentication and SPF/DKIM records`);
+  } else {
+    console.error(`[EmailService] Failed to send password reset email: ${result.error}`);
+  }
+
+  return result.success;
 }
