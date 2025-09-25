@@ -8,9 +8,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { pcpAssessmentResults } from '@shared/schema/progressive-assessment';
-import { users } from '@shared/schema';
+import { users, matchAssessments } from '@shared/schema';
 import { 
   aggregateMultiCoachRatings,
   getOfficialPCPRating,
@@ -330,11 +330,10 @@ router.get('/recent-assessments', isAuthenticated, async (req, res) => {
       });
     }
 
-    // Get recent assessments performed by this coach (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const recentAssessments = await db
+    // Get recent assessments from both new and legacy tables
+    
+    // New assessments from pcp_assessment_results table
+    const newAssessments = await db
       .select({
         id: pcpAssessmentResults.id,
         playerId: pcpAssessmentResults.playerId,
@@ -343,13 +342,43 @@ router.get('/recent-assessments', isAuthenticated, async (req, res) => {
         skillsAssessedCount: pcpAssessmentResults.skillsAssessedCount,
         isCompleteAssessment: pcpAssessmentResults.isCompleteAssessment,
         createdAt: pcpAssessmentResults.createdAt,
-        studentName: users.displayName
+        studentName: users.displayName,
+        source: sql<string>`'new'`
       })
       .from(pcpAssessmentResults)
       .leftJoin(users, eq(pcpAssessmentResults.playerId, users.id))
       .where(eq(pcpAssessmentResults.coachId, coachId))
-      .orderBy(desc(pcpAssessmentResults.createdAt))
-      .limit(10);
+      .orderBy(desc(pcpAssessmentResults.createdAt));
+
+    // Legacy assessments from match_assessments table (your actual student assessments)
+    const legacyAssessments = await db
+      .select({
+        id: matchAssessments.id,
+        playerId: matchAssessments.targetId,
+        coachId: matchAssessments.assessorId,
+        calculatedPcpRating: sql<string>`CASE 
+          WHEN ${matchAssessments.matchContext}::text LIKE '%pcp_rating%' 
+          THEN (${matchAssessments.matchContext}::json->>'pcp_rating')::text 
+          ELSE ((${matchAssessments.technicalRating} + ${matchAssessments.tacticalRating} + ${matchAssessments.physicalRating} + ${matchAssessments.mentalRating} + ${matchAssessments.consistencyRating}) / 5.0)::text
+        END`,
+        skillsAssessedCount: sql<number>`55`,
+        isCompleteAssessment: sql<boolean>`CASE 
+          WHEN ${matchAssessments.matchContext}::json->>'assessment_mode' = 'quick' THEN false 
+          ELSE true 
+        END`,
+        createdAt: matchAssessments.createdAt,
+        studentName: users.displayName,
+        source: sql<string>`'legacy'`
+      })
+      .from(matchAssessments)
+      .leftJoin(users, eq(matchAssessments.targetId, users.id))
+      .where(eq(matchAssessments.assessorId, coachId))
+      .orderBy(desc(matchAssessments.createdAt));
+
+    // Combine and sort all assessments by date
+    const recentAssessments = [...newAssessments, ...legacyAssessments]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
 
     const formattedAssessments = recentAssessments.map(assessment => ({
       id: assessment.id,
