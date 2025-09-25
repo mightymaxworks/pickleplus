@@ -92,6 +92,27 @@ const MobileStatCard: React.FC<{
 const FacilityManagerDashboard: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'today' | 'week' | 'month'>('week');
 
+  // Handle button clicks with coming soon functionality
+  const handleAddBooking = () => {
+    alert('Add Booking feature coming soon! This will open a booking form to schedule new court reservations.');
+  };
+
+  const handleSettings = () => {
+    alert('Facility Settings coming soon! This will open facility configuration options.');
+  };
+
+  const handleBlockTimeSlot = () => {
+    alert('Block Time Slot feature coming soon! This will allow you to mark time slots as unavailable.');
+  };
+
+  const handleViewSchedule = () => {
+    alert('View Schedule feature coming soon! This will show the full facility schedule.');
+  };
+
+  const handleViewReports = () => {
+    alert('View Reports feature coming soon! This will display detailed analytics and reports.');
+  };
+
   // Fetch facility booking summary
   const { data: bookingSummary, isLoading: summaryLoading } = useQuery<BookingSummary>({
     queryKey: ['/api/facility-manager/summary', selectedTimeRange],
@@ -297,19 +318,19 @@ const FacilityManagerDashboard: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-block-time-slot">
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-block-time-slot" onClick={handleBlockTimeSlot}>
               <Plus className="w-4 h-4" />
               Block Time Slot
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-view-schedule">
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-view-schedule" onClick={handleViewSchedule}>
               <Calendar className="w-4 h-4" />
               View Schedule
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-facility-settings">
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-facility-settings" onClick={handleSettings}>
               <Settings className="w-4 h-4" />
               Facility Settings
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-view-reports">
+            <DropdownMenuItem className="flex items-center gap-2" data-testid="menu-view-reports" onClick={handleViewReports}>
               <Activity className="w-4 h-4" />
               View Reports
             </DropdownMenuItem>
@@ -322,6 +343,7 @@ const FacilityManagerDashboard: React.FC = () => {
           variant="outline" 
           className="h-16 flex-col gap-2 min-h-[64px]"
           data-testid="button-quick-add-booking"
+          onClick={handleAddBooking}
         >
           <Plus className="w-5 h-5" />
           <span className="text-sm">Add Booking</span>
@@ -330,6 +352,7 @@ const FacilityManagerDashboard: React.FC = () => {
           variant="outline" 
           className="h-16 flex-col gap-2 min-h-[64px]"
           data-testid="button-quick-schedule"
+          onClick={handleViewSchedule}
         >
           <Calendar className="w-5 h-5" />
           <span className="text-sm">Schedule</span>
@@ -435,6 +458,7 @@ const FacilityManagerDashboard: React.FC = () => {
             variant="outline" 
             className="flex-1 min-h-[44px]"
             data-testid="button-sticky-settings"
+            onClick={handleSettings}
           >
             <Settings className="w-4 h-4 mr-2" />
             Settings
@@ -442,6 +466,7 @@ const FacilityManagerDashboard: React.FC = () => {
           <Button 
             className="flex-1 min-h-[44px] bg-primary hover:bg-primary/90"
             data-testid="button-sticky-add-booking"
+            onClick={handleAddBooking}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Booking
