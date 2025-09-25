@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 import { 
   DollarSign,
   TrendingUp,
@@ -91,6 +92,12 @@ const MobileStatCard: React.FC<{
 
 const FacilityManagerDashboard: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'today' | 'week' | 'month'>('week');
+  const [, navigate] = useLocation();
+
+  // Handle back navigation - go to dashboard instead of browser history
+  const handleBack = () => {
+    navigate('/dashboard');
+  };
 
   // Handle button clicks with coming soon functionality
   const handleAddBooking = () => {
@@ -452,6 +459,7 @@ const FacilityManagerDashboard: React.FC = () => {
   return (
     <MobilePage 
       title="Facility Dashboard"
+      onBack={handleBack}
       stickyActions={
         <div className="flex gap-2">
           <Button 
