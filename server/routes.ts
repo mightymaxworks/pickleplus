@@ -129,6 +129,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Facebook OAuth routes
+  app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+  
+  app.get('/auth/facebook/callback', 
+    passport.authenticate('facebook', { failureRedirect: '/login' }),
+    (req, res) => {
+      // Successful authentication, redirect to dashboard
+      console.log('[Facebook OAuth] Successful authentication, redirecting to dashboard');
+      res.redirect('/');
+    }
+  );
+
+  // Kakao OAuth routes
+  app.get('/auth/kakao', passport.authenticate('kakao'));
+  
+  app.get('/auth/kakao/callback', 
+    passport.authenticate('kakao', { failureRedirect: '/login' }),
+    (req, res) => {
+      // Successful authentication, redirect to dashboard
+      console.log('[Kakao OAuth] Successful authentication, redirecting to dashboard');
+      res.redirect('/');
+    }
+  );
+
+  // Line OAuth routes
+  app.get('/auth/line', passport.authenticate('line'));
+  
+  app.get('/auth/line/callback', 
+    passport.authenticate('line', { failureRedirect: '/login' }),
+    (req, res) => {
+      // Successful authentication, redirect to dashboard
+      console.log('[Line OAuth] Successful authentication, redirecting to dashboard');
+      res.redirect('/');
+    }
+  );
+
   // Register basic API routes
   console.log("[ROUTES] Registering basic API routes...");
   const { registerMatchRoutes } = await import('./routes/match-routes');

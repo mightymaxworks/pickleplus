@@ -7,6 +7,9 @@ declare module 'express-session' {
 
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as FacebookStrategy } from "passport-facebook";
+import { Strategy as KakaoStrategy } from "passport-kakao";
+import { Strategy as LineStrategy } from "passport-line";
 import express, { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcryptjs from "bcryptjs";
@@ -281,6 +284,212 @@ export function setupAuth(app: Express) {
       }
     }),
   );
+
+  // Configure Facebook OAuth strategy
+  if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+    passport.use(
+      new FacebookStrategy(
+        {
+          clientID: process.env.FACEBOOK_APP_ID,
+          clientSecret: process.env.FACEBOOK_APP_SECRET,
+          callbackURL: "/auth/facebook/callback",
+          profileFields: ['id', 'displayName', 'name', 'email', 'photos']
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            console.log(`[Facebook OAuth] Login attempt for profile: ${profile.id}`);
+            
+            // Check if user already exists with Facebook ID
+            let user = await storage.getUser(profile.id);
+            
+            if (user) {
+              // Update existing user's Facebook data
+              const updatedUser = await storage.upsertUser({
+                id: user.id.toString(),
+                facebookId: profile.id,
+                profileImageUrl: profile.photos?.[0]?.value || user.profileImageUrl,
+                lastSocialLogin: new Date(),
+                socialLoginCount: (user.socialLoginCount || 0) + 1,
+                primaryOauthProvider: user.primaryOauthProvider || 'facebook'
+              });
+              console.log(`[Facebook OAuth] Updated existing user: ${updatedUser.id}`);
+              return done(null, updatedUser);
+            } else {
+              // Check if email already exists
+              if (profile.emails?.[0]?.value) {
+                const existingEmailUser = await storage.getUserByEmail(profile.emails[0].value);
+                if (existingEmailUser) {
+                  // Link Facebook to existing account
+                  const linkedUser = await storage.upsertUser({
+                    id: existingEmailUser.id.toString(),
+                    facebookId: profile.id,
+                    profileImageUrl: profile.photos?.[0]?.value || existingEmailUser.profileImageUrl,
+                    lastSocialLogin: new Date(),
+                    socialLoginCount: (existingEmailUser.socialLoginCount || 0) + 1,
+                    primaryOauthProvider: existingEmailUser.primaryOauthProvider || 'facebook'
+                  });
+                  console.log(`[Facebook OAuth] Linked Facebook to existing account: ${linkedUser.id}`);
+                  return done(null, linkedUser);
+                }
+              }
+              
+              // Create new user from Facebook profile
+              const newUser = await storage.upsertUser({
+                email: profile.emails?.[0]?.value || `facebook_${profile.id}@pickle.app`,
+                firstName: profile.name?.givenName || profile.displayName?.split(' ')[0] || 'Facebook',
+                lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || 'User',
+                profileImageUrl: profile.photos?.[0]?.value,
+                facebookId: profile.id,
+                primaryOauthProvider: 'facebook',
+                socialLoginCount: 1,
+                lastSocialLogin: new Date(),
+                socialDataConsentLevel: 'basic'
+              });
+              console.log(`[Facebook OAuth] Created new user: ${newUser.id}`);
+              return done(null, newUser);
+            }
+          } catch (error) {
+            console.error('[Facebook OAuth] Error in FacebookStrategy:', error);
+            return done(error);
+          }
+        }
+      )
+    );
+    console.log('[Facebook OAuth] Facebook strategy configured');
+  } else {
+    console.log('[Facebook OAuth] Facebook OAuth disabled - missing environment variables');
+  }
+
+  // Configure Kakao OAuth strategy
+  if (process.env.KAKAO_CLIENT_ID && process.env.KAKAO_CLIENT_SECRET) {
+    passport.use(
+      new KakaoStrategy(
+        {
+          clientID: process.env.KAKAO_CLIENT_ID,
+          clientSecret: process.env.KAKAO_CLIENT_SECRET,
+          callbackURL: "/auth/kakao/callback"
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            console.log(`[Kakao OAuth] Login attempt for profile: ${profile.id}`);
+            
+            // Check if user already exists with Kakao ID
+            let user = await storage.getUser(profile.id);
+            
+            if (user) {
+              // Update existing user's Kakao data
+              const updatedUser = await storage.upsertUser({
+                id: user.id.toString(),
+                kakaoId: profile.id,
+                profileImageUrl: profile._json?.properties?.profile_image || user.profileImageUrl,
+                lastSocialLogin: new Date(),
+                socialLoginCount: (user.socialLoginCount || 0) + 1,
+                primaryOauthProvider: user.primaryOauthProvider || 'kakao'
+              });
+              console.log(`[Kakao OAuth] Updated existing user: ${updatedUser.id}`);
+              return done(null, updatedUser);
+            } else {
+              // Check if email already exists
+              const email = profile._json?.kakao_account?.email;
+              if (email) {
+                const existingEmailUser = await storage.getUserByEmail(email);
+                if (existingEmailUser) {
+                  // Link Kakao to existing account
+                  const linkedUser = await storage.upsertUser({
+                    id: existingEmailUser.id.toString(),
+                    kakaoId: profile.id,
+                    profileImageUrl: profile._json?.properties?.profile_image || existingEmailUser.profileImageUrl,
+                    lastSocialLogin: new Date(),
+                    socialLoginCount: (existingEmailUser.socialLoginCount || 0) + 1,
+                    primaryOauthProvider: existingEmailUser.primaryOauthProvider || 'kakao'
+                  });
+                  console.log(`[Kakao OAuth] Linked Kakao to existing account: ${linkedUser.id}`);
+                  return done(null, linkedUser);
+                }
+              }
+              
+              // Create new user from Kakao profile
+              const newUser = await storage.upsertUser({
+                email: email || `kakao_${profile.id}@pickle.app`,
+                firstName: profile._json?.properties?.nickname || 'Kakao',
+                lastName: 'User',
+                profileImageUrl: profile._json?.properties?.profile_image,
+                kakaoId: profile.id,
+                primaryOauthProvider: 'kakao',
+                socialLoginCount: 1,
+                lastSocialLogin: new Date(),
+                socialDataConsentLevel: 'basic'
+              });
+              console.log(`[Kakao OAuth] Created new user: ${newUser.id}`);
+              return done(null, newUser);
+            }
+          } catch (error) {
+            console.error('[Kakao OAuth] Error in KakaoStrategy:', error);
+            return done(error);
+          }
+        }
+      )
+    );
+    console.log('[Kakao OAuth] Kakao strategy configured');
+  } else {
+    console.log('[Kakao OAuth] Kakao OAuth disabled - missing environment variables');
+  }
+
+  // Configure Line OAuth strategy
+  if (process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET) {
+    passport.use(
+      new LineStrategy(
+        {
+          channelID: process.env.LINE_CHANNEL_ID,
+          channelSecret: process.env.LINE_CHANNEL_SECRET,
+          callbackURL: "/auth/line/callback"
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            console.log(`[Line OAuth] Login attempt for profile: ${profile.id}`);
+            
+            // Check if user already exists with Line ID
+            let user = await storage.getUser(profile.id);
+            
+            if (user) {
+              // Update existing user's Line data
+              const updatedUser = await storage.upsertUser({
+                id: user.id.toString(),
+                lineId: profile.id,
+                profileImageUrl: profile.pictureUrl || user.profileImageUrl,
+                lastSocialLogin: new Date(),
+                socialLoginCount: (user.socialLoginCount || 0) + 1,
+                primaryOauthProvider: user.primaryOauthProvider || 'line'
+              });
+              console.log(`[Line OAuth] Updated existing user: ${updatedUser.id}`);
+              return done(null, updatedUser);
+            } else {
+              // Create new user from Line profile
+              const newUser = await storage.upsertUser({
+                email: `line_${profile.id}@pickle.app`, // Line doesn't provide email by default
+                firstName: profile.displayName || 'Line',
+                lastName: 'User',
+                profileImageUrl: profile.pictureUrl,
+                lineId: profile.id,
+                primaryOauthProvider: 'line',
+                socialLoginCount: 1,
+                lastSocialLogin: new Date(),
+                socialDataConsentLevel: 'basic'
+              });
+              console.log(`[Line OAuth] Created new user: ${newUser.id}`);
+              return done(null, newUser);
+            }
+          } catch (error) {
+            console.error('[Line OAuth] Error in LineStrategy:', error);
+            return done(error);
+          }
+        }
+      )
+    );
+    console.log('[Line OAuth] Line strategy configured');
+  } else {
+    console.log('[Line OAuth] Line OAuth disabled - missing environment variables');
+  }
 
   // Configure Passport serialization and deserialization
   passport.serializeUser((user: Express.User, done) => {
