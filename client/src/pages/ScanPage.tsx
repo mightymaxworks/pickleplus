@@ -99,7 +99,7 @@ export default function ScanPage() {
         <div className="flex items-center justify-between mb-6">
           <Button 
             variant="ghost" 
-            onClick={() => window.history.back()}
+            onClick={() => navigate('/dashboard')}
             className="text-orange-700 hover:text-orange-800"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

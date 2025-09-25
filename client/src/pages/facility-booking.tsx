@@ -69,6 +69,11 @@ const FacilityBooking: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+
+  // Custom back navigation - go to facilities page or dashboard
+  const handleBack = () => {
+    setLocation('/facilities');
+  };
   const detailsFormRef = useRef<HTMLFormElement>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -664,6 +669,7 @@ const FacilityBooking: React.FC = () => {
     <>
       <MobilePage 
         title={getStepTitle()}
+        onBack={handleBack}
         stickyActions={getStickyActions()}
       >
         {/* Facility Info Header */}
