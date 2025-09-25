@@ -164,7 +164,7 @@ export function AppHeader({
   
   // V1.0 Launch Navigation - Core features including Facilities per user request
   const baseNavItems = [
-    { label: 'Dashboard', icon: <Home size={18} />, path: '/' },
+    { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
     { label: 'Record Match', icon: <Calendar size={18} />, path: '/matches' },
     { label: 'Rankings', icon: <Award size={18} />, path: '/rankings' },
     { label: 'Facilities', icon: <Building2 size={18} />, path: '/facilities' },
