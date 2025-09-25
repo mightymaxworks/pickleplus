@@ -415,6 +415,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Find student by passport code for coach connections
+  app.post('/api/coach/find-student-by-passport', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const { passportCode } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      if (!passportCode) {
+        return res.status(400).json({ error: 'Passport code is required' });
+      }
+
+      console.log(`[COACH API] Coach ${userId} searching for student with passport code: ${passportCode}`);
+
+      // Find student by passport code
+      const student = await storage.getUserByPassportCode(passportCode);
+      
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found with that passport code' });
+      }
+
+      // Return student info (excluding sensitive data)
+      const studentInfo = {
+        id: student.id,
+        displayName: student.displayName,
+        username: student.username,
+        passportCode: student.passportCode,
+        rankingPoints: student.rankingPoints || 0,
+        profilePicture: student.avatarUrl
+      };
+
+      console.log(`[COACH API] Found student: ${student.displayName} (ID: ${student.id})`);
+      res.json(studentInfo);
+    } catch (error) {
+      console.error('[COACH API] Error finding student by passport code:', error);
+      res.status(500).json({ 
+        error: 'Failed to find student',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Request coaching connection with a student
+  app.post('/api/coach/request-student-connection', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const coachId = (req.user as any)?.id;
+      const { studentId } = req.body;
+      
+      if (!coachId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      if (!studentId) {
+        return res.status(400).json({ error: 'Student ID is required' });
+      }
+
+      console.log(`[COACH API] Coach ${coachId} requesting connection with student ${studentId}`);
+
+      // Check if connection request already exists
+      const existingRequest = await storage.findCoachStudentRequest(coachId, studentId);
+      
+      if (existingRequest) {
+        return res.status(409).json({ 
+          message: 'Connection request already exists',
+          status: existingRequest.status 
+        });
+      }
+
+      // Create new connection request
+      const request = await storage.createCoachStudentRequest({
+        coachId,
+        studentId,
+        status: 'pending',
+        studentRequestDate: new Date().toISOString()
+      });
+
+      console.log(`[COACH API] Created connection request ID: ${request.id}`);
+      res.json({ 
+        success: true, 
+        requestId: request.id,
+        message: 'Connection request sent to student' 
+      });
+    } catch (error) {
+      console.error('[COACH API] Error creating connection request:', error);
+      res.status(500).json({ 
+        error: 'Failed to request connection',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Progressive Assessment Submission Route - Enhanced CoachingAssessmentValidator Integration
   app.post('/api/coaching/progressive-assessment', isAuthenticated, async (req: Request, res: Response) => {
     try {

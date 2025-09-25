@@ -20,6 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { MobileFirstProgressiveAssessment } from '@/components/coaching/MobileFirstProgressiveAssessment';
 import { CoachStudentRequests } from '@/components/coaching/CoachStudentRequests';
+import { CoachStudentScanner } from '@/components/coaching/CoachStudentScanner';
 import { ProvisionalRatingManagement } from '@/components/coaching/ProvisionalRatingManagement';
 import { CoachAntiAbuseManagement } from '@/components/admin/CoachAntiAbuseManagement';
 import { useToast } from '@/hooks/use-toast';
@@ -1046,66 +1047,44 @@ export default function CoachDashboard() {
                 Coach Connect Discovery
               </CardTitle>
               <CardDescription>
-                Discover and connect with players using QR codes or invite codes
+                Scan student QR codes or enter passport codes to connect for assessments
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <h4 className="font-medium text-blue-800 mb-2">New Enhanced Discovery System</h4>
+                <h4 className="font-medium text-blue-800 mb-2">Connect with Students</h4>
                 <p className="text-sm text-blue-700">
-                  Use our mobile-first coach discovery system with secure authentication, 
-                  anti-abuse controls, and mutual consent protocols.
+                  Scan a student's passport QR code or manually enter their passport code to request a coaching connection for assessments.
                 </p>
               </div>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card className="border-2 hover:border-blue-300 transition-all duration-200">
-                    <CardContent className="p-4">
-                      <div className="text-center space-y-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto">
-                          <Users className="w-6 h-6 text-white" />
-                        </div>
-                        <h4 className="font-semibold">QR Code Discovery</h4>
-                        <p className="text-sm text-gray-600">Generate QR codes for players to connect with you instantly</p>
-                        <Button className="w-full bg-green-600 hover:bg-green-700" size="sm">
-                          Generate QR Code
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-2 hover:border-purple-300 transition-all duration-200">
-                    <CardContent className="p-4">
-                      <div className="text-center space-y-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto">
-                          <Target className="w-6 h-6 text-white" />
-                        </div>
-                        <h4 className="font-semibold">Invite Codes</h4>
-                        <p className="text-sm text-gray-600">Create unique invite codes for private coaching connections</p>
-                        <Button className="w-full bg-purple-600 hover:bg-purple-700" size="sm">
-                          Create Invite Code
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+              
+              <div className="max-w-md mx-auto">
+                <CoachStudentScanner 
+                  onStudentFound={(student) => {
+                    toast({
+                      title: "Connection Requested!",
+                      description: `Sent connection request to ${student.displayName}`,
+                    });
+                  }}
+                  onClose={() => {}}
+                />
+              </div>
                 
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h4 className="font-medium text-orange-800 mb-2 flex items-center gap-2">
-                    <Star className="w-5 h-5" />
-                    Advanced Features Available
-                  </h4>
-                  <p className="text-sm text-orange-700 mb-3">
-                    Access the full Coach Assessment System with mobile-first progressive interface, 
-                    anti-abuse controls, and comprehensive testing suite:
-                  </p>
-                  <Link href="/coach-system-test">
-                    <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-100">
-                      <Target className="w-4 h-4 mr-2" />
-                      Full System Dashboard
-                    </Button>
-                  </Link>
-                </div>
+              <div className="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <h4 className="font-medium text-orange-800 mb-2 flex items-center gap-2">
+                  <Star className="w-5 h-5" />
+                  Advanced Features Available
+                </h4>
+                <p className="text-sm text-orange-700 mb-3">
+                  Access the full Coach Assessment System with mobile-first progressive interface, 
+                  anti-abuse controls, and comprehensive testing suite:
+                </p>
+                <Link href="/coach-system-test">
+                  <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-100">
+                    <Target className="w-4 h-4 mr-2" />
+                    Open Assessment System
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

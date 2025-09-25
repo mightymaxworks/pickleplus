@@ -457,6 +457,10 @@ export interface IStorage extends CommunityStorage {
   getEventRegistrations(eventId: number): Promise<any[]>;
   updateFacilityEvent(eventId: number, data: any): Promise<any>;
   getEventRevenueAnalytics(eventId: number): Promise<any>;
+  
+  // Coach-Student Connection Management
+  findCoachStudentRequest(coachId: number, studentId: number): Promise<any>;
+  createCoachStudentRequest(data: { coachId: number; studentId: number; status: string; studentRequestDate: string }): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -8095,6 +8099,38 @@ export class DatabaseStorage implements IStorage {
       return event;
     } catch (error) {
       console.error('Error updating facility event:', error);
+      throw error;
+    }
+  }
+
+  // Coach-Student Connection Management Methods
+  async findCoachStudentRequest(coachId: number, studentId: number): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM coach_student_requests 
+        WHERE coach_id = ${coachId} AND student_id = ${studentId}
+        ORDER BY student_request_date DESC 
+        LIMIT 1
+      `);
+      
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error finding coach-student request:', error);
+      return null;
+    }
+  }
+
+  async createCoachStudentRequest(data: { coachId: number; studentId: number; status: string; studentRequestDate: string }): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO coach_student_requests (coach_id, student_id, status, student_request_date)
+        VALUES (${data.coachId}, ${data.studentId}, ${data.status}, ${data.studentRequestDate})
+        RETURNING *
+      `);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating coach-student request:', error);
       throw error;
     }
   }
