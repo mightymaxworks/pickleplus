@@ -207,7 +207,7 @@ router.get('/rankings', async (req: Request, res: Response) => {
       };
       
       // Log high-privilege access for monitoring
-      console.log(`[SECURITY] Algorithm access used by API key: ${req.apiKey?.keyPrefix} for rankings`);
+      console.log(`[SECURITY] Algorithm access used by API key: ${(req as any).apiKey?.keyPrefix} for rankings`);
     }
     
     // Add data obfuscation timestamp to prevent reverse engineering
@@ -305,7 +305,7 @@ router.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(err.status || 500).json({
     error: err.code || 'server_error',
     error_description: err.message || 'An unexpected error occurred',
-    request_id: req.id // Assuming request ID middleware is used
+    request_id: (req as any).id // Assuming request ID middleware is used
   });
 });
 

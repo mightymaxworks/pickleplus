@@ -6,8 +6,6 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { RateLimiterMemory } from 'rate-limiter-flexible';
-
 // Suspicious usage pattern detection
 const suspiciousPatterns = new Map<string, {
   requestCount: number;
@@ -17,21 +15,40 @@ const suspiciousPatterns = new Map<string, {
   flagged: boolean;
 }>();
 
-// Advanced rate limiter for algorithm-sensitive endpoints
-const algorithmRateLimiter = new RateLimiterMemory({
-  keyPrefix: 'algo_protect',
-  points: 100, // Number of requests
-  duration: 3600, // Per hour
-  execEvenly: true, // Do not allow bursts
-});
+// Simple rate limiting using Map-based tracking
+const rateLimitTracking = new Map<string, {
+  algorithmRequests: { count: number; resetTime: number };
+  bulkRequests: { count: number; resetTime: number };
+}>();
 
-// Bulk extraction detection rate limiter
-const bulkExtractionLimiter = new RateLimiterMemory({
-  keyPrefix: 'bulk_protect',
-  points: 500, // Total data points
-  duration: 86400, // Per 24 hours
-  execEvenly: false,
-});
+function checkRateLimit(keyId: string, type: 'algorithm' | 'bulk', points: number = 1): { allowed: boolean; resetTime?: number } {
+  const now = Date.now();
+  const tracking = rateLimitTracking.get(keyId) || {
+    algorithmRequests: { count: 0, resetTime: now + 3600000 }, // 1 hour
+    bulkRequests: { count: 0, resetTime: now + 86400000 } // 24 hours
+  };
+  
+  const limit = type === 'algorithm' ? 100 : 500;
+  const window = type === 'algorithm' ? 3600000 : 86400000;
+  const current = tracking[`${type}Requests`];
+  
+  // Reset if window expired
+  if (now > current.resetTime) {
+    current.count = 0;
+    current.resetTime = now + window;
+  }
+  
+  // Check if adding points would exceed limit
+  if (current.count + points > limit) {
+    return { allowed: false, resetTime: current.resetTime };
+  }
+  
+  // Increment and update
+  current.count += points;
+  rateLimitTracking.set(keyId, tracking);
+  
+  return { allowed: true };
+}
 
 export interface AlgorithmProtectionOptions {
   enableSuspiciousPatternDetection?: boolean;
@@ -116,18 +133,16 @@ export function algorithmProtection(options: AlgorithmProtectionOptions = {}) {
                                  endpoint.includes('/multi-rankings');
 
       if (isAlgorithmEndpoint) {
-        try {
-          await algorithmRateLimiter.consume(keyId);
-        } catch (rejRes) {
-          const remainingTime = Math.round(rejRes.msBeforeNext / 1000);
+        const rateCheck = checkRateLimit(keyId, 'algorithm');
+        if (!rateCheck.allowed) {
+          const remainingTime = Math.round((rateCheck.resetTime! - Date.now()) / 1000);
           return res.status(429).json({
             error: 'algorithm_rate_limit',
             error_description: 'Algorithm access rate limit exceeded',
             retry_after: remainingTime,
             limit_info: {
               limit: 100,
-              window: '1 hour',
-              remaining: rejRes.remainingHits
+              window: '1 hour'
             }
           });
         }
@@ -140,13 +155,13 @@ export function algorithmProtection(options: AlgorithmProtectionOptions = {}) {
       );
 
       if (requestLimit > 10) {
-        try {
-          await bulkExtractionLimiter.consume(keyId, requestLimit);
-        } catch (rejRes) {
+        const rateCheck = checkRateLimit(keyId, 'bulk', requestLimit);
+        if (!rateCheck.allowed) {
+          const remainingTime = Math.round((rateCheck.resetTime! - Date.now()) / 1000);
           return res.status(429).json({
             error: 'bulk_extraction_limit',
             error_description: 'Daily bulk data extraction limit exceeded',
-            retry_after: Math.round(rejRes.msBeforeNext / 1000),
+            retry_after: remainingTime,
             suggestion: 'Consider upgrading to a higher tier plan for increased limits'
           });
         }
