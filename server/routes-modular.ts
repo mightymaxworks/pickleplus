@@ -35,44 +35,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[API][Registration] Attempting to register user: ${username}`);
       
-      // Check if user already exists
+      // Check if user already exists (fast path optimization)
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         return res.status(409).json({ error: 'Username already exists' });
       }
       
+      // Hash password before creating user
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(password);
+      
       // Generate passport code
-      const passportCode = `PKL-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      const { generateUniquePassportCode } = await import('./utils/passport-code');
+      const passportCode = await generateUniquePassportCode() || 'ERROR_CODE';
       
-      // Create new user
-      const newUser = await storage.createUser({
-        username,
-        email: email || `${username}@pickle.com`,
-        password, // This will be hashed by storage layer
-        firstName,
-        lastName,
-        passportCode,
-        duprRating: "3.0",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-      
-      console.log(`[API][Registration] User ${username} registered successfully with passport code ${passportCode}`);
-      
-      res.status(201).json({
-        success: true,
-        user: {
-          id: newUser.id,
-          username: newUser.username,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          passportCode: newUser.passportCode
+      // Create new user with database constraint protection
+      try {
+        const newUser = await storage.createUser({
+          username,
+          email: email || `${username}@pickle.com`,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          passportCode,
+          duprRating: "3.0",
+          picklePoints: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        
+        console.log(`[API][Registration] User ${username} registered successfully with passport code ${passportCode}`);
+        
+        res.status(201).json({
+          success: true,
+          user: {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            passportCode: newUser.passportCode
+          }
+        });
+        
+      } catch (createError: any) {
+        console.error('[API][Registration] Database error during user creation:', createError.message);
+        
+        // Handle specific database constraint violations with user-friendly messages
+        if (createError.name === 'UniqueViolation') {
+          if (createError.field === 'username') {
+            return res.status(409).json({ 
+              error: 'Username already exists',
+              field: 'username',
+              message: 'This username is already taken. Please choose a different username.'
+            });
+          } else if (createError.field === 'email') {
+            return res.status(409).json({ 
+              error: 'Email already exists',
+              field: 'email',
+              message: 'An account with this email address already exists.'
+            });
+          }
         }
-      });
+        
+        // Re-throw for outer catch to handle
+        throw createError;
+      }
+      
     } catch (error) {
       console.error('[API][Registration] Error:', error);
-      res.status(500).json({ error: 'Registration failed' });
+      res.status(500).json({ error: 'Registration failed', message: 'An unexpected error occurred during registration.' });
     }
   });
 

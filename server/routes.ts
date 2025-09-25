@@ -936,8 +936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password, email, firstName, lastName, dateOfBirth, gender, location, playingSince, skillLevel } = req.body;
       
       console.log(`[API][Registration] Attempting to register user: ${username}`);
-      console.log(`[API][Registration] Raw password: "${password}" (length: ${password.length})`);
-      console.log(`[API][Registration] Date of Birth: ${dateOfBirth}, Gender: ${gender}`);
+      console.log(`[API][Registration] Registration request received for user: ${username}`);
       
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
@@ -952,44 +951,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash the password before creating user
       const { hashPassword } = await import('./auth');
       const hashedPassword = await hashPassword(password);
-      console.log(`[API][Registration] Password hashed from "${password}" to "${hashedPassword}"`);
-      console.log(`[API][Registration] Hash length: ${hashedPassword.length}`);
+      console.log(`[API][Registration] Password successfully hashed for user: ${username}`);
       
       // Create new user with proper defaults including new fields
-      const newUser = await storage.createUser({
-        username,
-        email: email || `${username}@pickle.com`,
-        password: hashedPassword, // Password is now properly hashed
-        firstName,
-        lastName,
-        dateOfBirth: dateOfBirth || null,
-        gender: gender || null,
-        location: location || null,
-        playingSince: playingSince || null,
-        skillLevel: skillLevel || 'beginner',
-        displayName: `${firstName} ${lastName}` || username,
-        avatarInitials: `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}` || username.charAt(0).toUpperCase(),
-        passportCode,
-        duprRating: "3.0",
-
-      });
-      
-      console.log(`[API][Registration] User ${username} registered successfully with passport code ${passportCode}`);
-      
-      res.status(201).json({
-        success: true,
-        user: {
-          id: newUser.id,
-          username: newUser.username,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          dateOfBirth: newUser.dateOfBirth,
-          gender: newUser.gender,
-          location: newUser.location,
-          passportCode: newUser.passportCode
+      try {
+        const newUser = await storage.createUser({
+          username,
+          email: email || `${username}@pickle.com`,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          dateOfBirth: dateOfBirth || null,
+          gender: gender || null,
+          location: location || null,
+          playingSince: playingSince || null,
+          skillLevel: skillLevel || 'beginner',
+          displayName: `${firstName} ${lastName}` || username,
+          avatarInitials: `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}` || username.charAt(0).toUpperCase(),
+          passportCode,
+          duprRating: "3.0",
+          picklePoints: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        
+        console.log(`[API][Registration] User ${username} registered successfully with passport code ${passportCode}`);
+        
+        res.status(201).json({
+          success: true,
+          user: {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            dateOfBirth: newUser.dateOfBirth,
+            gender: newUser.gender,
+            location: newUser.location,
+            passportCode: newUser.passportCode
+          }
+        });
+        
+      } catch (createError: any) {
+        console.error('[API][Registration] Database error during user creation:', createError.message);
+        
+        // Handle specific database constraint violations with user-friendly messages
+        if (createError.name === 'UniqueViolation') {
+          if (createError.field === 'username') {
+            return res.status(409).json({ 
+              error: 'Username already exists',
+              field: 'username',
+              message: 'This username is already taken. Please choose a different username.'
+            });
+          } else if (createError.field === 'email') {
+            return res.status(409).json({ 
+              error: 'Email already exists',
+              field: 'email',
+              message: 'An account with this email address already exists.'
+            });
+          }
         }
-      });
+        
+        // Re-throw for outer catch to handle
+        throw createError;
+      }
     } catch (error) {
       console.error('[API][Registration] Error:', error);
       res.status(500).json({ error: 'Registration failed' });

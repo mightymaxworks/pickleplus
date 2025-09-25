@@ -717,12 +717,76 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const userData = { ...insertUser };
-    if (!userData.passportCode) {
-      userData.passportCode = await generateUniquePassportCode();
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount <= maxRetries) {
+      if (!userData.passportCode) {
+        userData.passportCode = await generateUniquePassportCode();
+      }
+      
+      try {
+        const [user] = await db.insert(users).values(userData).returning();
+        return user;
+      } catch (error: any) {
+        // Handle PostgreSQL unique constraint violations
+        if (error?.code === '23505') { // PostgreSQL unique violation error code
+          // Parse constraint violation field from error details
+          let violatedField: string | null = null;
+          
+          // Try to get field from constraint name first
+          const constraintName = error?.constraint;
+          if (constraintName?.includes('username')) {
+            violatedField = 'username';
+          } else if (constraintName?.includes('email')) {
+            violatedField = 'email';
+          } else if (constraintName?.includes('passport')) {
+            violatedField = 'passport_code';
+          }
+          
+          // Fallback: parse from error detail message if constraint name failed
+          if (!violatedField && error?.detail) {
+            const detailMatch = error.detail.match(/Key \(([^)]+)\)=/);
+            if (detailMatch) {
+              violatedField = detailMatch[1];
+            }
+          }
+          
+          console.warn(`[Storage] Unique constraint violation on field: ${violatedField}`);
+          
+          // Handle specific violations
+          if (violatedField === 'username') {
+            const uniqueError = new Error('Username already exists') as any;
+            uniqueError.name = 'UniqueViolation';
+            uniqueError.field = 'username';
+            throw uniqueError;
+          } else if (violatedField === 'email') {
+            const uniqueError = new Error('Email already exists') as any;
+            uniqueError.name = 'UniqueViolation';
+            uniqueError.field = 'email';
+            throw uniqueError;
+          } else if (violatedField === 'passport_code' && retryCount < maxRetries) {
+            // Retry with new passport code
+            console.warn(`[Storage] Passport code collision, retrying (${retryCount + 1}/${maxRetries})`);
+            userData.passportCode = await generateUniquePassportCode();
+            retryCount++;
+            continue;
+          } else if (violatedField === 'passport_code') {
+            const uniqueError = new Error('Failed to generate unique passport code') as any;
+            uniqueError.name = 'UniqueViolation';
+            uniqueError.field = 'passport_code';
+            throw uniqueError;
+          }
+        }
+        
+        // Re-throw original error if not a known constraint violation
+        console.error('[Storage] createUser error:', error);
+        throw error;
+      }
     }
     
-    const [user] = await db.insert(users).values(userData).returning();
-    return user;
+    // Should never reach here due to the loop logic, but TypeScript safety
+    throw new Error('Maximum retries exceeded for user creation');
   }
 
   async updateUser(id: number, userData: Partial<InsertUser>): Promise<User> {
