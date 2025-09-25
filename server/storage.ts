@@ -7674,7 +7674,8 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(coachStudentAssignments.coachId, coachId),
-            eq(coachStudentAssignments.isActive, true)
+            eq(coachStudentAssignments.isActive, true),
+            or(eq(users.isTestData, false), sql`${users.isTestData} IS NULL`)
           )
         )
         .orderBy(desc(coachStudentAssignments.assignedAt));

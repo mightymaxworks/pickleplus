@@ -8,7 +8,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and, or } from 'drizzle-orm';
 import { pcpAssessmentResults } from '@shared/schema/progressive-assessment';
 import { users } from '@shared/schema';
 import { matchAssessments } from '@shared/schema/courtiq';
@@ -348,7 +348,12 @@ router.get('/recent-assessments', isAuthenticated, async (req, res) => {
       })
       .from(pcpAssessmentResults)
       .leftJoin(users, eq(pcpAssessmentResults.playerId, users.id))
-      .where(eq(pcpAssessmentResults.coachId, coachId))
+      .where(
+        and(
+          eq(pcpAssessmentResults.coachId, coachId),
+          or(eq(users.isTestData, false), sql`${users.isTestData} IS NULL`)
+        )
+      )
       .orderBy(desc(pcpAssessmentResults.createdAt));
 
     // Legacy assessments from match_assessments table (your actual student assessments)
@@ -366,7 +371,12 @@ router.get('/recent-assessments', isAuthenticated, async (req, res) => {
       })
       .from(matchAssessments)
       .leftJoin(users, eq(matchAssessments.targetId, users.id))
-      .where(eq(matchAssessments.assessorId, coachId))
+      .where(
+        and(
+          eq(matchAssessments.assessorId, coachId),
+          or(eq(users.isTestData, false), sql`${users.isTestData} IS NULL`)
+        )
+      )
       .orderBy(desc(matchAssessments.createdAt));
 
     // Combine and sort all assessments by date
