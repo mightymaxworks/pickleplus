@@ -164,10 +164,10 @@ export function AppHeader({
   
   // V1.0 Launch Navigation - Core features only (facilities hidden as not ready)
   const baseNavItems = [
-    { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
-    { label: 'Record Match', icon: <Calendar size={18} />, path: '/matches' },
-    { label: 'Rankings', icon: <Award size={18} />, path: '/rankings' },
-    { label: 'My Profile', icon: <Users size={18} />, path: '/profile' }
+    { label: t('nav.dashboard', 'Dashboard'), icon: <Home size={18} />, path: '/dashboard' },
+    { label: t('nav.recordMatch', 'Record Match'), icon: <Calendar size={18} />, path: '/matches' },
+    { label: t('nav.rankings', 'Rankings'), icon: <Award size={18} />, path: '/rankings' },
+    { label: t('nav.myProfile', 'My Profile'), icon: <Users size={18} />, path: '/profile' }
   ];
 
   // Add Coach Dashboard if user has coachLevel > 0
@@ -175,7 +175,7 @@ export function AppHeader({
   if (user?.coachLevel && user.coachLevel > 0) {
     console.log("AppHeader - Adding Coach Dashboard for coachLevel:", user.coachLevel);
     defaultNavItems.splice(1, 0, { 
-      label: 'Coach Dashboard', 
+      label: t('nav.coachDashboard', 'Coach Dashboard'), 
       icon: <GraduationCap size={18} />, 
       path: '/coach' 
     });

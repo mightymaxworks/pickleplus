@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import pickleLogoPath from "../assets/Pickle (2).png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Navigation item type definition
 type NavigationItem = {
@@ -41,6 +42,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { t } = useLanguage();
 
   const handleLogout = () => {
     console.log("Logout button clicked - direct approach");
@@ -83,11 +85,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // Core navigation items per user request: Dashboard, Record Match, Rankings, My Profile + Pickle Points
   const baseNavigationItems: NavigationItem[] = [
-    { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
-    { name: 'Record Match', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
-    { name: 'Rankings', path: '/rankings', icon: <Award className="h-5 w-5" /> },
-    { name: 'Pickle Points', path: '/pickle-points', icon: <Ticket className="h-5 w-5" /> },
-    { name: 'My Profile', path: '/profile', icon: <Users className="h-5 w-5" /> },
+    { name: t('nav.dashboard', 'Dashboard'), path: '/', icon: <Home className="h-5 w-5" /> },
+    { name: t('nav.recordMatch', 'Record Match'), path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
+    { name: t('nav.rankings', 'Rankings'), path: '/rankings', icon: <Award className="h-5 w-5" /> },
+    { name: t('dashboard.picklePoints', 'Pickle Points'), path: '/pickle-points', icon: <Ticket className="h-5 w-5" /> },
+    { name: t('nav.myProfile', 'My Profile'), path: '/profile', icon: <Users className="h-5 w-5" /> },
   ];
 
   // Debug user data for coach dashboard
@@ -101,7 +103,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // Add coach dashboard for users with coach level
   if (user?.coachLevel && user.coachLevel > 0) {
     navigationItems.push({
-      name: 'Coach Dashboard', 
+      name: t('nav.coachDashboard', 'Coach Dashboard'), 
       path: '/coach-dashboard', 
       icon: <BookOpen className="h-5 w-5 text-blue-600" />
     });
@@ -110,7 +112,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // Add admin dashboard for admin users
   if (user?.isAdmin) {
     navigationItems.push({
-      name: 'Admin Dashboard', 
+      name: t('nav.adminDashboard', 'Admin Dashboard'), 
       path: '/admin', 
       icon: <Shield className="h-5 w-5 text-rose-500" />
     });

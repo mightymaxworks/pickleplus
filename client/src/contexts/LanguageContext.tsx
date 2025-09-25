@@ -14,6 +14,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations: Record<Language, Record<string, string>> = {
   'en': {
     // Navigation & Common
+    'nav.dashboard': 'Dashboard',
+    'nav.myProfile': 'My Profile',
+    'nav.coachDashboard': 'Coach Dashboard',
     'nav.referrals': 'Referrals',
     'nav.findPlayers': 'Find Players',
     'nav.trainingFacilities': 'Training Facilities',
@@ -1266,6 +1269,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Core Navigation
     'nav.dashboard': '仪表板',
+    'nav.myProfile': '我的资料',
+    'nav.coachDashboard': '教练仪表板',
     'nav.recordMatch': '记录比赛',
     'nav.rankings': '排名',
     'nav.profile': '我的资料',
