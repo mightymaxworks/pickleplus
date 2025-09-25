@@ -725,10 +725,13 @@ interface AssignedStudent {
 
 interface RecentAssessment {
   id: number;
+  studentId: number;
   studentName: string;
-  overallRating: number;
-  assessmentType: string;
-  createdAt: string;
+  pcpRating: number;
+  assessmentMode: string;
+  skillsAssessed: number;
+  assessmentDate: string;
+  daysAgo: number;
 }
 
 /**
