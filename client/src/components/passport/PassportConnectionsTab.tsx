@@ -34,18 +34,9 @@ export default function PassportConnectionsTab({ user, qrCodeData, passportId }:
   const queryClient = useQueryClient();
   const [copiedPassportId, setCopiedPassportId] = useState(false);
 
-  // Fetch pending coach requests
+  // Fetch pending coach requests - using default fetcher with credentials
   const { data: requestsData, isLoading: isLoadingRequests } = useQuery({
-    queryKey: ['/api/student/coach-requests'],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest('/api/student/coach-requests') as any;
-        return response.requests || [];
-      } catch (error) {
-        // If error, return empty array (user might not have any requests)
-        return [];
-      }
-    }
+    queryKey: ['/api/student/coach-requests']
   });
 
   // Accept coach request mutation
@@ -144,7 +135,8 @@ export default function PassportConnectionsTab({ user, qrCodeData, passportId }:
     }
   };
 
-  const requests = requestsData || [];
+  // Handle different response shapes - API might return { requests: [...] } or { success: true, requests: [...] }
+  const requests = ((requestsData as any)?.requests ?? (requestsData as any)?.data?.requests ?? (Array.isArray(requestsData) ? requestsData : []));
   const pendingRequestsCount = requests.length;
 
   return (
