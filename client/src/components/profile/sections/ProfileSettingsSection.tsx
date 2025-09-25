@@ -14,11 +14,13 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { EnhancedUser } from "@/types/enhanced-user";
-import { Bell, EyeOff, Lock, Share2, Globe, UserCog } from "lucide-react";
+import { Bell, EyeOff, Lock, Share2, Globe, UserCog, Languages } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import React, { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProfileSettingsSectionProps {
   user: EnhancedUser;
@@ -44,6 +46,7 @@ interface NotificationSettings {
 
 export function ProfileSettingsSection({ user }: ProfileSettingsSectionProps) {
   const { toast } = useToast();
+  const { language, t } = useLanguage();
   
   // Get privacy settings
   const { data: privacySettings, isLoading: privacyLoading } = useQuery({
@@ -77,17 +80,21 @@ export function ProfileSettingsSection({ user }: ProfileSettingsSectionProps) {
   };
   
   // Use settings from API if available, otherwise use defaults
-  const [privacy, setPrivacy] = useState<PrivacySettings>(privacySettings || defaultPrivacy);
-  const [notifications, setNotifications] = useState<NotificationSettings>(notificationSettings || defaultNotifications);
+  const [privacy, setPrivacy] = useState<PrivacySettings>(defaultPrivacy);
+  const [notifications, setNotifications] = useState<NotificationSettings>(defaultNotifications);
   
   // Update state when data loads
-  if (privacySettings && privacy !== privacySettings) {
-    setPrivacy(privacySettings);
-  }
+  React.useEffect(() => {
+    if (privacySettings) {
+      setPrivacy(privacySettings);
+    }
+  }, [privacySettings]);
   
-  if (notificationSettings && notifications !== notificationSettings) {
-    setNotifications(notificationSettings);
-  }
+  React.useEffect(() => {
+    if (notificationSettings) {
+      setNotifications(notificationSettings);
+    }
+  }, [notificationSettings]);
   
   // Mutation for updating privacy settings
   const updatePrivacyMutation = useMutation({
@@ -155,6 +162,35 @@ export function ProfileSettingsSection({ user }: ProfileSettingsSectionProps) {
   
   return (
     <div className="space-y-6">
+      {/* Language Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Languages className="h-5 w-5 mr-2 text-primary" />
+            Language Settings
+          </CardTitle>
+          <CardDescription>
+            Choose your preferred language for the interface
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base">Interface Language</Label>
+              <div className="text-sm text-muted-foreground">
+                Change the language used throughout the application
+              </div>
+            </div>
+            <LanguageToggle />
+          </div>
+          <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
+            <strong>Current language:</strong> {language === 'en' ? 'English (US)' : '中文 (简体)'}
+            <br />
+            Language changes apply immediately across the entire application.
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Privacy Settings */}
       <Card>
         <CardHeader>
