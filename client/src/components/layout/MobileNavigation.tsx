@@ -34,31 +34,31 @@ export function MobileNavigation() {
   const baseNavItems = [
     { 
       icon: <Home size={20} />, 
-      label: 'Dashboard', 
+      label: t('nav.dashboard', 'Dashboard'), 
       path: '/dashboard',
       id: 'dashboard'
     },
     { 
       icon: <Calendar size={20} />, 
-      label: 'Record Match', 
+      label: t('nav.recordMatch', 'Record Match'), 
       path: '/matches',
       id: 'record-match'
     },
     { 
       icon: <Award size={20} />, 
-      label: 'Rankings', 
+      label: t('nav.rankings', 'Rankings'), 
       path: '/rankings',
       id: 'rankings'
     },
     { 
       icon: <Ticket size={20} />, 
-      label: 'Pickle Points', 
+      label: t('dashboard.picklePoints', 'Pickle Points'), 
       path: '/pickle-points',
       id: 'pickle-points'
     },
     { 
       icon: <User size={20} />, 
-      label: 'My Profile', 
+      label: t('nav.myProfile', 'My Profile'), 
       path: '/profile',
       id: 'profile'
     }
@@ -70,7 +70,7 @@ export function MobileNavigation() {
     console.log("MobileNavigation - Adding Coach Dashboard for coachLevel:", user.coachLevel);
     navItems.splice(1, 0, { 
       icon: <GraduationCap size={20} />, 
-      label: 'Coach Dashboard', 
+      label: t('nav.coachDashboard', 'Coach Dashboard'), 
       path: '/coach',
       id: 'coach-dashboard'
     });
