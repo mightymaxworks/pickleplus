@@ -401,155 +401,107 @@ export function LeaderboardPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]" onClick={() => handleSort('rank')}>
-                      <div className="flex items-center cursor-pointer">
-                        <span>Rank</span>
-                        {sortField === 'rank' && (
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        )}
+            {/* Mobile-optimized card layout */}
+            <div className="space-y-3">
+              {leaderboard && leaderboard.map((player: LeaderboardEntry, index: number) => {
+                const rank = player.rank || player.position || index + 1 + (page - 1) * itemsPerPage;
+                const name = player.displayName || player.username;
+                const points = player.pointsTotal || player.rankingPoints || 0;
+                const tierColor = getTierColor(player);
+                const specialty = player.specialty || 'All-Around';
+                
+                return (
+                  <div 
+                    key={player.userId}
+                    className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center space-x-4">
+                      {/* Rank badge */}
+                      <div className="flex-shrink-0">
+                        <div className={`w-12 h-12 flex items-center justify-center rounded-full text-sm font-bold text-white ${
+                          rank === 1 ? "bg-gradient-to-br from-yellow-400 to-yellow-600" :
+                          rank === 2 ? "bg-gradient-to-br from-gray-300 to-gray-500" :
+                          rank === 3 ? "bg-gradient-to-br from-amber-700 to-amber-900" :
+                          "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                        }`}>
+                          {rank <= 3 ? (
+                            <Crown className="h-4 w-4" />
+                          ) : (
+                            rank
+                          )}
+                        </div>
                       </div>
-                    </TableHead>
-                    <TableHead onClick={() => handleSort('name')}>
-                      <div className="flex items-center cursor-pointer">
-                        <span>Player</span>
-                        {sortField === 'name' && (
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        )}
+
+                      {/* Avatar */}
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                          {player.avatarUrl ? (
+                            <img
+                              src={player.avatarUrl}
+                              alt={name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium">
+                              {player.avatarInitials || name.substring(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </TableHead>
-                    <TableHead className="text-center" onClick={() => handleSort('points')}>
-                      <div className="flex items-center justify-center cursor-pointer">
-                        <span>PCP Score</span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="ml-1 h-3 w-3 text-gray-400" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs max-w-xs">Pickle+ Competitive Points determine your ranking position on the leaderboard</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        {sortField === 'points' && (
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell text-center">
-                      <div className="flex items-center justify-center">
-                        <span>CourtIQ™</span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="ml-1 h-3 w-3 text-gray-400" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs max-w-xs">CourtIQ™ skill rating (0-9 scale) determines your tier color and is separate from PCP points</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </TableHead>
-                    <TableHead className="hidden sm:table-cell text-center">Country</TableHead>
-                    <TableHead className="hidden lg:table-cell">Specialty</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {leaderboard && leaderboard.map((player: LeaderboardEntry, index: number) => {
-                    const rank = player.rank || player.position || index + 1 + (page - 1) * itemsPerPage;
-                    const name = player.displayName || player.username;
-                    const points = player.pointsTotal || player.rankingPoints || 0;
-                    const tierColor = getTierColor(player);
-                    const specialty = player.specialty || 'All-Around';
-                    
-                    let rankBadgeClass = "h-6 w-6 flex items-center justify-center rounded-full text-xs font-bold text-white";
-                    if (rank === 1) {
-                      rankBadgeClass += " bg-gradient-to-br from-yellow-400 to-yellow-600";
-                    } else if (rank === 2) {
-                      rankBadgeClass += " bg-gradient-to-br from-gray-300 to-gray-500";
-                    } else if (rank === 3) {
-                      rankBadgeClass += " bg-gradient-to-br from-amber-700 to-amber-900";
-                    } else {
-                      rankBadgeClass += " bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
-                    }
-                    
-                    return (
-                      <TableRow key={player.userId}>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <div className={rankBadgeClass}>
-                              {rank <= 3 ? (
-                                <Crown className="h-3 w-3" />
-                              ) : (
-                                rank
-                              )}
-                            </div>
+
+                      {/* Player info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                            {name}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-3 overflow-hidden">
-                              {player.avatarUrl ? (
-                                <img
-                                  src={player.avatarUrl}
-                                  alt={name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-xs font-medium">
-                                  {player.avatarInitials || name.substring(0, 2).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <div>
-                              <div className="font-medium">{name}</div>
-                              <div className="text-xs text-gray-500">
-                                @{player.username}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center font-bold text-[#FF5722]">
-                          {points.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-center">
                           <Badge 
                             style={{ 
                               backgroundColor: tierColor || "#6b7280",
                               color: "white" 
                             }} 
-                            className="text-xs font-normal"
+                            className="text-xs font-normal flex-shrink-0"
                           >
                             {convertRatingScale(player.ratings?.overall) || "8.1"}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-center">
-                          <div className="flex justify-center">
-                            <div className="w-6 h-6 rounded overflow-hidden">
-                              {player.countryCode && (
+                        </div>
+                        
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          @{player.username}
+                        </div>
+
+                        {/* Stats grid */}
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">PCP Score:</span>
+                            <span className="font-bold text-[#FF5722] ml-1">
+                              {points.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-500 dark:text-gray-400">Country:</span>
+                            {player.countryCode && (
+                              <div className="w-4 h-4 rounded overflow-hidden ml-1">
                                 <img 
                                   src={`https://flagcdn.com/w20/${player.countryCode.toLowerCase()}.png`} 
                                   alt={player.countryCode} 
                                   className="w-full h-full object-cover"
                                 />
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <Badge variant="outline" className="text-xs">
-                            {specialty}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                          <div className="col-span-2">
+                            <span className="text-gray-500 dark:text-gray-400">Specialty:</span>
+                            <Badge variant="outline" className="text-xs ml-1">
+                              {specialty}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             
             {/* Pagination */}

@@ -247,99 +247,109 @@ export default function LeaderboardView({
       
       <CardContent>
         <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[60px]">Rank</TableHead>
-                <TableHead>Player</TableHead>
-                {type === 'rating' && <TableHead className="text-right">Rating</TableHead>}
-                {type === 'points' && <TableHead className="text-right">Points</TableHead>}
-                <TableHead className="hidden md:table-cell">Matches</TableHead>
-                <TableHead className="hidden md:table-cell text-right">Win %</TableHead>
-                <TableHead className="hidden sm:table-cell text-right">Change</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leaderboard?.entries?.slice(0, maxEntries).map((entry: LeaderboardEntry) => (
-                <TableRow 
-                  key={entry.userId} 
-                  className={entry.isCurrentUser && showPersonalHighlight ? 'bg-muted/50' : ''}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
+          {/* Mobile-optimized card layout */}
+          <div className="space-y-2">
+            {leaderboard?.entries?.slice(0, maxEntries).map((entry: LeaderboardEntry) => (
+              <div 
+                key={entry.userId}
+                className={`p-4 rounded-lg border transition-colors ${
+                  entry.isCurrentUser && showPersonalHighlight 
+                    ? 'bg-muted/50 border-primary border-opacity-30' 
+                    : 'hover:bg-muted/30'
+                }`}
+              >
+                <div className="flex items-center space-x-4">
+                  {/* Rank */}
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
                       {entry.rank <= 3 ? (
                         <Medal className={`h-5 w-5 ${getMedalColor(entry.rank)}`} />
                       ) : (
-                        <span className="pl-1">{entry.rank}</span>
+                        <span className="font-semibold text-sm">{entry.rank}</span>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={entry.profileImageUrl} />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-semibold flex items-center gap-2">
-                          {entry.displayName || entry.username}
-                          {entry.isCurrentUser && showPersonalHighlight && (
-                            <Badge variant="outline" className="ml-2">You</Badge>
-                          )}
-                        </div>
-                        {entry.tier && (
-                          <div className="text-xs text-muted-foreground">{entry.tier}</div>
-                        )}
+                  </div>
+
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={entry.profileImageUrl} />
+                      <AvatarFallback>
+                        <User className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+
+                  {/* Player info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="font-semibold truncate">
+                        {entry.displayName || entry.username}
                       </div>
+                      {entry.isCurrentUser && showPersonalHighlight && (
+                        <Badge variant="outline" className="text-xs">You</Badge>
+                      )}
                     </div>
-                  </TableCell>
-                  {type === 'rating' && (
-                    <TableCell className="text-right font-semibold">{entry.rating}</TableCell>
-                  )}
-                  {type === 'points' && (
-                    <TableCell className="text-right font-semibold">{entry.points}</TableCell>
-                  )}
-                  <TableCell className="hidden md:table-cell">{entry.matchesPlayed}</TableCell>
-                  <TableCell className="hidden md:table-cell text-right">
-                    {entry.winPercentage}%
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell text-right">
-                    {entry.rankChange !== undefined && (
-                      <div className="flex items-center justify-end space-x-1">
-                        {entry.rankChange > 0 ? (
-                          <>
-                            <ChevronUp className="h-4 w-4 text-green-500" />
-                            <span className="text-green-500">{entry.rankChange}</span>
-                          </>
-                        ) : entry.rankChange < 0 ? (
-                          <>
-                            <ChevronDown className="h-4 w-4 text-red-500" />
-                            <span className="text-red-500">{Math.abs(entry.rankChange)}</span>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </div>
+                    
+                    {entry.tier && (
+                      <div className="text-xs text-muted-foreground mb-2">{entry.tier}</div>
                     )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {/* If no entries are found */}
-              {(!leaderboard?.entries || leaderboard.entries.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <Trophy className="h-8 w-8 mb-2 opacity-30" />
-                      <p>No leaderboard data available for these filters.</p>
+                    
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">
+                          {type === 'rating' ? 'Rating' : 'Points'}:
+                        </span>
+                        <span className="font-semibold ml-1">
+                          {type === 'rating' ? entry.rating : entry.points}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Matches:</span>
+                        <span className="font-medium ml-1">{entry.matchesPlayed}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Win %:</span>
+                        <span className="font-medium ml-1">{entry.winPercentage}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Change:</span>
+                        {entry.rankChange !== undefined && (
+                          <span className="ml-1 flex items-center">
+                            {entry.rankChange > 0 ? (
+                              <>
+                                <ChevronUp className="h-3 w-3 text-green-500" />
+                                <span className="text-green-500 text-xs">{entry.rankChange}</span>
+                              </>
+                            ) : entry.rankChange < 0 ? (
+                              <>
+                                <ChevronDown className="h-3 w-3 text-red-500" />
+                                <span className="text-red-500 text-xs">{Math.abs(entry.rankChange)}</span>
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">-</span>
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* If no entries are found */}
+            {(!leaderboard?.entries || leaderboard.entries.length === 0) && (
+              <div className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <Trophy className="h-12 w-12 mb-4 opacity-30" />
+                  <p className="text-lg font-medium mb-2">No leaderboard data available</p>
+                  <p className="text-sm">Try adjusting your filters or check back later.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Footnote with leaderboard info */}

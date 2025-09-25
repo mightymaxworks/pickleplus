@@ -141,7 +141,7 @@ export function PicklePointsBreakdown({
             </div>
             
             {/* Activity Bonuses */}
-            {calculation.bonusPicklePoints > 0 && (
+            {calculation.bonusPicklePoints && calculation.bonusPicklePoints > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm">Activity Bonuses</span>
                 <span className="font-semibold text-green-600">+{calculation.bonusPicklePoints}</span>

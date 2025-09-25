@@ -23,54 +23,73 @@ const LeaderboardTable = ({ users, currentUser, sortBy }: LeaderboardTableProps)
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="text-sm text-gray-500 border-b border-gray-100">
-            <th className="p-3 text-center">Rank</th>
-            <th className="p-3 text-left">Player</th>
-            <th className="p-3 text-center">Rating</th>
-            <th className="p-3 text-center">W/L</th>
-            <th className="p-3 text-center">XP</th>
-            <th className="p-3 text-center">Level</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedUsers.map((user, index) => {
-            const isCurrentUser = currentUser && user.id === currentUser.id;
-            
-            return (
-              <tr 
-                key={user.id} 
-                className={`border-b border-gray-100 ${isCurrentUser ? 'bg-primary bg-opacity-5' : ''} hover:bg-gray-50`}
-              >
-                <td className="p-3 text-center font-medium w-16">{index + 1}</td>
-                <td className="p-3">
-                  <div className="flex items-center">
-                    <div className={`h-10 w-10 rounded-full ${isCurrentUser ? 'bg-primary' : 'bg-secondary'} flex items-center justify-center text-white text-sm mr-3`}>
-                      <span>{user.displayName.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {user.displayName}{isCurrentUser ? ' (You)' : ''}
-                      </div>
-                      <div className="text-xs text-gray-500">{user.skillLevel} Skill Level</div>
-                    </div>
+    <div className="space-y-2">
+      {/* Mobile-first card layout */}
+      {sortedUsers.map((user, index) => {
+        const isCurrentUser = currentUser && user.id === currentUser.id;
+        
+        return (
+          <div 
+            key={user.id} 
+            className={`p-4 rounded-lg border transition-colors ${
+              isCurrentUser ? 'bg-primary bg-opacity-5 border-primary border-opacity-20' : 'bg-white border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center space-x-4">
+              {/* Rank badge */}
+              <div className="flex-shrink-0">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                  index < 3 
+                    ? index === 0 
+                      ? 'bg-yellow-500 text-white' 
+                      : index === 1 
+                        ? 'bg-gray-400 text-white' 
+                        : 'bg-amber-600 text-white'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {index + 1}
+                </div>
+              </div>
+
+              {/* Player avatar */}
+              <div className="flex-shrink-0">
+                <div className={`h-12 w-12 rounded-full ${isCurrentUser ? 'bg-primary' : 'bg-secondary'} flex items-center justify-center text-white text-sm`}>
+                  <span>{user.displayName.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+                </div>
+              </div>
+
+              {/* Player info - takes remaining space */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-1">
+                  <div className="font-medium text-gray-900 truncate">
+                    {user.displayName}{isCurrentUser ? ' (You)' : ''}
                   </div>
-                </td>
-                <td className="p-3 text-center font-bold">{(user.rating / 1000).toFixed(1)}</td>
-                <td className="p-3 text-center">{user.wins}/{user.losses}</td>
-                <td className="p-3 text-center font-medium text-secondary">{user.xp.toLocaleString()}</td>
-                <td className="p-3 text-center">
-                  <div className="inline-block bg-primary bg-opacity-10 text-primary text-xs font-medium rounded-full px-2 py-1">
+                  <div className="inline-block bg-primary bg-opacity-10 text-primary text-xs font-medium rounded-full px-2 py-1 flex-shrink-0">
                     Level {user.level}
                   </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                </div>
+                <div className="text-sm text-gray-500">{user.skillLevel} Skill Level</div>
+                
+                {/* Stats row - mobile optimized */}
+                <div className="flex items-center space-x-4 mt-2 text-sm">
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-500">Rating:</span>
+                    <span className="font-semibold text-gray-900">{(user.rating / 1000).toFixed(1)}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-500">W/L:</span>
+                    <span className="font-medium">{user.wins}/{user.losses}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-500">XP:</span>
+                    <span className="font-medium text-secondary">{user.xp.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

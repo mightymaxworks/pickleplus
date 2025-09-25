@@ -353,69 +353,78 @@ export default function PicklePointsPage() {
               {picklePointsData.players.map((player, index) => (
                 <div
                   key={player.id}
-                  className={`flex items-center gap-4 p-4 transition-colors ${
+                  className={`p-4 rounded-lg border transition-colors ${
                     player.isCurrentUser 
-                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500' 
-                      : 'hover:bg-orange-50/50'
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                      : 'hover:bg-orange-50/50 border-orange-100'
                   }`}
                 >
-                  {/* Rank */}
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-700 font-bold text-sm">
-                    #{player.ranking}
-                  </div>
-
-                  {/* Avatar */}
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={player.avatar} alt={player.displayName} />
-                    <AvatarFallback className="bg-orange-100 text-orange-700">
-                      {player.displayName?.charAt(0) || player.username.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  {/* Player Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="font-medium text-sm truncate">
-                        {player.displayName || player.username}
+                  <div className="flex items-start space-x-4">
+                    {/* Rank badge */}
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 text-orange-700 font-bold text-sm">
+                        #{player.ranking}
                       </div>
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs px-2 h-5 border-0 font-semibold ${getTierColor(player.tier)}`}
-                      >
-                        <span className="mr-1">{getTierIcon(player.tier)}</span>
-                        {player.tier}
-                      </Badge>
                     </div>
-                    <div className="text-xs text-gray-600 flex items-center gap-3">
-                      <span>Age {player.age}</span>
-                      <span>{player.winRate}% wins</span>
-                      <span>{player.matchesPlayed} matches</span>
-                      <span className="flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {player.recentActivity.pointsThisWeek} this week
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Points Display */}
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-orange-600 flex items-center gap-1">
-                      <Coins className="h-4 w-4" />
-                      {player.picklePoints.toLocaleString()}
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={player.avatar} alt={player.displayName} />
+                        <AvatarFallback className="bg-orange-100 text-orange-700">
+                          {player.displayName?.charAt(0) || player.username.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {player.lifetimePoints.toLocaleString()} lifetime
-                    </div>
-                  </div>
 
-                  {/* Activity Indicators */}
-                  <div className="flex flex-col items-center gap-1 text-xs">
-                    <div className="flex items-center gap-1 text-green-600">
-                      <Clock className="h-3 w-3" />
-                      {player.recentActivity.streakDays}d
-                    </div>
-                    <div className="text-gray-500">
-                      {new Date(player.recentActivity.lastMatch).toLocaleDateString()}
+                    {/* Player info - takes available space */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="font-semibold text-gray-900 truncate">
+                          {player.displayName || player.username}
+                        </div>
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs px-2 py-1 border-0 font-semibold flex-shrink-0 ${getTierColor(player.tier)}`}
+                        >
+                          <span className="mr-1">{getTierIcon(player.tier)}</span>
+                          {player.tier}
+                        </Badge>
+                      </div>
+                      
+                      {/* Player stats in mobile-friendly grid */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-gray-600 mb-3">
+                        <div>Age {player.age}</div>
+                        <div>{player.winRate}% wins</div>
+                        <div>{player.matchesPlayed} matches</div>
+                        <div className="flex items-center">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          {player.recentActivity.pointsThisWeek} this week
+                        </div>
+                      </div>
+
+                      {/* Points and activity row */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-lg font-bold text-orange-600 flex items-center gap-1">
+                            <Coins className="h-4 w-4" />
+                            {player.picklePoints.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {player.lifetimePoints.toLocaleString()} lifetime
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="flex items-center justify-end gap-1 text-green-600 text-sm">
+                            <Clock className="h-3 w-3" />
+                            {player.recentActivity.streakDays}d streak
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Last: {new Date(player.recentActivity.lastMatch).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
