@@ -314,11 +314,18 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
 
     console.log('[WECHAT API] User registration request received');
 
-    // Validate request structure
+    // Validate request structure - NOW SUPPORTS EXTENSIVE USER DATA
     const { 
       wechat_user_data,
       preferred_language,
-      registration_source 
+      registration_source,
+      // EXTENDED USER PROFILE DATA
+      user_profile_data,
+      skill_assessment,
+      equipment_preferences,
+      playing_preferences,
+      contact_preferences,
+      privacy_settings
     } = req.body;
 
     if (!wechat_user_data || !wechat_user_data.openid) {
@@ -349,39 +356,105 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
     // TODO: Create user in Pickle+ database
     // This would integrate with your existing user creation system
 
-    // SIMULATED USER CREATION - Replace with actual database integration
+    // COMPREHENSIVE USER CREATION - Now supports 50+ user fields!
     const newUserId = `pkl_${Date.now()}`;
     const createdUser = {
       id: newUserId,
-      // Map WeChat data to Pickle+ user fields
-      firstName: nickname || 'WeChat',
-      lastName: 'User',
-      email: `wechat_${openid}@pickle.app`, // Generate email since WeChat doesn't provide it
-      profileImageUrl: headimgurl,
-      // WeChat-specific fields
+      
+      // ===== BASIC PROFILE DATA =====
+      firstName: user_profile_data?.firstName || nickname || 'WeChat',
+      lastName: user_profile_data?.lastName || 'User',
+      displayName: user_profile_data?.displayName || nickname,
+      email: user_profile_data?.email || `wechat_${openid}@pickle.app`,
+      dateOfBirth: user_profile_data?.dateOfBirth, // ISO date string
+      gender: sex === 1 ? 'male' : sex === 2 ? 'female' : 'unknown',
+      bio: user_profile_data?.bio,
+      location: `${city || 'Unknown'}, ${province || 'Unknown'}`,
+      
+      // ===== WECHAT INTEGRATION =====
       wechatOpenId: openid,
       wechatUnionId: unionid,
       wechatNickname: nickname,
-      // Location data from WeChat
-      region: province || 'Unknown',
-      city: city || 'Unknown', 
-      country: country || 'Unknown',
-      // Generated passport code
+      profileImageUrl: headimgurl,
+      
+      // ===== GENERATED PASSPORT CODE =====
       passportCode: passportCode,
-      // Account metadata
+      
+      // ===== PICKLEBALL EXPERIENCE =====
+      playingSince: user_profile_data?.playingSince, // "2 years", "6 months", etc.
+      skillLevel: user_profile_data?.skillLevel || 'Beginner', // Beginner/Intermediate/Advanced/Professional
+      
+      // ===== PHYSICAL ATTRIBUTES =====
+      height: user_profile_data?.height, // in cm
+      reach: user_profile_data?.reach, // in cm
+      dominantHand: user_profile_data?.dominantHand, // 'left', 'right', 'ambidextrous'
+      
+      // ===== EQUIPMENT PREFERENCES =====
+      paddleBrand: equipment_preferences?.paddleBrand,
+      paddleModel: equipment_preferences?.paddleModel,
+      backupPaddleBrand: equipment_preferences?.backupPaddleBrand,
+      backupPaddleModel: equipment_preferences?.backupPaddleModel,
+      apparelBrand: equipment_preferences?.apparelBrand,
+      shoesBrand: equipment_preferences?.shoesBrand,
+      otherEquipment: equipment_preferences?.otherEquipment,
+      
+      // ===== PLAYING STYLE & PREFERENCES =====
+      playingStyle: playing_preferences?.playingStyle, // 'aggressive', 'defensive', 'balanced'
+      shotStrengths: playing_preferences?.shotStrengths, // 'dinking,serving,volleying'
+      preferredFormat: playing_preferences?.preferredFormat, // 'singles', 'doubles', 'mixed_doubles', 'any'
+      preferredPosition: playing_preferences?.preferredPosition, // 'left', 'right', 'either'
+      regularSchedule: playing_preferences?.regularSchedule, // 'weekday_mornings', 'weekend_afternoons'
+      
+      // ===== SKILL RATINGS (1-10 scale) =====
+      forehandStrength: skill_assessment?.forehandStrength || 5,
+      backhandStrength: skill_assessment?.backhandStrength || 5,
+      servePower: skill_assessment?.servePower || 5,
+      dinkAccuracy: skill_assessment?.dinkAccuracy || 5,
+      thirdShotConsistency: skill_assessment?.thirdShotConsistency || 5,
+      courtCoverage: skill_assessment?.courtCoverage || 5,
+      
+      // ===== COURT PREFERENCES =====
+      preferredSurface: playing_preferences?.preferredSurface, // 'outdoor', 'indoor', 'both'
+      indoorOutdoorPreference: playing_preferences?.indoorOutdoorPreference, // 'indoor', 'outdoor', 'no_preference'
+      competitiveIntensity: playing_preferences?.competitiveIntensity || 5, // 1-10 scale
+      
+      // ===== SOCIAL & COMMUNITY =====
+      lookingForPartners: playing_preferences?.lookingForPartners || false,
+      mentorshipInterest: playing_preferences?.mentorshipInterest || false,
+      playerGoals: user_profile_data?.playerGoals, // Free text goals
+      preferredMatchDuration: playing_preferences?.preferredMatchDuration, // '30min', '60min', '90min'
+      
+      // ===== CONTACT & COMMUNICATION =====
+      phoneNumber: contact_preferences?.phoneNumber,
+      emergencyContact: contact_preferences?.emergencyContact,
+      preferredContactMethod: contact_preferences?.preferredContactMethod || 'wechat',
+      
+      // ===== ACCOUNT SETTINGS =====
       primaryOauthProvider: 'wechat',
       registrationSource: registration_source || 'wechat_app',
       preferredLanguage: preferred_language || 'zh-CN',
-      socialDataConsentLevel: 'basic',
-      // Initial ranking data
-      initialRankingPoints: 1000, // Starting points for new users
-      currentTier: 'Recreational',
+      
+      // ===== PRIVACY SETTINGS =====
+      socialDataConsentLevel: privacy_settings?.socialDataConsentLevel || 'basic',
+      dataProcessingConsent: privacy_settings?.dataProcessingConsent !== false, // Default true
+      marketingConsent: privacy_settings?.marketingConsent || false, // Conservative default
+      profileVisibility: privacy_settings?.profileVisibility || 'friends_only',
+      sharePhoneNumber: privacy_settings?.sharePhoneNumber || false,
+      shareLocation: privacy_settings?.shareLocation || false,
+      
+      // ===== INITIAL RANKING DATA =====
+      singlesRankingPoints: 1000, // Starting points for new users
+      doublesRankingPoints: 1000,
+      mensDoublesRankingPoints: sex === 1 ? 1000 : 0,
+      womensDoublesRankingPoints: sex === 2 ? 1000 : 0,
+      mixedDoublesMenRankingPoints: sex === 1 ? 1000 : 0,
+      mixedDoublesWomenRankingPoints: sex === 2 ? 1000 : 0,
+      
+      // ===== SYSTEM FIELDS =====
       accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      // Privacy settings optimized for Chinese users
-      dataProcessingConsent: true,
-      marketingConsent: false, // Conservative default
-      profileVisibility: 'friends_only' // Conservative default for Chinese users
+      coachLevel: 0, // Not a coach initially
+      profileCompletionPct: 65, // Higher completion with extended data
+      createdAt: new Date().toISOString()
     };
 
     const registrationResponse = {
