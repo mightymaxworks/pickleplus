@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useUserData } from "@/contexts/UserDataContext";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -50,6 +51,7 @@ export default function ProfileEdit() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { refreshUserData } = useUserData();
   
   const [activeTab, setActiveTab] = useState("basic");
   
@@ -118,7 +120,7 @@ export default function ProfileEdit() {
     mutationFn: async (data: ProfileFormValues) => {
       return await apiRequest("PATCH", "/api/profile/update", data);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated",
@@ -127,6 +129,9 @@ export default function ProfileEdit() {
       // Update the user data in the auth context and queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/profile/completion"] });
+      
+      // **CRITICAL FIX**: Force refresh of UserDataContext cache
+      await refreshUserData();
       
       // If XP was awarded, show a special toast
       if (data?.xpAwarded > 0) {
