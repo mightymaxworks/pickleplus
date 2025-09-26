@@ -12,7 +12,7 @@ import { algorithmProtection } from '../middleware/algorithm-protection';
 import { triggerWeChatWebhook, triggerUserWebhook } from '../utils/webhook-delivery';
 import { storage } from '../../../storage';
 import { db } from '../../../db';
-import { eq, and, or, like, desc, asc, gte, lte } from 'drizzle-orm';
+import { eq, and, or, like, desc, asc, gte, lte, inArray } from 'drizzle-orm';
 import { users } from '../../../../shared/schema';
 import { coachMarketplaceProfiles } from '../../../../shared/schema/coach-marketplace';
 import { coachProfiles } from '../../../../shared/schema/coach-management';
@@ -75,29 +75,24 @@ router.get('/coaching/discover', async (req: Request, res: Response) => {
     }
 
     // Price filtering
-    if (price_min || price_max) {
-      if (price_min && price_max) {
-        queryConditions.push(
-          and(
-            gte(coachMarketplaceProfiles.hourlyRate, Number(price_min)),
-            lte(coachMarketplaceProfiles.hourlyRate, Number(price_max))
-          )
-        );
-      } else if (price_min) {
-        queryConditions.push(
-          gte(coachMarketplaceProfiles.hourlyRate, Number(price_min))
-        );
-      } else if (price_max) {
-        queryConditions.push(
-          lte(coachMarketplaceProfiles.hourlyRate, Number(price_max))
-        );
-      }
+    if (price_min && price_max) {
+      const minCondition = gte(coachMarketplaceProfiles.hourlyRate, String(price_min));
+      const maxCondition = lte(coachMarketplaceProfiles.hourlyRate, String(price_max));
+      queryConditions.push(and(minCondition, maxCondition));
+    } else if (price_min) {
+      queryConditions.push(
+        gte(coachMarketplaceProfiles.hourlyRate, String(price_min))
+      );
+    } else if (price_max) {
+      queryConditions.push(
+        lte(coachMarketplaceProfiles.hourlyRate, String(price_max))
+      );
     }
 
     // Rating filtering
     if (rating_min) {
       queryConditions.push(
-        gte(coachMarketplaceProfiles.averageRating, Number(rating_min))
+        gte(coachMarketplaceProfiles.averageRating, String(rating_min))
       );
     }
 
@@ -153,7 +148,7 @@ router.get('/coaching/discover', async (req: Request, res: Response) => {
         pcp_certification_number: coachProfiles.pcpCertificationNumber
       })
       .from(coachProfiles)
-      .where(coachProfiles.id.in(coachIds));
+      .where(inArray(coachProfiles.id, coachIds));
 
     // Combine data
     const enrichedCoaches = coaches.map(coach => {

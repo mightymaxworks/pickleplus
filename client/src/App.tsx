@@ -132,6 +132,9 @@ import SocialContentPage from './pages/social-content'
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
 
+// Import API testing page for developers
+import APITesting from './pages/APITesting'
+
 // Keep imports for non-lazy loaded pages (cleaned up)
 // QRTestPage and EventTestPage removed - files deleted
 import CommunityPage from './pages/CommunityPage'
@@ -274,6 +277,9 @@ export default function App() {
                   <Route path="/weighted-assessment-test" component={WeightedAssessmentTestPage} />
                   {/* Mixed Doubles Ranking Test */}
                   <Route path="/mixed-doubles-test" component={MixedDoublesRankingTest} />
+                  
+                  {/* API Testing Interface for Developers */}
+                  <Route path="/api-testing" component={APITesting} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
                   {/* <Route path="/community-system-demo" component={lazyLoad(() => import('./pages/CommunitySystemDemo'))} /> */}
                   {/* <Route path="/wise-business-demo" component={lazyLoad(() => import('./pages/WiseBusinessDemo'))} /> */}
@@ -635,7 +641,7 @@ export default function App() {
                   {/* Achievements Page */}
                   <ProtectedRouteWithLayout
                     path="/achievements"
-                    component={lazyLoad(() => import('./pages/Achievements'))}
+                    component={lazyLoad(() => import('./pages/achievements'))}
                     pageTitle="Achievements"
                   />
                   

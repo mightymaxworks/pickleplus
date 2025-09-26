@@ -382,7 +382,7 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
       firstName: user_profile_data?.firstName || nickname || 'WeChat',
       lastName: user_profile_data?.lastName || 'User',
       displayName: user_profile_data?.displayName || nickname,
-      dateOfBirth: user_profile_data?.dateOfBirth ? new Date(user_profile_data.dateOfBirth) : undefined,
+      dateOfBirth: user_profile_data?.dateOfBirth ? new Date(user_profile_data.dateOfBirth).toISOString() : undefined,
       gender: sex === 1 ? 'male' : sex === 2 ? 'female' : undefined,
       bio: user_profile_data?.bio,
       location: `${city || 'Unknown'}, ${province || 'Unknown'}`,
@@ -690,7 +690,7 @@ router.patch('/wechat/sync-user-profile', async (req: Request, res: Response) =>
     }
 
     // Apply profile updates with conflict resolution
-    const updatedFields: Partial<typeof user> = {};
+    const updatedFields: any = {};
     
     if (profile_updates) {
       // Map profile updates to user fields
