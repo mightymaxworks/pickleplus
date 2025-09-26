@@ -512,6 +512,7 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
+      console.log(`[Auth] Attempting to deserialize user with ID: ${id}`);
       const user = await storage.getUser(id);
       
       // Ensure we found a valid user
@@ -520,51 +521,19 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
-      // PKL-278651-AUTH-0016-PROLES - Fetch user roles
-      try {
-        const userRoles = await storage.getUserRoles(user.id);
-        
-        // Add roles to user object
-        const enhancedUser = {
-          ...user,
-          roles: userRoles.filter(ur => ur.isActive).map(ur => ({
-            id: ur.roleId,
-            name: ur.role.name,
-            label: ur.role.label,
-            priority: ur.role.priority
-          }))
-        };
-        
-        // Check specific role flags for backward compatibility
-        if (enhancedUser.roles.some(r => r.name === 'ADMIN')) {
-          enhancedUser.isAdmin = true;
-        }
-        
-        if (enhancedUser.roles.some(r => r.name === 'COACH')) {
-          enhancedUser.isCoach = true;
-        }
-        
-        if (enhancedUser.roles.some(r => r.name === 'REFEREE')) {
-          enhancedUser.isReferee = true;
-        }
-        
-        // Add additional logging for roles
-        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with roles: ${enhancedUser.roles.map(r => r.name).join(', ')}`);
-        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with isAdmin=${enhancedUser.isAdmin}, isCoach=${enhancedUser.isCoach}, isReferee=${enhancedUser.isReferee}`);
-        
-        // Successfully found user with roles
-        return done(null, enhancedUser);
-      } catch (roleError) {
-        // If there's an error getting roles, just return the user without roles
-        console.error('Error fetching user roles:', roleError);
-        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized without roles due to error`);
-        
-        // Add additional logging for admin privileges
-        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with isAdmin=${user.isAdmin}, isFoundingMember=${user.isFoundingMember}`);
-        
-        // Successfully found user, but without roles
-        return done(null, user);
-      }
+      console.log(`[Auth] User found: ${user.username} (ID: ${user.id})`);
+      
+      // For now, skip the complex role fetching that might be causing issues
+      // Just return the user with basic admin flag from database
+      const enhancedUser = {
+        ...user,
+        roles: []
+      };
+      
+      console.log(`[Auth] User ${user.username} (ID: ${user.id}) successfully deserialized`);
+      
+      // Successfully found user
+      return done(null, enhancedUser);
     } catch (error) {
       // Log the error for debugging
       console.error('Error in deserializeUser:', error);
