@@ -13,6 +13,7 @@ import webhookRoutes from './webhook-routes';
 import adminRoutes from './admin-routes';
 import docsRoutes from './docs-routes';
 import wechatIntegrationRoutes from './wechat-integration-routes';
+import { coachingIntegrationRoutes } from './coaching-integration-routes';
 
 // Create API Gateway router
 const apiGatewayRouter = Router();
@@ -33,6 +34,9 @@ apiGatewayRouter.use(API_BASE_PATH, gatewayV1Routes);
 
 // WeChat Integration routes (protected endpoints for WeChat app)
 apiGatewayRouter.use(API_BASE_PATH, wechatIntegrationRoutes);
+
+// Coaching Integration routes (protected endpoints for coaching services)
+apiGatewayRouter.use(API_BASE_PATH, coachingIntegrationRoutes);
 
 // Health check endpoint
 apiGatewayRouter.get(`${API_BASE_PATH}/health`, (req: Request, res: Response) => {
