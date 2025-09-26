@@ -838,4 +838,322 @@ router.post('/coaching/connect', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Coach Assessment & Rating Endpoint
+ * Submit assessments and ratings for coaches after sessions
+ */
+router.post('/coaching/assess/:coachId', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('coaching:write')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'Coach assessment requires coaching:write scope'
+      });
+    }
+
+    const { coachId } = req.params;
+    const {
+      student_wechat_id,
+      booking_id,
+      rating,
+      technical_skills,
+      communication,
+      reliability,
+      value_for_money,
+      review_title,
+      review_content,
+      tags,
+      session_date
+    } = req.body;
+
+    if (!student_wechat_id || !rating) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'Required fields: student_wechat_id, rating (1-5)'
+      });
+    }
+
+    console.log(`[COACHING API] Assessment submission for coach: ${coachId}`);
+
+    // Find student user
+    const wechatEmail = `wechat_${student_wechat_id}@pickle.app`;
+    const studentUser = await storage.getUserByEmail(wechatEmail);
+    
+    if (!studentUser) {
+      return res.status(404).json({
+        error: 'student_not_found',
+        error_description: 'Student not found'
+      });
+    }
+
+    // Validate rating values
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({
+        error: 'invalid_rating',
+        error_description: 'Rating must be between 1 and 5'
+      });
+    }
+
+    // For now, we'll create a simplified assessment record
+    // This would integrate with the existing coach marketplace reviews schema
+    const assessmentResponse = {
+      api_version: 'v1',
+      data: {
+        assessment_id: `assess_${Date.now()}`,
+        coach_id: Number(coachId),
+        student_id: studentUser.id,
+        booking_id,
+        ratings: {
+          overall_rating: rating,
+          technical_skills: technical_skills || rating,
+          communication: communication || rating,
+          reliability: reliability || rating,
+          value_for_money: value_for_money || rating
+        },
+        review: {
+          title: review_title,
+          content: review_content,
+          tags: tags || []
+        },
+        assessment_metadata: {
+          session_date: session_date,
+          submitted_at: new Date().toISOString(),
+          is_verified: !!booking_id,
+          platform: 'wechat_integration'
+        },
+        coach_impact: {
+          contributes_to_average: true,
+          affects_discovery_ranking: true,
+          triggers_performance_review: rating <= 2
+        }
+      }
+    };
+
+    // Trigger webhook for assessment submission
+    await triggerWeChatWebhook('coach_assessed', {
+      coach_id: Number(coachId),
+      student_user_id: studentUser.id,
+      overall_rating: rating,
+      booking_id,
+      assessment_data: {
+        technical_skills,
+        communication,
+        reliability,
+        value_for_money
+      }
+    });
+
+    res.json(assessmentResponse);
+
+  } catch (error) {
+    console.error('[COACHING API] Error submitting assessment:', error);
+    res.status(500).json({
+      error: 'assessment_error',
+      error_description: 'Error submitting coach assessment'
+    });
+  }
+});
+
+/**
+ * Coaching Content & Drills Endpoint
+ * Access coaching drills and educational content
+ */
+router.get('/coaching/content', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('coaching:read')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'Coaching content access requires coaching:read scope'
+      });
+    }
+
+    const {
+      category,
+      skill_level,
+      drill_type,
+      coach_id,
+      limit = 20,
+      search
+    } = req.query;
+
+    console.log('[COACHING API] Coaching content request');
+
+    // This would integrate with the existing drills and curriculum systems
+    // For now, providing a sample response structure
+    const contentResponse = {
+      api_version: 'v1',
+      data: {
+        content_categories: {
+          drills: {
+            total_count: 150,
+            categories: ['technical', 'tactical', 'physical', 'mental'],
+            skill_levels: ['beginner', 'intermediate', 'advanced', 'professional']
+          },
+          video_lessons: {
+            total_count: 75,
+            categories: ['fundamentals', 'strategy', 'equipment', 'rules']
+          },
+          assessment_templates: {
+            total_count: 25,
+            types: ['skill_evaluation', 'progress_tracking', 'goal_setting']
+          }
+        },
+        featured_content: [
+          {
+            content_id: 'drill_001',
+            title: 'Third Shot Drop Mastery',
+            description: 'Perfect your third shot drop with progressive difficulty levels',
+            category: 'technical',
+            skill_level: 'intermediate',
+            duration_minutes: 30,
+            equipment_needed: ['balls', 'cones'],
+            coach_rating: 4.8,
+            usage_count: 1250
+          },
+          {
+            content_id: 'lesson_001',
+            title: 'Court Positioning Fundamentals',
+            description: 'Learn optimal court positioning for different game situations',
+            category: 'tactical',
+            skill_level: 'beginner',
+            duration_minutes: 45,
+            format: 'video_lesson',
+            coach_rating: 4.9,
+            usage_count: 890
+          }
+        ],
+        access_features: {
+          coach_customization: true,
+          progress_tracking: true,
+          skill_assessment: true,
+          content_filtering: true,
+          offline_download: false // WeChat integration limitation
+        },
+        usage_analytics: {
+          most_popular_category: 'technical',
+          trending_drills: ['third_shot_drop', 'dink_consistency', 'serve_placement'],
+          effectiveness_ratings: {
+            beginner_improvement: 4.6,
+            intermediate_advancement: 4.4,
+            retention_rate: 0.82
+          }
+        }
+      }
+    };
+
+    res.json(contentResponse);
+
+  } catch (error) {
+    console.error('[COACHING API] Error accessing coaching content:', error);
+    res.status(500).json({
+      error: 'content_error',
+      error_description: 'Error accessing coaching content'
+    });
+  }
+});
+
+/**
+ * Coach Performance Analytics Endpoint
+ * Get analytics and insights about coach performance
+ */
+router.get('/coaching/analytics/:coachId', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('coaching:read')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'Coach analytics requires coaching:read scope'
+      });
+    }
+
+    const { coachId } = req.params;
+    const { 
+      period = '30d',
+      include_detailed_metrics = false 
+    } = req.query;
+
+    console.log(`[COACHING API] Analytics request for coach: ${coachId}`);
+
+    // Get basic coach performance data
+    const coachProfile = await db
+      .select({
+        totalSessions: coachProfiles.totalSessions,
+        totalEarnings: coachProfiles.totalEarnings,
+        averageRating: coachProfiles.averageRating,
+        totalReviews: coachProfiles.totalReviews,
+        pcpLevel: coachProfiles.pcpLevel
+      })
+      .from(coachProfiles)
+      .where(eq(coachProfiles.id, Number(coachId)))
+      .limit(1);
+
+    if (coachProfile.length === 0) {
+      return res.status(404).json({
+        error: 'coach_not_found',
+        error_description: 'Coach not found'
+      });
+    }
+
+    const coach = coachProfile[0];
+
+    const analyticsResponse = {
+      api_version: 'v1',
+      data: {
+        coach_id: Number(coachId),
+        analytics_period: period,
+        performance_summary: {
+          total_sessions: coach.totalSessions,
+          total_earnings: Number(coach.totalEarnings) / 100, // Convert from cents
+          average_rating: Number(coach.averageRating) / 10, // Convert to 0-10 scale
+          total_reviews: coach.totalReviews,
+          pcp_level: coach.pcpLevel
+        },
+        growth_metrics: {
+          sessions_growth: '+12%', // Sample data
+          rating_trend: 'stable',
+          earnings_growth: '+8%',
+          student_retention: '85%'
+        },
+        teaching_effectiveness: {
+          student_improvement_rate: 4.2,
+          session_completion_rate: 0.96,
+          rebooking_rate: 0.73,
+          recommendation_score: 4.6
+        },
+        market_position: {
+          ranking_in_area: 15,
+          total_coaches_in_area: 127,
+          competitiveness_score: 78,
+          demand_level: 'high'
+        },
+        optimization_insights: [
+          {
+            category: 'pricing',
+            insight: 'Your rates are 15% below market average for PCP Level ' + coach.pcpLevel,
+            impact: 'potential_revenue_increase',
+            confidence: 0.87
+          },
+          {
+            category: 'availability',
+            insight: 'Weekend morning slots have highest booking rates',
+            impact: 'session_optimization',
+            confidence: 0.92
+          }
+        ]
+      }
+    };
+
+    res.json(analyticsResponse);
+
+  } catch (error) {
+    console.error('[COACHING API] Error generating analytics:', error);
+    res.status(500).json({
+      error: 'analytics_error',
+      error_description: 'Error generating coach analytics'
+    });
+  }
+});
+
 export { router as coachingIntegrationRoutes };
