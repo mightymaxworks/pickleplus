@@ -10,6 +10,9 @@ import { Router, Request, Response } from 'express';
 import { apiKeyAuth } from '../middleware/api-key-auth';
 import { algorithmProtection } from '../middleware/algorithm-protection';
 import { generatePassportId } from '../../../../shared/utils/passport-utils';
+import { storage } from '../../../storage';
+import { hashPassword } from '../../../auth';
+import { type InsertUser } from '@shared/schema';
 
 const router = Router();
 
@@ -346,48 +349,49 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
       unionid
     } = wechat_user_data;
 
-    // Check if user already exists
-    // TODO: Query database to check if WeChat OpenID already registered
+    // Check if user already exists by email (WeChat generated) 
+    const wechatEmail = user_profile_data?.email || `wechat_${openid}@pickle.app`;
+    const existingUser = await storage.getUserByEmail(wechatEmail);
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'user_already_exists',
+        error_description: 'User with this WeChat account already registered',
+        data: {
+          existing_user_id: existingUser.id,
+          passport_code: existingUser.passportCode
+        }
+      });
+    }
 
-    // Generate unique passport code
-    const passportCode = generatePassportId();
-    console.log(`[WECHAT API] Generated passport code: ${passportCode} for WeChat user: ${openid}`);
+    // REAL DATABASE INTEGRATION - Create user in PostgreSQL database
+    // Generate temporary password for WeChat users (they'll use OAuth for login)
+    const tempPassword = `wechat_${openid}_temp_${Date.now()}`;
+    const hashedPassword = await hashPassword(tempPassword);
 
-    // TODO: Create user in Pickle+ database
-    // This would integrate with your existing user creation system
-
-    // COMPREHENSIVE USER CREATION - Now supports 50+ user fields!
-    const newUserId = `pkl_${Date.now()}`;
-    const createdUser = {
-      id: newUserId,
+    // Prepare comprehensive user data for database insertion
+    const insertUserData: InsertUser = {
+      // ===== REQUIRED FIELDS =====
+      username: `wechat_${openid.substring(0, 8)}`, // Unique username from WeChat OpenID
+      email: wechatEmail,
+      password: hashedPassword, // Temporary - WeChat users will use OAuth
       
       // ===== BASIC PROFILE DATA =====
       firstName: user_profile_data?.firstName || nickname || 'WeChat',
       lastName: user_profile_data?.lastName || 'User',
       displayName: user_profile_data?.displayName || nickname,
-      email: user_profile_data?.email || `wechat_${openid}@pickle.app`,
-      dateOfBirth: user_profile_data?.dateOfBirth, // ISO date string
-      gender: sex === 1 ? 'male' : sex === 2 ? 'female' : 'unknown',
+      dateOfBirth: user_profile_data?.dateOfBirth ? new Date(user_profile_data.dateOfBirth) : undefined,
+      gender: sex === 1 ? 'male' : sex === 2 ? 'female' : undefined,
       bio: user_profile_data?.bio,
       location: `${city || 'Unknown'}, ${province || 'Unknown'}`,
       
-      // ===== WECHAT INTEGRATION =====
-      wechatOpenId: openid,
-      wechatUnionId: unionid,
-      wechatNickname: nickname,
-      profileImageUrl: headimgurl,
-      
-      // ===== GENERATED PASSPORT CODE =====
-      passportCode: passportCode,
-      
       // ===== PICKLEBALL EXPERIENCE =====
-      playingSince: user_profile_data?.playingSince, // "2 years", "6 months", etc.
-      skillLevel: user_profile_data?.skillLevel || 'Beginner', // Beginner/Intermediate/Advanced/Professional
+      playingSince: user_profile_data?.playingSince,
+      skillLevel: user_profile_data?.skillLevel || 'Beginner',
       
       // ===== PHYSICAL ATTRIBUTES =====
-      height: user_profile_data?.height, // in cm
-      reach: user_profile_data?.reach, // in cm
-      dominantHand: user_profile_data?.dominantHand, // 'left', 'right', 'ambidextrous'
+      height: user_profile_data?.height,
+      reach: user_profile_data?.reach,
+      dominantHand: user_profile_data?.dominantHand,
       
       // ===== EQUIPMENT PREFERENCES =====
       paddleBrand: equipment_preferences?.paddleBrand,
@@ -399,11 +403,11 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
       otherEquipment: equipment_preferences?.otherEquipment,
       
       // ===== PLAYING STYLE & PREFERENCES =====
-      playingStyle: playing_preferences?.playingStyle, // 'aggressive', 'defensive', 'balanced'
-      shotStrengths: playing_preferences?.shotStrengths, // 'dinking,serving,volleying'
-      preferredFormat: playing_preferences?.preferredFormat, // 'singles', 'doubles', 'mixed_doubles', 'any'
-      preferredPosition: playing_preferences?.preferredPosition, // 'left', 'right', 'either'
-      regularSchedule: playing_preferences?.regularSchedule, // 'weekday_mornings', 'weekend_afternoons'
+      playingStyle: playing_preferences?.playingStyle,
+      shotStrengths: playing_preferences?.shotStrengths,
+      preferredFormat: playing_preferences?.preferredFormat,
+      preferredPosition: playing_preferences?.preferredPosition,
+      regularSchedule: playing_preferences?.regularSchedule,
       
       // ===== SKILL RATINGS (1-10 scale) =====
       forehandStrength: skill_assessment?.forehandStrength || 5,
@@ -414,36 +418,18 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
       courtCoverage: skill_assessment?.courtCoverage || 5,
       
       // ===== COURT PREFERENCES =====
-      preferredSurface: playing_preferences?.preferredSurface, // 'outdoor', 'indoor', 'both'
-      indoorOutdoorPreference: playing_preferences?.indoorOutdoorPreference, // 'indoor', 'outdoor', 'no_preference'
-      competitiveIntensity: playing_preferences?.competitiveIntensity || 5, // 1-10 scale
+      preferredSurface: playing_preferences?.preferredSurface,
+      indoorOutdoorPreference: playing_preferences?.indoorOutdoorPreference,
+      competitiveIntensity: playing_preferences?.competitiveIntensity || 5,
       
       // ===== SOCIAL & COMMUNITY =====
       lookingForPartners: playing_preferences?.lookingForPartners || false,
       mentorshipInterest: playing_preferences?.mentorshipInterest || false,
-      playerGoals: user_profile_data?.playerGoals, // Free text goals
-      preferredMatchDuration: playing_preferences?.preferredMatchDuration, // '30min', '60min', '90min'
-      
-      // ===== CONTACT & COMMUNICATION =====
-      phoneNumber: contact_preferences?.phoneNumber,
-      emergencyContact: contact_preferences?.emergencyContact,
-      preferredContactMethod: contact_preferences?.preferredContactMethod || 'wechat',
-      
-      // ===== ACCOUNT SETTINGS =====
-      primaryOauthProvider: 'wechat',
-      registrationSource: registration_source || 'wechat_app',
-      preferredLanguage: preferred_language || 'zh-CN',
-      
-      // ===== PRIVACY SETTINGS =====
-      socialDataConsentLevel: privacy_settings?.socialDataConsentLevel || 'basic',
-      dataProcessingConsent: privacy_settings?.dataProcessingConsent !== false, // Default true
-      marketingConsent: privacy_settings?.marketingConsent || false, // Conservative default
-      profileVisibility: privacy_settings?.profileVisibility || 'friends_only',
-      sharePhoneNumber: privacy_settings?.sharePhoneNumber || false,
-      shareLocation: privacy_settings?.shareLocation || false,
+      playerGoals: user_profile_data?.playerGoals,
+      preferredMatchDuration: playing_preferences?.preferredMatchDuration,
       
       // ===== INITIAL RANKING DATA =====
-      singlesRankingPoints: 1000, // Starting points for new users
+      singlesRankingPoints: 1000,
       doublesRankingPoints: 1000,
       mensDoublesRankingPoints: sex === 1 ? 1000 : 0,
       womensDoublesRankingPoints: sex === 2 ? 1000 : 0,
@@ -451,63 +437,103 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
       mixedDoublesWomenRankingPoints: sex === 2 ? 1000 : 0,
       
       // ===== SYSTEM FIELDS =====
-      accountStatus: 'active',
-      coachLevel: 0, // Not a coach initially
-      profileCompletionPct: 65, // Higher completion with extended data
-      createdAt: new Date().toISOString()
+      coachLevel: 0,
+      profileCompletionPct: 65,
+      avatarInitials: `${(user_profile_data?.firstName || nickname || 'W').charAt(0)}${(user_profile_data?.lastName || 'U').charAt(0)}`.toUpperCase()
     };
 
-    const registrationResponse = {
-      api_version: 'v1',
-      data: {
-        registration_status: 'success',
-        user_account: {
-          pickle_user_id: newUserId,
-          passport_code: passportCode, // This is what WeChat app needs!
-          display_name: nickname || 'WeChat User',
-          profile_image_url: headimgurl,
-          initial_ranking: {
-            points: 1000,
-            tier: 'Recreational',
-            position: null // Will be calculated after first match
+    // ===== CREATE USER IN DATABASE =====
+    try {
+      const createdUser = await storage.createUser(insertUserData);
+      console.log(`[WECHAT API] User successfully created in database with ID: ${createdUser.id} and passport: ${createdUser.passportCode}`);
+      
+      // Store additional WeChat-specific data (if needed, could be in separate WeChat integration table)
+      // For now, we'll include WeChat data in the response
+      const wechatMetadata = {
+        wechatOpenId: openid,
+        wechatUnionId: unionid,
+        wechatNickname: nickname,
+        profileImageUrl: headimgurl,
+        registrationSource: registration_source || 'wechat_app',
+        preferredLanguage: preferred_language || 'zh-CN'
+      };
+
+      const registrationResponse = {
+        api_version: 'v1',
+        data: {
+          registration_status: 'success',
+          user_account: {
+            pickle_user_id: createdUser.id, // Real database ID
+            passport_code: createdUser.passportCode, // Real generated passport code
+            username: createdUser.username,
+            display_name: createdUser.displayName,
+            email: createdUser.email,
+            profile_image_url: wechatMetadata.profileImageUrl,
+            initial_ranking: {
+              singles_points: createdUser.singlesRankingPoints,
+              doubles_points: createdUser.doublesRankingPoints,
+              tier: 'Recreational',
+              position: null // Will be calculated after first match
+            },
+            profile_completion: createdUser.profileCompletionPct,
+            account_features: {
+              qr_code_enabled: true,
+              tournament_participation: true,
+              social_features: true,
+              ranking_tracking: true
+            }
           },
-          account_features: {
-            qr_code_enabled: true,
-            tournament_participation: true,
-            social_features: true,
-            ranking_tracking: true
+          wechat_integration: {
+            openid: wechatMetadata.wechatOpenId,
+            unionid: wechatMetadata.wechatUnionId,
+            nickname: wechatMetadata.wechatNickname,
+            linked_at: new Date().toISOString(),
+            sync_preferences: {
+              auto_match_sync: true,
+              ranking_notifications: true,
+              tournament_updates: true,
+              language: wechatMetadata.preferredLanguage
+            }
+          },
+          next_steps: {
+            recommended_actions: [
+              'complete_profile',
+              'join_first_tournament', 
+              'connect_with_local_players',
+              'set_skill_preferences'
+            ],
+            onboarding_flow: 'wechat_new_user'
           }
-        },
-        wechat_integration: {
-          openid: openid,
-          linked_at: new Date().toISOString(),
-          sync_preferences: {
-            auto_match_sync: true,
-            ranking_notifications: true,
-            tournament_updates: true
-          }
-        },
-        next_steps: {
-          recommended_actions: [
-            'complete_profile',
-            'join_first_tournament', 
-            'connect_with_local_players',
-            'set_skill_preferences'
-          ],
-          onboarding_flow: 'wechat_new_user'
         }
+      };
+
+      console.log(`[WECHAT API] User registration completed: ${createdUser.id} with passport code: ${createdUser.passportCode}`);
+
+      res.json(registrationResponse);
+      
+    } catch (error: any) {
+      console.error('[WECHAT API] Database error during user creation:', error);
+      
+      // Handle specific database errors
+      if (error.name === 'UniqueViolation') {
+        return res.status(409).json({
+          error: 'duplicate_user',
+          error_description: `User already exists: ${error.field}`,
+          field: error.field
+        });
       }
-    };
-
-    console.log(`[WECHAT API] User registration completed: ${newUserId} with passport code: ${passportCode}`);
-
-    res.json(registrationResponse);
+      
+      res.status(500).json({
+        error: 'registration_error',
+        error_description: 'Error creating user account in database'
+      });
+    }
 
   } catch (error) {
-    console.error('[WECHAT API] Error in user registration:', error);
+    console.error('[WECHAT API] General error in user registration:', error);
     res.status(500).json({
       error: 'registration_error',
-      error_description: 'Error creating user account'
+      error_description: 'Error processing registration request'
     });
   }
 });
