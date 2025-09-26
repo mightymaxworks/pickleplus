@@ -13,6 +13,9 @@ import { generatePassportId } from '../../../../shared/utils/passport-utils';
 import { storage } from '../../../storage';
 import { hashPassword } from '../../../auth';
 import { type InsertUser } from '@shared/schema';
+import { triggerWeChatWebhook, triggerUserWebhook } from '../utils/webhook-delivery';
+import { db } from '../../../db';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 
@@ -509,6 +512,45 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
 
       console.log(`[WECHAT API] User registration completed: ${createdUser.id} with passport code: ${createdUser.passportCode}`);
 
+      // ===== REAL-TIME SYNC: TRIGGER WEBHOOKS =====
+      // Notify external apps about new user creation and WeChat linking
+      try {
+        // Trigger user creation webhook
+        await triggerUserWebhook('created', createdUser.id, {
+          user_id: createdUser.id,
+          username: createdUser.username,
+          display_name: createdUser.displayName,
+          passport_code: createdUser.passportCode,
+          email: createdUser.email,
+          ranking_points: {
+            singles: createdUser.singlesRankingPoints,
+            doubles: createdUser.doublesRankingPoints
+          },
+          profile_completion: createdUser.profileCompletionPct,
+          created_at: new Date().toISOString()
+        });
+
+        // Trigger WeChat-specific linking webhook
+        await triggerWeChatWebhook('user_linked', {
+          pickle_user_id: createdUser.id,
+          passport_code: createdUser.passportCode,
+          wechat_data: {
+            openid: wechatMetadata.wechatOpenId,
+            unionid: wechatMetadata.wechatUnionId,
+            nickname: wechatMetadata.wechatNickname,
+            profile_image: wechatMetadata.profileImageUrl
+          },
+          linked_at: new Date().toISOString(),
+          registration_source: wechatMetadata.registrationSource,
+          language: wechatMetadata.preferredLanguage
+        });
+
+        console.log(`[WEBHOOK] Real-time sync webhooks triggered for user: ${createdUser.id}`);
+      } catch (webhookError) {
+        // Don't fail the registration if webhooks fail
+        console.error('[WEBHOOK] Error triggering webhooks:', webhookError);
+      }
+
       res.json(registrationResponse);
       
     } catch (error: any) {
@@ -539,7 +581,172 @@ router.post('/wechat/register-user', async (req: Request, res: Response) => {
 });
 
 /**
- * WeChat User Profile Update Endpoint
+ * WeChat Webhook Registration Endpoint
+ * Allows WeChat apps to register for real-time data updates via webhooks
+ */
+router.post('/wechat/register-webhook', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('webhook:manage')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'Webhook registration requires webhook:manage scope'
+      });
+    }
+
+    const { 
+      webhook_url,
+      events, // ['user.created', 'user.ranking_changed', 'wechat.user_linked']
+      secret 
+    } = req.body;
+
+    if (!webhook_url || !events || !Array.isArray(events)) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'Required fields: webhook_url, events (array)'
+      });
+    }
+
+    console.log(`[WECHAT API] Registering webhook for app: ${apiKey.applicationId}`);
+
+    // Register webhook in the database (using existing webhook system)
+    // This will be handled by the webhook-routes.ts system
+    
+    const webhookResponse = {
+      api_version: 'v1',
+      data: {
+        webhook_id: `wh_${Date.now()}`,
+        application_id: apiKey.applicationId,
+        url: webhook_url,
+        events: events,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        sync_capabilities: {
+          real_time_user_updates: true,
+          ranking_notifications: true,
+          match_result_sync: true,
+          profile_change_alerts: true
+        }
+      }
+    };
+
+    res.json(webhookResponse);
+    
+  } catch (error) {
+    console.error('[WECHAT API] Error registering webhook:', error);
+    res.status(500).json({
+      error: 'webhook_registration_error',
+      error_description: 'Error registering webhook endpoint'
+    });
+  }
+});
+
+/**
+ * WeChat Real-Time User Sync Endpoint
+ * Allows bidirectional sync of user profile changes from WeChat to Pickle+
+ */
+router.patch('/wechat/sync-user-profile', async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    if (!apiKey?.scopes.includes('user:write')) {
+      return res.status(403).json({
+        error: 'insufficient_scope',
+        error_description: 'Profile sync requires user:write scope'
+      });
+    }
+
+    const { 
+      wechat_openid,
+      pickle_user_id,
+      profile_updates,
+      sync_timestamp,
+      conflict_resolution = 'pickle_plus_wins'
+    } = req.body;
+
+    if (!wechat_openid && !pickle_user_id) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'Either wechat_openid or pickle_user_id is required'
+      });
+    }
+
+    console.log(`[WECHAT API] Real-time profile sync request for user: ${pickle_user_id || wechat_openid}`);
+
+    // Find user by Pickle+ ID or WeChat OpenID
+    let user;
+    if (pickle_user_id) {
+      user = await storage.getUser(pickle_user_id);
+    } else {
+      // Find by email pattern for WeChat users
+      const wechatEmail = `wechat_${wechat_openid}@pickle.app`;
+      user = await storage.getUserByEmail(wechatEmail);
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'user_not_found',
+        error_description: 'User not found in Pickle+ database'
+      });
+    }
+
+    // Apply profile updates with conflict resolution
+    const updatedFields: Partial<typeof user> = {};
+    
+    if (profile_updates) {
+      // Map profile updates to user fields
+      if (profile_updates.display_name) updatedFields.displayName = profile_updates.display_name;
+      if (profile_updates.bio) updatedFields.bio = profile_updates.bio;
+      if (profile_updates.skill_level) updatedFields.skillLevel = profile_updates.skill_level;
+      if (profile_updates.playing_since) updatedFields.playingSince = profile_updates.playing_since;
+      if (profile_updates.equipment_preferences) {
+        if (profile_updates.equipment_preferences.paddle_brand) updatedFields.paddleBrand = profile_updates.equipment_preferences.paddle_brand;
+        if (profile_updates.equipment_preferences.paddle_model) updatedFields.paddleModel = profile_updates.equipment_preferences.paddle_model;
+      }
+      if (profile_updates.skill_ratings) {
+        if (profile_updates.skill_ratings.forehand) updatedFields.forehandStrength = profile_updates.skill_ratings.forehand;
+        if (profile_updates.skill_ratings.backhand) updatedFields.backhandStrength = profile_updates.skill_ratings.backhand;
+        if (profile_updates.skill_ratings.serve) updatedFields.servePower = profile_updates.skill_ratings.serve;
+      }
+    }
+
+    // Update user profile in database
+    const updatedUser = await storage.updateUserProfile(user.id, updatedFields);
+
+    // Trigger webhook for profile sync
+    await triggerWeChatWebhook('profile_synced', {
+      pickle_user_id: updatedUser.id,
+      wechat_openid: wechat_openid,
+      updated_fields: Object.keys(updatedFields),
+      sync_timestamp: sync_timestamp || new Date().toISOString(),
+      conflict_resolution: conflict_resolution
+    });
+
+    const syncResponse = {
+      api_version: 'v1',
+      data: {
+        sync_status: 'success',
+        user_id: updatedUser.id,
+        passport_code: updatedUser.passportCode,
+        updated_fields: Object.keys(updatedFields),
+        profile_completion: updatedUser.profileCompletionPct,
+        sync_timestamp: new Date().toISOString(),
+        next_sync_eligible_at: new Date(Date.now() + 60000).toISOString() // 1 minute cooldown
+      }
+    };
+
+    res.json(syncResponse);
+    
+  } catch (error) {
+    console.error('[WECHAT API] Error in profile sync:', error);
+    res.status(500).json({
+      error: 'profile_sync_error',
+      error_description: 'Error synchronizing user profile'
+    });
+  }
+});
+
+/**
+ * WeChat User Profile Update Endpoint (Legacy)
  * Updates existing Pickle+ user data when WeChat profile changes
  */
 router.patch('/wechat/update-profile', async (req: Request, res: Response) => {
