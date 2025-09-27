@@ -679,7 +679,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.firstMatch.title': 'Ready to Start Your Pickleball Journey?',
     'dashboard.firstMatch.encouragement': 'Play your first match and record it to start tracking your progress, earning Pickle Points, and climbing the rankings!',
     'dashboard.firstMatch.recordButton': 'Record My First Match',
-    'dashboard.firstMatch.benefits': '🏆 Earn ranking points • 🎯 Track progress • 🌟 Build your player profile',
+    'dashboard.firstMatch.benefits': 'Earn ranking points • Track progress • Build your player profile',
     
     // Tournament & Competition
     'tournament.upcoming': 'Upcoming Tournaments',
@@ -1533,7 +1533,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.firstMatch.title': '准备开始您的匹克球之旅？',
     'dashboard.firstMatch.encouragement': '进行您的第一场比赛并记录下来，开始追踪进度、赚取匹克积分并攀登排名！',
     'dashboard.firstMatch.recordButton': '记录我的第一场比赛',
-    'dashboard.firstMatch.benefits': '🏆 获得排名积分 • 🎯 追踪进度 • 🌟 建立球员档案',
+    'dashboard.firstMatch.benefits': '获得排名积分 • 追踪进度 • 建立球员档案',
 
     
     // Training & Facilities

@@ -88,7 +88,7 @@ export function ComingSoonModal({ isOpen, onClose, feature, description }: Comin
             className="bg-gradient-to-r from-orange-50 to-purple-50 rounded-lg p-4 border border-orange-200"
           >
             <p className="text-gray-700 font-medium">
-              We're cooking up something amazing! 🔥
+              We're cooking up something amazing!
             </p>
             <p className="text-sm text-gray-600 mt-1">
               This feature is in development and will be available soon.

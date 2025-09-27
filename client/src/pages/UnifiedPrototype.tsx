@@ -32,7 +32,8 @@ import {
   Upload,
   RotateCw,
   Save,
-  Sparkles
+  Sparkles,
+  CheckCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -305,7 +306,10 @@ function NotificationsHeader({
           ))}
           
           {notifications.length === 0 && (
-            <div className="text-slate-400 text-sm">All caught up! 🎉</div>
+            <div className="text-slate-400 text-sm flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              All caught up!
+            </div>
           )}
         </div>
       </div>
@@ -342,7 +346,7 @@ function PlayerRankingCard({
           <div className="flex-shrink-0">
             {player.rank <= 3 ? (
               <div className="text-2xl">
-                {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : '🥉'}
+                <Medal className={`h-6 w-6 ${player.rank === 1 ? 'text-yellow-400' : player.rank === 2 ? 'text-slate-400' : 'text-amber-600'}`} />
               </div>
             ) : (
               <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
@@ -841,7 +845,9 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
                 </div>
               )}
             </div>
-            <div className="text-3xl mb-1">🥇</div>
+            <div className="mb-1">
+              <Medal className="h-8 w-8 text-yellow-400 mx-auto" />
+            </div>
             <div className="text-white font-bold">{podiumPlayers[0]?.name.split(' ')[0]}</div>
             <div className="text-slate-400 text-sm">{podiumPlayers[0]?.rankingPoints}</div>
           </div>
