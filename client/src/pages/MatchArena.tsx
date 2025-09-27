@@ -6,15 +6,18 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gamepad2, Play, Users, UserPlus, Trophy, Search, Globe, MapPin,
-  Star, Crown, Shield, Zap, Target, Award, ChevronRight, X, Activity
+  Star, Crown, Shield, Zap, Target, Award, ChevronRight, X, Activity,
+  IdCard, UserCog
 } from 'lucide-react';
 // Navigation will be defined inline to match UnifiedPrototype style
 import DoublesPartnerSystem from '@/components/doubles/DoublesPartnerSystem';
+import { useLocation } from 'wouter';
 
 // Types
 type PlayerStatus = 'online' | 'away' | 'busy' | 'available';
 type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
 type ArenaMode = 'lobby' | 'doubles' | 'challenges' | 'search';
+type GlobalTabMode = 'passport' | 'play' | 'rankings' | 'profile';
 type PlayerTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 
 interface ArenaPlayer {
@@ -52,6 +55,40 @@ interface PartnerRequest {
   status: 'pending' | 'accepted' | 'declined';
 }
 
+
+// Global Navigation Tabs Component (matches UnifiedPrototype)
+function GlobalNavigationTabs({ activeTab, onTabChange }: { activeTab: GlobalTabMode; onTabChange: (tab: GlobalTabMode) => void }) {
+  const tabs = [
+    { id: 'passport' as GlobalTabMode, label: 'Passport', icon: IdCard },
+    { id: 'play' as GlobalTabMode, label: 'Play', icon: Activity },
+    { id: 'rankings' as GlobalTabMode, label: 'Rankings', icon: Trophy },
+    { id: 'profile' as GlobalTabMode, label: 'Profile', icon: UserCog },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 z-50">
+      <div className="flex">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex-1 p-4 flex flex-col items-center gap-1 transition-colors ${
+                activeTab === tab.id 
+                  ? 'text-orange-400 bg-orange-500/10' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // Arena Player Card Component
 interface ArenaPlayerCardProps {
@@ -234,6 +271,7 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
 
 export default function MatchArena() {
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   const [arenaMode, setArenaMode] = useState<ArenaMode>('lobby');
   const [arenaPlayers, setArenaPlayers] = useState<ArenaPlayer[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -442,7 +480,7 @@ export default function MatchArena() {
           {([
             { key: 'lobby', label: 'Lobby', mobileLabel: 'Lobby', icon: Users },
             { key: 'doubles', label: 'Partners', mobileLabel: 'Teams', icon: UserPlus },
-            { key: 'challenges', label: 'Challenges', mobileLabel: 'Fights', icon: Trophy },
+            { key: 'challenges', label: 'Challenges', mobileLabel: 'Matches', icon: Trophy },
             { key: 'search', label: 'Find Players', mobileLabel: 'Search', icon: Search }
           ] as const).map(tab => {
             const Icon = tab.icon;
@@ -516,7 +554,12 @@ export default function MatchArena() {
                   ...partner,
                   status: 'online' as PlayerStatus,
                   matchType: 'doubles-team' as MatchType,
-                  lastSeen: 'now'
+                  lastSeen: 'now',
+                  points: partner.rankingPoints || 0,
+                  wins: Math.floor((partner.winRate || 0) * 10),
+                  losses: Math.floor((1 - (partner.winRate || 0)) * 10),
+                  distance: partner.distance || 0,
+                  isOnline: true
                 };
                 setMyPartner(arenaPartner);
                 toast({
@@ -579,6 +622,21 @@ export default function MatchArena() {
         }}
         onSendChallenge={handleSendChallenge}
         myPartner={myPartner}
+      />
+
+      {/* Global Bottom Navigation */}
+      <GlobalNavigationTabs 
+        activeTab={'play'} 
+        onTabChange={(tab) => {
+          if (tab === 'passport') {
+            setLocation('/unified-prototype');
+          } else if (tab === 'rankings') {
+            setLocation('/rankings');
+          } else if (tab === 'profile') {
+            setLocation('/profile');
+          }
+          // 'play' tab stays on current page
+        }} 
       />
       
     </div>
