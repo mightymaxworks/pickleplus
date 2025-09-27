@@ -471,26 +471,38 @@ export default function MatchArena() {
         )}
       </div>
 
+      {/* Mobile-Optimized Top Navigation */}
       <div className="flex justify-center mb-6">
-        <div className="flex bg-slate-800 rounded-lg p-1">
+        <div className="flex bg-slate-800/50 backdrop-blur-sm rounded-xl p-1 border border-slate-700/50 shadow-2xl max-w-full overflow-x-auto">
           {([
-            { key: 'lobby', label: 'Arena Lobby', icon: Users },
-            { key: 'doubles', label: 'Doubles Partners', icon: UserPlus },
-            { key: 'challenges', label: 'Challenges', icon: Trophy },
-            { key: 'search', label: 'Find Players', icon: Search }
+            { key: 'lobby', label: 'Lobby', mobileLabel: 'Lobby', icon: Users },
+            { key: 'doubles', label: 'Partners', mobileLabel: 'Teams', icon: UserPlus },
+            { key: 'challenges', label: 'Challenges', mobileLabel: 'Fights', icon: Trophy },
+            { key: 'search', label: 'Find Players', mobileLabel: 'Search', icon: Search }
           ] as const).map(tab => {
             const Icon = tab.icon;
+            const isActive = arenaMode === tab.key;
             return (
               <Button
                 key={tab.key}
                 onClick={() => setArenaMode(tab.key)}
-                variant={arenaMode === tab.key ? 'default' : 'ghost'}
-                className="flex items-center gap-2"
+                variant="ghost"
+                className={`
+                  relative flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 
+                  min-w-[4rem] sm:min-w-fit transition-all duration-200 
+                  ${
+                    isActive 
+                      ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 shadow-lg shadow-orange-500/20' 
+                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50 border border-transparent'
+                  }
+                  rounded-lg backdrop-blur-sm
+                `}
               >
-                <Icon className="h-4 w-4" />
-                {tab.label}
+                <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${isActive ? 'text-orange-400' : ''}`} />
+                <span className="hidden sm:inline text-sm font-medium">{tab.label}</span>
+                <span className="sm:hidden text-xs font-medium">{tab.mobileLabel}</span>
                 {tab.key === 'challenges' && challenges.length > 0 && (
-                  <Badge className="bg-orange-500 text-white ml-1">
+                  <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 absolute -top-1 -right-1 sm:relative sm:top-0 sm:right-0 sm:ml-1">
                     {challenges.length}
                   </Badge>
                 )}
