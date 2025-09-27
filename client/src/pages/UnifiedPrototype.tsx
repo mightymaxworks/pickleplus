@@ -57,6 +57,7 @@ import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 // Passport Code Utilities
 function formatPassportCode(code: string): string {
@@ -1664,14 +1665,60 @@ function PlayModeContent() {
   );
 }
 
-// Rankings Mode Content
+// Rankings Mode Content - Enhanced with real data integration
 function RankingsModeContent({ player }: { player: PlayerData }) {
   const [selectedCategory, setSelectedCategory] = useState('singles');
   const [selectedView, setSelectedView] = useState('local');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Fetch real rankings data from API
+  const { data: leaderboardData, isLoading: isLoadingLeaderboard, error: leaderboardError } = useQuery({
+    queryKey: ['/api/enhanced-leaderboard', selectedCategory, selectedView],
+    enabled: true
+  });
+  
+  // Fetch user's position in rankings
+  const { data: userPosition, isLoading: isLoadingPosition } = useQuery({
+    queryKey: ['/api/multi-rankings/position', selectedCategory],
+    enabled: true
+  });
+  
+  // Transform API data to match component interface
+  const transformLeaderboardData = (apiData: any[]): RankedPlayer[] => {
+    if (!apiData || !Array.isArray(apiData)) return [];
+    
+    return apiData.map((entry, index) => ({
+      id: entry.id || entry.user_id || `player-${index}`,
+      name: entry.name || entry.username || `Player ${index + 1}`,
+      tier: mapScoreToTier(entry.ranking_points || entry.points || 0),
+      rankingPoints: entry.ranking_points || entry.points || 0,
+      rank: entry.rank || index + 1,
+      location: entry.location || 'Unknown',
+      recentChange: entry.recent_change || entry.point_change || 0,
+      winRate: entry.win_rate || (entry.wins && entry.matches ? entry.wins / entry.matches : 0.5),
+      matchesPlayed: entry.matches_played || entry.matches || 0,
+      avatar: entry.avatar || undefined
+    }));
+  };
+  
+  // Map ranking points to tier
+  const mapScoreToTier = (points: number): PlayerTier => {
+    if (points >= 1800) return 'professional';
+    if (points >= 1000) return 'elite';
+    if (points >= 300) return 'competitive';
+    return 'recreational';
+  };
+  
+  // Use real data if available, fallback to mock data
+  const allRankings = isLoadingLeaderboard 
+    ? mockRankings.slice(0, 5) // Show partial mock data while loading
+    : transformLeaderboardData(leaderboardData?.leaderboard || leaderboardData?.players || leaderboardData || []);
+  
+  // If real data is empty and not loading, fallback to mock data for demo
+  const rankings = allRankings.length > 0 ? allRankings : mockRankings;
+  
   // Filter rankings based on search
-  const filteredRankings = mockRankings.filter(rankedPlayer => 
+  const filteredRankings = rankings.filter(rankedPlayer => 
     rankedPlayer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     rankedPlayer.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -1683,6 +1730,28 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
 
   return (
     <div className="space-y-6">
+      {/* Data Source Indicator & Loading State */}
+      {isLoadingLeaderboard && (
+        <Card className="p-4 bg-slate-800 border-slate-700">
+          <div className="flex items-center gap-3 text-slate-300">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-400"></div>
+            <span>Loading live rankings data...</span>
+          </div>
+        </Card>
+      )}
+      
+      {/* Data Source Badge */}
+      <div className="flex items-center justify-between mb-4">
+        <Badge className={`${!isLoadingLeaderboard && allRankings.length > 0 ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'} border-none`}>
+          {!isLoadingLeaderboard && allRankings.length > 0 ? '🔄 Live Rankings Data' : '🎮 Demo Rankings Data'}
+        </Badge>
+        {leaderboardError && (
+          <Badge className="bg-yellow-500/20 text-yellow-300 border-none">
+            ⚠️ Using Demo Data
+          </Badge>
+        )}
+      </div>
+
       {/* Search Bar */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
