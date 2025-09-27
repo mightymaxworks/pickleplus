@@ -283,6 +283,11 @@ export default function App() {
                   <Route path="/modern-design" component={lazyLoad(() => import('./pages/ModernDesignTestPage'))} />
                   <Route path="/design-components" component={lazyLoad(() => import('./pages/DesignComponentShowcase'))} />
                   
+                  {/* Passport-Centric UX Test Pages */}
+                  <Route path="/passport-dashboard-test" component={lazyLoad(() => import('./pages/PassportDashboardTest'))} />
+                  <Route path="/card-rankings-test" component={lazyLoad(() => import('./pages/CardRankingsTest'))} />
+                  <Route path="/simplified-nav-test" component={lazyLoad(() => import('./pages/SimplifiedNavTest'))} />
+                  
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
