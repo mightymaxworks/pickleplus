@@ -357,7 +357,7 @@ export default function MatchArena() {
   const myPlayerId = 'current-player';
 
   // Mock arena players (nearby/online)
-  const [arenaPlayers] = useState<ArenaPlayer[]>([
+  const [arenaPlayers, setArenaPlayers] = useState<ArenaPlayer[]>([
     {
       id: '1',
       name: 'Sarah Martinez',
@@ -613,10 +613,21 @@ export default function MatchArena() {
             <Button
               onClick={() => {
                 const partnerName = myPartner.name;
+                const partnerId = myPartner.id;
+                
+                // Restore partner to available players when partnership is dissolved
+                const restoredPlayer: ArenaPlayer = {
+                  ...myPartner,
+                  matchType: 'doubles-looking' as MatchType,
+                  partner: undefined
+                };
+                
+                setArenaPlayers(prev => [...prev, restoredPlayer]);
                 setMyPartner(null);
+                
                 toast({
                   title: "🔄 Partnership Dissolved",
-                  description: `You're no longer partnered with ${partnerName}. You can form new partnerships anytime.`,
+                  description: `You're no longer partnered with ${partnerName}. They're back in the player pool.`,
                   duration: 3000,
                 });
               }}
@@ -770,13 +781,32 @@ export default function MatchArena() {
                   onChallenge={handleChallenge}
                   onViewProfile={() => {}}
                   onPartnerUp={(player) => {
-                    // Go directly to doubles partner system for partnership
+                    // Directly partner with the selected player
                     toast({
-                      title: "🤝 Finding Partners!",
-                      description: `Connecting you with ${player.name} for doubles partnership...`,
+                      title: "🤝 Partnership Request Sent!",
+                      description: `Sending partnership request to ${player.name}...`,
                       duration: 2000,
                     });
-                    setTimeout(() => setArenaMode('doubles'), 1000);
+                    
+                    // Simulate partnership acceptance after 2 seconds
+                    setTimeout(() => {
+                      const partnerData: ArenaPlayer = {
+                        ...player,
+                        matchType: 'doubles-team' as MatchType,
+                        partner: { name: 'You', id: myPlayerId }
+                      };
+                      
+                      setMyPartner(partnerData);
+                      
+                      // Remove partnered player from available players
+                      setArenaPlayers(prev => prev.filter(p => p.id !== player.id));
+                      
+                      toast({
+                        title: "🎉 Partnership Formed!",
+                        description: `You and ${player.name} are now a doubles team! Ready to challenge other teams?`,
+                        duration: 4000,
+                      });
+                    }, 2000);
                   }}
                   myPlayerId={myPlayerId}
                 />
