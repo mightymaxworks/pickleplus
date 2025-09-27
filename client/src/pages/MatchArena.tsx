@@ -608,10 +608,42 @@ export default function MatchArena() {
                       <p className="text-slate-200 text-sm mb-3">{challenge.message}</p>
                     )}
                     <div className="flex gap-2">
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                      <Button 
+                        size="sm" 
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => {
+                          // Accept the challenge and navigate to gamified match recorder
+                          toast({
+                            title: '🎾 Challenge Accepted!',
+                            description: `Match vs ${challenge.opponent} confirmed. Starting match recorder...`,
+                            duration: 2000,
+                          });
+                          
+                          // Remove challenge from list
+                          setChallenges(prev => prev.filter(c => c.id !== challenge.id));
+                          
+                          // Navigate to gamified match recorder
+                          setLocation('/gamified-match-recording');
+                        }}
+                      >
                         Accept
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="border-slate-500 text-slate-300 hover:bg-slate-700 hover:text-white"
+                        onClick={() => {
+                          // Decline the challenge
+                          toast({
+                            title: '❌ Challenge Declined',
+                            description: `You declined ${challenge.opponent}'s challenge.`,
+                            duration: 2000,
+                          });
+                          
+                          // Remove challenge from list
+                          setChallenges(prev => prev.filter(c => c.id !== challenge.id));
+                        }}
+                      >
                         Decline
                       </Button>
                     </div>
