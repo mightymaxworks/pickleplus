@@ -280,6 +280,7 @@ export default function App() {
                   
                   {/* Design Test Pages - PlayByPoint Inspired Design Showcase */}
                   <Route path="/design-test" component={lazyLoad(() => import('./pages/DesignTestPage'))} />
+                  <Route path="/modern-design" component={lazyLoad(() => import('./pages/ModernDesignTestPage'))} />
                   <Route path="/design-components" component={lazyLoad(() => import('./pages/DesignComponentShowcase'))} />
                   
                   {/* API Testing Interface for Developers */}
