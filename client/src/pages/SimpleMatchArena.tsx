@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, 
   Zap, 
@@ -63,12 +63,89 @@ interface ArenaPlayer {
   preferredFormat?: 'singles' | 'doubles' | 'both';
 }
 
+// Navigation Tabs Component for Arena Lobby
+type TabMode = 'passport' | 'play' | 'rankings' | 'profile';
+
+function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
+  const tabs = [
+    { id: 'passport' as TabMode, label: 'Passport', icon: IdCard, path: '/unified-prototype' },
+    { id: 'play' as TabMode, label: 'Arena', icon: Activity, path: '/match-arena' },
+    { id: 'rankings' as TabMode, label: 'Rankings', icon: Trophy, path: '/unified-prototype' },
+    { id: 'profile' as TabMode, label: 'Profile', icon: User, path: '/unified-prototype' }
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 px-4 py-2 z-50">
+      <div className="flex justify-around max-w-md mx-auto">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <motion.button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                isActive ? 'text-orange-400' : 'text-slate-400'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Icon className={`h-5 w-5 ${isActive ? 'text-orange-400' : 'text-slate-400'}`} />
+              <span className={`text-xs font-medium ${isActive ? 'text-orange-400' : 'text-slate-400'}`}>
+                {tab.label}
+              </span>
+              {isActive && (
+                <motion.div
+                  className="w-1 h-1 bg-orange-400 rounded-full"
+                  layoutId="activeTab"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Floating reaction animations
+interface ReactionFloatProps {
+  icon: React.ComponentType<{ className?: string }>;
+  text: string;
+  color?: string;
+  show: boolean;
+  onComplete?: () => void;
+}
+
+function ReactionFloat({ icon: IconComponent, text, color = 'text-green-400', show, onComplete }: ReactionFloatProps) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 1, y: 0, scale: 0.8 }}
+          animate={{ opacity: 1, y: -40, scale: 1 }}
+          exit={{ opacity: 0, y: -60, scale: 1.2 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          onAnimationComplete={onComplete}
+          className="absolute z-10 flex items-center gap-2 bg-slate-800/90 border border-orange-500/30 rounded-lg px-3 py-1 pointer-events-none"
+        >
+          <IconComponent className={`h-4 w-4 ${color}`} />
+          <span className={`text-sm font-medium ${color}`}>{text}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 const SimpleMatchArena: React.FC = () => {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [arenaMode, setArenaMode] = useState<'lobby' | 'doubles' | 'challenges' | 'search'>('lobby');
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<TabMode>('play');
+  const [showChallengeFeedback, setShowChallengeFeedback] = useState<string | null>(null);
 
   // Mock players data
   const [arenaPlayers] = useState<ArenaPlayer[]>([
@@ -127,11 +204,15 @@ const SimpleMatchArena: React.FC = () => {
   const availableCount = arenaPlayers.filter(p => p.status === 'available' || p.status === 'online').length;
 
   const handleChallenge = (player: ArenaPlayer) => {
+    setShowChallengeFeedback(player.id);
     toast({
-      title: "🎮 Challenge Sent!",
+      title: "⚔️ Challenge Sent!",
       description: `You've challenged ${player.name} to a match. Waiting for their response...`,
       duration: 3000,
     });
+    
+    // Hide feedback after animation
+    setTimeout(() => setShowChallengeFeedback(null), 2000);
   };
 
   const handleNavigateToRecording = () => {
@@ -144,7 +225,7 @@ const SimpleMatchArena: React.FC = () => {
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Gamepad2 className="h-8 w-8 text-orange-400" />
-          <h1 className="text-3xl font-bold text-white">Match Arena</h1>
+          <h1 className="text-3xl font-bold text-white">Arena Lobby</h1>
         </div>
         <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
           <div className="flex items-center gap-1">
@@ -190,7 +271,7 @@ const SimpleMatchArena: React.FC = () => {
           className="bg-orange-500 hover:bg-orange-600"
         >
           <Play className="h-4 w-4 mr-2" />
-          Record Match
+          Arena
         </Button>
         <Button variant="outline">
           <Search className="h-4 w-4 mr-2" />
@@ -221,9 +302,21 @@ const SimpleMatchArena: React.FC = () => {
       {/* Content Area */}
       <div className="max-w-4xl mx-auto">
         {arenaMode === 'lobby' && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPlayers.map((player) => (
-              <Card key={player.id} className="bg-slate-800 border-slate-700 p-4">
+          <motion.div 
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {filteredPlayers.map((player, index) => (
+              <motion.div
+                key={player.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+                className="relative"
+              >
+                <Card className="bg-slate-800 border-slate-700 p-4 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -262,22 +355,47 @@ const SimpleMatchArena: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={() => handleChallenge(player)}
-                    disabled={player.status === 'in-match'}
+                  <motion.div 
                     className="flex-1"
-                    size="sm"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Swords className="h-4 w-4 mr-1" />
-                    Challenge
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                    <Button 
+                      onClick={() => handleChallenge(player)}
+                      disabled={player.status === 'in-match'}
+                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0"
+                      size="sm"
+                    >
+                      <Swords className="h-4 w-4 mr-1" />
+                      Challenge
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="border-slate-600 hover:border-orange-500/50"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
                 </div>
+
+                {/* Challenge Reaction Feedback */}
+                <ReactionFloat
+                  icon={Swords}
+                  text="Challenge Sent!"
+                  color="text-orange-400"
+                  show={showChallengeFeedback === player.id}
+                  onComplete={() => setShowChallengeFeedback(null)}
+                />
               </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
 
         {arenaMode === 'doubles' && (
@@ -312,6 +430,12 @@ const SimpleMatchArena: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      <NavigationTabs 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
     </div>
   );
 };
