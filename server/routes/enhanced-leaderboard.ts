@@ -14,17 +14,13 @@ router.get('/test', (req, res) => {
   });
 });
 
-// Test endpoint to simulate production filtering
+// Test endpoint to simulate production filtering - SAFE VERSION
 router.get('/test-production', async (req, res) => {
   try {
-    // Temporarily set NODE_ENV to production for this test
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    // Use query flag instead of mutating global environment
+    const testProductionMode = true;
     
-    const fullLeaderboardData = await getRealLeaderboardData('singles', 'open', 'male', '', req.user?.id, req);
-    
-    // Restore original environment
-    process.env.NODE_ENV = originalEnv;
+    const fullLeaderboardData = await getRealLeaderboardData('singles', 'open', 'male', '', req.user?.id, { ...req, testProductionMode });
     
     res.json({
       message: 'Production filtering test',
@@ -291,7 +287,7 @@ interface LeaderboardEntry {
   displayName: string;
   username: string;
   avatar?: string;
-  points: number; // UDF: 2 decimal precision with gender multipliers
+  points: number; // UDF: 2 decimal precision, stored values only
   matchesPlayed: number; // Frontend expects 'matchesPlayed'
   winRate: number; // UDF: 2 decimal precision
   gender: 'male' | 'female';
@@ -406,10 +402,12 @@ async function getRealLeaderboardData(
   gender: string, 
   searchTerm?: string,
   currentUserId?: number,
-  req?: any
+  req?: any,
+  view: string = 'global'
 ): Promise<LeaderboardEntry[]> {
   try {
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Support safe production testing mode
+    const isProduction = req?.testProductionMode || process.env.NODE_ENV === 'production';
     console.log(`[LEADERBOARD] Fetching real data for ${format} - ${division} - ${gender} (Production: ${isProduction})`);
     
     // FORMAT MAPPING: Handle both old generic formats and new specific formats
@@ -435,54 +433,42 @@ async function getRealLeaderboardData(
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25; // Default age if not provided
         
-        // UDF ALGORITHM: Use format-specific ranking points with gender-based multipliers
-        // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field with UDF compliance
-        let basePoints = 0; // Track base points before multipliers for UDF calculations
+        // UDF COMPLIANT: Use format-specific ranking points WITHOUT display-time multipliers
+        // NOTE: Gender multipliers should be applied during match recording, NOT during display
+        // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field
         let formatPoints = 0;
         
         if (format === 'singles') {
-          basePoints = user.singlesRankingPoints || user.rankingPoints || 0;
-          // Apply UDF gender multiplier for women under 1000 points in cross-gender singles
-          formatPoints = (user.gender === 'female' && basePoints < 1000) ? basePoints * 1.15 : basePoints;
+          formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'doubles') {
-          // UDF MIXED DOUBLES: Show actual mixed doubles performance with gender multipliers
+          // MIXED DOUBLES: Show actual mixed doubles performance (stored values)
           if (gender === 'mixed') {
             // Show performance from actual mixed doubles matches
             if (user.gender === 'male') {
-              basePoints = user.mixedDoublesMenRankingPoints || 0;
+              formatPoints = user.mixedDoublesMenRankingPoints || 0;
             } else if (user.gender === 'female') {
-              basePoints = user.mixedDoublesWomenRankingPoints || 0;
+              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
             }
-            // Apply UDF gender multiplier for mixed teams under 1000 points
-            formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
           } else {
             // Regular doubles
-            basePoints = user.doublesRankingPoints || user.rankingPoints || 0;
-            formatPoints = basePoints;
+            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
           }
         } else if (format === 'mens-doubles') {
-          basePoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
-          formatPoints = basePoints;
+          formatPoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'womens-doubles') {
-          basePoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
-          // Apply UDF gender multiplier for women under 1000 points
-          formatPoints = (user.gender === 'female' && basePoints < 1000) ? basePoints * 1.15 : basePoints;
+          formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
         } else if (format === 'mixed-doubles-men') {
-          // UDF Mixed doubles performance tracking with gender multipliers
-          basePoints = user.mixedDoublesMenRankingPoints || 0;
-          formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
+          // Mixed doubles performance tracking - display stored values
+          formatPoints = user.mixedDoublesMenRankingPoints || 0;
         } else if (format === 'mixed-doubles-women') {
-          // UDF Mixed doubles performance tracking with gender multipliers
-          basePoints = user.mixedDoublesWomenRankingPoints || 0;
-          formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
+          // Mixed doubles performance tracking - display stored values
+          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
         } else if (format === 'mixed') {
-          // UDF Legacy mixed format with gender-specific performance and multipliers
+          // Legacy mixed format - use gender-specific mixed doubles performance
           if (user.gender === 'male') {
-            basePoints = user.mixedDoublesMenRankingPoints || 0;
-            formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
+            formatPoints = user.mixedDoublesMenRankingPoints || 0;
           } else if (user.gender === 'female') {
-            basePoints = user.mixedDoublesWomenRankingPoints || 0;
-            formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
+            formatPoints = user.mixedDoublesWomenRankingPoints || 0;
           }
         }
         
@@ -508,7 +494,7 @@ async function getRealLeaderboardData(
           displayName: enhancedDisplayName,
           username: user.username,
           avatar: user.avatarUrl || undefined,
-          points: Number(formatPoints.toFixed(2)), // UDF: 2 decimal precision
+          points: Number(formatPoints.toFixed(2)), // UDF: 2 decimal precision, no display-time multipliers
           matchesPlayed: totalMatches, // Frontend expects 'matchesPlayed'
           winRate: Math.round(winRate * 100) / 100, // UDF: 2 decimal precision for win rate
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
