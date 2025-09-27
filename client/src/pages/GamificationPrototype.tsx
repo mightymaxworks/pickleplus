@@ -104,9 +104,12 @@ export default function GamificationPrototype() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-orange-400 to-purple-600 bg-clip-text text-transparent">
-            🎮 Pickle+ Gamification Prototype
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Gamepad2 className="h-10 w-10 text-orange-400" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-purple-600 bg-clip-text text-transparent">
+              Pickle+ Gamification Prototype
+            </h1>
+          </div>
           <p className="text-slate-400 text-lg">
             Experience how every player interaction becomes a game
           </p>
@@ -184,7 +187,10 @@ function ImmediateFeedbackDemo({ points, showPointsAnimation, triggerPointsGain 
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">⚡ Immediate Feedback Loops</h2>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Zap className="h-6 w-6 text-yellow-400" />
+          <h2 className="text-2xl font-bold">Immediate Feedback Loops</h2>
+        </div>
         <p className="text-slate-400">Every action triggers instant, satisfying responses</p>
       </div>
 
@@ -297,7 +303,10 @@ function SocialCompetitionDemo({ players, challengeTarget, setChallengeTarget }:
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">⚔️ Social Competition Mechanics</h2>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Sword className="h-6 w-6 text-red-400" />
+          <h2 className="text-2xl font-bold">Social Competition Mechanics</h2>
+        </div>
         <p className="text-slate-400">Turn every interaction into friendly competition</p>
       </div>
 
@@ -430,7 +439,10 @@ function DiscoveryCollectionDemo({ players }: { players: MockPlayer[] }) {
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">✨ Discovery & Collection</h2>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Sparkles className="h-6 w-6 text-purple-400" />
+          <h2 className="text-2xl font-bold">Discovery & Collection</h2>
+        </div>
         <p className="text-slate-400">Make finding opponents feel like collecting rare items</p>
       </div>
 
@@ -517,9 +529,17 @@ function DiscoveryCollectionDemo({ players }: { players: MockPlayer[] }) {
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {['Downtown', 'Westside', 'Northshore', 'Suburbs'].map((area, i) => (
-            <div key={area} className="text-center">
-              <div className={`w-16 h-16 rounded-lg mx-auto mb-2 flex items-center justify-center ${
-                i <= 1 ? 'bg-green-500/20 border-2 border-green-500' : 'bg-slate-700 border-2 border-slate-600'
+            <motion.div 
+              key={area} 
+              className="text-center cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                // Add conquest animation here
+              }}
+            >
+              <div className={`w-16 h-16 rounded-lg mx-auto mb-2 flex items-center justify-center transition-all ${
+                i <= 1 ? 'bg-green-500/20 border-2 border-green-500' : 'bg-slate-700 border-2 border-slate-600 hover:border-slate-500'
               }`}>
                 {i <= 1 ? (
                   <CheckCircle className="h-8 w-8 text-green-400" />
@@ -531,7 +551,7 @@ function DiscoveryCollectionDemo({ players }: { players: MockPlayer[] }) {
               <div className="text-xs text-slate-400">
                 {i <= 1 ? 'Conquered' : 'Locked'}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </Card>
@@ -550,7 +570,10 @@ function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">❤️ Real-Time Social Recognition</h2>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Heart className="h-6 w-6 text-pink-400" />
+          <h2 className="text-2xl font-bold">Real-Time Social Recognition</h2>
+        </div>
         <p className="text-slate-400">Instant gratification for social interactions</p>
       </div>
 
@@ -566,9 +589,9 @@ function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
             <motion.div
               animate={{ scale: applauseCount > 0 ? [1, 1.2, 1] : 1 }}
               transition={{ duration: 0.5 }}
-              className="text-6xl"
+              className="flex items-center justify-center w-24 h-24 rounded-full bg-pink-500/20 border-2 border-pink-500"
             >
-              👏
+              <HandHeart className="h-12 w-12 text-pink-400" />
             </motion.div>
             
             <div className="text-2xl font-bold text-pink-400">
@@ -609,20 +632,30 @@ function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
           </h3>
           
           <div className="space-y-3">
-            {['🔥 Amazing shot!', '💪 What a comeback!', '⚡ Lightning fast!'].map((reaction, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.5 }}
-                className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 border border-slate-600"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-purple-600 flex items-center justify-center text-xs font-bold">
-                  {['AC', 'MS', 'JK'][i]}
-                </div>
-                <div className="text-sm">{reaction}</div>
-              </motion.div>
-            ))}
+            {[
+              { icon: Flame, message: 'Amazing shot!', color: 'text-orange-400' },
+              { icon: Shield, message: 'What a comeback!', color: 'text-blue-400' },
+              { icon: Zap, message: 'Lightning fast!', color: 'text-yellow-400' }
+            ].map((reaction, i) => {
+              const IconComponent = reaction.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.5 }}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 border border-slate-600"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-purple-600 flex items-center justify-center text-xs font-bold">
+                    {['AC', 'MS', 'JK'][i]}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <IconComponent className={`h-4 w-4 ${reaction.color}`} />
+                    <div className="text-sm">{reaction.message}</div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="mt-4 text-center">
@@ -683,7 +716,10 @@ function ProgressionStoryDemo({ showCelebration, triggerBreakthrough }: any) {
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">👑 Progression Storytelling</h2>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Crown className="h-6 w-6 text-yellow-400" />
+          <h2 className="text-2xl font-bold">Progression Storytelling</h2>
+        </div>
         <p className="text-slate-400">Make advancement feel like an epic journey</p>
       </div>
 
@@ -733,7 +769,9 @@ function ProgressionStoryDemo({ showCelebration, triggerBreakthrough }: any) {
           <div className="text-center space-y-4">
             {!showCelebration ? (
               <>
-                <div className="text-4xl mb-4">🎯</div>
+                <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-600/20 border-2 border-yellow-500 mx-auto mb-4">
+                  <Target className="h-10 w-10 text-yellow-400" />
+                </div>
                 <div className="text-lg font-semibold">Ready for Glory?</div>
                 <div className="text-sm text-slate-400 mb-4">
                   Trigger a major ranking breakthrough and experience the celebration
