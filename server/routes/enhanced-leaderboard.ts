@@ -291,14 +291,19 @@ interface LeaderboardEntry {
   displayName: string;
   username: string;
   avatar?: string;
-  points: number; // Frontend expects 'points'
+  points: number; // UDF: 2 decimal precision with gender multipliers
   matchesPlayed: number; // Frontend expects 'matchesPlayed'
-  winRate: number;
+  winRate: number; // UDF: 2 decimal precision
   gender: 'male' | 'female';
   age: number;
   division: string; // Frontend expects 'division'
   ranking: number;
   isCurrentUser?: boolean;
+  location?: { // UDF: Location data for geographic filtering
+    city: string;
+    state: string;
+    country: string;
+  };
 }
 
 interface LeaderboardResponse {
@@ -430,40 +435,54 @@ async function getRealLeaderboardData(
           Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
           25; // Default age if not provided
         
-        // Use format-specific ranking points with fallback to legacy fields
-        // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field
+        // UDF ALGORITHM: Use format-specific ranking points with gender-based multipliers
+        // FORMAT-SPECIFIC SYSTEM: Each format uses its own ranking field with UDF compliance
+        let basePoints = 0; // Track base points before multipliers for UDF calculations
         let formatPoints = 0;
+        
         if (format === 'singles') {
-          formatPoints = user.singlesRankingPoints || user.rankingPoints || 0;
+          basePoints = user.singlesRankingPoints || user.rankingPoints || 0;
+          // Apply UDF gender multiplier for women under 1000 points in cross-gender singles
+          formatPoints = (user.gender === 'female' && basePoints < 1000) ? basePoints * 1.15 : basePoints;
         } else if (format === 'doubles') {
-          // MIXED DOUBLES PERFORMANCE: For mixed doubles display, show actual mixed doubles performance
+          // UDF MIXED DOUBLES: Show actual mixed doubles performance with gender multipliers
           if (gender === 'mixed') {
             // Show performance from actual mixed doubles matches
             if (user.gender === 'male') {
-              formatPoints = user.mixedDoublesMenRankingPoints || 0;
+              basePoints = user.mixedDoublesMenRankingPoints || 0;
             } else if (user.gender === 'female') {
-              formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+              basePoints = user.mixedDoublesWomenRankingPoints || 0;
             }
+            // Apply UDF gender multiplier for mixed teams under 1000 points
+            formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
           } else {
             // Regular doubles
-            formatPoints = user.doublesRankingPoints || user.rankingPoints || 0;
+            basePoints = user.doublesRankingPoints || user.rankingPoints || 0;
+            formatPoints = basePoints;
           }
         } else if (format === 'mens-doubles') {
-          formatPoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          basePoints = user.mensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          formatPoints = basePoints;
         } else if (format === 'womens-doubles') {
-          formatPoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          basePoints = user.womensDoublesRankingPoints || user.doublesRankingPoints || user.rankingPoints || 0;
+          // Apply UDF gender multiplier for women under 1000 points
+          formatPoints = (user.gender === 'female' && basePoints < 1000) ? basePoints * 1.15 : basePoints;
         } else if (format === 'mixed-doubles-men') {
-          // Mixed doubles performance tracking - show actual mixed doubles performance
-          formatPoints = user.mixedDoublesMenRankingPoints || 0;
+          // UDF Mixed doubles performance tracking with gender multipliers
+          basePoints = user.mixedDoublesMenRankingPoints || 0;
+          formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
         } else if (format === 'mixed-doubles-women') {
-          // Mixed doubles performance tracking - show actual mixed doubles performance  
-          formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+          // UDF Mixed doubles performance tracking with gender multipliers
+          basePoints = user.mixedDoublesWomenRankingPoints || 0;
+          formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
         } else if (format === 'mixed') {
-          // Legacy mixed format - use gender-specific mixed doubles performance
+          // UDF Legacy mixed format with gender-specific performance and multipliers
           if (user.gender === 'male') {
-            formatPoints = user.mixedDoublesMenRankingPoints || 0;
+            basePoints = user.mixedDoublesMenRankingPoints || 0;
+            formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
           } else if (user.gender === 'female') {
-            formatPoints = user.mixedDoublesWomenRankingPoints || 0;
+            basePoints = user.mixedDoublesWomenRankingPoints || 0;
+            formatPoints = basePoints < 1000 ? basePoints * 1.075 : basePoints;
           }
         }
         
@@ -489,20 +508,27 @@ async function getRealLeaderboardData(
           displayName: enhancedDisplayName,
           username: user.username,
           avatar: user.avatarUrl || undefined,
-          points: Number(formatPoints.toFixed(2)), // Frontend expects 'points'
+          points: Number(formatPoints.toFixed(2)), // UDF: 2 decimal precision
           matchesPlayed: totalMatches, // Frontend expects 'matchesPlayed'
-          winRate: Math.round(winRate * 100) / 100, // Frontend expects 'winRate' (2 decimal precision)
+          winRate: Math.round(winRate * 100) / 100, // UDF: 2 decimal precision for win rate
           gender: (user.gender?.toLowerCase() as 'male' | 'female') || 'male',
           age: age,
           division: getPrimaryDivisionFromAge(age), // Frontend expects 'division'
           ranking: index + 1,
-          isCurrentUser: currentUserId === user.id
+          isCurrentUser: currentUserId === user.id,
+          // UDF: Add location data for geographic filtering
+          location: {
+            city: user.city || '',
+            state: user.state || user.province || '',
+            country: user.country || 'Unknown'
+          }
         };
       }));
 
     let processedPlayers = usersWithStats
       .filter(player => player.points > 0) // Only show players with points in this format
       .filter(player => isProductionDataFilter(player)) // Apply production data filtering
+      .filter(player => applyGeographicFilter(player, view, req.user)) // UDF: Apply geographic filtering
       .filter(player => {
         // Filter by gender - support mixed doubles
         if (gender !== 'all' && gender !== 'male' && gender !== 'female' && gender !== 'mixed') return false;
@@ -554,13 +580,44 @@ async function getRealLeaderboardData(
       console.log(`[LEADERBOARD] Production mode: Excluded ${excludedCount} test/development users`);
     }
     
-    console.log(`[LEADERBOARD] Found ${processedPlayers.length} players with ranking points`);
+    console.log(`[LEADERBOARD] UDF-Compliant: Found ${processedPlayers.length} players with ranking points for view: ${view}`);
     return processedPlayers;
     
   } catch (error) {
     console.error('[LEADERBOARD] Error fetching real data:', error);
     return [];
   }
+}
+
+// UDF Geographic filtering function
+function applyGeographicFilter(player: any, view: string, currentUser?: any): boolean {
+  if (view === 'global') {
+    return true; // Global view shows all players
+  }
+  
+  if (!currentUser || !player.location) {
+    return view === 'global'; // Fallback to global if no location data
+  }
+  
+  const userLocation = {
+    city: currentUser.city || '',
+    state: currentUser.state || currentUser.province || '',
+    country: currentUser.country || 'Unknown'
+  };
+  
+  if (view === 'local') {
+    // Local: Same city and state/province
+    return player.location.city === userLocation.city && 
+           player.location.state === userLocation.state;
+  }
+  
+  if (view === 'regional') {
+    // Regional: Same state/province or country
+    return player.location.state === userLocation.state || 
+           player.location.country === userLocation.country;
+  }
+  
+  return true; // Default to showing all players
 }
 
 // Enhanced leaderboard endpoint with age group, gender separation, search, and pagination (legacy format param route)
