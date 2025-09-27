@@ -176,6 +176,97 @@ const currentPlayer: RankedPlayer = {
   matchesPlayed: 89,
 };
 
+function PlayerRankingRow({ 
+  player, 
+  isCurrentPlayer = false 
+}: { 
+  player: RankedPlayer; 
+  isCurrentPlayer?: boolean;
+}) {
+  const config = tierConfig[player.tier];
+  const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className={`flex items-center justify-between p-3 rounded-lg border transition-colors hover:bg-slate-700/50 ${
+        isCurrentPlayer 
+          ? 'bg-orange-500/20 border-orange-400/30' 
+          : 'bg-slate-800 border-slate-700'
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        {/* Rank */}
+        <div className="w-12 text-center">
+          {player.rank <= 3 ? (
+            <span className="text-xl">
+              {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : '🥉'}
+            </span>
+          ) : (
+            <span className={`font-bold text-lg ${isCurrentPlayer ? 'text-orange-300' : 'text-white'}`}>
+              #{player.rank}
+            </span>
+          )}
+        </div>
+
+        {/* Avatar */}
+        <div className="w-10 h-10">
+          {player.avatar ? (
+            <img 
+              src={player.avatar} 
+              alt={player.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-medium text-sm">{initials}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Player Info */}
+        <div className="flex-1">
+          <div className={`font-medium ${isCurrentPlayer ? 'text-orange-200' : 'text-white'}`}>
+            {isCurrentPlayer ? `${player.name} (You)` : player.name}
+          </div>
+          <div className="text-slate-400 text-sm flex items-center">
+            <MapPin className="h-3 w-3 mr-1" />
+            {player.location}
+          </div>
+        </div>
+
+        {/* Points */}
+        <div className="text-right">
+          <div className="text-white font-semibold">{player.rankingPoints.toLocaleString()}</div>
+          <div className="text-slate-400 text-sm">points</div>
+        </div>
+
+        {/* Win Rate */}
+        <div className="text-right w-16">
+          <div className="text-white font-medium">{(player.winRate * 100).toFixed(0)}%</div>
+          <div className="text-slate-400 text-xs">wins</div>
+        </div>
+
+        {/* Recent Change */}
+        <div className="w-16 text-right">
+          <Badge 
+            className={`text-xs ${
+              player.recentChange > 0 
+                ? 'bg-green-500/20 text-green-300 border-green-400/30' 
+                : player.recentChange < 0
+                ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+            }`}
+          >
+            {player.recentChange > 0 ? '+' : ''}{player.recentChange}
+          </Badge>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function PlayerRankingCard({ 
   player, 
   isCurrentPlayer = false,
@@ -344,7 +435,11 @@ function RankingFilters({
             size="sm"
             variant={view === viewOption ? 'default' : 'outline'}
             onClick={() => onViewChange(viewOption)}
-            className="capitalize flex-1"
+            className={`capitalize flex-1 ${
+              view === viewOption 
+                ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                : 'text-white border-slate-600 hover:bg-slate-700'
+            }`}
           >
             {viewOption === 'local' && <MapPin className="h-3 w-3 mr-1" />}
             {viewOption === 'tier' && <Star className="h-3 w-3 mr-1" />}
@@ -362,7 +457,11 @@ function RankingFilters({
             size="sm"
             variant={category === cat ? 'default' : 'outline'}
             onClick={() => onCategoryChange(cat)}
-            className="capitalize flex-1"
+            className={`capitalize flex-1 ${
+              category === cat 
+                ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                : 'text-white border-slate-600 hover:bg-slate-700'
+            }`}
           >
             {cat}
           </Button>
@@ -440,12 +539,13 @@ export default function CardRankingsTest() {
     return true; // global view shows all
   });
 
-  // Split into podium (top 3) and paginated rest
+  // Split into podium (top 3), card players (4-8), and row players (9+)
   const podiumPlayers = filteredRankings.slice(0, 3);
-  const allListPlayers = filteredRankings.slice(3);
-  const totalPages = Math.ceil(allListPlayers.length / playersPerPage);
+  const cardPlayers = filteredRankings.slice(3, 8);
+  const allRowPlayers = filteredRankings.slice(8);
+  const totalPages = Math.ceil(allRowPlayers.length / playersPerPage);
   const startIndex = (currentPage - 1) * playersPerPage;
-  const listPlayers = allListPlayers.slice(startIndex, startIndex + playersPerPage);
+  const rowPlayers = allRowPlayers.slice(startIndex, startIndex + playersPerPage);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-6">
@@ -553,24 +653,17 @@ export default function CardRankingsTest() {
               </div>
             )}
 
-            {/* Rest of Rankings */}
-            {allListPlayers.length > 0 && (
+            {/* Card Rankings (4-8) */}
+            {cardPlayers.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-semibold flex items-center">
-                    <Medal className="h-4 w-4 mr-2" />
-                    {view === 'global' ? 'Global Rankings' : 
-                     view === 'local' ? 'Local Rankings (Vancouver)' : 
-                     `${tierConfig[currentPlayer.tier].name} Tier Rankings`}
-                  </h3>
-                  <div className="text-slate-400 text-sm">
-                    Showing {startIndex + 1}-{Math.min(startIndex + playersPerPage, allListPlayers.length)} of {allListPlayers.length}
-                  </div>
-                </div>
+                <h3 className="text-white font-semibold mb-4 flex items-center">
+                  <Medal className="h-4 w-4 mr-2" />
+                  Leading Contenders
+                </h3>
                 
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
                   <AnimatePresence mode="popLayout">
-                    {listPlayers.map((player) => (
+                    {cardPlayers.map((player) => (
                       <motion.div
                         key={player.id}
                         onClick={() => toggleCardExpansion(player.id)}
@@ -580,6 +673,33 @@ export default function CardRankingsTest() {
                           showDetails={expandedCards.has(player.id)}
                         />
                       </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
+            {/* Row Rankings (9+) */}
+            {allRowPlayers.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-semibold flex items-center">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Full Rankings
+                  </h3>
+                  <div className="text-slate-400 text-sm">
+                    Showing {startIndex + 9}-{Math.min(startIndex + playersPerPage + 8, filteredRankings.length)} of {filteredRankings.length}
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-6">
+                  <AnimatePresence mode="popLayout">
+                    {rowPlayers.map((player) => (
+                      <PlayerRankingRow
+                        key={player.id}
+                        player={player}
+                        isCurrentPlayer={player.id === currentPlayer.id}
+                      />
                     ))}
                   </AnimatePresence>
                 </div>
