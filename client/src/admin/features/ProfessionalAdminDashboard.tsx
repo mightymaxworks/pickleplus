@@ -56,27 +56,43 @@ export default function ProfessionalAdminDashboard() {
       setLoading(true);
       setError(null);
       
+      console.log('[ADMIN DASHBOARD] Making fetch request to /api/admin/v1/dashboard');
+      
       const response = await fetch('/api/admin/v1/dashboard', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
       
+      console.log('[ADMIN DASHBOARD] Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.log('[ADMIN DASHBOARD] Error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
       
       const result = await response.json();
+      console.log('[ADMIN DASHBOARD] Data received:', result);
       setData(result);
       setLastRefresh(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
-      console.error('Dashboard fetch error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+      setError(errorMessage);
+      console.error('[ADMIN DASHBOARD] Fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    // Add a small delay to ensure authentication is established
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   if (loading && !data) {
