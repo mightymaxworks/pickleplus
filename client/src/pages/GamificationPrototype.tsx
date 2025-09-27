@@ -257,6 +257,11 @@ export default function GamificationPrototype() {
               points={points}
               showPointsAnimation={showPointsAnimation}
               triggerPointsGain={triggerPointsGain}
+              shimmerPoints={shimmerPoints}
+              showChallengeReaction={showChallengeReaction}
+              triggerChallenge={triggerChallenge}
+              showScoutingReaction={showScoutingReaction}
+              triggerScouting={triggerScouting}
             />
           )}
           {activeDemo === 'social-competition' && (
@@ -267,7 +272,11 @@ export default function GamificationPrototype() {
             />
           )}
           {activeDemo === 'discovery-collection' && (
-            <DiscoveryCollectionDemo players={mockPlayers} />
+            <DiscoveryCollectionDemo 
+              players={mockPlayers} 
+              showBadgeReaction={showBadgeReaction}
+              triggerBadgeUnlock={triggerBadgeUnlock}
+            />
           )}
           {activeDemo === 'social-recognition' && (
             <SocialRecognitionDemo 
@@ -288,7 +297,16 @@ export default function GamificationPrototype() {
 }
 
 // Immediate Feedback Demo Component
-function ImmediateFeedbackDemo({ points, showPointsAnimation, triggerPointsGain }: any) {
+function ImmediateFeedbackDemo({ 
+  points, 
+  showPointsAnimation, 
+  triggerPointsGain, 
+  shimmerPoints,
+  showChallengeReaction,
+  triggerChallenge,
+  showScoutingReaction,
+  triggerScouting
+}: any) {
   return (
     <motion.div
       key="immediate-feedback"
@@ -556,7 +574,7 @@ function SocialCompetitionDemo({ players, challengeTarget, setChallengeTarget }:
 }
 
 // Discovery & Collection Demo Component
-function DiscoveryCollectionDemo({ players }: { players: MockPlayer[] }) {
+function DiscoveryCollectionDemo({ players, showBadgeReaction, triggerBadgeUnlock }: { players: MockPlayer[]; showBadgeReaction: boolean; triggerBadgeUnlock: () => void }) {
   return (
     <motion.div
       key="discovery-collection"
