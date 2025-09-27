@@ -7,7 +7,6 @@ import {
   UserCog, 
   Gamepad2,
   Users,
-  QrCode,
   Gift,
   Star,
   MapPin,
@@ -42,7 +41,9 @@ import {
   Send,
   Filter,
   Search,
-  Copy
+  Copy,
+  QrCode,
+  EyeOff
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,17 @@ import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+
+// Passport Code Utilities
+function formatPassportCode(code: string): string {
+  // Format as AAAA-1234 (4-4 segments)
+  return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4, 8)}` : code;
+}
+
+function maskPassportCode(code: string, revealed: boolean): string {
+  if (revealed) return formatPassportCode(code);
+  return code.length === 8 ? `••••-${code.slice(4, 8)}` : '••••-••••';
+}
 
 // Micro-Feedback Components
 function ReactionFloat({ icon: Icon, text, color, show, onComplete }: {
@@ -226,7 +238,7 @@ const mockPlayer: PlayerData = {
   picklePoints: 89,
   globalRank: 847,
   localRank: 23,
-  passportCode: 'ALEX1234',
+  passportCode: 'HVGN0BW0',
   recentChange: +34,
   winRate: 0.73,
   nextMilestone: {
