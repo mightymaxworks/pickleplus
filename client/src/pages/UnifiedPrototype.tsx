@@ -33,7 +33,15 @@ import {
   RotateCw,
   Save,
   Sparkles,
-  CheckCircle
+  CheckCircle,
+  Swords,
+  Eye,
+  UserPlus,
+  User,
+  Timer,
+  Send,
+  Filter,
+  Search
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +53,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
+import { useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
 
 // Micro-Feedback Components
 function ReactionFloat({ icon: Icon, text, color, show, onComplete }: {
@@ -167,6 +177,37 @@ interface RankedPlayer {
 }
 
 type TabMode = 'passport' | 'play' | 'rankings' | 'profile';
+
+// Arena-related types
+type PlayerStatus = 'online' | 'in-match' | 'available' | 'away' | 'offline';
+type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
+
+interface ArenaPlayer {
+  id: string;
+  name: string;
+  tier: 'recreational' | 'competitive' | 'elite' | 'professional';
+  rankingPoints: number;
+  status: PlayerStatus;
+  location: string;
+  distance: number; // km away
+  avatar?: string;
+  matchType: MatchType;
+  partner?: { name: string; id: string }; // For doubles teams
+  winRate: number;
+  isOnline: boolean;
+  lastSeen: string;
+  preferredFormat?: 'singles' | 'doubles' | 'both';
+}
+
+interface ChallengeRequest {
+  id: string;
+  fromPlayer: ArenaPlayer;
+  toPlayer: ArenaPlayer;
+  matchType: MatchType;
+  message: string;
+  timestamp: Date;
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+}
 
 const tierConfig = {
   recreational: { name: 'Recreational', color: 'from-slate-500 to-slate-600', icon: Shield },
@@ -695,87 +736,700 @@ function PassportModeContent({
   );
 }
 
-// Play Mode Content
-function PlayModeContent() {
+// Gaming-Style Player Card Component
+function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPlayerId }: {
+  player: ArenaPlayer;
+  onChallenge: (player: ArenaPlayer, matchType: MatchType) => void;
+  onViewProfile: (player: ArenaPlayer) => void;
+  onPartnerUp: (player: ArenaPlayer) => void;
+  myPlayerId: string;
+}) {
+  const config = tierConfig[player.tier];
+  const statusConfig = {
+    online: { color: 'bg-green-500', text: 'Online', pulse: true },
+    available: { color: 'bg-green-400', text: 'Available', pulse: true },
+    'in-match': { color: 'bg-red-500', text: 'In Match', pulse: false },
+    away: { color: 'bg-yellow-500', text: 'Away', pulse: false },
+    offline: { color: 'bg-gray-500', text: 'Offline', pulse: false },
+  };
+
+  const status = statusConfig[player.status];
+  const TierIcon = config.icon;
+  const isChallengeable = player.status === 'online' || player.status === 'available';
+
   return (
-    <div className="space-y-6">
-      {/* Quick Match */}
-      <Card className="p-6 bg-gradient-to-r from-green-600 to-green-700 border-green-500 text-white">
-        <div className="text-center">
-          <Gamepad2 className="h-12 w-12 mx-auto mb-4" />
-          <h3 className="text-xl font-bold mb-2">Quick Match</h3>
-          <p className="text-green-100 mb-4">Find players near you right now</p>
-          <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-            <Users className="h-4 w-4 mr-2" />
-            Find Game Now
-          </Button>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      className="relative"
+    >
+      <Card className={`p-4 border border-slate-600 bg-gradient-to-br ${config.color} hover:border-orange-400 transition-all`}>
+        {/* Status Indicator */}
+        <div className="absolute -top-2 -right-2">
+          <div className={`w-4 h-4 rounded-full ${status.color} ${status.pulse ? 'animate-pulse' : ''}`} />
+        </div>
+
+        <div className="text-white">
+          {/* Player Header */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/30">
+                <TierIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="font-bold text-lg">{player.name}</div>
+                <div className="text-xs opacity-75">{config.name}</div>
+                <div className="flex items-center gap-1 text-xs">
+                  <MapPin className="h-3 w-3" />
+                  {player.distance < 1 ? `${Math.round(player.distance * 1000)}m` : `${player.distance}km`}
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <div className="text-lg font-bold">{player.rankingPoints.toLocaleString()}</div>
+              <div className="text-xs opacity-75">Ranking Points</div>
+            </div>
+          </div>
+
+          {/* Match Type & Partner Info */}
+          <div className="mb-3">
+            {player.matchType === 'doubles-team' && player.partner ? (
+              <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
+                <Users className="h-4 w-4" />
+                <span className="text-sm">Team with {player.partner.name}</span>
+              </div>
+            ) : player.matchType === 'doubles-looking' ? (
+              <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
+                <UserPlus className="h-4 w-4" />
+                <span className="text-sm">Looking for doubles partner</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
+                <User className="h-4 w-4" />
+                <span className="text-sm">Singles player</span>
+              </div>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+            <div className="text-center p-2 bg-black/20 rounded">
+              <div className="font-bold">{Math.round(player.winRate * 100)}%</div>
+              <div className="opacity-75">Win Rate</div>
+            </div>
+            <div className="text-center p-2 bg-black/20 rounded">
+              <div className="font-bold">{status.text}</div>
+              <div className="opacity-75">Status</div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => onViewProfile(player)}
+              variant="outline"
+              size="sm"
+              className="flex-1 text-white border-white/30 hover:bg-white/10"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              View
+            </Button>
+            
+            {isChallengeable && player.id !== myPlayerId ? (
+              player.matchType === 'doubles-looking' ? (
+                <Button
+                  onClick={() => onPartnerUp(player)}
+                  size="sm"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Partner Up
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => onChallenge(player, player.matchType)}
+                  size="sm"
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  <Swords className="h-4 w-4 mr-1" />
+                  Challenge
+                </Button>
+              )
+            ) : (
+              <Button
+                disabled
+                size="sm"
+                className="flex-1 opacity-50"
+              >
+                <Timer className="h-4 w-4 mr-1" />
+                {player.status === 'in-match' ? 'In Match' : 'Unavailable'}
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
+    </motion.div>
+  );
+}
 
-      {/* Match Types */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 bg-slate-800 border-slate-700 hover:bg-slate-700/50 transition-colors cursor-pointer">
-          <div className="text-center">
-            <Trophy className="h-8 w-8 text-orange-400 mx-auto mb-2" />
-            <h4 className="text-white font-medium">Tournament</h4>
-            <p className="text-slate-400 text-sm">Competitive play</p>
-          </div>
-        </Card>
-        <Card className="p-4 bg-slate-800 border-slate-700 hover:bg-slate-700/50 transition-colors cursor-pointer">
-          <div className="text-center">
-            <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-            <h4 className="text-white font-medium">Casual</h4>
-            <p className="text-slate-400 text-sm">Fun games</p>
-          </div>
-        </Card>
-      </div>
+// Enhanced Challenge Modal with smart doubles detection and match preview
+function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }: {
+  player: ArenaPlayer | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSendChallenge: (matchType: MatchType, message: string) => void;
+  myPartner: ArenaPlayer | null;
+}) {
+  const [selectedType, setSelectedType] = useState<MatchType>('singles');
+  const [message, setMessage] = useState('');
 
-      {/* Nearby Players */}
-      <Card className="p-4 bg-slate-800 border-slate-700">
-        <h3 className="text-white font-semibold mb-3 flex items-center">
-          <MapPin className="h-4 w-4 mr-2 text-orange-400" />
-          Nearby Players
-        </h3>
-        <div className="space-y-3">
-          {mockRankings.slice(0, 3).map((player) => {
-            const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
-            return (
-              <div key={player.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded hover:bg-slate-700 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10">
-                    {player.avatar ? (
-                      <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className={`w-10 h-10 bg-gradient-to-r ${tierConfig[player.tier].color} rounded-full flex items-center justify-center`}>
-                        {React.createElement(tierConfig[player.tier].icon, { className: "h-5 w-5 text-white" })}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">{player.name}</div>
-                    <div className="text-slate-400 text-sm">{player.location}</div>
-                  </div>
+  // Smart type detection based on target player and user's partner status
+  const getAvailableMatchTypes = () => {
+    const types = [{ type: 'singles' as MatchType, label: 'Singles Match', icon: User }];
+    
+    if (player?.matchType === 'doubles-team' && myPartner) {
+      // User has partner, challenging doubles team = Team vs Team
+      types.push({ type: 'doubles-team' as MatchType, label: `Team Match (You + ${myPartner.name} vs ${player.name} + ${player.partner?.name})`, icon: Users });
+    } else if (player?.matchType === 'doubles-team' && !myPartner) {
+      // User has no partner, need to find one first
+      types.push({ type: 'doubles-looking' as MatchType, label: 'Find Partner First, Then Challenge Team', icon: UserPlus });
+    } else if (player?.matchType === 'doubles-looking') {
+      // Target is looking for partner
+      types.push({ type: 'doubles-looking' as MatchType, label: 'Partner Up & Play Together', icon: UserPlus });
+    }
+    
+    return types;
+  };
+
+  if (!player) return null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-md w-full"
+          >
+            <Card className="p-6 bg-slate-800 border-slate-700">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Swords className="h-6 w-6 text-orange-400" />
+                  <h2 className="text-xl font-bold text-white">Challenge {player.name}</h2>
                 </div>
-                <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-                  Invite
+                <p className="text-slate-400">Send a match challenge</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Smart Match Type Selection */}
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Match Type</label>
+                  <div className="space-y-2">
+                    {getAvailableMatchTypes().map(({ type, label, icon: Icon }) => (
+                      <Button
+                        key={type}
+                        onClick={() => setSelectedType(type)}
+                        variant={selectedType === type ? 'default' : 'outline'}
+                        className="w-full justify-start text-left"
+                      >
+                        <Icon className="h-4 w-4 mr-2 shrink-0" />
+                        <span className="truncate">{label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {/* Context-aware helper text */}
+                  {player?.matchType === 'doubles-team' && !myPartner && (
+                    <p className="text-xs text-orange-400 mt-2">
+                      💡 You need a doubles partner to challenge this team
+                    </p>
+                  )}
+                  {player?.matchType === 'doubles-team' && myPartner && (
+                    <p className="text-xs text-green-400 mt-2">
+                      🎾 Perfect! Team vs Team match ready
+                    </p>
+                  )}
+                </div>
+
+                {/* Match Preview */}
+                {selectedType === 'doubles-team' && myPartner && player?.partner && (
+                  <div className="p-4 bg-slate-900/50 border border-orange-500/30 rounded-lg">
+                    <div className="text-center mb-3">
+                      <h3 className="text-white font-medium flex items-center justify-center gap-2">
+                        <Trophy className="h-4 w-4 text-orange-400" />
+                        Match Preview
+                      </h3>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      {/* Team 1 */}
+                      <div className="text-center">
+                        <div className="bg-blue-500/20 rounded-lg p-3 mb-2">
+                          <Users className="h-6 w-6 text-blue-400 mx-auto" />
+                        </div>
+                        <div className="text-white font-medium text-sm">Your Team</div>
+                        <div className="text-blue-400 text-xs">You & {myPartner.name}</div>
+                      </div>
+                      
+                      {/* VS */}
+                      <div className="text-orange-400 font-bold text-lg">VS</div>
+                      
+                      {/* Team 2 */}
+                      <div className="text-center">
+                        <div className="bg-red-500/20 rounded-lg p-3 mb-2">
+                          <Users className="h-6 w-6 text-red-400 mx-auto" />
+                        </div>
+                        <div className="text-white font-medium text-sm">Their Team</div>
+                        <div className="text-red-400 text-xs">{player.name} & {player.partner.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedType === 'singles' && (
+                  <div className="p-4 bg-slate-900/50 border border-purple-500/30 rounded-lg">
+                    <div className="text-center mb-3">
+                      <h3 className="text-white font-medium flex items-center justify-center gap-2">
+                        <User className="h-4 w-4 text-purple-400" />
+                        Singles Match Preview
+                      </h3>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="text-center">
+                        <div className="bg-blue-500/20 rounded-lg p-3 mb-2">
+                          <User className="h-6 w-6 text-blue-400 mx-auto" />
+                        </div>
+                        <div className="text-blue-400 text-sm">You</div>
+                      </div>
+                      
+                      <div className="text-purple-400 font-bold text-lg">VS</div>
+                      
+                      <div className="text-center">
+                        <div className="bg-red-500/20 rounded-lg p-3 mb-2">
+                          <User className="h-6 w-6 text-red-400 mx-auto" />
+                        </div>
+                        <div className="text-red-400 text-sm">{player.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Message */}
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Challenge Message</label>
+                  <Input
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Ready for a match?"
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  onClick={onClose}
+                  variant="outline"
+                  className="flex-1 text-white border-slate-600"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => onSendChallenge(selectedType, message)}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Challenge
                 </Button>
               </div>
-            );
-          })}
-        </div>
-      </Card>
+            </Card>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
-      {/* QR Scanner */}
-      <Card className="p-4 bg-slate-800 border-slate-700">
-        <div className="text-center">
-          <QrCode className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-          <h3 className="text-white font-semibold mb-2">Scan to Join</h3>
-          <p className="text-slate-400 text-sm mb-4">Scan another player's QR code to connect</p>
-          <Button variant="outline" className="text-white border-slate-600 hover:bg-slate-700">
-            Open Scanner
-          </Button>
+// Play Mode Content with Full Arena Integration
+function PlayModeContent() {
+  const [location, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [arenaMode, setArenaMode] = useState<'lobby' | 'challenges' | 'doubles'>('lobby');
+  const [selectedPlayer, setSelectedPlayer] = useState<ArenaPlayer | null>(null);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [challenges, setChallenges] = useState<ChallengeRequest[]>([]);
+  const [myPartner, setMyPartner] = useState<ArenaPlayer | null>(null); // Track if user already has a partner
+  const [filterTier, setFilterTier] = useState<string>('all');
+  const [filterMatchType, setFilterMatchType] = useState<string>('all');
+
+  // Mock current player
+  const myPlayerId = 'current-player';
+
+  // Mock arena players (nearby/online)
+  const [arenaPlayers, setArenaPlayers] = useState<ArenaPlayer[]>([
+    {
+      id: '1',
+      name: 'Sarah Martinez',
+      tier: 'elite',
+      rankingPoints: 1456,
+      status: 'online',
+      location: 'Downtown Sports Complex',
+      distance: 0.8,
+      matchType: 'singles',
+      winRate: 0.82,
+      isOnline: true,
+      lastSeen: 'now',
+      preferredFormat: 'singles'
+    },
+    {
+      id: '2',
+      name: 'Mike Johnson',
+      tier: 'competitive',
+      rankingPoints: 892,
+      status: 'available',
+      location: 'Riverside Community Center',
+      distance: 1.2,
+      matchType: 'doubles-team',
+      partner: { name: 'Lisa Chen', id: 'lisa_chen' },
+      winRate: 0.67,
+      isOnline: true,
+      lastSeen: '2 min ago',
+      preferredFormat: 'doubles'
+    },
+    {
+      id: '3',
+      name: 'Emma Davis',
+      tier: 'recreational',
+      rankingPoints: 234,
+      status: 'online',
+      location: 'Westside Courts',
+      distance: 0.5,
+      matchType: 'doubles-looking',
+      winRate: 0.45,
+      isOnline: true,
+      lastSeen: 'now',
+      preferredFormat: 'doubles'
+    },
+    {
+      id: '4',
+      name: 'James Wilson',
+      tier: 'professional',
+      rankingPoints: 2134,
+      status: 'in-match',
+      location: 'Elite Training Center',
+      distance: 2.1,
+      matchType: 'singles',
+      winRate: 0.91,
+      isOnline: true,
+      lastSeen: '1 hour ago',
+      preferredFormat: 'both'
+    },
+    {
+      id: '5',
+      name: 'Anna Schmidt',
+      tier: 'elite',
+      rankingPoints: 1323,
+      status: 'available',
+      location: 'North Park Courts',
+      distance: 0.3,
+      matchType: 'doubles-team',
+      partner: { name: 'David Kim', id: 'david_kim' },
+      winRate: 0.78,
+      isOnline: true,
+      lastSeen: 'now',
+      preferredFormat: 'doubles'
+    }
+  ]);
+
+  const handleChallenge = (player: ArenaPlayer, matchType: MatchType) => {
+    setSelectedPlayer(player);
+    setShowChallengeModal(true);
+  };
+
+  const handleSendChallenge = (matchType: MatchType, message: string) => {
+    if (!selectedPlayer) return;
+
+    // Handle different challenge scenarios with match preview
+    if (matchType === 'doubles-team' && myPartner) {
+      // Team vs Team - go directly to match recording with context
+      const matchData = {
+        team1: {
+          player1: { name: 'You', id: myPlayerId },
+          player2: { name: myPartner.name, id: myPartner.id }
+        },
+        team2: {
+          player1: { name: selectedPlayer.name, id: selectedPlayer.id },
+          player2: { name: selectedPlayer.partner?.name || 'Partner', id: selectedPlayer.partner?.id || 'partner' }
+        },
+        matchType: 'doubles',
+        challengeMessage: message
+      };
+      
+      // Store match context for the recording page
+      sessionStorage.setItem('pendingMatch', JSON.stringify(matchData));
+      sessionStorage.setItem('realPlayerNames', JSON.stringify({
+        team1Player1: 'You',
+        team1Player2: myPartner.name,
+        team2Player1: selectedPlayer.name,
+        team2Player2: selectedPlayer.partner?.name || 'Partner'
+      }));
+      
+      toast({
+        title: "🎮 Team Challenge Ready!",
+        description: `Starting team match: You & ${myPartner.name} vs ${selectedPlayer.name} & ${selectedPlayer.partner?.name}`,
+        duration: 3000,
+      });
+      
+      setTimeout(() => {
+        setLocation('/gamified-match-recording');
+      }, 1500);
+      
+    } else {
+      // Regular challenge
+      const newChallenge: ChallengeRequest = {
+        id: Date.now().toString(),
+        fromPlayer: {
+          id: myPlayerId,
+          name: 'You',
+          tier: 'elite',
+          rankingPoints: 1247,
+          status: 'online',
+          location: 'Current',
+          distance: 0,
+          matchType: matchType,
+          winRate: 0.73,
+          isOnline: true,
+          lastSeen: 'now'
+        },
+        toPlayer: selectedPlayer,
+        matchType,
+        message: message || 'Ready for a match?',
+        timestamp: new Date(),
+        status: 'pending'
+      };
+
+      setChallenges(prev => [...prev, newChallenge]);
+      
+      const feedback = {
+        'singles': `Singles challenge sent to ${selectedPlayer.name}`,
+        'doubles-looking': `Partnership request sent to ${selectedPlayer.name}`,
+        'doubles-team': `Team challenge sent to ${selectedPlayer.name}'s team`
+      };
+      
+      toast({
+        title: "🎯 Challenge Sent!",
+        description: feedback[matchType] || `Challenge sent to ${selectedPlayer.name}`,
+        duration: 3000,
+      });
+
+      setTimeout(() => setArenaMode('challenges'), 500);
+    }
+    
+    setShowChallengeModal(false);
+    setSelectedPlayer(null);
+  };
+
+  // Filter players based on criteria
+  const filteredPlayers = arenaPlayers.filter(player => {
+    const tierMatch = filterTier === 'all' || player.tier === filterTier;
+    const matchTypeMatch = filterMatchType === 'all' || player.matchType === filterMatchType;
+    return tierMatch && matchTypeMatch;
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Arena Mode Tabs */}
+      <div className="flex gap-2 p-1 bg-slate-800 rounded-lg">
+        <Button
+          onClick={() => setArenaMode('lobby')}
+          variant={arenaMode === 'lobby' ? 'default' : 'ghost'}
+          className="flex-1"
+        >
+          <Gamepad2 className="h-4 w-4 mr-2" />
+          Lobby
+        </Button>
+        <Button
+          onClick={() => setArenaMode('challenges')}
+          variant={arenaMode === 'challenges' ? 'default' : 'ghost'}
+          className="flex-1 relative"
+        >
+          <Swords className="h-4 w-4 mr-2" />
+          Challenges
+          {challenges.length > 0 && (
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-orange-500">
+              {challenges.length}
+            </Badge>
+          )}
+        </Button>
+        <Button
+          onClick={() => setArenaMode('doubles')}
+          variant={arenaMode === 'doubles' ? 'default' : 'ghost'}
+          className="flex-1"
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Doubles
+        </Button>
+      </div>
+
+      {/* Arena Content */}
+      {arenaMode === 'lobby' && (
+        <div className="space-y-4">
+          {/* Filters */}
+          <Card className="p-4 bg-slate-800 border-slate-700">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-slate-400" />
+                <span className="text-white text-sm">Filter:</span>
+              </div>
+              <Select value={filterTier} onValueChange={setFilterTier}>
+                <SelectTrigger className="w-[120px] bg-slate-700 border-slate-600">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tiers</SelectItem>
+                  <SelectItem value="recreational">Recreational</SelectItem>
+                  <SelectItem value="competitive">Competitive</SelectItem>
+                  <SelectItem value="elite">Elite</SelectItem>
+                  <SelectItem value="professional">Professional</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterMatchType} onValueChange={setFilterMatchType}>
+                <SelectTrigger className="w-[140px] bg-slate-700 border-slate-600">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="singles">Singles</SelectItem>
+                  <SelectItem value="doubles-looking">Looking for Partner</SelectItem>
+                  <SelectItem value="doubles-team">Doubles Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </Card>
+
+          {/* Players Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredPlayers.map(player => (
+              <ArenaPlayerCard
+                key={player.id}
+                player={player}
+                onChallenge={handleChallenge}
+                onViewProfile={() => {}}
+                onPartnerUp={(player) => {
+                  toast({
+                    title: "🤝 Partnership Request Sent!",
+                    description: `Sending partnership request to ${player.name}...`,
+                    duration: 2000,
+                  });
+                }}
+                myPlayerId={myPlayerId}
+              />
+            ))}
+          </div>
         </div>
-      </Card>
+      )}
+
+      {arenaMode === 'challenges' && (
+        <Card className="p-6 bg-slate-800 border-slate-700">
+          <h3 className="text-white font-semibold mb-4 flex items-center">
+            <Swords className="h-5 w-5 mr-2 text-orange-400" />
+            Active Challenges
+          </h3>
+          {challenges.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-400">No active challenges</p>
+              <p className="text-slate-500 text-sm">Challenge players from the lobby to get started!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {challenges.map(challenge => (
+                <div key={challenge.id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <div className="text-white font-medium">
+                      {challenge.matchType === 'singles' ? 'Singles' : 'Doubles'} Challenge to {challenge.toPlayer.name}
+                    </div>
+                    <div className="text-slate-400 text-sm">{challenge.message}</div>
+                  </div>
+                  <Badge variant="outline" className="text-orange-400 border-orange-400">
+                    {challenge.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {arenaMode === 'doubles' && (
+        <Card className="p-6 bg-slate-800 border-slate-700">
+          <h3 className="text-white font-semibold mb-4 flex items-center">
+            <Users className="h-5 w-5 mr-2 text-blue-400" />
+            Doubles Partners
+          </h3>
+          {myPartner ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <Users className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Current Partner</div>
+                    <div className="text-blue-400">{myPartner.name}</div>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setMyPartner(null)}
+                  variant="outline"
+                  size="sm"
+                  className="text-white border-slate-600"
+                >
+                  Leave Team
+                </Button>
+              </div>
+              <Button
+                onClick={() => setArenaMode('lobby')}
+                className="w-full bg-orange-500 hover:bg-orange-600"
+              >
+                <Swords className="h-4 w-4 mr-2" />
+                Find Teams to Challenge
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <UserPlus className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-400 mb-4">No current doubles partner</p>
+              <Button
+                onClick={() => setArenaMode('lobby')}
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Find Partner
+              </Button>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Challenge Modal */}
+      <ChallengeModal
+        player={selectedPlayer}
+        isOpen={showChallengeModal}
+        onClose={() => setShowChallengeModal(false)}
+        onSendChallenge={handleSendChallenge}
+        myPartner={myPartner}
+      />
     </div>
   );
 }
@@ -1018,22 +1672,10 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           <BarChart3 className="h-4 w-4 mr-2" />
           Full Rankings
         </Button>
-        <div className="relative">
-          <PressRipple onClick={triggerChallengeReaction}>
-            <Button variant="outline" className="text-white border-slate-600 hover:bg-slate-700">
-              <Users className="h-4 w-4 mr-2" />
-              Challenge Player
-            </Button>
-          </PressRipple>
-          
-          <ReactionFloat
-            icon={Users}
-            text="Challenge Sent!"
-            color="text-blue-400"
-            show={showChallengeReaction}
-            onComplete={() => setShowChallengeReaction(false)}
-          />
-        </div>
+        <Button variant="outline" className="text-white border-slate-600 hover:bg-slate-700">
+          <Users className="h-4 w-4 mr-2" />
+          Challenge Player
+        </Button>
       </div>
     </div>
   );
@@ -1633,27 +2275,13 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
             exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40"
           >
-            <div className="relative">
-              <PressRipple onClick={() => {
-                setHasUnsavedChanges(false);
-                triggerSaveReaction();
-              }}>
-                <Button
-                  size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8"
-                >
-                  Save Changes
-                </Button>
-              </PressRipple>
-              
-              <ReactionFloat
-                icon={Save}
-                text="Profile Saved!"
-                color="text-green-400"
-                show={showSaveReaction}
-                onComplete={() => setShowSaveReaction(false)}
-              />
-            </div>
+            <Button
+              size="lg"
+              onClick={() => setHasUnsavedChanges(false)}
+              className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8"
+            >
+              Save Changes
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
