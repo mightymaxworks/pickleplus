@@ -19,7 +19,7 @@ interface TradingCard {
   foilType?: string;
 }
 
-// Card rarity configurations
+// Card rarity configurations aligned to ranking points system
 const rarityConfig: Record<CardRarity, {
   bgGradient: string;
   glowColor: string;
@@ -27,6 +27,8 @@ const rarityConfig: Record<CardRarity, {
   icon: React.ComponentType<any>;
   particles: boolean;
   holographic: boolean;
+  pointsRange: string;
+  tier: string;
 }> = {
   common: {
     bgGradient: 'from-slate-600 to-slate-700',
@@ -35,6 +37,8 @@ const rarityConfig: Record<CardRarity, {
     icon: Users,
     particles: false,
     holographic: false,
+    pointsRange: '0-300',
+    tier: 'Recreational',
   },
   rare: {
     bgGradient: 'from-blue-500 to-blue-600',
@@ -43,6 +47,8 @@ const rarityConfig: Record<CardRarity, {
     icon: Shield,
     particles: false,
     holographic: false,
+    pointsRange: '300-1000',
+    tier: 'Competitive',
   },
   epic: {
     bgGradient: 'from-purple-500 to-purple-600',
@@ -50,7 +56,9 @@ const rarityConfig: Record<CardRarity, {
     borderColor: 'border-purple-400/60',
     icon: Sparkles,
     particles: true,
-    holographic: false,
+    holographic: true,
+    pointsRange: '1000-1800',
+    tier: 'Elite',
   },
   legendary: {
     bgGradient: 'from-orange-500 to-orange-600',
@@ -59,6 +67,8 @@ const rarityConfig: Record<CardRarity, {
     icon: Crown,
     particles: true,
     holographic: true,
+    pointsRange: '1800+',
+    tier: 'Professional',
   },
   mythic: {
     bgGradient: 'from-red-500 via-pink-500 to-purple-500',
@@ -67,6 +77,8 @@ const rarityConfig: Record<CardRarity, {
     icon: Flame,
     particles: true,
     holographic: true,
+    pointsRange: '1800+',
+    tier: 'Professional',
   },
 };
 
@@ -92,9 +104,9 @@ function FoilPackOpening({ onReveal }: { onReveal: () => void }) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      {/* Foil Pack */}
+      {/* Enhanced Premium Foil Pack */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-silver-400 via-gray-300 to-silver-500 rounded-xl shadow-2xl border-2 border-silver-300"
+        className="absolute inset-0 rounded-xl shadow-2xl border-2 overflow-hidden"
         animate={isOpening ? { 
           rotateY: 180, 
           scale: 0.8,
@@ -102,39 +114,59 @@ function FoilPackOpening({ onReveal }: { onReveal: () => void }) {
         } : {}}
         transition={{ duration: 1.5, ease: "easeInOut" }}
         style={{
-          background: `linear-gradient(45deg, 
-            #e5e7eb 0%, 
-            #f3f4f6 25%, 
-            #e5e7eb 50%, 
-            #f3f4f6 75%, 
-            #e5e7eb 100%)`,
-          backgroundSize: '20px 20px',
+          background: `linear-gradient(135deg, 
+            #1a1a1a 0%,
+            #2d2d2d 25%, 
+            #1a1a1a 50%, 
+            #2d2d2d 75%, 
+            #1a1a1a 100%)`,
+          borderImage: 'linear-gradient(45deg, #f97316, #fb923c, #f97316) 1',
         }}
       >
-        {/* Holographic overlay */}
+        {/* Premium Iridescent Foil Effect */}
         <motion.div
-          className="absolute inset-0 rounded-xl opacity-60"
+          className="absolute inset-0 rounded-xl opacity-40"
           animate={{
             background: [
-              'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.8) 50%, transparent 70%)',
-              'linear-gradient(45deg, transparent 70%, rgba(255,255,255,0.8) 90%, transparent 110%)',
+              'linear-gradient(45deg, transparent 20%, rgba(249,115,22,0.8) 40%, rgba(251,146,60,0.9) 50%, rgba(249,115,22,0.8) 60%, transparent 80%)',
+              'linear-gradient(135deg, transparent 20%, rgba(251,146,60,0.9) 40%, rgba(249,115,22,0.8) 50%, rgba(251,146,60,0.9) 60%, transparent 80%)',
+              'linear-gradient(225deg, transparent 20%, rgba(249,115,22,0.8) 40%, rgba(251,146,60,0.9) 50%, rgba(249,115,22,0.8) 60%, transparent 80%)',
             ]
           }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
         />
         
-        {/* Pack Content */}
-        <div className="relative z-10 p-6 h-full flex flex-col justify-between text-slate-800">
+        {/* Embossed Security Strips */}
+        <div className="absolute inset-0 rounded-xl">
+          <div className="absolute top-4 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-60" />
+          <div className="absolute bottom-4 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-60" />
+        </div>
+        
+        {/* Premium Pack Content */}
+        <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
           <div className="text-center">
-            <h3 className="text-lg font-bold mb-2">PICKLE+ CARD PACK</h3>
-            <p className="text-sm opacity-70">Premium Player Collection</p>
+            <motion.div
+              className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Sparkles className="h-8 w-8 text-white" />
+            </motion.div>
+            <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+              TODAY'S DAILY PACK
+            </h3>
+            <p className="text-sm opacity-80">Special Community Rewards</p>
           </div>
           
           <div className="text-center">
-            <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Sparkles className="h-6 w-6 text-orange-600" />
-            </div>
-            <p className="text-xs opacity-60">Click to Open</p>
+            <motion.div
+              className="text-xs opacity-70 mb-2"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              ✨ Premium Collectibles Inside ✨
+            </motion.div>
+            <p className="text-sm font-semibold">Click to Reveal</p>
           </div>
         </div>
       </motion.div>
@@ -317,21 +349,21 @@ function TradingCardShowcase({
   const [showPack, setShowPack] = useState(true);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   
-  // Sample cards with different rarities
+  // Sample passport cards aligned to ranking points tiers
   const sampleCards: TradingCard[] = [
     {
       id: '1',
       playerName: 'ALEX CHEN',
       rating: 1247,
-      rarity: 'legendary',
-      achievements: ['Tournament Winner', 'Rising Star'],
+      rarity: 'epic', // Elite tier (1000-1800 points)
+      achievements: ['Elite Player', 'Tournament Regular'],
       cardNumber: '#001/1000',
     },
     {
       id: '2',
       playerName: 'SARAH MARTINEZ',
       rating: 892,
-      rarity: 'epic',
+      rarity: 'rare', // Competitive tier (300-1000 points) 
       achievements: ['Team Captain', 'Consistent Player'],
       cardNumber: '#047/1000',
     },
@@ -339,9 +371,17 @@ function TradingCardShowcase({
       id: '3',
       playerName: 'MIKE JOHNSON',
       rating: 1856,
-      rarity: 'mythic',
+      rarity: 'legendary', // Professional tier (1800+ points)
       achievements: ['Hall of Fame', 'Perfect Season'],
       cardNumber: '#001/100',
+    },
+    {
+      id: '4',
+      playerName: 'JAMIE RIVERA',
+      rating: 156,
+      rarity: 'common', // Recreational tier (0-300 points)
+      achievements: ['New Player', 'Learning Fast'],
+      cardNumber: '#156/1000',
     },
   ];
 
@@ -396,11 +436,16 @@ function TradingCardShowcase({
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
       >
-        <p className="text-sm text-slate-300">
-          Rarity: <span className={`font-bold capitalize text-${rarityConfig[sampleCards[currentCardIndex].rarity].bgGradient.split('-')[1]}-400`}>
-            {sampleCards[currentCardIndex].rarity}
-          </span>
-        </p>
+        <div className="text-center">
+          <p className="text-sm text-slate-300 mb-2">
+            <span className="font-bold capitalize text-orange-400">
+              {rarityConfig[sampleCards[currentCardIndex].rarity].tier}
+            </span> • {rarityConfig[sampleCards[currentCardIndex].rarity].pointsRange} points
+          </p>
+          <p className="text-xs text-slate-400">
+            Passport Card Rarity: {sampleCards[currentCardIndex].rarity}
+          </p>
+        </div>
       </motion.div>
     </div>
   );
@@ -522,35 +567,24 @@ export default function ModernDesignTestPage() {
         ))}
       </div>
 
-      {/* Hero Section - 3D Passport */}
+      {/* Hero Section - Passport Identity Focus */}
       <motion.section
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center px-6"
         style={{ y: yHero, opacity: opacityHero }}
       >
         <div className="max-w-6xl mx-auto text-center">
-          {/* Trading Card Pack Opening Experience */}
-          <motion.div
-            className="relative mb-12"
-            style={{ scale: scalePassport }}
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: heroInView ? 1 : 0, y: heroInView ? 0 : 100 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-          >
-            <TradingCardShowcase mousePosition={mousePosition} />
-          </motion.div>
-
-          {/* Kinetic Typography - Softer & More Elegant */}
-          <motion.div className="mb-12">
-            <motion.h1 className="text-4xl md:text-6xl font-semibold leading-tight mb-8 text-white">
-              {["COLLECT", "YOUR", "PLAYER", "CARD"].map((word, i) => (
+          {/* Passport Identity Messaging */}
+          <motion.div className="mb-16">
+            <motion.h1 className="text-5xl md:text-7xl font-bold leading-tight mb-8 text-white">
+              {["YOUR", "UNIVERSAL", "PICKLEBALL", "PASSPORT"].map((word, i) => (
                 <motion.span
                   key={word}
                   className={`inline-block mr-4 ${i === 2 ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500' : ''}`}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: heroInView ? 1 : 0, y: heroInView ? 0 : 30 }}
                   transition={{ duration: 0.6, delay: i * 0.15 }}
-                  whileHover={{ scale: 1.02, color: "#f97316" }}
+                  whileHover={{ scale: 1.02 }}
                 >
                   {word}
                   {i === 1 && <br />}
@@ -559,17 +593,17 @@ export default function ModernDesignTestPage() {
             </motion.h1>
             
             <motion.p
-              className="text-lg md:text-xl text-slate-300 leading-relaxed mb-12 max-w-3xl mx-auto"
+              className="text-xl md:text-2xl text-slate-300 leading-relaxed mb-12 max-w-4xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: heroInView ? 1 : 0 }}
               transition={{ duration: 1, delay: 0.5 }}
             >
-              Unlock your unique player card with every achievement. From common beginnings to legendary status - 
-              your pickleball journey becomes a collectible story worth sharing.
+              The passport for everything pickleball. Your verified identity that opens doors to courts, tournaments, 
+              and communities worldwide. Future-ready for your active lifestyle journey.
             </motion.p>
           </motion.div>
 
-          {/* Magnetic CTA Buttons */}
+          {/* Primary CTA */}
           <motion.div
             className="flex flex-col sm:flex-row gap-6 justify-center"
             initial={{ opacity: 0, y: 30 }}
@@ -584,14 +618,14 @@ export default function ModernDesignTestPage() {
             >
               <Button 
                 size="lg" 
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-medium relative overflow-hidden group"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-xl font-bold relative overflow-hidden group"
               >
                 <motion.span
                   className="relative z-10 flex items-center"
                   animate={{ x: isHovering ? 5 : 0 }}
                 >
-                  Claim My Card
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  Claim My Passport
+                  <ArrowRight className="ml-3 h-6 w-6" />
                 </motion.span>
                 
                 {/* Magnetic effect background */}
@@ -608,10 +642,61 @@ export default function ModernDesignTestPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white/20 text-white hover:bg-white/10 px-8 py-4 text-lg font-medium backdrop-blur-sm"
+                className="border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg font-medium backdrop-blur-sm"
               >
-                Watch Demo
+                Learn More
               </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Daily Pack Section - Below the Fold */}
+      <motion.section 
+        className="py-24 bg-slate-900/50 backdrop-blur-sm relative"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+      >
+        <div className="container mx-auto px-6">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Today's Community Pack
+            </h2>
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
+              Daily rewards and collectibles await! Login to claim and store your exclusive items.
+            </p>
+          </motion.div>
+
+          {/* Trading Card Pack Experience */}
+          <motion.div
+            className="max-w-lg mx-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <TradingCardShowcase mousePosition={mousePosition} />
+          </motion.div>
+
+          {/* Login Value Proposition */}
+          <motion.div
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+          >
+            <p className="text-slate-400 mb-6">
+              🎁 Preview one reward as guest • Login to claim all 5 items
+            </p>
+            <motion.div className="text-sm text-orange-400 font-medium">
+              ⏰ This pack expires in 14:32:18
             </motion.div>
           </motion.div>
         </div>
@@ -837,7 +922,7 @@ export default function ModernDesignTestPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            Ready to Join the Revolution?
+            Ready for Your Passport?
           </motion.h2>
           <motion.p
             className="text-xl text-orange-100 mb-8 max-w-2xl mx-auto"
@@ -846,7 +931,7 @@ export default function ModernDesignTestPage() {
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            Be among the first to get your verified pickleball passport and join the global community.
+            Join the universal pickleball identity system. Get verified, collect rewards, and connect with the global community.
           </motion.p>
           
           <motion.div
@@ -868,7 +953,7 @@ export default function ModernDesignTestPage() {
                 }}
               >
                 <span className="relative z-10 flex items-center">
-                  Claim My Passport Now
+                  Create My Passport
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1, repeat: Infinity }}
