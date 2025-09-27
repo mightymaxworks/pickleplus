@@ -20,6 +20,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import pickleLogoPath from '@assets/Pickle (2).png';
 import pickleCharacterPath from '@assets/Untitled design (51).png';
 import MascotLoader, { MascotLoaderOverlay } from "@/components/ui/MascotLoader";
+import { ComingSoonModal } from "@/components/ui/coming-soon-modal";
 
 // Form schemas
 const loginSchema = z.object({
@@ -82,6 +83,7 @@ export default function NewAuthPage() {
   const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState("login");
   const [isLoading, setIsLoading] = useState(false);
+  const [comingSoonModal, setComingSoonModal] = useState<{ isOpen: boolean; provider: string }>({ isOpen: false, provider: '' });
 
   // Login form
   const loginForm = useForm<LoginFormData>({
@@ -331,7 +333,7 @@ export default function NewAuthPage() {
                             type="button"
                             variant="outline"
                             className="w-full"
-                            onClick={() => window.location.href = '/auth/facebook'}
+                            onClick={() => setComingSoonModal({ isOpen: true, provider: 'Facebook' })}
                             disabled={isLoading}
                           >
                             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -347,7 +349,7 @@ export default function NewAuthPage() {
                             type="button"
                             variant="outline"
                             className="w-full"
-                            onClick={() => window.location.href = '/auth/kakao'}
+                            onClick={() => setComingSoonModal({ isOpen: true, provider: 'Kakao' })}
                             disabled={isLoading}
                           >
                             <div className="w-4 h-4 mr-2 bg-yellow-400 rounded-full flex items-center justify-center">
@@ -361,7 +363,7 @@ export default function NewAuthPage() {
                             type="button"
                             variant="outline"
                             className="w-full"
-                            onClick={() => window.location.href = '/auth/line'}
+                            onClick={() => setComingSoonModal({ isOpen: true, provider: 'Line' })}
                             disabled={isLoading}
                           >
                             <div className="w-4 h-4 mr-2 bg-green-500 rounded-sm flex items-center justify-center">
@@ -377,7 +379,7 @@ export default function NewAuthPage() {
                             type="button"
                             variant="outline"
                             className="w-full"
-                            onClick={() => window.location.href = '/auth/wechat'}
+                            onClick={() => setComingSoonModal({ isOpen: true, provider: 'WeChat' })}
                             disabled={isLoading}
                           >
                             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -708,6 +710,14 @@ export default function NewAuthPage() {
         </div>
       </div>
     </div>
+
+    {/* Coming Soon Modal for OAuth providers */}
+    <ComingSoonModal
+      isOpen={comingSoonModal.isOpen}
+      onClose={() => setComingSoonModal({ isOpen: false, provider: '' })}
+      feature={`${comingSoonModal.provider} Authentication`}
+      description={`One-click sign-in with ${comingSoonModal.provider} is being fine-tuned for the best user experience. Use traditional login for now!`}
+    />
     </>
   );
 }
