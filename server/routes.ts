@@ -2,6 +2,7 @@ import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { setupAuth as setupReplitAuth, isAuthenticated as isAuthenticatedOAuth } from "./replitAuth";
+import { setupNotificationWebSocket } from "./modules/notifications/notificationWebSocket";
 import passport from "passport";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -1796,6 +1797,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('[ROUTES] Coach Weighted Assessment Test routes registered successfully');
 
   console.log("[ROUTES] Modular route architecture setup complete");
+  
+  // Setup WebSocket notifications
+  console.log("[ROUTES] Setting up WebSocket notifications...");
+  const notificationWS = setupNotificationWebSocket(httpServer);
+  console.log("[ROUTES] WebSocket notifications setup complete");
+  
+  // Make WebSocket interface available globally for other modules
+  (global as any).notificationWS = notificationWS;
   
   return httpServer;
 }

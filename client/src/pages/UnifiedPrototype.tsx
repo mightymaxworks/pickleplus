@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -20,7 +20,10 @@ import {
   X,
   ChevronRight,
   Dumbbell,
-  Shield
+  Shield,
+  Bell,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 
 // Types from our previous implementations
 interface PlayerData {
@@ -208,25 +212,22 @@ const mockRankings: RankedPlayer[] = [
   },
 ];
 
-// Notifications Header Component
-function NotificationsHeader({ player }: { player: PlayerData }) {
+// Notifications Header Component with WebSocket Integration
+function NotificationsHeader({ 
+  player, 
+  notifications, 
+  connected, 
+  onTriggerDemo 
+}: { 
+  player: PlayerData;
+  notifications: Array<{id: string; type: string; message: string; timestamp: Date; read: boolean}>;
+  connected: boolean;
+  onTriggerDemo: () => void;
+}) {
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'match', text: '3 new matches', count: 3, unread: true },
-    { id: 2, type: 'points', text: `+${player.recentChange} pts`, count: player.recentChange, unread: true },
-    { id: 3, type: 'challenge', text: '2 challenges', count: 2, unread: false },
-  ]);
-
-  const markAsRead = (id: number) => {
-    setNotifications(prev => 
-      prev.map(notif => notif.id === id ? { ...notif, unread: false } : notif)
-    );
-  };
-
-  const clearNotification = (id: number) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-  };
+  
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <motion.div 
@@ -244,27 +245,63 @@ function NotificationsHeader({ player }: { player: PlayerData }) {
           </div>
         </div>
 
-        {/* Interactive Notifications */}
-        <div className="flex items-center gap-2">
-          {notifications.filter(n => n.unread).map((notification) => (
+        {/* WebSocket Status & Notifications */}
+        <div className="flex items-center gap-3">
+          {/* WebSocket Connection Status */}
+          <div className="flex items-center gap-2">
+            {connected ? (
+              <div className="flex items-center gap-1 text-green-400">
+                <Wifi className="h-4 w-4" />
+                <span className="text-xs">Live</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-red-400">
+                <WifiOff className="h-4 w-4" />
+                <span className="text-xs">Offline</span>
+              </div>
+            )}
+          </div>
+
+          {/* Notification Bell */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="relative text-white hover:bg-slate-700"
+            onClick={onTriggerDemo}
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <Badge 
+                className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </Button>
+
+          {/* Recent Notifications Preview */}
+          {notifications.slice(0, 2).map((notification) => (
             <motion.div
               key={notification.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="max-w-48"
             >
               <Badge 
-                className={`text-xs cursor-pointer transition-all hover:opacity-80 ${
-                  notification.type === 'match' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
-                  notification.type === 'points' ? 'bg-green-500/20 text-green-300 border-green-400/30' :
-                  'bg-orange-500/20 text-orange-300 border-orange-400/30'
+                className={`text-xs transition-all ${
+                  notification.type === 'match_request' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
+                  notification.type === 'ranking_update' ? 'bg-green-500/20 text-green-300 border-green-400/30' :
+                  notification.type === 'challenge' ? 'bg-orange-500/20 text-orange-300 border-orange-400/30' :
+                  'bg-purple-500/20 text-purple-300 border-purple-400/30'
                 }`}
-                onClick={() => markAsRead(notification.id)}
               >
-                {notification.text}
+                {notification.message.slice(0, 30)}...
               </Badge>
             </motion.div>
           ))}
-          {notifications.filter(n => n.unread).length === 0 && (
+          
+          {notifications.length === 0 && (
             <div className="text-slate-400 text-sm">All caught up! 🎉</div>
           )}
         </div>
@@ -1460,11 +1497,59 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [activeTab, setActiveTab] = useState<TabMode>('passport');
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    type: string;
+    message: string;
+    timestamp: Date;
+    read: boolean;
+  }>>([]);
+  
+  // WebSocket connection for real-time notifications - demo user
+  const { connected, lastMessage, unreadCount } = useNotificationSocket({
+    debugMode: true,
+    onMessage: (message) => {
+      console.log('📡 Received notification:', message);
+      if (message.type === 'system' || message.type === 'match_request') {
+        setNotifications(prev => [{
+          id: Date.now().toString(),
+          type: message.type,
+          message: message.data?.message || 'New notification',
+          timestamp: new Date(),
+          read: false
+        }, ...prev].slice(0, 10)); // Keep only last 10 notifications
+      }
+    }
+  });
+
+  // Demo function to simulate notifications
+  const triggerDemoNotification = () => {
+    const demoNotifications = [
+      { type: 'match_request', message: 'Sarah Chen wants to play a match!' },
+      { type: 'ranking_update', message: 'You moved up to #23 in your local rankings!' },
+      { type: 'challenge', message: 'Alex Rodriguez challenged you to a match' },
+      { type: 'system', message: 'New tournament registration open nearby' }
+    ];
+    
+    const randomNotif = demoNotifications[Math.floor(Math.random() * demoNotifications.length)];
+    setNotifications(prev => [{
+      id: Date.now().toString(),
+      type: randomNotif.type,
+      message: randomNotif.message,
+      timestamp: new Date(),
+      read: false
+    }, ...prev].slice(0, 10));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       {/* Notifications Header */}
-      <NotificationsHeader player={mockPlayer} />
+      <NotificationsHeader 
+        player={mockPlayer} 
+        notifications={notifications}
+        connected={connected}
+        onTriggerDemo={triggerDemoNotification}
+      />
       
       {/* Content Area */}
       <div className="p-4 pb-24"> {/* pb-24 for bottom nav space */}
