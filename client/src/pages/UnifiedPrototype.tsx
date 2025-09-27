@@ -2317,6 +2317,7 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 }
 
 export default function UnifiedPrototype() {
+  const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<TabMode>('passport');
   
   // Micro-feedback states
@@ -2423,7 +2424,7 @@ export default function UnifiedPrototype() {
                 onPhotoUpload={() => setShowPhotoUpload(true)}
               />
             )}
-            {activeTab === 'play' && <PlayModeContent />}
+            {/* Play tab redirects to /match-arena */}
             {activeTab === 'rankings' && <RankingsModeContent player={mockPlayer} />}
             {activeTab === 'profile' && <ProfileModeContent player={mockPlayer} />}
           </motion.div>
@@ -2445,7 +2446,13 @@ export default function UnifiedPrototype() {
       </AnimatePresence>
 
       {/* Bottom Navigation */}
-      <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <NavigationTabs activeTab={activeTab} onTabChange={(tab) => {
+        if (tab === 'play') {
+          setLocation('/match-arena');
+        } else {
+          setActiveTab(tab);
+        }
+      }} />
     </div>
   );
 }
