@@ -278,6 +278,10 @@ export default function App() {
                   {/* Mixed Doubles Ranking Test */}
                   <Route path="/mixed-doubles-test" component={MixedDoublesRankingTest} />
                   
+                  {/* Design Test Pages - PlayByPoint Inspired Design Showcase */}
+                  <Route path="/design-test" component={lazyLoad(() => import('./pages/DesignTestPage'))} />
+                  <Route path="/design-components" component={lazyLoad(() => import('./pages/DesignComponentShowcase'))} />
+                  
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
