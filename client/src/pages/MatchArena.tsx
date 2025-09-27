@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { 
   Trophy, 
   Zap, 
@@ -343,6 +344,7 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
 // Main Arena Component
 export default function MatchArena() {
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   const [arenaMode, setArenaMode] = useState<'lobby' | 'search' | 'challenges' | 'doubles'>('lobby');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
@@ -471,7 +473,7 @@ export default function MatchArena() {
       });
       
       setTimeout(() => {
-        window.location.href = '/gamified-match-recording';
+        setLocation('/gamified-match-recording');
       }, 1500);
       
     } else if (matchType === 'doubles-looking' && selectedPlayer.matchType === 'doubles-team') {
@@ -693,7 +695,7 @@ export default function MatchArena() {
         </Button>
         
         <Button
-          onClick={() => window.location.href = '/gamified-match-recording'}
+          onClick={() => setLocation('/gamified-match-recording')}
           className="bg-green-500 hover:bg-green-600"
         >
           <Play className="h-4 w-4 mr-2" />
@@ -922,7 +924,7 @@ export default function MatchArena() {
                             duration: 2000,
                           });
                           setTimeout(() => {
-                            window.location.href = '/gamified-match-recording';
+                            setLocation('/gamified-match-recording');
                           }, 2000);
                         }}
                         size="sm"
