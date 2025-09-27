@@ -477,10 +477,21 @@ export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
+    console.log('[Session] Initializing PostgreSQL session store...');
     this.sessionStore = new PostgresSessionStore({ 
       conString: process.env.DATABASE_URL,
-      createTableIfMissing: true 
+      createTableIfMissing: true,
+      tableName: 'sessions', // Explicitly set table name
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      disableTouch: false // Enable session updates
     });
+    
+    // Add error handling for session store
+    this.sessionStore.on('error', (err: any) => {
+      console.error('[Session] Session store error:', err);
+    });
+    
+    console.log('[Session] PostgreSQL session store initialized successfully');
   }
 
   // Database access method for community operations

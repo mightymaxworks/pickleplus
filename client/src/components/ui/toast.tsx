@@ -27,10 +27,10 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white/95 text-gray-900 shadow-lg shadow-gray-900/10 ring-1 ring-gray-900/5",
-        destructive: "bg-red-50/95 text-red-900 shadow-lg shadow-red-900/10 ring-1 ring-red-900/5",
-        success: "bg-emerald-50/95 text-emerald-900 shadow-lg shadow-emerald-900/10 ring-1 ring-emerald-900/5",
-        warning: "bg-amber-50/95 text-amber-900 shadow-lg shadow-amber-900/10 ring-1 ring-amber-900/5",
+        default: "bg-gradient-to-r from-orange-50/95 to-blue-50/95 text-gray-900 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/20 border-l-4 border-l-orange-500",
+        destructive: "bg-gradient-to-r from-red-50/95 to-pink-50/95 text-red-900 shadow-lg shadow-red-500/20 ring-1 ring-red-500/20 border-l-4 border-l-red-500",
+        success: "bg-gradient-to-r from-emerald-50/95 to-green-50/95 text-emerald-900 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/20 border-l-4 border-l-emerald-500",
+        warning: "bg-gradient-to-r from-amber-50/95 to-yellow-50/95 text-amber-900 shadow-lg shadow-amber-500/20 ring-1 ring-amber-500/20 border-l-4 border-l-amber-500",
       },
     },
     defaultVariants: {
@@ -76,7 +76,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-3 top-3 rounded-full p-1.5 text-gray-400 opacity-0 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600 focus:opacity-100 focus:outline-none group-hover:opacity-100",
+      "absolute right-3 top-3 rounded-full p-1.5 text-gray-400 opacity-0 transition-all duration-200 hover:bg-white/50 hover:text-gray-700 hover:scale-110 focus:opacity-100 focus:outline-none group-hover:opacity-100 active:scale-95",
       className
     )}
     toast-close=""
