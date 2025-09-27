@@ -288,6 +288,7 @@ export default function App() {
                   <Route path="/card-rankings-test" component={lazyLoad(() => import('./pages/CardRankingsTest'))} />
                   <Route path="/simplified-nav-test" component={lazyLoad(() => import('./pages/SimplifiedNavTest'))} />
                   <Route path="/profile-edit-test" component={lazyLoad(() => import('./pages/ProfileEditTest'))} />
+                  <Route path="/unified-prototype" component={lazyLoad(() => import('./pages/UnifiedPrototype'))} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
