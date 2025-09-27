@@ -30,7 +30,7 @@ import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coa
 import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed doubles ranking test
 import GamificationPrototype from '@/pages/GamificationPrototype' // Gamification prototype showcase
 import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-style match recording
-import SimpleMatchArena from '@/pages/SimpleMatchArena' // Working match arena - JSX corruption backup
+import MatchArena from '@/pages/MatchArena' // Sophisticated gaming-style match arena
 import UnifiedPrototype from '@/pages/UnifiedPrototype' // Temporary redirect
 import { NotificationProvider, NotificationBell } from '@/components/notifications/RealtimeNotificationSystem' // Real-time gaming notifications
 
@@ -296,7 +296,7 @@ export default function App() {
                   <Route path="/unified-prototype" component={lazyLoad(() => import('./pages/UnifiedPrototype'))} />
                   <Route path="/gamification-prototype" component={GamificationPrototype} />
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
-                  <Route path="/match-arena" component={SimpleMatchArena} />
+                  <Route path="/match-arena" component={MatchArena} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
@@ -661,7 +661,7 @@ export default function App() {
                   {/* Achievements Page */}
                   <ProtectedRouteWithLayout
                     path="/achievements"
-                    component={lazyLoad(() => import('./pages/achievements'))}
+                    component={lazyLoad(() => import('./pages/Achievements'))}
                     pageTitle="Achievements"
                   />
                   
