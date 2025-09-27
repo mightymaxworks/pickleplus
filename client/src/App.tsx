@@ -29,6 +29,7 @@ import { ProfileCompletionWrapper } from '@/components/profile/ProfileCompletion
 import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coach weighted assessment testing
 import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed doubles ranking test
 import GamificationPrototype from '@/pages/GamificationPrototype' // Gamification prototype showcase
+import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-style match recording
 
 
 // Import module initializations
@@ -291,6 +292,7 @@ export default function App() {
                   <Route path="/profile-edit-test" component={lazyLoad(() => import('./pages/ProfileEditTest'))} />
                   <Route path="/unified-prototype" component={lazyLoad(() => import('./pages/UnifiedPrototype'))} />
                   <Route path="/gamification-prototype" component={GamificationPrototype} />
+                  <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
