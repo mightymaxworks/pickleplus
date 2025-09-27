@@ -337,9 +337,10 @@ function PartnerRequestsPanel({ requests, onAccept, onDecline }: {
 }
 
 // Main Doubles Partner System Component
-export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }: {
+export default function DoublesPartnerSystem({ onPartnerFound, currentPartner, onNavigateToLobby }: {
   onPartnerFound?: (partner: PartnerProfile) => void;
   currentPartner?: { name: string; id: string } | null;
+  onNavigateToLobby?: () => void;
 }) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -563,7 +564,7 @@ export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }:
                     <div className="flex gap-2">
                       <Button 
                         className="flex-1 bg-orange-500 hover:bg-orange-600"
-                        onClick={() => setLocation('/match-arena')}
+                        onClick={() => onNavigateToLobby ? onNavigateToLobby() : setLocation('/match-arena')}
                       >
                         <Zap className="h-4 w-4 mr-2" />
                         Find Opponents

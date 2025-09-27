@@ -834,6 +834,7 @@ export default function MatchArena() {
           >
             <DoublesPartnerSystem
               currentPartner={myPartner ? { name: myPartner.name, id: myPartner.id } : null}
+              onNavigateToLobby={() => setArenaMode('lobby')}
               onPartnerFound={(partner) => {
                 // Convert PartnerProfile to ArenaPlayer format
                 const arenaPartner: ArenaPlayer = {
