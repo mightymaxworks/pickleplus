@@ -28,6 +28,7 @@ import { SmartFeatureGuide } from '@/components/onboarding/SmartFeatureGuide' //
 import { ProfileCompletionWrapper } from '@/components/profile/ProfileCompletionWrapper' // Profile completion system
 import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coach weighted assessment testing
 import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed doubles ranking test
+import GamificationPrototype from '@/pages/GamificationPrototype' // Gamification prototype showcase
 
 
 // Import module initializations
@@ -289,6 +290,7 @@ export default function App() {
                   <Route path="/simplified-nav-test" component={lazyLoad(() => import('./pages/SimplifiedNavTest'))} />
                   <Route path="/profile-edit-test" component={lazyLoad(() => import('./pages/ProfileEditTest'))} />
                   <Route path="/unified-prototype" component={lazyLoad(() => import('./pages/UnifiedPrototype'))} />
+                  <Route path="/gamification-prototype" component={GamificationPrototype} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
