@@ -72,7 +72,7 @@ const tierConfig = {
   professional: { name: 'Professional', color: 'from-orange-500 to-orange-600', icon: Trophy },
 };
 
-// Mock data
+// Mock data with more complete rankings for 4-8 display
 const mockPlayer: PlayerData = {
   id: 'current',
   name: 'Alex Chen',
@@ -127,52 +127,223 @@ const mockRankings: RankedPlayer[] = [
     matchesPlayed: 134,
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
   },
+  // Ranks 4-8 for card display
+  {
+    id: '4',
+    name: 'Jessica Liu',
+    tier: 'elite',
+    rankingPoints: 1523,
+    rank: 4,
+    location: 'Vancouver, BC',
+    recentChange: +15,
+    winRate: 0.79,
+    matchesPlayed: 98,
+  },
+  {
+    id: '5',
+    name: 'David Kim',
+    tier: 'elite',
+    rankingPoints: 1456,
+    rank: 5,
+    location: 'Richmond, BC',
+    recentChange: -8,
+    winRate: 0.74,
+    matchesPlayed: 112,
+  },
+  {
+    id: '6',
+    name: 'Maria Santos',
+    tier: 'elite',
+    rankingPoints: 1398,
+    rank: 6,
+    location: 'Burnaby, BC',
+    recentChange: +22,
+    winRate: 0.81,
+    matchesPlayed: 87,
+  },
+  {
+    id: '7',
+    name: 'Robert Wilson',
+    tier: 'competitive',
+    rankingPoints: 1367,
+    rank: 7,
+    location: 'Surrey, BC',
+    recentChange: +5,
+    winRate: 0.77,
+    matchesPlayed: 134,
+  },
+  {
+    id: '8',
+    name: 'Linda Chang',
+    tier: 'competitive',
+    rankingPoints: 1298,
+    rank: 8,
+    location: 'Vancouver, BC',
+    recentChange: -3,
+    winRate: 0.73,
+    matchesPlayed: 156,
+  },
+  // Additional players for row display
+  {
+    id: '9',
+    name: 'Tom Anderson',
+    tier: 'competitive',
+    rankingPoints: 1276,
+    rank: 9,
+    location: 'Coquitlam, BC',
+    recentChange: +12,
+    winRate: 0.69,
+    matchesPlayed: 89,
+  },
+  {
+    id: '10',
+    name: 'Lisa Park',
+    tier: 'competitive',
+    rankingPoints: 1254,
+    rank: 10,
+    location: 'Vancouver, BC',
+    recentChange: +7,
+    winRate: 0.71,
+    matchesPlayed: 102,
+  },
 ];
 
-// Mini Passport Header Component
-function MiniPassportHeader({ player, onPassportClick }: { player: PlayerData; onPassportClick: () => void }) {
+// Notifications Header Component
+function NotificationsHeader({ player }: { player: PlayerData }) {
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
   return (
     <motion.div 
       className="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 p-4 sticky top-0 z-50"
-      whileTap={{ scale: 0.98 }}
     >
-      <button 
-        onClick={onPassportClick}
-        className={`w-full bg-gradient-to-r ${config.color} rounded-xl p-4 text-white hover:scale-[1.02] transition-transform`}
-      >
-        <div className="flex items-center gap-4">
-          {/* Avatar */}
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/30">
-            <TierIcon className="h-6 w-6" />
+      <div className="flex items-center justify-between">
+        {/* Player Identity */}
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 bg-gradient-to-r ${config.color} rounded-full flex items-center justify-center`}>
+            <TierIcon className="h-5 w-5 text-white" />
           </div>
-          
-          {/* Player Info */}
-          <div className="flex-1 text-left">
-            <div className="font-bold text-lg">{player.name}</div>
-            <div className="text-white/90 text-sm">🎫 {player.passportCode} • {config.name}</div>
+          <div>
+            <div className="text-white font-semibold">{player.name}</div>
+            <div className="text-slate-400 text-sm">🎫 {player.passportCode}</div>
           </div>
-          
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-lg font-bold">{player.rankingPoints.toLocaleString()}</div>
-              <div className="text-white/80 text-xs">Ranking</div>
-            </div>
-            <div>
-              <div className="text-lg font-bold">{player.picklePoints}</div>
-              <div className="text-white/80 text-xs">Pickle</div>
-            </div>
-          </div>
-          
-          {/* Recent Change */}
+        </div>
+
+        {/* Notifications */}
+        <div className="flex items-center gap-2">
+          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
+            3 new matches
+          </Badge>
           <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
-            +{player.recentChange}
+            +{player.recentChange} pts
           </Badge>
         </div>
-      </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// PlayerRankingCard Component (for ranks 4-8)
+function PlayerRankingCard({ 
+  player, 
+  showDetails = false,
+  isPodium = false
+}: { 
+  player: RankedPlayer; 
+  showDetails?: boolean;
+  isPodium?: boolean;
+}) {
+  const config = tierConfig[player.tier];
+  const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-slate-800 border-slate-700 rounded-lg border overflow-hidden hover:bg-slate-700/50 transition-colors cursor-pointer ${
+        isPodium ? 'shadow-lg' : ''
+      }`}
+    >
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-3">
+          {/* Rank */}
+          <div className="flex-shrink-0">
+            {player.rank <= 3 ? (
+              <div className="text-2xl">
+                {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : '🥉'}
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">#{player.rank}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Avatar */}
+          <div className="w-12 h-12">
+            {player.avatar ? (
+              <img 
+                src={player.avatar} 
+                alt={player.name}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-medium">{initials}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Player Info */}
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-semibold truncate">{player.name}</div>
+            <div className="text-slate-400 text-sm flex items-center">
+              <MapPin className="h-3 w-3 mr-1" />
+              {player.location}
+            </div>
+          </div>
+
+          {/* Recent Change */}
+          <Badge 
+            className={`text-xs ${
+              player.recentChange > 0 
+                ? 'bg-green-500/20 text-green-300 border-green-400/30' 
+                : player.recentChange < 0
+                ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+            }`}
+          >
+            {player.recentChange > 0 ? '+' : ''}{player.recentChange}
+          </Badge>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div>
+            <div className="text-lg font-bold text-white">{player.rankingPoints.toLocaleString()}</div>
+            <div className="text-slate-400 text-xs">Points</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-white">{(player.winRate * 100).toFixed(0)}%</div>
+            <div className="text-slate-400 text-xs">Win Rate</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-white">{player.matchesPlayed}</div>
+            <div className="text-slate-400 text-xs">Matches</div>
+          </div>
+        </div>
+
+        {/* Tier Badge */}
+        <div className="mt-3">
+          <Badge className={`text-xs ${config.name === 'Professional' ? 'bg-orange-500/20 text-orange-300' : 
+            config.name === 'Elite' ? 'bg-purple-500/20 text-purple-300' : 
+            'bg-blue-500/20 text-blue-300'}`}>
+            {config.name}
+          </Badge>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -211,14 +382,14 @@ function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabC
   );
 }
 
-// Passport Mode Content
+// Passport Mode Content - Full passport display
 function PassportModeContent({ player }: { player: PlayerData }) {
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
   return (
     <div className="space-y-6">
-      {/* Expanded Passport Card */}
+      {/* Full Passport Card */}
       <Card className={`p-6 bg-gradient-to-br ${config.color} border border-white/20 relative overflow-hidden`}>
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
         
@@ -361,28 +532,31 @@ function PlayModeContent() {
           Nearby Players
         </h3>
         <div className="space-y-3">
-          {mockRankings.slice(0, 3).map((player) => (
-            <div key={player.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded hover:bg-slate-700 transition-colors cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10">
-                  {player.avatar ? (
-                    <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-white" />
-                    </div>
-                  )}
+          {mockRankings.slice(0, 3).map((player) => {
+            const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            return (
+              <div key={player.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded hover:bg-slate-700 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10">
+                    {player.avatar ? (
+                      <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">{initials}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">{player.name}</div>
+                    <div className="text-slate-400 text-sm">{player.location}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-white font-medium">{player.name}</div>
-                  <div className="text-slate-400 text-sm">{player.location}</div>
-                </div>
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+                  Invite
+                </Button>
               </div>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-                Invite
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
@@ -405,6 +579,11 @@ function PlayModeContent() {
 function RankingsModeContent({ player }: { player: PlayerData }) {
   const [selectedCategory, setSelectedCategory] = useState('singles');
   const [selectedView, setSelectedView] = useState('local');
+  
+  // Split rankings for hybrid display
+  const podiumPlayers = mockRankings.slice(0, 3);
+  const cardPlayers = mockRankings.slice(3, 8);
+  const rowPlayers = mockRankings.slice(8);
 
   return (
     <div className="space-y-6">
@@ -481,34 +660,78 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           {/* 2nd place */}
           <div className="w-20 text-center">
             <div className="w-12 h-12 mx-auto mb-2">
-              <img src={mockRankings[1].avatar} alt={mockRankings[1].name} className="w-12 h-12 rounded-full object-cover" />
+              {podiumPlayers[1]?.avatar ? (
+                <img src={podiumPlayers[1].avatar} alt={podiumPlayers[1].name} className="w-12 h-12 rounded-full object-cover" />
+              ) : (
+                <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-medium text-sm">
+                    {podiumPlayers[1]?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="text-2xl mb-1">🥈</div>
-            <div className="text-white text-sm font-medium">{mockRankings[1].name.split(' ')[0]}</div>
-            <div className="text-slate-400 text-xs">{mockRankings[1].rankingPoints}</div>
+            <div className="text-white text-sm font-medium">{podiumPlayers[1]?.name.split(' ')[0]}</div>
+            <div className="text-slate-400 text-xs">{podiumPlayers[1]?.rankingPoints}</div>
           </div>
           
           {/* 1st place - elevated */}
           <div className="w-24 text-center -mt-4">
             <div className="w-16 h-16 mx-auto mb-2">
-              <img src={mockRankings[0].avatar} alt={mockRankings[0].name} className="w-16 h-16 rounded-full object-cover border-2 border-yellow-400" />
+              {podiumPlayers[0]?.avatar ? (
+                <img src={podiumPlayers[0].avatar} alt={podiumPlayers[0].name} className="w-16 h-16 rounded-full object-cover border-2 border-yellow-400" />
+              ) : (
+                <div className="w-16 h-16 bg-slate-600 rounded-full flex items-center justify-center border-2 border-yellow-400">
+                  <span className="text-white font-medium">
+                    {podiumPlayers[0]?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="text-3xl mb-1">🥇</div>
-            <div className="text-white font-bold">{mockRankings[0].name.split(' ')[0]}</div>
-            <div className="text-slate-400 text-sm">{mockRankings[0].rankingPoints}</div>
+            <div className="text-white font-bold">{podiumPlayers[0]?.name.split(' ')[0]}</div>
+            <div className="text-slate-400 text-sm">{podiumPlayers[0]?.rankingPoints}</div>
           </div>
           
           {/* 3rd place */}
           <div className="w-20 text-center">
             <div className="w-12 h-12 mx-auto mb-2">
-              <img src={mockRankings[2].avatar} alt={mockRankings[2].name} className="w-12 h-12 rounded-full object-cover" />
+              {podiumPlayers[2]?.avatar ? (
+                <img src={podiumPlayers[2].avatar} alt={podiumPlayers[2].name} className="w-12 h-12 rounded-full object-cover" />
+              ) : (
+                <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-medium text-sm">
+                    {podiumPlayers[2]?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="text-2xl mb-1">🥉</div>
-            <div className="text-white text-sm font-medium">{mockRankings[2].name.split(' ')[0]}</div>
-            <div className="text-slate-400 text-xs">{mockRankings[2].rankingPoints}</div>
+            <div className="text-white text-sm font-medium">{podiumPlayers[2]?.name.split(' ')[0]}</div>
+            <div className="text-slate-400 text-xs">{podiumPlayers[2]?.rankingPoints}</div>
           </div>
         </div>
       </Card>
+
+      {/* Leading Contenders (4-8) */}
+      {cardPlayers.length > 0 && (
+        <Card className="p-4 bg-slate-800 border-slate-700">
+          <h3 className="text-white font-semibold mb-4 flex items-center">
+            <Medal className="h-4 w-4 mr-2 text-orange-400" />
+            Leading Contenders
+          </h3>
+          <div className="grid md:grid-cols-2 gap-3">
+            <AnimatePresence mode="popLayout">
+              {cardPlayers.map((rankedPlayer) => (
+                <PlayerRankingCard
+                  key={rankedPlayer.id}
+                  player={rankedPlayer}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </Card>
+      )}
 
       {/* Players Around You */}
       <Card className="p-4 bg-slate-800 border-slate-700">
@@ -521,23 +744,23 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
             { name: 'David Kim', rank: 22, points: 1251, change: '+3' },
             { name: 'You', rank: 23, points: 1247, change: '+34', isYou: true },
             { name: 'Lisa Zhang', rank: 24, points: 1243, change: '-2' },
-          ].map((player, i) => (
+          ].map((contextPlayer, i) => (
             <div key={i} className={`flex items-center justify-between p-2 rounded ${
-              player.isYou ? 'bg-orange-500/20 border border-orange-400/30' : 'bg-slate-700/50'
+              contextPlayer.isYou ? 'bg-orange-500/20 border border-orange-400/30' : 'bg-slate-700/50'
             }`}>
               <div className="flex items-center gap-3">
-                <div className={`font-bold ${player.isYou ? 'text-orange-300' : 'text-white'}`}>
-                  #{player.rank}
+                <div className={`font-bold ${contextPlayer.isYou ? 'text-orange-300' : 'text-white'}`}>
+                  #{contextPlayer.rank}
                 </div>
                 <div>
-                  <div className={`font-medium ${player.isYou ? 'text-orange-200' : 'text-white'}`}>
-                    {player.name}
+                  <div className={`font-medium ${contextPlayer.isYou ? 'text-orange-200' : 'text-white'}`}>
+                    {contextPlayer.name}
                   </div>
-                  <div className="text-slate-400 text-xs">{player.points.toLocaleString()} points</div>
+                  <div className="text-slate-400 text-xs">{contextPlayer.points.toLocaleString()} points</div>
                 </div>
               </div>
-              <Badge className={player.change.startsWith('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}>
-                {player.change}
+              <Badge className={contextPlayer.change.startsWith('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}>
+                {contextPlayer.change}
               </Badge>
             </div>
           ))}
@@ -559,27 +782,98 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
   );
 }
 
-// Profile Mode Content (Simplified version)
+// Profile Mode Content - Comprehensive version with all fields
 function ProfileModeContent({ player }: { player: PlayerData }) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
   const [profile, setProfile] = useState({
+    // Basic Info
     displayName: player.name,
     email: 'alex.chen@example.com',
+    firstName: 'Alex',
+    lastName: 'Chen',
     location: 'Vancouver, BC',
     bio: 'Passionate pickleball player always looking to improve.',
+    dateOfBirth: '1990-03-15',
+    gender: 'male',
+    
+    // Playing Profile
     skillLevel: '4.0',
     playingStyle: 'Aggressive baseline',
+    dominantHand: 'right',
+    preferredPosition: 'Right side',
+    preferredFormat: 'Doubles',
+    playingSince: '3 years',
+    regularSchedule: 'Weekends, Tuesday evenings',
+    
+    // Equipment
+    paddleBrand: 'Selkirk',
+    paddleModel: 'Amped Epic',
+    backupPaddleBrand: 'JOOLA',
+    backupPaddleModel: 'Ben Johns Hyperion',
+    apparelBrand: 'HEAD',
+    shoesBrand: 'K-Swiss',
+    
+    // Physical
+    height: 175,
+    reach: 180,
+    fitnessLevel: 'Good',
+    
+    // Skill Assessment (1-10)
+    forehandStrength: 7,
+    backhandStrength: 6,
+    servePower: 8,
+    dinkAccuracy: 7,
+    thirdShotConsistency: 6,
+    courtCoverage: 8,
+    
+    // Preferences
+    preferredSurface: 'Outdoor courts',
+    indoorOutdoorPreference: 'both',
+    competitiveIntensity: 7,
     lookingForPartners: true,
     mentorshipInterest: false,
+    preferredMatchDuration: '1-2 hours',
+    travelRadiusKm: 25,
+    
+    // External Ratings
+    duprRating: '4.2',
+    utprRating: '4.1',
+    wprRating: '',
+    
+    // Privacy
+    privacyProfile: 'standard',
+    languagePreference: 'en',
   });
 
   const updateProfile = (field: string, value: any) => {
     setProfile(prev => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);
   };
+
+  // Skill Assessment Slider Component
+  const SkillSlider = ({ label, value, field }: { label: string; value: number; field: string }) => (
+    <div className="p-3 rounded-lg hover:bg-slate-700/30 transition-colors">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-white font-medium">{label}</div>
+        <div className="text-white font-bold text-lg">{value}</div>
+      </div>
+      <Slider
+        value={[value]}
+        onValueChange={(newValue) => updateProfile(field, newValue[0])}
+        min={1}
+        max={10}
+        step={1}
+        className="w-full"
+      />
+      <div className="flex justify-between text-xs text-slate-400 mt-1">
+        <span>Poor (1)</span>
+        <span>Excellent (10)</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -603,18 +897,26 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
         </div>
       </Card>
 
-      {/* Quick Edit Fields */}
+      {/* Basic Information */}
       <Card className="p-4 bg-slate-800 border-slate-700">
         <h3 className="text-white font-semibold mb-4 flex items-center">
           <User className="h-4 w-4 mr-2 text-orange-400" />
           Basic Information
         </h3>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-slate-400 mb-1 block">Display Name</label>
+            <label className="text-sm text-slate-400 mb-1 block">First Name</label>
             <Input
-              value={profile.displayName}
-              onChange={(e) => updateProfile('displayName', e.target.value)}
+              value={profile.firstName}
+              onChange={(e) => updateProfile('firstName', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Last Name</label>
+            <Input
+              value={profile.lastName}
+              onChange={(e) => updateProfile('lastName', e.target.value)}
               className="bg-slate-700 border-slate-600 text-white"
             />
           </div>
@@ -636,6 +938,28 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
             />
           </div>
           <div>
+            <label className="text-sm text-slate-400 mb-1 block">Birth Date</label>
+            <Input
+              value={profile.dateOfBirth}
+              onChange={(e) => updateProfile('dateOfBirth', e.target.value)}
+              type="date"
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Gender</label>
+            <Select value={profile.gender} onValueChange={(value) => updateProfile('gender', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="male" className="text-white">Male</SelectItem>
+                <SelectItem value="female" className="text-white">Female</SelectItem>
+                <SelectItem value="other" className="text-white">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2">
             <label className="text-sm text-slate-400 mb-1 block">Bio</label>
             <Textarea
               value={profile.bio}
@@ -653,7 +977,7 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
           <Gamepad2 className="h-4 w-4 mr-2 text-orange-400" />
           Playing Profile
         </h3>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-slate-400 mb-1 block">Skill Level</label>
             <Select value={profile.skillLevel} onValueChange={(value) => updateProfile('skillLevel', value)}>
@@ -661,6 +985,8 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="2.0" className="text-white">2.0 - Beginner</SelectItem>
+                <SelectItem value="2.5" className="text-white">2.5 - Novice</SelectItem>
                 <SelectItem value="3.0" className="text-white">3.0 - Beginner+</SelectItem>
                 <SelectItem value="3.5" className="text-white">3.5 - Intermediate</SelectItem>
                 <SelectItem value="4.0" className="text-white">4.0 - Advanced</SelectItem>
@@ -680,8 +1006,200 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
                 <SelectItem value="Defensive baseline" className="text-white">Defensive Baseline</SelectItem>
                 <SelectItem value="Net rusher" className="text-white">Net Rusher</SelectItem>
                 <SelectItem value="All-court" className="text-white">All-Court</SelectItem>
+                <SelectItem value="Counter puncher" className="text-white">Counter Puncher</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Dominant Hand</label>
+            <Select value={profile.dominantHand} onValueChange={(value) => updateProfile('dominantHand', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="right" className="text-white">Right</SelectItem>
+                <SelectItem value="left" className="text-white">Left</SelectItem>
+                <SelectItem value="ambidextrous" className="text-white">Ambidextrous</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Preferred Position</label>
+            <Select value={profile.preferredPosition} onValueChange={(value) => updateProfile('preferredPosition', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="Left side" className="text-white">Left Side (Forehand)</SelectItem>
+                <SelectItem value="Right side" className="text-white">Right Side (Backhand)</SelectItem>
+                <SelectItem value="Either" className="text-white">Either Side</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Preferred Format</label>
+            <Select value={profile.preferredFormat} onValueChange={(value) => updateProfile('preferredFormat', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="Singles" className="text-white">Singles</SelectItem>
+                <SelectItem value="Doubles" className="text-white">Doubles</SelectItem>
+                <SelectItem value="Mixed doubles" className="text-white">Mixed Doubles</SelectItem>
+                <SelectItem value="Any" className="text-white">Any Format</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Playing Since</label>
+            <Input
+              value={profile.playingSince}
+              onChange={(e) => updateProfile('playingSince', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="e.g., 2 years, 6 months"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Skill Assessment */}
+      <Card className="p-4 bg-slate-800 border-slate-700">
+        <h3 className="text-white font-semibold mb-4 flex items-center">
+          <Target className="h-4 w-4 mr-2 text-orange-400" />
+          Skill Assessment
+        </h3>
+        <div className="space-y-4">
+          <SkillSlider label="Forehand Strength" value={profile.forehandStrength} field="forehandStrength" />
+          <SkillSlider label="Backhand Strength" value={profile.backhandStrength} field="backhandStrength" />
+          <SkillSlider label="Serve Power" value={profile.servePower} field="servePower" />
+          <SkillSlider label="Dink Accuracy" value={profile.dinkAccuracy} field="dinkAccuracy" />
+          <SkillSlider label="Third Shot Consistency" value={profile.thirdShotConsistency} field="thirdShotConsistency" />
+          <SkillSlider label="Court Coverage" value={profile.courtCoverage} field="courtCoverage" />
+        </div>
+      </Card>
+
+      {/* Equipment */}
+      <Card className="p-4 bg-slate-800 border-slate-700">
+        <h3 className="text-white font-semibold mb-4 flex items-center">
+          <Shield className="h-4 w-4 mr-2 text-orange-400" />
+          Equipment
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Paddle Brand</label>
+            <Input
+              value={profile.paddleBrand}
+              onChange={(e) => updateProfile('paddleBrand', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="e.g., Selkirk, JOOLA, HEAD"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Paddle Model</label>
+            <Input
+              value={profile.paddleModel}
+              onChange={(e) => updateProfile('paddleModel', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="e.g., Amped Epic, Ben Johns Hyperion"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Apparel Brand</label>
+            <Input
+              value={profile.apparelBrand}
+              onChange={(e) => updateProfile('apparelBrand', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="Preferred clothing brand"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Shoes Brand</label>
+            <Input
+              value={profile.shoesBrand}
+              onChange={(e) => updateProfile('shoesBrand', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="Court shoe brand"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Physical Profile */}
+      <Card className="p-4 bg-slate-800 border-slate-700">
+        <h3 className="text-white font-semibold mb-4 flex items-center">
+          <Dumbbell className="h-4 w-4 mr-2 text-orange-400" />
+          Physical Profile
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Height (cm)</label>
+            <Input
+              value={profile.height}
+              onChange={(e) => updateProfile('height', Number(e.target.value))}
+              type="number"
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Reach (cm)</label>
+            <Input
+              value={profile.reach}
+              onChange={(e) => updateProfile('reach', Number(e.target.value))}
+              type="number"
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Fitness Level</label>
+            <Select value={profile.fitnessLevel} onValueChange={(value) => updateProfile('fitnessLevel', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="Excellent" className="text-white">Excellent</SelectItem>
+                <SelectItem value="Good" className="text-white">Good</SelectItem>
+                <SelectItem value="Average" className="text-white">Average</SelectItem>
+                <SelectItem value="Fair" className="text-white">Fair</SelectItem>
+                <SelectItem value="Poor" className="text-white">Poor</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
+      {/* External Ratings */}
+      <Card className="p-4 bg-slate-800 border-slate-700">
+        <h3 className="text-white font-semibold mb-4 flex items-center">
+          <Trophy className="h-4 w-4 mr-2 text-orange-400" />
+          External Ratings
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">DUPR Rating</label>
+            <Input
+              value={profile.duprRating}
+              onChange={(e) => updateProfile('duprRating', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="e.g., 4.2"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">UTPR Rating</label>
+            <Input
+              value={profile.utprRating}
+              onChange={(e) => updateProfile('utprRating', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="e.g., 4.1"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">WPR Rating</label>
+            <Input
+              value={profile.wprRating}
+              onChange={(e) => updateProfile('wprRating', e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="e.g., 4.0"
+            />
           </div>
         </div>
       </Card>
@@ -693,6 +1211,36 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
           Preferences
         </h3>
         <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">Preferred Surface</label>
+              <Select value={profile.preferredSurface} onValueChange={(value) => updateProfile('preferredSurface', value)}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectItem value="Outdoor courts" className="text-white">Outdoor Courts</SelectItem>
+                  <SelectItem value="Indoor courts" className="text-white">Indoor Courts</SelectItem>
+                  <SelectItem value="Both" className="text-white">Both Indoor/Outdoor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">Match Duration</label>
+              <Select value={profile.preferredMatchDuration} onValueChange={(value) => updateProfile('preferredMatchDuration', value)}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectItem value="30 minutes" className="text-white">30 minutes</SelectItem>
+                  <SelectItem value="1 hour" className="text-white">1 hour</SelectItem>
+                  <SelectItem value="1-2 hours" className="text-white">1-2 hours</SelectItem>
+                  <SelectItem value="2+ hours" className="text-white">2+ hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div>
               <div className="text-white font-medium">Looking for Partners</div>
@@ -711,6 +1259,19 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
             <Switch
               checked={profile.mentorshipInterest}
               onCheckedChange={(checked) => updateProfile('mentorshipInterest', checked)}
+            />
+          </div>
+          
+          <SkillSlider label="Competitive Intensity" value={profile.competitiveIntensity} field="competitiveIntensity" />
+          
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Travel Radius (km)</label>
+            <Input
+              value={profile.travelRadiusKm}
+              onChange={(e) => updateProfile('travelRadiusKm', Number(e.target.value))}
+              type="number"
+              className="bg-slate-700 border-slate-600 text-white"
+              placeholder="How far will you travel?"
             />
           </div>
         </div>
@@ -741,20 +1302,11 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [activeTab, setActiveTab] = useState<TabMode>('passport');
-  const [showFullPassport, setShowFullPassport] = useState(false);
-
-  const handlePassportClick = () => {
-    if (activeTab !== 'passport') {
-      setActiveTab('passport');
-    } else {
-      setShowFullPassport(!showFullPassport);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      {/* Mini Passport Header */}
-      <MiniPassportHeader player={mockPlayer} onPassportClick={handlePassportClick} />
+      {/* Notifications Header */}
+      <NotificationsHeader player={mockPlayer} />
       
       {/* Content Area */}
       <div className="p-4 pb-24"> {/* pb-24 for bottom nav space */}
