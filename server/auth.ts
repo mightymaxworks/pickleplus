@@ -508,26 +508,36 @@ export function setupAuth(app: Express) {
     try {
       // Add more robust error handling
       if (!id || typeof id !== 'number') {
-        console.error('Invalid user ID in deserializeUser:', id);
+        console.error('[Auth] Invalid user ID in deserializeUser:', { id, type: typeof id });
         return done(null, false);
       }
       
-      console.log(`[Auth] Attempting to deserialize user with ID: ${id}`);
+      console.log(`[Auth] Attempting to deserialize user with ID: ${id} (type: ${typeof id})`);
+      
+      // Add explicit check for storage object
+      if (!storage) {
+        console.error('[Auth] Storage object is undefined in deserializeUser');
+        return done(null, false);
+      }
+      
+      console.log('[Auth] Storage object exists, calling getUser...');
       const user = await storage.getUser(id);
+      console.log(`[Auth] getUser returned:`, { user: !!user, userType: typeof user });
       
       // Ensure we found a valid user
       if (!user) {
-        console.log(`User with ID ${id} not found during deserialization`);
+        console.log(`[Auth] User with ID ${id} not found during deserialization`);
+        // Let's try to debug why by checking if the user exists in raw SQL
+        console.log(`[Auth] Debugging: Will check database directly for user ID ${id}`);
         return done(null, false);
       }
       
-      console.log(`[Auth] User found: ${user.username} (ID: ${user.id})`);
+      console.log(`[Auth] User found successfully: ${user.username} (ID: ${user.id}, isAdmin: ${user.isAdmin})`);
       
-      // For now, skip the complex role fetching that might be causing issues
-      // Just return the user with basic admin flag from database
+      // Return the user directly without extra complexity
       const enhancedUser = {
         ...user,
-        roles: []
+        roles: [] // Simplified for debugging
       };
       
       console.log(`[Auth] User ${user.username} (ID: ${user.id}) successfully deserialized`);
@@ -535,8 +545,13 @@ export function setupAuth(app: Express) {
       // Successfully found user
       return done(null, enhancedUser);
     } catch (error) {
-      // Log the error for debugging
-      console.error('Error in deserializeUser:', error);
+      // Log the error for debugging with more detail
+      console.error('[Auth] Error in deserializeUser:', {
+        error: error.message,
+        stack: error.stack,
+        id,
+        idType: typeof id
+      });
       // Return false instead of the error to prevent crash
       return done(null, false);
     }
