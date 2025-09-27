@@ -31,7 +31,9 @@ import {
   Globe,
   Filter,
   Settings,
-  X
+  X,
+  IdCard,
+  UserCog
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -404,9 +406,54 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
 }
 
 // Main Arena Component
+// Navigation Tab Types
+type TabMode = 'passport' | 'play' | 'rankings' | 'profile';
+
+// Navigation Tabs Component for Match Arena
+function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
+  const tabs = [
+    { id: 'passport' as TabMode, label: 'Passport', icon: IdCard, path: '/unified-prototype' },
+    { id: 'play' as TabMode, label: 'Play', icon: Activity, path: '/match-arena' },
+    { id: 'rankings' as TabMode, label: 'Rankings', icon: Trophy, path: '/unified-prototype' },
+    { id: 'profile' as TabMode, label: 'Profile', icon: UserCog, path: '/unified-prototype' },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 z-50">
+      <div className="flex">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                if (tab.path !== '/match-arena') {
+                  // Navigate to other pages
+                  window.location.href = tab.path;
+                } else {
+                  onTabChange(tab.id);
+                }
+              }}
+              className={`flex-1 p-4 flex flex-col items-center gap-1 transition-colors ${
+                activeTab === tab.id 
+                  ? 'text-orange-400 bg-orange-500/10' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function MatchArena() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<TabMode>('play'); // Default to 'play' for match arena
   const [arenaMode, setArenaMode] = useState<'lobby' | 'search' | 'challenges' | 'doubles'>('lobby');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
@@ -640,7 +687,7 @@ export default function MatchArena() {
   const availableCount = arenaPlayers.filter(p => p.status === 'available' || p.status === 'online').length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 pb-24"> {/* pb-24 for bottom nav space */
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1021,6 +1068,12 @@ export default function MatchArena() {
         }}
         onSendChallenge={handleSendChallenge}
         myPartner={myPartner}
+      />
+      
+      {/* Bottom Navigation */}
+      <NavigationTabs 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
     </div>
   );
