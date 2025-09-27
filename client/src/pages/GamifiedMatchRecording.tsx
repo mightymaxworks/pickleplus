@@ -256,9 +256,45 @@ interface MatchState {
 
 export default function GamifiedMatchRecording() {
   const [showConfig, setShowConfig] = useState(true);
+  
+  // Get real player names from session storage or use defaults
+  const getInitialPlayerNames = () => {
+    try {
+      const storedNames = sessionStorage.getItem('realPlayerNames');
+      if (storedNames) {
+        const playerNames = JSON.parse(storedNames);
+        
+        // Check if it's a doubles match (has team players)
+        if (playerNames.team1Player1 && playerNames.team2Player1) {
+          return {
+            player1: `${playerNames.team1Player1} & ${playerNames.team1Player2}`,
+            player2: `${playerNames.team2Player1} & ${playerNames.team2Player2}`
+          };
+        }
+        // Singles match
+        else if (playerNames.player1 && playerNames.player2) {
+          return {
+            player1: playerNames.player1,
+            player2: playerNames.player2
+          };
+        }
+      }
+    } catch (error) {
+      console.log('Could not load player names from session storage:', error);
+    }
+    
+    // Fallback to defaults if no session storage data
+    return {
+      player1: 'Alex Chen',
+      player2: 'Sarah Martinez'
+    };
+  };
+
+  const initialNames = getInitialPlayerNames();
+  
   const [matchState, setMatchState] = useState<MatchState>({
-    player1: { name: 'Alex Chen', id: '1', tier: 'Elite', score: 0 },
-    player2: { name: 'Sarah Martinez', id: '2', tier: 'Professional', score: 0 },
+    player1: { name: initialNames.player1, id: '1', tier: 'Elite', score: 0 },
+    player2: { name: initialNames.player2, id: '2', tier: 'Professional', score: 0 },
     gameHistory: [],
     currentGame: 1,
     matchComplete: false,
@@ -380,9 +416,10 @@ export default function GamifiedMatchRecording() {
   };
 
   const resetMatch = () => {
+    const resetNames = getInitialPlayerNames();
     setMatchState(prev => ({
-      player1: { name: 'Alex Chen', id: '1', tier: 'Elite', score: 0 },
-      player2: { name: 'Sarah Martinez', id: '2', tier: 'Professional', score: 0 },
+      player1: { name: resetNames.player1, id: '1', tier: 'Elite', score: 0 },
+      player2: { name: resetNames.player2, id: '2', tier: 'Professional', score: 0 },
       gameHistory: [],
       currentGame: 1,
       matchComplete: false,
