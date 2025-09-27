@@ -753,7 +753,14 @@ export default function MatchArena() {
           >
             <DoublesPartnerSystem
               onPartnerFound={(partner) => {
-                setMyPartner(partner); // Update partner state
+                // Convert PartnerProfile to ArenaPlayer format
+                const arenaPartner: ArenaPlayer = {
+                  ...partner,
+                  status: 'online' as PlayerStatus,
+                  matchType: 'doubles-team' as MatchType,
+                  lastSeen: 'now'
+                };
+                setMyPartner(arenaPartner); // Update partner state
                 toast({
                   title: "🎾 Team Ready!",
                   description: `You and ${partner.name} are now a doubles team. Ready to challenge other teams?`,
