@@ -1550,7 +1550,7 @@ export default function UnifiedPrototype() {
     autoReconnect: false, // Disable for demo mode
     onMessage: (message) => {
       console.log('📡 Received notification:', message);
-      if (message.type === 'system' || message.type === 'match_request') {
+      if (message.type === 'new_notification') {
         setNotifications(prev => [{
           id: Date.now().toString(),
           type: message.type,
