@@ -1672,7 +1672,7 @@ function PlayModeContent() {
 function RankingsModeContent({ player }: { player: PlayerData }) {
   const [selectedFormat, setSelectedFormat] = useState('singles'); // singles, doubles, mixed-doubles
   const [selectedGender, setSelectedGender] = useState('men'); // men, women
-  const [selectedView, setSelectedView] = useState('local'); // local, regional, global
+  const [selectedView, setSelectedView] = useState('global'); // local, regional, global
   const [searchQuery, setSearchQuery] = useState('');
   
   // Fetch real rankings data from API with format and gender specifications
