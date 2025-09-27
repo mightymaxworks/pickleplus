@@ -41,7 +41,8 @@ import {
   Timer,
   Send,
   Filter,
-  Search
+  Search,
+  Copy
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -364,6 +365,7 @@ function NotificationsHeader({
   connected: boolean;
   onTriggerDemo: () => void;
 }) {
+  const { toast } = useToast();
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
   
@@ -381,7 +383,19 @@ function NotificationsHeader({
           </div>
           <div>
             <div className="text-white font-semibold">{player.name}</div>
-            <div className="text-slate-400 text-sm">🎫 {player.passportCode}</div>
+            <div className="text-slate-400 text-sm flex items-center gap-2">
+              <IdCard className="h-3 w-3" />
+              <span>{player.passportCode}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(player.passportCode);
+                  toast({ title: "Passport code copied!", duration: 2000 });
+                }}
+                className="hover:text-slate-300 transition-colors"
+              >
+                <Copy className="h-3 w-3" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -595,6 +609,7 @@ function PassportModeContent({
   passportPhoto?: string;
   onPhotoUpload: () => void;
 }) {
+  const { toast } = useToast();
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
@@ -634,7 +649,19 @@ function PassportModeContent({
             
             <h2 className="text-3xl font-bold mb-1">{player.name}</h2>
             <Badge className="bg-white/30 text-white px-4 py-2 text-base">{config.name} Player</Badge>
-            <div className="text-white/90 text-lg mt-2">🎫 {player.passportCode}</div>
+            <div className="text-white/90 text-lg mt-2 flex items-center gap-3">
+              <IdCard className="h-4 w-4" />
+              <span>{player.passportCode}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(player.passportCode);
+                  toast({ title: "Passport code copied!", duration: 2000 });
+                }}
+                className="hover:text-white/70 transition-colors"
+              >
+                <Copy className="h-4 w-4" />
+              </button>
+            </div>
             
             {!passportPhoto && (
               <div className="mt-3">
