@@ -61,13 +61,13 @@ import { useQuery } from '@tanstack/react-query';
 
 // Passport Code Utilities
 function formatPassportCode(code: string): string {
-  // Format as AAAA-1234 (4-4 segments)
-  return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4, 8)}` : code;
+  // Official passport codes have no hyphens (e.g., HVGN0BW0)
+  return code;
 }
 
 function maskPassportCode(code: string, revealed: boolean): string {
   if (revealed) return formatPassportCode(code);
-  return code.length === 8 ? `••••-${code.slice(4, 8)}` : '••••-••••';
+  return code.length === 8 ? `••••${code.slice(4, 8)}` : '••••••••';
 }
 
 // Enhanced tier styling with premium visual effects
@@ -1670,8 +1670,8 @@ function PlayModeContent() {
 
 // Rankings Mode Content - Enhanced with real data integration
 function RankingsModeContent({ player }: { player: PlayerData }) {
-  const [selectedFormat, setSelectedFormat] = useState('singles'); // singles, mens-doubles, womens-doubles, mixed-doubles-men, mixed-doubles-women
-  const [selectedGender, setSelectedGender] = useState('all'); // all, male, female  
+  const [selectedFormat, setSelectedFormat] = useState('singles'); // singles, doubles, mixed-doubles
+  const [selectedGender, setSelectedGender] = useState('men'); // men, women
   const [selectedView, setSelectedView] = useState('local'); // local, regional, global
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -1679,8 +1679,16 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
   const { data: leaderboardData, isLoading: isLoadingLeaderboard, error: leaderboardError } = useQuery({
     queryKey: ['/api/enhanced-leaderboard', selectedFormat, selectedGender, selectedView],
     queryFn: () => {
+      // Convert new format structure to API format
+      let apiFormat = selectedFormat;
+      if (selectedFormat === 'doubles') {
+        apiFormat = selectedGender === 'men' ? 'mens-doubles' : 'womens-doubles';
+      } else if (selectedFormat === 'mixed-doubles') {
+        apiFormat = selectedGender === 'men' ? 'mixed-doubles-men' : 'mixed-doubles-women';
+      }
+      
       const params = new URLSearchParams({
-        format: selectedFormat,
+        format: apiFormat,
         gender: selectedGender,
         division: 'open', // Default to open division
         view: selectedView
@@ -1800,10 +1808,8 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
             {[
               { key: 'singles', label: 'Singles' },
-              { key: 'mens-doubles', label: "Men's Doubles" },
-              { key: 'womens-doubles', label: "Women's Doubles" },
-              { key: 'mixed-doubles-men', label: 'Mixed (Men)' },
-              { key: 'mixed-doubles-women', label: 'Mixed (Women)' }
+              { key: 'doubles', label: 'Doubles' },
+              { key: 'mixed-doubles', label: 'Mixed Doubles' }
             ].map((format) => (
               <Button
                 key={format.key}
@@ -1821,18 +1827,16 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
             ))}
           </div>
           
-          {/* Gender Filter (for singles) */}
-          {selectedFormat === 'singles' && (
-            <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-              {[
-                { key: 'all', label: 'All Genders' },
-                { key: 'male', label: 'Men' },
-                { key: 'female', label: 'Women' }
-              ].map((gender) => (
-                <Button
-                  key={gender.key}
-                  size="sm"
-                  variant={selectedGender === gender.key ? 'default' : 'ghost'}
+          {/* Gender Selection */}
+          <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+            {[
+              { key: 'men', label: 'Men' },
+              { key: 'women', label: 'Women' }
+            ].map((gender) => (
+              <Button
+                key={gender.key}
+                size="sm"
+                variant={selectedGender === gender.key ? 'default' : 'ghost'}
                   className={`flex-1 text-xs ${
                     selectedGender === gender.key 
                       ? 'bg-blue-500 hover:bg-blue-600 text-white' 
