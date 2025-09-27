@@ -158,10 +158,11 @@ router.get('/', async (req, res) => {
       gender = 'male',
       search = '',
       page = '1',
-      limit = '20'
+      limit = '20',
+      view = 'global' // Geographic filtering: local, regional, global
     } = req.query;
 
-    console.log(`[ENHANCED LEADERBOARD] Main endpoint called with: format=${format}, division=${division}, gender=${gender}`);
+    console.log(`[ENHANCED LEADERBOARD] Main endpoint called with: format=${format}, division=${division}, gender=${gender}, view=${view}`);
 
     const pageNum = parseInt(page as string, 10) || 1;
     const limitNum = parseInt(limit as string, 10) || 20;
@@ -236,9 +237,9 @@ router.get('/', async (req, res) => {
       return res.json(response);
     }
 
-    // For adult categories, use the real leaderboard data from database
+    // For adult categories, use the real leaderboard data from database with UDF algorithm compliance
     const currentUserId = req.user?.id;
-    const fullLeaderboardData = await getRealLeaderboardData(format as string, division as string, gender as string, search as string, currentUserId, req);
+    const fullLeaderboardData = await getRealLeaderboardData(format as string, division as string, gender as string, search as string, currentUserId, req, view as string);
     
     // Find current user position in full dataset (before pagination)
     let currentUserPosition = undefined;
