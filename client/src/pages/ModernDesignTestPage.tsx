@@ -2,9 +2,409 @@ import { motion, useScroll, useTransform, useSpring, useInView } from "framer-mo
 import { useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Trophy, TrendingUp, Users, Zap, Shield, Globe, Star } from "lucide-react";
+import { ArrowRight, Trophy, TrendingUp, Users, Zap, Shield, Globe, Star, Sparkles, Crown, Flame } from "lucide-react";
 import ReactPlayer from "react-player";
 import YouTube from "react-youtube";
+
+// Trading Card Rarity Types
+type CardRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+
+interface TradingCard {
+  id: string;
+  playerName: string;
+  rating: number;
+  rarity: CardRarity;
+  achievements: string[];
+  cardNumber: string;
+  foilType?: string;
+}
+
+// Card rarity configurations
+const rarityConfig: Record<CardRarity, {
+  bgGradient: string;
+  glowColor: string;
+  borderColor: string;
+  icon: React.ComponentType<any>;
+  particles: boolean;
+  holographic: boolean;
+}> = {
+  common: {
+    bgGradient: 'from-slate-600 to-slate-700',
+    glowColor: 'shadow-slate-500/20',
+    borderColor: 'border-slate-400/30',
+    icon: Users,
+    particles: false,
+    holographic: false,
+  },
+  rare: {
+    bgGradient: 'from-blue-500 to-blue-600',
+    glowColor: 'shadow-blue-500/40',
+    borderColor: 'border-blue-400/50',
+    icon: Shield,
+    particles: false,
+    holographic: false,
+  },
+  epic: {
+    bgGradient: 'from-purple-500 to-purple-600',
+    glowColor: 'shadow-purple-500/50',
+    borderColor: 'border-purple-400/60',
+    icon: Sparkles,
+    particles: true,
+    holographic: false,
+  },
+  legendary: {
+    bgGradient: 'from-orange-500 to-orange-600',
+    glowColor: 'shadow-orange-500/60',
+    borderColor: 'border-orange-400/70',
+    icon: Crown,
+    particles: true,
+    holographic: true,
+  },
+  mythic: {
+    bgGradient: 'from-red-500 via-pink-500 to-purple-500',
+    glowColor: 'shadow-red-500/70',
+    borderColor: 'border-red-400/80',
+    icon: Flame,
+    particles: true,
+    holographic: true,
+  },
+};
+
+// Foil Pack Opening Component
+function FoilPackOpening({ onReveal }: { onReveal: () => void }) {
+  const [isOpening, setIsOpening] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+
+  const handleOpenPack = () => {
+    setIsOpening(true);
+    setTimeout(() => {
+      setIsRevealed(true);
+      onReveal();
+    }, 1500);
+  };
+
+  if (isRevealed) return null;
+
+  return (
+    <motion.div
+      className="relative w-80 h-64 mx-auto cursor-pointer"
+      onClick={handleOpenPack}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      {/* Foil Pack */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-silver-400 via-gray-300 to-silver-500 rounded-xl shadow-2xl border-2 border-silver-300"
+        animate={isOpening ? { 
+          rotateY: 180, 
+          scale: 0.8,
+          opacity: 0 
+        } : {}}
+        transition={{ duration: 1.5, ease: "easeInOut" }}
+        style={{
+          background: `linear-gradient(45deg, 
+            #e5e7eb 0%, 
+            #f3f4f6 25%, 
+            #e5e7eb 50%, 
+            #f3f4f6 75%, 
+            #e5e7eb 100%)`,
+          backgroundSize: '20px 20px',
+        }}
+      >
+        {/* Holographic overlay */}
+        <motion.div
+          className="absolute inset-0 rounded-xl opacity-60"
+          animate={{
+            background: [
+              'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.8) 50%, transparent 70%)',
+              'linear-gradient(45deg, transparent 70%, rgba(255,255,255,0.8) 90%, transparent 110%)',
+            ]
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        />
+        
+        {/* Pack Content */}
+        <div className="relative z-10 p-6 h-full flex flex-col justify-between text-slate-800">
+          <div className="text-center">
+            <h3 className="text-lg font-bold mb-2">PICKLE+ CARD PACK</h3>
+            <p className="text-sm opacity-70">Premium Player Collection</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Sparkles className="h-6 w-6 text-orange-600" />
+            </div>
+            <p className="text-xs opacity-60">Click to Open</p>
+          </div>
+        </div>
+      </motion.div>
+      
+      {/* Opening effect particles */}
+      {isOpening && (
+        <div className="absolute inset-0 pointer-events-none">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-orange-400 rounded-full"
+              initial={{ 
+                x: 160, 
+                y: 132, 
+                scale: 0, 
+                opacity: 1 
+              }}
+              animate={{ 
+                x: 160 + (Math.random() - 0.5) * 400,
+                y: 132 + (Math.random() - 0.5) * 400,
+                scale: [0, 1, 0],
+                opacity: [1, 1, 0]
+              }}
+              transition={{ 
+                duration: 1.5, 
+                delay: i * 0.1,
+                ease: "easeOut" 
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// Individual Trading Card Component
+function TradingCard({ 
+  card, 
+  mousePosition 
+}: { 
+  card: TradingCard; 
+  mousePosition: { x: number; y: number } 
+}) {
+  const config = rarityConfig[card.rarity];
+  const IconComponent = config.icon;
+
+  return (
+    <motion.div
+      className="relative w-80 h-64 mx-auto"
+      style={{
+        rotateX: mousePosition.y * 10,
+        rotateY: mousePosition.x * 10,
+        transformStyle: "preserve-3d",
+      }}
+      whileHover={{ scale: 1.05 }}
+      initial={{ opacity: 0, scale: 0.8, rotateY: 180 }}
+      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+      transition={{ duration: 1, ease: "easeOut" }}
+    >
+      {/* Card Glow Effect */}
+      <div className={`absolute inset-0 rounded-xl blur-xl ${config.glowColor} opacity-50`} />
+      
+      {/* Main Card */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${config.bgGradient} rounded-xl border-2 ${config.borderColor} shadow-2xl overflow-hidden`}>
+        
+        {/* Holographic Effect for Higher Rarities */}
+        {config.holographic && (
+          <motion.div
+            className="absolute inset-0 rounded-xl opacity-30"
+            style={{
+              background: `linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.6) 50%, 
+                transparent 70%)`,
+              transform: `translateX(${mousePosition.x * 30}px) translateY(${mousePosition.y * 30}px)`,
+            }}
+          />
+        )}
+        
+        {/* Particle Effects for Epic+ */}
+        {config.particles && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white rounded-full opacity-60"
+                animate={{
+                  x: [0, Math.random() * 320, 0],
+                  y: [0, Math.random() * 256, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: i * 0.5,
+                  ease: "easeInOut",
+                }}
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+        
+        {/* Card Content */}
+        <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
+          {/* Header */}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <IconComponent className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wide">
+                  {card.rarity}
+                </span>
+              </div>
+              <p className="text-xs opacity-80">{card.cardNumber}</p>
+            </div>
+            <motion.div
+              className="w-8 h-8 border border-white/30 rounded bg-white/10 flex items-center justify-center"
+              animate={{ rotate: card.rarity === 'mythic' ? 360 : 0 }}
+              transition={{ 
+                duration: card.rarity === 'mythic' ? 4 : 0, 
+                repeat: card.rarity === 'mythic' ? Infinity : 0, 
+                ease: "linear" 
+              }}
+            >
+              <div className="text-xs font-bold">
+                {card.rating >= 1800 ? '⭐' : card.rating >= 1000 ? '🏆' : '🎯'}
+              </div>
+            </motion.div>
+          </div>
+          
+          {/* Player Info */}
+          <div className="text-center">
+            <motion.h3 
+              className="text-xl font-bold mb-2"
+              animate={card.rarity === 'mythic' ? {
+                textShadow: [
+                  '0 0 5px rgba(255,255,255,0.5)',
+                  '0 0 20px rgba(255,255,255,0.8)',
+                  '0 0 5px rgba(255,255,255,0.5)',
+                ]
+              } : {}}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {card.playerName}
+            </motion.h3>
+            <p className="text-lg font-semibold mb-1">{card.rating} PCP</p>
+            <div className="flex flex-wrap gap-1 justify-center">
+              {card.achievements.slice(0, 2).map((achievement, i) => (
+                <span key={i} className="text-xs bg-white/20 px-2 py-1 rounded">
+                  {achievement}
+                </span>
+              ))}
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="text-center">
+            <p className="text-xs opacity-70">PICKLE+ TRADING CARDS</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Card depth shadow */}
+      <div className="absolute inset-0 bg-black/30 rounded-xl transform translate-z-[-10px]" />
+    </motion.div>
+  );
+}
+
+// Main Trading Card Showcase Component
+function TradingCardShowcase({ 
+  mousePosition 
+}: { 
+  mousePosition: { x: number; y: number } 
+}) {
+  const [showPack, setShowPack] = useState(true);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  
+  // Sample cards with different rarities
+  const sampleCards: TradingCard[] = [
+    {
+      id: '1',
+      playerName: 'ALEX CHEN',
+      rating: 1247,
+      rarity: 'legendary',
+      achievements: ['Tournament Winner', 'Rising Star'],
+      cardNumber: '#001/1000',
+    },
+    {
+      id: '2',
+      playerName: 'SARAH MARTINEZ',
+      rating: 892,
+      rarity: 'epic',
+      achievements: ['Team Captain', 'Consistent Player'],
+      cardNumber: '#047/1000',
+    },
+    {
+      id: '3',
+      playerName: 'MIKE JOHNSON',
+      rating: 1856,
+      rarity: 'mythic',
+      achievements: ['Hall of Fame', 'Perfect Season'],
+      cardNumber: '#001/100',
+    },
+  ];
+
+  const handlePackReveal = () => {
+    setShowPack(false);
+  };
+
+  const cycleCard = () => {
+    setCurrentCardIndex((prev) => (prev + 1) % sampleCards.length);
+  };
+
+  if (showPack) {
+    return <FoilPackOpening onReveal={handlePackReveal} />;
+  }
+
+  return (
+    <div className="relative">
+      <TradingCard 
+        card={sampleCards[currentCardIndex]} 
+        mousePosition={mousePosition} 
+      />
+      
+      {/* Card cycling controls */}
+      <motion.div 
+        className="flex justify-center gap-4 mt-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2 }}
+      >
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={cycleCard}
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          View Next Card
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowPack(true)}
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          Open New Pack
+        </Button>
+      </motion.div>
+      
+      {/* Rarity indicator */}
+      <motion.div 
+        className="text-center mt-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+      >
+        <p className="text-sm text-slate-300">
+          Rarity: <span className={`font-bold capitalize text-${rarityConfig[sampleCards[currentCardIndex].rarity].bgGradient.split('-')[1]}-400`}>
+            {sampleCards[currentCardIndex].rarity}
+          </span>
+        </p>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function ModernDesignTestPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -129,7 +529,7 @@ export default function ModernDesignTestPage() {
         style={{ y: yHero, opacity: opacityHero }}
       >
         <div className="max-w-6xl mx-auto text-center">
-          {/* 3D Passport Card */}
+          {/* Trading Card Pack Opening Experience */}
           <motion.div
             className="relative mb-12"
             style={{ scale: scalePassport }}
@@ -137,86 +537,35 @@ export default function ModernDesignTestPage() {
             animate={{ opacity: heroInView ? 1 : 0, y: heroInView ? 0 : 100 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <motion.div
-              className="w-80 h-48 mx-auto relative"
-              style={{
-                rotateX: mousePosition.y * 15,
-                rotateY: mousePosition.x * 15,
-                transformStyle: "preserve-3d",
-              }}
-              whileHover={{ scale: 1.05 }}
-            >
-              {/* Passport Card */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-2xl">
-                {/* Holographic effect */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl opacity-50"
-                  style={{
-                    background: `linear-gradient(45deg, 
-                      transparent 30%, 
-                      rgba(255,255,255,0.3) 50%, 
-                      transparent 70%)`,
-                    transform: `translateX(${mousePosition.x * 20}px)`,
-                  }}
-                />
-                
-                {/* Card Content */}
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-sm font-bold">PICKLE+ PASSPORT</h3>
-                      <p className="text-xs opacity-80">Universal Player ID</p>
-                    </div>
-                    <motion.div
-                      className="w-8 h-8 border border-white/30 rounded"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    >
-                      <div className="w-full h-full bg-white/20 rounded flex items-center justify-center text-xs">
-                        QR
-                      </div>
-                    </motion.div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-xl font-bold mb-1">ALEX CHEN</p>
-                    <p className="text-sm opacity-80">ID: HVGN0BW0</p>
-                    <p className="text-sm opacity-80">Rating: 1247 PCP</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Card shadow/depth */}
-              <div className="absolute inset-0 bg-black/20 rounded-xl transform translate-z-[-10px]" />
-            </motion.div>
+            <TradingCardShowcase mousePosition={mousePosition} />
           </motion.div>
 
-          {/* Kinetic Typography */}
+          {/* Kinetic Typography - Softer & More Elegant */}
           <motion.div className="mb-12">
-            <motion.h1 className="text-6xl md:text-8xl font-black leading-tight mb-8 text-white">
-              {["YOUR", "PICKLEBALL", "PASSPORT", "STARTS", "HERE"].map((word, i) => (
+            <motion.h1 className="text-4xl md:text-6xl font-semibold leading-tight mb-8 text-white">
+              {["COLLECT", "YOUR", "PLAYER", "CARD"].map((word, i) => (
                 <motion.span
                   key={word}
-                  className={`inline-block mr-6 ${i === 1 ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500' : ''}`}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: heroInView ? 1 : 0, y: heroInView ? 0 : 50 }}
-                  transition={{ duration: 0.8, delay: i * 0.1 }}
-                  whileHover={{ scale: 1.05, color: "#f97316" }}
+                  className={`inline-block mr-4 ${i === 2 ? 'text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500' : ''}`}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: heroInView ? 1 : 0, y: heroInView ? 0 : 30 }}
+                  transition={{ duration: 0.6, delay: i * 0.15 }}
+                  whileHover={{ scale: 1.02, color: "#f97316" }}
                 >
                   {word}
-                  {i === 2 && <br />}
+                  {i === 1 && <br />}
                 </motion.span>
               ))}
             </motion.h1>
             
             <motion.p
-              className="text-xl md:text-2xl text-slate-300 leading-relaxed mb-12 max-w-3xl mx-auto"
+              className="text-lg md:text-xl text-slate-300 leading-relaxed mb-12 max-w-3xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: heroInView ? 1 : 0 }}
               transition={{ duration: 1, delay: 0.5 }}
             >
-              Every player deserves a verified identity. Track your journey, connect with others, 
-              and prove your skills with the universal pickleball passport system.
+              Unlock your unique player card with every achievement. From common beginnings to legendary status - 
+              your pickleball journey becomes a collectible story worth sharing.
             </motion.p>
           </motion.div>
 
@@ -241,7 +590,7 @@ export default function ModernDesignTestPage() {
                   className="relative z-10 flex items-center"
                   animate={{ x: isHovering ? 5 : 0 }}
                 >
-                  Get My Passport
+                  Claim My Card
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </motion.span>
                 
