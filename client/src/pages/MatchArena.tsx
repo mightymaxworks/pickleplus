@@ -44,6 +44,15 @@ interface Challenge {
   status: 'pending' | 'accepted' | 'declined';
 }
 
+interface PartnerRequest {
+  id: string;
+  requester: ArenaPlayer;
+  target: ArenaPlayer;
+  message: string;
+  timestamp: string;
+  status: 'pending' | 'accepted' | 'declined';
+}
+
 // Navigation Tabs Component (matching UnifiedPrototype style)
 function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
   const tabs = [
@@ -269,7 +278,7 @@ export default function MatchArena() {
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<ArenaPlayer | null>(null);
   const [isSearchingPartner, setIsSearchingPartner] = useState(false);
-  const [partnerRequests, setPartnerRequests] = useState<ArenaPlayer[]>([]);
+  const [partnerRequests, setPartnerRequests] = useState<PartnerRequest[]>([]);
 
   const myPlayerId = 'current-player';
 
@@ -342,6 +351,41 @@ export default function MatchArena() {
   };
 
   const handlePartnerUp = (player: ArenaPlayer) => {
+    // Send partner request
+    const partnerRequest: PartnerRequest = {
+      id: Date.now().toString(),
+      requester: { id: myPlayerId, name: 'You' } as ArenaPlayer,
+      target: player,
+      message: `Would like to team up for doubles matches!`,
+      timestamp: new Date().toISOString(),
+      status: 'pending'
+    };
+
+    setPartnerRequests(prev => [...prev, partnerRequest]);
+    
+    toast({
+      title: '🎾 Partner Request Sent!',
+      description: `Request sent to ${player.name}. They'll be auto-accepted for demo!`,
+      duration: 3000,
+    });
+
+    // Auto-accept for demo purposes after 1.5 seconds
+    setTimeout(() => {
+      handleAcceptPartnerRequest(partnerRequest.id, player);
+    }, 1500);
+  };
+
+  const handleAcceptPartnerRequest = (requestId: string, player: ArenaPlayer) => {
+    // Update request status
+    setPartnerRequests(prev => 
+      prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'accepted' as const }
+          : req
+      )
+    );
+
+    // Form partnership
     const partnerData: ArenaPlayer = {
       ...player,
       matchType: 'doubles-team' as MatchType,
@@ -356,6 +400,11 @@ export default function MatchArena() {
       description: `You and ${player.name} are now a doubles team!`,
       duration: 4000,
     });
+
+    // Remove accepted request after a short delay
+    setTimeout(() => {
+      setPartnerRequests(prev => prev.filter(req => req.id !== requestId));
+    }, 2000);
   };
 
   const filteredPlayers = arenaPlayers.filter(player => {
