@@ -204,6 +204,13 @@ function GameifiedPlayerCard({ player, score, isWinning, onClick }: {
   );
 }
 
+interface MatchConfig {
+  scoringType: 'traditional' | 'rally';
+  pointTarget: 11 | 15 | 21;
+  matchFormat: 'single' | 'best-of-3' | 'best-of-5';
+  winByTwo: boolean;
+}
+
 interface MatchState {
   player1: { name: string; id: string; tier: string; score: number };
   player2: { name: string; id: string; tier: string; score: number };
@@ -212,9 +219,11 @@ interface MatchState {
   matchComplete: boolean;
   achievements: Array<{ type: string; message: string; timestamp: number }>;
   streak: { player: string; count: number; type: 'win' | 'ace' };
+  config: MatchConfig;
 }
 
 export default function GamifiedMatchRecording() {
+  const [showConfig, setShowConfig] = useState(true);
   const [matchState, setMatchState] = useState<MatchState>({
     player1: { name: 'Alex Chen', id: '1', tier: 'Elite', score: 0 },
     player2: { name: 'Sarah Martinez', id: '2', tier: 'Professional', score: 0 },
@@ -222,7 +231,13 @@ export default function GamifiedMatchRecording() {
     currentGame: 1,
     matchComplete: false,
     achievements: [],
-    streak: { player: '', count: 0, type: 'win' }
+    streak: { player: '', count: 0, type: 'win' },
+    config: {
+      scoringType: 'traditional',
+      pointTarget: 11,
+      matchFormat: 'best-of-3',
+      winByTwo: true
+    }
   });
 
   const [showReaction, setShowReaction] = useState<{show: boolean; type: 'win' | 'ace' | 'streak' | 'milestone'}>({
@@ -250,11 +265,15 @@ export default function GamifiedMatchRecording() {
         newState.player2.score++;
       }
       
-      // Check for game win (11 points, win by 2)
+      // Check for game win based on config
       const p1Score = newState.player1.score;
       const p2Score = newState.player2.score;
+      const { pointTarget, winByTwo } = newState.config;
       
-      if ((p1Score >= 11 || p2Score >= 11) && Math.abs(p1Score - p2Score) >= 2) {
+      const hasReachedTarget = p1Score >= pointTarget || p2Score >= pointTarget;
+      const hasWinMargin = winByTwo ? Math.abs(p1Score - p2Score) >= 2 : p1Score !== p2Score;
+      
+      if (hasReachedTarget && hasWinMargin) {
         const winner = p1Score > p2Score ? newState.player1.name : newState.player2.name;
         
         // Add to game history
@@ -281,11 +300,14 @@ export default function GamifiedMatchRecording() {
         newState.player2.score = 0;
         newState.currentGame++;
         
-        // Check for match completion (best of 3)
+        // Check for match completion based on format
         const p1Wins = newState.gameHistory.filter(g => g.winner === newState.player1.name).length;
         const p2Wins = newState.gameHistory.filter(g => g.winner === newState.player2.name).length;
         
-        if (p1Wins === 2 || p2Wins === 2) {
+        const requiredWins = newState.config.matchFormat === 'single' ? 1 : 
+                           newState.config.matchFormat === 'best-of-3' ? 2 : 3;
+        
+        if (p1Wins === requiredWins || p2Wins === requiredWins) {
           newState.matchComplete = true;
           setShowReaction({ show: true, type: 'milestone' });
         }
@@ -304,16 +326,22 @@ export default function GamifiedMatchRecording() {
   };
 
   const resetMatch = () => {
-    setMatchState({
+    setMatchState(prev => ({
       player1: { name: 'Alex Chen', id: '1', tier: 'Elite', score: 0 },
       player2: { name: 'Sarah Martinez', id: '2', tier: 'Professional', score: 0 },
       gameHistory: [],
       currentGame: 1,
       matchComplete: false,
       achievements: [],
-      streak: { player: '', count: 0, type: 'win' }
-    });
+      streak: { player: '', count: 0, type: 'win' },
+      config: prev.config
+    }));
     setUndoStack([]);
+  };
+
+  const startNewMatch = () => {
+    setShowConfig(true);
+    resetMatch();
   };
 
   const isWinning = (playerId: string) => {
@@ -322,6 +350,143 @@ export default function GamifiedMatchRecording() {
     }
     return matchState.player2.score > matchState.player1.score;
   };
+
+  // Match Configuration Component
+  const MatchConfigModal = () => {
+    const [tempConfig, setTempConfig] = useState<MatchConfig>(matchState.config);
+
+    const startMatch = () => {
+      setMatchState(prev => ({ ...prev, config: tempConfig }));
+      setShowConfig(false);
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="max-w-md w-full"
+        >
+          <Card className="p-6 bg-slate-800 border-slate-700">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Gamepad2 className="h-8 w-8 text-orange-400" />
+                <h1 className="text-2xl font-bold text-white">Match Setup</h1>
+              </div>
+              <p className="text-slate-400">Configure your match settings</p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Scoring Type */}
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Scoring System</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <PulsingScoreButton
+                    onClick={() => setTempConfig(prev => ({ ...prev, scoringType: 'traditional' }))}
+                    variant={tempConfig.scoringType === 'traditional' ? 'winning' : 'default'}
+                  >
+                    <div className="text-center">
+                      <div className="font-bold">Traditional</div>
+                      <div className="text-xs opacity-75">Side-out</div>
+                    </div>
+                  </PulsingScoreButton>
+                  <PulsingScoreButton
+                    onClick={() => setTempConfig(prev => ({ ...prev, scoringType: 'rally' }))}
+                    variant={tempConfig.scoringType === 'rally' ? 'winning' : 'default'}
+                  >
+                    <div className="text-center">
+                      <div className="font-bold">Rally</div>
+                      <div className="text-xs opacity-75">Every point</div>
+                    </div>
+                  </PulsingScoreButton>
+                </div>
+              </div>
+
+              {/* Point Target */}
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Points to Win</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([11, 15, 21] as const).map(points => (
+                    <PulsingScoreButton
+                      key={points}
+                      onClick={() => setTempConfig(prev => ({ ...prev, pointTarget: points }))}
+                      variant={tempConfig.pointTarget === points ? 'winning' : 'default'}
+                    >
+                      {points}
+                    </PulsingScoreButton>
+                  ))}
+                </div>
+                {tempConfig.scoringType === 'rally' && tempConfig.pointTarget === 11 && (
+                  <p className="text-xs text-orange-400 mt-1">Rally scoring typically uses 15 or 21 points</p>
+                )}
+              </div>
+
+              {/* Match Format */}
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Match Format</label>
+                <div className="space-y-2">
+                  {([
+                    { value: 'single', label: 'Single Game', desc: 'First to win 1 game' },
+                    { value: 'best-of-3', label: 'Best of 3', desc: 'First to win 2 games' },
+                    { value: 'best-of-5', label: 'Best of 5', desc: 'First to win 3 games' }
+                  ] as const).map(format => (
+                    <PulsingScoreButton
+                      key={format.value}
+                      onClick={() => setTempConfig(prev => ({ ...prev, matchFormat: format.value }))}
+                      variant={tempConfig.matchFormat === format.value ? 'winning' : 'default'}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="text-left">
+                          <div className="font-bold">{format.label}</div>
+                          <div className="text-xs opacity-75">{format.desc}</div>
+                        </div>
+                        {tempConfig.matchFormat === format.value && (
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                        )}
+                      </div>
+                    </PulsingScoreButton>
+                  ))}
+                </div>
+              </div>
+
+              {/* Win by 2 */}
+              <div className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                <div>
+                  <div className="text-white font-medium">Must win by 2</div>
+                  <div className="text-xs text-slate-400">Require 2-point margin to win</div>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setTempConfig(prev => ({ ...prev, winByTwo: !prev.winByTwo }))}
+                  className={`w-12 h-6 rounded-full transition-colors ${
+                    tempConfig.winByTwo ? 'bg-orange-500' : 'bg-slate-600'
+                  }`}
+                >
+                  <motion.div
+                    animate={{ x: tempConfig.winByTwo ? 24 : 0 }}
+                    className="w-6 h-6 bg-white rounded-full shadow-md"
+                  />
+                </motion.button>
+              </div>
+            </div>
+
+            <Button
+              onClick={startMatch}
+              className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3"
+              size="lg"
+            >
+              <Zap className="h-5 w-5 mr-2" />
+              Start Match Arena!
+            </Button>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  };
+
+  if (showConfig) {
+    return <MatchConfigModal />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
@@ -336,13 +501,22 @@ export default function GamifiedMatchRecording() {
           <h1 className="text-3xl font-bold text-white">Match Arena</h1>
           <Gamepad2 className="h-8 w-8 text-orange-400" />
         </div>
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
           <Badge className="bg-orange-500/20 text-orange-300">
             Game {matchState.currentGame}
           </Badge>
           <Badge className="bg-blue-500/20 text-blue-300">
-            Best of 3
+            {matchState.config.matchFormat === 'single' ? 'Single Game' :
+             matchState.config.matchFormat === 'best-of-3' ? 'Best of 3' : 'Best of 5'}
           </Badge>
+          <Badge className="bg-purple-500/20 text-purple-300">
+            {matchState.config.scoringType === 'traditional' ? 'Traditional' : 'Rally'} • {matchState.config.pointTarget} pts
+          </Badge>
+          {matchState.config.winByTwo && (
+            <Badge className="bg-green-500/20 text-green-300">
+              Win by 2
+            </Badge>
+          )}
         </div>
       </motion.div>
 
@@ -468,6 +642,15 @@ export default function GamifiedMatchRecording() {
           <RotateCw className="h-4 w-4 mr-2" />
           Reset
         </Button>
+        
+        <Button
+          onClick={startNewMatch}
+          variant="outline"
+          className="text-white border-slate-600 hover:bg-slate-700"
+        >
+          <Gamepad2 className="h-4 w-4 mr-2" />
+          New Match
+        </Button>
       </div>
 
       {/* Match Complete Celebration */}
@@ -492,13 +675,23 @@ export default function GamifiedMatchRecording() {
                 </div>
               ))}
             </div>
-            <Button
-              onClick={resetMatch}
-              className="bg-white text-orange-500 hover:bg-slate-100"
-            >
-              <PartyPopper className="h-4 w-4 mr-2" />
-              New Match
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={resetMatch}
+                variant="outline"
+                className="text-white border-white hover:bg-white hover:text-orange-500"
+              >
+                <RotateCw className="h-4 w-4 mr-2" />
+                Same Settings
+              </Button>
+              <Button
+                onClick={startNewMatch}
+                className="bg-white text-orange-500 hover:bg-slate-100"
+              >
+                <PartyPopper className="h-4 w-4 mr-2" />
+                New Match
+              </Button>
+            </div>
           </Card>
         </motion.div>
       )}
