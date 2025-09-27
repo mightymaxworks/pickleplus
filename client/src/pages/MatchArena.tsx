@@ -222,7 +222,7 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
                 <Button
                   variant={selectedType === 'singles' ? 'default' : 'outline'}
                   onClick={() => setSelectedType('singles')}
-                  className="w-full"
+                  className={`w-full ${selectedType === 'singles' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-slate-500 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
                 >
                   Singles
                 </Button>
@@ -230,7 +230,7 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
                   variant={selectedType === 'doubles-team' ? 'default' : 'outline'}
                   onClick={() => setSelectedType('doubles-team')}
                   disabled={!myPartner}
-                  className="w-full"
+                  className={`w-full ${selectedType === 'doubles-team' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-slate-500 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
                 >
                   Doubles
                 </Button>
@@ -243,7 +243,7 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Add a challenge message..."
-                className="w-full p-2 bg-slate-800 border border-slate-600 rounded text-white"
+                className="w-full p-2 bg-slate-800 border border-slate-600 rounded text-white placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 rows={3}
               />
             </div>
@@ -258,7 +258,11 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
               >
                 Send Challenge
               </Button>
-              <Button variant="outline" onClick={onClose}>
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="border-slate-500 text-slate-300 hover:bg-slate-700 hover:text-white"
+              >
                 Cancel
               </Button>
             </div>
@@ -550,8 +554,20 @@ export default function MatchArena() {
               currentPartner={myPartner !== null ? { name: myPartner.name, id: myPartner.id } : null}
               onNavigateToLobby={() => setArenaMode('lobby')}
               onPartnerFound={(partner) => {
+                // Map tier types to match ArenaPlayer interface
+                const mapTier = (tier: string): PlayerTier => {
+                  switch(tier) {
+                    case 'recreational': return 'bronze';
+                    case 'competitive': return 'silver';
+                    case 'elite': return 'gold';
+                    case 'professional': return 'platinum';
+                    default: return 'bronze';
+                  }
+                };
+                
                 const arenaPartner: ArenaPlayer = {
                   ...partner,
+                  tier: mapTier(partner.tier),
                   status: 'online' as PlayerStatus,
                   matchType: 'doubles-team' as MatchType,
                   lastSeen: 'now',
