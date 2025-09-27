@@ -22,7 +22,8 @@ import {
   Plus,
   Minus,
   Undo2,
-  PartyPopper
+  PartyPopper,
+  ArrowLeft
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -257,9 +258,27 @@ interface MatchState {
 export default function GamifiedMatchRecording() {
   const [showConfig, setShowConfig] = useState(true);
   
+  // Navigation function
+  const goBackToPrototype = () => {
+    // Clear current match data when leaving
+    sessionStorage.removeItem('currentMatch');
+    window.location.href = '/unified-prototype';
+  };
+  
   // Get real player names from session storage or use defaults
   const getInitialPlayerNames = () => {
     try {
+      // First try to get current match data (from challenge acceptance)
+      const currentMatch = sessionStorage.getItem('currentMatch');
+      if (currentMatch) {
+        const matchData = JSON.parse(currentMatch);
+        return {
+          player1: matchData.player1,
+          player2: matchData.player2
+        };
+      }
+      
+      // Fallback to old format for backwards compatibility
       const storedNames = sessionStorage.getItem('realPlayerNames');
       if (storedNames) {
         const playerNames = JSON.parse(storedNames);
@@ -459,12 +478,44 @@ export default function GamifiedMatchRecording() {
           className="max-w-md w-full"
         >
           <Card className="p-6 bg-slate-800 border-slate-700">
+            {/* Back Button */}
+            <div className="flex justify-between items-center mb-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goBackToPrototype}
+                className="text-slate-400 hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Lobby
+              </Button>
+            </div>
+            
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Gamepad2 className="h-8 w-8 text-orange-400" />
                 <h1 className="text-2xl font-bold text-white">Match Setup</h1>
               </div>
               <p className="text-slate-400">Configure your match settings</p>
+              
+              {/* Player Preview */}
+              <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                <div className="flex items-center justify-center gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Users className="h-3 w-3 text-white" />
+                    </div>
+                    <span className="text-blue-300 font-medium">{initialNames.player1}</span>
+                  </div>
+                  <span className="text-slate-400 font-bold">vs</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <Users className="h-3 w-3 text-white" />
+                    </div>
+                    <span className="text-red-300 font-medium">{initialNames.player2}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -585,12 +636,59 @@ export default function GamifiedMatchRecording() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6"
+        className="mb-6"
       >
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Gamepad2 className="h-8 w-8 text-orange-400" />
-          <h1 className="text-3xl font-bold text-white">Match Arena</h1>
-          <Gamepad2 className="h-8 w-8 text-orange-400" />
+        {/* Back Navigation */}
+        <div className="flex justify-between items-center mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goBackToPrototype}
+            className="text-slate-400 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Lobby
+          </Button>
+          
+          {matchState.matchComplete && (
+            <Button
+              onClick={goBackToPrototype}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Return to Arena
+            </Button>
+          )}
+        </div>
+        
+        {/* Match Title */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Gamepad2 className="h-8 w-8 text-orange-400" />
+            <h1 className="text-3xl font-bold text-white">Match Arena</h1>
+            <Gamepad2 className="h-8 w-8 text-orange-400" />
+          </div>
+          
+          {/* Player Preview */}
+          <div className="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 max-w-lg mx-auto">
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-blue-300 font-bold text-lg">{matchState.player1.name}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-slate-400 font-bold text-xl">VS</span>
+                <div className="text-xs text-slate-500">Live Match</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-red-300 font-bold text-lg">{matchState.player2.name}</span>
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex items-center justify-center gap-2 flex-wrap">
           <Badge className="bg-orange-500/20 text-orange-300">

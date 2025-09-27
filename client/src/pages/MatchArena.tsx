@@ -615,9 +615,18 @@ export default function MatchArena() {
                           // Accept the challenge and navigate to gamified match recorder
                           toast({
                             title: '🎾 Challenge Accepted!',
-                            description: `Match vs ${challenge.opponent} confirmed. Starting match recorder...`,
+                            description: `Match vs ${challenge.challenger.name} confirmed. Starting match recorder...`,
                             duration: 2000,
                           });
+                          
+                          // Store challenge participants for the match recorder
+                          const challengeData = {
+                            player1: 'You', // Current user
+                            player2: challenge.challenger.name,
+                            matchType: challenge.matchType,
+                            challengeId: challenge.id
+                          };
+                          sessionStorage.setItem('currentMatch', JSON.stringify(challengeData));
                           
                           // Remove challenge from list
                           setChallenges(prev => prev.filter(c => c.id !== challenge.id));
@@ -636,7 +645,7 @@ export default function MatchArena() {
                           // Decline the challenge
                           toast({
                             title: '❌ Challenge Declined',
-                            description: `You declined ${challenge.opponent}'s challenge.`,
+                            description: `You declined ${challenge.challenger.name}'s challenge.`,
                             duration: 2000,
                           });
                           
