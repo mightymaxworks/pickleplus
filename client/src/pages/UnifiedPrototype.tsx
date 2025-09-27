@@ -34,6 +34,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
+import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 
 // Types from our previous implementations
 interface PlayerData {
@@ -450,7 +451,15 @@ function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabC
 }
 
 // Passport Mode Content - Full passport display
-function PassportModeContent({ player }: { player: PlayerData }) {
+function PassportModeContent({ 
+  player, 
+  passportPhoto, 
+  onPhotoUpload 
+}: { 
+  player: PlayerData;
+  passportPhoto?: string;
+  onPhotoUpload: () => void;
+}) {
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
@@ -461,14 +470,49 @@ function PassportModeContent({ player }: { player: PlayerData }) {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
         
         <div className="relative text-white">
-          {/* Player Avatar and Info */}
+          {/* Player Photo and Info */}
           <div className="text-center mb-6">
-            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
-              <TierIcon className="h-12 w-12" />
+            <div className="relative inline-block">
+              {passportPhoto ? (
+                <div className="w-32 h-32 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 p-1 rounded-full mx-auto mb-4">
+                  <img 
+                    src={passportPhoto} 
+                    alt={player.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+                  <TierIcon className="h-16 w-16" />
+                </div>
+              )}
+              
+              {/* Photo Upload Button */}
+              <Button
+                onClick={onPhotoUpload}
+                className="absolute -bottom-2 right-0 w-8 h-8 p-0 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg"
+                title="Upload passport photo"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
             </div>
+            
             <h2 className="text-3xl font-bold mb-1">{player.name}</h2>
             <Badge className="bg-white/30 text-white px-4 py-2 text-base">{config.name} Player</Badge>
             <div className="text-white/90 text-lg mt-2">🎫 {player.passportCode}</div>
+            
+            {!passportPhoto && (
+              <div className="mt-3">
+                <Button
+                  onClick={onPhotoUpload}
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/30"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Add Action Photo
+                </Button>
+              </div>
+            )}
           </div>
           
           {/* Detailed Stats */}
@@ -1497,6 +1541,8 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [activeTab, setActiveTab] = useState<TabMode>('passport');
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [passportPhoto, setPassportPhoto] = useState<string | undefined>(undefined);
   const [notifications, setNotifications] = useState<Array<{
     id: string;
     type: string;
@@ -1541,6 +1587,21 @@ export default function UnifiedPrototype() {
     }, ...prev].slice(0, 10));
   };
 
+  // Handle passport photo save
+  const handlePhotoSave = (photoData: string, border: string) => {
+    setPassportPhoto(photoData);
+    setShowPhotoUpload(false);
+    
+    // Add a notification about the photo update
+    setNotifications(prev => [{
+      id: Date.now().toString(),
+      type: 'system',
+      message: `Passport photo updated with ${border} border!`,
+      timestamp: new Date(),
+      read: false
+    }, ...prev].slice(0, 10));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       {/* Notifications Header */}
@@ -1561,13 +1622,33 @@ export default function UnifiedPrototype() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'passport' && <PassportModeContent player={mockPlayer} />}
+            {activeTab === 'passport' && (
+              <PassportModeContent 
+                player={mockPlayer}
+                passportPhoto={passportPhoto}
+                onPhotoUpload={() => setShowPhotoUpload(true)}
+              />
+            )}
             {activeTab === 'play' && <PlayModeContent />}
             {activeTab === 'rankings' && <RankingsModeContent player={mockPlayer} />}
             {activeTab === 'profile' && <ProfileModeContent player={mockPlayer} />}
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Photo Upload Modal */}
+      <AnimatePresence>
+        {showPhotoUpload && (
+          <PassportPhotoUpload
+            currentPhoto={passportPhoto}
+            playerName={mockPlayer.name}
+            rankingPoints={mockPlayer.rankingPoints}
+            localRank={mockPlayer.localRank}
+            onPhotoSave={handlePhotoSave}
+            onClose={() => setShowPhotoUpload(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation */}
       <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
