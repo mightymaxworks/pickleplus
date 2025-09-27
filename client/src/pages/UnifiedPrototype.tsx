@@ -212,6 +212,21 @@ const mockRankings: RankedPlayer[] = [
 function NotificationsHeader({ player }: { player: PlayerData }) {
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'match', text: '3 new matches', count: 3, unread: true },
+    { id: 2, type: 'points', text: `+${player.recentChange} pts`, count: player.recentChange, unread: true },
+    { id: 3, type: 'challenge', text: '2 challenges', count: 2, unread: false },
+  ]);
+
+  const markAsRead = (id: number) => {
+    setNotifications(prev => 
+      prev.map(notif => notif.id === id ? { ...notif, unread: false } : notif)
+    );
+  };
+
+  const clearNotification = (id: number) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
 
   return (
     <motion.div 
@@ -229,14 +244,29 @@ function NotificationsHeader({ player }: { player: PlayerData }) {
           </div>
         </div>
 
-        {/* Notifications */}
+        {/* Interactive Notifications */}
         <div className="flex items-center gap-2">
-          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
-            3 new matches
-          </Badge>
-          <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
-            +{player.recentChange} pts
-          </Badge>
+          {notifications.filter(n => n.unread).map((notification) => (
+            <motion.div
+              key={notification.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Badge 
+                className={`text-xs cursor-pointer transition-all hover:opacity-80 ${
+                  notification.type === 'match' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
+                  notification.type === 'points' ? 'bg-green-500/20 text-green-300 border-green-400/30' :
+                  'bg-orange-500/20 text-orange-300 border-orange-400/30'
+                }`}
+                onClick={() => markAsRead(notification.id)}
+              >
+                {notification.text}
+              </Badge>
+            </motion.div>
+          ))}
+          {notifications.filter(n => n.unread).length === 0 && (
+            <div className="text-slate-400 text-sm">All caught up! 🎉</div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -579,14 +609,42 @@ function PlayModeContent() {
 function RankingsModeContent({ player }: { player: PlayerData }) {
   const [selectedCategory, setSelectedCategory] = useState('singles');
   const [selectedView, setSelectedView] = useState('local');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filter rankings based on search
+  const filteredRankings = mockRankings.filter(rankedPlayer => 
+    rankedPlayer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    rankedPlayer.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   // Split rankings for hybrid display
-  const podiumPlayers = mockRankings.slice(0, 3);
-  const cardPlayers = mockRankings.slice(3, 8);
-  const rowPlayers = mockRankings.slice(8);
+  const podiumPlayers = filteredRankings.slice(0, 3);
+  const cardPlayers = filteredRankings.slice(3, 8);
+  const rowPlayers = filteredRankings.slice(8);
 
   return (
     <div className="space-y-6">
+      {/* Search Bar */}
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <User className="h-4 w-4 text-slate-400" />
+        </div>
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search players by name or location..."
+          className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
       {/* Category & View Filters */}
       <div className="space-y-3">
         <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
@@ -625,6 +683,22 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           ))}
         </div>
       </div>
+
+      {/* Search Results Info */}
+      {searchQuery && (
+        <div className="text-slate-400 text-sm">
+          Found {filteredRankings.length} player{filteredRankings.length !== 1 ? 's' : ''} matching "{searchQuery}"
+        </div>
+      )}
+
+      {/* No Results */}
+      {searchQuery && filteredRankings.length === 0 && (
+        <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+          <User className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-white font-semibold mb-2">No players found</h3>
+          <p className="text-slate-400">Try adjusting your search terms</p>
+        </Card>
+      )}
 
       {/* Your Position */}
       <Card className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 border-orange-400">
@@ -1087,39 +1161,129 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-slate-400 mb-1 block">Paddle Brand</label>
-            <Input
-              value={profile.paddleBrand}
-              onChange={(e) => updateProfile('paddleBrand', e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white"
-              placeholder="e.g., Selkirk, JOOLA, HEAD"
-            />
+            <Select value={profile.paddleBrand} onValueChange={(value) => updateProfile('paddleBrand', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="Selkirk" className="text-white">Selkirk</SelectItem>
+                <SelectItem value="JOOLA" className="text-white">JOOLA</SelectItem>
+                <SelectItem value="HEAD" className="text-white">HEAD</SelectItem>
+                <SelectItem value="SHOT3" className="text-white">SHOT3</SelectItem>
+                <SelectItem value="DragonFly" className="text-white">DragonFly</SelectItem>
+                <SelectItem value="Paddletek" className="text-white">Paddletek</SelectItem>
+                <SelectItem value="Engage" className="text-white">Engage</SelectItem>
+                <SelectItem value="Franklin" className="text-white">Franklin</SelectItem>
+                <SelectItem value="Gamma" className="text-white">Gamma</SelectItem>
+                <SelectItem value="Other" className="text-white">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="text-sm text-slate-400 mb-1 block">Paddle Model</label>
-            <Input
-              value={profile.paddleModel}
-              onChange={(e) => updateProfile('paddleModel', e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white"
-              placeholder="e.g., Amped Epic, Ben Johns Hyperion"
-            />
+            <Select value={profile.paddleModel} onValueChange={(value) => updateProfile('paddleModel', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                {profile.paddleBrand === 'Selkirk' && (
+                  <>
+                    <SelectItem value="Amped Epic" className="text-white">Amped Epic</SelectItem>
+                    <SelectItem value="Amped Omni" className="text-white">Amped Omni</SelectItem>
+                    <SelectItem value="Power Air" className="text-white">Power Air</SelectItem>
+                    <SelectItem value="Vanguard 2.0" className="text-white">Vanguard 2.0</SelectItem>
+                  </>
+                )}
+                {profile.paddleBrand === 'JOOLA' && (
+                  <>
+                    <SelectItem value="Ben Johns Hyperion" className="text-white">Ben Johns Hyperion</SelectItem>
+                    <SelectItem value="Perseus" className="text-white">Perseus</SelectItem>
+                    <SelectItem value="Solaire" className="text-white">Solaire</SelectItem>
+                    <SelectItem value="Vision" className="text-white">Vision</SelectItem>
+                  </>
+                )}
+                {profile.paddleBrand === 'HEAD' && (
+                  <>
+                    <SelectItem value="Extreme Elite" className="text-white">Extreme Elite</SelectItem>
+                    <SelectItem value="Radical Elite" className="text-white">Radical Elite</SelectItem>
+                    <SelectItem value="Gravity" className="text-white">Gravity</SelectItem>
+                  </>
+                )}
+                {profile.paddleBrand === 'SHOT3' && (
+                  <>
+                    <SelectItem value="Shockwave Pro" className="text-white">Shockwave Pro</SelectItem>
+                    <SelectItem value="Elite Series" className="text-white">Elite Series</SelectItem>
+                    <SelectItem value="Competition" className="text-white">Competition</SelectItem>
+                  </>
+                )}
+                {profile.paddleBrand === 'DragonFly' && (
+                  <>
+                    <SelectItem value="Dynamo Pro" className="text-white">Dynamo Pro</SelectItem>
+                    <SelectItem value="Thunder Elite" className="text-white">Thunder Elite</SelectItem>
+                    <SelectItem value="Phoenix Series" className="text-white">Phoenix Series</SelectItem>
+                  </>
+                )}
+                <SelectItem value="Other" className="text-white">Other / Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm text-slate-400 mb-1 block">Backup Paddle Brand</label>
+            <Select value={profile.backupPaddleBrand} onValueChange={(value) => updateProfile('backupPaddleBrand', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="Selkirk" className="text-white">Selkirk</SelectItem>
+                <SelectItem value="JOOLA" className="text-white">JOOLA</SelectItem>
+                <SelectItem value="HEAD" className="text-white">HEAD</SelectItem>
+                <SelectItem value="SHOT3" className="text-white">SHOT3</SelectItem>
+                <SelectItem value="DragonFly" className="text-white">DragonFly</SelectItem>
+                <SelectItem value="Paddletek" className="text-white">Paddletek</SelectItem>
+                <SelectItem value="Engage" className="text-white">Engage</SelectItem>
+                <SelectItem value="Franklin" className="text-white">Franklin</SelectItem>
+                <SelectItem value="Gamma" className="text-white">Gamma</SelectItem>
+                <SelectItem value="None" className="text-white">None</SelectItem>
+                <SelectItem value="Other" className="text-white">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="text-sm text-slate-400 mb-1 block">Apparel Brand</label>
-            <Input
-              value={profile.apparelBrand}
-              onChange={(e) => updateProfile('apparelBrand', e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white"
-              placeholder="Preferred clothing brand"
-            />
+            <Select value={profile.apparelBrand} onValueChange={(value) => updateProfile('apparelBrand', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="HEAD" className="text-white">HEAD</SelectItem>
+                <SelectItem value="Nike" className="text-white">Nike</SelectItem>
+                <SelectItem value="Adidas" className="text-white">Adidas</SelectItem>
+                <SelectItem value="Under Armour" className="text-white">Under Armour</SelectItem>
+                <SelectItem value="Lululemon" className="text-white">Lululemon</SelectItem>
+                <SelectItem value="Wilson" className="text-white">Wilson</SelectItem>
+                <SelectItem value="Fila" className="text-white">Fila</SelectItem>
+                <SelectItem value="Other" className="text-white">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="text-sm text-slate-400 mb-1 block">Shoes Brand</label>
-            <Input
-              value={profile.shoesBrand}
-              onChange={(e) => updateProfile('shoesBrand', e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white"
-              placeholder="Court shoe brand"
-            />
+            <Select value={profile.shoesBrand} onValueChange={(value) => updateProfile('shoesBrand', value)}>
+              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="K-Swiss" className="text-white">K-Swiss</SelectItem>
+                <SelectItem value="ASICS" className="text-white">ASICS</SelectItem>
+                <SelectItem value="Nike" className="text-white">Nike</SelectItem>
+                <SelectItem value="Adidas" className="text-white">Adidas</SelectItem>
+                <SelectItem value="New Balance" className="text-white">New Balance</SelectItem>
+                <SelectItem value="HEAD" className="text-white">HEAD</SelectItem>
+                <SelectItem value="Wilson" className="text-white">Wilson</SelectItem>
+                <SelectItem value="Fila" className="text-white">Fila</SelectItem>
+                <SelectItem value="Other" className="text-white">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </Card>
