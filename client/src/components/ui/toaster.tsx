@@ -116,7 +116,7 @@ export function Toaster() {
                   className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-orange-400 to-blue-400"
                   initial={{ width: "100%" }}
                   animate={{ width: "0%" }}
-                  transition={{ duration: 5, ease: "linear" }}
+                  transition={{ duration: 3, ease: "linear" }}
                 />
                 <div className="flex space-x-3 w-full">
                   {/* Icon */}
@@ -127,12 +127,12 @@ export function Toaster() {
                   {/* Content */}
                   <div className="flex-1 space-y-1 pr-8">
                     {title && (
-                      <ToastTitle className="font-medium text-gray-900">
+                      <ToastTitle className="font-medium text-white">
                         {title}
                       </ToastTitle>
                     )}
                     {description && (
-                      <ToastDescription className="text-gray-600 text-sm leading-relaxed">
+                      <ToastDescription className="text-white/90 text-sm leading-relaxed">
                         {description}
                       </ToastDescription>
                     )}

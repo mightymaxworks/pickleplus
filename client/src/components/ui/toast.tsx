@@ -27,10 +27,10 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-orange-50/95 to-blue-50/95 text-gray-900 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/20 border-l-4 border-l-orange-500",
-        destructive: "bg-gradient-to-r from-red-50/95 to-pink-50/95 text-red-900 shadow-lg shadow-red-500/20 ring-1 ring-red-500/20 border-l-4 border-l-red-500",
-        success: "bg-gradient-to-r from-emerald-50/95 to-green-50/95 text-emerald-900 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/20 border-l-4 border-l-emerald-500",
-        warning: "bg-gradient-to-r from-amber-50/95 to-yellow-50/95 text-amber-900 shadow-lg shadow-amber-500/20 ring-1 ring-amber-500/20 border-l-4 border-l-amber-500",
+        default: "bg-gradient-to-r from-orange-500/95 to-blue-500/95 text-white shadow-lg shadow-orange-500/30 ring-1 ring-white/20 border-l-4 border-l-white/60",
+        destructive: "bg-gradient-to-r from-red-500/95 to-pink-500/95 text-white shadow-lg shadow-red-500/30 ring-1 ring-white/20 border-l-4 border-l-white/60",
+        success: "bg-gradient-to-r from-emerald-500/95 to-green-500/95 text-white shadow-lg shadow-emerald-500/30 ring-1 ring-white/20 border-l-4 border-l-white/60",
+        warning: "bg-gradient-to-r from-amber-500/95 to-yellow-500/95 text-white shadow-lg shadow-amber-500/30 ring-1 ring-white/20 border-l-4 border-l-white/60",
       },
     },
     defaultVariants: {

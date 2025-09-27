@@ -214,15 +214,34 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, myPlayerId }: {
   );
 }
 
-// Challenge Modal
-function ChallengeModal({ player, isOpen, onClose, onSendChallenge }: {
+// Enhanced Challenge Modal with smart doubles detection
+function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }: {
   player: ArenaPlayer | null;
   isOpen: boolean;
   onClose: () => void;
   onSendChallenge: (matchType: MatchType, message: string) => void;
+  myPartner: ArenaPlayer | null;
 }) {
   const [selectedType, setSelectedType] = useState<MatchType>('singles');
   const [message, setMessage] = useState('');
+
+  // Smart type detection based on target player and user's partner status
+  const getAvailableMatchTypes = () => {
+    const types = [{ type: 'singles' as MatchType, label: 'Singles Match', icon: User }];
+    
+    if (player?.matchType === 'doubles-team' && myPartner) {
+      // User has partner, challenging doubles team = Team vs Team
+      types.push({ type: 'doubles-team' as MatchType, label: `Team Match (You + ${myPartner.name} vs ${player.name} + ${player.partner?.name})`, icon: Users });
+    } else if (player?.matchType === 'doubles-team' && !myPartner) {
+      // User has no partner, need to find one first
+      types.push({ type: 'doubles-looking' as MatchType, label: 'Find Partner First, Then Challenge Team', icon: UserPlus });
+    } else if (player?.matchType === 'doubles-looking') {
+      // Target is looking for partner
+      types.push({ type: 'doubles-looking' as MatchType, label: 'Partner Up & Play Together', icon: UserPlus });
+    }
+    
+    return types;
+  };
 
   if (!player) return null;
 
@@ -253,27 +272,34 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge }: {
               </div>
 
               <div className="space-y-4">
-                {/* Match Type Selection */}
+                {/* Smart Match Type Selection */}
                 <div>
                   <label className="text-sm text-slate-400 mb-2 block">Match Type</label>
                   <div className="space-y-2">
-                    <Button
-                      onClick={() => setSelectedType('singles')}
-                      variant={selectedType === 'singles' ? 'default' : 'outline'}
-                      className="w-full justify-start"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Singles Match
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedType('doubles-looking')}
-                      variant={selectedType === 'doubles-looking' ? 'default' : 'outline'}
-                      className="w-full justify-start"
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Doubles (Find Partners)
-                    </Button>
+                    {getAvailableMatchTypes().map(({ type, label, icon: Icon }) => (
+                      <Button
+                        key={type}
+                        onClick={() => setSelectedType(type)}
+                        variant={selectedType === type ? 'default' : 'outline'}
+                        className="w-full justify-start text-left"
+                      >
+                        <Icon className="h-4 w-4 mr-2 shrink-0" />
+                        <span className="truncate">{label}</span>
+                      </Button>
+                    ))}
                   </div>
+                  
+                  {/* Context-aware helper text */}
+                  {player?.matchType === 'doubles-team' && !myPartner && (
+                    <p className="text-xs text-orange-400 mt-2">
+                      💡 You need a doubles partner to challenge this team
+                    </p>
+                  )}
+                  {player?.matchType === 'doubles-team' && myPartner && (
+                    <p className="text-xs text-green-400 mt-2">
+                      🎾 Perfect! Team vs Team match ready
+                    </p>
+                  )}
                 </div>
 
                 {/* Message */}
@@ -323,6 +349,7 @@ export default function MatchArena() {
   const [challenges, setChallenges] = useState<ChallengeRequest[]>([]);
   const [isSearchingPartner, setIsSearchingPartner] = useState(false);
   const [partnerRequests, setPartnerRequests] = useState<ArenaPlayer[]>([]);
+  const [myPartner, setMyPartner] = useState<ArenaPlayer | null>(null); // Track if user already has a partner
 
   // Mock current player
   const myPlayerId = 'current-player';
@@ -410,39 +437,87 @@ export default function MatchArena() {
   const handleSendChallenge = (matchType: MatchType, message: string) => {
     if (!selectedPlayer) return;
 
-    const newChallenge: ChallengeRequest = {
-      id: Date.now().toString(),
-      fromPlayer: {
-        id: myPlayerId,
-        name: 'You',
-        tier: 'elite',
-        rankingPoints: 1247,
-        status: 'online',
-        location: 'Current',
-        distance: 0,
-        matchType: matchType,
-        winRate: 0.73,
-        isOnline: true,
-        lastSeen: 'now'
-      },
-      toPlayer: selectedPlayer,
-      matchType,
-      message: message || 'Ready for a match?',
-      timestamp: new Date(),
-      status: 'pending'
-    };
+    // Handle different challenge scenarios
+    if (matchType === 'doubles-team' && myPartner) {
+      // Team vs Team - go directly to match recording with context
+      const matchData = {
+        team1: {
+          player1: { name: 'You', id: myPlayerId },
+          player2: { name: myPartner.name, id: myPartner.id }
+        },
+        team2: {
+          player1: { name: selectedPlayer.name, id: selectedPlayer.id },
+          player2: { name: selectedPlayer.partner?.name || 'Partner', id: selectedPlayer.partner?.id || 'partner' }
+        },
+        matchType: 'doubles',
+        challengeMessage: message
+      };
+      
+      // Store match context for the recording page
+      sessionStorage.setItem('pendingMatch', JSON.stringify(matchData));
+      
+      toast({
+        title: "🎮 Team Challenge Ready!",
+        description: `Starting team match: You & ${myPartner.name} vs ${selectedPlayer.name} & ${selectedPlayer.partner?.name}`,
+        duration: 3000,
+      });
+      
+      setTimeout(() => {
+        window.location.href = '/gamified-match-recording';
+      }, 1500);
+      
+    } else if (matchType === 'doubles-looking' && selectedPlayer.matchType === 'doubles-team') {
+      // Need to find partner first before challenging team
+      toast({
+        title: "🤝 Find Partner First!",
+        description: "You need a doubles partner to challenge this team. Let's find you one!",
+        duration: 3000,
+      });
+      
+      setTimeout(() => setArenaMode('doubles'), 1000);
+      
+    } else {
+      // Regular singles or partner-finding challenge
+      const newChallenge: ChallengeRequest = {
+        id: Date.now().toString(),
+        fromPlayer: {
+          id: myPlayerId,
+          name: 'You',
+          tier: 'elite',
+          rankingPoints: 1247,
+          status: 'online',
+          location: 'Current',
+          distance: 0,
+          matchType: matchType,
+          winRate: 0.73,
+          isOnline: true,
+          lastSeen: 'now'
+        },
+        toPlayer: selectedPlayer,
+        matchType,
+        message: message || 'Ready for a match?',
+        timestamp: new Date(),
+        status: 'pending'
+      };
 
-    setChallenges(prev => [...prev, newChallenge]);
-    
-    // Show success feedback
-    toast({
-      title: "🎯 Challenge Sent!",
-      description: `${matchType === 'singles' ? 'Singles' : 'Doubles'} challenge sent to ${selectedPlayer.name}`,
-      duration: 3000,
-    });
+      setChallenges(prev => [...prev, newChallenge]);
+      
+      // Smart feedback based on match type
+      const feedback = {
+        'singles': `Singles challenge sent to ${selectedPlayer.name}`,
+        'doubles-looking': `Partnership request sent to ${selectedPlayer.name}`,
+        'doubles-team': `Team challenge sent to ${selectedPlayer.name}'s team`
+      };
+      
+      toast({
+        title: "🎯 Challenge Sent!",
+        description: feedback[matchType] || `Challenge sent to ${selectedPlayer.name}`,
+        duration: 3000,
+      });
 
-    // Auto-switch to challenges tab to show pending challenge
-    setTimeout(() => setArenaMode('challenges'), 500);
+      // Auto-switch to challenges tab to show pending challenge
+      setTimeout(() => setArenaMode('challenges'), 500);
+    }
     
     setShowChallengeModal(false);
     setSelectedPlayer(null);
@@ -678,6 +753,7 @@ export default function MatchArena() {
           >
             <DoublesPartnerSystem
               onPartnerFound={(partner) => {
+                setMyPartner(partner); // Update partner state
                 toast({
                   title: "🎾 Team Ready!",
                   description: `You and ${partner.name} are now a doubles team. Ready to challenge other teams?`,
@@ -779,6 +855,7 @@ export default function MatchArena() {
           setSelectedPlayer(null);
         }}
         onSendChallenge={handleSendChallenge}
+        myPartner={myPartner}
       />
     </div>
   );
