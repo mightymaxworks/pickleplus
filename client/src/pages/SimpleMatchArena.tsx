@@ -494,34 +494,6 @@ function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabC
   );
 }
 
-// Floating reaction animations
-interface ReactionFloatProps {
-  icon: React.ComponentType<{ className?: string }>;
-  text: string;
-  color?: string;
-  show: boolean;
-  onComplete?: () => void;
-}
-
-function ReactionFloat({ icon: IconComponent, text, color = 'text-green-400', show, onComplete }: ReactionFloatProps) {
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 1, y: 0, scale: 0.8 }}
-          animate={{ opacity: 1, y: -40, scale: 1 }}
-          exit={{ opacity: 0, y: -60, scale: 1.2 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          onAnimationComplete={onComplete}
-          className="absolute z-10 flex items-center gap-2 bg-slate-800/90 border border-orange-500/30 rounded-lg px-3 py-1 pointer-events-none"
-        >
-          <IconComponent className={`h-4 w-4 ${color}`} />
-          <span className={`text-sm font-medium ${color}`}>{text}</span>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
 
 const SimpleMatchArena: React.FC = () => {
   const [location, setLocation] = useLocation();
@@ -881,14 +853,6 @@ const SimpleMatchArena: React.FC = () => {
                   </motion.div>
                 </div>
 
-                {/* Challenge Reaction Feedback */}
-                <ReactionFloat
-                  icon={Swords}
-                  text="Challenge Sent!"
-                  color="text-orange-400"
-                  show={showChallengeFeedback === player.id}
-                  onComplete={() => setShowChallengeFeedback(null)}
-                />
               </Card>
               </motion.div>
             ))}
