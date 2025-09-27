@@ -320,8 +320,8 @@ function PlayerRankingCard({
                 className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
-              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">{initials}</span>
+              <div className={`w-12 h-12 bg-gradient-to-r ${config.color} rounded-full flex items-center justify-center`}>
+                <config.icon className="h-6 w-6 text-white" />
               </div>
             )}
           </div>
@@ -571,8 +571,8 @@ function PlayModeContent() {
                     {player.avatar ? (
                       <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full object-cover" />
                     ) : (
-                      <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">{initials}</span>
+                      <div className={`w-10 h-10 bg-gradient-to-r ${tierConfig[player.tier].color} rounded-full flex items-center justify-center`}>
+                        {React.createElement(tierConfig[player.tier].icon, { className: "h-5 w-5 text-white" })}
                       </div>
                     )}
                   </div>
@@ -737,10 +737,8 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
               {podiumPlayers[1]?.avatar ? (
                 <img src={podiumPlayers[1].avatar} alt={podiumPlayers[1].name} className="w-12 h-12 rounded-full object-cover" />
               ) : (
-                <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">
-                    {podiumPlayers[1]?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </span>
+                <div className={`w-12 h-12 bg-gradient-to-r ${tierConfig[podiumPlayers[1]?.tier].color} rounded-full flex items-center justify-center`}>
+                  {React.createElement(tierConfig[podiumPlayers[1]?.tier].icon, { className: "h-6 w-6 text-white" })}
                 </div>
               )}
             </div>
@@ -755,10 +753,8 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
               {podiumPlayers[0]?.avatar ? (
                 <img src={podiumPlayers[0].avatar} alt={podiumPlayers[0].name} className="w-16 h-16 rounded-full object-cover border-2 border-yellow-400" />
               ) : (
-                <div className="w-16 h-16 bg-slate-600 rounded-full flex items-center justify-center border-2 border-yellow-400">
-                  <span className="text-white font-medium">
-                    {podiumPlayers[0]?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </span>
+                <div className={`w-16 h-16 bg-gradient-to-r ${tierConfig[podiumPlayers[0]?.tier].color} rounded-full flex items-center justify-center border-2 border-yellow-400`}>
+                  {React.createElement(tierConfig[podiumPlayers[0]?.tier].icon, { className: "h-8 w-8 text-white" })}
                 </div>
               )}
             </div>
@@ -773,10 +769,8 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
               {podiumPlayers[2]?.avatar ? (
                 <img src={podiumPlayers[2].avatar} alt={podiumPlayers[2].name} className="w-12 h-12 rounded-full object-cover" />
               ) : (
-                <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">
-                    {podiumPlayers[2]?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </span>
+                <div className={`w-12 h-12 bg-gradient-to-r ${tierConfig[podiumPlayers[2]?.tier].color} rounded-full flex items-center justify-center`}>
+                  {React.createElement(tierConfig[podiumPlayers[2]?.tier].icon, { className: "h-6 w-6 text-white" })}
                 </div>
               )}
             </div>
