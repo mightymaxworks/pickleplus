@@ -58,6 +58,89 @@ const difficultyConfig: Record<DifficultyType, { color: string; textColor: strin
   legendary: { color: 'bg-purple-500', textColor: 'text-purple-300', label: 'Legendary Rival' }
 };
 
+// Micro-feedback kit components
+interface ReactionFloatProps {
+  icon: React.ComponentType<{ className?: string }>;
+  text: string;
+  color?: string;
+  show: boolean;
+  onComplete?: () => void;
+}
+
+function ReactionFloat({ icon: IconComponent, text, color = 'text-green-400', show, onComplete }: ReactionFloatProps) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 1, y: 0, scale: 0.8 }}
+          animate={{ opacity: 1, y: -40, scale: 1 }}
+          exit={{ opacity: 0, y: -60, scale: 1.2 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          onAnimationComplete={onComplete}
+          className="absolute z-10 flex items-center gap-2 bg-slate-800/90 border border-slate-600 rounded-lg px-3 py-1 pointer-events-none"
+        >
+          <IconComponent className={`h-4 w-4 ${color}`} />
+          <span className={`text-sm font-medium ${color}`}>{text}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+interface PressRippleProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+}
+
+function PressRipple({ children, onClick, className = "" }: PressRippleProps) {
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleClick = () => {
+    setIsPressed(true);
+    setTimeout(() => setIsPressed(false), 150);
+    onClick?.();
+  };
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      animate={{ scale: isPressed ? [1, 1.05, 1] : 1 }}
+      transition={{ duration: 0.15 }}
+      onClick={handleClick}
+      className={`cursor-pointer ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+interface ShimmerStatProps {
+  children: React.ReactNode;
+  shimmer: boolean;
+  color?: string;
+}
+
+function ShimmerStat({ children, shimmer, color = 'border-orange-400' }: ShimmerStatProps) {
+  return (
+    <motion.div
+      animate={shimmer ? {
+        borderColor: ['transparent', color.replace('border-', ''), 'transparent'],
+        boxShadow: shimmer ? [
+          '0 0 0 0 transparent',
+          `0 0 0 2px ${color.replace('border-', '').replace('-400', '').replace('-', '')}40`,
+          '0 0 0 0 transparent'
+        ] : 'none'
+      } : {}}
+      transition={{ duration: 0.6, ease: "easeInOut" }}
+      className={`border-2 border-transparent rounded transition-all ${shimmer ? color : ''}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export default function GamificationPrototype() {
   const [activeDemo, setActiveDemo] = useState<string>('immediate-feedback');
   const [points, setPoints] = useState(1247);
@@ -66,12 +149,40 @@ export default function GamificationPrototype() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [challengeTarget, setChallengeTarget] = useState<any>(null);
   const [showRivalModal, setShowRivalModal] = useState(false);
+  
+  // Micro-feedback states
+  const [showChallengeReaction, setShowChallengeReaction] = useState(false);
+  const [showScoutingReaction, setShowScoutingReaction] = useState(false);
+  const [showBadgeReaction, setShowBadgeReaction] = useState(false);
+  const [shimmerPoints, setShimmerPoints] = useState(false);
 
   // Immediate Feedback Demo
   const triggerPointsGain = (amount: number) => {
     setPoints(prev => prev + amount);
     setShowPointsAnimation(true);
-    setTimeout(() => setShowPointsAnimation(false), 1500);
+    setShimmerPoints(true);
+    setTimeout(() => {
+      setShowPointsAnimation(false);
+      setShimmerPoints(false);
+    }, 1500);
+  };
+  
+  // Challenge reaction
+  const triggerChallenge = () => {
+    setShowChallengeReaction(true);
+    setTimeout(() => setShowChallengeReaction(false), 1500);
+  };
+  
+  // Scouting reaction
+  const triggerScouting = () => {
+    setShowScoutingReaction(true);
+    setTimeout(() => setShowScoutingReaction(false), 1500);
+  };
+  
+  // Badge unlock reaction
+  const triggerBadgeUnlock = () => {
+    setShowBadgeReaction(true);
+    setTimeout(() => setShowBadgeReaction(false), 1500);
   };
 
   // Social Recognition Demo
@@ -199,35 +310,31 @@ function ImmediateFeedbackDemo({ points, showPointsAnimation, triggerPointsGain 
         <Card className="p-6 bg-slate-800 border-slate-700 relative overflow-hidden">
           <div className="text-center">
             <div className="relative mb-4">
-              <div className="text-3xl font-bold text-orange-400">{points}</div>
+              <ShimmerStat shimmer={shimmerPoints} color="border-orange-400">
+                <div className="text-3xl font-bold text-orange-400 p-2">{points}</div>
+              </ShimmerStat>
               <div className="text-sm text-slate-400">Ranking Points</div>
               
-              <AnimatePresence>
-                {showPointsAnimation && (
-                  <motion.div
-                    initial={{ opacity: 1, y: 0, scale: 1 }}
-                    animate={{ opacity: 0, y: -40, scale: 1.2 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <div className="text-2xl font-bold text-green-400">+15</div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <ReactionFloat
+                icon={Trophy}
+                text="+15 Points"
+                color="text-green-400"
+                show={showPointsAnimation}
+                onComplete={() => setShowPointsAnimation(false)}
+              />
             </div>
             
-            <Button 
-              onClick={() => triggerPointsGain(15)}
-              className="bg-green-600 hover:bg-green-700 w-full"
-            >
-              <Trophy className="h-4 w-4 mr-2" />
-              Win Match
-            </Button>
+            <PressRipple onClick={() => triggerPointsGain(15)}>
+              <Button className="bg-green-600 hover:bg-green-700 w-full">
+                <Trophy className="h-4 w-4 mr-2" />
+                Win Match
+              </Button>
+            </PressRipple>
           </div>
         </Card>
 
         {/* Challenge Feedback */}
-        <Card className="p-6 bg-slate-800 border-slate-700">
+        <Card className="p-6 bg-slate-800 border-slate-700 relative">
           <div className="text-center">
             <div className="mb-4">
               <Sword className="h-12 w-12 text-purple-400 mx-auto mb-2" />
@@ -235,18 +342,28 @@ function ImmediateFeedbackDemo({ points, showPointsAnimation, triggerPointsGain 
               <div className="text-sm text-slate-400">Maria Santos notified</div>
             </div>
             
-            <Button 
-              variant="outline" 
-              className="border-purple-500 text-purple-300 hover:bg-purple-500/20 w-full"
-            >
-              <Target className="h-4 w-4 mr-2" />
-              Send Challenge
-            </Button>
+            <PressRipple onClick={triggerChallenge}>
+              <Button 
+                variant="outline" 
+                className="border-purple-500 text-purple-300 hover:bg-purple-500/20 w-full"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Send Challenge
+              </Button>
+            </PressRipple>
+            
+            <ReactionFloat
+              icon={Sword}
+              text="Challenge Sent!"
+              color="text-purple-400"
+              show={showChallengeReaction}
+              onComplete={() => setShowChallengeReaction(false)}
+            />
           </div>
         </Card>
 
         {/* Profile Scouting */}
-        <Card className="p-6 bg-slate-800 border-slate-700">
+        <Card className="p-6 bg-slate-800 border-slate-700 relative">
           <div className="text-center">
             <div className="mb-4">
               <Eye className="h-12 w-12 text-blue-400 mx-auto mb-2" />
@@ -254,13 +371,23 @@ function ImmediateFeedbackDemo({ points, showPointsAnimation, triggerPointsGain 
               <div className="text-sm text-slate-400">+2 XP for intel gathering</div>
             </div>
             
-            <Button 
-              variant="outline" 
-              className="border-blue-500 text-blue-300 hover:bg-blue-500/20 w-full"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              View Profile
-            </Button>
+            <PressRipple onClick={triggerScouting}>
+              <Button 
+                variant="outline" 
+                className="border-blue-500 text-blue-300 hover:bg-blue-500/20 w-full"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                View Profile
+              </Button>
+            </PressRipple>
+            
+            <ReactionFloat
+              icon={Eye}
+              text="+2 XP"
+              color="text-blue-400"
+              show={showScoutingReaction}
+              onComplete={() => setShowScoutingReaction(false)}
+            />
           </div>
         </Card>
       </div>
@@ -491,15 +618,25 @@ function DiscoveryCollectionDemo({ players }: { players: MockPlayer[] }) {
                     </div>
                     <Progress value={30} className="h-1" />
                     
-                    <div className="text-center">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={`border-orange-500 text-orange-300 hover:bg-orange-500/20 text-xs`}
-                      >
-                        <Gift className="h-3 w-3 mr-1" />
-                        Unlock Badge
-                      </Button>
+                    <div className="text-center relative">
+                      <PressRipple onClick={triggerBadgeUnlock}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`border-orange-500 text-orange-300 hover:bg-orange-500/20 text-xs`}
+                        >
+                          <Gift className="h-3 w-3 mr-1" />
+                          Unlock Badge
+                        </Button>
+                      </PressRipple>
+                      
+                      <ReactionFloat
+                        icon={Award}
+                        text="Badge Unlocked!"
+                        color="text-yellow-400"
+                        show={showBadgeReaction}
+                        onComplete={() => setShowBadgeReaction(false)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -659,10 +796,12 @@ function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
           </div>
 
           <div className="mt-4 text-center">
-            <Button variant="outline" className="border-blue-500 text-blue-300 hover:bg-blue-500/20">
-              <Camera className="h-4 w-4 mr-2" />
-              Add Reaction
-            </Button>
+            <PressRipple onClick={() => setApplauseCount(prev => prev + 1)}>
+              <Button variant="outline" className="border-blue-500 text-blue-300 hover:bg-blue-500/20">
+                <Camera className="h-4 w-4 mr-2" />
+                Add Reaction
+              </Button>
+            </PressRipple>
           </div>
         </Card>
       </div>
