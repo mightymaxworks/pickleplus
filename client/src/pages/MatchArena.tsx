@@ -305,6 +305,68 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
                   )}
                 </div>
 
+                {/* Match Preview */}
+                {selectedType === 'doubles-team' && myPartner && player?.partner && (
+                  <div className="p-4 bg-slate-900/50 border border-orange-500/30 rounded-lg">
+                    <div className="text-center mb-3">
+                      <h3 className="text-white font-medium flex items-center justify-center gap-2">
+                        <Trophy className="h-4 w-4 text-orange-400" />
+                        Match Preview
+                      </h3>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      {/* Team 1 */}
+                      <div className="text-center">
+                        <div className="bg-blue-500/20 rounded-lg p-3 mb-2">
+                          <Users className="h-6 w-6 text-blue-400 mx-auto" />
+                        </div>
+                        <div className="text-white font-medium text-sm">Your Team</div>
+                        <div className="text-blue-400 text-xs">You & {myPartner.name}</div>
+                      </div>
+                      
+                      {/* VS */}
+                      <div className="text-orange-400 font-bold text-lg">VS</div>
+                      
+                      {/* Team 2 */}
+                      <div className="text-center">
+                        <div className="bg-red-500/20 rounded-lg p-3 mb-2">
+                          <Users className="h-6 w-6 text-red-400 mx-auto" />
+                        </div>
+                        <div className="text-white font-medium text-sm">Their Team</div>
+                        <div className="text-red-400 text-xs">{player.name} & {player.partner.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedType === 'singles' && (
+                  <div className="p-4 bg-slate-900/50 border border-purple-500/30 rounded-lg">
+                    <div className="text-center mb-3">
+                      <h3 className="text-white font-medium flex items-center justify-center gap-2">
+                        <User className="h-4 w-4 text-purple-400" />
+                        Singles Match Preview
+                      </h3>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="text-center">
+                        <div className="bg-blue-500/20 rounded-lg p-3 mb-2">
+                          <User className="h-6 w-6 text-blue-400 mx-auto" />
+                        </div>
+                        <div className="text-blue-400 text-sm">You</div>
+                      </div>
+                      
+                      <div className="text-purple-400 font-bold text-lg">VS</div>
+                      
+                      <div className="text-center">
+                        <div className="bg-red-500/20 rounded-lg p-3 mb-2">
+                          <User className="h-6 w-6 text-red-400 mx-auto" />
+                        </div>
+                        <div className="text-red-400 text-sm">{player.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Message */}
                 <div>
                   <label className="text-sm text-slate-400 mb-2 block">Challenge Message</label>
