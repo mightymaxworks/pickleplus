@@ -831,6 +831,7 @@ export default function MatchArena() {
             exit={{ opacity: 0, x: 20 }}
           >
             <DoublesPartnerSystem
+              currentPartner={myPartner ? { name: myPartner.name, id: myPartner.id } : null}
               onPartnerFound={(partner) => {
                 // Convert PartnerProfile to ArenaPlayer format
                 const arenaPartner: ArenaPlayer = {

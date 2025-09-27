@@ -336,8 +336,9 @@ function PartnerRequestsPanel({ requests, onAccept, onDecline }: {
 }
 
 // Main Doubles Partner System Component
-export default function DoublesPartnerSystem({ onPartnerFound }: {
+export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }: {
   onPartnerFound?: (partner: PartnerProfile) => void;
+  currentPartner?: { name: string; id: string } | null;
 }) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'teams'>('discover');
@@ -540,15 +541,64 @@ export default function DoublesPartnerSystem({ onPartnerFound }: {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="text-center py-12"
           >
-            <Trophy className="h-16 w-16 text-orange-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2">My Doubles Teams</h3>
-            <p className="text-slate-400 mb-6">Your established partnerships will appear here</p>
-            <Button className="bg-blue-500 hover:bg-blue-600">
-              <Plus className="h-4 w-4 mr-2" />
-              Find New Partner
-            </Button>
+            {currentPartner ? (
+              <div className="max-w-md mx-auto">
+                <Card className="p-6 border border-slate-600 bg-gradient-to-br from-green-600/20 to-blue-600/20">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <Users className="h-8 w-8 text-green-400" />
+                      <Trophy className="h-8 w-8 text-yellow-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Active Doubles Team</h3>
+                    <div className="text-green-400 text-lg font-medium mb-4">
+                      You & {currentPartner.name}
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mb-6">
+                      <CheckCircle className="h-4 w-4 text-green-400" />
+                      <span>Partnership Active</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex-1 bg-orange-500 hover:bg-orange-600"
+                        onClick={() => setActiveTab('discover')}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Find Opponents
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="flex-1 border-red-400/30 text-red-400 hover:bg-red-400/10"
+                        onClick={() => {
+                          toast({
+                            title: "🔄 Partnership Dissolved",
+                            description: "You can form new partnerships anytime.",
+                            duration: 3000,
+                          });
+                          // This would normally call a callback to dissolve the partnership
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Dissolve
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Trophy className="h-16 w-16 text-orange-400 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-white mb-2">My Doubles Teams</h3>
+                <p className="text-slate-400 mb-6">Your established partnerships will appear here</p>
+                <Button 
+                  className="bg-blue-500 hover:bg-blue-600"
+                  onClick={() => setActiveTab('discover')}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Find New Partner
+                </Button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
