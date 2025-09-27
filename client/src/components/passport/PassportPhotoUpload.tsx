@@ -17,12 +17,16 @@ import {
   Crop, 
   Save,
   X,
-  Star,
-  Trophy,
+  Target,
+  Shield,
   Award,
   Crown,
   Sparkles,
-  Image as ImageIcon
+  ImageIcon,
+  Palette,
+  Sliders,
+  Move3D,
+  Zap
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,27 +47,27 @@ interface BorderConfig {
 
 const borderConfigs: Record<PassportBorder, BorderConfig> = {
   bronze: {
-    name: 'Bronze Explorer',
+    name: 'Bronze Foundation',
     gradient: 'from-amber-600 via-amber-500 to-amber-600',
-    icon: Trophy,
+    icon: Shield,
     color: 'text-amber-400',
-    description: 'Getting started on your journey',
+    description: 'Building your foundation',
     requirement: '0-999 ranking points'
   },
   silver: {
-    name: 'Silver Achiever', 
+    name: 'Silver Precision', 
     gradient: 'from-slate-400 via-slate-300 to-slate-400',
-    icon: Star,
+    icon: Target,
     color: 'text-slate-300',
     description: 'Consistent performance',
     requirement: '1000-1499 ranking points'
   },
   gold: {
-    name: 'Gold Champion',
+    name: 'Gold Excellence',
     gradient: 'from-yellow-500 via-yellow-400 to-yellow-500',
     icon: Award,
     color: 'text-yellow-400',
-    description: 'Elite level player',
+    description: 'Proven excellence',
     requirement: '1500+ ranking points'
   },
   diamond: {
@@ -71,15 +75,15 @@ const borderConfigs: Record<PassportBorder, BorderConfig> = {
     gradient: 'from-cyan-400 via-blue-400 to-purple-400',
     icon: Crown,
     color: 'text-cyan-400',
-    description: 'Top 100 in region',
+    description: 'Elite mastery',
     requirement: 'Regional top 100'
   },
   legendary: {
-    name: 'Legendary Master',
+    name: 'Legendary Status',
     gradient: 'from-purple-500 via-pink-500 to-purple-500',
     icon: Sparkles,
     color: 'text-purple-400',
-    description: 'Elite of the elite',
+    description: 'Legendary achievement',
     requirement: 'Regional top 10'
   }
 };
