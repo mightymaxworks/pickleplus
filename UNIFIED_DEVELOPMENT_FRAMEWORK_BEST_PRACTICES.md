@@ -24,6 +24,17 @@
 
 **CONTEXT**: Complete reimagining of Pickle+ as trading card universe while preserving ALL existing algorithms and functionality. Every user becomes a collectible trading card, transforming functional interactions into engaging collection-building experiences.
 
+### **CHANGELOG v4.1.0** 📋
+*September 27, 2025 - Navigation Architecture Standards*
+
+**ADDED**:
+- **Navigation Architecture Standards (GN-01 through GN-08)**: Mandatory rules to prevent navigation system conflicts and ensure proper separation between global and page-specific navigation
+- **Route-Driven Navigation**: Elimination of local navigation state in favor of URL-driven active tab determination
+- **Navigation Ownership Boundaries**: Clear guidelines for preventing competing navigation systems
+- **Navigation Testing Requirements**: Mandatory tests for navigation coherence and deep-link correctness
+
+**CONTEXT**: Critical architectural standards added in response to navigation system conflicts where competing NavigationTabs components interfered with each other, causing menu functionality failures between /unified-prototype and /match-arena pages.
+
 ### **CHANGELOG v3.3.0** 📋
 *September 24, 2025 - Generic Schema Evolution Framework*
 
@@ -84,6 +95,156 @@
 **CONTEXT**: Addressed critical algorithm compliance gap where players competing across age groups (e.g., 42-year-old in Open 19+ event) only updated single age division rankings instead of ALL eligible rankings (Open 19+ AND 35+). This enhancement ensures full algorithm compliance for cross-age group participation scenarios.  
 
 ---
+
+## 🏗️ NAVIGATION ARCHITECTURE STANDARDS
+
+### **RULE GN-01: SINGLE NAVIGATION OWNER**
+**GlobalNav is defined once in the root layout and never re-declared inside pages.**
+
+**Implementation:**
+- Only one NavigationTabs/GlobalNav component permitted application-wide
+- Must be declared in root layout (App.tsx) only
+- Pages must not contain any fixed bottom navigation bars
+- Any navigation within pages must be clearly named (e.g., ModeNav, SectionNav) and render in scrollable content area
+
+**Violation Example:**
+```jsx
+// ❌ FORBIDDEN - Competing navigation systems
+function MatchArena() {
+  return (
+    <div>
+      <NavigationTabs activeTab="play" /> {/* FORBIDDEN */}
+    </div>
+  );
+}
+```
+
+**Correct Example:**
+```jsx
+// ✅ CORRECT - Page-specific mode navigation only
+function MatchArena() {
+  return (
+    <div>
+      <ArenaModeNav activeMode="lobby" /> {/* ALLOWED */}
+    </div>
+  );
+}
+```
+
+### **RULE GN-02: ROUTE-DRIVEN STATE**
+**Global tab highlighting and behavior are derived from location (pathname) rather than local state.**
+
+**Implementation:**
+- No `useState` for global navigation activeTab
+- Active tab determined by `pathname.startsWith()` or similar route matching
+- Navigation state must always reflect current URL
+- Deep linking must work correctly for all navigation states
+
+**Violation Example:**
+```jsx
+// ❌ FORBIDDEN - Local state for global navigation
+const [activeTab, setActiveTab] = useState('play');
+```
+
+**Correct Example:**
+```jsx
+// ✅ CORRECT - Route-derived active state
+const activeTab = deriveTabFromRoute(pathname);
+```
+
+### **RULE GN-03: CANONICAL ROUTE MAP**
+**Maintain a tab→route map (e.g., passport:/unified-prototype, play:/match-arena). GlobalNav only navigates via Link to these routes.**
+
+**Implementation:**
+- Define canonical tab-to-route mapping
+- GlobalNav must use Link components for navigation
+- No programmatic setLocation within navigation handlers for global tabs
+- Each global tab must have exactly one canonical route
+
+**Required Mapping:**
+```tsx
+const GLOBAL_TAB_ROUTES = {
+  passport: '/unified-prototype',
+  play: '/match-arena', 
+  rankings: '/rankings',
+  profile: '/profile'
+} as const;
+```
+
+### **RULE GN-04: NO SHADOWING**
+**Feature pages must not render any component named NavigationTabs/GlobalNav or fixed bottom bars that visually compete with GlobalNav.**
+
+**Implementation:**
+- Prohibited component names in pages: NavigationTabs, GlobalNav, BottomNav
+- No `fixed bottom-0` styling in page components
+- Page-level navigation must be clearly named and positioned within content flow
+- Visual design must not compete with global navigation area
+
+### **RULE GN-05: PAGE MODE CONTRACTS**
+**Page ModeNavs manage only local modes and must not include global sections; name them ModeNav to avoid conflation.**
+
+**Implementation:**
+- Page navigation components must use descriptive names (ArenaModeNav, ProfileModeNav)
+- Must only contain page-specific modes/sections
+- Cannot contain global navigation items (passport, play, rankings, profile)
+- Must render within scrollable content area, not fixed positioning
+
+### **RULE GN-06: REDIRECTION DISCIPLINE**
+**Global tabs may redirect only to their canonical routes; pages must not intercept or remap global navigation.**
+
+**Implementation:**
+- Global navigation handlers must use direct routing to canonical routes
+- Pages cannot override global navigation behavior
+- No conditional redirection logic in global navigation
+- Pages must not implement click handlers that conflict with global navigation
+
+### **RULE GN-07: ACTIVE STATE CONTRACT**
+**activeGlobalTab = deriveFromRoute(pathname); no setState for global nav. Tests must verify URL↔tab coherence and deep-link correctness.**
+
+**Implementation:**
+```tsx
+// Required implementation pattern
+function deriveTabFromRoute(pathname: string): GlobalTab {
+  if (pathname.startsWith('/unified-prototype')) return 'passport';
+  if (pathname.startsWith('/match-arena')) return 'play';
+  if (pathname.startsWith('/rankings')) return 'rankings'; 
+  if (pathname.startsWith('/profile')) return 'profile';
+  return 'passport'; // default
+}
+```
+
+**Testing Requirements:**
+- Test URL-to-tab derivation for all routes
+- Test deep linking functionality
+- Test browser back/forward button behavior
+- Test navigation state persistence across page refreshes
+
+### **RULE GN-08: GUARDRAILS**
+**Add lint rule/check to prevent declaring GlobalNav/NavigationTabs in non-root files; add test asserting only one fixed bottom nav exists app-wide.**
+
+**Implementation:**
+- ESLint rule to detect NavigationTabs/GlobalNav in non-root files
+- CI check to fail builds on navigation architecture violations  
+- Unit test to verify only one fixed bottom navigation exists
+- Automated detection of competing navigation systems
+
+**Lint Rule Example:**
+```javascript
+// .eslintrc.js
+rules: {
+  'custom/no-page-global-nav': 'error' // Prevent NavigationTabs in pages
+}
+```
+
+**Test Requirements:**
+```tsx
+describe('Navigation Architecture', () => {
+  it('should have only one fixed bottom navigation', () => {
+    const fixedBottomNavs = document.querySelectorAll('[class*="fixed"][class*="bottom"]');
+    expect(fixedBottomNavs).toHaveLength(1);
+  });
+});
+```
 
 ## 🚨 CRITICAL COMPLIANCE REQUIREMENTS
 
