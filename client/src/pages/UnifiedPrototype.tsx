@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, 
+  IdCard, 
   Trophy, 
   BarChart3, 
-  Settings, 
+  UserCog, 
   Gamepad2,
   Users,
   QrCode,
@@ -21,9 +21,18 @@ import {
   ChevronRight,
   Dumbbell,
   Shield,
-  Bell,
+  BellRing,
   Wifi,
-  WifiOff
+  WifiOff,
+  Crown,
+  Award,
+  Zap,
+  Activity,
+  Scan,
+  Upload,
+  RotateCw,
+  Save,
+  Sparkles
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,10 +80,10 @@ interface RankedPlayer {
 type TabMode = 'passport' | 'play' | 'rankings' | 'profile';
 
 const tierConfig = {
-  recreational: { name: 'Recreational', color: 'from-slate-500 to-slate-600', icon: User },
+  recreational: { name: 'Recreational', color: 'from-slate-500 to-slate-600', icon: Shield },
   competitive: { name: 'Competitive', color: 'from-blue-500 to-blue-600', icon: Target },
-  elite: { name: 'Elite', color: 'from-purple-500 to-purple-600', icon: Star },
-  professional: { name: 'Professional', color: 'from-orange-500 to-orange-600', icon: Trophy },
+  elite: { name: 'Elite', color: 'from-purple-500 to-purple-600', icon: Award },
+  professional: { name: 'Professional', color: 'from-orange-500 to-orange-600', icon: Crown },
 };
 
 // Mock data with more complete rankings for 4-8 display
@@ -263,7 +272,7 @@ function NotificationsHeader({
             className="relative text-white hover:bg-slate-700"
             onClick={onTriggerDemo}
           >
-            <Bell className="h-4 w-4" />
+            <BellRing className="h-4 w-4" />
             {unreadCount > 0 && (
               <Badge 
                 className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center"
@@ -412,10 +421,10 @@ function PlayerRankingCard({
 // Navigation Tabs Component
 function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
   const tabs = [
-    { id: 'passport' as TabMode, label: 'Passport', icon: User },
-    { id: 'play' as TabMode, label: 'Play', icon: Gamepad2 },
+    { id: 'passport' as TabMode, label: 'Passport', icon: IdCard },
+    { id: 'play' as TabMode, label: 'Play', icon: Activity },
     { id: 'rankings' as TabMode, label: 'Rankings', icon: Trophy },
-    { id: 'profile' as TabMode, label: 'Profile', icon: Settings },
+    { id: 'profile' as TabMode, label: 'Profile', icon: UserCog },
   ];
 
   return (
@@ -1439,7 +1448,7 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
       {/* Preferences */}
       <Card className="p-4 bg-slate-800 border-slate-700">
         <h3 className="text-white font-semibold mb-4 flex items-center">
-          <Settings className="h-4 w-4 mr-2 text-orange-400" />
+          <UserCog className="h-4 w-4 mr-2 text-orange-400" />
           Preferences
         </h3>
         <div className="space-y-4">
