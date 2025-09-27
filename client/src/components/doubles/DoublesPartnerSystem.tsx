@@ -546,7 +546,7 @@ export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }:
           >
             {currentPartner ? (
               <div className="max-w-md mx-auto">
-                <Card className="p-6 border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10 hover:border-orange-400/50 transition-all">
+                <Card className="p-6 border border-slate-600 bg-gradient-to-br from-slate-800 to-slate-700 hover:border-slate-500 transition-all">
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-3 mb-4">
                       <Users className="h-8 w-8 text-green-400" />
