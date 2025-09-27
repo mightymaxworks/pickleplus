@@ -29,7 +29,8 @@ import {
   Eye,
   Globe,
   Filter,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,10 +72,11 @@ interface ChallengeRequest {
 }
 
 // Gaming-Style Player Card
-function ArenaPlayerCard({ player, onChallenge, onViewProfile, myPlayerId }: {
+function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPlayerId }: {
   player: ArenaPlayer;
   onChallenge: (player: ArenaPlayer, matchType: MatchType) => void;
   onViewProfile: (player: ArenaPlayer) => void;
+  onPartnerUp: (player: ArenaPlayer) => void;
   myPlayerId: string;
 }) {
   const tierConfig = {
@@ -180,7 +182,7 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, myPlayerId }: {
             {isChallengeable && player.id !== myPlayerId ? (
               player.matchType === 'doubles-looking' ? (
                 <Button
-                  onClick={() => onChallenge(player, 'doubles-looking')}
+                  onClick={() => onPartnerUp(player)}
                   size="sm"
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
                 >
@@ -455,6 +457,12 @@ export default function MatchArena() {
       
       // Store match context for the recording page
       sessionStorage.setItem('pendingMatch', JSON.stringify(matchData));
+      sessionStorage.setItem('realPlayerNames', JSON.stringify({
+        team1Player1: 'You',
+        team1Player2: myPartner.name,
+        team2Player1: selectedPlayer.name,
+        team2Player2: selectedPlayer.partner?.name || 'Partner'
+      }));
       
       toast({
         title: "🎮 Team Challenge Ready!",
@@ -589,6 +597,38 @@ export default function MatchArena() {
             {availableCount} available for matches
           </div>
         </div>
+        
+        {/* Partnership Status Display */}
+        {myPartner && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-4 inline-flex items-center gap-3 bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/30 rounded-lg px-4 py-2"
+          >
+            <Users className="h-5 w-5 text-green-400" />
+            <div className="text-left">
+              <div className="text-white font-medium">Doubles Team Active</div>
+              <div className="text-green-400 text-sm">Partnered with {myPartner.name}</div>
+            </div>
+            <Button
+              onClick={() => {
+                const partnerName = myPartner.name;
+                setMyPartner(null);
+                toast({
+                  title: "🔄 Partnership Dissolved",
+                  description: `You're no longer partnered with ${partnerName}. You can form new partnerships anytime.`,
+                  duration: 3000,
+                });
+              }}
+              size="sm"
+              variant="outline"
+              className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Dissolve
+            </Button>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Navigation Tabs */}
@@ -729,6 +769,15 @@ export default function MatchArena() {
                   player={player}
                   onChallenge={handleChallenge}
                   onViewProfile={() => {}}
+                  onPartnerUp={(player) => {
+                    // Go directly to doubles partner system for partnership
+                    toast({
+                      title: "🤝 Finding Partners!",
+                      description: `Connecting you with ${player.name} for doubles partnership...`,
+                      duration: 2000,
+                    });
+                    setTimeout(() => setArenaMode('doubles'), 1000);
+                  }}
                   myPlayerId={myPlayerId}
                 />
               ))}
@@ -822,6 +871,19 @@ export default function MatchArena() {
                       </Badge>
                       <Button
                         onClick={() => {
+                          // Store challenge context for match recording
+                          const challengeContext = {
+                            challenger: 'You',
+                            challenged: challenge.toPlayer.name,
+                            matchType: challenge.matchType,
+                            message: challenge.message
+                          };
+                          sessionStorage.setItem('activeChallenge', JSON.stringify(challengeContext));
+                          sessionStorage.setItem('realPlayerNames', JSON.stringify({
+                            player1: 'You',
+                            player2: challenge.toPlayer.name
+                          }));
+                          
                           // Simulate starting match
                           toast({
                             title: "🎮 Challenge Accepted!",
