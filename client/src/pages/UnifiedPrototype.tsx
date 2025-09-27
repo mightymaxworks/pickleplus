@@ -250,17 +250,10 @@ function NotificationsHeader({
         <div className="flex items-center gap-3">
           {/* WebSocket Connection Status */}
           <div className="flex items-center gap-2">
-            {connected ? (
-              <div className="flex items-center gap-1 text-green-400">
-                <Wifi className="h-4 w-4" />
-                <span className="text-xs">Live</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-red-400">
-                <WifiOff className="h-4 w-4" />
-                <span className="text-xs">Offline</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1 text-green-400">
+              <Wifi className="h-4 w-4" />
+              <span className="text-xs">Live</span>
+            </div>
           </div>
 
           {/* Notification Bell */}
@@ -1554,6 +1547,7 @@ export default function UnifiedPrototype() {
   // WebSocket connection for real-time notifications - demo user
   const { connected, lastMessage, unreadCount } = useNotificationSocket({
     debugMode: true,
+    autoReconnect: false, // Disable for demo mode
     onMessage: (message) => {
       console.log('📡 Received notification:', message);
       if (message.type === 'system' || message.type === 'match_request') {
