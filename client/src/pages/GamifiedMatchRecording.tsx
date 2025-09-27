@@ -29,16 +29,48 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
-function ExplosiveReaction({ show, type, onComplete }: {
+function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
   show: boolean;
   type: 'win' | 'ace' | 'streak' | 'milestone';
   onComplete: () => void;
+  playerName?: string;
+  context?: { score?: string; gameType?: string; margin?: number };
 }) {
+  const getPersonalizedMessage = () => {
+    if (!playerName) return getDefaultMessage();
+    
+    switch (type) {
+      case 'ace':
+        return `${playerName.toUpperCase()} DOMINATES!`;
+      case 'win':
+        if (context?.margin && context.margin >= 5) {
+          return `${playerName.toUpperCase()} CRUSHES IT!`;
+        }
+        return `${playerName.toUpperCase()} TAKES THE GAME!`;
+      case 'milestone':
+        return `${playerName.toUpperCase()} WINS THE MATCH!`;
+      case 'streak':
+        return `${playerName.toUpperCase()} ON FIRE!`;
+      default:
+        return `${playerName.toUpperCase()} VICTORIOUS!`;
+    }
+  };
+
+  const getDefaultMessage = () => {
+    const configs = {
+      win: "GAME WON!",
+      ace: "PERFECT GAME!",
+      streak: "WIN STREAK!",
+      milestone: "MATCH WON!"
+    };
+    return configs[type];
+  };
+
   const configs = {
-    win: { icon: Trophy, text: "VICTORY!", color: "text-yellow-400", particles: 8 },
-    ace: { icon: Zap, text: "ACE!", color: "text-orange-400", particles: 6 },
-    streak: { icon: Target, text: "WIN STREAK!", color: "text-purple-400", particles: 10 },
-    milestone: { icon: Crown, text: "MILESTONE!", color: "text-pink-400", particles: 12 }
+    win: { icon: Trophy, color: "text-yellow-400", particles: 8 },
+    ace: { icon: Zap, color: "text-orange-400", particles: 12 },
+    streak: { icon: Target, color: "text-purple-400", particles: 10 },
+    milestone: { icon: Crown, color: "text-pink-400", particles: 15 }
   };
 
   const config = configs[type];
@@ -77,7 +109,7 @@ function ExplosiveReaction({ show, type, onComplete }: {
             className={`flex items-center gap-3 px-6 py-3 rounded-full bg-slate-900/90 border-2 border-orange-400 backdrop-blur-sm ${config.color}`}
           >
             <Icon className="h-8 w-8" />
-            <span className="text-xl font-bold">{config.text}</span>
+            <span className="text-xl font-bold">{getPersonalizedMessage()}</span>
           </motion.div>
         </motion.div>
       )}
@@ -240,7 +272,12 @@ export default function GamifiedMatchRecording() {
     }
   });
 
-  const [showReaction, setShowReaction] = useState<{show: boolean; type: 'win' | 'ace' | 'streak' | 'milestone'}>({
+  const [showReaction, setShowReaction] = useState<{
+    show: boolean; 
+    type: 'win' | 'ace' | 'streak' | 'milestone';
+    playerName?: string;
+    context?: { score?: string; gameType?: string; margin?: number };
+  }>({
     show: false,
     type: 'win'
   });
@@ -283,16 +320,27 @@ export default function GamifiedMatchRecording() {
           winner
         });
         
-        // Check for achievements
-        if (p1Score === 11 && p2Score === 0 || p2Score === 11 && p1Score === 0) {
+        // Check for achievements with personalized reactions
+        const margin = Math.abs(p1Score - p2Score);
+        if (p1Score === pointTarget && p2Score === 0 || p2Score === pointTarget && p1Score === 0) {
           newState.achievements.push({
             type: 'ace',
             message: `${winner} scored a perfect game!`,
             timestamp: Date.now()
           });
-          setShowReaction({ show: true, type: 'ace' });
+          setShowReaction({ 
+            show: true, 
+            type: 'ace', 
+            playerName: winner,
+            context: { score: `${p1Score}-${p2Score}`, margin }
+          });
         } else {
-          setShowReaction({ show: true, type: 'win' });
+          setShowReaction({ 
+            show: true, 
+            type: 'win', 
+            playerName: winner,
+            context: { score: `${p1Score}-${p2Score}`, margin }
+          });
         }
         
         // Reset scores for next game
@@ -309,7 +357,13 @@ export default function GamifiedMatchRecording() {
         
         if (p1Wins === requiredWins || p2Wins === requiredWins) {
           newState.matchComplete = true;
-          setShowReaction({ show: true, type: 'milestone' });
+          const matchWinner = p1Wins === requiredWins ? newState.player1.name : newState.player2.name;
+          setShowReaction({ 
+            show: true, 
+            type: 'milestone', 
+            playerName: matchWinner,
+            context: { gameType: newState.config.matchFormat }
+          });
         }
       }
       
@@ -700,6 +754,8 @@ export default function GamifiedMatchRecording() {
       <ExplosiveReaction
         show={showReaction.show}
         type={showReaction.type}
+        playerName={showReaction.playerName}
+        context={showReaction.context}
         onComplete={() => setShowReaction({ show: false, type: 'win' })}
       />
     </div>
