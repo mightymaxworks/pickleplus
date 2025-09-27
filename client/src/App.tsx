@@ -287,6 +287,7 @@ export default function App() {
                   <Route path="/passport-dashboard-test" component={lazyLoad(() => import('./pages/PassportDashboardTest'))} />
                   <Route path="/card-rankings-test" component={lazyLoad(() => import('./pages/CardRankingsTest'))} />
                   <Route path="/simplified-nav-test" component={lazyLoad(() => import('./pages/SimplifiedNavTest'))} />
+                  <Route path="/profile-edit-test" component={lazyLoad(() => import('./pages/ProfileEditTest'))} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />

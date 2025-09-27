@@ -410,6 +410,8 @@ export default function CardRankingsTest() {
   const [category, setCategory] = useState<RankingCategory>('singles');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const playersPerPage = 20;
 
   const toggleCardExpansion = (playerId: string) => {
     const newExpanded = new Set(expandedCards);
@@ -438,9 +440,12 @@ export default function CardRankingsTest() {
     return true; // global view shows all
   });
 
-  // Split into podium (top 3) and rest
+  // Split into podium (top 3) and paginated rest
   const podiumPlayers = filteredRankings.slice(0, 3);
-  const listPlayers = filteredRankings.slice(3);
+  const allListPlayers = filteredRankings.slice(3);
+  const totalPages = Math.ceil(allListPlayers.length / playersPerPage);
+  const startIndex = (currentPage - 1) * playersPerPage;
+  const listPlayers = allListPlayers.slice(startIndex, startIndex + playersPerPage);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-6">
@@ -549,16 +554,21 @@ export default function CardRankingsTest() {
             )}
 
             {/* Rest of Rankings */}
-            {listPlayers.length > 0 && (
+            {allListPlayers.length > 0 && (
               <div>
-                <h3 className="text-white font-semibold mb-4 flex items-center">
-                  <Medal className="h-4 w-4 mr-2" />
-                  {view === 'global' ? 'Global Rankings' : 
-                   view === 'local' ? 'Local Rankings (Vancouver)' : 
-                   `${tierConfig[currentPlayer.tier].name} Tier Rankings`}
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-semibold flex items-center">
+                    <Medal className="h-4 w-4 mr-2" />
+                    {view === 'global' ? 'Global Rankings' : 
+                     view === 'local' ? 'Local Rankings (Vancouver)' : 
+                     `${tierConfig[currentPlayer.tier].name} Tier Rankings`}
+                  </h3>
+                  <div className="text-slate-400 text-sm">
+                    Showing {startIndex + 1}-{Math.min(startIndex + playersPerPage, allListPlayers.length)} of {allListPlayers.length}
+                  </div>
+                </div>
                 
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                   <AnimatePresence mode="popLayout">
                     {listPlayers.map((player) => (
                       <motion.div
@@ -573,6 +583,61 @@ export default function CardRankingsTest() {
                     ))}
                   </AnimatePresence>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="text-white border-slate-600 hover:bg-slate-700"
+                    >
+                      Previous
+                    </Button>
+                    
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={currentPage === pageNum 
+                              ? "bg-orange-500 hover:bg-orange-600" 
+                              : "text-white border-slate-600 hover:bg-slate-700"
+                            }
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="text-white border-slate-600 hover:bg-slate-700"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
