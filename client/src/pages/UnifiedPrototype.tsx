@@ -710,7 +710,7 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
       {/* Search Bar */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <User className="h-4 w-4 text-slate-400" />
+          <IdCard className="h-4 w-4 text-slate-400" />
         </div>
         <Input
           value={searchQuery}
@@ -777,7 +777,7 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
       {/* No Results */}
       {searchQuery && filteredRankings.length === 0 && (
         <Card className="p-8 bg-slate-800 border-slate-700 text-center">
-          <User className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <IdCard className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-white font-semibold mb-2">No players found</h3>
           <p className="text-slate-400">Try adjusting your search terms</p>
         </Card>
@@ -1051,7 +1051,7 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
       {/* Basic Information */}
       <Card className="p-4 bg-slate-800 border-slate-700">
         <h3 className="text-white font-semibold mb-4 flex items-center">
-          <User className="h-4 w-4 mr-2 text-orange-400" />
+          <IdCard className="h-4 w-4 mr-2 text-orange-400" />
           Basic Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
