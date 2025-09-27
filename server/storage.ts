@@ -705,29 +705,30 @@ export class DatabaseStorage implements IStorage {
     return await communityStorageImplementation.updateJoinRequestStatus.call({ getDb: () => db }, requestId, status, reviewedByUserId);
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
-  }
-
-  // OAuth support - getUser by string ID (for OAuth provider IDs)
-  async getUser(id: string): Promise<User | undefined> {
-    // First try to find by OAuth provider IDs
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(
-        or(
-          eq(users.googleId, id),
-          eq(users.facebookId, id),
-          eq(users.appleId, id),
-          eq(users.githubId, id),
-          eq(users.xTwitterId, id),
-          eq(users.kakaoId, id),
-          eq(users.lineId, id)
-        )
-      );
-    return user || undefined;
+  // Unified getUser method that handles both numeric IDs and OAuth string IDs
+  async getUser(id: number | string): Promise<User | undefined> {
+    if (typeof id === 'number') {
+      // Query by numeric user ID (primary key)
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    } else {
+      // Query by OAuth provider IDs (string)
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          or(
+            eq(users.googleId, id),
+            eq(users.facebookId, id),
+            eq(users.appleId, id),
+            eq(users.githubId, id),
+            eq(users.xTwitterId, id),
+            eq(users.kakaoId, id),
+            eq(users.lineId, id)
+          )
+        );
+      return user || undefined;
+    }
   }
 
   // OAuth User upsert (Required by Replit Auth)
