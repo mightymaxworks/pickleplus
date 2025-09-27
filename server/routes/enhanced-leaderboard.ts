@@ -208,7 +208,7 @@ router.get('/', async (req, res) => {
 
       // Apply production data filtering for youth rankings
       const originalCount = leaderboardEntries.length;
-      leaderboardEntries = leaderboardEntries.filter(player => isProductionDataFilter(player));
+      leaderboardEntries = leaderboardEntries.filter(player => isProductionDataFilter(player, false));
       
       // Re-rank after filtering - maintain correct pagination ranking
       leaderboardEntries = leaderboardEntries.map((player, index) => ({
@@ -355,9 +355,7 @@ function getPrimaryDivisionFromAge(age: number): string {
 }
 
 // Production data filtering utility
-function isProductionDataFilter(player: any): boolean {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
+function isProductionDataFilter(player: any, isProduction: boolean = false): boolean {
   if (!isProduction) {
     // In development, allow all data
     return true;
@@ -513,7 +511,7 @@ async function getRealLeaderboardData(
 
     let processedPlayers = usersWithStats
       .filter(player => player.points > 0) // Only show players with points in this format
-      .filter(player => isProductionDataFilter(player)) // Apply production data filtering
+      .filter(player => isProductionDataFilter(player, isProduction)) // Apply production data filtering
       .filter(player => applyGeographicFilter(player, view, req.user)) // UDF: Apply geographic filtering
       .filter(player => {
         // Filter by gender - support mixed doubles
