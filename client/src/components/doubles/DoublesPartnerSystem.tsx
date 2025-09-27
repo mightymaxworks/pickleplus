@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { 
   Users, 
   UserPlus, 
@@ -341,6 +342,7 @@ export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }:
   currentPartner?: { name: string; id: string } | null;
 }) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'teams'>('discover');
   const [isSearching, setIsSearching] = useState(false);
   const [partnerRequests, setPartnerRequests] = useState<TeamRequest[]>([]);
@@ -544,7 +546,7 @@ export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }:
           >
             {currentPartner ? (
               <div className="max-w-md mx-auto">
-                <Card className="p-6 border border-slate-600 bg-gradient-to-br from-green-600/20 to-blue-600/20">
+                <Card className="p-6 border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10 hover:border-orange-400/50 transition-all">
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-3 mb-4">
                       <Users className="h-8 w-8 text-green-400" />
@@ -561,7 +563,7 @@ export default function DoublesPartnerSystem({ onPartnerFound, currentPartner }:
                     <div className="flex gap-2">
                       <Button 
                         className="flex-1 bg-orange-500 hover:bg-orange-600"
-                        onClick={() => setActiveTab('discover')}
+                        onClick={() => setLocation('/match-arena')}
                       >
                         <Zap className="h-4 w-4 mr-2" />
                         Find Opponents
