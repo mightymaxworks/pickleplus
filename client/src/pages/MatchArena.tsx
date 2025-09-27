@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 // Enhanced Player Status Indicators
 type PlayerStatus = 'online' | 'in-match' | 'available' | 'away' | 'offline';
@@ -176,14 +177,25 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, myPlayerId }: {
             </Button>
             
             {isChallengeable && player.id !== myPlayerId ? (
-              <Button
-                onClick={() => onChallenge(player, player.matchType)}
-                size="sm"
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                <Swords className="h-4 w-4 mr-1" />
-                Challenge
-              </Button>
+              player.matchType === 'doubles-looking' ? (
+                <Button
+                  onClick={() => onChallenge(player, 'doubles-looking')}
+                  size="sm"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Partner Up
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => onChallenge(player, player.matchType)}
+                  size="sm"
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  <Swords className="h-4 w-4 mr-1" />
+                  Challenge
+                </Button>
+              )
             ) : (
               <Button
                 disabled
@@ -301,12 +313,15 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge }: {
 
 // Main Arena Component
 export default function MatchArena() {
+  const { toast } = useToast();
   const [arenaMode, setArenaMode] = useState<'lobby' | 'search' | 'challenges'>('lobby');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
   const [selectedPlayer, setSelectedPlayer] = useState<ArenaPlayer | null>(null);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [challenges, setChallenges] = useState<ChallengeRequest[]>([]);
+  const [isSearchingPartner, setIsSearchingPartner] = useState(false);
+  const [partnerRequests, setPartnerRequests] = useState<ArenaPlayer[]>([]);
 
   // Mock current player
   const myPlayerId = 'current-player';
@@ -417,8 +432,53 @@ export default function MatchArena() {
     };
 
     setChallenges(prev => [...prev, newChallenge]);
+    
+    // Show success feedback
+    toast({
+      title: "🎯 Challenge Sent!",
+      description: `${matchType === 'singles' ? 'Singles' : 'Doubles'} challenge sent to ${selectedPlayer.name}`,
+      duration: 3000,
+    });
+
+    // Auto-switch to challenges tab to show pending challenge
+    setTimeout(() => setArenaMode('challenges'), 500);
+    
     setShowChallengeModal(false);
     setSelectedPlayer(null);
+  };
+
+  const handleFindPartner = () => {
+    setIsSearchingPartner(true);
+    
+    // Show searching feedback
+    toast({
+      title: "🔍 Finding Partners...",
+      description: "Looking for available doubles partners in your area",
+      duration: 2000,
+    });
+
+    // Simulate finding partners (in real app, this would be an API call)
+    setTimeout(() => {
+      const availablePartners = arenaPlayers.filter(p => 
+        p.matchType === 'doubles-looking' && p.id !== myPlayerId
+      );
+      setPartnerRequests(availablePartners);
+      setIsSearchingPartner(false);
+      
+      if (availablePartners.length > 0) {
+        toast({
+          title: "✨ Partners Found!",
+          description: `Found ${availablePartners.length} available partner${availablePartners.length > 1 ? 's' : ''}`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "😔 No Partners Available",
+          description: "No doubles partners found nearby. Try expanding your search or check back later.",
+          duration: 4000,
+        });
+      }
+    }, 1500);
   };
 
   const filteredPlayers = arenaPlayers.filter(player => {
@@ -484,6 +544,35 @@ export default function MatchArena() {
         </div>
       </div>
 
+      {/* Quick Actions Bar */}
+      <div className="flex justify-center gap-4 mb-6">
+        <Button
+          onClick={handleFindPartner}
+          disabled={isSearchingPartner}
+          className="bg-blue-500 hover:bg-blue-600"
+        >
+          {isSearchingPartner ? (
+            <>
+              <Timer className="h-4 w-4 mr-2 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Find Doubles Partner
+            </>
+          )}
+        </Button>
+        
+        <Button
+          onClick={() => window.location.href = '/gamified-match-recording'}
+          className="bg-green-500 hover:bg-green-600"
+        >
+          <Play className="h-4 w-4 mr-2" />
+          Record Match
+        </Button>
+      </div>
+
       {/* Content Area */}
       <AnimatePresence mode="wait">
         {arenaMode === 'lobby' && (
@@ -493,6 +582,40 @@ export default function MatchArena() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
           >
+            {/* Partner Requests Section */}
+            {partnerRequests.length > 0 && (
+              <Card className="p-4 bg-blue-800/30 border-blue-500 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <UserPlus className="h-5 w-5 text-blue-400" />
+                  <h3 className="text-lg font-semibold text-white">Available Doubles Partners</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {partnerRequests.map(partner => (
+                    <div key={partner.id} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                      <div>
+                        <div className="text-white font-medium">{partner.name}</div>
+                        <div className="text-sm text-slate-400">{partner.rankingPoints} points • {partner.distance}km away</div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          toast({
+                            title: "🤝 Partner Request Sent!",
+                            description: `Sent doubles partnership request to ${partner.name}`,
+                            duration: 3000,
+                          });
+                        }}
+                        size="sm"
+                        className="bg-blue-500 hover:bg-blue-600"
+                      >
+                        <Send className="h-4 w-4 mr-1" />
+                        Invite
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             {/* Filters */}
             <Card className="p-4 bg-slate-800/50 border-slate-700 mb-6">
               <div className="flex flex-wrap gap-4 items-center">
@@ -583,11 +706,34 @@ export default function MatchArena() {
                         <div className="text-sm text-slate-400">
                           {challenge.matchType === 'singles' ? 'Singles' : 'Doubles'} • {challenge.message}
                         </div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          Sent {challenge.timestamp.toLocaleTimeString()}
+                        </div>
                       </div>
                     </div>
-                    <Badge className="bg-yellow-500/20 text-yellow-300">
-                      Pending
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-yellow-500/20 text-yellow-300">
+                        Pending
+                      </Badge>
+                      <Button
+                        onClick={() => {
+                          // Simulate starting match
+                          toast({
+                            title: "🎮 Challenge Accepted!",
+                            description: `${challenge.toPlayer.name} accepted your challenge. Starting match...`,
+                            duration: 2000,
+                          });
+                          setTimeout(() => {
+                            window.location.href = '/gamified-match-recording';
+                          }, 2000);
+                        }}
+                        size="sm"
+                        className="bg-green-500 hover:bg-green-600"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))
