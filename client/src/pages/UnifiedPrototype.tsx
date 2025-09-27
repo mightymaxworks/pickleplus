@@ -46,6 +46,94 @@ import { Slider } from '@/components/ui/slider';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 
+// Micro-Feedback Components
+function ReactionFloat({ icon: Icon, text, color, show, onComplete }: {
+  icon: any;
+  text: string;
+  color: string;
+  show: boolean;
+  onComplete: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: 0, scale: 0.8 }}
+          animate={{ opacity: 1, y: -50, scale: 1 }}
+          exit={{ opacity: 0, y: -80, scale: 0.6 }}
+          transition={{ duration: 1.2, onComplete }}
+          className={`absolute z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-white/20 backdrop-blur-sm pointer-events-none ${color}`}
+        >
+          <Icon className="h-4 w-4" />
+          <span className="text-sm font-medium">{text}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function PressRipple({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  const [ripples, setRipples] = useState<Array<{id: number; x: number; y: number}>>([]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const newRipple = {
+      id: Date.now(),
+      x,
+      y
+    };
+    
+    setRipples(prev => [...prev, newRipple]);
+    
+    setTimeout(() => {
+      setRipples(prev => prev.filter(ripple => ripple.id !== newRipple.id));
+    }, 600);
+    
+    if (onClick) onClick();
+  };
+
+  return (
+    <div className="relative overflow-hidden" onClick={handleClick}>
+      {children}
+      {ripples.map(ripple => (
+        <motion.div
+          key={ripple.id}
+          className="absolute pointer-events-none"
+          initial={{ scale: 0, opacity: 0.6 }}
+          animate={{ scale: 4, opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            left: ripple.x - 10,
+            top: ripple.y - 10,
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)'
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ShimmerStat({ children, trigger }: { children: React.ReactNode; trigger: boolean }) {
+  return (
+    <motion.div
+      animate={{ 
+        borderColor: trigger ? ['#f97316', '#fb923c', '#f97316'] : '#374151',
+        boxShadow: trigger ? '0 0 20px rgba(249, 115, 22, 0.3)' : 'none'
+      }}
+      transition={{ duration: 0.8 }}
+      className="border-2 rounded-lg p-3"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 // Types from our previous implementations
 interface PlayerData {
   id: string;
@@ -930,10 +1018,22 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           <BarChart3 className="h-4 w-4 mr-2" />
           Full Rankings
         </Button>
-        <Button variant="outline" className="text-white border-slate-600 hover:bg-slate-700">
-          <Users className="h-4 w-4 mr-2" />
-          Challenge Player
-        </Button>
+        <div className="relative">
+          <PressRipple onClick={triggerChallengeReaction}>
+            <Button variant="outline" className="text-white border-slate-600 hover:bg-slate-700">
+              <Users className="h-4 w-4 mr-2" />
+              Challenge Player
+            </Button>
+          </PressRipple>
+          
+          <ReactionFloat
+            icon={Users}
+            text="Challenge Sent!"
+            color="text-blue-400"
+            show={showChallengeReaction}
+            onComplete={() => setShowChallengeReaction(false)}
+          />
+        </div>
       </div>
     </div>
   );
@@ -1533,13 +1633,27 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
             exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40"
           >
-            <Button
-              onClick={() => setHasUnsavedChanges(false)}
-              size="lg"
-              className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8"
-            >
-              Save Changes
-            </Button>
+            <div className="relative">
+              <PressRipple onClick={() => {
+                setHasUnsavedChanges(false);
+                triggerSaveReaction();
+              }}>
+                <Button
+                  size="lg"
+                  className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8"
+                >
+                  Save Changes
+                </Button>
+              </PressRipple>
+              
+              <ReactionFloat
+                icon={Save}
+                text="Profile Saved!"
+                color="text-green-400"
+                show={showSaveReaction}
+                onComplete={() => setShowSaveReaction(false)}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1549,6 +1663,22 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [activeTab, setActiveTab] = useState<TabMode>('passport');
+  
+  // Micro-feedback states
+  const [showSaveReaction, setShowSaveReaction] = useState(false);
+  const [showChallengeReaction, setShowChallengeReaction] = useState(false);
+  const [showPhotoReaction, setShowPhotoReaction] = useState(false);
+  const [shimmerStats, setShimmerStats] = useState(false);
+  
+  // Trigger functions for micro-feedback
+  const triggerSaveReaction = () => {
+    setShowSaveReaction(true);
+    setShimmerStats(true);
+    setTimeout(() => setShimmerStats(false), 800);
+  };
+  
+  const triggerChallengeReaction = () => setShowChallengeReaction(true);
+  const triggerPhotoReaction = () => setShowPhotoReaction(true);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [passportPhoto, setPassportPhoto] = useState<string | undefined>(undefined);
   const [notifications, setNotifications] = useState<Array<{

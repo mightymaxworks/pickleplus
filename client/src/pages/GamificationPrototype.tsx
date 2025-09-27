@@ -262,6 +262,9 @@ export default function GamificationPrototype() {
               triggerChallenge={triggerChallenge}
               showScoutingReaction={showScoutingReaction}
               triggerScouting={triggerScouting}
+              setShowPointsAnimation={setShowPointsAnimation}
+              setShowChallengeReaction={setShowChallengeReaction}
+              setShowScoutingReaction={setShowScoutingReaction}
             />
           )}
           {activeDemo === 'social-competition' && (
@@ -276,6 +279,7 @@ export default function GamificationPrototype() {
               players={mockPlayers} 
               showBadgeReaction={showBadgeReaction}
               triggerBadgeUnlock={triggerBadgeUnlock}
+              setShowBadgeReaction={setShowBadgeReaction}
             />
           )}
           {activeDemo === 'social-recognition' && (
@@ -305,7 +309,10 @@ function ImmediateFeedbackDemo({
   showChallengeReaction,
   triggerChallenge,
   showScoutingReaction,
-  triggerScouting
+  triggerScouting,
+  setShowPointsAnimation,
+  setShowChallengeReaction,
+  setShowScoutingReaction
 }: any) {
   return (
     <motion.div
@@ -450,7 +457,7 @@ function SocialCompetitionDemo({ players, challengeTarget, setChallengeTarget }:
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Sword className="h-6 w-6 text-red-400" />
-          <h2 className="text-2xl font-bold">Social Competition Mechanics</h2>
+          <h2 className="text-2xl font-bold text-white">Social Competition Mechanics</h2>
         </div>
         <p className="text-slate-400">Turn every interaction into friendly competition</p>
       </div>
@@ -574,7 +581,7 @@ function SocialCompetitionDemo({ players, challengeTarget, setChallengeTarget }:
 }
 
 // Discovery & Collection Demo Component
-function DiscoveryCollectionDemo({ players, showBadgeReaction, triggerBadgeUnlock }: { players: MockPlayer[]; showBadgeReaction: boolean; triggerBadgeUnlock: () => void }) {
+function DiscoveryCollectionDemo({ players, showBadgeReaction, triggerBadgeUnlock, setShowBadgeReaction }: { players: MockPlayer[]; showBadgeReaction: boolean; triggerBadgeUnlock: () => void; setShowBadgeReaction: (value: boolean) => void }) {
   return (
     <motion.div
       key="discovery-collection"
@@ -586,7 +593,7 @@ function DiscoveryCollectionDemo({ players, showBadgeReaction, triggerBadgeUnloc
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Sparkles className="h-6 w-6 text-purple-400" />
-          <h2 className="text-2xl font-bold">Discovery & Collection</h2>
+          <h2 className="text-2xl font-bold text-white">Discovery & Collection</h2>
         </div>
         <p className="text-slate-400">Make finding opponents feel like collecting rare items</p>
       </div>
@@ -702,7 +709,7 @@ function DiscoveryCollectionDemo({ players, showBadgeReaction, triggerBadgeUnloc
                   <div className="text-slate-500 text-xs">0/5</div>
                 )}
               </div>
-              <div className="text-sm font-medium">{area}</div>
+              <div className="text-sm font-medium text-white">{area}</div>
               <div className="text-xs text-slate-400">
                 {i <= 1 ? 'Conquered' : 'Locked'}
               </div>
@@ -715,7 +722,7 @@ function DiscoveryCollectionDemo({ players, showBadgeReaction, triggerBadgeUnloc
 }
 
 // Social Recognition Demo Component
-function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
+function SocialRecognitionDemo({ applauseCount, triggerApplause, setApplauseCount }: any) {
   return (
     <motion.div
       key="social-recognition"
@@ -727,7 +734,7 @@ function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Heart className="h-6 w-6 text-pink-400" />
-          <h2 className="text-2xl font-bold">Real-Time Social Recognition</h2>
+          <h2 className="text-2xl font-bold text-white">Real-Time Social Recognition</h2>
         </div>
         <p className="text-slate-400">Instant gratification for social interactions</p>
       </div>
@@ -806,7 +813,7 @@ function SocialRecognitionDemo({ applauseCount, triggerApplause }: any) {
                   </div>
                   <div className="flex items-center gap-2">
                     <IconComponent className={`h-4 w-4 ${reaction.color}`} />
-                    <div className="text-sm">{reaction.message}</div>
+                    <div className="text-sm text-white">{reaction.message}</div>
                   </div>
                 </motion.div>
               );
@@ -875,7 +882,7 @@ function ProgressionStoryDemo({ showCelebration, triggerBreakthrough }: any) {
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Crown className="h-6 w-6 text-yellow-400" />
-          <h2 className="text-2xl font-bold">Progression Storytelling</h2>
+          <h2 className="text-2xl font-bold text-white">Progression Storytelling</h2>
         </div>
         <p className="text-slate-400">Make advancement feel like an epic journey</p>
       </div>
