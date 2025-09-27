@@ -1848,7 +1848,6 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
                 </Button>
               ))}
             </div>
-          )}
         </div>
 
         <div className="flex gap-2">
