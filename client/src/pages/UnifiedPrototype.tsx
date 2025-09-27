@@ -69,6 +69,104 @@ function maskPassportCode(code: string, revealed: boolean): string {
   return code.length === 8 ? `••••-${code.slice(4, 8)}` : '••••-••••';
 }
 
+// Passport Hero Component - Centralized identity display
+function PassportHero({ 
+  player, 
+  codeRevealed, 
+  onToggleReveal, 
+  onCopy, 
+  onShowQR 
+}: { 
+  player: PlayerData; 
+  codeRevealed: boolean; 
+  onToggleReveal: () => void; 
+  onCopy: () => void; 
+  onShowQR: () => void; 
+}) {
+  const config = tierConfig[player.tier];
+  const TierIcon = config.icon;
+  const formattedCode = codeRevealed ? formatPassportCode(player.passportCode) : maskPassportCode(player.passportCode, false);
+
+  return (
+    <Card className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 mb-6">
+      <div className="text-center">
+        {/* Player Identity */}
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className={`w-12 h-12 bg-gradient-to-r ${config.color} rounded-full flex items-center justify-center`}>
+            <TierIcon className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">{player.name}</h2>
+            <Badge className={`${config.color} text-white border-none`}>{config.name}</Badge>
+          </div>
+        </div>
+
+        {/* Passport Code - Large and Prominent */}
+        <div className="bg-slate-800/50 rounded-lg p-6 mb-4 border border-slate-600">
+          <div className="text-slate-400 text-sm mb-2 flex items-center justify-center gap-2">
+            <IdCard className="h-4 w-4" />
+            Passport Code
+          </div>
+          
+          {/* Large Segmented Code Display */}
+          <div className="font-mono text-3xl md:text-4xl font-bold text-white tracking-[0.3em] mb-4">
+            {formattedCode}
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleReveal}
+              className="text-slate-300 hover:text-white border-slate-600 hover:border-slate-500"
+            >
+              {codeRevealed ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+              {codeRevealed ? 'Hide' : 'Reveal'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCopy}
+              className="text-slate-300 hover:text-white border-slate-600 hover:border-slate-500"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onShowQR}
+              className="text-slate-300 hover:text-white border-slate-600 hover:border-slate-500"
+            >
+              <QrCode className="h-4 w-4 mr-2" />
+              QR Code
+            </Button>
+          </div>
+        </div>
+
+        {/* Performance KPIs */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-white">#{player.globalRank}</div>
+            <div className="text-slate-400 text-sm">Global Rank</div>
+          </div>
+          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-white">{Math.round(player.winRate * 100)}%</div>
+            <div className="text-slate-400 text-sm">Win Rate</div>
+          </div>
+          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-white">{player.rankingPoints.toLocaleString()}</div>
+            <div className="text-slate-400 text-sm">Points</div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 // Micro-Feedback Components
 function ReactionFloat({ icon: Icon, text, color, show, onComplete }: {
   icon: any;
@@ -611,6 +709,47 @@ function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabC
   );
 }
 
+// QR Code Modal Component
+function QRCodeModal({ 
+  isOpen, 
+  onClose, 
+  passportCode 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  passportCode: string; 
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-900 rounded-lg p-6 max-w-sm w-full border border-slate-700">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">Passport QR Code</h3>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="text-center">
+          <div className="bg-white p-4 rounded-lg mb-4 mx-auto w-fit">
+            {/* Placeholder for QR code - in real implementation would use QR library */}
+            <div className="w-32 h-32 bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+              <QrCode className="h-8 w-8 text-slate-400" />
+            </div>
+          </div>
+          <p className="text-slate-400 text-sm mb-4">
+            Scan this QR code to connect with this player
+          </p>
+          <div className="font-mono text-white bg-slate-800 px-3 py-2 rounded text-sm">
+            {formatPassportCode(passportCode)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Passport Mode Content - Full passport display
 function PassportModeContent({ 
   player, 
@@ -622,155 +761,101 @@ function PassportModeContent({
   onPhotoUpload: () => void;
 }) {
   const { toast } = useToast();
+  const [codeRevealed, setCodeRevealed] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(player.passportCode);
+    toast({ 
+      title: "Passport code copied!", 
+      description: `${formatPassportCode(player.passportCode)} copied to clipboard`,
+      duration: 2000 
+    });
+  };
+
+  const handleShowQR = () => {
+    setShowQRModal(true);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Full Passport Card */}
-      <Card className={`p-6 bg-gradient-to-br ${config.color} border border-white/20 relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+      {/* Passport Hero - Centralized Identity */}
+      <PassportHero 
+        player={player}
+        codeRevealed={codeRevealed}
+        onToggleReveal={() => setCodeRevealed(!codeRevealed)}
+        onCopy={handleCopy}
+        onShowQR={handleShowQR}
+      />
+      
+      {/* Player Photo Section */}
+      <Card className="p-6 bg-slate-900/50 border-slate-700">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Camera className="h-5 w-5" />
+          Player Photo
+        </h3>
         
-        <div className="relative text-white">
-          {/* Player Photo and Info */}
-          <div className="text-center mb-6">
-            <div className="relative inline-block">
-              {passportPhoto ? (
-                <div className="w-32 h-32 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 p-1 rounded-full mx-auto mb-4">
-                  <img 
-                    src={passportPhoto} 
-                    alt={player.name}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
-                  <TierIcon className="h-16 w-16" />
-                </div>
-              )}
-              
-              {/* Photo Upload Button */}
-              <Button
-                onClick={onPhotoUpload}
-                className="absolute -bottom-2 right-0 w-8 h-8 p-0 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg"
-                title="Upload passport photo"
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <h2 className="text-3xl font-bold mb-1">{player.name}</h2>
-            <Badge className="bg-white/30 text-white px-4 py-2 text-base">{config.name} Player</Badge>
-            <div className="text-white/90 text-lg mt-2 flex items-center gap-3">
-              <IdCard className="h-4 w-4" />
-              <span>{player.passportCode}</span>
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(player.passportCode);
-                  toast({ title: "Passport code copied!", duration: 2000 });
-                }}
-                className="hover:text-white/70 transition-colors"
-              >
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
-            
-            {!passportPhoto && (
-              <div className="mt-3">
-                <Button
-                  onClick={onPhotoUpload}
-                  variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/30"
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Add Action Photo
-                </Button>
+        <div className="text-center">
+          <div className="relative inline-block">
+            {passportPhoto ? (
+              <div className="w-32 h-32 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 p-1 rounded-full mx-auto mb-4">
+                <img 
+                  src={passportPhoto} 
+                  alt={player.name}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-slate-600">
+                <TierIcon className="h-16 w-16 text-slate-400" />
               </div>
             )}
+            
+            {/* Photo Upload Button */}
+            <Button
+              onClick={onPhotoUpload}
+              className="absolute -bottom-2 right-0 w-8 h-8 p-0 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg"
+              title="Upload passport photo"
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
           </div>
           
-          {/* Detailed Stats */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-white/20 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold">{player.rankingPoints.toLocaleString()}</div>
-              <div className="text-white/90">Ranking Points</div>
-            </div>
-            <div className="bg-white/20 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold">{player.picklePoints}</div>
-              <div className="text-white/90">Pickle Points</div>
-            </div>
-          </div>
-
-          {/* Progress to Next Tier */}
-          <div className="bg-white/20 rounded-lg p-4 mb-6">
-            <div className="flex justify-between text-white text-sm mb-2">
-              <span>Progress to {player.nextMilestone.tier}</span>
-              <span>{player.nextMilestone.pointsNeeded} points needed</span>
-            </div>
-            <div className="bg-white/30 rounded-full h-3">
-              <div className="bg-white rounded-full h-3 w-3/4 transition-all duration-1000" />
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-              <Users className="h-4 w-4 mr-2" />
-              Find Game
-            </Button>
-            <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-              <QrCode className="h-4 w-4 mr-2" />
-              Scan QR
-            </Button>
-          </div>
+          {!passportPhoto && (
+            <p className="text-slate-400 text-sm">
+              Add a photo to personalize your passport
+            </p>
+          )}
         </div>
       </Card>
-
-      {/* Position Summary */}
-      <Card className="p-4 bg-slate-800 border-slate-700">
-        <h3 className="text-white font-semibold mb-3 flex items-center">
-          <Medal className="h-4 w-4 mr-2 text-orange-400" />
-          Your Position
+      
+      {/* Additional Stats - Simplified */}
+      <Card className="p-6 bg-slate-900/50 border-slate-700">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Trophy className="h-5 w-5" />
+          Additional Stats
         </h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-white">#{player.globalRank}</div>
-            <div className="text-slate-400 text-sm">Global</div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-white">{player.picklePoints}</div>
+            <div className="text-slate-400 text-sm">Pickle Points</div>
           </div>
-          <div>
+          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-white">#{player.localRank}</div>
-            <div className="text-slate-400 text-sm">Local</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">{(player.winRate * 100).toFixed(0)}%</div>
-            <div className="text-slate-400 text-sm">Win Rate</div>
+            <div className="text-slate-400 text-sm">Local Rank</div>
           </div>
         </div>
       </Card>
-
-      {/* Recent Activity */}
-      <Card className="p-4 bg-slate-800 border-slate-700">
-        <h3 className="text-white font-semibold mb-3 flex items-center">
-          <TrendingUp className="h-4 w-4 mr-2 text-green-400" />
-          Recent Activity
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded">
-            <div>
-              <div className="text-white font-medium">Won against Sarah M.</div>
-              <div className="text-slate-400 text-sm">2 hours ago</div>
-            </div>
-            <Badge className="bg-green-500/20 text-green-300">+4.5 pts</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded">
-            <div>
-              <div className="text-white font-medium">Lost to Mike J.</div>
-              <div className="text-slate-400 text-sm">Yesterday</div>
-            </div>
-            <Badge className="bg-blue-500/20 text-blue-300">+1.5 pts</Badge>
-          </div>
-        </div>
-      </Card>
+      
+      {/* QR Code Modal */}
+      <QRCodeModal 
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        passportCode={player.passportCode}
+      />
     </div>
   );
 }
