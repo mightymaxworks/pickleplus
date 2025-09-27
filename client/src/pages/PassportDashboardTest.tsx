@@ -93,42 +93,18 @@ function InteractivePassportCard({
   onModeChange: (mode: ViewMode) => void;
   onAction: (action: string) => void;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  
-  const rotateX = useSpring(useTransform(mouseY, [-300, 300], [15, -15]));
-  const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-15, 15]));
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    mouseX.set(e.clientX - centerX);
-    mouseY.set(e.clientY - centerY);
-  };
-
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
 
   return (
     <motion.div
-      ref={cardRef}
-      className="relative w-full max-w-md mx-auto perspective-1000"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => {
-        mouseX.set(0);
-        mouseY.set(0);
-      }}
-      style={{
-        rotateX,
-        rotateY,
-      }}
+      className="relative w-full max-w-md mx-auto"
+      whileHover={{ y: -10, scale: 1.02 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className={`relative bg-gradient-to-br ${config.color} rounded-2xl p-6 shadow-2xl border border-white/20 backdrop-blur-sm`}>
-        {/* Holographic overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-2xl opacity-50" />
+      <div className={`relative bg-gradient-to-br ${config.color} rounded-2xl p-6 shadow-xl border border-white/30`}>
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent rounded-2xl" />
         
         {/* Header */}
         <div className="relative z-10 text-center mb-6">
@@ -185,23 +161,23 @@ function InteractivePassportCard({
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              <div className="flex justify-between text-white/90 text-sm">
+              <div className="flex justify-between text-white text-sm">
                 <span>Global Rank</span>
                 <span>#{player.globalRank.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-white/90 text-sm">
+              <div className="flex justify-between text-white text-sm">
                 <span>Local Rank</span>
                 <span>#{player.localRank}</span>
               </div>
               <div className="pt-2">
-                <div className="text-white/80 text-xs mb-1">Next: {player.nextMilestone.tier}</div>
-                <div className="bg-white/20 rounded-full h-2">
+                <div className="text-white text-xs mb-1">Next: {player.nextMilestone.tier}</div>
+                <div className="bg-white/30 rounded-full h-2">
                   <div 
                     className="bg-white rounded-full h-2 transition-all duration-1000"
                     style={{ width: '65%' }}
                   />
                 </div>
-                <div className="text-white/80 text-xs mt-1">{player.nextMilestone.pointsNeeded} points needed</div>
+                <div className="text-white text-xs mt-1">{player.nextMilestone.pointsNeeded} points needed</div>
               </div>
             </motion.div>
           )}
@@ -215,13 +191,13 @@ function InteractivePassportCard({
               <div className="text-center">
                 <div className="text-white text-sm mb-2">Competitive Standing</div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-white/20 rounded-lg p-2">
+                  <div className="bg-white/30 rounded-lg p-2">
                     <div className="text-white font-bold">#{player.globalRank}</div>
-                    <div className="text-white/80">Global</div>
+                    <div className="text-white">Global</div>
                   </div>
-                  <div className="bg-white/20 rounded-lg p-2">
+                  <div className="bg-white/30 rounded-lg p-2">
                     <div className="text-white font-bold">#{player.localRank}</div>
-                    <div className="text-white/80">Local</div>
+                    <div className="text-white">Local</div>
                   </div>
                 </div>
               </div>
@@ -236,12 +212,12 @@ function InteractivePassportCard({
             >
               <div className="text-center">
                 <div className="text-white text-sm mb-2">Collection Progress</div>
-                <div className="text-xs text-white/80 mb-2">
+                <div className="text-xs text-white mb-2">
                   {player.picklePoints} points available to spend
                 </div>
                 <Button 
                   size="sm" 
-                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                  className="bg-white/30 hover:bg-white/40 text-white border-white/30"
                   onClick={() => onAction('openPack')}
                 >
                   <Gift className="h-4 w-4 mr-1" />
@@ -256,7 +232,7 @@ function InteractivePassportCard({
         <div className="relative z-10 flex gap-2 mt-6">
           <Button 
             size="sm" 
-            className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/30"
+            className="flex-1 bg-white/30 hover:bg-white/40 text-white border-white/30"
             onClick={() => onAction('findGame')}
           >
             <Users className="h-4 w-4 mr-1" />
@@ -264,7 +240,7 @@ function InteractivePassportCard({
           </Button>
           <Button 
             size="sm" 
-            className="bg-white/20 hover:bg-white/30 text-white border-white/30 px-3"
+            className="bg-white/30 hover:bg-white/40 text-white border-white/30 px-3"
             onClick={() => onAction('scanQR')}
           >
             <QrCode className="h-4 w-4" />

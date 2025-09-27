@@ -63,7 +63,7 @@ const tierConfig = {
   },
 };
 
-// Mock ranking data
+// Mock ranking data with player avatars
 const mockRankings: RankedPlayer[] = [
   {
     id: '1',
@@ -75,6 +75,7 @@ const mockRankings: RankedPlayer[] = [
     recentChange: +47,
     winRate: 0.89,
     matchesPlayed: 156,
+    avatar: 'https://images.unsplash.com/photo-1494790108755-2616c179e845?w=100&h=100&fit=crop&crop=face',
   },
   {
     id: '2', 
@@ -86,6 +87,7 @@ const mockRankings: RankedPlayer[] = [
     recentChange: -12,
     winRate: 0.87,
     matchesPlayed: 203,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
   },
   {
     id: '3',
@@ -97,6 +99,7 @@ const mockRankings: RankedPlayer[] = [
     recentChange: +23,
     winRate: 0.82,
     matchesPlayed: 134,
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
   },
   {
     id: '4',
@@ -108,6 +111,7 @@ const mockRankings: RankedPlayer[] = [
     recentChange: +89,
     winRate: 0.85,
     matchesPlayed: 98,
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
   },
   {
     id: '5',
@@ -119,6 +123,7 @@ const mockRankings: RankedPlayer[] = [
     recentChange: -5,
     winRate: 0.79,
     matchesPlayed: 167,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
   },
   {
     id: '6',
@@ -130,6 +135,31 @@ const mockRankings: RankedPlayer[] = [
     recentChange: +156,
     winRate: 0.76,
     matchesPlayed: 87,
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '7',
+    name: 'James Wilson',
+    tier: 'competitive',
+    rankingPoints: 743,
+    rank: 7,
+    location: 'Vancouver, BC',
+    recentChange: +12,
+    winRate: 0.71,
+    matchesPlayed: 92,
+    avatar: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=100&h=100&fit=crop&crop=face',
+  },
+  {
+    id: '8',
+    name: 'Anna Kim',
+    tier: 'competitive',
+    rankingPoints: 687,
+    rank: 8,
+    location: 'Vancouver, BC',
+    recentChange: -8,
+    winRate: 0.68,
+    matchesPlayed: 78,
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face',
   },
 ];
 
@@ -149,14 +179,19 @@ const currentPlayer: RankedPlayer = {
 function PlayerRankingCard({ 
   player, 
   isCurrentPlayer = false,
-  showDetails = false 
+  showDetails = false,
+  isPodium = false
 }: { 
   player: RankedPlayer; 
   isCurrentPlayer?: boolean;
   showDetails?: boolean;
+  isPodium?: boolean;
 }) {
   const config = tierConfig[player.tier];
   const TierIcon = config.icon;
+
+  // Generate initials fallback
+  const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
     <motion.div
@@ -164,10 +199,14 @@ function PlayerRankingCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ scale: 1.02, y: -5 }}
-      className={`relative overflow-hidden ${isCurrentPlayer ? 'ring-2 ring-orange-400' : ''}`}
+      whileHover={{ scale: isPodium ? 1.05 : 1.02, y: -5 }}
+      className={`relative overflow-hidden ${isCurrentPlayer ? 'ring-2 ring-orange-400' : ''} ${
+        isPodium ? 'w-full' : ''
+      }`}
     >
-      <Card className={`p-4 bg-gradient-to-r ${config.color} border-2 ${config.borderColor}/30 hover:${config.borderColor}/60 transition-all cursor-pointer`}>
+      <Card className={`p-4 bg-gradient-to-r ${config.color} border-2 ${config.borderColor}/30 hover:${config.borderColor}/60 transition-all cursor-pointer ${
+        isPodium && player.rank === 1 ? 'scale-110 border-yellow-400/60' : ''
+      }`}>
         {/* Rank Badge */}
         <div className="absolute top-2 left-2">
           {player.rank <= 3 ? (
@@ -200,10 +239,21 @@ function PlayerRankingCard({
         <div className="mt-8">
           {/* Player Info */}
           <div className="text-center mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <TierIcon className="h-6 w-6 text-white" />
+            {/* Player Avatar */}
+            <div className="w-16 h-16 mx-auto mb-3">
+              {player.avatar ? (
+                <img 
+                  src={player.avatar} 
+                  alt={player.name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-white/30"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/30">
+                  <span className="text-white font-bold text-lg">{initials}</span>
+                </div>
+              )}
             </div>
-            <h3 className="text-lg font-bold text-white">
+            <h3 className={`font-bold text-white ${isPodium ? 'text-lg' : 'text-base'}`}>
               {isCurrentPlayer ? `${player.name} (You)` : player.name}
             </h3>
             <div className="flex items-center justify-center text-white/80 text-sm">
@@ -388,6 +438,10 @@ export default function CardRankingsTest() {
     return true; // global view shows all
   });
 
+  // Split into podium (top 3) and rest
+  const podiumPlayers = filteredRankings.slice(0, 3);
+  const listPlayers = filteredRankings.slice(3);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-6">
       <div className="max-w-6xl mx-auto">
@@ -440,37 +494,93 @@ export default function CardRankingsTest() {
               <YourPositionCard player={currentPlayer} />
             </div>
 
-            {/* Top Rankings */}
-            <div>
-              <h3 className="text-white font-semibold mb-4 flex items-center">
-                <Trophy className="h-4 w-4 mr-2" />
-                {view === 'global' ? 'Global Rankings' : 
-                 view === 'local' ? 'Local Rankings (Vancouver)' : 
-                 `${tierConfig[currentPlayer.tier].name} Tier Rankings`}
-              </h3>
-              
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-                <AnimatePresence mode="popLayout">
-                  {filteredRankings.map((player) => (
+            {/* Podium - Top 3 */}
+            {podiumPlayers.length > 0 && (
+              <div>
+                <h3 className="text-white font-semibold mb-6 flex items-center">
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Top Performers
+                </h3>
+                
+                <div className="flex justify-center items-end gap-4 mb-8">
+                  {/* 2nd place */}
+                  {podiumPlayers[1] && (
                     <motion.div
-                      key={player.id}
-                      onClick={() => toggleCardExpansion(player.id)}
+                      className="w-40"
+                      onClick={() => toggleCardExpansion(podiumPlayers[1].id)}
                     >
                       <PlayerRankingCard
-                        player={player}
-                        showDetails={expandedCards.has(player.id)}
+                        player={podiumPlayers[1]}
+                        showDetails={expandedCards.has(podiumPlayers[1].id)}
+                        isPodium={true}
                       />
                     </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-
-              {filteredRankings.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-slate-400">No players found matching your criteria</div>
+                  )}
+                  
+                  {/* 1st place - elevated */}
+                  {podiumPlayers[0] && (
+                    <motion.div
+                      className="w-44 -mt-8"
+                      onClick={() => toggleCardExpansion(podiumPlayers[0].id)}
+                    >
+                      <PlayerRankingCard
+                        player={podiumPlayers[0]}
+                        showDetails={expandedCards.has(podiumPlayers[0].id)}
+                        isPodium={true}
+                      />
+                    </motion.div>
+                  )}
+                  
+                  {/* 3rd place */}
+                  {podiumPlayers[2] && (
+                    <motion.div
+                      className="w-40"
+                      onClick={() => toggleCardExpansion(podiumPlayers[2].id)}
+                    >
+                      <PlayerRankingCard
+                        player={podiumPlayers[2]}
+                        showDetails={expandedCards.has(podiumPlayers[2].id)}
+                        isPodium={true}
+                      />
+                    </motion.div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Rest of Rankings */}
+            {listPlayers.length > 0 && (
+              <div>
+                <h3 className="text-white font-semibold mb-4 flex items-center">
+                  <Medal className="h-4 w-4 mr-2" />
+                  {view === 'global' ? 'Global Rankings' : 
+                   view === 'local' ? 'Local Rankings (Vancouver)' : 
+                   `${tierConfig[currentPlayer.tier].name} Tier Rankings`}
+                </h3>
+                
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <AnimatePresence mode="popLayout">
+                    {listPlayers.map((player) => (
+                      <motion.div
+                        key={player.id}
+                        onClick={() => toggleCardExpansion(player.id)}
+                      >
+                        <PlayerRankingCard
+                          player={player}
+                          showDetails={expandedCards.has(player.id)}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
+            {filteredRankings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-slate-400">No players found matching your criteria</div>
+              </div>
+            )}
           </div>
         </div>
 

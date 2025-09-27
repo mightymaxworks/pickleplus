@@ -219,24 +219,42 @@ function PassportModeContent() {
 
   return (
     <div className="space-y-6">
-      {/* Passport Card Preview */}
-      <Card className="p-6 bg-gradient-to-r from-purple-500 to-purple-600 border-purple-400">
-        <div className="text-center text-white mb-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Star className="h-8 w-8" />
-          </div>
-          <h2 className="text-xl font-bold">{playerData.name}</h2>
-          <Badge className="bg-white/20 text-white mt-1">{playerData.tier}</Badge>
-        </div>
+      {/* Enhanced Passport Card Preview */}
+      <Card className="p-6 bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 border-purple-400 relative overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
         
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold">{playerData.rankingPoints.toLocaleString()}</div>
-            <div className="text-purple-100 text-sm">Ranking Points</div>
+        <div className="relative">
+          {/* Player Avatar and Info */}
+          <div className="text-center text-white mb-6">
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/30">
+              <Star className="h-10 w-10" />
+            </div>
+            <h2 className="text-2xl font-bold mb-1">{playerData.name}</h2>
+            <Badge className="bg-white/30 text-white px-3 py-1 text-sm">{playerData.tier} Player</Badge>
           </div>
-          <div>
-            <div className="text-2xl font-bold">{playerData.picklePoints}</div>
-            <div className="text-purple-100 text-sm">Pickle Points</div>
+          
+          {/* Points Display */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-white/20 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-white">{playerData.rankingPoints.toLocaleString()}</div>
+              <div className="text-white/90 text-sm">Ranking Points</div>
+            </div>
+            <div className="bg-white/20 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-white">{playerData.picklePoints}</div>
+              <div className="text-white/90 text-sm">Pickle Points</div>
+            </div>
+          </div>
+
+          {/* Progress Indicator */}
+          <div className="bg-white/20 rounded-lg p-3">
+            <div className="flex justify-between text-white text-sm mb-2">
+              <span>Progress to Professional</span>
+              <span>553 points needed</span>
+            </div>
+            <div className="bg-white/30 rounded-full h-2">
+              <div className="bg-white rounded-full h-2 w-3/4" />
+            </div>
           </div>
         </div>
       </Card>
@@ -293,34 +311,67 @@ function PassportModeContent() {
 }
 
 function RankingsModeContent() {
-  const topPlayers = [
-    { name: 'Sarah Martinez', points: 2156, rank: 1, change: '+47' },
-    { name: 'Mike Johnson', points: 2089, rank: 2, change: '-12' },
-    { name: 'Alex Chen', points: 1647, rank: 3, change: '+23' },
-    { name: 'Emma Wilson', points: 1523, rank: 4, change: '+89' },
-  ];
+  const [selectedCategory, setSelectedCategory] = useState('singles');
+  const [selectedView, setSelectedView] = useState('local');
+
+  const contextualData = {
+    yourPosition: { global: 847, local: 23, points: 1247 },
+    nearbyPlayers: [
+      { name: 'David Kim', rank: 22, points: 1251, change: '+3' },
+      { name: 'You', rank: 23, points: 1247, change: '+34', isYou: true },
+      { name: 'Lisa Zhang', rank: 24, points: 1243, change: '-2' },
+    ],
+    topPlayers: [
+      { name: 'Sarah Martinez', points: 2156, rank: 1, change: '+47' },
+      { name: 'Mike Johnson', points: 2089, rank: 2, change: '-12' },
+      { name: 'Alex Chen', points: 1647, rank: 3, change: '+23' },
+    ],
+    risingStars: [
+      { name: 'Emma Wilson', points: 1523, rank: 4, change: '+89' },
+      { name: 'James Liu', points: 987, rank: 12, change: '+156' },
+    ]
+  };
 
   return (
     <div className="space-y-6">
+      {/* Category Selection */}
+      <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+        {['singles', 'doubles', 'mixed'].map((category) => (
+          <Button
+            key={category}
+            size="sm"
+            variant={selectedCategory === category ? 'default' : 'ghost'}
+            className="flex-1 capitalize text-xs"
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category}
+          </Button>
+        ))}
+      </div>
+
       {/* View Switcher */}
       <div className="flex gap-2">
-        {['Global', 'Local', 'My Tier'].map((view) => (
+        {['Local', 'Regional', 'Global'].map((view) => (
           <Button
             key={view}
             size="sm"
-            variant={view === 'Local' ? 'default' : 'outline'}
-            className="flex-1"
+            variant={selectedView.toLowerCase() === view.toLowerCase() ? 'default' : 'outline'}
+            className="flex-1 text-xs"
+            onClick={() => setSelectedView(view.toLowerCase())}
           >
             {view}
           </Button>
         ))}
       </div>
 
-      {/* Your Position */}
+      {/* Your Contextual Position */}
       <Card className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 border-orange-400">
-        <div className="text-white text-center">
-          <h3 className="font-semibold mb-2">Your Position</h3>
-          <div className="grid grid-cols-3 gap-4">
+        <div className="text-white">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">Your Position</h3>
+            <Badge className="bg-white/20 text-white text-xs">+34 this week</Badge>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-xl font-bold">#847</div>
               <div className="text-orange-100 text-xs">Global</div>
@@ -334,23 +385,60 @@ function RankingsModeContent() {
               <div className="text-orange-100 text-xs">Points</div>
             </div>
           </div>
+          <div className="mt-3 text-center">
+            <div className="text-xs text-orange-100">15 points from rank #22</div>
+          </div>
         </div>
       </Card>
 
-      {/* Top Rankings */}
+      {/* Players Around You */}
+      <Card className="p-4 bg-slate-800 border-slate-700">
+        <h3 className="text-white font-semibold mb-3 flex items-center">
+          <Target className="h-4 w-4 mr-2" />
+          Players Near You
+        </h3>
+        <div className="space-y-2">
+          {contextualData.nearbyPlayers.map((player, i) => (
+            <div key={i} className={`flex items-center justify-between p-2 rounded ${
+              player.isYou ? 'bg-orange-500/20 border border-orange-400/30' : 'bg-slate-700/50'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`font-bold ${player.isYou ? 'text-orange-300' : 'text-white'}`}>
+                  #{player.rank}
+                </div>
+                <div>
+                  <div className={`font-medium ${player.isYou ? 'text-orange-200' : 'text-white'}`}>
+                    {player.name}
+                  </div>
+                  <div className="text-slate-400 text-xs">{player.points.toLocaleString()} points</div>
+                </div>
+              </div>
+              <Badge 
+                className={player.change.startsWith('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}
+              >
+                {player.change}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Local Leaders */}
       <Card className="p-4 bg-slate-800 border-slate-700">
         <h3 className="text-white font-semibold mb-3 flex items-center">
           <Trophy className="h-4 w-4 mr-2" />
-          Local Leaders (Vancouver)
+          Local Leaders
         </h3>
         <div className="space-y-2">
-          {topPlayers.map((player) => (
-            <div key={player.rank} className="flex items-center justify-between p-3 bg-slate-700/50 rounded">
+          {contextualData.topPlayers.map((player) => (
+            <div key={player.rank} className="flex items-center justify-between p-2 bg-slate-700/50 rounded">
               <div className="flex items-center gap-3">
-                <div className="text-white font-bold">#{player.rank}</div>
+                <div className="text-white font-bold">
+                  {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : '🥉'}
+                </div>
                 <div>
                   <div className="text-white font-medium">{player.name}</div>
-                  <div className="text-slate-400 text-sm">{player.points.toLocaleString()} points</div>
+                  <div className="text-slate-400 text-xs">{player.points.toLocaleString()} points</div>
                 </div>
               </div>
               <Badge 
@@ -365,13 +453,13 @@ function RankingsModeContent() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        <Button variant="outline">
-          <BarChart3 className="h-4 w-4 mr-2" />
-          View All
+        <Button variant="outline" className="text-xs">
+          <BarChart3 className="h-3 w-3 mr-1" />
+          Full Rankings
         </Button>
-        <Button variant="outline">
-          <Users className="h-4 w-4 mr-2" />
-          Find Players
+        <Button variant="outline" className="text-xs">
+          <Users className="h-3 w-3 mr-1" />
+          Challenge Player
         </Button>
       </div>
     </div>
