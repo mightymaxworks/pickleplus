@@ -6,9 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gamepad2, Play, Users, UserPlus, Trophy, Search, Globe, MapPin,
-  Star, Crown, Shield, Zap, Target, Award, ChevronRight, X
+  Star, Crown, Shield, Zap, Target, Award, ChevronRight, X, Activity
 } from 'lucide-react';
-import { MobileNavigation as NavigationTabs } from '@/components/layout/MobileNavigation';
+// Navigation will be defined inline to match UnifiedPrototype style
 import DoublesPartnerSystem from '@/components/doubles/DoublesPartnerSystem';
 
 // Types
@@ -16,7 +16,7 @@ type PlayerStatus = 'online' | 'away' | 'busy' | 'available';
 type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
 type ArenaMode = 'lobby' | 'doubles' | 'challenges' | 'search';
 type PlayerTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
-type TabMode = 'home' | 'play' | 'leaderboard' | 'profile';
+type TabMode = 'passport' | 'play' | 'rankings' | 'profile';
 
 interface ArenaPlayer {
   id: string;
@@ -42,6 +42,40 @@ interface Challenge {
   message: string;
   timestamp: string;
   status: 'pending' | 'accepted' | 'declined';
+}
+
+// Navigation Tabs Component (matching UnifiedPrototype style)
+function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
+  const tabs = [
+    { id: 'passport' as TabMode, label: 'Passport', icon: Star },
+    { id: 'play' as TabMode, label: 'Play', icon: Activity },
+    { id: 'rankings' as TabMode, label: 'Rankings', icon: Trophy },
+    { id: 'profile' as TabMode, label: 'Profile', icon: UserPlus },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 z-50">
+      <div className="flex">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex-1 p-4 flex flex-col items-center gap-1 transition-colors ${
+                activeTab === tab.id 
+                  ? 'text-orange-400 bg-orange-500/10' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // Arena Player Card Component
