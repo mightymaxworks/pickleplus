@@ -8,8 +8,8 @@ import {
   Gamepad2, Play, Users, UserPlus, Trophy, Search, Globe, MapPin,
   Star, Crown, Shield, Zap, Target, Award, ChevronRight, X
 } from 'lucide-react';
-import NavigationTabs from '@/components/layout/MobileNavigation';
-import { DoublesPartnerSystem } from '@/components/doubles/DoublesPartnerSystem';
+import { MobileNavigation as NavigationTabs } from '@/components/layout/MobileNavigation';
+import DoublesPartnerSystem from '@/components/doubles/DoublesPartnerSystem';
 
 // Types
 type PlayerStatus = 'online' | 'away' | 'busy' | 'available';
