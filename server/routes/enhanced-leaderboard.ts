@@ -580,7 +580,7 @@ function applyGeographicFilter(player: any, view: string, currentUser?: any): bo
   }
   
   if (!currentUser || !player.location) {
-    return view === 'global'; // Fallback to global if no location data
+    return true; // In development, show all players if no location data
   }
   
   const userLocation = {

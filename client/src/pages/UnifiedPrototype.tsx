@@ -1425,7 +1425,7 @@ function PlayModeContent() {
       });
       
       setTimeout(() => {
-        setLocation('/gamified-match-recording');
+        setLocation('/match-arena');
       }, 1500);
       
     } else {

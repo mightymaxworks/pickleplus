@@ -135,7 +135,7 @@ const SimpleMatchArena: React.FC = () => {
   };
 
   const handleNavigateToRecording = () => {
-    setLocation('/gamified-match-recording');
+    setLocation('/match-arena');
   };
 
   return (

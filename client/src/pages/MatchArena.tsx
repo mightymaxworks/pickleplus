@@ -582,7 +582,7 @@ export default function MatchArena() {
       });
       
       setTimeout(() => {
-        setLocation('/gamified-match-recording');
+        setLocation('/match-arena');
       }, 1500);
       
     } else if (matchType === 'doubles-looking' && selectedPlayer.matchType === 'doubles-team') {
@@ -796,11 +796,11 @@ export default function MatchArena() {
         </Button>
         
         <Button
-          onClick={() => setLocation('/gamified-match-recording')}
+          onClick={() => setLocation('/match-arena')}
           className="bg-green-500 hover:bg-green-600"
         >
           <Play className="h-4 w-4 mr-2" />
-          Record Match
+          Arena
         </Button>
       </div>
 
@@ -1010,7 +1010,7 @@ export default function MatchArena() {
                             duration: 2000,
                           });
                           setTimeout(() => {
-                            setLocation('/gamified-match-recording');
+                            setLocation('/match-arena');
                           }, 2000);
                         }}
                         size="sm"
@@ -1032,7 +1032,7 @@ export default function MatchArena() {
             )}
           </div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Challenge Modal */}
       <ChallengeModal
