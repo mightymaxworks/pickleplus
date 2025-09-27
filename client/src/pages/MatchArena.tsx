@@ -689,11 +689,7 @@ export default function MatchArena() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 pb-24"> {/* pb-24 for bottom nav space */
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6"
-      >
+      <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Gamepad2 className="h-8 w-8 text-orange-400" />
           <h1 className="text-3xl font-bold text-white">Match Arena</h1>
@@ -711,11 +707,7 @@ export default function MatchArena() {
         
         {/* Partnership Status Display */}
         {myPartner && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mt-4 inline-flex items-center gap-3 bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/30 rounded-lg px-4 py-2"
-          >
+          <div className="mt-4 inline-flex items-center gap-3 bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/30 rounded-lg px-4 py-2">
             <Users className="h-5 w-5 text-green-400" />
             <div className="text-left">
               <div className="text-white font-medium">Doubles Team Active</div>
@@ -749,9 +741,9 @@ export default function MatchArena() {
               <X className="h-4 w-4 mr-1" />
               Dissolve
             </Button>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Navigation Tabs */}
       <div className="flex justify-center mb-6">
@@ -815,12 +807,7 @@ export default function MatchArena() {
       {/* Content Area */}
       <AnimatePresence mode="wait">
         {arenaMode === 'lobby' && (
-          <motion.div
-            key="lobby"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-          >
+          <div key="lobby">
             {/* Partner Requests Section */}
             {partnerRequests.length > 0 && (
               <Card className="p-4 bg-blue-800/30 border-blue-500 mb-6">
@@ -931,16 +918,11 @@ export default function MatchArena() {
                 <p className="text-slate-400">Try adjusting your filters or check the Find Players tab</p>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
         {arenaMode === 'doubles' && (
-          <motion.div
-            key="doubles"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-          >
+          <div key="doubles">
             <DoublesPartnerSystem
               currentPartner={myPartner ? { name: myPartner.name, id: myPartner.id } : null}
               onNavigateToLobby={() => setArenaMode('lobby')}
@@ -961,15 +943,12 @@ export default function MatchArena() {
                 setTimeout(() => setArenaMode('lobby'), 2000);
               }}
             />
-          </motion.div>
+          </div>
         )}
 
         {arenaMode === 'search' && (
-          <motion.div
+          <div
             key="search"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
             className="text-center py-12"
           >
             <Search className="h-16 w-16 text-orange-400 mx-auto mb-4" />
@@ -979,15 +958,12 @@ export default function MatchArena() {
               <Globe className="h-4 w-4 mr-2" />
               Coming Soon
             </Button>
-          </motion.div>
+          </div>
         )}
 
         {arenaMode === 'challenges' && (
-          <motion.div
+          <div
             key="challenges"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
             {challenges.length > 0 ? (
@@ -1054,9 +1030,9 @@ export default function MatchArena() {
                 <p className="text-slate-400">Challenge players from the Arena Lobby to get started</p>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Challenge Modal */}
       <ChallengeModal

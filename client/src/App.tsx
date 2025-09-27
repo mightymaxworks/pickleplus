@@ -30,7 +30,8 @@ import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coa
 import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed doubles ranking test
 import GamificationPrototype from '@/pages/GamificationPrototype' // Gamification prototype showcase
 import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-style match recording
-import MatchArena from '@/pages/MatchArena' // Gaming-style player lobby and challenge system
+// import MatchArena from '@/pages/MatchArena' // Temporarily disabled due to compilation issue
+import UnifiedPrototype from '@/pages/UnifiedPrototype' // Temporary redirect for testing
 import { NotificationProvider, NotificationBell } from '@/components/notifications/RealtimeNotificationSystem' // Real-time gaming notifications
 
 
@@ -295,7 +296,7 @@ export default function App() {
                   <Route path="/unified-prototype" component={lazyLoad(() => import('./pages/UnifiedPrototype'))} />
                   <Route path="/gamification-prototype" component={GamificationPrototype} />
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
-                  <Route path="/match-arena" component={MatchArena} />
+                  <Route path="/match-arena" component={UnifiedPrototype} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
