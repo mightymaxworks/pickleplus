@@ -30,8 +30,8 @@ import WeightedAssessmentTestPage from '@/pages/weighted-assessment-test' // Coa
 import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed doubles ranking test
 import GamificationPrototype from '@/pages/GamificationPrototype' // Gamification prototype showcase
 import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-style match recording
-// import MatchArena from '@/pages/MatchArena' // Temporarily disabled due to compilation issue
-import UnifiedPrototype from '@/pages/UnifiedPrototype' // Temporary redirect for testing
+// import MatchArena from '@/pages/MatchArena' // Temporarily disabled due to JSX encoding issues
+import UnifiedPrototype from '@/pages/UnifiedPrototype' // Temporary redirect
 import { NotificationProvider, NotificationBell } from '@/components/notifications/RealtimeNotificationSystem' // Real-time gaming notifications
 
 

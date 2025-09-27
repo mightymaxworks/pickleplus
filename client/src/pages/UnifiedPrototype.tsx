@@ -348,6 +348,9 @@ interface RankedPlayer {
 
 type TabMode = 'passport' | 'play' | 'rankings' | 'profile';
 
+// Add PlayerTier type for tier mapping
+type PlayerTier = 'recreational' | 'competitive' | 'elite' | 'professional';
+
 // Arena-related types
 type PlayerStatus = 'online' | 'in-match' | 'available' | 'away' | 'offline';
 type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
@@ -1667,19 +1670,36 @@ function PlayModeContent() {
 
 // Rankings Mode Content - Enhanced with real data integration
 function RankingsModeContent({ player }: { player: PlayerData }) {
-  const [selectedCategory, setSelectedCategory] = useState('singles');
-  const [selectedView, setSelectedView] = useState('local');
+  const [selectedFormat, setSelectedFormat] = useState('singles'); // singles, mens-doubles, womens-doubles, mixed-doubles-men, mixed-doubles-women
+  const [selectedGender, setSelectedGender] = useState('all'); // all, male, female  
+  const [selectedView, setSelectedView] = useState('local'); // local, regional, global
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Fetch real rankings data from API
+  // Fetch real rankings data from API with format and gender specifications
   const { data: leaderboardData, isLoading: isLoadingLeaderboard, error: leaderboardError } = useQuery({
-    queryKey: ['/api/enhanced-leaderboard', selectedCategory, selectedView],
+    queryKey: ['/api/enhanced-leaderboard', selectedFormat, selectedGender, selectedView],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        format: selectedFormat,
+        gender: selectedGender,
+        division: 'open', // Default to open division
+        view: selectedView
+      });
+      return fetch(`/api/enhanced-leaderboard?${params}`).then(res => res.json());
+    },
     enabled: true
   });
   
   // Fetch user's position in rankings
   const { data: userPosition, isLoading: isLoadingPosition } = useQuery({
-    queryKey: ['/api/multi-rankings/position', selectedCategory],
+    queryKey: ['/api/multi-rankings/position', selectedFormat, selectedGender],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        format: selectedFormat,
+        gender: selectedGender
+      });
+      return fetch(`/api/multi-rankings/position?${params}`).then(res => res.json());
+    },
     enabled: true
   });
   
@@ -1775,22 +1795,56 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
 
       {/* Category & View Filters */}
       <div className="space-y-3">
-        <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-          {['singles', 'doubles', 'mixed'].map((category) => (
-            <Button
-              key={category}
-              size="sm"
-              variant={selectedCategory === category ? 'default' : 'ghost'}
-              className={`flex-1 capitalize text-xs ${
-                selectedCategory === category 
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                  : 'text-white hover:bg-slate-700'
-              }`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </Button>
-          ))}
+        <div className="space-y-2">
+          {/* Format Selection */}
+          <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+            {[
+              { key: 'singles', label: 'Singles' },
+              { key: 'mens-doubles', label: "Men's Doubles" },
+              { key: 'womens-doubles', label: "Women's Doubles" },
+              { key: 'mixed-doubles-men', label: 'Mixed (Men)' },
+              { key: 'mixed-doubles-women', label: 'Mixed (Women)' }
+            ].map((format) => (
+              <Button
+                key={format.key}
+                size="sm"
+                variant={selectedFormat === format.key ? 'default' : 'ghost'}
+                className={`flex-1 text-xs ${
+                  selectedFormat === format.key 
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                    : 'text-white hover:bg-slate-700'
+                }`}
+                onClick={() => setSelectedFormat(format.key)}
+              >
+                {format.label}
+              </Button>
+            ))}
+          </div>
+          
+          {/* Gender Filter (for singles) */}
+          {selectedFormat === 'singles' && (
+            <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+              {[
+                { key: 'all', label: 'All Genders' },
+                { key: 'male', label: 'Men' },
+                { key: 'female', label: 'Women' }
+              ].map((gender) => (
+                <Button
+                  key={gender.key}
+                  size="sm"
+                  variant={selectedGender === gender.key ? 'default' : 'ghost'}
+                  className={`flex-1 text-xs ${
+                    selectedGender === gender.key 
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                      : 'text-white hover:bg-slate-700'
+                  }`}
+                  onClick={() => setSelectedGender(gender.key)}
+                >
+                  {gender.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">
