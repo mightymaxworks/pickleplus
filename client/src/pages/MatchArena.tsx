@@ -37,6 +37,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import DoublesPartnerSystem from '@/components/doubles/DoublesPartnerSystem';
 
 // Enhanced Player Status Indicators
 type PlayerStatus = 'online' | 'in-match' | 'available' | 'away' | 'offline';
@@ -314,7 +315,7 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge }: {
 // Main Arena Component
 export default function MatchArena() {
   const { toast } = useToast();
-  const [arenaMode, setArenaMode] = useState<'lobby' | 'search' | 'challenges'>('lobby');
+  const [arenaMode, setArenaMode] = useState<'lobby' | 'search' | 'challenges' | 'doubles'>('lobby');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'singles' | 'doubles'>('all');
   const [selectedPlayer, setSelectedPlayer] = useState<ArenaPlayer | null>(null);
@@ -520,8 +521,9 @@ export default function MatchArena() {
         <div className="flex bg-slate-800 rounded-lg p-1">
           {([
             { key: 'lobby', label: 'Arena Lobby', icon: Users },
-            { key: 'search', label: 'Find Players', icon: Search },
-            { key: 'challenges', label: 'Challenges', icon: Trophy }
+            { key: 'doubles', label: 'Doubles Partners', icon: UserPlus },
+            { key: 'challenges', label: 'Challenges', icon: Trophy },
+            { key: 'search', label: 'Find Players', icon: Search }
           ] as const).map(tab => {
             const Icon = tab.icon;
             return (
@@ -664,6 +666,26 @@ export default function MatchArena() {
                 <p className="text-slate-400">Try adjusting your filters or check the Find Players tab</p>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {arenaMode === 'doubles' && (
+          <motion.div
+            key="doubles"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+          >
+            <DoublesPartnerSystem
+              onPartnerFound={(partner) => {
+                toast({
+                  title: "🎾 Team Ready!",
+                  description: `You and ${partner.name} are now a doubles team. Ready to challenge other teams?`,
+                  duration: 4000,
+                });
+                setTimeout(() => setArenaMode('lobby'), 2000);
+              }}
+            />
           </motion.div>
         )}
 

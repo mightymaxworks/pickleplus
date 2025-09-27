@@ -31,6 +31,7 @@ import MixedDoublesRankingTest from '@/pages/MixedDoublesRankingTest' // Mixed d
 import GamificationPrototype from '@/pages/GamificationPrototype' // Gamification prototype showcase
 import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-style match recording
 import MatchArena from '@/pages/MatchArena' // Gaming-style player lobby and challenge system
+import { NotificationProvider, NotificationBell } from '@/components/notifications/RealtimeNotificationSystem' // Real-time gaming notifications
 
 
 // Import module initializations
