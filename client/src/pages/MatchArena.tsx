@@ -139,16 +139,16 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
                 </div>
                 <div>
                   <div className="font-bold text-lg">{player.name}</div>
-                  <div className="text-xs opacity-75">{config.name}</div>
-                  <div className="flex items-center gap-1 text-xs">
+                  <div className="text-xs text-white/80 font-medium">{config.name}</div>
+                  <div className="flex items-center gap-1 text-xs text-white/70">
                     <MapPin className="h-3 w-3" />
                     {player.distance < 1 ? `${Math.round(player.distance * 1000)}m` : `${player.distance}km`}
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-semibold">{player.points}</div>
-                <div className="text-xs opacity-75">points</div>
+                <div className="text-sm font-bold text-white">{player.points}</div>
+                <div className="text-xs text-white/80 font-medium">points</div>
               </div>
             </div>
 
@@ -424,7 +424,7 @@ export default function MatchArena() {
           <Gamepad2 className="h-8 w-8 text-orange-400" />
           <h1 className="text-3xl font-bold text-white">Match Arena</h1>
         </div>
-        <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
+        <div className="flex items-center justify-center gap-4 text-sm text-slate-300">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             {onlineCount} players online
@@ -533,9 +533,9 @@ export default function MatchArena() {
 
             {filteredPlayers.length === 0 && (
               <div className="text-center py-12">
-                <Globe className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                <Globe className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">No players found</h3>
-                <p className="text-slate-400">Try adjusting your filters or check the Find Players tab</p>
+                <p className="text-slate-300">Try adjusting your filters or check the Find Players tab</p>
               </div>
             )}
           </div>
@@ -574,14 +574,14 @@ export default function MatchArena() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-semibold">Challenge from {challenge.challenger.name}</div>
-                        <div className="text-sm text-slate-400">{challenge.matchType} match</div>
+                        <div className="text-sm text-slate-300">{challenge.matchType} match</div>
                       </div>
                       <Badge className={challenge.status === 'pending' ? 'bg-orange-500' : 'bg-green-500'}>
                         {challenge.status}
                       </Badge>
                     </div>
                     {challenge.message && (
-                      <p className="text-slate-300 text-sm mb-3">{challenge.message}</p>
+                      <p className="text-slate-200 text-sm mb-3">{challenge.message}</p>
                     )}
                     <div className="flex gap-2">
                       <Button size="sm" className="bg-green-600 hover:bg-green-700">
@@ -596,9 +596,9 @@ export default function MatchArena() {
               ))
             ) : (
               <div className="text-center py-12">
-                <Trophy className="h-16 w-16 text-slate-500 mx-auto mb-4" />
+                <Trophy className="h-16 w-16 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-white mb-2">No Active Challenges</h3>
-                <p className="text-slate-400">Challenge players from the Arena Lobby to get started</p>
+                <p className="text-slate-300">Challenge players from the Arena Lobby to get started</p>
               </div>
             )}
           </div>
