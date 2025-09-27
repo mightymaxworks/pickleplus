@@ -30,28 +30,24 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required" }),
-  lastName: z.string().min(1, { message: "Last name is required" }),
-  username: z.string().min(3, { message: "Username must be at least 3 characters" })
-    .regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }),
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
-  confirmPassword: z.string(),
-  dateOfBirth: z.string().optional().refine(val => !val || new Date(val) <= new Date(), {
-    message: "Date of birth cannot be in the future"
-  }).refine(val => !val || new Date().getFullYear() - new Date(val).getFullYear() >= 13, {
-    message: "You must be at least 13 years old to register"
+  yearOfBirth: z.number({
+    required_error: "Year of birth is required",
+    invalid_type_error: "Please enter a valid year"
+  }).min(1920, { message: "Please enter a valid year" })
+    .max(new Date().getFullYear() - 13, { message: "You must be at least 13 years old to register" }),
+  username: z.string().optional().refine(val => !val || val.length >= 3, {
+    message: "Username must be at least 3 characters if provided"
+  }).refine(val => !val || /^[a-zA-Z0-9_]+$/.test(val), {
+    message: "Username can only contain letters, numbers, and underscores"
   }),
-  gender: z.enum(["male", "female"]).optional(),
-  location: z.string().optional(),
-  playingSince: z.string().optional(),
-  skillLevel: z.string().optional(),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  gender: z.enum(["male", "female"], {
+    required_error: "Please select your gender"
+  }),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms and conditions"
   }),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -99,17 +95,11 @@ export default function NewAuthPage() {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      username: "",
       email: "",
+      yearOfBirth: undefined,
+      username: "",
       password: "",
-      confirmPassword: "",
-      dateOfBirth: "",
       gender: undefined,
-      location: "",
-      playingSince: "",
-      skillLevel: "beginner",
       agreeToTerms: false,
     },
   });
@@ -143,16 +133,11 @@ export default function NewAuthPage() {
     setIsLoading(true);
     try {
       await register({
-        username: data.username,
+        username: data.username || undefined, // Make username optional
         email: data.email,
         password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        dateOfBirth: data.dateOfBirth,
+        yearOfBirth: data.yearOfBirth,
         gender: data.gender,
-        location: data.location,
-        playingSince: data.playingSince,
-        skillLevel: data.skillLevel,
       });
       toast({
         title: "Welcome to Pickle+!",
@@ -407,63 +392,13 @@ export default function NewAuthPage() {
                   <TabsContent value="register" className="space-y-4">
                     <Form {...registerForm}>
                       <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={registerForm.control}
-                            name="firstName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('auth.firstName', 'First Name')}</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder={t('auth.firstNamePlaceholder', 'John')} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={registerForm.control}
-                            name="lastName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('auth.lastName', 'Last Name')}</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder={t('auth.lastNamePlaceholder', 'Doe')} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={registerForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('auth.username', 'Username')}</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                                  <Input 
-                                    {...field} 
-                                    placeholder={t('auth.usernamePlaceholderRegister', 'Choose a unique username')}
-                                    className="pl-10"
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
+                        {/* Email Field - Moved to top as most important */}
                         <FormField
                           control={registerForm.control}
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.email', 'Email')}</FormLabel>
+                              <FormLabel>{t('auth.email', 'Email')} *</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -480,64 +415,25 @@ export default function NewAuthPage() {
                           )}
                         />
 
-                        <FormField
-                          control={registerForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('auth.password', 'Password')}</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                                  <Input 
-                                    {...field} 
-                                    type="password"
-                                    placeholder={t('auth.createPassword', 'Create a strong password')}
-                                    className="pl-10"
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={registerForm.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('auth.confirmPassword', 'Confirm Password')}</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                                  <Input 
-                                    {...field} 
-                                    type="password"
-                                    placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm your password')}
-                                    className="pl-10"
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
                         <div className="grid grid-cols-2 gap-4">
+                          {/* Year of Birth Field */}
                           <FormField
                             control={registerForm.control}
-                            name="dateOfBirth"
+                            name="yearOfBirth"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('dateOfBirth', 'Date of Birth')}</FormLabel>
+                                <FormLabel>{t('auth.yearOfBirth', 'Year of Birth')} *</FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                     <Input 
                                       {...field} 
-                                      type="date"
+                                      type="number"
+                                      min="1920"
+                                      max={new Date().getFullYear() - 13}
+                                      placeholder="1990"
                                       className="pl-10"
+                                      onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                                     />
                                   </div>
                                 </FormControl>
@@ -546,12 +442,13 @@ export default function NewAuthPage() {
                             )}
                           />
 
+                          {/* Gender Field */}
                           <FormField
                             control={registerForm.control}
                             name="gender"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('gender', 'Gender')}</FormLabel>
+                                <FormLabel>{t('gender', 'Gender')} *</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
@@ -569,42 +466,43 @@ export default function NewAuthPage() {
                           />
                         </div>
 
+                        {/* Username Field (Optional) */}
                         <FormField
                           control={registerForm.control}
-                          name="skillLevel"
+                          name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.skillLevel', 'Skill Level')}</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={t('auth.selectLevel', 'Select level')} />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="beginner">{t('auth.beginner', 'Beginner')}</SelectItem>
-                                  <SelectItem value="intermediate">{t('auth.intermediate', 'Intermediate')}</SelectItem>
-                                  <SelectItem value="advanced">{t('auth.advanced', 'Advanced')}</SelectItem>
-                                  <SelectItem value="expert">{t('auth.expert', 'Expert')}</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormLabel>{t('auth.username', 'Username')} <span className="text-gray-400 text-sm">(optional)</span></FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                  <Input 
+                                    {...field} 
+                                    placeholder={t('auth.usernamePlaceholderRegister', 'Choose a unique username (leave blank to auto-generate)')}
+                                    className="pl-10"
+                                  />
+                                </div>
+                              </FormControl>
                               <FormMessage />
+                              <p className="text-xs text-gray-500 mt-1">If left blank, we'll create one for you that you can change later</p>
                             </FormItem>
                           )}
                         />
 
+                        {/* Password Field */}
                         <FormField
                           control={registerForm.control}
-                          name="location"
+                          name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.location', 'Location (Optional)')}</FormLabel>
+                              <FormLabel>{t('auth.password', 'Password')} *</FormLabel>
                               <FormControl>
                                 <div className="relative">
-                                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                  <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
-                                    placeholder={t('auth.locationPlaceholder', 'City, State/Country')}
+                                    type="password"
+                                    placeholder={t('auth.createPassword', 'Create a strong password (8+ characters)')}
                                     className="pl-10"
                                   />
                                 </div>
@@ -613,6 +511,8 @@ export default function NewAuthPage() {
                             </FormItem>
                           )}
                         />
+
+                        {/* Terms Agreement */}
 
                         <FormField
                           control={registerForm.control}
