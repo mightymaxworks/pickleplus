@@ -954,7 +954,7 @@ export default function GamifiedMatchRecording() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-4 relative"
         >
-          <Card className="p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-500/30">
+          <Card className="p-4 bg-slate-900/95 border-slate-700/50 backdrop-blur-sm">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
                 {isLiveMode ? (
@@ -970,16 +970,21 @@ export default function GamifiedMatchRecording() {
                 )}
               </div>
               <div className="flex-1">
-                <p className="text-sm text-white/90">
-                  {isLiveMode ? (
+                <p className="text-sm text-slate-300">
+                  {matchState.showVideo && matchState.config?.videoUrl ? (
+                    <>
+                      <span className="text-blue-400 font-semibold">📹 Video Reference Mode</span> - 
+                      Momentum tracking is enhanced with video reference for maximum accuracy
+                    </>
+                  ) : isLiveMode ? (
                     <>
                       <span className="text-green-400 font-semibold">🎯 Live Mode Detected</span> - 
-                      Momentum tracking is most accurate with point-by-point live scoring
+                      Momentum tracking is most accurate with point-by-point live scoring. Add video URL for best results.
                     </>
                   ) : (
                     <>
                       <span className="text-orange-400 font-semibold">📊 Representation Mode</span> - 
-                      Momentum wave shows general flow but is most accurate with live point-by-point scoring
+                      Momentum wave shows general flow but is not accurate unless you remember point-by-point scoring or add a video URL
                     </>
                   )}
                 </p>
