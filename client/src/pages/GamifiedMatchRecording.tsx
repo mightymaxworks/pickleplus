@@ -933,7 +933,9 @@ export default function GamifiedMatchRecording() {
           });
           // Add to strategic messages instead of separate reaction
           newState.strategicMessages.push({
-            type: 'gameWin',
+            id: `game-win-${Date.now()}`,
+            type: 'gamePoint',
+            priority: 'high',
             text: `🏆 PERFECT GAME! ${winner} wins ${p1Score}-${p2Score}`,
             timestamp: Date.now(),
             pointNo: newState.player1.score + newState.player2.score,
@@ -944,7 +946,9 @@ export default function GamifiedMatchRecording() {
         } else {
           // Add to strategic messages instead of separate reaction
           newState.strategicMessages.push({
-            type: 'gameWin',
+            id: `game-win-${Date.now()}`,
+            type: 'gamePoint',
+            priority: 'high',
             text: `🎉 GAME WON! ${winner} takes the game ${p1Score}-${p2Score}`,
             timestamp: Date.now(),
             pointNo: newState.player1.score + newState.player2.score,
@@ -971,7 +975,9 @@ export default function GamifiedMatchRecording() {
           const matchWinner = p1Wins === requiredWins ? newState.player1.name : newState.player2.name;
           // Add match completion to strategic messages instead of separate reaction
           newState.strategicMessages.push({
-            type: 'matchComplete',
+            id: `match-complete-${Date.now()}`,
+            type: 'matchPoint',
+            priority: 'high',
             text: `🏆 MATCH COMPLETE! ${matchWinner} wins the ${newState.config.matchFormat === 'single' ? 'match' : newState.config.matchFormat}!`,
             timestamp: Date.now(),
             pointNo: newState.player1.score + newState.player2.score,
