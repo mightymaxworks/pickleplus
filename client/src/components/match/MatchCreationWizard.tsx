@@ -693,7 +693,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                       key={player.id}
                       variant={pairings?.team1.some(p => p.id === player.id) ? 'default' : 'outline'}
                       onClick={() => {
-                        const currentUser = { id: 0, username: 'You', displayName: 'You' } as Player;
+                        const currentUser = { id: 0, username: 'current_user', displayName: 'Current User' } as Player;
                         const otherPlayers = selectedPlayers.filter(p => p.id !== player.id);
                         setPairings({
                           team1: [currentUser, player],
@@ -817,7 +817,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                             name: "You", 
                             color: theme.team1.color, 
                             glowColor: theme.team1.color,
-                            players: [{ id: 0, name: "You", displayName: "You" }]
+                            players: [{ id: 0, name: "Current User", displayName: "Current User" }]
                           },
                           {
                             name: selectedPlayers[0]?.displayName || selectedPlayers[0]?.username || "Opponent", 
