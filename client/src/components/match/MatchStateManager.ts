@@ -64,6 +64,7 @@ export class MatchStateManager {
   private momentumEngine?: MomentumEngine;
   private listeners: ((state: MatchState) => void)[] = [];
   private unsubscribeFromStream?: () => void;
+  private manualOverride: boolean = false;
 
   constructor(config: Partial<MatchStateConfig> = {}) {
     this.config = {
@@ -118,6 +119,12 @@ export class MatchStateManager {
    * Handle stream state changes from detector
    */
   private handleStreamStateChange(streamState: LiveStreamState): void {
+    // Skip automatic detection if manual override is active
+    if (this.manualOverride) {
+      console.log('🔒 Manual override active - skipping automatic detection');
+      return;
+    }
+
     const newMode: MatchMode = streamState.isLive ? 'live' : 
                                streamState.status === 'offline' ? 'offline' : 'recorded';
     
@@ -274,13 +281,36 @@ export class MatchStateManager {
   }
 
   /**
-   * Force set match mode (for testing)
+   * Force set match mode (for testing) with manual override
    */
   setMode(mode: MatchMode): void {
-    liveStreamDetector.setStreamStatus(
-      mode === 'live' ? 'live' : mode === 'recorded' ? 'recorded' : 'offline',
-      true
-    );
+    console.log(`🎮 Manual mode toggle: ${mode}`);
+    
+    // Enable manual override to prevent automatic detection from overriding this
+    this.manualOverride = true;
+    
+    // Directly update the match state
+    const newMode = mode;
+    const isLive = mode === 'live';
+    
+    this.updateState({
+      mode: newMode,
+      isLive: isLive,
+      gamingFeatures: this.calculateGamingFeatures(newMode)
+    });
+
+    // Trigger mode-specific initialization
+    if (newMode === 'live') {
+      this.initializeLiveMode();
+    } else {
+      this.initializeRecordedMode();
+    }
+    
+    // Clear manual override after 30 seconds to allow normal detection
+    setTimeout(() => {
+      console.log('🔓 Manual override timeout - resuming automatic detection');
+      this.manualOverride = false;
+    }, 30000);
   }
 
   /**
