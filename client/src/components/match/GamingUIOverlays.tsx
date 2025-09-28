@@ -226,6 +226,8 @@ export function GamingUIOverlays({
             momentumState={momentumState}
             isLive={isEnabled}
             aestheticMode={aestheticMode}
+            enableDecay={true} // Enable energy decay system
+            decayRate={1.5} // Energy decays by 1.5 points per second when inactive
             onEnergyChange={(energy) => {
               setCrowdEnergy(energy);
               console.log(`🔥 Crowd Energy: ${energy}%`);

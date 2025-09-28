@@ -23,6 +23,8 @@ interface CrowdEnergyProps {
   aestheticMode: 'subtle' | 'esports';
   onEnergyChange?: (energy: number) => void;
   onReactionTrigger?: (reaction: CrowdReaction) => void;
+  enableDecay?: boolean; // Optional energy decay system
+  decayRate?: number; // Energy decay per second (default: 2)
 }
 
 interface CrowdReaction {
@@ -63,7 +65,9 @@ export function CrowdEnergyMeter({
   isLive, 
   aestheticMode,
   onEnergyChange,
-  onReactionTrigger 
+  onReactionTrigger,
+  enableDecay = false,
+  decayRate = 2
 }: CrowdEnergyProps) {
   const [energy, setEnergy] = useState(45);
   const [audience, setAudience] = useState<SimulatedAudience>({
@@ -141,6 +145,35 @@ export function CrowdEnergyMeter({
     // Notify parent of reactions
     newActiveReactions.forEach(reaction => onReactionTrigger?.(reaction));
   }, [audience.recentReactions, onReactionTrigger]);
+
+  // Energy decay system - gradually reduces energy when nothing exciting happens
+  useEffect(() => {
+    if (!enableDecay || !isLive) return;
+
+    const decayInterval = setInterval(() => {
+      setAudience(prev => {
+        // Only decay if no recent reactions and energy is above minimum
+        const hasRecentActivity = prev.recentReactions.some(
+          reaction => Date.now() - reaction.timestamp < 5000 // 5 seconds
+        );
+        
+        if (hasRecentActivity || prev.baseEnergy <= 20) {
+          return prev; // No decay if recent activity or already at minimum
+        }
+
+        // Gradual decay - higher energy decays faster
+        const currentDecayRate = decayRate * (prev.baseEnergy > 80 ? 1.5 : 1.0);
+        const newBaseEnergy = Math.max(20, prev.baseEnergy - currentDecayRate);
+
+        return {
+          ...prev,
+          baseEnergy: newBaseEnergy
+        };
+      });
+    }, 1000); // Check every second
+
+    return () => clearInterval(decayInterval);
+  }, [enableDecay, isLive, decayRate]);
 
   // Manual test reactions
   const triggerTestReaction = (type: CrowdReaction['type']) => {

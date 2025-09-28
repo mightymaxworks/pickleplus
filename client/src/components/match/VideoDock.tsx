@@ -11,26 +11,45 @@ import {
   Settings,
   ExternalLink,
   Wifi,
-  WifiOff
+  WifiOff,
+  Youtube,
+  TestTube,
+  Zap,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface VideoConfig {
   liveStreamUrl?: string;
   recordingUrl?: string;
   videoProvider?: 'hls' | 'mp4' | 'youtube' | 'vimeo';
   videoSyncOffset?: number; // seconds
+  youtubeUrl?: string; // For testing with YouTube videos
+  testingMode?: boolean; // Enable testing controls
+}
+
+interface MomentumTestEvent {
+  type: 'point_won' | 'point_lost' | 'rally_long' | 'ace' | 'error' | 'comeback';
+  intensity: number; // 0-1
+  description: string;
 }
 
 interface VideoDockProps {
   config: VideoConfig;
   isVisible: boolean;
   onSyncOffsetChange: (offset: number) => void;
+  onMomentumTest?: (event: MomentumTestEvent) => void; // For testing momentum events
   className?: string;
 }
 
-export const VideoDock = ({ config, isVisible, onSyncOffsetChange, className = '' }: VideoDockProps) => {
+export const VideoDock = ({ config, isVisible, onSyncOffsetChange, onMomentumTest, className = '' }: VideoDockProps) => {
   const [isDocked, setIsDocked] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -40,6 +59,8 @@ export const VideoDock = ({ config, isVisible, onSyncOffsetChange, className = '
   const [syncOffset, setSyncOffset] = useState(config.videoSyncOffset || 0);
   const [showSettings, setShowSettings] = useState(false);
   const [hlsError, setHlsError] = useState<string | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState(config.youtubeUrl || '');
+  const [showTestingControls, setShowTestingControls] = useState(config.testingMode || false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -236,6 +257,27 @@ export const VideoDock = ({ config, isVisible, onSyncOffsetChange, className = '
     onSyncOffsetChange(offset);
   };
 
+  // YouTube URL processing
+  const processYouTubeUrl = (url: string): string => {
+    const videoId = extractYouTubeId(url);
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1&enablejsapi=1` : '';
+  };
+
+  // Testing momentum events
+  const triggerTestMomentumEvent = (event: MomentumTestEvent) => {
+    onMomentumTest?.(event);
+  };
+
+  // Predefined test events for realistic testing
+  const testEvents: MomentumTestEvent[] = [
+    { type: 'point_won', intensity: 0.7, description: 'Winning Point' },
+    { type: 'point_lost', intensity: 0.6, description: 'Point Lost' },
+    { type: 'rally_long', intensity: 0.8, description: 'Epic Rally' },
+    { type: 'ace', intensity: 0.9, description: 'Ace Serve' },
+    { type: 'error', intensity: 0.5, description: 'Unforced Error' },
+    { type: 'comeback', intensity: 1.0, description: 'Amazing Comeback' }
+  ];
+
   if (!isVisible) return null;
 
   return (
@@ -384,6 +426,67 @@ export const VideoDock = ({ config, isVisible, onSyncOffsetChange, className = '
                     <RotateCcw className="h-3 w-3 mr-1" />
                     Reset Sync
                   </Button>
+
+                  {/* YouTube Testing Section */}
+                  {config.testingMode && (
+                    <>
+                      <div className="border-t border-slate-600 pt-3 mt-3">
+                        <div className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                          <Youtube className="h-4 w-4 text-red-500" />
+                          YouTube Testing
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Paste YouTube URL..."
+                            value={youtubeUrl}
+                            onChange={(e) => setYoutubeUrl(e.target.value)}
+                            className="h-7 text-xs bg-slate-700 border-slate-600"
+                          />
+                          
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full h-7 text-xs"
+                            onClick={() => setShowTestingControls(!showTestingControls)}
+                          >
+                            <TestTube className="h-3 w-3 mr-1" />
+                            {showTestingControls ? 'Hide' : 'Show'} Testing Controls
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Momentum Testing Controls */}
+                      {showTestingControls && (
+                        <div className="border-t border-slate-600 pt-3 mt-3">
+                          <div className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-purple-500" />
+                            Momentum Testing
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1">
+                            {testEvents.map((event, index) => (
+                              <Button
+                                key={index}
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-xs p-1 bg-slate-700/50 hover:bg-slate-600/70 text-white"
+                                onClick={() => triggerTestMomentumEvent(event)}
+                              >
+                                {event.type === 'point_won' && <TrendingUp className="h-3 w-3 mr-1 text-green-400" />}
+                                {event.type === 'point_lost' && <TrendingDown className="h-3 w-3 mr-1 text-red-400" />}
+                                {event.type === 'rally_long' && <Activity className="h-3 w-3 mr-1 text-yellow-400" />}
+                                {event.type === 'ace' && <Zap className="h-3 w-3 mr-1 text-purple-400" />}
+                                {event.type === 'error' && <TrendingDown className="h-3 w-3 mr-1 text-orange-400" />}
+                                {event.type === 'comeback' && <BarChart3 className="h-3 w-3 mr-1 text-blue-400" />}
+                                {event.description}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </motion.div>
             )}

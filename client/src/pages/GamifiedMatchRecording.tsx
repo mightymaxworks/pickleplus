@@ -1842,13 +1842,61 @@ export default function GamifiedMatchRecording() {
             liveStreamUrl: matchState.config.liveStreamUrl,
             recordingUrl: matchState.config.recordingUrl,
             videoProvider: matchState.config.videoProvider,
-            videoSyncOffset: matchState.config.videoSyncOffset
+            videoSyncOffset: matchState.config.videoSyncOffset,
+            testingMode: true, // Enable YouTube testing functionality
+            youtubeUrl: ''
           }}
           isVisible={matchState.showVideo}
           onSyncOffsetChange={(offset) => {
             setMatchState(prev => ({
               ...prev,
               config: { ...prev.config, videoSyncOffset: offset }
+            }));
+          }}
+          onMomentumTest={(event) => {
+            // Simulate momentum event for testing
+            const simulatedMomentum = event.intensity * (event.type === 'point_won' || event.type === 'ace' || event.type === 'comeback' ? 1 : -1);
+            
+            // Create a fake momentum event to test the crowd energy response
+            setMatchState(prev => {
+              const newState = { ...prev };
+              if (newState.momentumState) {
+                const newMomentum = Math.max(-1, Math.min(1, newState.momentumState.momentum + simulatedMomentum * 0.3));
+                newState.momentumState = {
+                  ...newState.momentumState,
+                  momentum: newMomentum,
+                  momentumScore: Math.round((newMomentum + 1) * 50) // Convert [-1,1] to [0,100]
+                };
+              } else {
+                // Create initial momentum state for testing
+                const momentum = simulatedMomentum * 0.3;
+                newState.momentumState = {
+                  momentum,
+                  momentumScore: Math.round((momentum + 1) * 50),
+                  streak: { team: 'team1', length: 0 },
+                  wave: [],
+                  totalPoints: 0,
+                  gamePhase: 'early' as const
+                };
+              }
+              return newState;
+            });
+            
+            // Add a strategic message for testing
+            const testMessage: StrategyMessage = {
+              id: `test-${Date.now()}`,
+              type: 'momentumShift' as const,
+              priority: 1,
+              text: `Testing: ${event.description}`,
+              timestamp: Date.now(),
+              pointNo: matchState.player1.score + matchState.player2.score + 1,
+              team: event.type === 'point_won' || event.type === 'ace' || event.type === 'comeback' ? 'team1' : 'team2',
+              duration: 3000
+            };
+            
+            setMatchState(prev => ({
+              ...prev,
+              strategicMessages: [...prev.strategicMessages, testMessage]
             }));
           }}
         />
