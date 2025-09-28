@@ -832,7 +832,11 @@ export default function MatchArena() {
             return (
               <Button
                 key={tab.key}
-                onClick={() => setArenaMode(tab.key)}
+                onClick={() => {
+                  console.log('Setting arena mode to:', tab.key);
+                  setArenaMode(tab.key);
+                  console.log('Arena mode should now be:', tab.key);
+                }}
                 variant="ghost"
                 className={`
                   relative flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 
@@ -1006,6 +1010,7 @@ export default function MatchArena() {
 
         {arenaMode === 'search' && (
           <div key="search" className="space-y-4">
+            {console.log('RENDERING SEARCH MODE - arenaMode is:', arenaMode)}
             {/* Find Players Search Interface */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
               <div className="flex items-center gap-3 mb-4">
