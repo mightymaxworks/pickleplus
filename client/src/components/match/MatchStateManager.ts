@@ -363,6 +363,22 @@ export class MatchStateManager {
   }
 
   /**
+   * Start live stream detection
+   */
+  startLiveDetection(): void {
+    console.log('▶️ Starting live stream detection...');
+    liveStreamDetector.startDetection();
+  }
+
+  /**
+   * Stop live stream detection
+   */
+  stopLiveDetection(): void {
+    console.log('⏸️ Stopping live stream detection...');
+    liveStreamDetector.stopDetection();
+  }
+
+  /**
    * Cleanup resources
    */
   destroy(): void {

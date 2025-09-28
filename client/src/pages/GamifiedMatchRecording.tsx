@@ -954,6 +954,15 @@ export default function GamifiedMatchRecording() {
     // Initialize match state manager with momentum engine
     matchStateManager.initialize(momentumEngine);
     
+    // Stop live detection during setup to prevent flickering
+    if (showConfig) {
+      console.log('⏸️ Pausing live detection during setup...');
+      matchStateManager.stopLiveDetection();
+    } else {
+      console.log('▶️ Starting live detection for match...');
+      matchStateManager.startLiveDetection();
+    }
+    
     // Subscribe to live match state changes
     const unsubscribe = matchStateManager.subscribe((newLiveState) => {
       console.log('📡 Live match state updated:', newLiveState.mode);
@@ -969,7 +978,7 @@ export default function GamifiedMatchRecording() {
       unsubscribe();
       matchStateManager.destroy();
     };
-  }, []);
+  }, [showConfig]);
 
   // Auto-hide momentum context notification when video URL is added
   useEffect(() => {
