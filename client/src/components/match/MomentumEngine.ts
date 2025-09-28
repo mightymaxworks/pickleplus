@@ -27,13 +27,14 @@ export interface MomentumState {
 
 export interface StrategyMessage {
   id: string;
-  type: 'firstBlood' | 'streak' | 'momentumShift' | 'clutchSave' | 'comeback' | 'gamePoint' | 'matchPoint' | 'break' | 'deuce';
+  type: 'firstBlood' | 'streak' | 'megaStreak' | 'momentumShift' | 'clutchSave' | 'comeback' | 'gamePoint' | 'matchPoint' | 'break' | 'deuce';
   priority: 0 | 1 | 2 | 3; // 0=highest, 3=lowest
   text: string;
   timestamp: number;
   pointNo: number;
   team?: 'team1' | 'team2';
   duration: number; // ms
+  megaLevel?: 1 | 2 | 3; // For mega animations: 1=3pts, 2=5pts, 3=8pts
 }
 
 export interface MatchConfig {
@@ -171,14 +172,26 @@ export class MomentumEngine {
   }
 
   private getStreakMessage(length: number, team: 'team1' | 'team2'): StrategyMessage | null {
+    // Mega streak messages for special animations
+    if (length === 3) {
+      return this.createMegaMessage('megaStreak', '🌋 DOMINATION BEGINS!', team, 0, 1, 4000);
+    }
+    if (length === 5) {
+      return this.createMegaMessage('megaStreak', '⚡ TOTAL CONTROL!', team, 0, 2, 5000);
+    }
+    if (length === 8) {
+      return this.createMegaMessage('megaStreak', '🔥 ABSOLUTE DOMINANCE!', team, 0, 3, 6000);
+    }
+    
+    // Regular streak messages
     const messages = {
       2: { text: '🔥 HEATING UP!', priority: 2 as const },
-      3: { text: '🌋 ON FIRE!', priority: 1 as const },
       4: { text: '⚡ BLAZING HOT!', priority: 1 as const },
-      5: { text: '🚀 UNSTOPPABLE!', priority: 0 as const }
+      6: { text: '🚀 UNSTOPPABLE!', priority: 0 as const },
+      7: { text: '👑 LEGENDARY!', priority: 0 as const }
     };
     
-    const key = Math.min(length, 5) as keyof typeof messages;
+    const key = Math.min(length, 7) as keyof typeof messages;
     if (messages[key]) {
       return this.createMessage('streak', messages[key].text, team, messages[key].priority);
     }
@@ -271,6 +284,27 @@ export class MomentumEngine {
       pointNo: this.state.totalPoints,
       team,
       duration
+    };
+  }
+
+  private createMegaMessage(
+    type: StrategyMessage['type'],
+    text: string,
+    team?: 'team1' | 'team2',
+    priority: 0 | 1 | 2 | 3 = 0,
+    megaLevel: 1 | 2 | 3 = 1,
+    duration = 4000
+  ): StrategyMessage {
+    return {
+      id: `${type}-${Date.now()}-${Math.random()}`,
+      type,
+      priority,
+      text,
+      timestamp: Date.now(),
+      pointNo: this.state.totalPoints,
+      team,
+      duration,
+      megaLevel
     };
   }
 

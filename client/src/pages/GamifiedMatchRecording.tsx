@@ -125,6 +125,159 @@ function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
   );
 }
 
+// Mega Streak Animations for Gaming Experience
+function MegaStreakAnimation({ show, megaLevel, teamColor, teamName, onComplete }: {
+  show: boolean;
+  megaLevel: 1 | 2 | 3;
+  teamColor: string;
+  teamName: string;
+  onComplete: () => void;
+}) {
+  const getMegaConfig = () => {
+    switch (megaLevel) {
+      case 1: // 3 points
+        return {
+          text: '🌋 DOMINATION BEGINS!',
+          subtitle: `${teamName} takes control!`,
+          particles: 12,
+          scale: 1.2,
+          duration: 4000,
+          color: 'from-orange-500 to-red-500',
+          intensity: 'low'
+        };
+      case 2: // 5 points
+        return {
+          text: '⚡ TOTAL CONTROL!',
+          subtitle: `${teamName} unleashes fury!`,
+          particles: 20,
+          scale: 1.4,
+          duration: 5000,
+          color: 'from-purple-500 to-pink-500',
+          intensity: 'medium'
+        };
+      case 3: // 8 points
+        return {
+          text: '🔥 ABSOLUTE DOMINANCE!',
+          subtitle: `${teamName} achieves legendary status!`,
+          particles: 30,
+          scale: 1.6,
+          duration: 6000,
+          color: 'from-yellow-400 to-orange-600',
+          intensity: 'high'
+        };
+      default:
+        return null;
+    }
+  };
+
+  const config = getMegaConfig();
+  if (!config || !show) return null;
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onAnimationComplete={() => setTimeout(onComplete, config.duration)}
+          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+          style={{
+            background: `radial-gradient(circle, ${teamColor}40 0%, transparent 70%)`
+          }}
+        >
+          {/* Screen flash effect */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.3, 0] }}
+            transition={{ duration: 0.5, times: [0, 0.1, 1] }}
+            className="absolute inset-0 bg-white mix-blend-overlay"
+          />
+          
+          {/* Massive particle explosion */}
+          <div className="absolute inset-0">
+            {[...Array(config.particles)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ 
+                  scale: 0,
+                  x: '50vw',
+                  y: '50vh',
+                  opacity: 1
+                }}
+                animate={{
+                  scale: [0, 1, 0],
+                  x: `${50 + (Math.cos(i * (360 / config.particles) * Math.PI / 180) * 40)}vw`,
+                  y: `${50 + (Math.sin(i * (360 / config.particles) * Math.PI / 180) * 40)}vh`,
+                  opacity: [1, 1, 0]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  delay: i * 0.02,
+                  ease: "easeOut"
+                }}
+                className={`absolute w-6 h-6 bg-gradient-to-r ${config.color} rounded-full`}
+                style={{ filter: 'blur(1px)' }}
+              />
+            ))}
+          </div>
+          
+          {/* Central mega message */}
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ 
+              scale: [0, config.scale, 1], 
+              rotate: [0, 360, 0] 
+            }}
+            transition={{ 
+              duration: 1.5, 
+              ease: "easeOut",
+              times: [0, 0.6, 1]
+            }}
+            className="relative z-10"
+          >
+            <div className={`text-center p-8 rounded-2xl bg-gradient-to-r ${config.color} border-4 border-white backdrop-blur-sm`}>
+              <motion.h1
+                animate={{ 
+                  textShadow: [
+                    '0 0 20px rgba(255,255,255,0.8)',
+                    '0 0 40px rgba(255,255,255,1)',
+                    '0 0 20px rgba(255,255,255,0.8)'
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="text-6xl font-bold text-white mb-4"
+              >
+                {config.text}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-2xl text-white font-semibold"
+              >
+                {config.subtitle}
+              </motion.p>
+            </div>
+          </motion.div>
+          
+          {/* Screen shake effect */}
+          <motion.div
+            animate={config.intensity === 'high' ? {
+              x: [0, -5, 5, -5, 5, 0],
+              y: [0, -3, 3, -3, 3, 0]
+            } : config.intensity === 'medium' ? {
+              x: [0, -3, 3, -3, 3, 0]
+            } : {}}
+            transition={{ duration: 0.5, repeat: 2 }}
+            className="absolute inset-0 pointer-events-none"
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function PulsingScoreButton({ children, onClick, variant = 'default', disabled = false }: {
   children: React.ReactNode;
   onClick: () => void;
@@ -295,6 +448,19 @@ export default function GamifiedMatchRecording() {
   // Context UI state for momentum accuracy guidance
   const [showMomentumContext, setShowMomentumContext] = useState(true);
   const [isLiveMode, setIsLiveMode] = useState(true); // Track if user is doing live point-by-point scoring
+
+  // Mega streak animation state
+  const [megaAnimation, setMegaAnimation] = useState<{
+    show: boolean;
+    megaLevel: 1 | 2 | 3;
+    teamColor: string;
+    teamName: string;
+  }>({
+    show: false,
+    megaLevel: 1,
+    teamColor: '#ff6b35',
+    teamName: ''
+  });
 
   // Detect live vs representation mode based on scoring frequency
   const detectScoringMode = () => {
@@ -583,6 +749,20 @@ export default function GamifiedMatchRecording() {
       const newMessages = momentumEngine.processPoint(momentumEvent);
       newState.strategicMessages = [...prev.strategicMessages, ...newMessages];
       newState.momentumState = momentumEngine.getState();
+      
+      // Check for mega streak messages and trigger animations
+      const megaStreakMsg = newMessages.find(msg => msg.type === 'megaStreak');
+      if (megaStreakMsg && megaStreakMsg.megaLevel) {
+        const teamColor = megaStreakMsg.team === 'team1' ? teamTheme.team1.color : teamTheme.team2.color;
+        const teamName = megaStreakMsg.team === 'team1' ? newState.player1.name : newState.player2.name;
+        
+        setMegaAnimation({
+          show: true,
+          megaLevel: megaStreakMsg.megaLevel,
+          teamColor,
+          teamName
+        });
+      }
       
       // Check for game win based on config
       const p1Score = newState.player1.score;
@@ -1480,6 +1660,15 @@ export default function GamifiedMatchRecording() {
         playerName={showReaction.playerName}
         context={showReaction.context}
         onComplete={() => setShowReaction({ show: false, type: 'win' })}
+      />
+
+      {/* Mega Streak Animations */}
+      <MegaStreakAnimation
+        show={megaAnimation.show}
+        megaLevel={megaAnimation.megaLevel}
+        teamColor={megaAnimation.teamColor}
+        teamName={megaAnimation.teamName}
+        onComplete={() => setMegaAnimation({ show: false, megaLevel: 1, teamColor: '#ff6b35', teamName: '' })}
       />
     </div>
   );
