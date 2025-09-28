@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { CrowdEnergyMeter } from './CrowdEnergyMeter';
 import { HypeTrainEffects } from './HypeTrainEffects';
+import { MomentumWave } from './MomentumWave';
 import { MomentumState } from './MomentumEngine';
 
 interface GamingUIOverlaysProps {
@@ -45,6 +46,8 @@ export function GamingUIOverlays({
 }: GamingUIOverlaysProps) {
   const [showControls, setShowControls] = useState(false);
   const [crowdEnergy, setCrowdEnergy] = useState(45);
+  const [hypeTrainActive, setHypeTrainActive] = useState(false);
+  const [hypeTrainLevel, setHypeTrainLevel] = useState(0);
   const [activeElements, setActiveElements] = useState<OverlayElements>({
     topBar: true,
     sideIndicators: true,
@@ -183,6 +186,24 @@ export function GamingUIOverlays({
         {/* Main Content with Gaming Padding */}
         <div className={`relative ${aestheticMode === 'esports' ? 'pt-20 pb-24' : 'pt-12 pb-16'}`}>
           {children}
+          
+          {/* Enhanced Momentum Wave - Integrated into main content */}
+          {momentumState && (
+            <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-2xl px-4">
+              <MomentumWave
+                momentumState={momentumState}
+                team1Color="#22c55e"
+                team2Color="#ef4444"
+                team1Name="Team 1"
+                team2Name="Team 2"
+                className="mb-4"
+                isInteractive={true}
+                crowdEnergy={crowdEnergy}
+                heroMode={crowdEnergy >= 85 || (hypeTrainActive && hypeTrainLevel >= 4)}
+                aestheticMode={aestheticMode}
+              />
+            </div>
+          )}
         </div>
 
         {/* Bottom Gaming HUD */}
@@ -219,8 +240,16 @@ export function GamingUIOverlays({
           aestheticMode={aestheticMode}
           crowdEnergy={crowdEnergy}
           momentumState={momentumState}
-          onHypeTrainStart={(level) => console.log(`🚂 HYPE TRAIN Level ${level} ACTIVATED!`)}
-          onHypeTrainEnd={() => console.log(`🚂 Hype Train Complete!`)}
+          onHypeTrainStart={(level) => {
+            setHypeTrainActive(true);
+            setHypeTrainLevel(level);
+            console.log(`🚂 HYPE TRAIN Level ${level} ACTIVATED!`);
+          }}
+          onHypeTrainEnd={() => {
+            setHypeTrainActive(false);
+            setHypeTrainLevel(0);
+            console.log(`🚂 Hype Train Complete!`);
+          }}
         />
 
         {/* Effects Layer - for future particle effects, hype trains, etc. */}

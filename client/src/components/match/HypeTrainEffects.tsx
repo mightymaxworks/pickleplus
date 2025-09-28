@@ -134,6 +134,11 @@ export function HypeTrainEffects({
   const [lastEnergy, setLastEnergy] = useState(crowdEnergy);
   const [showManualControls, setShowManualControls] = useState(false);
   const [lastMilestone, setLastMilestone] = useState(0);
+  const [epicModeState, setEpicModeState] = useState({
+    isActive: false,
+    startTime: 0,
+    cooldownUntil: 0
+  });
 
   // Get current hype level based on energy
   const getCurrentHypeLevel = (energy: number): HypeLevel | null => {
@@ -141,6 +146,29 @@ export function HypeTrainEffects({
   };
 
   const currentLevel = getCurrentHypeLevel(crowdEnergy);
+
+  // Epic Mode trigger effect
+  useEffect(() => {
+    const currentTime = Date.now();
+    
+    // Check if Epic Mode should trigger
+    const shouldTriggerEpicMode = (crowdEnergy >= 98 || hypeState.level === 5) && 
+                                  !epicModeState.isActive && 
+                                  currentTime > epicModeState.cooldownUntil;
+    
+    if (shouldTriggerEpicMode) {
+      setEpicModeState({
+        isActive: true,
+        startTime: currentTime,
+        cooldownUntil: currentTime + 10000 // 10s cooldown after epic mode ends
+      });
+      
+      // Epic Mode lasts 5 seconds
+      setTimeout(() => {
+        setEpicModeState(prev => ({ ...prev, isActive: false }));
+      }, 5000);
+    }
+  }, [crowdEnergy, hypeState.level, epicModeState.isActive, epicModeState.cooldownUntil]);
 
   // Detect energy spikes and momentum shifts
   useEffect(() => {
@@ -645,6 +673,147 @@ export function HypeTrainEffects({
                 ⚡
               </motion.div>
             ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EPIC MODE - Cinematic Full-Screen Experience */}
+      <AnimatePresence>
+        {epicModeState.isActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 pointer-events-none"
+          >
+            {/* Cinematic Vignette */}
+            <motion.div
+              initial={{ opacity: 0, scale: 1.2 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(138,43,226,0.3)_60%,rgba(0,0,0,0.7)_100%)]"
+            />
+
+            {/* Epic Mode Logo/Stinger */}
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ 
+                scale: [0, 1.2, 1],
+                rotate: [0, 0, 0]
+              }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ 
+                duration: 1.5,
+                scale: { times: [0, 0.6, 1], ease: "backOut" }
+              }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            >
+              <div className="text-center">
+                <motion.div
+                  animate={{
+                    textShadow: [
+                      '0 0 20px #8b5cf6, 0 0 40px #a855f7, 0 0 60px #c084fc',
+                      '0 0 30px #ef4444, 0 0 50px #f87171, 0 0 70px #fca5a5',
+                      '0 0 20px #8b5cf6, 0 0 40px #a855f7, 0 0 60px #c084fc'
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-6xl md:text-8xl font-bold text-white mb-4"
+                >
+                  EPIC MODE
+                </motion.div>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ delay: 0.5, duration: 1 }}
+                  className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 mx-auto max-w-md"
+                />
+              </div>
+            </motion.div>
+
+            {/* Camera Punch-In Effect */}
+            <motion.div
+              initial={{ scale: 1 }}
+              animate={{ 
+                scale: [1, 1.05, 1],
+                filter: [
+                  'brightness(1) contrast(1)',
+                  'brightness(1.2) contrast(1.3)',
+                  'brightness(1) contrast(1)'
+                ]
+              }}
+              transition={{ duration: 0.8, repeat: 5 }}
+              className="absolute inset-0"
+            />
+
+            {/* Confetti Arcs Biased Toward Leading Team */}
+            <div className="absolute inset-0">
+              {Array.from({ length: aestheticMode === 'subtle' ? 20 : 40 }).map((_, i) => (
+                <motion.div
+                  key={`epic-confetti-${i}`}
+                  initial={{ 
+                    x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
+                    y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 100,
+                    scale: 0,
+                    rotate: 0
+                  }}
+                  animate={{ 
+                    y: -100,
+                    scale: [0, 1.5, 1, 0],
+                    rotate: Math.random() * 1440, // Multiple rotations
+                    x: `+=${(Math.random() - 0.5) * 600}`
+                  }}
+                  transition={{ 
+                    duration: 4 + Math.random() * 2,
+                    delay: Math.random() * 3,
+                    ease: "easeOut"
+                  }}
+                  className="absolute text-4xl"
+                >
+                  {['🎉', '🎊', '⚡', '🔥', '✨', '🚂', '💥', '🌟', '👑', '🏆', '💎', '🎆', '🎇', '⭐', '💫'][Math.floor(Math.random() * 15)]}
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Gradient Rails Effect */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1, duration: 1.5 }}
+              className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-r from-purple-600 via-pink-500 to-red-600 opacity-80"
+            />
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1, duration: 1.5 }}
+              className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-r from-red-600 via-pink-500 to-purple-600 opacity-80"
+            />
+
+            {/* Epic Sound Waves Visualization */}
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2 }}
+            >
+              {Array.from({ length: 8 }).map((_, i) => (
+                <motion.div
+                  key={`sound-wave-${i}`}
+                  className="absolute w-2 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full"
+                  style={{ left: `${40 + i * 2.5}%` }}
+                  animate={{
+                    height: [20, 60, 40, 80, 30, 70, 20],
+                    opacity: [0.5, 1, 0.7, 1, 0.6, 1, 0.5]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: i * 0.1,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

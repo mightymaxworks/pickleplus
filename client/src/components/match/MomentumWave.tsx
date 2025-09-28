@@ -19,6 +19,9 @@ interface MomentumWaveProps {
   className?: string;
   isInteractive?: boolean;
   isMatchComplete?: boolean;
+  crowdEnergy?: number;
+  heroMode?: boolean;
+  aestheticMode?: 'subtle' | 'esports';
 }
 
 interface TooltipData {
@@ -39,7 +42,10 @@ export const MomentumWave = memo(({
   team2Name = "Team 2",
   className = '', 
   isInteractive = false,
-  isMatchComplete = false 
+  isMatchComplete = false,
+  crowdEnergy = 0,
+  heroMode = false,
+  aestheticMode = 'subtle'
 }: MomentumWaveProps) => {
   const { wave, momentum, momentumScore, streak, gamePhase, currentScore, gameNumber } = momentumState;
   const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
@@ -89,18 +95,19 @@ export const MomentumWave = memo(({
   };
 
   // Generate SVG path for momentum wave
-  const generateWavePath = () => {
+  const generateWavePath = (amplitudeBoost = 1) => {
     if (wave.length < 2) return '';
     
     const width = 300;
-    const height = 60;
+    const height = heroMode ? 120 : 60;
     const centerY = height / 2;
     
     let path = `M 0 ${centerY}`;
     
     wave.forEach((point, index) => {
       const x = (index / (wave.length - 1)) * width;
-      const y = centerY - (point.y * centerY * 0.8); // Scale momentum to chart height
+      // Apply amplitude boost for visual enhancement only
+      const y = centerY - (point.y * centerY * 0.8 * amplitudeBoost);
       
       if (index === 0) {
         path += ` L ${x} ${y}`;
@@ -108,7 +115,43 @@ export const MomentumWave = memo(({
         // Smooth curve using quadratic bezier
         const prevPoint = wave[index - 1];
         const prevX = ((index - 1) / (wave.length - 1)) * width;
-        const prevY = centerY - (prevPoint.y * centerY * 0.8);
+        const prevY = centerY - (prevPoint.y * centerY * 0.8 * amplitudeBoost);
+        
+        const cpX = (prevX + x) / 2;
+        const cpY = (prevY + y) / 2;
+        path += ` Q ${cpX} ${cpY} ${x} ${y}`;
+      }
+    });
+    
+    return path;
+  };
+
+  // Generate crowd resonance wave path (secondary layer)
+  const generateCrowdResonancePath = () => {
+    if (wave.length < 2 || crowdEnergy < 30) return '';
+    
+    const width = 300;
+    const height = heroMode ? 120 : 60;
+    const centerY = height / 2;
+    const phaseOffset = 0.2; // Slight phase shift for parallax effect
+    const crowdNorm = Math.min(crowdEnergy / 100, 1);
+    const amplitudeBoost = 1 + crowdNorm * 0.3; // Crowd energy amplifies visuals
+    
+    let path = `M 0 ${centerY}`;
+    
+    wave.forEach((point, index) => {
+      const x = (index / (wave.length - 1)) * width;
+      // Apply phase offset and crowd amplitude boost
+      const adjustedY = point.y + Math.sin(index * 0.5 + phaseOffset) * 0.1;
+      const y = centerY - (adjustedY * centerY * 0.8 * amplitudeBoost);
+      
+      if (index === 0) {
+        path += ` L ${x} ${y}`;
+      } else {
+        const prevPoint = wave[index - 1];
+        const prevX = ((index - 1) / (wave.length - 1)) * width;
+        const prevAdjustedY = prevPoint.y + Math.sin((index - 1) * 0.5 + phaseOffset) * 0.1;
+        const prevY = centerY - (prevAdjustedY * centerY * 0.8 * amplitudeBoost);
         
         const cpX = (prevX + x) / 2;
         const cpY = (prevY + y) / 2;
@@ -172,7 +215,12 @@ export const MomentumWave = memo(({
     setHoveredPoint(null);
   };
 
-  const wavePath = generateWavePath();
+  // Calculate amplitude boost based on crowd energy
+  const crowdNorm = Math.min(crowdEnergy / 100, 1);
+  const amplitudeBoost = 1 + crowdNorm * 0.3; // Visual enhancement only
+  
+  const wavePath = generateWavePath(amplitudeBoost);
+  const crowdResonancePath = generateCrowdResonancePath();
   const momentumShifts = analyzeMomentumShifts();
   const intensity = Math.abs(momentum);
   const glowIntensity = Math.min(intensity * 2, 1);
@@ -181,6 +229,11 @@ export const MomentumWave = memo(({
   const dominantTeam = momentum > 0 ? 'team1' : 'team2';
   const dominantColor = momentum > 0 ? team1Color : team2Color;
   const fillOpacity = Math.min(Math.abs(momentum) * 0.6 + 0.2, 0.8);
+  
+  // Crowd energy effects
+  const crowdOpacity = Math.max((crowdEnergy - 60) / 40, 0); // Visible when energy > 60
+  const shouldShowParticles = aestheticMode === 'esports' && crowdEnergy > 70;
+  const chartHeight = heroMode ? 120 : 60;
 
   // Momentum Tutorial Component
   const MomentumTutorial = () => (
@@ -427,7 +480,9 @@ export const MomentumWave = memo(({
         </div>
 
         {/* Wave Visualization */}
-        <div className="relative bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+        <div className={`relative bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 transition-all duration-500 ${
+          heroMode ? 'scale-105 shadow-2xl shadow-purple-500/20' : ''
+        }`}>
           {/* Team indicators */}
           <div className="absolute top-2 left-4 right-4 flex justify-between text-xs">
             <div className="flex items-center gap-1">
@@ -439,6 +494,47 @@ export const MomentumWave = memo(({
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: team2Color }} />
             </div>
           </div>
+
+          {/* Crowd Ribbon Background (when energy is high) */}
+          {crowdEnergy > 50 && (
+            <motion.div
+              className="absolute inset-x-0 top-6 h-16 rounded-lg opacity-20"
+              style={{
+                background: `linear-gradient(90deg, ${team1Color}40, transparent, ${team2Color}40)`
+              }}
+              animate={{
+                opacity: [0.2, 0.4, 0.2],
+                scaleY: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          )}
+
+          {/* Particle Sparks (esports mode only) */}
+          {shouldShowParticles && Array.from({ length: 5 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute top-6 w-1 h-1 bg-yellow-400 rounded-full"
+              style={{
+                left: `${20 + i * 15}%`
+              }}
+              animate={{
+                y: [0, -10, 0],
+                opacity: [0.5, 1, 0.5],
+                scale: [0.5, 1, 0.5]
+              }}
+              transition={{
+                duration: 2 + Math.random(),
+                repeat: Infinity,
+                delay: Math.random() * 2,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
 
           {/* SVG Wave Chart */}
           <div className="mt-6 relative">
@@ -482,9 +578,9 @@ export const MomentumWave = memo(({
             </div>
             <svg 
               width="100%" 
-              height="60" 
-              viewBox="0 0 300 60" 
-              className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
+              height={chartHeight} 
+              viewBox={`0 0 300 ${chartHeight}`} 
+              className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''} transition-all duration-500`}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
               style={{ pointerEvents: 'all', position: 'relative', zIndex: 20 }}
@@ -503,19 +599,97 @@ export const MomentumWave = memo(({
               {/* Center baseline */}
               <line
                 x1="0"
-                y1="30"
+                y1={chartHeight / 2}
                 x2="300"
-                y2="30"
+                y2={chartHeight / 2}
                 stroke="#64748b"
                 strokeWidth="1"
                 strokeDasharray="4,4"
                 opacity="0.5"
               />
+
+              {/* Team-tinted glow under primary path */}
+              {heroMode && (
+                <motion.path
+                  d={wavePath}
+                  stroke={dominantColor}
+                  strokeWidth="8"
+                  fill="none"
+                  opacity="0.3"
+                  style={{
+                    filter: `blur(4px)`
+                  }}
+                  animate={{
+                    opacity: [0.2, 0.4, 0.2]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+
+              {/* Crowd Resonance Layer (secondary wave) */}
+              {crowdResonancePath && crowdOpacity > 0 && (
+                <>
+                  {/* Crowd resonance fill */}
+                  {momentum > 0 && (
+                    <motion.path
+                      d={`${crowdResonancePath} L 300 ${chartHeight / 2} L 0 ${chartHeight / 2} Z`}
+                      fill={team1Color}
+                      fillOpacity={crowdOpacity * 0.3}
+                      animate={{
+                        fillOpacity: [crowdOpacity * 0.3, crowdOpacity * 0.5, crowdOpacity * 0.3]
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  )}
+                  
+                  {momentum < 0 && (
+                    <motion.path
+                      d={`${crowdResonancePath} L 300 ${chartHeight / 2} L 0 ${chartHeight / 2} Z`}
+                      fill={team2Color}
+                      fillOpacity={crowdOpacity * 0.3}
+                      animate={{
+                        fillOpacity: [crowdOpacity * 0.3, crowdOpacity * 0.5, crowdOpacity * 0.3]
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  )}
+                  
+                  {/* Crowd resonance line */}
+                  <motion.path
+                    d={crowdResonancePath}
+                    stroke={dominantColor}
+                    strokeWidth="1.5"
+                    fill="none"
+                    opacity={crowdOpacity}
+                    strokeDasharray="5,3"
+                    animate={{
+                      strokeDashoffset: [0, 8],
+                      opacity: [crowdOpacity, crowdOpacity * 1.5, crowdOpacity]
+                    }}
+                    transition={{
+                      strokeDashoffset: { duration: 2, repeat: Infinity, ease: "linear" },
+                      opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                  />
+                </>
+              )}
             
               {/* Team 1 area (top half) with enhanced animations */}
               {momentum > 0 && (
                 <motion.path
-                  d={`${wavePath} L 300 30 L 0 30 Z`}
+                  d={`${wavePath} L 300 ${chartHeight / 2} L 0 ${chartHeight / 2} Z`}
                   fill={team1Color}
                   fillOpacity={fillOpacity}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -534,7 +708,7 @@ export const MomentumWave = memo(({
               {/* Team 2 area (bottom half) with enhanced animations */}
               {momentum < 0 && (
                 <motion.path
-                  d={`${wavePath} L 300 30 L 0 30 Z`}
+                  d={`${wavePath} L 300 ${chartHeight / 2} L 0 ${chartHeight / 2} Z`}
                   fill={team2Color}
                   fillOpacity={fillOpacity}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -564,12 +738,49 @@ export const MomentumWave = memo(({
                 }}
               />
               
+              {/* Milestone markers */}
+              {heroMode && wave.length > 4 && [0.25, 0.5, 0.75].map((ratio, index) => {
+                const pointIndex = Math.floor(ratio * (wave.length - 1));
+                const point = wave[pointIndex];
+                if (!point) return null;
+                
+                return (
+                  <motion.g key={`milestone-${index}`}>
+                    <motion.line
+                      x1={ratio * 300}
+                      y1={0}
+                      x2={ratio * 300}
+                      y2={chartHeight}
+                      stroke="#64748b"
+                      strokeWidth="1"
+                      strokeDasharray="2,4"
+                      opacity="0.3"
+                    />
+                    <motion.circle
+                      cx={ratio * 300}
+                      cy={chartHeight / 2 - (point.y * chartHeight / 2 * 0.8 * amplitudeBoost)}
+                      r="2"
+                      fill={dominantColor}
+                      animate={{
+                        r: [2, 3, 2],
+                        opacity: [0.5, 1, 0.5]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: index * 0.5
+                      }}
+                    />
+                  </motion.g>
+                );
+              })}
+
               {/* Key momentum shift indicators */}
               {isInteractive && momentumShifts.map((shift) => (
                 <motion.circle
                   key={shift.point}
                   cx={(shift.point / Math.max(wave.length - 1, 1)) * 300}
-                  cy={30 - (shift.momentum * 30 * 0.8)}
+                  cy={chartHeight / 2 - (shift.momentum * chartHeight / 2 * 0.8 * amplitudeBoost)}
                   r="3"
                   fill={shift.momentum > 0 ? '#10b981' : '#ef4444'}
                   stroke="#ffffff"
