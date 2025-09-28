@@ -36,6 +36,38 @@ export const MomentumWave = memo(({
   const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
+  // Analyze momentum shifts for tooltips
+  const analyzeMomentumShifts = () => {
+    const shifts = [];
+    for (let i = 1; i < wave.length; i++) {
+      const prev = wave[i - 1];
+      const curr = wave[i];
+      const shift = Math.abs(curr.y - prev.y);
+      
+      if (shift > 0.3) { // Significant momentum shift
+        let reason = '';
+        if (curr.y > prev.y) {
+          reason = curr.y > 0.7 ? 'Dominant streak! Multiple consecutive points' : 
+                   curr.y > 0.4 ? 'Building momentum with consistent play' : 
+                   'Turning the tide with key points';
+        } else {
+          reason = curr.y < -0.7 ? 'Momentum completely reversed!' : 
+                   curr.y < -0.4 ? 'Opponent fighting back' : 
+                   'Losing momentum after missed opportunities';
+        }
+        
+        shifts.push({
+          point: i,
+          momentum: curr.y,
+          reason,
+          timestamp: curr.timestamp,
+          score: curr.score
+        });
+      }
+    }
+    return shifts;
+  };
+
   // Generate SVG path for momentum wave
   const generateWavePath = () => {
     if (wave.length < 2) return '';
@@ -67,7 +99,43 @@ export const MomentumWave = memo(({
     return path;
   };
 
+  // Handle hover events for interactive mode
+  const handleMouseMove = (event: React.MouseEvent<SVGElement>) => {
+    if (!isInteractive) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    setMousePosition({ x: event.clientX, y: event.clientY });
+    
+    // Find nearest wave point
+    const width = 300;
+    const pointIndex = Math.round((x / width) * (wave.length - 1));
+    
+    if (pointIndex >= 0 && pointIndex < wave.length) {
+      const point = wave[pointIndex];
+      const shifts = analyzeMomentumShifts();
+      const shift = shifts.find(s => s.point === pointIndex);
+      
+      setHoveredPoint({
+        x,
+        y,
+        point: pointIndex,
+        momentum: point.y,
+        reason: shift?.reason || (point.y > 0 ? 'Momentum favoring this side' : 'Momentum against this side'),
+        timestamp: point.timestamp,
+        score: point.score
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredPoint(null);
+  };
+
   const wavePath = generateWavePath();
+  const momentumShifts = analyzeMomentumShifts();
   const intensity = Math.abs(momentum);
   const glowIntensity = Math.min(intensity * 2, 1);
   
@@ -77,7 +145,42 @@ export const MomentumWave = memo(({
   const fillOpacity = Math.min(Math.abs(momentum) * 0.6 + 0.2, 0.8);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className="relative">
+      {/* Interactive Tooltip */}
+      {isInteractive && hoveredPoint && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: mousePosition.x + 10,
+            top: mousePosition.y - 80
+          }}
+        >
+          <Card className="p-3 bg-slate-900/95 border-slate-600 backdrop-blur-sm max-w-xs">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                {hoveredPoint.momentum > 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-400" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-400" />
+                )}
+                <Badge className={`text-xs ${hoveredPoint.momentum > 0 ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                  Point {hoveredPoint.point + 1}
+                </Badge>
+              </div>
+              <p className="text-sm text-white/90 font-medium">
+                {hoveredPoint.reason}
+              </p>
+              <div className="text-xs text-white/60">
+                Score: {hoveredPoint.score.player1}-{hoveredPoint.score.player2}
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      <div className={`relative ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -119,7 +222,14 @@ export const MomentumWave = memo(({
 
         {/* SVG Wave Chart */}
         <div className="mt-6">
-          <svg width="100%" height="60" viewBox="0 0 300 60" className="overflow-visible">
+          <svg 
+            width="100%" 
+            height="60" 
+            viewBox="0 0 300 60" 
+            className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
             {/* Center baseline */}
             <line
               x1="0"
@@ -170,6 +280,30 @@ export const MomentumWave = memo(({
               }}
             />
             
+            {/* Key momentum shift indicators */}
+            {isInteractive && momentumShifts.map((shift) => (
+              <motion.circle
+                key={shift.point}
+                cx={(shift.point / Math.max(wave.length - 1, 1)) * 300}
+                cy={30 - (shift.momentum * 30 * 0.8)}
+                r="3"
+                fill={shift.momentum > 0 ? '#10b981' : '#ef4444'}
+                stroke="#ffffff"
+                strokeWidth="1"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.8 }}
+                transition={{ 
+                  delay: shift.point * 0.1,
+                  type: "spring", 
+                  stiffness: 400, 
+                  damping: 25 
+                }}
+                style={{
+                  filter: `drop-shadow(0 0 4px ${shift.momentum > 0 ? '#10b981' : '#ef4444'})`
+                }}
+              />
+            ))}
+
             {/* Current position indicator */}
             {wave.length > 0 && (
               <motion.circle
