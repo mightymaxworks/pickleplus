@@ -249,7 +249,11 @@ function MatchClosenessIndicator({
           hovered: { opacity: 1, scale: 1, y: 0, pointerEvents: "auto" }
         }}
         transition={{ duration: 0.2 }}
-        className="absolute top-full left-0 right-0 mt-2 p-3 bg-slate-900/95 rounded-lg border border-slate-600 text-xs text-white backdrop-blur-sm z-10"
+        className="absolute top-full left-0 right-0 mt-2 p-3 bg-slate-900/95 rounded-lg border border-slate-600 text-xs text-white backdrop-blur-sm z-50 shadow-2xl"
+        style={{ 
+          minWidth: '250px',
+          transform: 'translateZ(0)' // Force hardware acceleration
+        }}
       >
         <div className="grid grid-cols-2 gap-2">
           <div>Momentum Balance: {closeness.indicators.momentumBalance}%</div>
@@ -1573,7 +1577,7 @@ export default function GamifiedMatchRecording() {
 
           {/* Match Closeness Indicator */}
           {matchState.momentumState?.closeness && (
-            <div className="mt-4">
+            <div className="mt-4 relative" style={{ zIndex: 30 }}>
               <MatchClosenessIndicator 
                 closeness={matchState.momentumState.closeness}
                 team1Name={matchState.player1?.name}
