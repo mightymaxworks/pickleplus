@@ -34,7 +34,6 @@ interface ArenaPlayer {
   isOnline: boolean;
   matchType: MatchType;
   partner?: ArenaPlayer;
-  compatibility: number; // 0-100% compatibility score
 }
 
 interface Challenge {
@@ -108,9 +107,10 @@ interface ArenaPlayerCardProps {
   onViewProfile: (player: ArenaPlayer) => void;
   onPartnerUp: (player: ArenaPlayer) => void;
   myPlayerId: string;
+  calculateCompatibility: (player: ArenaPlayer) => number;
 }
 
-function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPlayerId }: ArenaPlayerCardProps) {
+function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPlayerId, calculateCompatibility }: ArenaPlayerCardProps) {
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   
@@ -132,6 +132,10 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
   const config = tierConfig[player.tier];
   const status = statusConfig[player.status];
   const TierIcon = config.icon;
+  
+  const compatibility = calculateCompatibility(player);
+  const compatibilityColor = compatibility >= 80 ? 'text-green-400' : 
+                           compatibility >= 60 ? 'text-yellow-400' : 'text-red-400';
 
   if (player.id === myPlayerId) return null;
 
@@ -215,14 +219,8 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
         {/* Compatibility Badge (Partners Tab Style) */}
         <div className="absolute -top-2 -right-2">
           <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-slate-900 border-2 border-slate-600`}>
-            <Heart className={`h-3 w-3 ${
-              player.compatibility >= 80 ? 'text-green-400' : 
-              player.compatibility >= 60 ? 'text-yellow-400' : 'text-red-400'
-            }`} />
-            <span className={`text-xs font-bold ${
-              player.compatibility >= 80 ? 'text-green-400' : 
-              player.compatibility >= 60 ? 'text-yellow-400' : 'text-red-400'
-            }`}>{player.compatibility}%</span>
+            <Heart className={`h-3 w-3 ${compatibilityColor}`} />
+            <span className={`text-xs font-bold ${compatibilityColor}`}>{compatibility}%</span>
           </div>
         </div>
 
@@ -260,18 +258,15 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
           <div className="mb-3">
             <div className="flex items-center justify-between text-xs mb-1">
               <span>Match Compatibility</span>
-              <span className={`${
-                player.compatibility >= 80 ? 'text-green-400' : 
-                player.compatibility >= 60 ? 'text-yellow-400' : 'text-red-400'
-              }`}>{player.compatibility}%</span>
+              <span className={compatibilityColor}>{compatibility}%</span>
             </div>
             <div className="w-full bg-black/20 rounded-full h-2">
               <div 
                 className={`h-2 rounded-full transition-all ${
-                  player.compatibility >= 80 ? 'bg-green-400' : 
-                  player.compatibility >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                  compatibility >= 80 ? 'bg-green-400' : 
+                  compatibility >= 60 ? 'bg-yellow-400' : 'bg-red-400'
                 }`}
-                style={{ width: `${player.compatibility}%` }}
+                style={{ width: `${compatibility}%` }}
               />
             </div>
           </div>
@@ -473,6 +468,42 @@ export default function MatchArena() {
   const [selectedPlayerForSheet, setSelectedPlayerForSheet] = useState<ArenaPlayer | null>(null);
 
   const myPlayerId = 'current-player';
+  
+  // Current player stats for compatibility calculation
+  const currentPlayer = {
+    points: 1200, // Mock current player ranking
+    winRate: 0.68 // Mock current player win rate
+  };
+
+  // Calculate competitive balance compatibility
+  const calculateCompatibility = (player: ArenaPlayer): number => {
+    // Points difference factor (closer points = higher compatibility)
+    const pointsDiff = Math.abs(player.points - currentPlayer.points);
+    const maxPointsDiff = 1000; // Consider 1000+ point difference as very low compatibility
+    const pointsCompatibility = Math.max(0, (maxPointsDiff - pointsDiff) / maxPointsDiff);
+    
+    // Win rate similarity factor
+    const winRateDiff = Math.abs(player.winRate - currentPlayer.winRate);
+    const maxWinRateDiff = 0.3; // 30% win rate difference
+    const winRateCompatibility = Math.max(0, (maxWinRateDiff - winRateDiff) / maxWinRateDiff);
+    
+    // Experience level factor (total games played)
+    const playerGames = player.wins + player.losses;
+    const currentPlayerGames = 100; // Mock current player total games
+    const gamesDiff = Math.abs(playerGames - currentPlayerGames);
+    const maxGamesDiff = 50;
+    const experienceCompatibility = Math.max(0, (maxGamesDiff - gamesDiff) / maxGamesDiff);
+    
+    // Weighted average: points (50%), win rate (30%), experience (20%)
+    const compatibility = (
+      pointsCompatibility * 0.5 + 
+      winRateCompatibility * 0.3 + 
+      experienceCompatibility * 0.2
+    ) * 100;
+    
+    // Ensure minimum 20% compatibility (always some chance for upset matches)
+    return Math.max(20, Math.round(compatibility));
+  };
 
   // Mock data
   useEffect(() => {
@@ -489,8 +520,7 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 0.3,
         isOnline: true,
-        matchType: 'singles',
-        compatibility: 92
+        matchType: 'singles'
       },
       {
         id: '2',
@@ -504,8 +534,7 @@ export default function MatchArena() {
         lastSeen: '2 min ago',
         distance: 0.8,
         isOnline: true,
-        matchType: 'doubles-looking',
-        compatibility: 85
+        matchType: 'doubles-looking'
       },
       {
         id: '3',
@@ -519,8 +548,7 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 1.2,
         isOnline: true,
-        matchType: 'singles',
-        compatibility: 78
+        matchType: 'singles'
       },
       // Add more players with varying distances for testing proximity filter
       {
@@ -535,8 +563,7 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 3.5, // Beyond 2km proximity filter
         isOnline: true,
-        matchType: 'doubles-looking',
-        compatibility: 70
+        matchType: 'doubles-looking'
       },
       {
         id: '5',
@@ -550,8 +577,7 @@ export default function MatchArena() {
         lastSeen: '5 min ago',
         distance: 5.2, // Far distance - only in Create Match
         isOnline: true,
-        matchType: 'singles',
-        compatibility: 66
+        matchType: 'singles'
       },
       {
         id: '6',
@@ -565,11 +591,17 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 0.5, // Very close
         isOnline: true,
-        matchType: 'doubles-looking',
-        compatibility: 75
+        matchType: 'doubles-looking'
       }
     ];
-    setArenaPlayers(mockPlayers);
+    
+    // Calculate compatibility for each player
+    const playersWithCompatibility = mockPlayers.map(player => ({
+      ...player,
+      compatibility: calculateCompatibility(player)
+    }));
+    
+    setArenaPlayers(playersWithCompatibility);
   }, []);
 
   // Ready-check system functions
@@ -862,6 +894,7 @@ export default function MatchArena() {
                   }}
                   onViewProfile={() => openPlayerBottomSheet(player)}
                   onPartnerUp={(player) => handlePartnerUp(player, 'manual')}
+                  calculateCompatibility={calculateCompatibility}
                   myPlayerId={myPlayerId}
                 />
               ))}
@@ -928,6 +961,7 @@ export default function MatchArena() {
                     onViewProfile={() => openPlayerBottomSheet(player)}
                     onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
                     myPlayerId={myPlayerId}
+                    calculateCompatibility={calculateCompatibility}
                   />
                 </div>
               ))}
