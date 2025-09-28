@@ -274,6 +274,117 @@ export class MomentumEngine {
     };
   }
 
+  /**
+   * Remove the last point and recalculate momentum state
+   * This properly backtracks momentum without adding incorrect opposite momentum
+   */
+  removeLastPoint(): StrategyMessage[] {
+    const messages: StrategyMessage[] = [];
+    
+    // Can't remove if no points have been scored
+    if (this.state.totalPoints === 0 || this.state.wave.length === 0) {
+      return messages;
+    }
+    
+    // Remove the last point from wave and recalculate
+    this.state.wave.pop();
+    this.state.totalPoints--;
+    
+    // Recalculate momentum from scratch based on remaining points
+    if (this.state.wave.length === 0) {
+      // No points left, reset to initial state
+      this.state.momentum = 0;
+      this.state.momentumScore = 50;
+      this.state.streak = { team: 'team1', length: 0 };
+      this.state.gamePhase = 'early';
+    } else {
+      // Recalculate momentum using EWMA from all remaining points
+      this.recalculateMomentumFromWave();
+    }
+    
+    // Decrease last message point counter if needed
+    if (this.lastMessagePoint >= this.state.totalPoints) {
+      this.lastMessagePoint = Math.max(-1, this.state.totalPoints - 1);
+    }
+    
+    return messages;
+  }
+
+  /**
+   * Recalculate momentum state from existing wave data
+   * Used when backtracking points to ensure accurate momentum
+   */
+  private recalculateMomentumFromWave() {
+    if (this.state.wave.length === 0) return;
+    
+    // Reset momentum to neutral
+    this.state.momentum = 0;
+    
+    // Replay all momentum calculations from wave data
+    for (let i = 0; i < this.state.wave.length; i++) {
+      const point = this.state.wave[i];
+      // Use the sign of the Y value to determine which team scored
+      const signal = point.y > 0 ? 1 : -1;
+      this.state.momentum = (1 - this.alpha) * this.state.momentum + this.alpha * signal;
+      this.state.momentum = Math.max(-1, Math.min(1, this.state.momentum));
+    }
+    
+    this.state.momentumScore = Math.round(((this.state.momentum + 1) / 2) * 100);
+    
+    // Recalculate streak based on recent momentum direction
+    this.recalculateStreak();
+    
+    // Update game phase based on current total points (approximation)
+    const approximateScore = this.estimateScoreFromMomentum();
+    this.updateGamePhase(approximateScore);
+  }
+
+  /**
+   * Recalculate streak based on recent momentum direction
+   */
+  private recalculateStreak() {
+    if (this.state.wave.length === 0) {
+      this.state.streak = { team: 'team1', length: 0 };
+      return;
+    }
+    
+    const recentPoints = this.state.wave.slice(-5); // Look at last 5 points
+    let streakTeam: 'team1' | 'team2' = this.state.momentum > 0 ? 'team1' : 'team2';
+    let streakLength = 1;
+    
+    // Count consecutive points in the same direction
+    for (let i = recentPoints.length - 2; i >= 0; i--) {
+      const current = recentPoints[i + 1];
+      const previous = recentPoints[i];
+      
+      const currentTeam = current.y > 0 ? 'team1' : 'team2';
+      const previousTeam = previous.y > 0 ? 'team1' : 'team2';
+      
+      if (currentTeam === previousTeam && currentTeam === streakTeam) {
+        streakLength++;
+      } else {
+        break;
+      }
+    }
+    
+    this.state.streak = { team: streakTeam, length: Math.min(streakLength, recentPoints.length) };
+  }
+
+  /**
+   * Estimate score from momentum data (approximation for game phase calculation)
+   */
+  private estimateScoreFromMomentum(): [number, number] {
+    const totalPoints = this.state.totalPoints;
+    const momentum = this.state.momentum;
+    
+    // Simple approximation: distribute points based on momentum bias
+    const team1Bias = (momentum + 1) / 2; // Convert [-1,1] to [0,1]
+    const team1Points = Math.round(totalPoints * team1Bias);
+    const team2Points = totalPoints - team1Points;
+    
+    return [team1Points, team2Points];
+  }
+
   getState(): MomentumState {
     return { ...this.state };
   }

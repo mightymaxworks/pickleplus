@@ -656,18 +656,14 @@ export default function GamifiedMatchRecording() {
         return prev; // No change if trying to remove from 0 score
       }
       
-      // Recalculate momentum with the new score
-      const momentumEvent = {
-        pointNo: newState.player1.score + newState.player2.score,
-        scoringTeam: playerId === '1' ? 'team2' as const : 'team1' as const, // Opposite team since we're removing
-        score: [newState.player1.score, newState.player2.score] as [number, number],
-        timestamp: Date.now(),
-        tags: ['point_removed']
-      };
-
-      // Update momentum state with point removal
-      const newMessages = momentumEngine.processPoint(momentumEvent);
-      newState.strategicMessages = [...prev.strategicMessages, ...newMessages];
+      // Properly backtrack momentum by removing the last point
+      // This ensures accurate momentum recalculation without distortion
+      const backtrackMessages = momentumEngine.removeLastPoint();
+      
+      // Add any messages from the backtrack operation
+      newState.strategicMessages = [...prev.strategicMessages, ...backtrackMessages];
+      
+      // Update momentum state after proper backtracking
       newState.momentumState = momentumEngine.getState();
 
       // Detect scoring mode after point removal
