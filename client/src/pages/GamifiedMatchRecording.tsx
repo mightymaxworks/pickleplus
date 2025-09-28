@@ -38,6 +38,8 @@ import { VideoDock } from '@/components/match/VideoDock';
 import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
 import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
 import { GamingUIOverlays } from '@/components/match/GamingUIOverlays';
+import LiveStreamIntegration from '@/components/match/LiveStreamIntegration';
+import { type LiveStreamValidation } from '@/components/match/LiveStreamValidator';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -597,13 +599,39 @@ export default function GamifiedMatchRecording() {
   // Gaming UI overlay states for Sprint 2
   const [aestheticMode, setAestheticMode] = useState<'subtle' | 'esports'>('subtle');
   const [gamingOverlaysEnabled, setGamingOverlaysEnabled] = useState(false);
+  
+  // Live stream validation states
+  const [liveStreamValidation, setLiveStreamValidation] = useState<LiveStreamValidation>({
+    isValid: false,
+    isLoading: false
+  });
+  const [viewerLink, setViewerLink] = useState('');
 
-  // Enable gaming overlays when live match state is active
+  // Enable gaming overlays when live match state is active OR live stream is validated
   useEffect(() => {
-    const shouldEnable = liveMatchState.isLive && liveMatchState.gamingFeatures.crowdEnergyMeter;
+    const liveStateEnabled = liveMatchState.isLive && liveMatchState.gamingFeatures.crowdEnergyMeter;
+    const liveStreamEnabled = liveStreamValidation.isValid;
+    const shouldEnable = liveStateEnabled || liveStreamEnabled;
+    
     setGamingOverlaysEnabled(shouldEnable);
-    console.log(`🎮 Gaming overlays ${shouldEnable ? 'ENABLED' : 'DISABLED'} - Live: ${liveMatchState.isLive}`);
-  }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter]);
+    console.log(`🎮 Gaming overlays ${shouldEnable ? 'ENABLED' : 'DISABLED'} - Live State: ${liveStateEnabled}, Live Stream: ${liveStreamEnabled}`);
+  }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter, liveStreamValidation.isValid]);
+
+  // Live stream validation handlers
+  const handleLiveStreamValidation = (validation: LiveStreamValidation) => {
+    setLiveStreamValidation(validation);
+    console.log('🎥 Live stream validation updated:', validation);
+  };
+
+  const handleGamingFeaturesToggle = (enabled: boolean) => {
+    console.log(`🎮 Gaming features ${enabled ? 'ENABLED' : 'DISABLED'} via live stream`);
+    // Additional logic if needed
+  };
+
+  const handleViewerLinkGenerated = (link: string) => {
+    setViewerLink(link);
+    console.log('🔗 Viewer link generated:', link);
+  };
 
   // Gaming feature test handlers
   const handleGamingTest = (trigger: string) => {
@@ -1497,6 +1525,17 @@ export default function GamifiedMatchRecording() {
               Return to Arena
             </Button>
           )}
+        </div>
+        
+        {/* Live Stream Integration */}
+        <div className="mb-6">
+          <LiveStreamIntegration
+            onValidationChange={handleLiveStreamValidation}
+            onGamingFeaturesToggle={handleGamingFeaturesToggle}
+            onViewerLinkGenerated={handleViewerLinkGenerated}
+            matchId={`live-${Date.now()}`}
+            className="max-w-4xl mx-auto"
+          />
         </div>
         
         {/* Match Title */}
