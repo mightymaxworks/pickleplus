@@ -305,7 +305,7 @@ export default function GamifiedMatchRecording() {
     window.location.href = '/unified-prototype';
   };
   
-  // Pickleball-themed team combinations (same as MatchCreationWizard)
+  // Extensive pickleball-themed team combinations for variety and fun
   const pickleballTeamThemes = [
     {
       team1: { name: "Dink Masters", color: "#10b981", icon: "🎯" },
@@ -330,6 +330,102 @@ export default function GamifiedMatchRecording() {
     {
       team1: { name: "Serve Samurai", color: "#dc2626", icon: "⚡" },
       team2: { name: "Return Rebels", color: "#7c3aed", icon: "🔥" }
+    },
+    {
+      team1: { name: "Paddle Phantoms", color: "#6366f1", icon: "👻" },
+      team2: { name: "Court Crushers", color: "#f43f5e", icon: "⚔️" }
+    },
+    {
+      team1: { name: "Third Shot Titans", color: "#059669", icon: "🏔️" },
+      team2: { name: "Backhand Bandits", color: "#dc2626", icon: "🏴‍☠️" }
+    },
+    {
+      team1: { name: "Overhead Overlords", color: "#7c3aed", icon: "👑" },
+      team2: { name: "Sideline Snipers", color: "#ea580c", icon: "🎯" }
+    },
+    {
+      team1: { name: "Pickle Pirates", color: "#0891b2", icon: "🏴‍☠️" },
+      team2: { name: "Ace Assassins", color: "#be123c", icon: "🗡️" }
+    },
+    {
+      team1: { name: "Crosscourt Commandos", color: "#16a34a", icon: "🪖" },
+      team2: { name: "Forehand Fury", color: "#dc2626", icon: "🔥" }
+    },
+    {
+      team1: { name: "Paddle Predators", color: "#9333ea", icon: "🦅" },
+      team2: { name: "Baseline Beasts", color: "#c2410c", icon: "🦁" }
+    },
+    {
+      team1: { name: "Rally Renegades", color: "#0d9488", icon: "🤠" },
+      team2: { name: "Smash Squad", color: "#e11d48", icon: "💥" }
+    },
+    {
+      team1: { name: "Court Captains", color: "#0369a1", icon: "⚓" },
+      team2: { name: "Dink Destroyers", color: "#991b1b", icon: "💀" }
+    },
+    {
+      team1: { name: "Net Navigators", color: "#059669", icon: "🧭" },
+      team2: { name: "Volley Vipers", color: "#7c2d12", icon: "🐍" }
+    },
+    {
+      team1: { name: "Pickle Powerhouse", color: "#7c3aed", icon: "⚡" },
+      team2: { name: "Kitchen Killers", color: "#b91c1c", icon: "🔪" }
+    },
+    {
+      team1: { name: "Serve Storms", color: "#0284c7", icon: "⛈️" },
+      team2: { name: "Return Raiders", color: "#dc2626", icon: "🏴‍☠️" }
+    },
+    {
+      team1: { name: "Paddle Panthers", color: "#374151", icon: "🐾" },
+      team2: { name: "Court Cobras", color: "#16a34a", icon: "🐍" }
+    },
+    {
+      team1: { name: "Lob Lions", color: "#d97706", icon: "🦁" },
+      team2: { name: "Drop Dragons", color: "#dc2626", icon: "🐉" }
+    },
+    {
+      team1: { name: "Angle Arrows", color: "#0891b2", icon: "🏹" },
+      team2: { name: "Pace Pacers", color: "#7c2d12", icon: "🏃" }
+    },
+    {
+      team1: { name: "Pickleball Phoenixes", color: "#e11d48", icon: "🔥" },
+      team2: { name: "Court Cardinals", color: "#dc2626", icon: "🔴" }
+    },
+    {
+      team1: { name: "Spin Sharks", color: "#0369a1", icon: "🦈" },
+      team2: { name: "Rally Rhinos", color: "#6b7280", icon: "🦏" }
+    },
+    {
+      team1: { name: "Paddle Pumas", color: "#a21caf", icon: "🐱" },
+      team2: { name: "Net Narwhals", color: "#0284c7", icon: "🦄" }
+    },
+    {
+      team1: { name: "Kitchen Krakens", color: "#0d9488", icon: "🐙" },
+      team2: { name: "Baseline Bulls", color: "#dc2626", icon: "🐂" }
+    },
+    {
+      team1: { name: "Volley Velociraptors", color: "#16a34a", icon: "🦖" },
+      team2: { name: "Dink Dolphins", color: "#0ea5e9", icon: "🐬" }
+    },
+    {
+      team1: { name: "Court Cyclones", color: "#6366f1", icon: "🌀" },
+      team2: { name: "Paddle Phoenixes", color: "#f59e0b", icon: "🔥" }
+    },
+    {
+      team1: { name: "Smash Spartans", color: "#b91c1c", icon: "🛡️" },
+      team2: { name: "Rally Rangers", color: "#059669", icon: "🏹" }
+    },
+    {
+      team1: { name: "Third Shot Thunders", color: "#7c3aed", icon: "⚡" },
+      team2: { name: "Baseline Blizzards", color: "#0ea5e9", icon: "❄️" }
+    },
+    {
+      team1: { name: "Pickle Pilots", color: "#0369a1", icon: "✈️" },
+      team2: { name: "Court Comets", color: "#f59e0b", icon: "☄️" }
+    },
+    {
+      team1: { name: "Dink Dynamos", color: "#dc2626", icon: "⚡" },
+      team2: { name: "Volley Vortex", color: "#8b5cf6", icon: "🌪️" }
     }
   ];
 
