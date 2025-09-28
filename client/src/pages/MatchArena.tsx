@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gamepad2, Play, Users, UserPlus, Trophy, Search, Globe, MapPin,
   Star, Crown, Shield, Zap, Target, Award, ChevronRight, X, Activity,
-  IdCard, UserCog
+  IdCard, UserCog, Heart, Plus, ArrowLeft, ArrowRight
 } from 'lucide-react';
 // Navigation will be defined inline to match UnifiedPrototype style
 import DoublesPartnerSystem from '@/components/doubles/DoublesPartnerSystem';
@@ -100,6 +100,9 @@ interface ArenaPlayerCardProps {
 }
 
 function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPlayerId }: ArenaPlayerCardProps) {
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  
   const tierConfig = {
     bronze: { color: 'from-amber-600 to-amber-800', name: 'Bronze', icon: Shield },
     silver: { color: 'from-slate-400 to-slate-600', name: 'Silver', icon: Star },
@@ -121,14 +124,80 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
 
   if (player.id === myPlayerId) return null;
 
+  // Handle swipe gestures
+  const handleDragEnd = (event: any, info: any) => {
+    const swipeThreshold = 100;
+    
+    if (Math.abs(info.offset.x) > swipeThreshold) {
+      if (info.offset.x > 0) {
+        // Swipe right - Challenge
+        setSwipeDirection('right');
+        setTimeout(() => {
+          onChallenge(player, 'singles');
+          setSwipeDirection(null);
+        }, 150);
+      } else {
+        // Swipe left - Partner request (only if available for doubles)
+        if (player.matchType === 'doubles-looking') {
+          setSwipeDirection('left');
+          setTimeout(() => {
+            onPartnerUp(player);
+            setSwipeDirection(null);
+          }, 150);
+        }
+      }
+    }
+  };
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        x: swipeDirection === 'right' ? 50 : swipeDirection === 'left' ? -50 : 0,
+        scale: swipeDirection ? 0.95 : 1
+      }}
       exit={{ opacity: 0, y: -20 }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.2}
+      onDragEnd={handleDragEnd}
+      transition={{ duration: 0.2 }}
+      whileDrag={{ scale: 0.98 }}
+      className="relative cursor-grab active:cursor-grabbing"
     >
-      <Card className={`p-4 border border-slate-600 bg-gradient-to-br ${config.color} hover:border-orange-400 transition-all`}>
+      {/* Swipe Action Indicators */}
+      <div className="absolute inset-0 flex items-center justify-between pointer-events-none z-10">
+        {/* Left swipe indicator - Partner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ 
+            opacity: swipeDirection === 'left' ? 1 : 0,
+            scale: swipeDirection === 'left' ? 1 : 0.8
+          }}
+          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full ml-4"
+        >
+          <Users className="h-4 w-4" />
+          <span className="font-medium text-sm">Partner Up!</span>
+        </motion.div>
+        
+        {/* Right swipe indicator - Challenge */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ 
+            opacity: swipeDirection === 'right' ? 1 : 0,
+            scale: swipeDirection === 'right' ? 1 : 0.8
+          }}
+          className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full mr-4"
+        >
+          <Target className="h-4 w-4" />
+          <span className="font-medium text-sm">Challenge!</span>
+        </motion.div>
+      </div>
+
+      <Card className={`p-4 border border-slate-600 bg-gradient-to-br ${config.color} hover:border-orange-400 transition-all ${swipeDirection ? 'border-orange-500' : ''}`}>
         <div className="relative">
           <div className="absolute -top-2 -right-2">
             <div className={`w-4 h-4 rounded-full ${status.color} ${status.pulse ? 'animate-pulse' : ''}`} />
@@ -159,6 +228,22 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
               <span>{player.wins}W</span>
               <span>{player.losses}L</span>
               <span>{Math.round(player.winRate * 100)}%</span>
+            </div>
+
+            {/* Swipe hint */}
+            <div className="text-center mb-2">
+              <div className="text-xs text-white/60 flex items-center justify-center gap-4">
+                {player.matchType === 'doubles-looking' && (
+                  <span className="flex items-center gap-1">
+                    <ArrowLeft className="h-3 w-3" />
+                    Partner
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  Challenge
+                  <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
             </div>
 
             <div className="flex gap-2">
