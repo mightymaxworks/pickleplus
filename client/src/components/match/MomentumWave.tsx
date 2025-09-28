@@ -121,11 +121,21 @@ export const MomentumWave = memo(({
 
   // Handle hover events for interactive mode
   const handleMouseMove = (event: React.MouseEvent<SVGElement>) => {
-    if (!isInteractive || !wave || wave.length === 0) return;
+    if (!isInteractive) {
+      console.log('Not interactive, skipping hover');
+      return;
+    }
+    
+    if (!wave || wave.length === 0) {
+      console.log('No wave data available:', { wave, waveLength: wave?.length });
+      return;
+    }
     
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+    
+    console.log('Mouse move detected:', { x, y, width: rect.width, height: rect.height });
     
     // Only update if mouse is actually over the wave area
     if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
@@ -135,12 +145,14 @@ export const MomentumWave = memo(({
       const actualWidth = rect.width;
       const pointIndex = Math.round((x / actualWidth) * (wave.length - 1));
       
+      console.log('Calculated point index:', pointIndex, 'of', wave.length);
+      
       if (pointIndex >= 0 && pointIndex < wave.length) {
         const point = wave[pointIndex];
         const shifts = analyzeMomentumShifts();
         const shift = shifts.find(s => s.point === pointIndex);
         
-        setHoveredPoint({
+        const newHoveredPoint = {
           x,
           y,
           point: pointIndex,
@@ -148,7 +160,10 @@ export const MomentumWave = memo(({
           reason: shift?.reason || (point.y > 0 ? 'Momentum favoring this side' : 'Momentum against this side'),
           timestamp: Date.now(),
           score: currentScore || { player1: Math.floor(pointIndex * 0.6), player2: Math.floor((wave.length - pointIndex) * 0.5) }
-        });
+        };
+        
+        console.log('Setting hovered point:', newHoveredPoint);
+        setHoveredPoint(newHoveredPoint);
       }
     }
   };
