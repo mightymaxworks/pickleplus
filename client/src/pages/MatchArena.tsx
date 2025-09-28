@@ -17,7 +17,7 @@ import { useLocation } from 'wouter';
 type PlayerStatus = 'online' | 'away' | 'busy' | 'available';
 type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
 type ArenaMode = 'lobby' | 'doubles' | 'challenges' | 'search' | 'create-match';
-type GlobalTabMode = 'passport' | 'play' | 'rankings' | 'profile';
+type GlobalTabMode = 'passport' | 'arena' | 'rankings' | 'profile';
 type PlayerTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 
 interface ArenaPlayer {
@@ -70,7 +70,7 @@ interface PartnerRequest {
 function GlobalNavigationTabs({ activeTab, onTabChange }: { activeTab: GlobalTabMode; onTabChange: (tab: GlobalTabMode) => void }) {
   const tabs = [
     { id: 'passport' as GlobalTabMode, label: 'Passport', icon: IdCard },
-    { id: 'play' as GlobalTabMode, label: 'Play', icon: Activity },
+    { id: 'arena' as GlobalTabMode, label: 'Arena', icon: Activity },
     { id: 'rankings' as GlobalTabMode, label: 'Rankings', icon: Trophy },
     { id: 'profile' as GlobalTabMode, label: 'Profile', icon: UserCog },
   ];
@@ -143,10 +143,8 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
         // Swipe right - Challenge
         setSwipeDirection('right');
         setTimeout(() => {
-          // Enhanced challenge via swipe with source tracking
-          const challengeModal = document.createElement('div');
-          // Auto-send challenge for swipe (simplified UX)
-          handleSendChallenge(player, 'singles', `Quick challenge via swipe!`, 'swipe');
+          // Fixed: Use the passed props instead of undefined functions
+          onChallenge(player, 'singles');
           setSwipeDirection(null);
         }, 150);
       } else {
@@ -154,7 +152,8 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
         if (player.matchType === 'doubles-looking') {
           setSwipeDirection('left');
           setTimeout(() => {
-            handlePartnerUp(player, 'swipe');
+            // Fixed: Use the passed props instead of undefined functions
+            onPartnerUp(player);
             setSwipeDirection(null);
           }, 150);
         }
@@ -174,12 +173,13 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
       }}
       exit={{ opacity: 0, y: -20 }}
       drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
+      dragConstraints={{ left: -20, right: 20 }}
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
       transition={{ duration: 0.2 }}
       whileDrag={{ scale: 0.98 }}
       className="relative cursor-grab active:cursor-grabbing"
+      onClick={() => onViewProfile(player)}
     >
       {/* Swipe Action Indicators */}
       <div className="absolute inset-0 flex items-center justify-between pointer-events-none z-10">
@@ -787,7 +787,7 @@ export default function MatchArena() {
                     setShowChallengeModal(true);
                   }}
                   onViewProfile={() => openPlayerBottomSheet(player)}
-                  onPartnerUp={(player) => handlePartnerUp(player, arenaMode === 'create-match' ? 'create-match' : 'manual')}
+                  onPartnerUp={(player) => handlePartnerUp(player, 'manual')}
                   myPlayerId={myPlayerId}
                 />
               ))}
@@ -1079,7 +1079,13 @@ export default function MatchArena() {
                     <h3 className="text-xl font-bold text-white mb-2">
                       {selectedPlayerForSheet.name}
                     </h3>
-                    <Badge className={`${getTierColor(selectedPlayerForSheet.tier)} mb-4`}>
+                    <Badge className={`${
+                      selectedPlayerForSheet.tier === 'bronze' ? 'bg-orange-600' :
+                      selectedPlayerForSheet.tier === 'silver' ? 'bg-slate-400' :
+                      selectedPlayerForSheet.tier === 'gold' ? 'bg-yellow-500' :
+                      selectedPlayerForSheet.tier === 'platinum' ? 'bg-cyan-400' :
+                      'bg-purple-500'
+                    } mb-4`}>
                       {selectedPlayerForSheet.tier} • {selectedPlayerForSheet.points} pts
                     </Badge>
                   </div>
@@ -1199,7 +1205,7 @@ export default function MatchArena() {
 
       {/* Global Bottom Navigation */}
       <GlobalNavigationTabs 
-        activeTab={'play'} 
+        activeTab={'arena'} 
         onTabChange={(tab) => {
           if (tab === 'passport') {
             setLocation('/unified-prototype');
@@ -1208,7 +1214,7 @@ export default function MatchArena() {
           } else if (tab === 'profile') {
             setLocation('/profile');
           }
-          // 'play' tab stays on current page
+          // 'arena' tab stays on current page
         }} 
       />
       
