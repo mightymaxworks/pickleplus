@@ -284,6 +284,16 @@ export default function GamifiedMatchRecording() {
   const [showMomentumContext, setShowMomentumContext] = useState(true);
   const [isLiveMode, setIsLiveMode] = useState(true); // Track if user is doing live point-by-point scoring
 
+  // Auto-hide momentum context notification when video URL is added
+  useEffect(() => {
+    if (matchState.showVideo) {
+      setShowMomentumContext(false);
+    } else {
+      // Show notification when no video is available (unless manually dismissed)
+      setShowMomentumContext(true);
+    }
+  }, [matchState.showVideo]);
+
   // Detect live vs representation mode based on scoring frequency
   const detectScoringMode = () => {
     const recentPointsCount = matchState.player1.score + matchState.player2.score;
