@@ -726,11 +726,7 @@ export default function App() {
                     />}
                   </Route>
                   {/* Main profile route using consolidated Profile component */}
-                  <ProtectedRouteWithLayout
-                    path="/profile"
-                    component={LazyProfilePage}
-                    pageTitle="Profile"
-                  />
+                  <Route path="/profile" component={LazyProfilePage} />
                   {/* Keep the edit profile route as it's still needed for editing */}
                   <ProtectedRouteWithLayout
                     path="/profile/edit"
