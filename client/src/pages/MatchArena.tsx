@@ -400,6 +400,9 @@ export default function MatchArena() {
   const [partnerRequests, setPartnerRequests] = useState<PartnerRequest[]>([]);
   const [proximityFilter, setProximityFilter] = useState<number>(2); // km radius for proximity-based discovery
   const [universalSearchTerm, setUniversalSearchTerm] = useState('');
+  const [showMobileBottomSheet, setShowMobileBottomSheet] = useState(false);
+  const [bottomSheetContent, setBottomSheetContent] = useState<'challenges' | 'player-info' | null>(null);
+  const [selectedPlayerForSheet, setSelectedPlayerForSheet] = useState<ArenaPlayer | null>(null);
 
   const myPlayerId = 'current-player';
 
@@ -545,6 +548,24 @@ export default function MatchArena() {
       description: `Challenge sent to ${player.name} for ${matchType} match ${sourceText}`,
       duration: 3000,
     });
+  };
+
+  // Mobile-specific handlers
+  const openPlayerBottomSheet = (player: ArenaPlayer) => {
+    setSelectedPlayerForSheet(player);
+    setBottomSheetContent('player-info');
+    setShowMobileBottomSheet(true);
+  };
+
+  const openChallengesBottomSheet = () => {
+    setBottomSheetContent('challenges');
+    setShowMobileBottomSheet(true);
+  };
+
+  const closeMobileBottomSheet = () => {
+    setShowMobileBottomSheet(false);
+    setBottomSheetContent(null);
+    setSelectedPlayerForSheet(null);
   };
 
   const handlePartnerUp = (player: ArenaPlayer, createdVia: 'swipe' | 'create-match' | 'manual' = 'manual') => {
@@ -765,7 +786,7 @@ export default function MatchArena() {
                     setSelectedPlayer(player);
                     setShowChallengeModal(true);
                   }}
-                  onViewProfile={() => {}}
+                  onViewProfile={() => openPlayerBottomSheet(player)}
                   onPartnerUp={(player) => handlePartnerUp(player, arenaMode === 'create-match' ? 'create-match' : 'manual')}
                   myPlayerId={myPlayerId}
                 />
@@ -830,7 +851,7 @@ export default function MatchArena() {
                       setSelectedPlayer(player);
                       setShowChallengeModal(true);
                     }}
-                    onViewProfile={() => {}}
+                    onViewProfile={() => openPlayerBottomSheet(player)}
                     onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
                     myPlayerId={myPlayerId}
                   />
@@ -1027,6 +1048,154 @@ export default function MatchArena() {
         onSendChallenge={handleSendChallenge}
         myPartner={myPartner}
       />
+
+      {/* Mobile Bottom Sheet */}
+      {showMobileBottomSheet && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={closeMobileBottomSheet}
+          />
+          
+          {/* Bottom Sheet */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 bg-slate-900 rounded-t-2xl border-t border-slate-700 max-h-[85vh] overflow-hidden"
+          >
+            {/* Handle Bar */}
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-1 bg-slate-600 rounded-full" />
+            </div>
+
+            {/* Sheet Content */}
+            <div className="px-4 pb-6 overflow-y-auto max-h-[calc(85vh-2rem)]">
+              {bottomSheetContent === 'player-info' && selectedPlayerForSheet && (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      {selectedPlayerForSheet.name}
+                    </h3>
+                    <Badge className={`${getTierColor(selectedPlayerForSheet.tier)} mb-4`}>
+                      {selectedPlayerForSheet.tier} • {selectedPlayerForSheet.points} pts
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-slate-800 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-green-400">
+                        {selectedPlayerForSheet.wins}
+                      </div>
+                      <div className="text-sm text-slate-400">Wins</div>
+                    </div>
+                    <div className="bg-slate-800 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-red-400">
+                        {selectedPlayerForSheet.losses}
+                      </div>
+                      <div className="text-sm text-slate-400">Losses</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Button
+                      onClick={() => {
+                        setSelectedPlayer(selectedPlayerForSheet);
+                        setShowChallengeModal(true);
+                        closeMobileBottomSheet();
+                      }}
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3"
+                    >
+                      🎯 Challenge to Match
+                    </Button>
+                    
+                    {selectedPlayerForSheet.matchType === 'doubles-looking' && (
+                      <Button
+                        onClick={() => {
+                          handlePartnerUp(selectedPlayerForSheet, arenaMode === 'create-match' ? 'create-match' : 'manual');
+                          closeMobileBottomSheet();
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                      >
+                        🤝 Request as Partner
+                      </Button>
+                    )}
+
+                    <div className="text-center text-slate-400 text-sm">
+                      {selectedPlayerForSheet.distance < 1 
+                        ? `${Math.round(selectedPlayerForSheet.distance * 1000)}m away`
+                        : `${selectedPlayerForSheet.distance}km away`
+                      }
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {bottomSheetContent === 'challenges' && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-white mb-4">Your Challenges</h3>
+                  {challenges.length > 0 ? (
+                    challenges.map(challenge => (
+                      <Card key={challenge.id} className="p-4 bg-slate-800 border-slate-600">
+                        <div className="text-white space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-semibold">{challenge.challenger.name}</div>
+                              <div className="text-sm text-slate-300">
+                                {challenge.matchType} • via {challenge.createdVia}
+                              </div>
+                            </div>
+                            <Badge className={
+                              challenge.status === 'pending' ? 'bg-orange-500' : 
+                              challenge.status === 'ready-check' ? 'bg-blue-500' :
+                              'bg-green-500'
+                            }>
+                              {challenge.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-green-600 hover:bg-green-700"
+                              onClick={() => {
+                                handleReadyCheck(challenge.id, 'challenged');
+                                toast({
+                                  title: '🎾 Challenge Progress!',
+                                  description: 'Updated via mobile sheet',
+                                  duration: 2000,
+                                });
+                              }}
+                            >
+                              {challenge.status === 'pending' && 'Accept'}
+                              {challenge.status === 'ready-check' && (challenge.readyStatus?.challenged ? '✅ Ready' : '⏱️ Ready?')}
+                              {challenge.status === 'confirmed' && '🚀 Start'}
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="border-slate-500 text-slate-300"
+                            >
+                              Decline
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Trophy className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                      <p className="text-slate-300">No pending challenges</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Global Bottom Navigation */}
       <GlobalNavigationTabs 
