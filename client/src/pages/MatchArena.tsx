@@ -43,7 +43,12 @@ interface Challenge {
   matchType: MatchType;
   message: string;
   timestamp: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'pending' | 'accepted' | 'declined' | 'ready-check' | 'confirmed';
+  createdVia: 'swipe' | 'create-match' | 'manual';
+  readyStatus?: {
+    challenger: boolean;
+    challenged: boolean;
+  };
 }
 
 interface PartnerRequest {
@@ -52,7 +57,12 @@ interface PartnerRequest {
   target: ArenaPlayer;
   message: string;
   timestamp: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'pending' | 'accepted' | 'declined' | 'ready-check' | 'confirmed';
+  createdVia: 'swipe' | 'create-match' | 'manual';
+  readyStatus?: {
+    requester: boolean;
+    target: boolean;
+  };
 }
 
 
@@ -133,7 +143,10 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
         // Swipe right - Challenge
         setSwipeDirection('right');
         setTimeout(() => {
-          onChallenge(player, 'singles');
+          // Enhanced challenge via swipe with source tracking
+          const challengeModal = document.createElement('div');
+          // Auto-send challenge for swipe (simplified UX)
+          handleSendChallenge(player, 'singles', `Quick challenge via swipe!`, 'swipe');
           setSwipeDirection(null);
         }, 150);
       } else {
@@ -141,7 +154,7 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
         if (player.matchType === 'doubles-looking') {
           setSwipeDirection('left');
           setTimeout(() => {
-            onPartnerUp(player);
+            handlePartnerUp(player, 'swipe');
             setSwipeDirection(null);
           }, 150);
         }
@@ -279,13 +292,26 @@ interface ChallengeModalProps {
   player: ArenaPlayer | null;
   isOpen: boolean;
   onClose: () => void;
-  onSendChallenge: (player: ArenaPlayer, matchType: MatchType, message: string) => void;
+  onSendChallenge: (player: ArenaPlayer, matchType: MatchType, message: string, createdVia?: 'swipe' | 'create-match' | 'manual') => void;
   myPartner: ArenaPlayer | null;
 }
 
 function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }: ChallengeModalProps) {
   const [selectedType, setSelectedType] = useState<MatchType>('singles');
   const [message, setMessage] = useState('');
+  
+  // Determine the source based on which mode we're currently in
+  const getCurrentMode = (): 'swipe' | 'create-match' | 'manual' => {
+    const currentUrl = window.location.href;
+    if (currentUrl.includes('match-arena')) {
+      // Check if we're in create-match mode based on active tab
+      const createMatchTab = document.querySelector('[data-arena-mode="create-match"]');
+      if (createMatchTab?.classList.contains('bg-orange-500')) {
+        return 'create-match';
+      }
+    }
+    return 'manual'; // Default for modal-based challenges
+  };
 
   if (!isOpen || !player) return null;
 
@@ -336,7 +362,8 @@ function ChallengeModal({ player, isOpen, onClose, onSendChallenge, myPartner }:
             <div className="flex gap-2">
               <Button
                 onClick={() => {
-                  onSendChallenge(player, selectedType, message);
+                  const mode = getCurrentMode();
+                  onSendChallenge(player, selectedType, message, mode);
                   onClose();
                 }}
                 className="flex-1 bg-orange-500 hover:bg-orange-600"
@@ -468,7 +495,33 @@ export default function MatchArena() {
     setArenaPlayers(mockPlayers);
   }, []);
 
-  const handleSendChallenge = (player: ArenaPlayer, matchType: MatchType, message: string) => {
+  // Ready-check system functions
+  const handleReadyCheck = (challengeId: string, playerRole: 'challenger' | 'challenged') => {
+    setChallenges(prev => prev.map(challenge => {
+      if (challenge.id === challengeId) {
+        const newReadyStatus = { ...challenge.readyStatus! };
+        newReadyStatus[playerRole] = !newReadyStatus[playerRole];
+        
+        // Check if both players are ready
+        const bothReady = newReadyStatus.challenger && newReadyStatus.challenged;
+        
+        return {
+          ...challenge,
+          readyStatus: newReadyStatus,
+          status: bothReady ? 'confirmed' as const : 'ready-check' as const
+        };
+      }
+      return challenge;
+    }));
+    
+    toast({
+      title: playerRole === 'challenger' ? '✅ You are Ready!' : '✅ Opponent Ready!',
+      description: 'Waiting for all players to confirm...',
+      duration: 2000,
+    });
+  };
+
+  const handleSendChallenge = (player: ArenaPlayer, matchType: MatchType, message: string, createdVia: 'swipe' | 'create-match' | 'manual' = 'manual') => {
     const newChallenge: Challenge = {
       id: Date.now().toString(),
       challenger: { id: myPlayerId, name: 'You' } as ArenaPlayer,
@@ -476,33 +529,46 @@ export default function MatchArena() {
       matchType,
       message,
       timestamp: new Date().toISOString(),
-      status: 'pending'
+      status: 'pending',
+      createdVia,
+      readyStatus: {
+        challenger: false,
+        challenged: false
+      }
     };
 
     setChallenges(prev => [...prev, newChallenge]);
+    
+    const sourceText = createdVia === 'swipe' ? 'via swipe' : createdVia === 'create-match' ? 'via Create Match' : '';
     toast({
       title: '🎯 Challenge Sent!',
-      description: `Challenge sent to ${player.name} for ${matchType} match`,
+      description: `Challenge sent to ${player.name} for ${matchType} match ${sourceText}`,
       duration: 3000,
     });
   };
 
-  const handlePartnerUp = (player: ArenaPlayer) => {
+  const handlePartnerUp = (player: ArenaPlayer, createdVia: 'swipe' | 'create-match' | 'manual' = 'manual') => {
     // Send partner request
     const partnerRequest: PartnerRequest = {
       id: Date.now().toString(),
       requester: { id: myPlayerId, name: 'You' } as ArenaPlayer,
       target: player,
-      message: `Would like to team up for doubles matches!`,
+      message: createdVia === 'swipe' ? `Quick partner request via swipe!` : `Would like to team up for doubles matches!`,
       timestamp: new Date().toISOString(),
-      status: 'pending'
+      status: 'pending',
+      createdVia,
+      readyStatus: {
+        requester: false,
+        target: false
+      }
     };
 
     setPartnerRequests(prev => [...prev, partnerRequest]);
     
+    const sourceText = createdVia === 'swipe' ? 'via swipe' : createdVia === 'create-match' ? 'via Create Match' : '';
     toast({
       title: '🎾 Partner Request Sent!',
-      description: `Request sent to ${player.name}. They'll be auto-accepted for demo!`,
+      description: `Request sent to ${player.name} ${sourceText}. They'll be auto-accepted for demo!`,
       duration: 3000,
     });
 
@@ -700,7 +766,7 @@ export default function MatchArena() {
                     setShowChallengeModal(true);
                   }}
                   onViewProfile={() => {}}
-                  onPartnerUp={handlePartnerUp}
+                  onPartnerUp={(player) => handlePartnerUp(player, arenaMode === 'create-match' ? 'create-match' : 'manual')}
                   myPlayerId={myPlayerId}
                 />
               ))}
@@ -765,7 +831,7 @@ export default function MatchArena() {
                       setShowChallengeModal(true);
                     }}
                     onViewProfile={() => {}}
-                    onPartnerUp={handlePartnerUp}
+                    onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
                     myPlayerId={myPlayerId}
                   />
                 </div>
@@ -840,11 +906,25 @@ export default function MatchArena() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-semibold">Challenge from {challenge.challenger.name}</div>
-                        <div className="text-sm text-slate-300">{challenge.matchType} match</div>
+                        <div className="text-sm text-slate-300">
+                          {challenge.matchType} match • via {challenge.createdVia === 'swipe' ? 'swipe' : challenge.createdVia === 'create-match' ? 'Create Match' : 'manual'}
+                        </div>
                       </div>
-                      <Badge className={challenge.status === 'pending' ? 'bg-orange-500' : 'bg-green-500'}>
-                        {challenge.status}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge className={
+                          challenge.status === 'pending' ? 'bg-orange-500' : 
+                          challenge.status === 'ready-check' ? 'bg-blue-500' :
+                          challenge.status === 'confirmed' ? 'bg-green-500' : 'bg-gray-500'
+                        }>
+                          {challenge.status === 'ready-check' ? 'Ready Check' : challenge.status}
+                        </Badge>
+                        {challenge.status === 'ready-check' && challenge.readyStatus && (
+                          <div className="text-xs text-slate-400">
+                            You: {challenge.readyStatus.challenged ? '✅' : '⏳'} | 
+                            Them: {challenge.readyStatus.challenger ? '✅' : '⏳'}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     {challenge.message && (
                       <p className="text-slate-200 text-sm mb-3">{challenge.message}</p>
@@ -852,32 +932,57 @@ export default function MatchArena() {
                     <div className="flex gap-2">
                       <Button 
                         size="sm" 
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className={`${
+                          challenge.status === 'pending' ? 'bg-green-600 hover:bg-green-700' :
+                          challenge.status === 'ready-check' ? 'bg-blue-600 hover:bg-blue-700' :
+                          'bg-orange-600 hover:bg-orange-700'
+                        } text-white`}
                         onClick={() => {
-                          // Accept the challenge and navigate to gamified match recorder
-                          toast({
-                            title: '🎾 Challenge Accepted!',
-                            description: `Match vs ${challenge.challenger.name} confirmed. Starting match recorder...`,
-                            duration: 2000,
-                          });
-                          
-                          // Store challenge participants for the match recorder
-                          const challengeData = {
-                            player1: 'You', // Current user
-                            player2: challenge.challenger.name,
-                            matchType: challenge.matchType,
-                            challengeId: challenge.id
-                          };
-                          sessionStorage.setItem('currentMatch', JSON.stringify(challengeData));
-                          
-                          // Remove challenge from list
-                          setChallenges(prev => prev.filter(c => c.id !== challenge.id));
-                          
-                          // Navigate to gamified match recorder
-                          setLocation('/gamified-match-recording');
+                          if (challenge.status === 'pending') {
+                            // Accept challenge and move to ready-check phase
+                            setChallenges(prev => prev.map(c => 
+                              c.id === challenge.id 
+                                ? { ...c, status: 'ready-check' as const }
+                                : c
+                            ));
+                            
+                            toast({
+                              title: '🎾 Challenge Accepted!',
+                              description: `Moving to ready-check phase. Confirm when you're ready to play!`,
+                              duration: 3000,
+                            });
+                          } else if (challenge.status === 'ready-check') {
+                            // Handle ready check
+                            handleReadyCheck(challenge.id, 'challenged');
+                          } else if (challenge.status === 'confirmed') {
+                            // Start the match
+                            toast({
+                              title: '🚀 Starting Match!',
+                              description: `Match vs ${challenge.challenger.name} starting now...`,
+                              duration: 2000,
+                            });
+                            
+                            // Store challenge participants for the match recorder
+                            const challengeData = {
+                              player1: 'You', // Current user
+                              player2: challenge.challenger.name,
+                              matchType: challenge.matchType,
+                              challengeId: challenge.id,
+                              createdVia: challenge.createdVia
+                            };
+                            sessionStorage.setItem('currentMatch', JSON.stringify(challengeData));
+                            
+                            // Remove challenge from list
+                            setChallenges(prev => prev.filter(c => c.id !== challenge.id));
+                            
+                            // Navigate to gamified match recorder
+                            setLocation('/gamified-match-recording');
+                          }
                         }}
                       >
-                        Accept
+                        {challenge.status === 'pending' && 'Accept'}
+                        {challenge.status === 'ready-check' && (challenge.readyStatus?.challenged ? '✅ Ready' : '⏱️ Ready?')}
+                        {challenge.status === 'confirmed' && '🚀 Start Match'}
                       </Button>
                       <Button 
                         size="sm" 
