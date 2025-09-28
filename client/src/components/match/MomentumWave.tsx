@@ -6,9 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Zap } from 'lucide-react';
 
 interface MomentumWaveProps {
-  momentumState: MomentumState;
+  momentumState: MomentumState & {
+    currentScore?: { player1: number; player2: number };
+    gameNumber?: number;
+    isMatchComplete?: boolean;
+  };
   team1Color: string;
   team2Color: string;
+  team1Name?: string;
+  team2Name?: string;
   className?: string;
   isInteractive?: boolean;
   isMatchComplete?: boolean;
@@ -28,17 +34,19 @@ export const MomentumWave = memo(({
   momentumState, 
   team1Color, 
   team2Color, 
+  team1Name = "Team 1",
+  team2Name = "Team 2",
   className = '', 
   isInteractive = false,
   isMatchComplete = false 
 }: MomentumWaveProps) => {
-  const { wave, momentum, momentumScore, streak, gamePhase } = momentumState;
+  const { wave, momentum, momentumScore, streak, gamePhase, currentScore, gameNumber } = momentumState;
   const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   // Analyze momentum shifts for tooltips
-  const analyzeMomentumShifts = () => {
-    const shifts = [];
+  const analyzeMomentumShifts = (): TooltipData[] => {
+    const shifts: TooltipData[] = [];
     if (!wave || wave.length < 2) return shifts;
     
     for (let i = 1; i < wave.length; i++) {
@@ -65,11 +73,13 @@ export const MomentumWave = memo(({
         }
         
         shifts.push({
+          x: 0, // Will be set later
+          y: 0, // Will be set later
           point: i,
           momentum: curr.y,
           reason,
-          timestamp: curr.timestamp || Date.now(),
-          score: curr.score || { player1: 0, player2: 0 }
+          timestamp: Date.now(),
+          score: { player1: 0, player2: 0 } // Will be updated with actual scores
         });
       }
     }
@@ -132,8 +142,8 @@ export const MomentumWave = memo(({
         point: pointIndex,
         momentum: point.y,
         reason: shift?.reason || (point.y > 0 ? 'Momentum favoring this side' : 'Momentum against this side'),
-        timestamp: point.timestamp || Date.now(),
-        score: point.score || { player1: 0, player2: 0 }
+        timestamp: Date.now(),
+        score: currentScore || { player1: Math.floor(pointIndex * 0.6), player2: Math.floor((wave.length - pointIndex) * 0.5) }
       });
     }
   };

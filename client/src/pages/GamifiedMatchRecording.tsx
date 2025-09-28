@@ -1112,24 +1112,40 @@ export default function GamifiedMatchRecording() {
                 )}
               </div>
               <div className="flex-1">
-                <p className="text-sm text-slate-300">
-                  {matchState.showVideo ? (
-                    <>
-                      <span className="text-blue-400 font-semibold">📹 Video Reference Mode</span> - 
-                      Momentum tracking is enhanced with video reference for maximum accuracy
-                    </>
-                  ) : isLiveMode ? (
-                    <>
-                      <span className="text-green-400 font-semibold">🎯 Live Mode Detected</span> - 
-                      Momentum tracking is most accurate with point-by-point live scoring. Add video URL for best results.
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-orange-400 font-semibold">📊 Representation Mode</span> - 
-                      Momentum wave shows general flow but is not accurate unless you remember point-by-point scoring or add a video URL
-                    </>
-                  )}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-slate-300">
+                    {matchState.showVideo ? (
+                      <>
+                        <span className="text-blue-400 font-semibold">📹 Video Reference Mode</span> - 
+                        Momentum tracking is enhanced with video reference for maximum accuracy
+                      </>
+                    ) : isLiveMode ? (
+                      <>
+                        <span className="text-green-400 font-semibold">🎯 Live Mode Detected</span> - 
+                        Perfect! Point-by-point scoring gives you the most accurate momentum analysis.
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-orange-400 font-semibold">📊 Representation Mode</span> - 
+                        Momentum shows general flow but may be inaccurate. Add video URL for precision analysis.
+                      </>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1 text-slate-400">
+                      <span>Current Score:</span>
+                      <span className="text-white font-mono">{matchState.player1.score}-{matchState.player2.score}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-400">
+                      <span>Game:</span>
+                      <span className="text-white">{matchState.currentGame}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-400">
+                      <span>Total Points:</span>
+                      <span className="text-white">{matchState.player1.score + matchState.player2.score}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
               <Button
                 size="sm"
@@ -1159,9 +1175,16 @@ export default function GamifiedMatchRecording() {
             </div>
           )}
           <MomentumWave
-            momentumState={matchState.momentumState}
+            momentumState={{
+              ...matchState.momentumState,
+              currentScore: { player1: matchState.player1.score, player2: matchState.player2.score },
+              gameNumber: matchState.currentGame,
+              isMatchComplete: matchState.matchComplete
+            }}
             team1Color={teamTheme.team1.color}
             team2Color={teamTheme.team2.color}
+            team1Name={matchState.player1.name}
+            team2Name={matchState.player2.name}
             className="w-full"
             isInteractive={true}
             isMatchComplete={matchState.matchComplete}
