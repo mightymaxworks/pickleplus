@@ -212,7 +212,7 @@ export const SmartPlayerSearch: React.FC<SmartPlayerSearchProps> = ({
             
             {!isLoading && searchResults && searchResults.length > 0 && (
               <div className="py-1">
-                {searchResults.map((player, index) => (
+                {searchResults.map((player: Player, index: number) => (
                   <div
                     key={player.id}
                     onClick={() => handlePlayerSelect(player)}

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 // Navigation will be defined inline to match UnifiedPrototype style
 import DoublesPartnerSystem from '@/components/doubles/DoublesPartnerSystem';
+import { MatchCreationWizard } from '@/components/match/MatchCreationWizard';
 import { useLocation } from 'wouter';
 
 // Types
@@ -911,97 +912,24 @@ export default function MatchArena() {
         )}
 
         {arenaMode === 'create-match' && (
-          <div key="create-match" className="space-y-4">
-            {/* Universal Search Interface */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
-              <div className="flex items-center gap-3 mb-4">
-                <Globe className="h-6 w-6 text-blue-400" />
-                <div>
-                  <h3 className="text-white font-medium text-lg">🌍 Universal Match Creation</h3>
-                  <p className="text-slate-400 text-sm">Search all players regardless of location • Perfect for planned matches</p>
-                </div>
-              </div>
+          <MatchCreationWizard 
+            onMatchCreated={(matchData) => {
+              // Navigate to match recorder with pre-populated data
+              toast({
+                title: '🎾 Match Created!',
+                description: `${matchData.format} match ready for ${matchData.selectedPlayers.length + 1} players`,
+                duration: 3000
+              });
               
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search players by name..."
-                  value={universalSearchTerm}
-                  onChange={(e) => setUniversalSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-300">
-                  Searching <span className="text-orange-400">{arenaPlayers.length} players</span> globally
-                </span>
-                <span className="text-slate-400">
-                  {filteredPlayers.length} found
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPlayers.map(player => (
-                <div key={player.id} className="relative">
-                  {/* Distance indicator for Create Match mode */}
-                  <div className="absolute -top-2 -right-2 z-20">
-                    <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs px-2 py-1">
-                      {player.distance < 1 ? `${Math.round(player.distance * 1000)}m` : `${player.distance}km`}
-                    </Badge>
-                  </div>
-                  <ArenaPlayerCard
-                    player={player}
-                    onChallenge={(player, matchType) => {
-                      setSelectedPlayer(player);
-                      setShowChallengeModal(true);
-                    }}
-                    onViewProfile={() => openPlayerBottomSheet(player)}
-                    onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
-                    myPlayerId={myPlayerId}
-                    calculateCompatibility={calculateCompatibility}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {filteredPlayers.length === 0 && universalSearchTerm && (
-              <div className="text-center py-12">
-                <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No players found</h3>
-                <p className="text-slate-300">Try a different search term or browse all players</p>
-              </div>
-            )}
-
-            {filteredPlayers.length === 0 && !universalSearchTerm && (
-              <div className="text-center py-12">
-                <Globe className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">All Players</h3>
-                <p className="text-slate-300">Start typing to search or browse all available players</p>
-              </div>
-            )}
-
-            {filteredPlayers.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredPlayers.map(player => (
-                  <ArenaPlayerCard
-                    key={player.id}
-                    player={player}
-                    onChallenge={(player, matchType) => {
-                      setSelectedPlayer(player);
-                      setShowChallengeModal(true);
-                    }}
-                    onViewProfile={() => openPlayerBottomSheet(player)}
-                    onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
-                    myPlayerId={myPlayerId}
-                    calculateCompatibility={calculateCompatibility}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+              // TODO: Integrate with actual match recorder
+              console.log('Match Data:', matchData);
+              
+              // For now, show success and return to lobby
+              setTimeout(() => {
+                setArenaMode('lobby');
+              }, 1500);
+            }}
+          />
         )}
 
         {arenaMode === 'search' && (
