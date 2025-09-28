@@ -1370,95 +1370,14 @@ export default function GamifiedMatchRecording() {
                 </motion.button>
               </div>
 
-              {/* Video Configuration */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Camera className="h-5 w-5 text-purple-400" />
-                  <label className="text-sm text-slate-400 font-medium">Video Integration (Optional)</label>
-                </div>
-                
-                {/* Live Stream */}
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-500 block">Live Stream URL</label>
-                  <div className="relative">
-                    <input
-                      type="url"
-                      value={tempConfig.liveStreamUrl || ''}
-                      onChange={(e) => setTempConfig(prev => ({ 
-                        ...prev, 
-                        liveStreamUrl: e.target.value,
-                        videoProvider: e.target.value ? 'hls' : undefined
-                      }))}
-                      placeholder="https://stream.example.com/live.m3u8"
-                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
-                    />
-                    {tempConfig.liveStreamUrl && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Recorded Video */}
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-500 block">Recorded Video URL</label>
-                  <input
-                    type="url"
-                    value={tempConfig.recordingUrl || ''}
-                    onChange={(e) => {
-                      const url = e.target.value;
-                      let provider: 'mp4' | 'youtube' | 'vimeo' | undefined;
-                      
-                      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                        provider = 'youtube';
-                      } else if (url.includes('vimeo.com')) {
-                        provider = 'vimeo';
-                      } else if (url.includes('.mp4')) {
-                        provider = 'mp4';
-                      }
-                      
-                      setTempConfig(prev => ({ 
-                        ...prev, 
-                        recordingUrl: url,
-                        videoProvider: provider
-                      }));
-                    }}
-                    placeholder="YouTube, Vimeo, or MP4 URL"
-                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
-                  />
-                  {tempConfig.recordingUrl && (
-                    <div className="text-xs text-slate-500">
-                      Detected: {tempConfig.videoProvider === 'youtube' ? 'YouTube' : 
-                                tempConfig.videoProvider === 'vimeo' ? 'Vimeo' : 
-                                tempConfig.videoProvider === 'mp4' ? 'MP4 Video' : 'Unknown format'}
-                    </div>
-                  )}
-                </div>
-
-                {/* Video Sync Offset */}
-                {(tempConfig.liveStreamUrl || tempConfig.recordingUrl) && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <label className="text-xs text-slate-500">Video Sync Offset</label>
-                      <span className="text-xs text-slate-400">{tempConfig.videoSyncOffset || 0}s</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="-30"
-                      max="30"
-                      step="0.5"
-                      value={tempConfig.videoSyncOffset || 0}
-                      onChange={(e) => setTempConfig(prev => ({ 
-                        ...prev, 
-                        videoSyncOffset: parseFloat(e.target.value)
-                      }))}
-                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="text-xs text-slate-600">Adjust if video doesn't match live scoring</div>
-                  </div>
-                )}
-              </div>
+              {/* Live Stream Integration */}
+              <LiveStreamIntegration
+                onValidationChange={handleLiveStreamValidation}
+                onGamingFeaturesToggle={handleGamingFeaturesToggle}
+                onViewerLinkGenerated={handleViewerLinkGenerated}
+                matchId={`setup-${Date.now()}`}
+                className=""
+              />
             </div>
 
             <Button
@@ -1525,17 +1444,6 @@ export default function GamifiedMatchRecording() {
               Return to Arena
             </Button>
           )}
-        </div>
-        
-        {/* Live Stream Integration */}
-        <div className="mb-6">
-          <LiveStreamIntegration
-            onValidationChange={handleLiveStreamValidation}
-            onGamingFeaturesToggle={handleGamingFeaturesToggle}
-            onViewerLinkGenerated={handleViewerLinkGenerated}
-            matchId={`live-${Date.now()}`}
-            className="max-w-4xl mx-auto"
-          />
         </div>
         
         {/* Match Title */}
