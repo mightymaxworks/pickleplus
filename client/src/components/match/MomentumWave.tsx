@@ -3,7 +3,8 @@ import { memo, useState } from 'react';
 import { MomentumState } from './MomentumEngine';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Target, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Target, Zap, HelpCircle, X } from 'lucide-react';
 
 interface MomentumWaveProps {
   momentumState: MomentumState & {
@@ -43,6 +44,7 @@ export const MomentumWave = memo(({
   const { wave, momentum, momentumScore, streak, gamePhase, currentScore, gameNumber } = momentumState;
   const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showTutorial, setShowTutorial] = useState(false);
   
   // Analyze momentum shifts for tooltips
   const analyzeMomentumShifts = (): TooltipData[] => {
@@ -162,8 +164,178 @@ export const MomentumWave = memo(({
   const dominantColor = momentum > 0 ? team1Color : team2Color;
   const fillOpacity = Math.min(Math.abs(momentum) * 0.6 + 0.2, 0.8);
 
+  // Momentum Tutorial Component
+  const MomentumTutorial = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={() => setShowTutorial(false)}
+    >
+      <motion.div
+        initial={{ y: 50 }}
+        animate={{ y: 0 }}
+        className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Zap className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">Momentum Wave Guide</h3>
+              <p className="text-slate-400 text-sm">Master the art of reading match flow</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowTutorial(false)}
+            className="text-slate-400 hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Wave Colors */}
+          <div className="space-y-3">
+            <h4 className="text-white font-semibold flex items-center gap-2">
+              🌊 Wave Colors & Meaning
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 bg-green-500 rounded"></div>
+                  <span className="text-green-300 font-medium">Green Zone</span>
+                </div>
+                <p className="text-slate-300 text-sm">Team 1 has momentum advantage. Consistent scoring and confidence building.</p>
+              </div>
+              <div className="bg-gradient-to-r from-red-500/20 to-rose-500/20 border border-red-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 bg-red-500 rounded"></div>
+                  <span className="text-red-300 font-medium">Red Zone</span>
+                </div>
+                <p className="text-slate-300 text-sm">Team 2 has momentum advantage. Dominating play and pressure building.</p>
+              </div>
+              <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                  <span className="text-yellow-300 font-medium">Neutral Zone</span>
+                </div>
+                <p className="text-slate-300 text-sm">Balanced match. Neither team has clear momentum advantage.</p>
+              </div>
+              <div className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                  <span className="text-purple-300 font-medium">Shift Zones</span>
+                </div>
+                <p className="text-slate-300 text-sm">Momentum is changing. Watch for potential momentum swings.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Team Favor Shifts */}
+          <div className="space-y-3">
+            <h4 className="text-white font-semibold flex items-center gap-2">
+              ⚖️ Reading Team Favor Shifts
+            </h4>
+            <div className="space-y-3">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-4 w-4 text-green-400" />
+                  <span className="text-green-300 font-medium">Rising Momentum</span>
+                </div>
+                <p className="text-slate-300 text-sm">Upward wave indicates a team is gaining control. Watch for streak messages and dominance patterns.</p>
+              </div>
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingDown className="h-4 w-4 text-red-400" />
+                  <span className="text-red-300 font-medium">Falling Momentum</span>
+                </div>
+                <p className="text-slate-300 text-sm">Downward wave shows momentum loss. Opportunity for the opponent to capitalize.</p>
+              </div>
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-blue-400" />
+                  <span className="text-blue-300 font-medium">Sharp Turns</span>
+                </div>
+                <p className="text-slate-300 text-sm">Sudden direction changes indicate momentum breaks, comebacks, or critical turning points.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Wave Intensity */}
+          <div className="space-y-3">
+            <h4 className="text-white font-semibold flex items-center gap-2">
+              ⚡ Wave Intensity Levels
+            </h4>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">💧</div>
+                  <div className="text-green-300 font-medium text-sm">Gentle</div>
+                  <div className="text-slate-400 text-xs">Slight advantage</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">🌊</div>
+                  <div className="text-blue-300 font-medium text-sm">Strong</div>
+                  <div className="text-slate-400 text-xs">Clear momentum</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">🌪️</div>
+                  <div className="text-purple-300 font-medium text-sm">Dominant</div>
+                  <div className="text-slate-400 text-xs">Overwhelming control</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pro Tips */}
+          <div className="space-y-3">
+            <h4 className="text-white font-semibold flex items-center gap-2">
+              💡 Pro Tips
+            </h4>
+            <div className="space-y-2 text-sm text-slate-300">
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>Hover over the wave line to see detailed point-by-point analysis</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>Watch for 3+ consecutive points - this creates significant momentum shifts</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>Late game momentum is more valuable than early game momentum</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>Momentum breaks often happen during high-pressure situations</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <Button
+            onClick={() => setShowTutorial(false)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Got it!
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
   return (
     <div className="relative">
+      {/* Tutorial Modal */}
+      {showTutorial && <MomentumTutorial />}
+
       {/* Interactive Tooltip */}
       {isInteractive && hoveredPoint && (
         <motion.div
@@ -206,6 +378,17 @@ export const MomentumWave = memo(({
             <span className="text-sm font-bold text-white">Momentum</span>
           </div>
           <div className="flex items-center gap-3">
+            {/* Tutorial Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTutorial(true)}
+              className="text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-1 h-6 px-2"
+            >
+              <HelpCircle className="h-3 w-3" />
+              <span className="text-xs">Guide</span>
+            </Button>
+            
             {/* Game Phase Indicator */}
             <div className={`px-2 py-1 rounded-full text-xs font-bold ${
               gamePhase === 'critical' ? 'bg-red-500/20 text-red-400' :
