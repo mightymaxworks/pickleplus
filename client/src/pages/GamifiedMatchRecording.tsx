@@ -1429,11 +1429,15 @@ export default function GamifiedMatchRecording() {
             Back to Lobby
           </Button>
 
-          {/* Live Stream Status Indicator */}
+          {/* Live Stream Status Indicator with Manual Toggle */}
           <StreamStatusIndicator 
             matchState={liveMatchState}
-            onModeToggle={(mode) => matchStateManager.setMode(mode)}
-            compact
+            onModeToggle={(mode) => {
+              console.log('🎮 Manual mode toggle:', mode);
+              matchStateManager.setMode(mode);
+            }}
+            compact={false}
+            className="bg-slate-800/50 border-slate-600"
           />
           
           {matchState.matchComplete && (
