@@ -918,15 +918,15 @@ export default function MatchArena() {
               toast({
                 title: '🎾 Match Created!',
                 description: `${matchData.format} match ready for ${matchData.selectedPlayers.length + 1} players`,
-                duration: 3000
+                duration: 1800
               });
               
-              // TODO: Integrate with actual match recorder
+              // Store match data for the recorder (future integration)
               console.log('Match Data:', matchData);
               
-              // For now, show success and return to lobby
+              // Navigate to gamified match recorder
               setTimeout(() => {
-                setArenaMode('lobby');
+                setLocation('/gamified-match-recording');
               }, 1500);
             }}
           />
