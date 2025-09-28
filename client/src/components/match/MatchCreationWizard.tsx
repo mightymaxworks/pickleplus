@@ -26,6 +26,19 @@ interface Player {
   rankingPoints?: number;
 }
 
+interface TeamIdentity {
+  team1: {
+    name: string;
+    color: string;
+    members: string[];
+  };
+  team2: {
+    name: string;
+    color: string;
+    members: string[];
+  };
+}
+
 interface MatchCreationData {
   format: 'singles' | 'doubles';
   selectedPlayers: Player[];
@@ -35,6 +48,7 @@ interface MatchCreationData {
     genderBonus: number;
     description: string;
   };
+  teamIdentity?: TeamIdentity;
 }
 
 interface MatchCreationWizardProps {
@@ -377,11 +391,25 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
         setCurrentStep('review');
         break;
       case 'review':
+        // Generate team theme for consistent identity
+        const teamTheme = getRandomTeamTheme();
         const matchData: MatchCreationData = {
           format: matchFormat,
           selectedPlayers,
           pairings: pairings || undefined,
-          matchStatus: calculateMatchStatus()
+          matchStatus: calculateMatchStatus(),
+          teamIdentity: {
+            team1: {
+              name: teamTheme.team1.name,
+              color: teamTheme.team1.color,
+              members: pairings ? pairings.team1.map(p => p.displayName || p.username) : ['Current User']
+            },
+            team2: {
+              name: teamTheme.team2.name,
+              color: teamTheme.team2.color,
+              members: pairings ? pairings.team2.map(p => p.displayName || p.username) : [selectedPlayers[0]?.displayName || selectedPlayers[0]?.username || 'Opponent']
+            }
+          }
         };
         onMatchCreated(matchData);
         break;

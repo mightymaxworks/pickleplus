@@ -762,7 +762,12 @@ export default function GamifiedMatchRecording() {
         const matchData = JSON.parse(currentMatch);
         
         // Handle pairings data from match creation wizard
-        if (matchData.pairings) {
+        if (matchData.pairings && matchData.teamIdentity) {
+          return {
+            player1: matchData.teamIdentity.team1.name,
+            player2: matchData.teamIdentity.team2.name
+          };
+        } else if (matchData.pairings) {
           const team1Names = matchData.pairings.team1.map((p: any) => p.displayName || p.username || p.name).join(' & ');
           const team2Names = matchData.pairings.team2.map((p: any) => p.displayName || p.username || p.name).join(' & ');
           return {
