@@ -422,7 +422,45 @@ export const MomentumWave = memo(({
           </div>
 
           {/* SVG Wave Chart */}
-          <div className="mt-6">
+          <div className="mt-6 relative">
+            {/* Dynamic Background Animation */}
+            <div className="absolute inset-0 overflow-hidden rounded-lg">
+              <motion.div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: `radial-gradient(ellipse at center, ${dominantColor}20 0%, transparent 70%)`
+                }}
+                animate={{
+                  scale: [1, 1.1, 1],
+                  opacity: [0.2, 0.4, 0.2]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Pulsing Grid Background */}
+              <motion.div 
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(${dominantColor}40 1px, transparent 1px),
+                    linear-gradient(90deg, ${dominantColor}40 1px, transparent 1px)
+                  `,
+                  backgroundSize: '20px 20px'
+                }}
+                animate={{
+                  backgroundPosition: ['0px 0px', '20px 20px']
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              />
+            </div>
             <svg 
               width="100%" 
               height="60" 
@@ -443,27 +481,41 @@ export const MomentumWave = memo(({
                 opacity="0.5"
               />
             
-              {/* Team 1 area (top half) */}
+              {/* Team 1 area (top half) with enhanced animations */}
               {momentum > 0 && (
                 <motion.path
                   d={`${wavePath} L 300 30 L 0 30 Z`}
                   fill={team1Color}
                   fillOpacity={fillOpacity}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    fillOpacity: [fillOpacity, fillOpacity * 1.2, fillOpacity]
+                  }}
+                  transition={{ 
+                    duration: 0.5,
+                    fillOpacity: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                  }}
                 />
               )}
               
-              {/* Team 2 area (bottom half) */}
+              {/* Team 2 area (bottom half) with enhanced animations */}
               {momentum < 0 && (
                 <motion.path
                   d={`${wavePath} L 300 30 L 0 30 Z`}
                   fill={team2Color}
                   fillOpacity={fillOpacity}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    fillOpacity: [fillOpacity, fillOpacity * 1.2, fillOpacity]
+                  }}
+                  transition={{ 
+                    duration: 0.5,
+                    fillOpacity: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                  }}
                 />
               )}
               
@@ -505,20 +557,84 @@ export const MomentumWave = memo(({
                 />
               ))}
 
-              {/* Current position indicator */}
+              {/* Current position indicator with enhanced animation */}
               {wave.length > 0 && (
-                <motion.circle
-                  cx={((wave.length - 1) / Math.max(wave.length - 1, 1)) * 300}
-                  cy={30 - (momentum * 30 * 0.8)}
-                  r="4"
-                  fill={dominantColor}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  style={{
-                    filter: `drop-shadow(0 0 ${4 + glowIntensity * 6}px ${dominantColor})`
-                  }}
-                />
+                <motion.g>
+                  {/* Pulsing outer ring */}
+                  <motion.circle
+                    cx={((wave.length - 1) / Math.max(wave.length - 1, 1)) * 300}
+                    cy={30 - (momentum * 30 * 0.8)}
+                    r="6"
+                    fill="none"
+                    stroke={dominantColor}
+                    strokeWidth="2"
+                    opacity="0.6"
+                    animate={{
+                      r: [6, 8, 6],
+                      opacity: [0.6, 0.2, 0.6]
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  {/* Main indicator dot */}
+                  <motion.circle
+                    cx={((wave.length - 1) / Math.max(wave.length - 1, 1)) * 300}
+                    cy={30 - (momentum * 30 * 0.8)}
+                    r="4"
+                    fill={dominantColor}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    style={{
+                      filter: `drop-shadow(0 0 ${4 + glowIntensity * 6}px ${dominantColor})`
+                    }}
+                  />
+                </motion.g>
+              )}
+              
+              {/* Streak intensity visual effects */}
+              {streak.length >= 3 && (
+                <motion.g>
+                  {/* Streak lightning effect */}
+                  <motion.line
+                    x1="0"
+                    y1={30 - (momentum * 30 * 0.8)}
+                    x2="300"
+                    y2={30 - (momentum * 30 * 0.8)}
+                    stroke={dominantColor}
+                    strokeWidth="1"
+                    opacity="0.8"
+                    strokeDasharray="5,5"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    style={{
+                      filter: `drop-shadow(0 0 4px ${dominantColor})`
+                    }}
+                  />
+                  
+                  {/* Streak particles */}
+                  {[...Array(5)].map((_, i) => (
+                    <motion.circle
+                      key={i}
+                      cx={60 + i * 50}
+                      cy={30 - (momentum * 30 * 0.8)}
+                      r="1.5"
+                      fill={dominantColor}
+                      initial={{ opacity: 0, y: 0 }}
+                      animate={{ 
+                        opacity: [0, 1, 0],
+                        y: momentum > 0 ? [-3, -6, -3] : [3, 6, 3]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        delay: i * 0.2,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  ))}
+                </motion.g>
               )}
             </svg>
           </div>
