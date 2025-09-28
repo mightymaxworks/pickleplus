@@ -12,6 +12,18 @@ export interface MomentumEvent {
   tags: string[];
 }
 
+export interface MatchCloseness {
+  level: 'nail-biter' | 'competitive' | 'one-sided' | 'blowout';
+  score: number; // 0-100, higher = more competitive
+  description: string;
+  indicators: {
+    momentumBalance: number; // How close to 50/50 momentum is
+    shiftFrequency: number; // How often momentum shifts
+    streakVolatility: number; // How varied the streak patterns are
+    scoreProximity: number; // How close the actual scores are
+  };
+}
+
 export interface MomentumState {
   momentum: number; // EWMA value [-1, 1]
   momentumScore: number; // UI-friendly [0, 100]
@@ -23,6 +35,7 @@ export interface MomentumState {
   wave: Array<{ x: number; y: number }>;
   totalPoints: number;
   gamePhase: 'early' | 'mid' | 'late' | 'critical';
+  closeness?: MatchCloseness;
 }
 
 export interface StrategyMessage {
@@ -93,6 +106,9 @@ export class MomentumEngine {
       messages.push(...this.generateMessages(event, prevMomentum));
       this.lastMessagePoint = event.pointNo;
     }
+    
+    // Compute and update match closeness
+    this.state.closeness = this.analyzeMatchCloseness(event.score);
     
     return messages;
   }
@@ -341,6 +357,10 @@ export class MomentumEngine {
       this.lastMessagePoint = Math.max(-1, this.state.totalPoints - 1);
     }
     
+    // Recompute match closeness after point removal
+    const estimatedScore = this.estimateScoreFromMomentum();
+    this.state.closeness = this.analyzeMatchCloseness(estimatedScore);
+    
     return messages;
   }
 
@@ -419,8 +439,129 @@ export class MomentumEngine {
     return [team1Points, team2Points];
   }
 
+  /**
+   * Analyze match closeness based on momentum patterns and scoring
+   */
+  private analyzeMatchCloseness(currentScore: [number, number]): MatchCloseness {
+    const wave = this.state.wave;
+    const totalPoints = this.state.totalPoints;
+    
+    if (totalPoints < 4) {
+      // Not enough data for meaningful analysis
+      return {
+        level: 'competitive',
+        score: 75,
+        description: 'Match just getting started...',
+        indicators: {
+          momentumBalance: 50,
+          shiftFrequency: 0,
+          streakVolatility: 0,
+          scoreProximity: 100
+        }
+      };
+    }
+
+    // 1. Momentum Balance - how close to 50/50 the momentum is
+    const momentumBalance = 100 - Math.abs(this.state.momentumScore - 50) * 2;
+    
+    // 2. Shift Frequency - count momentum shifts in the wave
+    let shifts = 0;
+    for (let i = 1; i < wave.length; i++) {
+      const prev = wave[i - 1].y;
+      const curr = wave[i].y;
+      if ((prev > 0) !== (curr > 0)) {
+        shifts++;
+      }
+    }
+    const shiftFrequency = Math.min(100, (shifts / Math.max(1, totalPoints - 1)) * 100 * 5); // Scale up frequency
+    
+    // 3. Streak Volatility - analyze streak length variations
+    const streakLengths: number[] = [];
+    let currentStreakLength = 1;
+    let currentStreakTeam = wave[0]?.y > 0 ? 'team1' : 'team2';
+    
+    for (let i = 1; i < wave.length; i++) {
+      const team = wave[i].y > 0 ? 'team1' : 'team2';
+      if (team === currentStreakTeam) {
+        currentStreakLength++;
+      } else {
+        streakLengths.push(currentStreakLength);
+        currentStreakLength = 1;
+        currentStreakTeam = team;
+      }
+    }
+    if (currentStreakLength > 0) {
+      streakLengths.push(currentStreakLength);
+    }
+    
+    const avgStreakLength = streakLengths.length > 0 ? 
+      streakLengths.reduce((a, b) => a + b, 0) / streakLengths.length : 1;
+    const maxStreakLength = Math.max(...streakLengths, 1);
+    const minStreakLength = Math.min(...streakLengths, 1);
+    
+    // Fixed: Higher volatility = more varied streak lengths
+    const streakRange = maxStreakLength - minStreakLength;
+    const streakVolatility = Math.min(100, (streakRange / Math.max(1, avgStreakLength)) * 30); // Scale to 0-100
+    
+    // 4. Score Proximity - how close the scores are
+    const [team1Score, team2Score] = currentScore;
+    const scoreDiff = Math.abs(team1Score - team2Score);
+    const maxPossibleDiff = Math.max(team1Score, team2Score, 1);
+    const scoreProximity = Math.max(0, 100 - (scoreDiff / maxPossibleDiff) * 100);
+    
+    // Calculate overall closeness score
+    const weights = {
+      momentumBalance: 0.3,
+      shiftFrequency: 0.25,
+      streakVolatility: 0.2,
+      scoreProximity: 0.25
+    };
+    
+    const overallScore = 
+      momentumBalance * weights.momentumBalance +
+      shiftFrequency * weights.shiftFrequency +
+      streakVolatility * weights.streakVolatility +
+      scoreProximity * weights.scoreProximity;
+    
+    // Determine level and description
+    let level: MatchCloseness['level'];
+    let description: string;
+    
+    if (overallScore >= 80) {
+      level = 'nail-biter';
+      description = 'Edge-of-your-seat thriller! 🔥';
+    } else if (overallScore >= 60) {
+      level = 'competitive';
+      description = 'Highly competitive match ⚡';
+    } else if (overallScore >= 35) {
+      level = 'one-sided';
+      description = 'One team pulling ahead 📈';
+    } else {
+      level = 'blowout';
+      description = 'Total domination 💥';
+    }
+    
+    return {
+      level,
+      score: Math.round(overallScore),
+      description,
+      indicators: {
+        momentumBalance: Math.round(momentumBalance),
+        shiftFrequency: Math.round(shiftFrequency),
+        streakVolatility: Math.round(streakVolatility),
+        scoreProximity: Math.round(scoreProximity)
+      }
+    };
+  }
+
   getState(): MomentumState {
-    return { ...this.state };
+    const currentScore = this.estimateScoreFromMomentum();
+    const closeness = this.analyzeMatchCloseness(currentScore);
+    
+    return { 
+      ...this.state,
+      closeness 
+    };
   }
 
   reset() {

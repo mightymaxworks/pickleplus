@@ -31,7 +31,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { VersusScreen } from '@/components/match/VersusScreen';
-import { MomentumEngine, MomentumState, StrategyMessage } from '@/components/match/MomentumEngine';
+import { MomentumEngine, MomentumState, StrategyMessage, MatchCloseness } from '@/components/match/MomentumEngine';
 import { MomentumWave } from '@/components/match/MomentumWave';
 import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
@@ -122,6 +122,110 @@ function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// Match Closeness Indicator for Gaming Experience
+function MatchClosenessIndicator({ closeness }: { closeness?: MatchCloseness }) {
+  if (!closeness) return null;
+
+  const levelColors = {
+    'nail-biter': 'from-red-500 to-orange-500',
+    'competitive': 'from-blue-500 to-purple-500', 
+    'one-sided': 'from-yellow-500 to-orange-500',
+    'blowout': 'from-gray-500 to-slate-600'
+  };
+
+  const levelIcons = {
+    'nail-biter': '🔥',
+    'competitive': '⚡',
+    'one-sided': '📈',
+    'blowout': '💥'
+  };
+
+  const levelBorderColors = {
+    'nail-biter': 'border-red-400',
+    'competitive': 'border-blue-400',
+    'one-sided': 'border-yellow-400', 
+    'blowout': 'border-gray-400'
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover="hovered"
+      variants={{
+        default: {},
+        hovered: {}
+      }}
+      className={`relative p-3 rounded-xl bg-gradient-to-r ${levelColors[closeness.level]} border-2 ${levelBorderColors[closeness.level]} backdrop-blur-sm shadow-lg cursor-pointer`}
+    >
+      {/* Pulsing effect for nail-biters */}
+      {closeness.level === 'nail-biter' && (
+        <motion.div
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 bg-gradient-to-r from-red-400 to-orange-400 rounded-xl blur-sm"
+        />
+      )}
+      
+      <div className="relative flex items-center gap-3">
+        <div className="text-2xl">{levelIcons[closeness.level]}</div>
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-white font-bold text-sm uppercase tracking-wide">
+              Match Intensity
+            </span>
+            <div className="text-white font-bold text-lg">
+              {closeness.score}/100
+            </div>
+          </div>
+          
+          <div className="text-white text-sm font-medium" style={{
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+          }}>
+            {closeness.description}
+          </div>
+        </div>
+        
+        {/* Intensity meter */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-2 h-12 bg-black/30 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: `${closeness.score}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="w-full bg-white rounded-full"
+              style={{
+                filter: closeness.level === 'nail-biter' ? 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' : 'none'
+              }}
+            />
+          </div>
+          <span className="text-white text-xs font-bold">
+            {closeness.level.replace('-', ' ').toUpperCase()}
+          </span>
+        </div>
+      </div>
+      
+      {/* Detailed breakdown tooltip on hover */}
+      <motion.div
+        variants={{
+          default: { opacity: 0, scale: 0.9, y: -10, pointerEvents: "none" },
+          hovered: { opacity: 1, scale: 1, y: 0, pointerEvents: "auto" }
+        }}
+        transition={{ duration: 0.2 }}
+        className="absolute top-full left-0 right-0 mt-2 p-3 bg-slate-900/95 rounded-lg border border-slate-600 text-xs text-white backdrop-blur-sm z-10"
+      >
+        <div className="grid grid-cols-2 gap-2">
+          <div>Momentum Balance: {closeness.indicators.momentumBalance}%</div>
+          <div>Shift Frequency: {closeness.indicators.shiftFrequency}%</div>
+          <div>Streak Volatility: {closeness.indicators.streakVolatility}%</div>
+          <div>Score Proximity: {closeness.indicators.scoreProximity}%</div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -1433,6 +1537,13 @@ export default function GamifiedMatchRecording() {
             isInteractive={true}
             isMatchComplete={matchState.matchComplete}
           />
+
+          {/* Match Closeness Indicator */}
+          {matchState.momentumState?.closeness && (
+            <div className="mt-4">
+              <MatchClosenessIndicator closeness={matchState.momentumState.closeness} />
+            </div>
+          )}
         </motion.div>
       )}
 
