@@ -615,8 +615,20 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                           {(player.displayName || player.username).charAt(0).toUpperCase()}
                         </div>
                         <div className="text-left">
-                          <div className="font-medium">{player.displayName || player.username}</div>
-                          <div className="text-sm opacity-75">Partner with You</div>
+                          <div className={`font-medium ${
+                            pairings?.team1.some(p => p.id === player.id)
+                              ? 'text-white' 
+                              : 'text-slate-300'
+                          }`}>
+                            {player.displayName || player.username}
+                          </div>
+                          <div className={`text-sm ${
+                            pairings?.team1.some(p => p.id === player.id)
+                              ? 'text-orange-100 opacity-90' 
+                              : 'text-slate-400 opacity-75'
+                          }`}>
+                            Partner with You
+                          </div>
                         </div>
                         {pairings?.team1.some(p => p.id === player.id) && (
                           <CheckCircle2 className="h-5 w-5 ml-auto" />
