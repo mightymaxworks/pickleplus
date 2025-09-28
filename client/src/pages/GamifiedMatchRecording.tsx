@@ -931,18 +931,26 @@ export default function GamifiedMatchRecording() {
             message: `${winner} scored a perfect game!`,
             timestamp: Date.now()
           });
-          setShowReaction({ 
-            show: true, 
-            type: 'ace', 
-            playerName: winner,
-            context: { score: `${p1Score}-${p2Score}`, margin }
+          // Add to strategic messages instead of separate reaction
+          newState.strategicMessages.push({
+            type: 'gameWin',
+            text: `🏆 PERFECT GAME! ${winner} wins ${p1Score}-${p2Score}`,
+            timestamp: Date.now(),
+            pointNo: newState.player1.score + newState.player2.score,
+            team: winner === newState.player1.name ? 'team1' : 'team2',
+            duration: 5000, // Show longer for game wins
+            megaLevel: 3 // Highest importance
           });
         } else {
-          setShowReaction({ 
-            show: true, 
-            type: 'win', 
-            playerName: winner,
-            context: { score: `${p1Score}-${p2Score}`, margin }
+          // Add to strategic messages instead of separate reaction
+          newState.strategicMessages.push({
+            type: 'gameWin',
+            text: `🎉 GAME WON! ${winner} takes the game ${p1Score}-${p2Score}`,
+            timestamp: Date.now(),
+            pointNo: newState.player1.score + newState.player2.score,
+            team: winner === newState.player1.name ? 'team1' : 'team2',
+            duration: 4000, // Show longer for game wins
+            megaLevel: 2
           });
         }
         
@@ -961,11 +969,15 @@ export default function GamifiedMatchRecording() {
         if (p1Wins === requiredWins || p2Wins === requiredWins) {
           newState.matchComplete = true;
           const matchWinner = p1Wins === requiredWins ? newState.player1.name : newState.player2.name;
-          setShowReaction({ 
-            show: true, 
-            type: 'milestone', 
-            playerName: matchWinner,
-            context: { gameType: newState.config.matchFormat }
+          // Add match completion to strategic messages instead of separate reaction
+          newState.strategicMessages.push({
+            type: 'matchComplete',
+            text: `🏆 MATCH COMPLETE! ${matchWinner} wins the ${newState.config.matchFormat === 'single' ? 'match' : newState.config.matchFormat}!`,
+            timestamp: Date.now(),
+            pointNo: newState.player1.score + newState.player2.score,
+            team: matchWinner === newState.player1.name ? 'team1' : 'team2',
+            duration: 6000, // Show even longer for match completion
+            megaLevel: 3 // Highest importance
           });
         }
       }
@@ -1806,14 +1818,7 @@ export default function GamifiedMatchRecording() {
         </motion.div>
       )}
 
-      {/* Explosive Reactions */}
-      <ExplosiveReaction
-        show={showReaction.show}
-        type={showReaction.type}
-        playerName={showReaction.playerName}
-        context={showReaction.context}
-        onComplete={() => setShowReaction({ show: false, type: 'win' })}
-      />
+      {/* Game win notifications now handled through MessageToast with other strategic messages */}
 
       {/* Mega Streak Animations */}
       <MegaStreakAnimation
