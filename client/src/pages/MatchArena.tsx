@@ -1004,6 +1004,74 @@ export default function MatchArena() {
           </div>
         )}
 
+        {arenaMode === 'search' && (
+          <div key="search" className="space-y-4">
+            {/* Find Players Search Interface */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+              <div className="flex items-center gap-3 mb-4">
+                <Search className="h-6 w-6 text-green-400" />
+                <div>
+                  <h3 className="text-white font-medium text-lg">🔍 Find Players</h3>
+                  <p className="text-slate-400 text-sm">Search all players globally • No distance limits</p>
+                </div>
+              </div>
+              
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search players by name..."
+                  value={universalSearchTerm}
+                  onChange={(e) => setUniversalSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-300">
+                  Searching <span className="text-green-400">{arenaPlayers.length} players</span> globally
+                </span>
+                <span className="text-slate-400">
+                  {filteredPlayers.length} found
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredPlayers.map(player => (
+                <ArenaPlayerCard
+                  key={player.id}
+                  player={player}
+                  onChallenge={(player, matchType) => {
+                    setSelectedPlayer(player);
+                    setShowChallengeModal(true);
+                  }}
+                  onViewProfile={() => openPlayerBottomSheet(player)}
+                  onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
+                  myPlayerId={myPlayerId}
+                  calculateCompatibility={calculateCompatibility}
+                />
+              ))}
+            </div>
+
+            {filteredPlayers.length === 0 && universalSearchTerm && (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No players found</h3>
+                <p className="text-slate-300">Try a different search term or browse all players</p>
+              </div>
+            )}
+
+            {filteredPlayers.length === 0 && !universalSearchTerm && (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Find Players</h3>
+                <p className="text-slate-300">Start typing to search or browse all available players</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {arenaMode === 'doubles' && (
           <div key="doubles">
             <DoublesPartnerSystem
