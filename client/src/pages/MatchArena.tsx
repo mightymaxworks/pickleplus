@@ -233,71 +233,121 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
           </div>
         )}
 
-        <div className="relative">
-          <div className="text-white">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/30">
-                  <TierIcon className="h-6 w-6" />
+        <div className="text-white">
+          {/* Partner Header - Matching DoublesPartnerSystem */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/30">
+                <TierIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="font-bold text-lg">{player.name}</div>
+                <div className="text-xs opacity-75">{config.name}</div>
+                <div className="flex items-center gap-1 text-xs">
+                  <MapPin className="h-3 w-3" />
+                  {player.distance < 1 ? `${Math.round(player.distance * 1000)}m` : `${player.distance}km`}
                 </div>
-                <div>
-                  <div className="font-bold text-lg">{player.name}</div>
-                  <div className="text-xs text-white/80 font-medium">{config.name}</div>
-                  <div className="flex items-center gap-1 text-xs text-white/70">
-                    <MapPin className="h-3 w-3" />
-                    {player.distance < 1 ? `${Math.round(player.distance * 1000)}m` : `${player.distance}km`}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-bold text-white">{player.points}</div>
-                <div className="text-xs text-white/80 font-medium">points</div>
               </div>
             </div>
-
-            <div className="flex justify-between text-xs mb-3">
-              <span>{player.wins}W</span>
-              <span>{player.losses}L</span>
-              <span>{Math.round(player.winRate * 100)}%</span>
+            
+            <div className="text-right">
+              <div className="text-lg font-bold">{player.points.toLocaleString()}</div>
+              <div className="text-xs opacity-75">Ranking Points</div>
             </div>
+          </div>
 
-            {/* Swipe hint */}
-            <div className="text-center mb-2">
-              <div className="text-xs text-white/60 flex items-center justify-center gap-4">
-                {player.matchType === 'doubles-looking' && (
-                  <span className="flex items-center gap-1">
-                    <ArrowLeft className="h-3 w-3" />
-                    Partner
-                  </span>
-                )}
-                <span className="flex items-center gap-1">
-                  Challenge
-                  <ArrowRight className="h-3 w-3" />
-                </span>
-              </div>
+          {/* Compatibility Bar - Matching DoublesPartnerSystem */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span>Match Compatibility</span>
+              <span className={`${
+                player.compatibility >= 80 ? 'text-green-400' : 
+                player.compatibility >= 60 ? 'text-yellow-400' : 'text-red-400'
+              }`}>{player.compatibility}%</span>
             </div>
+            <div className="w-full bg-black/20 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all ${
+                  player.compatibility >= 80 ? 'bg-green-400' : 
+                  player.compatibility >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                }`}
+                style={{ width: `${player.compatibility}%` }}
+              />
+            </div>
+          </div>
 
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={() => onChallenge(player, 'singles')}
-              >
-                <Target className="h-3 w-3 mr-1" />
-                Challenge
-              </Button>
-              {player.matchType === 'doubles-looking' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
-                  onClick={() => onPartnerUp(player)}
-                >
-                  <Users className="h-3 w-3 mr-1" />
-                  Partner
-                </Button>
+          {/* Match Type & Stats - Matching DoublesPartnerSystem */}
+          <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+            <div className="flex items-center gap-1 p-2 bg-black/20 rounded">
+              {player.matchType === 'singles' ? (
+                <>
+                  <Target className="h-3 w-3 text-blue-400" />
+                  <span>Singles</span>
+                </>
+              ) : player.matchType === 'doubles-looking' ? (
+                <>
+                  <UserPlus className="h-3 w-3 text-green-400" />
+                  <span>Seeking Partner</span>
+                </>
+              ) : (
+                <>
+                  <Users className="h-3 w-3 text-purple-400" />
+                  <span>Team Ready</span>
+                </>
               )}
             </div>
+            <div className="text-center p-2 bg-black/20 rounded">
+              <div className="font-bold">{Math.round(player.winRate * 100)}%</div>
+              <div className="opacity-75">Win Rate</div>
+            </div>
+          </div>
+
+          {/* Swipe hint */}
+          <div className="text-center mb-2">
+            <div className="text-xs text-white/60 flex items-center justify-center gap-4">
+              {player.matchType === 'doubles-looking' && (
+                <span className="flex items-center gap-1">
+                  <ArrowLeft className="h-3 w-3" />
+                  Partner
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                Challenge
+                <ArrowRight className="h-3 w-3" />
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => onChallenge(player, 'singles')}
+            >
+              <Gamepad2 className="h-4 w-4 mr-1" />
+              Challenge
+            </Button>
+            {player.matchType === 'doubles-looking' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 border-white text-white hover:bg-white/10"
+                onClick={() => onPartnerUp(player)}
+              >
+                <UserPlus className="h-4 w-4 mr-1" />
+                Partner
+              </Button>
+            )}
+            
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="px-3 text-white hover:bg-white/10"
+              onClick={() => onViewProfile(player)}
+            >
+              <IdCard className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </Card>
