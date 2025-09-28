@@ -39,9 +39,17 @@ export const MomentumWave = memo(({
   // Analyze momentum shifts for tooltips
   const analyzeMomentumShifts = () => {
     const shifts = [];
+    if (!wave || wave.length < 2) return shifts;
+    
     for (let i = 1; i < wave.length; i++) {
       const prev = wave[i - 1];
       const curr = wave[i];
+      
+      // Ensure both prev and curr exist and have required properties
+      if (!prev || !curr || typeof prev.y !== 'number' || typeof curr.y !== 'number') {
+        continue;
+      }
+      
       const shift = Math.abs(curr.y - prev.y);
       
       if (shift > 0.3) { // Significant momentum shift
@@ -60,8 +68,8 @@ export const MomentumWave = memo(({
           point: i,
           momentum: curr.y,
           reason,
-          timestamp: curr.timestamp,
-          score: curr.score
+          timestamp: curr.timestamp || Date.now(),
+          score: curr.score || { player1: 0, player2: 0 }
         });
       }
     }
@@ -124,8 +132,8 @@ export const MomentumWave = memo(({
         point: pointIndex,
         momentum: point.y,
         reason: shift?.reason || (point.y > 0 ? 'Momentum favoring this side' : 'Momentum against this side'),
-        timestamp: point.timestamp,
-        score: point.score
+        timestamp: point.timestamp || Date.now(),
+        score: point.score || { player1: 0, player2: 0 }
       });
     }
   };
@@ -173,7 +181,7 @@ export const MomentumWave = memo(({
                 {hoveredPoint.reason}
               </p>
               <div className="text-xs text-white/60">
-                Score: {hoveredPoint.score.player1}-{hoveredPoint.score.player2}
+                Score: {hoveredPoint.score?.player1 || 0}-{hoveredPoint.score?.player2 || 0}
               </div>
             </div>
           </Card>
