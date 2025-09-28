@@ -309,8 +309,8 @@ export default function GamifiedMatchRecording() {
         
         // Handle pairings data from match creation wizard
         if (matchData.pairings) {
-          const team1Names = matchData.pairings.team1.map(p => p.displayName || p.username || p.name).join(' & ');
-          const team2Names = matchData.pairings.team2.map(p => p.displayName || p.username || p.name).join(' & ');
+          const team1Names = matchData.pairings.team1.map((p: any) => p.displayName || p.username || p.name).join(' & ');
+          const team2Names = matchData.pairings.team2.map((p: any) => p.displayName || p.username || p.name).join(' & ');
           return {
             player1: team1Names,
             player2: team2Names
@@ -551,7 +551,7 @@ export default function GamifiedMatchRecording() {
                   const theme = getRandomTeamTheme();
                   return (
                     <VersusScreen
-                      mode="full"
+                      mode="mid"
                       teams={[
                         {
                           name: theme.team1.name,
@@ -567,7 +567,7 @@ export default function GamifiedMatchRecording() {
                         }
                       ]}
                       showStats={true}
-                      intensity={1.0}
+                      intensity={0.8}
                     />
                   );
                 })()}
