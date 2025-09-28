@@ -1260,6 +1260,7 @@ export default function GamifiedMatchRecording() {
                       ]}
                       showStats={true}
                       intensity={0.8}
+                      staticMode={true}
                     />
                   );
                 })()}

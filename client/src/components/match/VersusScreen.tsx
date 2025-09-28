@@ -29,34 +29,39 @@ interface VersusScreenProps {
   showStats?: boolean;
   onReady?: () => void;
   className?: string;
+  staticMode?: boolean; // Disable animations for setup screens
 }
 
 // Background effects component
-const BackgroundFX = ({ mode, intensity = 0.8 }: { mode: string; intensity: number }) => {
+const BackgroundFX = ({ mode, intensity = 0.8, staticMode = false }: { mode: string; intensity: number; staticMode?: boolean }) => {
   if (mode === 'mini') return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Animated background gradient */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-blue-500/10"
-        animate={{
-          background: [
-            'linear-gradient(45deg, rgba(249,115,22,0.1) 0%, transparent 50%, rgba(59,130,246,0.1) 100%)',
-            'linear-gradient(45deg, rgba(59,130,246,0.1) 0%, transparent 50%, rgba(249,115,22,0.1) 100%)',
-            'linear-gradient(45deg, rgba(249,115,22,0.1) 0%, transparent 50%, rgba(59,130,246,0.1) 100%)',
-          ]
-        }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      {/* Static background gradient for setup, animated for live matches */}
+      {staticMode ? (
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-blue-500/10" />
+      ) : (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-blue-500/10"
+          animate={{
+            background: [
+              'linear-gradient(45deg, rgba(249,115,22,0.1) 0%, transparent 50%, rgba(59,130,246,0.1) 100%)',
+              'linear-gradient(45deg, rgba(59,130,246,0.1) 0%, transparent 50%, rgba(249,115,22,0.1) 100%)',
+              'linear-gradient(45deg, rgba(249,115,22,0.1) 0%, transparent 50%, rgba(59,130,246,0.1) 100%)',
+            ]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
       
       {/* Scanlines for full mode */}
       {mode === 'full' && (
         <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_98%,rgba(255,255,255,0.03)_100%)] bg-[length:4px_4px]" />
       )}
       
-      {/* Floating particles */}
-      {intensity > 0.5 && (
+      {/* Floating particles - only animate when not in static mode */}
+      {intensity > 0.5 && !staticMode && (
         <div className="absolute inset-0">
           {[...Array(6)].map((_, i) => (
             <motion.div
@@ -184,12 +189,14 @@ const VersusTeam = ({
   team, 
   side, 
   mode, 
-  showStats 
+  showStats,
+  staticMode = false
 }: { 
   team: VersusTeam; 
   side: 'left' | 'right'; 
   mode: string; 
   showStats?: boolean; 
+  staticMode?: boolean;
 }) => {
   const isLeft = side === 'left';
   const slideDirection = isLeft ? -40 : 40;
@@ -201,14 +208,21 @@ const VersusTeam = ({
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      {/* Team glow effect for mid/full modes */}
+      {/* Team glow effect for mid/full modes - only animate when not in static mode */}
       {mode !== 'mini' && (
-        <motion.div
-          className="absolute inset-0 rounded-lg opacity-20"
-          style={{ backgroundColor: team.color }}
-          animate={{ opacity: [0.1, 0.3, 0.1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
+        staticMode ? (
+          <div
+            className="absolute inset-0 rounded-lg opacity-20"
+            style={{ backgroundColor: team.color }}
+          />
+        ) : (
+          <motion.div
+            className="absolute inset-0 rounded-lg opacity-20"
+            style={{ backgroundColor: team.color }}
+            animate={{ opacity: [0.1, 0.3, 0.1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        )
       )}
       
       {/* Team header */}
@@ -276,7 +290,8 @@ export function VersusScreen({
   intensity = 0.8, 
   showStats = false, 
   onReady, 
-  className = '' 
+  className = '',
+  staticMode = false
 }: VersusScreenProps) {
   React.useEffect(() => {
     if (onReady) {
@@ -306,14 +321,15 @@ export function VersusScreen({
         exit={{ opacity: 0, scale: mode === 'full' ? 1.1 : 1 }}
         transition={{ duration: 0.3 }}
       >
-        <BackgroundFX mode={mode} intensity={intensity} />
+        <BackgroundFX mode={mode} intensity={intensity} staticMode={staticMode} />
         
         <div className={contentClass}>
           <VersusTeam 
             team={teams[0]} 
             side="left" 
             mode={mode} 
-            showStats={showStats} 
+            showStats={showStats}
+            staticMode={staticMode}
           />
           
           <VsGlyph mode={mode} />
@@ -322,7 +338,8 @@ export function VersusScreen({
             team={teams[1]} 
             side="right" 
             mode={mode} 
-            showStats={showStats} 
+            showStats={showStats}
+            staticMode={staticMode}
           />
         </div>
         
