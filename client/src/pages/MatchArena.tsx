@@ -847,7 +847,7 @@ export default function MatchArena() {
                 `}
               >
                 <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${isActive ? 'text-orange-400' : ''}`} />
-                <span className="hidden sm:inline text-sm font-medium">{tab.label}</span>
+                <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">{tab.label}</span>
                 <span className="sm:hidden text-xs font-medium">{tab.mobileLabel}</span>
                 {tab.key === 'challenges' && challenges.length > 0 && (
                   <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 absolute -top-1 -right-1 sm:relative sm:top-0 sm:right-0 sm:ml-1">
