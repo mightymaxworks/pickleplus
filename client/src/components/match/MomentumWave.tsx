@@ -349,13 +349,6 @@ export const MomentumWave = memo(({
     </motion.div>
   );
 
-  // Debug: Log the component state
-  console.log('MomentumWave render:', { 
-    isInteractive, 
-    waveLength: wave?.length, 
-    momentumState, 
-    hoveredPoint 
-  });
 
   return (
     <div className="relative">
@@ -504,10 +497,7 @@ export const MomentumWave = memo(({
                 height="100%"
                 fill="transparent"
                 style={{ pointerEvents: 'all' }}
-                onMouseMove={(e) => {
-                  console.log('SVG rect mouse move event fired');
-                  handleMouseMove(e);
-                }}
+                onMouseMove={handleMouseMove}
               />
               
               {/* Center baseline */}

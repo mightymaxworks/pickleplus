@@ -35,6 +35,8 @@ import { MomentumEngine, MomentumState, StrategyMessage, MatchCloseness } from '
 import { MomentumWave } from '@/components/match/MomentumWave';
 import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
+import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
+import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -589,6 +591,7 @@ export default function GamifiedMatchRecording() {
   // Context UI state for momentum accuracy guidance
   const [showMomentumContext, setShowMomentumContext] = useState(true);
   const [isLiveMode, setIsLiveMode] = useState(true); // Track if user is doing live point-by-point scoring
+  const [liveMatchState, setLiveMatchState] = useState<LiveMatchState>(matchStateManager.getState());
 
   // Mega streak animation state
   const [megaAnimation, setMegaAnimation] = useState<{
@@ -874,6 +877,30 @@ export default function GamifiedMatchRecording() {
   const [undoStack, setUndoStack] = useState<MatchState[]>([]);
   const [showStats, setShowStats] = useState(false);
 
+  // Initialize live stream detection and match state manager
+  useEffect(() => {
+    console.log('🚀 Initializing live match system...');
+    
+    // Initialize match state manager with momentum engine
+    matchStateManager.initialize(momentumEngine);
+    
+    // Subscribe to live match state changes
+    const unsubscribe = matchStateManager.subscribe((newLiveState) => {
+      console.log('📡 Live match state updated:', newLiveState.mode);
+      setLiveMatchState(newLiveState);
+      
+      // Update live mode based on stream detection
+      if (newLiveState.mode === 'live') {
+        setIsLiveMode(true);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      matchStateManager.destroy();
+    };
+  }, []);
+
   // Auto-hide momentum context notification when video URL is added
   useEffect(() => {
     if (matchState.showVideo) {
@@ -1098,6 +1125,10 @@ export default function GamifiedMatchRecording() {
         config: tempConfig,
         showVideo: Boolean(tempConfig.liveStreamUrl || tempConfig.recordingUrl)
       }));
+
+      // Update live match state manager with momentum
+      const newMomentum = momentumEngine.getState();
+      matchStateManager.updateMomentum(newMomentum);
       setShowConfig(false);
     };
 
@@ -1386,7 +1417,7 @@ export default function GamifiedMatchRecording() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {/* Back Navigation */}
+        {/* Stream Status & Back Navigation */}
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
@@ -1397,6 +1428,13 @@ export default function GamifiedMatchRecording() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Lobby
           </Button>
+
+          {/* Live Stream Status Indicator */}
+          <StreamStatusIndicator 
+            matchState={liveMatchState}
+            onModeToggle={(mode) => matchStateManager.setMode(mode)}
+            compact
+          />
           
           {matchState.matchComplete && (
             <Button
