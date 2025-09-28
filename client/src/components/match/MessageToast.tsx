@@ -53,6 +53,7 @@ export const MessageToast = ({ messages, onMessageExpire, team1Color, team2Color
     const icons = {
       firstBlood: '🩸',
       streak: '🔥',
+      megaStreak: '🔥⚡',
       momentumShift: '⚡',
       clutchSave: '💪',
       comeback: '🚀',
