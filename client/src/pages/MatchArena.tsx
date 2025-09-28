@@ -16,7 +16,7 @@ import { useLocation } from 'wouter';
 // Types
 type PlayerStatus = 'online' | 'away' | 'busy' | 'available';
 type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
-type ArenaMode = 'lobby' | 'doubles' | 'challenges' | 'search';
+type ArenaMode = 'lobby' | 'doubles' | 'challenges' | 'search' | 'create-match';
 type GlobalTabMode = 'passport' | 'play' | 'rankings' | 'profile';
 type PlayerTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 
@@ -371,6 +371,8 @@ export default function MatchArena() {
   const [selectedPlayer, setSelectedPlayer] = useState<ArenaPlayer | null>(null);
   const [isSearchingPartner, setIsSearchingPartner] = useState(false);
   const [partnerRequests, setPartnerRequests] = useState<PartnerRequest[]>([]);
+  const [proximityFilter, setProximityFilter] = useState<number>(2); // km radius for proximity-based discovery
+  const [universalSearchTerm, setUniversalSearchTerm] = useState('');
 
   const myPlayerId = 'current-player';
 
@@ -418,6 +420,49 @@ export default function MatchArena() {
         distance: 1.2,
         isOnline: true,
         matchType: 'singles'
+      },
+      // Add more players with varying distances for testing proximity filter
+      {
+        id: '4',
+        name: 'Emma Rodriguez',
+        tier: 'silver',
+        points: 890,
+        wins: 42,
+        losses: 18,
+        winRate: 0.70,
+        status: 'online',
+        lastSeen: 'now',
+        distance: 3.5, // Beyond 2km proximity filter
+        isOnline: true,
+        matchType: 'doubles-looking'
+      },
+      {
+        id: '5',
+        name: 'David Kim',
+        tier: 'gold',
+        points: 1350,
+        wins: 67,
+        losses: 25,
+        winRate: 0.73,
+        status: 'available',
+        lastSeen: '5 min ago',
+        distance: 5.2, // Far distance - only in Create Match
+        isOnline: true,
+        matchType: 'singles'
+      },
+      {
+        id: '6',
+        name: 'Lisa Park',
+        tier: 'bronze',
+        points: 650,
+        wins: 28,
+        losses: 22,
+        winRate: 0.56,
+        status: 'online',
+        lastSeen: 'now',
+        distance: 0.5, // Very close
+        isOnline: true,
+        matchType: 'doubles-looking'
       }
     ];
     setArenaPlayers(mockPlayers);
@@ -500,9 +545,25 @@ export default function MatchArena() {
   };
 
   const filteredPlayers = arenaPlayers.filter(player => {
+    // Flow 1: Proximity-based discovery (lobby mode)
+    if (arenaMode === 'lobby') {
+      // Only show players within proximity radius
+      if (player.distance > proximityFilter) return false;
+    }
+    
+    // Flow 2: Universal search (create-match mode)
+    if (arenaMode === 'create-match') {
+      // Universal search - no distance restrictions
+      if (universalSearchTerm && !player.name.toLowerCase().includes(universalSearchTerm.toLowerCase())) return false;
+    } else {
+      // Regular search for other modes
+      if (searchTerm && !player.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    }
+    
+    // Match type filtering (applies to all modes)
     if (filterType === 'singles' && player.matchType !== 'singles') return false;
     if (filterType === 'doubles' && !player.matchType.includes('doubles')) return false;
-    if (searchTerm && !player.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    
     return true;
   });
 
@@ -568,6 +629,7 @@ export default function MatchArena() {
         <div className="flex bg-slate-800/50 backdrop-blur-sm rounded-xl p-1 border border-slate-700/50 shadow-2xl max-w-full overflow-x-auto">
           {([
             { key: 'lobby', label: 'Lobby', mobileLabel: 'Lobby', icon: Users },
+            { key: 'create-match', label: 'Create Match', mobileLabel: 'Create', icon: Plus },
             { key: 'doubles', label: 'Partners', mobileLabel: 'Teams', icon: UserPlus },
             { key: 'challenges', label: 'Challenges', mobileLabel: 'Matches', icon: Trophy },
             { key: 'search', label: 'Find Players', mobileLabel: 'Search', icon: Search }
@@ -607,6 +669,27 @@ export default function MatchArena() {
       <AnimatePresence mode="wait">
         {arenaMode === 'lobby' && (
           <div key="lobby" className="space-y-4">
+            {/* Proximity Filter Controls */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-medium">🎯 Quick Discovery</h3>
+                <div className="text-xs text-slate-400">Within {proximityFilter}km</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <MapPin className="h-4 w-4 text-orange-400" />
+                <input
+                  type="range"
+                  min="0.5"
+                  max="5"
+                  step="0.5"
+                  value={proximityFilter}
+                  onChange={(e) => setProximityFilter(Number(e.target.value))}
+                  className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                />
+                <span className="text-sm text-white min-w-[3rem]">{proximityFilter}km</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPlayers.map(player => (
                 <ArenaPlayerCard
@@ -626,8 +709,82 @@ export default function MatchArena() {
             {filteredPlayers.length === 0 && (
               <div className="text-center py-12">
                 <Globe className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No players nearby</h3>
+                <p className="text-slate-300">Try increasing the radius or use "Create Match" for universal search</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {arenaMode === 'create-match' && (
+          <div key="create-match" className="space-y-4">
+            {/* Universal Search Interface */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+              <div className="flex items-center gap-3 mb-4">
+                <Globe className="h-6 w-6 text-blue-400" />
+                <div>
+                  <h3 className="text-white font-medium text-lg">🌍 Universal Match Creation</h3>
+                  <p className="text-slate-400 text-sm">Search all players regardless of location • Perfect for planned matches</p>
+                </div>
+              </div>
+              
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search players by name..."
+                  value={universalSearchTerm}
+                  onChange={(e) => setUniversalSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-300">
+                  Searching <span className="text-orange-400">{arenaPlayers.length} players</span> globally
+                </span>
+                <span className="text-slate-400">
+                  {filteredPlayers.length} found
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredPlayers.map(player => (
+                <div key={player.id} className="relative">
+                  {/* Distance indicator for Create Match mode */}
+                  <div className="absolute -top-2 -right-2 z-20">
+                    <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs px-2 py-1">
+                      {player.distance < 1 ? `${Math.round(player.distance * 1000)}m` : `${player.distance}km`}
+                    </Badge>
+                  </div>
+                  <ArenaPlayerCard
+                    player={player}
+                    onChallenge={(player, matchType) => {
+                      setSelectedPlayer(player);
+                      setShowChallengeModal(true);
+                    }}
+                    onViewProfile={() => {}}
+                    onPartnerUp={handlePartnerUp}
+                    myPlayerId={myPlayerId}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {filteredPlayers.length === 0 && universalSearchTerm && (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">No players found</h3>
-                <p className="text-slate-300">Try adjusting your filters or check the Find Players tab</p>
+                <p className="text-slate-300">Try a different search term or browse all players</p>
+              </div>
+            )}
+
+            {filteredPlayers.length === 0 && !universalSearchTerm && (
+              <div className="text-center py-12">
+                <Globe className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">All Players</h3>
+                <p className="text-slate-300">Start typing to search or browse all available players</p>
               </div>
             )}
           </div>
