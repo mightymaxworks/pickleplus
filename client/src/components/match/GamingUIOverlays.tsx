@@ -16,6 +16,7 @@ import {
   Zap
 } from 'lucide-react';
 import { CrowdEnergyMeter } from './CrowdEnergyMeter';
+import { HypeTrainEffects } from './HypeTrainEffects';
 import { MomentumState } from './MomentumEngine';
 
 interface GamingUIOverlaysProps {
@@ -43,6 +44,7 @@ export function GamingUIOverlays({
   momentumState
 }: GamingUIOverlaysProps) {
   const [showControls, setShowControls] = useState(false);
+  const [crowdEnergy, setCrowdEnergy] = useState(45);
   const [activeElements, setActiveElements] = useState<OverlayElements>({
     topBar: true,
     sideIndicators: true,
@@ -203,10 +205,23 @@ export function GamingUIOverlays({
             momentumState={momentumState}
             isLive={isEnabled}
             aestheticMode={aestheticMode}
-            onEnergyChange={(energy) => console.log(`🔥 Crowd Energy: ${energy}%`)}
+            onEnergyChange={(energy) => {
+              setCrowdEnergy(energy);
+              console.log(`🔥 Crowd Energy: ${energy}%`);
+            }}
             onReactionTrigger={(reaction) => console.log(`👥 Crowd Reaction: ${reaction.type} (${reaction.intensity}%)`)}
           />
         </div>
+
+        {/* Hype Train Effects */}
+        <HypeTrainEffects
+          isEnabled={isEnabled}
+          aestheticMode={aestheticMode}
+          crowdEnergy={crowdEnergy}
+          momentumState={momentumState}
+          onHypeTrainStart={(level) => console.log(`🚂 HYPE TRAIN Level ${level} ACTIVATED!`)}
+          onHypeTrainEnd={() => console.log(`🚂 Hype Train Complete!`)}
+        />
 
         {/* Effects Layer - for future particle effects, hype trains, etc. */}
         <div className="fixed inset-0 pointer-events-none z-30">
