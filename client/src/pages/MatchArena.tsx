@@ -17,7 +17,7 @@ import { useLocation } from 'wouter';
 type PlayerStatus = 'online' | 'away' | 'busy' | 'available';
 type MatchType = 'singles' | 'doubles-looking' | 'doubles-team';
 type ArenaMode = 'lobby' | 'doubles' | 'challenges' | 'search' | 'create-match';
-type GlobalTabMode = 'passport' | 'arena' | 'rankings' | 'profile';
+type TabMode = 'passport' | 'arena' | 'rankings' | 'profile';
 type PlayerTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 
 interface ArenaPlayer {
@@ -34,6 +34,7 @@ interface ArenaPlayer {
   isOnline: boolean;
   matchType: MatchType;
   partner?: ArenaPlayer;
+  compatibility: number; // 0-100% compatibility score
 }
 
 interface Challenge {
@@ -66,17 +67,17 @@ interface PartnerRequest {
 }
 
 
-// Global Navigation Tabs Component (matches UnifiedPrototype)
-function GlobalNavigationTabs({ activeTab, onTabChange }: { activeTab: GlobalTabMode; onTabChange: (tab: GlobalTabMode) => void }) {
+// Navigation Tabs Component (matches UnifiedPrototype exactly)
+function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
   const tabs = [
-    { id: 'passport' as GlobalTabMode, label: 'Passport', icon: IdCard },
-    { id: 'arena' as GlobalTabMode, label: 'Arena', icon: Activity },
-    { id: 'rankings' as GlobalTabMode, label: 'Rankings', icon: Trophy },
-    { id: 'profile' as GlobalTabMode, label: 'Profile', icon: UserCog },
+    { id: 'passport' as TabMode, label: 'Passport', icon: IdCard },
+    { id: 'arena' as TabMode, label: 'Arena', icon: Activity },
+    { id: 'rankings' as TabMode, label: 'Rankings', icon: Trophy },
+    { id: 'profile' as TabMode, label: 'Profile', icon: UserCog },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 z-40">
       <div className="flex">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -168,8 +169,8 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
       animate={{ 
         opacity: 1, 
         y: 0,
-        x: swipeDirection === 'right' ? 50 : swipeDirection === 'left' ? -50 : 0,
-        scale: swipeDirection ? 0.95 : 1
+        x: 0,
+        scale: 1
       }}
       exit={{ opacity: 0, y: -20 }}
       drag="x"
@@ -210,12 +211,29 @@ function ArenaPlayerCard({ player, onChallenge, onViewProfile, onPartnerUp, myPl
         </motion.div>
       </div>
 
-      <Card className={`p-4 border border-slate-600 bg-gradient-to-br ${config.color} hover:border-orange-400 transition-all ${swipeDirection ? 'border-orange-500' : ''}`}>
-        <div className="relative">
-          <div className="absolute -top-2 -right-2">
-            <div className={`w-4 h-4 rounded-full ${status.color} ${status.pulse ? 'animate-pulse' : ''}`} />
+      <Card className={`p-4 border border-slate-600 bg-gradient-to-br ${config.color} hover:border-orange-400 transition-all ${swipeDirection ? 'border-orange-500' : ''} relative`}>
+        {/* Compatibility Badge (Partners Tab Style) */}
+        <div className="absolute -top-2 -right-2">
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-slate-900 border-2 border-slate-600`}>
+            <Heart className={`h-3 w-3 ${
+              player.compatibility >= 80 ? 'text-green-400' : 
+              player.compatibility >= 60 ? 'text-yellow-400' : 'text-red-400'
+            }`} />
+            <span className={`text-xs font-bold ${
+              player.compatibility >= 80 ? 'text-green-400' : 
+              player.compatibility >= 60 ? 'text-yellow-400' : 'text-red-400'
+            }`}>{player.compatibility}%</span>
           </div>
+        </div>
 
+        {/* Online Status */}
+        {player.status === 'online' && (
+          <div className="absolute -top-1 -left-1">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+          </div>
+        )}
+
+        <div className="relative">
           <div className="text-white">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -421,7 +439,8 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 0.3,
         isOnline: true,
-        matchType: 'singles'
+        matchType: 'singles',
+        compatibility: 92
       },
       {
         id: '2',
@@ -435,7 +454,8 @@ export default function MatchArena() {
         lastSeen: '2 min ago',
         distance: 0.8,
         isOnline: true,
-        matchType: 'doubles-looking'
+        matchType: 'doubles-looking',
+        compatibility: 85
       },
       {
         id: '3',
@@ -449,7 +469,8 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 1.2,
         isOnline: true,
-        matchType: 'singles'
+        matchType: 'singles',
+        compatibility: 78
       },
       // Add more players with varying distances for testing proximity filter
       {
@@ -464,7 +485,8 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 3.5, // Beyond 2km proximity filter
         isOnline: true,
-        matchType: 'doubles-looking'
+        matchType: 'doubles-looking',
+        compatibility: 70
       },
       {
         id: '5',
@@ -478,7 +500,8 @@ export default function MatchArena() {
         lastSeen: '5 min ago',
         distance: 5.2, // Far distance - only in Create Match
         isOnline: true,
-        matchType: 'singles'
+        matchType: 'singles',
+        compatibility: 66
       },
       {
         id: '6',
@@ -492,7 +515,8 @@ export default function MatchArena() {
         lastSeen: 'now',
         distance: 0.5, // Very close
         isOnline: true,
-        matchType: 'doubles-looking'
+        matchType: 'doubles-looking',
+        compatibility: 75
       }
     ];
     setArenaPlayers(mockPlayers);
@@ -1064,7 +1088,7 @@ export default function MatchArena() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-slate-900 rounded-t-2xl border-t border-slate-700 max-h-[85vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 bg-slate-900 rounded-t-2xl border-t border-slate-700 max-h-[85vh] overflow-hidden z-50"
           >
             {/* Handle Bar */}
             <div className="flex justify-center py-3">
@@ -1203,8 +1227,8 @@ export default function MatchArena() {
         </div>
       )}
 
-      {/* Global Bottom Navigation */}
-      <GlobalNavigationTabs 
+      {/* Bottom Navigation - Fixed z-index to not block modal actions */}
+      <NavigationTabs 
         activeTab={'arena'} 
         onTabChange={(tab) => {
           if (tab === 'passport') {
