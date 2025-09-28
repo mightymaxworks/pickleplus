@@ -535,6 +535,42 @@ export default function GamifiedMatchRecording() {
     });
   };
 
+  const removePoint = (playerId: string) => {
+    saveState(matchState);
+    
+    setMatchState(prev => {
+      const newState = { ...prev };
+      
+      // Can't remove points if score is already 0
+      if (playerId === '1' && newState.player1.score > 0) {
+        newState.player1.score--;
+      } else if (playerId === '2' && newState.player2.score > 0) {
+        newState.player2.score--;
+      } else {
+        return prev; // No change if trying to remove from 0 score
+      }
+      
+      // Recalculate momentum with the new score
+      const momentumEvent = {
+        pointNo: newState.player1.score + newState.player2.score,
+        scoringTeam: playerId === '1' ? 'team2' as const : 'team1' as const, // Opposite team since we're removing
+        score: [newState.player1.score, newState.player2.score] as [number, number],
+        timestamp: Date.now(),
+        tags: ['point_removed']
+      };
+
+      // Update momentum state with point removal
+      const newMessages = momentumEngine.processPoint(momentumEvent);
+      newState.strategicMessages = [...prev.strategicMessages, ...newMessages];
+      newState.momentumState = momentumEngine.getState();
+
+      // Detect scoring mode after point removal
+      detectScoringMode();
+      
+      return newState;
+    });
+  };
+
   const undo = () => {
     if (undoStack.length > 0) {
       const previousState = undoStack[undoStack.length - 1];
@@ -971,7 +1007,7 @@ export default function GamifiedMatchRecording() {
               </div>
               <div className="flex-1">
                 <p className="text-sm text-slate-300">
-                  {matchState.showVideo && matchState.config?.videoUrl ? (
+                  {matchState.showVideo ? (
                     <>
                       <span className="text-blue-400 font-semibold">📹 Video Reference Mode</span> - 
                       Momentum tracking is enhanced with video reference for maximum accuracy
@@ -1089,6 +1125,13 @@ export default function GamifiedMatchRecording() {
             <div className="text-center text-white font-semibold">{matchState.player1.name}</div>
             <div className="flex gap-2">
               <PulsingScoreButton
+                onClick={() => removePoint('1')}
+                variant="danger"
+                disabled={matchState.matchComplete || matchState.player1.score === 0}
+              >
+                <Minus className="h-6 w-6" />
+              </PulsingScoreButton>
+              <PulsingScoreButton
                 onClick={() => addPoint('1')}
                 variant={isWinning('1') ? 'winning' : 'default'}
                 disabled={matchState.matchComplete}
@@ -1114,6 +1157,13 @@ export default function GamifiedMatchRecording() {
                 disabled={matchState.matchComplete}
               >
                 <Plus className="h-6 w-6" />
+              </PulsingScoreButton>
+              <PulsingScoreButton
+                onClick={() => removePoint('2')}
+                variant="danger"
+                disabled={matchState.matchComplete || matchState.player2.score === 0}
+              >
+                <Minus className="h-6 w-6" />
               </PulsingScoreButton>
             </div>
           </div>
