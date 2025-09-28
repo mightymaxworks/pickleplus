@@ -665,21 +665,18 @@ function PlayerAvatar({
   );
 }
 
-// PlayerRankingCard Component (for ranks 4-8)
-function PlayerRankingCard({ 
-  player, 
-  showDetails = false,
-  isPodium = false
-}: { 
+// PlayerRankingCard Component (for ranks 4-8) - Wrapped with forwardRef for Framer Motion
+const PlayerRankingCard = React.forwardRef<HTMLDivElement, { 
   player: RankedPlayer; 
   showDetails?: boolean;
   isPodium?: boolean;
-}) {
+}>(({ player, showDetails = false, isPodium = false }, ref) => {
   const config = tierConfig[player.tier];
   const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -758,7 +755,10 @@ function PlayerRankingCard({
       </div>
     </motion.div>
   );
-}
+});
+
+// Add display name for debugging
+PlayerRankingCard.displayName = 'PlayerRankingCard';
 
 // Navigation Tabs Component
 function NavigationTabs({ activeTab, onTabChange }: { activeTab: TabMode; onTabChange: (tab: TabMode) => void }) {
@@ -1766,7 +1766,7 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
     : transformLeaderboardData(leaderboardData?.leaderboard || leaderboardData?.players || leaderboardData || []);
   
   // If real data is empty and not loading, fallback to mock data for demo
-  const rankings = allRankings.length > 0 ? allRankings : mockRankings;
+  const rankings = (allRankings.length > 0 && !isLoadingLeaderboard) ? allRankings : mockRankings;
   
   // Filter rankings based on search
   const filteredRankings = rankings.filter(rankedPlayer => 
