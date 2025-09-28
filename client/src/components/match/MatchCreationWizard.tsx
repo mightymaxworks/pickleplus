@@ -486,8 +486,9 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
 
             {/* Gamified Match Analysis */}
             {selectedPlayers.length > 0 && (
-              <Card className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-orange-500/30 p-4 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent"></div>
+              <Card className="bg-gradient-to-r from-emerald-900/80 via-blue-900/80 to-purple-900/80 border-2 border-cyan-400/50 p-4 relative overflow-hidden shadow-lg shadow-cyan-500/20">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/15 via-blue-500/15 to-purple-500/15 animate-pulse"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(34,197,94,0.1),transparent_50%)]"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="h-5 w-5 text-yellow-400" />
@@ -600,13 +601,13 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                           name: "Team Lightning", 
                           color: "#10b981", 
                           glowColor: "#10b981",
-                          players: pairings.team1
+                          players: pairings.team1.map(p => ({ ...p, name: p.displayName || p.username }))
                         },
                         {
                           name: "Team Thunder", 
                           color: "#3b82f6", 
                           glowColor: "#3b82f6", 
-                          players: pairings.team2
+                          players: pairings.team2.map(p => ({ ...p, name: p.displayName || p.username }))
                         }
                       ]}
                       showStats={true}
@@ -627,52 +628,65 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
             exit={{ opacity: 0, x: -50 }}
             className="space-y-6"
           >
-            {/* Full-Screen Versus Preview */}
-            <div className="relative">
+            {/* Epic Large Versus Preview */}
+            <div className="relative mb-6">
               {matchFormat === 'doubles' && pairings ? (
-                <VersusScreen
-                  mode="full"
-                  teams={[
-                    {
-                      name: "Team Lightning", 
-                      color: "#10b981", 
-                      glowColor: "#10b981",
-                      players: pairings.team1
-                    },
-                    {
-                      name: "Team Thunder", 
-                      color: "#3b82f6", 
-                      glowColor: "#3b82f6", 
-                      players: pairings.team2
-                    }
-                  ]}
-                  showStats={true}
-                />
+                <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 rounded-2xl p-8 border border-orange-500/30 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"></div>
+                  <div className="relative z-10">
+                    <VersusScreen
+                      mode="mid"
+                      teams={[
+                        {
+                          name: "Team Lightning", 
+                          color: "#10b981", 
+                          glowColor: "#10b981",
+                          players: pairings.team1.map(p => ({ ...p, name: p.displayName || p.username }))
+                        },
+                        {
+                          name: "Team Thunder", 
+                          color: "#3b82f6", 
+                          glowColor: "#3b82f6", 
+                          players: pairings.team2.map(p => ({ ...p, name: p.displayName || p.username }))
+                        }
+                      ]}
+                      showStats={true}
+                      intensity={1.0}
+                    />
+                  </div>
+                </div>
               ) : (
-                <VersusScreen
-                  mode="full"
-                  teams={[
-                    {
-                      name: "Player 1", 
-                      color: "#f97316", 
-                      glowColor: "#f97316",
-                      players: [{ id: 0, name: "You", displayName: "You" }]
-                    },
-                    {
-                      name: "Player 2", 
-                      color: "#3b82f6", 
-                      glowColor: "#3b82f6", 
-                      players: selectedPlayers.slice(0, 1)
-                    }
-                  ]}
-                  showStats={true}
-                />
+                <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 rounded-2xl p-8 border border-orange-500/30 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"></div>
+                  <div className="relative z-10">
+                    <VersusScreen
+                      mode="mid"
+                      teams={[
+                        {
+                          name: "Player 1", 
+                          color: "#f97316", 
+                          glowColor: "#f97316",
+                          players: [{ id: 0, name: "You", displayName: "You" }]
+                        },
+                        {
+                          name: "Player 2", 
+                          color: "#3b82f6", 
+                          glowColor: "#3b82f6", 
+                          players: selectedPlayers.slice(0, 1).map(p => ({ ...p, name: p.displayName || p.username }))
+                        }
+                      ]}
+                      showStats={true}
+                      intensity={1.0}
+                    />
+                  </div>
+                </div>
               )}
             </div>
 
             {/* Epic Match Analysis */}
-            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-orange-500/50 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"></div>
+            <Card className="bg-gradient-to-br from-purple-900/90 via-orange-900/90 to-red-900/90 border-2 border-yellow-500/60 relative overflow-hidden shadow-2xl shadow-orange-500/30">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]"></div>
               <div className="relative z-10 p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <motion.div 
