@@ -43,6 +43,34 @@ interface MatchCreationWizardProps {
 
 type WizardStep = 'format' | 'players' | 'pairings' | 'review';
 
+// Pickleball-themed team combinations
+const pickleballTeamThemes = [
+  {
+    team1: { name: "Dink Masters", color: "#10b981", icon: "🎯" },
+    team2: { name: "Power Smashers", color: "#3b82f6", icon: "💥" }
+  },
+  {
+    team1: { name: "Kitchen Warriors", color: "#f59e0b", icon: "🛡️" },
+    team2: { name: "Baseline Bombers", color: "#ef4444", icon: "🚀" }
+  },
+  {
+    team1: { name: "Drop Shot Legends", color: "#8b5cf6", icon: "🎪" },
+    team2: { name: "Volley Vikings", color: "#06b6d4", icon: "⚔️" }
+  },
+  {
+    team1: { name: "Spin Doctors", color: "#84cc16", icon: "🌪️" },
+    team2: { name: "Net Ninjas", color: "#f97316", icon: "🥷" }
+  },
+  {
+    team1: { name: "Lob Launchers", color: "#ec4899", icon: "🎈" },
+    team2: { name: "Rally Rockets", color: "#14b8a6", icon: "🚀" }
+  },
+  {
+    team1: { name: "Serve Samurai", color: "#dc2626", icon: "⚡" },
+    team2: { name: "Return Rebels", color: "#7c3aed", icon: "🔥" }
+  }
+];
+
 // Mock recent players (in a real app, this would come from API)
 const mockRecentPlayers: Player[] = [
   {
@@ -103,6 +131,11 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
   const [pairings, setPairings] = useState<{ team1: Player[]; team2: Player[] } | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Generate random pickleball team theme
+  const getRandomTeamTheme = () => {
+    return pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
+  };
+
   // Generate fun, gamified match analysis 
   const generateMatchAnalysis = () => {
     if (selectedPlayers.length === 0) {
@@ -126,50 +159,50 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
     const insights = [];
     const watchFor = [];
 
-    // Gender mix analysis with Lightning vs Thunder theme
+    // Gender mix analysis with pickleball insights
     if (matchFormat === 'doubles' && maleCount > 0 && femaleCount > 0) {
-      headlines.push('⚡ Lightning vs Thunder: Storm Brewing!');
-      badges.push({ icon: '🌩️', label: 'Storm Power', tier: 'A' });
-      insights.push('Lightning precision meets Thunder power in this epic clash!');
-      watchFor.push('Lightning strikes vs Thunder rolls');
+      headlines.push('🎾 Mixed Doubles Magic!');
+      badges.push({ icon: '⚡', label: 'Power Balance', tier: 'A' });
+      insights.push('Mixed doubles brings strategic variety - expect exciting shot selection!');
+      watchFor.push('Cross-court dinks', 'Stacking strategies');
     } else if (matchFormat === 'singles' && selectedPlayers[0]?.gender !== currentUserGender) {
-      headlines.push('⚡ Lightning vs Thunder: Elemental Duel!');
-      badges.push({ icon: '🌪️', label: 'Force Battle', tier: 'B' });
-      insights.push('Two elemental forces prepare for combat!');
-      watchFor.push('Lightning speed vs Thunder strength');
+      headlines.push('🎯 Cross-Gender Singles Showdown!');
+      badges.push({ icon: '🎪', label: 'Style Clash', tier: 'B' });
+      insights.push('Different playing styles about to collide on the court!');
+      watchFor.push('Power vs finesse', 'Court positioning');
     } else {
-      headlines.push('⚡ Lightning vs Thunder: Classic Storm!');
-      badges.push({ icon: '🌩️', label: 'Storm Match', tier: 'S' });
+      headlines.push('🔥 Classic Pickleball Battle!');
+      badges.push({ icon: '🏆', label: 'Pure Competition', tier: 'S' });
     }
 
-    // Skill level analysis with Lightning vs Thunder theme
+    // Skill level analysis with pickleball-specific insights
     if (avgPoints > 1400) {
-      headlines.unshift('👑 Lightning vs Thunder: Titan Storm!');
-      badges.push({ icon: '💎', label: 'Storm Titans', tier: 'S' });
-      insights.push('Elite Lightning vs Thunder - expect supernatural shot-making!');
-      watchFor.push('Lightning precision strikes', 'Thunder power volleys');
+      headlines.unshift('👑 Elite Championship Level!');
+      badges.push({ icon: '💎', label: 'Pro Tier', tier: 'S' });
+      insights.push('Elite players - expect lightning-fast exchanges and perfect shot placement!');
+      watchFor.push('Third shot drops', 'Kitchen line battles', 'Advanced footwork');
     } else if (avgPoints > 1000) {
-      badges.push({ icon: '🏆', label: 'Storm Warriors', tier: 'A' });
-      insights.push('Seasoned Lightning vs Thunder forces clash!');
-      watchFor.push('Lightning consistency', 'Thunder endurance');
+      badges.push({ icon: '🏆', label: 'Competitive', tier: 'A' });
+      insights.push('Solid fundamentals will decide this competitive match!');
+      watchFor.push('Consistent serves', 'Dink patience', 'Unforced errors');
     } else {
-      badges.push({ icon: '🌱', label: 'Storm Apprentices', tier: 'B' });
-      insights.push('Rising Lightning vs Thunder powers unleashing!');
-      watchFor.push('Lightning learning curves', 'Thunder growth spurts');
+      badges.push({ icon: '🌱', label: 'Developing', tier: 'B' });
+      insights.push('Great opportunity to see rapid improvement and learning!');
+      watchFor.push('Serve development', 'Shot selection', 'Court positioning');
     }
 
-    // AI-powered insights with Lightning vs Thunder theme
-    const aiInsights = [
-      'Lightning speed could overwhelm Thunder defense! ⚡',
-      'Thunder power might counter Lightning agility! ⛈️', 
-      'Scout\'s Note: Lightning strikes first, but Thunder rolls longer! 📊',
-      'AI predicts: Epic Lightning vs Thunder clash incoming! 🤖',
-      'Momentum Factor: Which team will harness the storm? 🌩️',
-      'Style Clash: Lightning quick strikes vs Thunder raw power! ⚡🛡️'
+    // AI-powered pickleball insights based on player data
+    const pickleballInsights = [
+      'AI predicts: Expect 3+ deuces based on similar skill matchups! 🤖',
+      'Scout Note: Both players favor baseline play - kitchen battles likely! 📊',
+      'Pattern Analysis: Cross-court dinks could be the deciding factor! 🎯',
+      'Momentum Factor: First to adapt their serve will control the match! 🎾',
+      'Strategy Alert: Look for early third shot drop attempts! 🎪',
+      'Key Insight: Player positioning suggests aggressive net play ahead! ⚡'
     ];
     
     if (Math.random() > 0.3) { // 70% chance to show AI insight
-      insights.push(aiInsights[Math.floor(Math.random() * aiInsights.length)]);
+      insights.push(pickleballInsights[Math.floor(Math.random() * pickleballInsights.length)]);
     }
 
     return {
@@ -494,7 +527,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="h-5 w-5 text-yellow-400" />
-                    <span className="text-white font-bold">⚡ Lightning vs Thunder Analysis ⛈️</span>
+                    <span className="text-white font-bold">🎾 Pickleball Match Analysis</span>
                   </div>
                   
                   {(() => {
@@ -596,24 +629,29 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                 {/* Epic Team Preview */}
                 {pairings && (
                   <div className="mt-6">
-                    <VersusScreen
-                      mode="mid"
-                      teams={[
-                        {
-                          name: "Team Lightning", 
-                          color: "#10b981", 
-                          glowColor: "#10b981",
-                          players: pairings.team1.map(p => ({ ...p, name: p.displayName || p.username }))
-                        },
-                        {
-                          name: "Team Thunder", 
-                          color: "#3b82f6", 
-                          glowColor: "#3b82f6", 
-                          players: pairings.team2.map(p => ({ ...p, name: p.displayName || p.username }))
-                        }
-                      ]}
-                      showStats={true}
-                    />
+                    {(() => {
+                      const theme = getRandomTeamTheme();
+                      return (
+                        <VersusScreen
+                          mode="mid"
+                          teams={[
+                            {
+                              name: theme.team1.name, 
+                              color: theme.team1.color, 
+                              glowColor: theme.team1.color,
+                              players: pairings.team1.map(p => ({ ...p, name: p.displayName || p.username }))
+                            },
+                            {
+                              name: theme.team2.name, 
+                              color: theme.team2.color, 
+                              glowColor: theme.team2.color, 
+                              players: pairings.team2.map(p => ({ ...p, name: p.displayName || p.username }))
+                            }
+                          ]}
+                          showStats={true}
+                        />
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -630,57 +668,61 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
             exit={{ opacity: 0, x: -50 }}
             className="space-y-6"
           >
-            {/* Epic Large Versus Preview */}
+            {/* Epic FULL-SCREEN Versus Experience */}
             <div className="relative mb-6">
               {matchFormat === 'doubles' && pairings ? (
-                <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 rounded-2xl p-8 border border-orange-500/30 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"></div>
-                  <div className="relative z-10">
-                    <VersusScreen
-                      mode="mid"
-                      teams={[
-                        {
-                          name: "Team Lightning", 
-                          color: "#10b981", 
-                          glowColor: "#10b981",
-                          players: pairings.team1.map(p => ({ ...p, name: p.displayName || p.username }))
-                        },
-                        {
-                          name: "Team Thunder", 
-                          color: "#3b82f6", 
-                          glowColor: "#3b82f6", 
-                          players: pairings.team2.map(p => ({ ...p, name: p.displayName || p.username }))
-                        }
-                      ]}
-                      showStats={true}
-                      intensity={1.0}
-                    />
-                  </div>
+                <div className="relative">
+                  {(() => {
+                    const theme = getRandomTeamTheme();
+                    return (
+                      <VersusScreen
+                        mode="full"
+                        teams={[
+                          {
+                            name: theme.team1.name, 
+                            color: theme.team1.color, 
+                            glowColor: theme.team1.color,
+                            players: pairings.team1.map(p => ({ ...p, name: p.displayName || p.username }))
+                          },
+                          {
+                            name: theme.team2.name, 
+                            color: theme.team2.color, 
+                            glowColor: theme.team2.color, 
+                            players: pairings.team2.map(p => ({ ...p, name: p.displayName || p.username }))
+                          }
+                        ]}
+                        showStats={true}
+                        intensity={1.0}
+                      />
+                    );
+                  })()}
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 rounded-2xl p-8 border border-orange-500/30 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"></div>
-                  <div className="relative z-10">
-                    <VersusScreen
-                      mode="mid"
-                      teams={[
-                        {
-                          name: "Player 1", 
-                          color: "#f97316", 
-                          glowColor: "#f97316",
-                          players: [{ id: 0, name: "You", displayName: "You" }]
-                        },
-                        {
-                          name: "Player 2", 
-                          color: "#3b82f6", 
-                          glowColor: "#3b82f6", 
-                          players: selectedPlayers.slice(0, 1).map(p => ({ ...p, name: p.displayName || p.username }))
-                        }
-                      ]}
-                      showStats={true}
-                      intensity={1.0}
-                    />
-                  </div>
+                <div className="relative">
+                  {(() => {
+                    const theme = getRandomTeamTheme();
+                    return (
+                      <VersusScreen
+                        mode="full"
+                        teams={[
+                          {
+                            name: "You", 
+                            color: theme.team1.color, 
+                            glowColor: theme.team1.color,
+                            players: [{ id: 0, name: "You", displayName: "You" }]
+                          },
+                          {
+                            name: selectedPlayers[0]?.displayName || selectedPlayers[0]?.username || "Opponent", 
+                            color: theme.team2.color, 
+                            glowColor: theme.team2.color, 
+                            players: selectedPlayers.slice(0, 1).map(p => ({ ...p, name: p.displayName || p.username }))
+                          }
+                        ]}
+                        showStats={true}
+                        intensity={1.0}
+                      />
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -698,7 +740,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                   >
                     <Trophy className="h-6 w-6 text-yellow-400" />
                   </motion.div>
-                  <h3 className="text-xl font-bold text-white">⚡ Lightning vs Thunder: Epic Storm Preview ⛈️</h3>
+                  <h3 className="text-xl font-bold text-white">🎾 Epic Pickleball Battle Preview</h3>
                 </div>
                 
                 {(() => {

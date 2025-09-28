@@ -288,13 +288,13 @@ export function VersusScreen({
   const containerClass = {
     mini: 'bg-slate-800/30 rounded-lg border border-slate-700/50 p-3',
     mid: 'bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 relative overflow-hidden',
-    full: 'fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+    full: 'bg-gradient-to-br from-slate-900/95 to-slate-800/95 rounded-2xl border-2 border-orange-500/50 p-8 relative overflow-hidden shadow-2xl shadow-orange-500/20'
   }[mode];
 
   const contentClass = {
     mini: 'flex items-center gap-4',
     mid: 'flex items-center gap-6 relative z-10',
-    full: 'flex items-center gap-12 max-w-6xl w-full relative z-10'
+    full: 'flex items-center gap-12 w-full relative z-10'
   }[mode];
 
   return (
