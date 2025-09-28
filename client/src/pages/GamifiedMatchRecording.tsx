@@ -37,6 +37,7 @@ import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
 import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
 import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
+import { GamingUIOverlays } from '@/components/match/GamingUIOverlays';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -592,6 +593,47 @@ export default function GamifiedMatchRecording() {
   const [showMomentumContext, setShowMomentumContext] = useState(true);
   const [isLiveMode, setIsLiveMode] = useState(true); // Track if user is doing live point-by-point scoring
   const [liveMatchState, setLiveMatchState] = useState<LiveMatchState>(matchStateManager.getState());
+
+  // Gaming UI overlay states for Sprint 2
+  const [aestheticMode, setAestheticMode] = useState<'subtle' | 'esports'>('subtle');
+  const [gamingOverlaysEnabled, setGamingOverlaysEnabled] = useState(false);
+
+  // Enable gaming overlays when live match state is active
+  useEffect(() => {
+    const shouldEnable = liveMatchState.isLive && liveMatchState.gamingFeatures.crowdEnergyMeter;
+    setGamingOverlaysEnabled(shouldEnable);
+    console.log(`🎮 Gaming overlays ${shouldEnable ? 'ENABLED' : 'DISABLED'} - Live: ${liveMatchState.isLive}`);
+  }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter]);
+
+  // Gaming feature test handlers
+  const handleGamingTest = (trigger: string) => {
+    console.log(`🎮 Testing gaming feature: ${trigger}`);
+    switch (trigger) {
+      case 'crowd-boost':
+        console.log('🔥 Crowd energy boost triggered!');
+        // Future: Connect to crowd energy meter
+        break;
+      case 'hype-train':
+        console.log('🚂 Hype train activated!');
+        // Future: Trigger hype train effects
+        break;
+      case 'particles':
+        console.log('✨ Particle effects triggered!');
+        // Future: Trigger particle celebration
+        break;
+      case 'celebration':
+        console.log('🎉 Victory celebration!');
+        setShowReaction({ show: true, type: 'milestone', playerName: 'Epic Player' });
+        setTimeout(() => setShowReaction({ show: false, type: 'win' }), 3000);
+        break;
+    }
+  };
+
+  const toggleAesthetic = () => {
+    const newMode = aestheticMode === 'subtle' ? 'esports' : 'subtle';
+    setAestheticMode(newMode);
+    console.log(`🎨 Aesthetic mode changed to: ${newMode}`);
+  };
 
   // Mega streak animation state
   const [megaAnimation, setMegaAnimation] = useState<{
@@ -1410,7 +1452,13 @@ export default function GamifiedMatchRecording() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
+    <GamingUIOverlays
+      isEnabled={gamingOverlaysEnabled}
+      aestheticMode={aestheticMode}
+      onAestheticToggle={toggleAesthetic}
+      onTestTrigger={handleGamingTest}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1898,6 +1946,7 @@ export default function GamifiedMatchRecording() {
         teamName={megaAnimation.teamName}
         onComplete={() => setMegaAnimation({ show: false, megaLevel: 1, teamColor: '#ff6b35', teamName: '' })}
       />
-    </div>
+      </div>
+    </GamingUIOverlays>
   );
 }
