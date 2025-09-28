@@ -126,44 +126,46 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
     const insights = [];
     const watchFor = [];
 
-    // Gender mix analysis
+    // Gender mix analysis with Lightning vs Thunder theme
     if (matchFormat === 'doubles' && maleCount > 0 && femaleCount > 0) {
-      headlines.push('🌟 Mixed Magic Matchup!');
-      badges.push({ icon: '⚡', label: 'Power Balance', tier: 'A' });
-      insights.push('Mixed gender teams bring explosive dynamics to the court!');
-      watchFor.push('Strategic shot placement differences');
+      headlines.push('⚡ Lightning vs Thunder: Storm Brewing!');
+      badges.push({ icon: '🌩️', label: 'Storm Power', tier: 'A' });
+      insights.push('Lightning precision meets Thunder power in this epic clash!');
+      watchFor.push('Lightning strikes vs Thunder rolls');
     } else if (matchFormat === 'singles' && selectedPlayers[0]?.gender !== currentUserGender) {
-      headlines.push('⚔️ Cross-Court Clash!');
-      badges.push({ icon: '🎯', label: 'Style Battle', tier: 'B' });
-      insights.push('Different playing styles are about to collide!');
-      watchFor.push('Power vs. finesse showdown');
+      headlines.push('⚡ Lightning vs Thunder: Elemental Duel!');
+      badges.push({ icon: '🌪️', label: 'Force Battle', tier: 'B' });
+      insights.push('Two elemental forces prepare for combat!');
+      watchFor.push('Lightning speed vs Thunder strength');
     } else {
-      headlines.push('🔥 Classic Rivalry Setup!');
-      badges.push({ icon: '⚖️', label: 'Even Match', tier: 'S' });
+      headlines.push('⚡ Lightning vs Thunder: Classic Storm!');
+      badges.push({ icon: '🌩️', label: 'Storm Match', tier: 'S' });
     }
 
-    // Skill level analysis
+    // Skill level analysis with Lightning vs Thunder theme
     if (avgPoints > 1400) {
-      headlines.unshift('👑 Elite Championship Battle!');
-      badges.push({ icon: '💎', label: 'Pro Level', tier: 'S' });
-      insights.push('Expect lightning-fast rallies and incredible shot-making!');
-      watchFor.push('Third shot drop precision', 'Kitchen battles');
+      headlines.unshift('👑 Lightning vs Thunder: Titan Storm!');
+      badges.push({ icon: '💎', label: 'Storm Titans', tier: 'S' });
+      insights.push('Elite Lightning vs Thunder - expect supernatural shot-making!');
+      watchFor.push('Lightning precision strikes', 'Thunder power volleys');
     } else if (avgPoints > 1000) {
-      badges.push({ icon: '🏆', label: 'Competitive', tier: 'A' });
-      insights.push('Solid fundamentals will decide this match!');
-      watchFor.push('Consistent serving', 'Dink game mastery');
+      badges.push({ icon: '🏆', label: 'Storm Warriors', tier: 'A' });
+      insights.push('Seasoned Lightning vs Thunder forces clash!');
+      watchFor.push('Lightning consistency', 'Thunder endurance');
     } else {
-      badges.push({ icon: '🌱', label: 'Rising Stars', tier: 'B' });
-      insights.push('Watch these players level up in real-time!');
-      watchFor.push('Improvement momentum', 'Learning opportunities');
+      badges.push({ icon: '🌱', label: 'Storm Apprentices', tier: 'B' });
+      insights.push('Rising Lightning vs Thunder powers unleashing!');
+      watchFor.push('Lightning learning curves', 'Thunder growth spurts');
     }
 
-    // AI-powered insights (mock for now)
+    // AI-powered insights with Lightning vs Thunder theme
     const aiInsights = [
-      'AI predicts: 3-set thriller incoming! 🤖',
-      'Scout\'s Note: This matchup has upset potential! 📊',
-      'Momentum Factor: Home court advantage detected! 🏠',
-      'Style Clash: Aggressive meets defensive strategy! ⚡🛡️'
+      'Lightning speed could overwhelm Thunder defense! ⚡',
+      'Thunder power might counter Lightning agility! ⛈️', 
+      'Scout\'s Note: Lightning strikes first, but Thunder rolls longer! 📊',
+      'AI predicts: Epic Lightning vs Thunder clash incoming! 🤖',
+      'Momentum Factor: Which team will harness the storm? 🌩️',
+      'Style Clash: Lightning quick strikes vs Thunder raw power! ⚡🛡️'
     ];
     
     if (Math.random() > 0.3) { // 70% chance to show AI insight
@@ -492,7 +494,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="h-5 w-5 text-yellow-400" />
-                    <span className="text-white font-bold">Match Analysis</span>
+                    <span className="text-white font-bold">⚡ Lightning vs Thunder Analysis ⛈️</span>
                   </div>
                   
                   {(() => {
@@ -696,7 +698,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                   >
                     <Trophy className="h-6 w-6 text-yellow-400" />
                   </motion.div>
-                  <h3 className="text-xl font-bold text-white">Epic Battle Preview</h3>
+                  <h3 className="text-xl font-bold text-white">⚡ Lightning vs Thunder: Epic Storm Preview ⛈️</h3>
                 </div>
                 
                 {(() => {
