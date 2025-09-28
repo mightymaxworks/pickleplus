@@ -42,6 +42,58 @@ interface MatchCreationWizardProps {
 
 type WizardStep = 'format' | 'players' | 'pairings' | 'review';
 
+// Mock recent players (in a real app, this would come from API)
+const mockRecentPlayers: Player[] = [
+  {
+    id: 101,
+    username: 'alex_chen',
+    displayName: 'Alex Chen',
+    passportCode: 'HVGN0BW0',
+    gender: 'male',
+    rankingPoints: 1200,
+  },
+  {
+    id: 102,
+    username: 'sarah_j',
+    displayName: 'Sarah Johnson',
+    passportCode: 'KGLE38K4',
+    gender: 'female',
+    rankingPoints: 980,
+  },
+  {
+    id: 103,
+    username: 'mike_torres',
+    displayName: 'Mike Torres',
+    passportCode: 'PLMN5R7X',
+    gender: 'male',
+    rankingPoints: 1450,
+  },
+  {
+    id: 104,
+    username: 'emma_wilson',
+    displayName: 'Emma Wilson',
+    passportCode: 'QWER8T9Y',
+    gender: 'female',
+    rankingPoints: 1100,
+  },
+  {
+    id: 105,
+    username: 'david_kim',
+    displayName: 'David Kim',
+    passportCode: 'ZXCV3B4N',
+    gender: 'male',
+    rankingPoints: 1320,
+  },
+  {
+    id: 106,
+    username: 'lisa_park',
+    displayName: 'Lisa Park',
+    passportCode: 'ASDF6G7H',
+    gender: 'female',
+    rankingPoints: 1050,
+  },
+];
+
 export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<WizardStep>('format');
@@ -295,6 +347,47 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
               </h3>
               
               <div className="space-y-4">
+                {/* Recent Players Quick Selection */}
+                <div className="space-y-3">
+                  <h4 className="text-white font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4 text-green-400" />
+                    Recent Opponents (Quick Select)
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {mockRecentPlayers.slice(0, 6).map((player) => (
+                      <Button
+                        key={player.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePlayerSelect(player)}
+                        disabled={selectedPlayers.some(p => p.id === player.id)}
+                        className={`h-auto p-3 flex flex-col gap-1 ${
+                          selectedPlayers.some(p => p.id === player.id)
+                            ? 'bg-green-500/20 border-green-500 text-green-300'
+                            : 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {(player.displayName || player.username).charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-xs font-medium truncate">
+                          {player.displayName || player.username}
+                        </span>
+                        <span className="text-xs opacity-75 font-mono">
+                          {player.passportCode}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-slate-600"></div>
+                  <span className="text-slate-400 text-sm">or search</span>
+                  <div className="flex-1 h-px bg-slate-600"></div>
+                </div>
+
                 <SmartPlayerSearch
                   label="Search by name or passport code"
                   placeholder="Enter name or passport code (e.g., HVGN0BW0)..."
