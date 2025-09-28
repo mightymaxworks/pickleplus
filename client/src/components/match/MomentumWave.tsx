@@ -181,166 +181,167 @@ export const MomentumWave = memo(({
       )}
 
       <div className={`relative ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse" />
-          <span className="text-sm font-bold text-white">Momentum</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Game Phase Indicator */}
-          <div className={`px-2 py-1 rounded-full text-xs font-bold ${
-            gamePhase === 'critical' ? 'bg-red-500/20 text-red-400' :
-            gamePhase === 'late' ? 'bg-orange-500/20 text-orange-400' :
-            gamePhase === 'mid' ? 'bg-yellow-500/20 text-yellow-400' :
-            'bg-green-500/20 text-green-400'
-          }`}>
-            {gamePhase.toUpperCase()}
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse" />
+            <span className="text-sm font-bold text-white">Momentum</span>
           </div>
-          
-          {/* Momentum Score */}
-          <div className="text-lg font-bold text-white">
-            {momentumScore}
-            <span className="text-xs text-slate-400 ml-1">%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Wave Visualization */}
-      <div className="relative bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-        {/* Team indicators */}
-        <div className="absolute top-2 left-4 right-4 flex justify-between text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: team1Color }} />
-            <span style={{ color: team1Color }}>Team 1</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span style={{ color: team2Color }}>Team 2</span>
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: team2Color }} />
+          <div className="flex items-center gap-3">
+            {/* Game Phase Indicator */}
+            <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+              gamePhase === 'critical' ? 'bg-red-500/20 text-red-400' :
+              gamePhase === 'late' ? 'bg-orange-500/20 text-orange-400' :
+              gamePhase === 'mid' ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-green-500/20 text-green-400'
+            }`}>
+              {gamePhase.toUpperCase()}
+            </div>
+            
+            {/* Momentum Score */}
+            <div className="text-lg font-bold text-white">
+              {momentumScore}
+              <span className="text-xs text-slate-400 ml-1">%</span>
+            </div>
           </div>
         </div>
 
-        {/* SVG Wave Chart */}
-        <div className="mt-6">
-          <svg 
-            width="100%" 
-            height="60" 
-            viewBox="0 0 300 60" 
-            className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-          >
-            {/* Center baseline */}
-            <line
-              x1="0"
-              y1="30"
-              x2="300"
-              y2="30"
-              stroke="#64748b"
-              strokeWidth="1"
-              strokeDasharray="4,4"
-              opacity="0.5"
-            />
-            
-            {/* Team 1 area (top half) */}
-            {momentum > 0 && (
-              <motion.path
-                d={`${wavePath} L 300 30 L 0 30 Z`}
-                fill={team1Color}
-                fillOpacity={fillOpacity}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-            
-            {/* Team 2 area (bottom half) */}
-            {momentum < 0 && (
-              <motion.path
-                d={`${wavePath} L 300 30 L 0 30 Z`}
-                fill={team2Color}
-                fillOpacity={fillOpacity}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-            
-            {/* Wave line */}
-            <motion.path
-              d={wavePath}
-              stroke={dominantColor}
-              strokeWidth="2"
-              fill="none"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              style={{
-                filter: `drop-shadow(0 0 ${4 + glowIntensity * 8}px ${dominantColor})`
-              }}
-            />
-            
-            {/* Key momentum shift indicators */}
-            {isInteractive && momentumShifts.map((shift) => (
-              <motion.circle
-                key={shift.point}
-                cx={(shift.point / Math.max(wave.length - 1, 1)) * 300}
-                cy={30 - (shift.momentum * 30 * 0.8)}
-                r="3"
-                fill={shift.momentum > 0 ? '#10b981' : '#ef4444'}
-                stroke="#ffffff"
+        {/* Wave Visualization */}
+        <div className="relative bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+          {/* Team indicators */}
+          <div className="absolute top-2 left-4 right-4 flex justify-between text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: team1Color }} />
+              <span style={{ color: team1Color }}>Team 1</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span style={{ color: team2Color }}>Team 2</span>
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: team2Color }} />
+            </div>
+          </div>
+
+          {/* SVG Wave Chart */}
+          <div className="mt-6">
+            <svg 
+              width="100%" 
+              height="60" 
+              viewBox="0 0 300 60" 
+              className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              {/* Center baseline */}
+              <line
+                x1="0"
+                y1="30"
+                x2="300"
+                y2="30"
+                stroke="#64748b"
                 strokeWidth="1"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.8 }}
-                transition={{ 
-                  delay: shift.point * 0.1,
-                  type: "spring", 
-                  stiffness: 400, 
-                  damping: 25 
-                }}
+                strokeDasharray="4,4"
+                opacity="0.5"
+              />
+            
+              {/* Team 1 area (top half) */}
+              {momentum > 0 && (
+                <motion.path
+                  d={`${wavePath} L 300 30 L 0 30 Z`}
+                  fill={team1Color}
+                  fillOpacity={fillOpacity}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+              
+              {/* Team 2 area (bottom half) */}
+              {momentum < 0 && (
+                <motion.path
+                  d={`${wavePath} L 300 30 L 0 30 Z`}
+                  fill={team2Color}
+                  fillOpacity={fillOpacity}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+              
+              {/* Wave line */}
+              <motion.path
+                d={wavePath}
+                stroke={dominantColor}
+                strokeWidth="2"
+                fill="none"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 style={{
-                  filter: `drop-shadow(0 0 4px ${shift.momentum > 0 ? '#10b981' : '#ef4444'})`
+                  filter: `drop-shadow(0 0 ${4 + glowIntensity * 8}px ${dominantColor})`
                 }}
               />
-            ))}
+              
+              {/* Key momentum shift indicators */}
+              {isInteractive && momentumShifts.map((shift) => (
+                <motion.circle
+                  key={shift.point}
+                  cx={(shift.point / Math.max(wave.length - 1, 1)) * 300}
+                  cy={30 - (shift.momentum * 30 * 0.8)}
+                  r="3"
+                  fill={shift.momentum > 0 ? '#10b981' : '#ef4444'}
+                  stroke="#ffffff"
+                  strokeWidth="1"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 0.8 }}
+                  transition={{ 
+                    delay: shift.point * 0.1,
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 25 
+                  }}
+                  style={{
+                    filter: `drop-shadow(0 0 4px ${shift.momentum > 0 ? '#10b981' : '#ef4444'})`
+                  }}
+                />
+              ))}
 
-            {/* Current position indicator */}
-            {wave.length > 0 && (
-              <motion.circle
-                cx={((wave.length - 1) / Math.max(wave.length - 1, 1)) * 300}
-                cy={30 - (momentum * 30 * 0.8)}
-                r="4"
-                fill={dominantColor}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                style={{
-                  filter: `drop-shadow(0 0 ${4 + glowIntensity * 6}px ${dominantColor})`
-                }}
+              {/* Current position indicator */}
+              {wave.length > 0 && (
+                <motion.circle
+                  cx={((wave.length - 1) / Math.max(wave.length - 1, 1)) * 300}
+                  cy={30 - (momentum * 30 * 0.8)}
+                  r="4"
+                  fill={dominantColor}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  style={{
+                    filter: `drop-shadow(0 0 ${4 + glowIntensity * 6}px ${dominantColor})`
+                  }}
+                />
+              )}
+            </svg>
+          </div>
+
+          {/* Streak Indicator */}
+          {streak.length >= 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute bottom-2 right-4 flex items-center gap-2 bg-slate-900/80 rounded-full px-3 py-1"
+            >
+              <div 
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ backgroundColor: streak.team === 'team1' ? team1Color : team2Color }}
               />
-            )}
-          </svg>
+              <span className="text-xs font-bold text-white">
+                {streak.length} streak
+              </span>
+              {streak.length >= 3 && (
+                <div className="text-xs">🔥</div>
+              )}
+            </motion.div>
+          )}
         </div>
-
-        {/* Streak Indicator */}
-        {streak.length >= 2 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-2 right-4 flex items-center gap-2 bg-slate-900/80 rounded-full px-3 py-1"
-          >
-            <div 
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: streak.team === 'team1' ? team1Color : team2Color }}
-            />
-            <span className="text-xs font-bold text-white">
-              {streak.length} streak
-            </span>
-            {streak.length >= 3 && (
-              <div className="text-xs">🔥</div>
-            )}
-          </motion.div>
-        )}
       </div>
     </div>
   );
