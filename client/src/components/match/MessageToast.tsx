@@ -100,7 +100,7 @@ export const MessageToast = ({ messages, onMessageExpire, team1Color, team2Color
   if (visibleMessages.length === 0) return null;
 
   return (
-    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 space-y-2 max-w-sm w-full px-4">
+    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-50 space-y-2 max-w-sm w-full px-4">
       <AnimatePresence mode="popLayout">
         {visibleMessages.map((message, index) => {
           const animation = getPriorityAnimation(message.priority);
