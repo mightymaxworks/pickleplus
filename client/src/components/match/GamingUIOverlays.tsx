@@ -187,7 +187,7 @@ export function GamingUIOverlays({
         <div className={`relative ${aestheticMode === 'esports' ? 'pt-20 pb-24' : 'pt-12 pb-16'}`}>
           {children}
           
-          {/* Enhanced Momentum Wave - Integrated into main content */}
+          {/* Enhanced Momentum Wave with Integrated Crowd Energy */}
           {momentumState && (
             <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-2xl px-4">
               <MomentumWave
@@ -196,12 +196,32 @@ export function GamingUIOverlays({
                 team2Color="#ef4444"
                 team1Name="Team 1"
                 team2Name="Team 2"
-                className="mb-4"
+                className="mb-3"
                 isInteractive={true}
                 crowdEnergy={crowdEnergy}
                 heroMode={crowdEnergy >= 85 || (hypeTrainActive && hypeTrainLevel >= 4)}
                 aestheticMode={aestheticMode}
               />
+              
+              {/* Crowd Energy - Integrated below momentum wave */}
+              {isEnabled && (
+                <div className="flex justify-center">
+                  <div className="max-w-sm w-full">
+                    <CrowdEnergyMeter
+                      momentumState={momentumState}
+                      isLive={isEnabled}
+                      aestheticMode={aestheticMode}
+                      enableDecay={true}
+                      decayRate={1.5}
+                      onEnergyChange={(energy) => {
+                        setCrowdEnergy(energy);
+                        console.log(`🔥 Crowd Energy: ${energy}%`);
+                      }}
+                      onReactionTrigger={(reaction) => console.log(`👥 Crowd Reaction: ${reaction.type} (${reaction.intensity}%)`)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -220,21 +240,6 @@ export function GamingUIOverlays({
           )}
         </AnimatePresence>
 
-        {/* Crowd Energy Meter - Floating Position */}
-        <div className="fixed bottom-32 right-4 z-40 max-w-sm">
-          <CrowdEnergyMeter
-            momentumState={momentumState}
-            isLive={isEnabled}
-            aestheticMode={aestheticMode}
-            enableDecay={true} // Enable energy decay system
-            decayRate={1.5} // Energy decays by 1.5 points per second when inactive
-            onEnergyChange={(energy) => {
-              setCrowdEnergy(energy);
-              console.log(`🔥 Crowd Energy: ${energy}%`);
-            }}
-            onReactionTrigger={(reaction) => console.log(`👥 Crowd Reaction: ${reaction.type} (${reaction.intensity}%)`)}
-          />
-        </div>
 
         {/* Hype Train Effects */}
         <HypeTrainEffects
