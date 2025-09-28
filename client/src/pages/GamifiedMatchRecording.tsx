@@ -139,6 +139,12 @@ function PulsingScoreButton({ children, onClick, variant = 'default', disabled =
     danger: 'bg-red-600 hover:bg-red-500 border-red-400 shadow-red-400/50'
   };
 
+  const textStyles = {
+    default: 'text-white',
+    winning: 'text-white',
+    danger: 'text-white'
+  };
+
   return (
     <motion.button
       disabled={disabled}
@@ -158,9 +164,12 @@ function PulsingScoreButton({ children, onClick, variant = 'default', disabled =
         ] : 'none'
       }}
       transition={{ duration: 0.2 }}
-      className={`relative p-4 rounded-xl border-2 text-white font-bold text-xl transition-all ${
+      className={`relative p-4 rounded-xl border-2 font-bold text-xl transition-all ${
         variants[variant]
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer shadow-lg'}`}
+      } ${textStyles[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer shadow-lg'}`}
+      style={{
+        textShadow: variant !== 'default' ? '0 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.4)' : 'none'
+      }}
     >
       {children}
       
@@ -222,6 +231,9 @@ function GameifiedPlayerCard({ player, score, isWinning, onClick }: {
             animate={{ scale: isWinning ? [1, 1.1, 1] : 1 }}
             transition={{ repeat: isWinning ? Infinity : 0, duration: 1 }}
             className={`text-4xl font-bold ${isWinning ? 'text-orange-400' : 'text-white'}`}
+            style={{
+              textShadow: isWinning ? '0 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.6)' : 'none'
+            }}
           >
             {score}
           </motion.div>
