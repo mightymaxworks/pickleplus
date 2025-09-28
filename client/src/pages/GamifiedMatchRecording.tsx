@@ -1568,7 +1568,7 @@ export default function GamifiedMatchRecording() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`mb-6 ${matchState.matchComplete ? 'ring-2 ring-yellow-400/50 rounded-lg p-2' : ''}`}
+          className={`mb-8 ${matchState.matchComplete ? 'ring-2 ring-yellow-400/50 rounded-lg p-2' : ''}`}
         >
           {matchState.matchComplete && (
             <div className="mb-2 text-center">
