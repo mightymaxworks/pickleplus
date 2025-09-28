@@ -982,6 +982,25 @@ export default function MatchArena() {
                 <p className="text-slate-300">Start typing to search or browse all available players</p>
               </div>
             )}
+
+            {filteredPlayers.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredPlayers.map(player => (
+                  <ArenaPlayerCard
+                    key={player.id}
+                    player={player}
+                    onChallenge={(player, matchType) => {
+                      setSelectedPlayer(player);
+                      setShowChallengeModal(true);
+                    }}
+                    onViewProfile={() => openPlayerBottomSheet(player)}
+                    onPartnerUp={(player) => handlePartnerUp(player, 'create-match')}
+                    myPlayerId={myPlayerId}
+                    calculateCompatibility={calculateCompatibility}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
