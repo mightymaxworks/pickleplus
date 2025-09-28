@@ -28,6 +28,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { VersusScreen } from '@/components/match/VersusScreen';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -265,6 +266,39 @@ export default function GamifiedMatchRecording() {
     window.location.href = '/unified-prototype';
   };
   
+  // Pickleball-themed team combinations (same as MatchCreationWizard)
+  const pickleballTeamThemes = [
+    {
+      team1: { name: "Dink Masters", color: "#10b981", icon: "🎯" },
+      team2: { name: "Power Smashers", color: "#3b82f6", icon: "💥" }
+    },
+    {
+      team1: { name: "Kitchen Warriors", color: "#f59e0b", icon: "🛡️" },
+      team2: { name: "Baseline Bombers", color: "#ef4444", icon: "🚀" }
+    },
+    {
+      team1: { name: "Drop Shot Legends", color: "#8b5cf6", icon: "🎪" },
+      team2: { name: "Volley Vikings", color: "#06b6d4", icon: "⚔️" }
+    },
+    {
+      team1: { name: "Spin Doctors", color: "#84cc16", icon: "🌪️" },
+      team2: { name: "Net Ninjas", color: "#f97316", icon: "🥷" }
+    },
+    {
+      team1: { name: "Lob Launchers", color: "#ec4899", icon: "🎈" },
+      team2: { name: "Rally Rockets", color: "#14b8a6", icon: "🚀" }
+    },
+    {
+      team1: { name: "Serve Samurai", color: "#dc2626", icon: "⚡" },
+      team2: { name: "Return Rebels", color: "#7c3aed", icon: "🔥" }
+    }
+  ];
+
+  // Generate random pickleball team theme
+  const getRandomTeamTheme = () => {
+    return pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
+  };
+
   // Get real player names from session storage or use defaults
   const getInitialPlayerNames = () => {
     try {
@@ -310,6 +344,7 @@ export default function GamifiedMatchRecording() {
   };
 
   const initialNames = getInitialPlayerNames();
+  const [teamTheme] = useState(getRandomTeamTheme()); // Fixed theme for entire match
   
   const [matchState, setMatchState] = useState<MatchState>({
     player1: { name: initialNames.player1, id: '1', tier: 'Elite', score: 0 },
@@ -668,26 +703,27 @@ export default function GamifiedMatchRecording() {
             <Gamepad2 className="h-8 w-8 text-orange-400" />
           </div>
           
-          {/* Player Preview */}
-          <div className="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 max-w-lg mx-auto">
-            <div className="flex items-center justify-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Users className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-blue-300 font-bold text-lg">{matchState.player1.name}</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-slate-400 font-bold text-xl">VS</span>
-                <div className="text-xs text-slate-500">Live Match</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-red-300 font-bold text-lg">{matchState.player2.name}</span>
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <Users className="h-4 w-4 text-white" />
-                </div>
-              </div>
-            </div>
+          {/* Epic Versus Screen */}
+          <div className="mb-6">
+            <VersusScreen
+              mode="mid"
+              teams={[
+                {
+                  name: teamTheme.team1.name,
+                  color: teamTheme.team1.color,
+                  glowColor: teamTheme.team1.color,
+                  players: [{ id: 1, name: matchState.player1.name, displayName: matchState.player1.name }]
+                },
+                {
+                  name: teamTheme.team2.name,
+                  color: teamTheme.team2.color,
+                  glowColor: teamTheme.team2.color,
+                  players: [{ id: 2, name: matchState.player2.name, displayName: matchState.player2.name }]
+                }
+              ]}
+              showStats={true}
+              intensity={0.8}
+            />
           </div>
         </div>
         <div className="flex items-center justify-center gap-2 flex-wrap">

@@ -921,7 +921,14 @@ export default function MatchArena() {
                 duration: 1800
               });
               
-              // Store match data for the recorder (future integration)
+              // Store match data for the recorder
+              const recorderData = {
+                player1: matchData.selectedPlayers[0]?.displayName || matchData.selectedPlayers[0]?.username || 'You',
+                player2: matchData.selectedPlayers[1]?.displayName || matchData.selectedPlayers[1]?.username || 'Opponent',
+                format: matchData.format,
+                pairings: matchData.pairings
+              };
+              sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
               console.log('Match Data:', matchData);
               
               // Navigate to gamified match recorder
