@@ -121,7 +121,7 @@ export const MomentumWave = memo(({
 
   // Handle hover events for interactive mode
   const handleMouseMove = (event: React.MouseEvent<SVGElement>) => {
-    if (!isInteractive) return;
+    if (!isInteractive || !wave || wave.length === 0) return;
     
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -130,8 +130,7 @@ export const MomentumWave = memo(({
     setMousePosition({ x: event.clientX, y: event.clientY });
     
     // Find nearest wave point using actual SVG width
-    const svgElement = event.currentTarget;
-    const actualWidth = parseFloat(svgElement.dataset.width || '300');
+    const actualWidth = rect.width; // Use rect.width instead of dataset
     const pointIndex = Math.round((x / actualWidth) * (wave.length - 1));
     
     if (pointIndex >= 0 && pointIndex < wave.length) {
@@ -469,12 +468,6 @@ export const MomentumWave = memo(({
               className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
-              ref={(svg) => {
-                if (svg && isInteractive) {
-                  const rect = svg.getBoundingClientRect();
-                  svg.dataset.width = rect.width.toString();
-                }
-              }}
             >
               {/* Transparent hit area for reliable hover detection */}
               <rect

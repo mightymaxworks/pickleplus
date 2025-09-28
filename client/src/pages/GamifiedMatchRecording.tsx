@@ -815,7 +815,25 @@ export default function GamifiedMatchRecording() {
   };
 
   const initialNames = getInitialPlayerNames();
-  const [teamTheme] = useState(getRandomTeamTheme()); // Fixed theme for entire match
+  
+  // Get team theme from session storage or generate a fixed one
+  const [teamTheme] = useState(() => {
+    try {
+      const currentMatch = sessionStorage.getItem('currentMatch');
+      if (currentMatch) {
+        const matchData = JSON.parse(currentMatch);
+        if (matchData.teamIdentity) {
+          return {
+            team1: { name: matchData.teamIdentity.team1.name, color: matchData.teamIdentity.team1.color },
+            team2: { name: matchData.teamIdentity.team2.name, color: matchData.teamIdentity.team2.color }
+          };
+        }
+      }
+    } catch (error) {
+      console.log('Could not load team theme from session storage:', error);
+    }
+    return getRandomTeamTheme(); // Fallback to random theme
+  });
   
   const [matchState, setMatchState] = useState<MatchState>({
     player1: { name: initialNames.player1, id: '1', tier: 'Elite', score: 0 },
@@ -1114,21 +1132,20 @@ export default function GamifiedMatchRecording() {
               {/* Epic Full-Screen Versus Preview */}
               <div className="mt-6">
                 {(() => {
-                  const theme = getRandomTeamTheme();
                   return (
                     <VersusScreen
                       mode="mid"
                       teams={[
                         {
-                          name: theme.team1.name,
-                          color: theme.team1.color,
-                          glowColor: theme.team1.color,
+                          name: teamTheme.team1.name,
+                          color: teamTheme.team1.color,
+                          glowColor: teamTheme.team1.color,
                           players: [{ id: 1, name: initialNames.player1, displayName: initialNames.player1 }]
                         },
                         {
-                          name: theme.team2.name,
-                          color: theme.team2.color,
-                          glowColor: theme.team2.color,
+                          name: teamTheme.team2.name,
+                          color: teamTheme.team2.color,
+                          glowColor: teamTheme.team2.color,
                           players: [{ id: 2, name: initialNames.player2, displayName: initialNames.player2 }]
                         }
                       ]}
@@ -1661,8 +1678,8 @@ export default function GamifiedMatchRecording() {
         />
       </div>
 
-      {/* Gaming-style Score Controls */}
-      <Card className="p-6 bg-slate-800/50 border-slate-700 mb-6">
+      {/* Gaming-style Score Controls - positioned with top margin for tooltip space */}
+      <Card className="p-6 bg-slate-800/50 border-slate-700 mb-6 mt-16">
         <h3 className="text-white font-semibold mb-4 flex items-center">
           <Target className="h-4 w-4 mr-2 text-orange-400" />
           Score Control
