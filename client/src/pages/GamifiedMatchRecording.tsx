@@ -1085,17 +1085,22 @@ export default function GamifiedMatchRecording() {
         </div>
       </motion.div>
 
-      {/* Contextual UI for Momentum Accuracy */}
+      {/* Enhanced Pre-Match Momentum Education */}
       {showMomentumContext && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-4 relative"
         >
-          <Card className="p-4 bg-slate-900/95 border-slate-700/50 backdrop-blur-sm">
+          <Card className="p-4 bg-gradient-to-r from-slate-900/95 to-slate-800/95 border-slate-700/50 backdrop-blur-sm">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
-                {isLiveMode ? (
+                {matchState.showVideo ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                    <Camera className="h-4 w-4 text-blue-400" />
+                  </div>
+                ) : isLiveMode ? (
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                     <Activity className="h-4 w-4 text-green-400" />
@@ -1108,25 +1113,63 @@ export default function GamifiedMatchRecording() {
                 )}
               </div>
               <div className="flex-1">
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-300">
-                    {matchState.showVideo ? (
-                      <>
-                        <span className="text-blue-400 font-semibold">📹 Video Reference Mode</span> - 
-                        Momentum tracking is enhanced with video reference for maximum accuracy
-                      </>
-                    ) : isLiveMode ? (
-                      <>
-                        <span className="text-green-400 font-semibold">🎯 Live Mode Detected</span> - 
-                        Perfect! Point-by-point scoring gives you the most accurate momentum analysis.
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-orange-400 font-semibold">📊 Representation Mode</span> - 
-                        Momentum shows general flow but may be inaccurate. Add video URL for precision analysis.
-                      </>
+                <div className="space-y-3">
+                  {/* Main status message */}
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-300">
+                      {matchState.showVideo ? (
+                        <>
+                          <span className="text-blue-400 font-semibold">📹 Video-Enhanced Tracking</span> - 
+                          Maximum accuracy momentum analysis with video reference
+                        </>
+                      ) : isLiveMode ? (
+                        <>
+                          <span className="text-green-400 font-semibold">🎯 Live Point-by-Point Mode</span> - 
+                          Perfect! You're getting the most accurate momentum analysis
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-orange-400 font-semibold">📊 Approximate Mode</span> - 
+                          Momentum shows general flow but may be less accurate
+                        </>
+                      )}
+                    </p>
+                    
+                    {/* Pre-match education for new users */}
+                    {(matchState.player1.score + matchState.player2.score) === 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="bg-slate-800/50 rounded-lg p-3 mt-2 border-l-4 border-blue-500"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-blue-400" />
+                            <span className="text-blue-300 font-semibold text-sm">Momentum Wave Guide</span>
+                          </div>
+                          <div className="text-xs text-slate-300 space-y-1">
+                            <div className="flex items-start gap-2">
+                              <span className="text-blue-400 mt-0.5">•</span>
+                              <span><strong>Best:</strong> Record each point as it happens for real-time momentum tracking</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">•</span>
+                              <span><strong>Good:</strong> Add a video URL to enhance accuracy during post-match analysis</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-orange-400 mt-0.5">•</span>
+                              <span><strong>Basic:</strong> Enter final scores only (momentum will show general trends)</span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-slate-400 italic mt-2">
+                            💡 The momentum wave becomes more accurate with each point you record
+                          </div>
+                        </div>
+                      </motion.div>
                     )}
-                  </p>
+                  </div>
+                  
+                  {/* Match progress info */}
                   <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1 text-slate-400">
                       <span>Current Score:</span>
@@ -1137,10 +1180,23 @@ export default function GamifiedMatchRecording() {
                       <span className="text-white">{matchState.currentGame}</span>
                     </div>
                     <div className="flex items-center gap-1 text-slate-400">
-                      <span>Total Points:</span>
+                      <span>Points Recorded:</span>
                       <span className="text-white">{matchState.player1.score + matchState.player2.score}</span>
                     </div>
+                    {isLiveMode && (
+                      <div className="flex items-center gap-1 text-green-400">
+                        <Activity className="h-3 w-3" />
+                        <span className="font-semibold">Live</span>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* Action suggestions */}
+                  {!matchState.showVideo && !isLiveMode && (matchState.player1.score + matchState.player2.score) > 0 && (
+                    <div className="text-xs text-slate-400 bg-slate-800/30 rounded p-2">
+                      💡 <span className="text-orange-300">Tip:</span> Add a video URL in settings for more accurate momentum analysis of this match
+                    </div>
+                  )}
                 </div>
               </div>
               <Button
