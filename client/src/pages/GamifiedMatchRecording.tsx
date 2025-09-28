@@ -39,7 +39,7 @@ import { matchStateManager, MatchState as LiveMatchState } from '@/components/ma
 import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
 import { GamingUIOverlays } from '@/components/match/GamingUIOverlays';
 import LiveStreamIntegration from '@/components/match/LiveStreamIntegration';
-import { type LiveStreamValidation } from '@/components/match/LiveStreamValidator';
+import { type StreamValidationResult } from '@/components/match/LiveStreamValidator';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -601,9 +601,8 @@ export default function GamifiedMatchRecording() {
   const [gamingOverlaysEnabled, setGamingOverlaysEnabled] = useState(false);
   
   // Live stream validation states
-  const [liveStreamValidation, setLiveStreamValidation] = useState<LiveStreamValidation>({
-    isValid: false,
-    isLoading: false
+  const [liveStreamValidation, setLiveStreamValidation] = useState<StreamValidationResult>({
+    isValid: false
   });
   const [viewerLink, setViewerLink] = useState('');
 
@@ -618,9 +617,10 @@ export default function GamifiedMatchRecording() {
   }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter, liveStreamValidation.isValid]);
 
   // Live stream validation handlers
-  const handleLiveStreamValidation = (validation: LiveStreamValidation) => {
+  const handleLiveStreamValidation = (isValid: boolean) => {
+    const validation: StreamValidationResult = { isValid };
     setLiveStreamValidation(validation);
-    console.log('🎥 Live stream validation updated:', validation);
+    console.log('🎥 Live stream validation updated:', isValid);
   };
 
   const handleGamingFeaturesToggle = (enabled: boolean) => {
@@ -1382,9 +1382,6 @@ export default function GamifiedMatchRecording() {
               {/* Live Stream Integration */}
               <LiveStreamIntegration
                 onValidationChange={handleLiveStreamValidation}
-                onGamingFeaturesToggle={handleGamingFeaturesToggle}
-                onViewerLinkGenerated={handleViewerLinkGenerated}
-                matchId={`setup-${Date.now()}`}
                 className=""
               />
             </div>
