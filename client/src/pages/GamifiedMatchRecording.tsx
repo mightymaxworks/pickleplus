@@ -29,6 +29,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { VersusScreen } from '@/components/match/VersusScreen';
+import { MomentumEngine, MomentumState, StrategyMessage } from '@/components/match/MomentumEngine';
+import { MomentumWave } from '@/components/match/MomentumWave';
+import { MessageToast } from '@/components/match/MessageToast';
+import { VideoDock } from '@/components/match/VideoDock';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -258,10 +262,21 @@ interface MatchState {
   achievements: Array<{ type: string; message: string; timestamp: number }>;
   streak: { player: string; count: number; type: 'win' | 'ace' };
   config: MatchConfig;
+  momentumState?: MomentumState;
+  strategicMessages: StrategyMessage[];
+  showVideo: boolean;
 }
 
 export default function GamifiedMatchRecording() {
   const [showConfig, setShowConfig] = useState(true);
+  
+  // Message expiration handler
+  const handleMessageExpire = (messageId: string) => {
+    setMatchState(prev => ({
+      ...prev,
+      strategicMessages: prev.strategicMessages.filter(msg => msg.id !== messageId)
+    }));
+  };
   
   // Navigation function
   const goBackToPrototype = () => {
@@ -370,6 +385,8 @@ export default function GamifiedMatchRecording() {
     matchComplete: false,
     achievements: [],
     streak: { player: '', count: 0, type: 'win' },
+    strategicMessages: [],
+    showVideo: false,
     config: {
       scoringType: 'traditional',
       pointTarget: 11,
@@ -377,6 +394,14 @@ export default function GamifiedMatchRecording() {
       winByTwo: true
     }
   });
+
+  // Initialize momentum engine
+  const [momentumEngine] = useState(() => new MomentumEngine({
+    pointTarget: 11,
+    winByTwo: true,
+    scoringType: 'traditional',
+    matchFormat: 'best-of-3'
+  }));
 
   const [showReaction, setShowReaction] = useState<{
     show: boolean; 
@@ -407,6 +432,19 @@ export default function GamifiedMatchRecording() {
       } else {
         newState.player2.score++;
       }
+      
+      // Process momentum and generate strategic messages
+      const momentumEvent = {
+        pointNo: newState.player1.score + newState.player2.score,
+        scoringTeam: playerId === '1' ? 'team1' as const : 'team2' as const,
+        score: [newState.player1.score, newState.player2.score] as [number, number],
+        timestamp: Date.now(),
+        tags: []
+      };
+      
+      const newMessages = momentumEngine.processPoint(momentumEvent);
+      newState.strategicMessages = [...prev.strategicMessages, ...newMessages];
+      newState.momentumState = momentumEngine.getState();
       
       // Check for game win based on config
       const p1Score = newState.player1.score;
@@ -517,7 +555,14 @@ export default function GamifiedMatchRecording() {
     const [tempConfig, setTempConfig] = useState<MatchConfig>(matchState.config);
 
     const startMatch = () => {
-      setMatchState(prev => ({ ...prev, config: tempConfig }));
+      // Update momentum engine with new config
+      momentumEngine.reset();
+      
+      setMatchState(prev => ({ 
+        ...prev, 
+        config: tempConfig,
+        showVideo: Boolean(tempConfig.liveStreamUrl || tempConfig.recordingUrl)
+      }));
       setShowConfig(false);
     };
 
@@ -879,6 +924,22 @@ export default function GamifiedMatchRecording() {
         </div>
       </motion.div>
 
+      {/* Momentum Wave Visualization */}
+      {matchState.momentumState && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <MomentumWave
+            momentumState={matchState.momentumState}
+            team1Color={teamTheme.team1.color}
+            team2Color={teamTheme.team2.color}
+            className="w-full"
+          />
+        </motion.div>
+      )}
+
       {/* Game History */}
       {matchState.gameHistory.length > 0 && (
         <motion.div
@@ -971,6 +1032,33 @@ export default function GamifiedMatchRecording() {
           </div>
         </div>
       </Card>
+
+      {/* Strategic Message Toasts */}
+      <MessageToast
+        messages={matchState.strategicMessages}
+        onMessageExpire={handleMessageExpire}
+        team1Color={teamTheme.team1.color}
+        team2Color={teamTheme.team2.color}
+      />
+
+      {/* Video Player */}
+      {matchState.showVideo && (
+        <VideoDock
+          config={{
+            liveStreamUrl: matchState.config.liveStreamUrl,
+            recordingUrl: matchState.config.recordingUrl,
+            videoProvider: matchState.config.videoProvider,
+            videoSyncOffset: matchState.config.videoSyncOffset
+          }}
+          isVisible={matchState.showVideo}
+          onSyncOffsetChange={(offset) => {
+            setMatchState(prev => ({
+              ...prev,
+              config: { ...prev.config, videoSyncOffset: offset }
+            }));
+          }}
+        />
+      )}
 
       {/* Action Buttons */}
       <div className="flex gap-3 justify-center mb-6">
