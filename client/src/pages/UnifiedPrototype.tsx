@@ -632,6 +632,39 @@ function NotificationsHeader({
   );
 }
 
+// Avatar component with fallback for broken/missing images
+function PlayerAvatar({ 
+  player, 
+  size = 'w-12 h-12',
+  iconSize = 'h-6 w-6',
+  border = ''
+}: { 
+  player: RankedPlayer;
+  size?: string;
+  iconSize?: string;
+  border?: string;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const config = tierConfig[player.tier];
+  
+  if (!player.avatar || imageError) {
+    return (
+      <div className={`${size} bg-gradient-to-r ${config.color} rounded-full flex items-center justify-center ${border}`}>
+        <config.icon className={`${iconSize} text-white`} />
+      </div>
+    );
+  }
+  
+  return (
+    <img 
+      src={player.avatar} 
+      alt={player.name}
+      className={`${size} rounded-full object-cover ${border}`}
+      onError={() => setImageError(true)}
+    />
+  );
+}
+
 // PlayerRankingCard Component (for ranks 4-8)
 function PlayerRankingCard({ 
   player, 
@@ -672,17 +705,7 @@ function PlayerRankingCard({
 
           {/* Avatar */}
           <div className="w-12 h-12">
-            {player.avatar ? (
-              <img 
-                src={player.avatar} 
-                alt={player.name}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            ) : (
-              <div className={`w-12 h-12 bg-gradient-to-r ${config.color} rounded-full flex items-center justify-center`}>
-                <config.icon className="h-6 w-6 text-white" />
-              </div>
-            )}
+            <PlayerAvatar player={player} />
           </div>
 
           {/* Player Info */}
@@ -1919,13 +1942,7 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           {/* 2nd place */}
           <div className="w-20 text-center">
             <div className="w-12 h-12 mx-auto mb-2">
-              {podiumPlayers[1]?.avatar ? (
-                <img src={podiumPlayers[1].avatar} alt={podiumPlayers[1].name} className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className={`w-12 h-12 bg-gradient-to-r ${tierConfig[podiumPlayers[1]?.tier].color} rounded-full flex items-center justify-center`}>
-                  {React.createElement(tierConfig[podiumPlayers[1]?.tier].icon, { className: "h-6 w-6 text-white" })}
-                </div>
-              )}
+              {podiumPlayers[1] && <PlayerAvatar player={podiumPlayers[1]} />}
             </div>
             <div className="text-2xl mb-1">🥈</div>
             <div className="text-white text-sm font-medium">{podiumPlayers[1]?.name.split(' ')[0]}</div>
@@ -1935,13 +1952,7 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           {/* 1st place - elevated */}
           <div className="w-24 text-center -mt-4">
             <div className="w-16 h-16 mx-auto mb-2">
-              {podiumPlayers[0]?.avatar ? (
-                <img src={podiumPlayers[0].avatar} alt={podiumPlayers[0].name} className="w-16 h-16 rounded-full object-cover border-2 border-yellow-400" />
-              ) : (
-                <div className={`w-16 h-16 bg-gradient-to-r ${tierConfig[podiumPlayers[0]?.tier].color} rounded-full flex items-center justify-center border-2 border-yellow-400`}>
-                  {React.createElement(tierConfig[podiumPlayers[0]?.tier].icon, { className: "h-8 w-8 text-white" })}
-                </div>
-              )}
+              {podiumPlayers[0] && <PlayerAvatar player={podiumPlayers[0]} size="w-16 h-16" iconSize="h-8 w-8" border="border-2 border-yellow-400" />}
             </div>
             <div className="mb-1">
               <Medal className="h-8 w-8 text-yellow-400 mx-auto" />
@@ -1953,13 +1964,7 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
           {/* 3rd place */}
           <div className="w-20 text-center">
             <div className="w-12 h-12 mx-auto mb-2">
-              {podiumPlayers[2]?.avatar ? (
-                <img src={podiumPlayers[2].avatar} alt={podiumPlayers[2].name} className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className={`w-12 h-12 bg-gradient-to-r ${tierConfig[podiumPlayers[2]?.tier].color} rounded-full flex items-center justify-center`}>
-                  {React.createElement(tierConfig[podiumPlayers[2]?.tier].icon, { className: "h-6 w-6 text-white" })}
-                </div>
-              )}
+              {podiumPlayers[2] && <PlayerAvatar player={podiumPlayers[2]} />}
             </div>
             <div className="text-2xl mb-1">🥉</div>
             <div className="text-white text-sm font-medium">{podiumPlayers[2]?.name.split(' ')[0]}</div>
