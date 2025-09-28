@@ -15,6 +15,8 @@ import {
   Volume2,
   Zap
 } from 'lucide-react';
+import { CrowdEnergyMeter } from './CrowdEnergyMeter';
+import { MomentumState } from './MomentumEngine';
 
 interface GamingUIOverlaysProps {
   isEnabled: boolean;
@@ -22,6 +24,7 @@ interface GamingUIOverlaysProps {
   children: React.ReactNode;
   onAestheticToggle: () => void;
   onTestTrigger?: (trigger: string) => void;
+  momentumState?: MomentumState;
 }
 
 interface OverlayElements {
@@ -36,7 +39,8 @@ export function GamingUIOverlays({
   aestheticMode, 
   children, 
   onAestheticToggle,
-  onTestTrigger
+  onTestTrigger,
+  momentumState
 }: GamingUIOverlaysProps) {
   const [showControls, setShowControls] = useState(false);
   const [activeElements, setActiveElements] = useState<OverlayElements>({
@@ -192,6 +196,17 @@ export function GamingUIOverlays({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Crowd Energy Meter - Floating Position */}
+        <div className="fixed bottom-32 right-4 z-40 max-w-sm">
+          <CrowdEnergyMeter
+            momentumState={momentumState}
+            isLive={isEnabled}
+            aestheticMode={aestheticMode}
+            onEnergyChange={(energy) => console.log(`🔥 Crowd Energy: ${energy}%`)}
+            onReactionTrigger={(reaction) => console.log(`👥 Crowd Reaction: ${reaction.type} (${reaction.intensity}%)`)}
+          />
+        </div>
 
         {/* Effects Layer - for future particle effects, hype trains, etc. */}
         <div className="fixed inset-0 pointer-events-none z-30">
