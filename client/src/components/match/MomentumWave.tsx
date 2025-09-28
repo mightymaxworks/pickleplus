@@ -1,16 +1,40 @@
 import { motion } from 'framer-motion';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { MomentumState } from './MomentumEngine';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, Target, Zap } from 'lucide-react';
 
 interface MomentumWaveProps {
   momentumState: MomentumState;
   team1Color: string;
   team2Color: string;
   className?: string;
+  isInteractive?: boolean;
+  isMatchComplete?: boolean;
 }
 
-export const MomentumWave = memo(({ momentumState, team1Color, team2Color, className = '' }: MomentumWaveProps) => {
+interface TooltipData {
+  x: number;
+  y: number;
+  point: number;
+  momentum: number;
+  reason: string;
+  timestamp: number;
+  score: { player1: number; player2: number };
+}
+
+export const MomentumWave = memo(({ 
+  momentumState, 
+  team1Color, 
+  team2Color, 
+  className = '', 
+  isInteractive = false,
+  isMatchComplete = false 
+}: MomentumWaveProps) => {
   const { wave, momentum, momentumScore, streak, gamePhase } = momentumState;
+  const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   // Generate SVG path for momentum wave
   const generateWavePath = () => {

@@ -23,7 +23,9 @@ import {
   Minus,
   Undo2,
   PartyPopper,
-  ArrowLeft
+  ArrowLeft,
+  BarChart3,
+  X
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -276,6 +278,24 @@ export default function GamifiedMatchRecording() {
       ...prev,
       strategicMessages: prev.strategicMessages.filter(msg => msg.id !== messageId)
     }));
+  };
+
+  // Context UI state for momentum accuracy guidance
+  const [showMomentumContext, setShowMomentumContext] = useState(true);
+  const [isLiveMode, setIsLiveMode] = useState(true); // Track if user is doing live point-by-point scoring
+
+  // Detect live vs representation mode based on scoring frequency
+  const detectScoringMode = () => {
+    const recentPointsCount = matchState.player1.score + matchState.player2.score;
+    const currentTime = Date.now();
+    
+    // Simple heuristic: if more than 10 points scored in less than 2 minutes, likely representation mode
+    // For live mode, we expect slower, more deliberate scoring
+    if (recentPointsCount > 10) {
+      setIsLiveMode(false); // Likely entering scores after the fact
+    } else {
+      setIsLiveMode(true); // Live point-by-point scoring
+    }
   };
   
   // Navigation function
@@ -927,18 +947,77 @@ export default function GamifiedMatchRecording() {
         </div>
       </motion.div>
 
-      {/* Momentum Wave Visualization */}
+      {/* Contextual UI for Momentum Accuracy */}
+      {showMomentumContext && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 relative"
+        >
+          <Card className="p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-500/30">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {isLiveMode ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <Activity className="h-4 w-4 text-green-400" />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full" />
+                    <BarChart3 className="h-4 w-4 text-orange-400" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-white/90">
+                  {isLiveMode ? (
+                    <>
+                      <span className="text-green-400 font-semibold">🎯 Live Mode Detected</span> - 
+                      Momentum tracking is most accurate with point-by-point live scoring
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-orange-400 font-semibold">📊 Representation Mode</span> - 
+                      Momentum wave shows general flow but is most accurate with live point-by-point scoring
+                    </>
+                  )}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowMomentumContext(false)}
+                className="flex-shrink-0 text-white/60 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Enhanced Momentum Wave Visualization */}
       {matchState.momentumState && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className={`mb-6 ${matchState.matchComplete ? 'ring-2 ring-yellow-400/50 rounded-lg p-2' : ''}`}
         >
+          {matchState.matchComplete && (
+            <div className="mb-2 text-center">
+              <Badge className="bg-yellow-500/20 text-yellow-300 font-semibold">
+                📊 Match Analysis - Review Your Momentum Journey
+              </Badge>
+            </div>
+          )}
           <MomentumWave
             momentumState={matchState.momentumState}
             team1Color={teamTheme.team1.color}
             team2Color={teamTheme.team2.color}
             className="w-full"
+            isInteractive={true}
+            isMatchComplete={matchState.matchComplete}
           />
         </motion.div>
       )}
