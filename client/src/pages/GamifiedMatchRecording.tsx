@@ -306,6 +306,18 @@ export default function GamifiedMatchRecording() {
       const currentMatch = sessionStorage.getItem('currentMatch');
       if (currentMatch) {
         const matchData = JSON.parse(currentMatch);
+        
+        // Handle pairings data from match creation wizard
+        if (matchData.pairings) {
+          const team1Names = matchData.pairings.team1.map(p => p.displayName || p.username || p.name).join(' & ');
+          const team2Names = matchData.pairings.team2.map(p => p.displayName || p.username || p.name).join(' & ');
+          return {
+            player1: team1Names,
+            player2: team2Names
+          };
+        }
+        
+        // Fallback to simple player1/player2 format
         return {
           player1: matchData.player1,
           player2: matchData.player2
@@ -533,7 +545,35 @@ export default function GamifiedMatchRecording() {
               </div>
               <p className="text-slate-400">Configure your match settings</p>
               
-              {/* Player Preview */}
+              {/* Epic Full-Screen Versus Preview */}
+              <div className="mt-6">
+                {(() => {
+                  const theme = getRandomTeamTheme();
+                  return (
+                    <VersusScreen
+                      mode="full"
+                      teams={[
+                        {
+                          name: theme.team1.name,
+                          color: theme.team1.color,
+                          glowColor: theme.team1.color,
+                          players: [{ id: 1, name: initialNames.player1, displayName: initialNames.player1 }]
+                        },
+                        {
+                          name: theme.team2.name,
+                          color: theme.team2.color,
+                          glowColor: theme.team2.color,
+                          players: [{ id: 2, name: initialNames.player2, displayName: initialNames.player2 }]
+                        }
+                      ]}
+                      showStats={true}
+                      intensity={1.0}
+                    />
+                  );
+                })()}
+              </div>
+              
+              {/* Player Names Display */}
               <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
                 <div className="flex items-center justify-center gap-3 text-sm">
                   <div className="flex items-center gap-2">
