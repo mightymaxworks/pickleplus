@@ -744,8 +744,8 @@ export default function MatchArena() {
       if (player.distance > proximityFilter) return false;
     }
     
-    // Flow 2: Universal search (create-match mode)
-    if (arenaMode === 'create-match') {
+    // Flow 2: Universal search (create-match and search modes)
+    if (arenaMode === 'create-match' || arenaMode === 'search') {
       // Universal search - no distance restrictions
       if (universalSearchTerm && !player.name.toLowerCase().includes(universalSearchTerm.toLowerCase())) return false;
     } else {
