@@ -1598,9 +1598,9 @@ export default function GamifiedMatchRecording() {
             isMatchComplete={matchState.matchComplete}
           />
 
-          {/* Match Closeness Indicator */}
+          {/* Match Closeness Indicator - positioned with proper spacing */}
           {matchState.momentumState?.closeness && (
-            <div className="mt-4 relative" style={{ zIndex: 30 }}>
+            <div className="mt-6 relative">
               <MatchClosenessIndicator 
                 closeness={matchState.momentumState.closeness}
                 team1Name={matchState.player1?.name}

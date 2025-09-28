@@ -129,9 +129,10 @@ export const MomentumWave = memo(({
     
     setMousePosition({ x: event.clientX, y: event.clientY });
     
-    // Find nearest wave point
-    const width = 300;
-    const pointIndex = Math.round((x / width) * (wave.length - 1));
+    // Find nearest wave point using actual SVG width
+    const svgElement = event.currentTarget;
+    const actualWidth = parseFloat(svgElement.dataset.width || '300');
+    const pointIndex = Math.round((x / actualWidth) * (wave.length - 1));
     
     if (pointIndex >= 0 && pointIndex < wave.length) {
       const point = wave[pointIndex];
@@ -468,7 +469,23 @@ export const MomentumWave = memo(({
               className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
+              ref={(svg) => {
+                if (svg && isInteractive) {
+                  const rect = svg.getBoundingClientRect();
+                  svg.dataset.width = rect.width.toString();
+                }
+              }}
             >
+              {/* Transparent hit area for reliable hover detection */}
+              <rect
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                fill="transparent"
+                style={{ pointerEvents: 'all' }}
+              />
+              
               {/* Center baseline */}
               <line
                 x1="0"
