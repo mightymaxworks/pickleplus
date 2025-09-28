@@ -10,6 +10,7 @@ import {
   Hash, User, Crown, Star, Zap
 } from 'lucide-react';
 import { SmartPlayerSearch } from './SmartPlayerSearch';
+import { VersusScreen } from './VersusScreen';
 
 // Types
 interface Player {
@@ -102,52 +103,89 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
   const [pairings, setPairings] = useState<{ team1: Player[]; team2: Player[] } | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Calculate match status based on gender combinations and algorithm
-  const calculateMatchStatus = (): MatchCreationData['matchStatus'] => {
+  // Generate fun, gamified match analysis 
+  const generateMatchAnalysis = () => {
     if (selectedPlayers.length === 0) {
-      return { competitiveBalance: 0, genderBonus: 0, description: 'Select players to see match analysis' };
+      return { 
+        headline: 'Ready for Action! 🎾',
+        badges: [],
+        insights: ['Select players to unlock match insights'],
+        watchFor: []
+      };
     }
 
-    // Count genders (assuming current user data)
     const currentUserGender = 'male'; // TODO: Get from actual user data
-    const allPlayers = [{ gender: currentUserGender }, ...selectedPlayers];
+    const allPlayers = [{ gender: currentUserGender, rankingPoints: 1200 }, ...selectedPlayers];
     const maleCount = allPlayers.filter(p => p.gender === 'male').length;
     const femaleCount = allPlayers.filter(p => p.gender === 'female').length;
+    const avgPoints = allPlayers.reduce((sum, p) => sum + (p.rankingPoints || 1000), 0) / allPlayers.length;
+    
+    // Generate exciting headlines and badges
+    const headlines = [];
+    const badges = [];
+    const insights = [];
+    const watchFor = [];
 
-    // Calculate gender bonus based on established algorithm
-    let genderBonus = 1.0;
-    let description = '';
-
-    if (matchFormat === 'doubles') {
-      // Mixed gender matches get bonus
-      if (maleCount > 0 && femaleCount > 0) {
-        genderBonus = 1.075; // 7.5% bonus for mixed teams under 1000 points
-        description = `🎉 Mixed Gender Match • ${genderBonus}x point multiplier`;
-      } else {
-        description = `⚪ Same Gender Match • Standard points`;
-      }
+    // Gender mix analysis
+    if (matchFormat === 'doubles' && maleCount > 0 && femaleCount > 0) {
+      headlines.push('🌟 Mixed Magic Matchup!');
+      badges.push({ icon: '⚡', label: 'Power Balance', tier: 'A' });
+      insights.push('Mixed gender teams bring explosive dynamics to the court!');
+      watchFor.push('Strategic shot placement differences');
+    } else if (matchFormat === 'singles' && selectedPlayers[0]?.gender !== currentUserGender) {
+      headlines.push('⚔️ Cross-Court Clash!');
+      badges.push({ icon: '🎯', label: 'Style Battle', tier: 'B' });
+      insights.push('Different playing styles are about to collide!');
+      watchFor.push('Power vs. finesse showdown');
     } else {
-      // Singles cross-gender match
-      if (selectedPlayers.length === 1 && selectedPlayers[0].gender !== currentUserGender) {
-        if (selectedPlayers[0].gender === 'female') {
-          genderBonus = 1.15; // 15% bonus for women in cross-gender matches under 1000 points
-          description = `💪 Cross-Gender Match • ${genderBonus}x point multiplier for female player`;
-        } else {
-          description = `⚔️ Cross-Gender Match • Standard points`;
-        }
-      } else {
-        description = `⚪ Same Gender Match • Standard points`;
-      }
+      headlines.push('🔥 Classic Rivalry Setup!');
+      badges.push({ icon: '⚖️', label: 'Even Match', tier: 'S' });
     }
 
-    // Calculate competitive balance (simplified)
-    const playersWithPoints = allPlayers.filter((p): p is Player => 'rankingPoints' in p && p.rankingPoints !== undefined);
-    const avgPoints = playersWithPoints.length > 0 
-      ? playersWithPoints.reduce((sum, p) => sum + (p.rankingPoints || 0), 0) / playersWithPoints.length
-      : 0;
-    const competitiveBalance = Math.min(100, Math.max(20, 100 - (avgPoints / 20))); // Simplified balance calculation
+    // Skill level analysis
+    if (avgPoints > 1400) {
+      headlines.unshift('👑 Elite Championship Battle!');
+      badges.push({ icon: '💎', label: 'Pro Level', tier: 'S' });
+      insights.push('Expect lightning-fast rallies and incredible shot-making!');
+      watchFor.push('Third shot drop precision', 'Kitchen battles');
+    } else if (avgPoints > 1000) {
+      badges.push({ icon: '🏆', label: 'Competitive', tier: 'A' });
+      insights.push('Solid fundamentals will decide this match!');
+      watchFor.push('Consistent serving', 'Dink game mastery');
+    } else {
+      badges.push({ icon: '🌱', label: 'Rising Stars', tier: 'B' });
+      insights.push('Watch these players level up in real-time!');
+      watchFor.push('Improvement momentum', 'Learning opportunities');
+    }
 
-    return { competitiveBalance, genderBonus, description };
+    // AI-powered insights (mock for now)
+    const aiInsights = [
+      'AI predicts: 3-set thriller incoming! 🤖',
+      'Scout\'s Note: This matchup has upset potential! 📊',
+      'Momentum Factor: Home court advantage detected! 🏠',
+      'Style Clash: Aggressive meets defensive strategy! ⚡🛡️'
+    ];
+    
+    if (Math.random() > 0.3) { // 70% chance to show AI insight
+      insights.push(aiInsights[Math.floor(Math.random() * aiInsights.length)]);
+    }
+
+    return {
+      headline: headlines[0] || '🎾 Game On!',
+      badges: badges.slice(0, 3), // Max 3 badges
+      insights: insights.slice(0, 2), // Max 2 insights
+      watchFor: watchFor.slice(0, 2) // Max 2 watch-for items
+    };
+  };
+
+  // Legacy function for compatibility
+  const calculateMatchStatus = (): MatchCreationData['matchStatus'] => {
+    const analysis = generateMatchAnalysis();
+    return { 
+      competitiveBalance: 85, 
+      genderBonus: 1.0, 
+      description: analysis.headline 
+    };
   };
 
   const handlePlayerSelect = (player: Player | null) => {
@@ -446,14 +484,52 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
               </div>
             </Card>
 
-            {/* Match Status Preview */}
+            {/* Gamified Match Analysis */}
             {selectedPlayers.length > 0 && (
-              <Card className="bg-slate-800/50 border-slate-700/50 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Trophy className="h-4 w-4 text-yellow-400" />
-                  <span className="text-white font-medium">Match Analysis</span>
+              <Card className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-orange-500/30 p-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="h-5 w-5 text-yellow-400" />
+                    <span className="text-white font-bold">Match Analysis</span>
+                  </div>
+                  
+                  {(() => {
+                    const analysis = generateMatchAnalysis();
+                    return (
+                      <div className="space-y-3">
+                        <h4 className="text-orange-400 font-bold text-lg">{analysis.headline}</h4>
+                        
+                        {analysis.badges.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {analysis.badges.map((badge, i) => (
+                              <Badge 
+                                key={i} 
+                                className={`${
+                                  badge.tier === 'S' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50' :
+                                  badge.tier === 'A' ? 'bg-orange-500/20 text-orange-300 border-orange-500/50' :
+                                  'bg-blue-500/20 text-blue-300 border-blue-500/50'
+                                }`}
+                              >
+                                {badge.icon} {badge.label}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {analysis.insights.length > 0 && (
+                          <div className="space-y-1">
+                            {analysis.insights.map((insight, i) => (
+                              <p key={i} className="text-slate-300 text-sm italic">
+                                💡 {insight}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
-                <p className="text-slate-300 text-sm">{calculateMatchStatus().description}</p>
               </Card>
             )}
           </motion.div>
@@ -514,24 +590,27 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                   ))}
                 </div>
 
-                {/* Pairing Preview */}
+                {/* Epic Team Preview */}
                 {pairings && (
-                  <div className="mt-6 p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                    <h4 className="text-white font-medium mb-3">Team Preview:</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-2">
-                        <div className="text-green-400 font-medium">🎾 Team 1</div>
-                        {pairings.team1.map(player => (
-                          <div key={player.id} className="text-slate-300">• {player.displayName || player.username}</div>
-                        ))}
-                      </div>
-                      <div className="space-y-2">
-                        <div className="text-blue-400 font-medium">🎾 Team 2</div>
-                        {pairings.team2.map(player => (
-                          <div key={player.id} className="text-slate-300">• {player.displayName || player.username}</div>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="mt-6">
+                    <VersusScreen
+                      mode="mid"
+                      teams={[
+                        {
+                          name: "Team Lightning", 
+                          color: "#10b981", 
+                          glowColor: "#10b981",
+                          players: pairings.team1
+                        },
+                        {
+                          name: "Team Thunder", 
+                          color: "#3b82f6", 
+                          glowColor: "#3b82f6", 
+                          players: pairings.team2
+                        }
+                      ]}
+                      showStats={true}
+                    />
                   </div>
                 )}
               </div>
@@ -539,84 +618,145 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
           </motion.div>
         )}
 
-        {/* Step 4: Review & Create */}
+        {/* Step 4: Epic Review Experience */}
         {currentStep === 'review' && (
           <motion.div
             key="review"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
-            className="space-y-4"
+            className="space-y-6"
           >
-            <Card className="bg-slate-800/50 border-slate-700/50 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-400" />
-                Review Match Details
-              </h3>
-              
-              <div className="space-y-4">
-                {/* Match Format */}
-                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                  <span className="text-slate-300">Format:</span>
-                  <Badge className="bg-orange-500/20 text-orange-300">
-                    {matchFormat === 'singles' ? 'Singles (1v1)' : 'Doubles (2v2)'}
-                  </Badge>
-                </div>
+            {/* Full-Screen Versus Preview */}
+            <div className="relative">
+              {matchFormat === 'doubles' && pairings ? (
+                <VersusScreen
+                  mode="full"
+                  teams={[
+                    {
+                      name: "Team Lightning", 
+                      color: "#10b981", 
+                      glowColor: "#10b981",
+                      players: pairings.team1
+                    },
+                    {
+                      name: "Team Thunder", 
+                      color: "#3b82f6", 
+                      glowColor: "#3b82f6", 
+                      players: pairings.team2
+                    }
+                  ]}
+                  showStats={true}
+                />
+              ) : (
+                <VersusScreen
+                  mode="full"
+                  teams={[
+                    {
+                      name: "Player 1", 
+                      color: "#f97316", 
+                      glowColor: "#f97316",
+                      players: [{ id: 0, name: "You", displayName: "You" }]
+                    },
+                    {
+                      name: "Player 2", 
+                      color: "#3b82f6", 
+                      glowColor: "#3b82f6", 
+                      players: selectedPlayers.slice(0, 1)
+                    }
+                  ]}
+                  showStats={true}
+                />
+              )}
+            </div>
 
-                {/* Players */}
-                <div className="space-y-2">
-                  <span className="text-slate-300 font-medium">Players:</span>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 p-2 bg-slate-700/30 rounded">
-                      <Crown className="h-4 w-4 text-yellow-400" />
-                      <span className="text-white">You (Match Creator)</span>
-                    </div>
-                    {selectedPlayers.map(player => (
-                      <div key={player.id} className="flex items-center gap-2 p-2 bg-slate-700/30 rounded">
-                        <User className="h-4 w-4 text-blue-400" />
-                        <span className="text-white">{player.displayName || player.username}</span>
-                        <Badge variant="secondary" className="text-xs">{player.passportCode}</Badge>
-                      </div>
-                    ))}
-                  </div>
+            {/* Epic Match Analysis */}
+            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-orange-500/50 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10"></div>
+              <div className="relative z-10 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <motion.div 
+                    className="p-2 bg-yellow-500/20 rounded-full"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Trophy className="h-6 w-6 text-yellow-400" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-white">Epic Battle Preview</h3>
                 </div>
-
-                {/* Pairing Details for Doubles */}
-                {matchFormat === 'doubles' && pairings && (
-                  <div className="space-y-2">
-                    <span className="text-slate-300 font-medium">Team Setup:</span>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                        <div className="text-green-400 font-medium mb-1">Team 1</div>
-                        {pairings.team1.map(player => (
-                          <div key={player.id} className="text-white text-sm">
-                            • {player.displayName || player.username}
+                
+                {(() => {
+                  const analysis = generateMatchAnalysis();
+                  return (
+                    <div className="space-y-4">
+                      <motion.h2 
+                        className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400"
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        {analysis.headline}
+                      </motion.h2>
+                      
+                      {analysis.badges.length > 0 && (
+                        <div className="flex flex-wrap gap-3">
+                          {analysis.badges.map((badge, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              transition={{ delay: i * 0.1, type: 'spring' }}
+                            >
+                              <Badge 
+                                className={`text-base py-2 px-4 ${
+                                  badge.tier === 'S' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50' :
+                                  badge.tier === 'A' ? 'bg-orange-500/20 text-orange-300 border-orange-500/50' :
+                                  'bg-blue-500/20 text-blue-300 border-blue-500/50'
+                                }`}
+                              >
+                                {badge.icon} {badge.label}
+                              </Badge>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {analysis.insights.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {analysis.insights.map((insight, i) => (
+                            <motion.div
+                              key={i}
+                              className="p-4 bg-slate-700/30 rounded-lg border border-slate-600"
+                              initial={{ x: i % 2 === 0 ? -20 : 20, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: 0.3 + i * 0.1 }}
+                            >
+                              <p className="text-slate-200 font-medium">
+                                🔥 {insight}
+                              </p>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {analysis.watchFor.length > 0 && (
+                        <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg">
+                          <h4 className="text-purple-300 font-bold mb-2 flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            What to Watch For:
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {analysis.watchFor.map((item, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs">
+                                👀 {item}
+                              </Badge>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                      <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                        <div className="text-blue-400 font-medium mb-1">Team 2</div>
-                        {pairings.team2.map(player => (
-                          <div key={player.id} className="text-white text-sm">
-                            • {player.displayName || player.username}
-                          </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-
-                {/* Match Status */}
-                <div className="p-4 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border border-orange-500/30 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Trophy className="h-5 w-5 text-yellow-400" />
-                    <span className="text-white font-medium">Match Analysis</span>
-                  </div>
-                  <p className="text-slate-200">{calculateMatchStatus().description}</p>
-                  <div className="mt-2 text-sm text-slate-400">
-                    Competitive Balance: {calculateMatchStatus().competitiveBalance}%
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             </Card>
           </motion.div>
