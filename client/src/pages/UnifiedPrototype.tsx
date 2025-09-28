@@ -2647,7 +2647,21 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [location, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<TabMode>('passport');
+  
+  // Auto-detect initial tab based on route
+  const getInitialTab = (): TabMode => {
+    if (location === '/rankings') return 'rankings';
+    if (location === '/profile') return 'profile';
+    if (location === '/match-arena') return 'play';
+    return 'passport';
+  };
+  
+  const [activeTab, setActiveTab] = useState<TabMode>(getInitialTab());
+  
+  // Update active tab when location changes
+  useEffect(() => {
+    setActiveTab(getInitialTab());
+  }, [location]);
   
   // Micro-feedback states
   const [showSaveReaction, setShowSaveReaction] = useState(false);

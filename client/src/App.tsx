@@ -725,8 +725,8 @@ export default function App() {
                       requiredRole={UserRole.ADMIN} 
                     />}
                   </Route>
-                  {/* Main profile route using consolidated Profile component */}
-                  <Route path="/profile" component={LazyProfilePage} />
+                  {/* Main profile route using prototype Profile component */}
+                  <Route path="/profile" component={UnifiedPrototype} />
                   {/* Keep the edit profile route as it's still needed for editing */}
                   <ProtectedRouteWithLayout
                     path="/profile/edit"
@@ -1082,7 +1082,7 @@ export default function App() {
                     component={React.lazy(() => import('./pages/RankingsPage'))}
                     pageTitle="Rankings"
                   />
-                  <Route path="/rankings" component={React.lazy(() => import('./pages/RankingsPage'))} />
+                  <Route path="/rankings" component={UnifiedPrototype} />
                   <ProtectedRouteWithLayout
                     path="/pickle-points"
                     component={React.lazy(() => import('./pages/PicklePointsPage'))}
