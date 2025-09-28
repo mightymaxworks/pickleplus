@@ -127,26 +127,29 @@ export const MomentumWave = memo(({
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    setMousePosition({ x: event.clientX, y: event.clientY });
-    
-    // Find nearest wave point using actual SVG width
-    const actualWidth = rect.width; // Use rect.width instead of dataset
-    const pointIndex = Math.round((x / actualWidth) * (wave.length - 1));
-    
-    if (pointIndex >= 0 && pointIndex < wave.length) {
-      const point = wave[pointIndex];
-      const shifts = analyzeMomentumShifts();
-      const shift = shifts.find(s => s.point === pointIndex);
+    // Only update if mouse is actually over the wave area
+    if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+      setMousePosition({ x: event.clientX, y: event.clientY });
       
-      setHoveredPoint({
-        x,
-        y,
-        point: pointIndex,
-        momentum: point.y,
-        reason: shift?.reason || (point.y > 0 ? 'Momentum favoring this side' : 'Momentum against this side'),
-        timestamp: Date.now(),
-        score: currentScore || { player1: Math.floor(pointIndex * 0.6), player2: Math.floor((wave.length - pointIndex) * 0.5) }
-      });
+      // Find nearest wave point using actual SVG width
+      const actualWidth = rect.width;
+      const pointIndex = Math.round((x / actualWidth) * (wave.length - 1));
+      
+      if (pointIndex >= 0 && pointIndex < wave.length) {
+        const point = wave[pointIndex];
+        const shifts = analyzeMomentumShifts();
+        const shift = shifts.find(s => s.point === pointIndex);
+        
+        setHoveredPoint({
+          x,
+          y,
+          point: pointIndex,
+          momentum: point.y,
+          reason: shift?.reason || (point.y > 0 ? 'Momentum favoring this side' : 'Momentum against this side'),
+          timestamp: Date.now(),
+          score: currentScore || { player1: Math.floor(pointIndex * 0.6), player2: Math.floor((wave.length - pointIndex) * 0.5) }
+        });
+      }
     }
   };
 
@@ -343,8 +346,8 @@ export const MomentumWave = memo(({
           animate={{ opacity: 1, scale: 1 }}
           className="fixed z-50 pointer-events-none"
           style={{
-            left: mousePosition.x + 10,
-            top: mousePosition.y - 80
+            left: mousePosition.x - 150, // Center tooltip on cursor
+            top: mousePosition.y - 120   // Extra space above cursor to avoid overlap
           }}
         >
           <Card className="p-3 bg-slate-900/95 border-slate-600 backdrop-blur-sm max-w-xs">
@@ -675,3 +678,5 @@ export const MomentumWave = memo(({
 });
 
 MomentumWave.displayName = 'MomentumWave';
+
+export default MomentumWave;

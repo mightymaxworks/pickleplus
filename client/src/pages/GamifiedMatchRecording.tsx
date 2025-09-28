@@ -1661,8 +1661,8 @@ export default function GamifiedMatchRecording() {
         </motion.div>
       )}
 
-      {/* Player Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* Player Cards - positioned with top margin for tooltip space */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-16">
         <GameifiedPlayerCard
           player={matchState.player1}
           score={matchState.player1.score}
