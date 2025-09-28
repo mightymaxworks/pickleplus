@@ -396,7 +396,7 @@ export const MomentumWave = memo(({
         </motion.div>
       )}
 
-      <div className={`relative ${className}`}>
+      <div className={`relative ${className}`} style={{ zIndex: 10 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -494,6 +494,7 @@ export const MomentumWave = memo(({
               className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
+              style={{ pointerEvents: 'all', position: 'relative', zIndex: 20 }}
             >
               {/* Transparent hit area for reliable hover detection */}
               <rect
