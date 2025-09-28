@@ -126,7 +126,17 @@ function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
 }
 
 // Match Closeness Indicator for Gaming Experience
-function MatchClosenessIndicator({ closeness }: { closeness?: MatchCloseness }) {
+function MatchClosenessIndicator({ 
+  closeness, 
+  team1Name, 
+  team2Name, 
+  momentumScore 
+}: { 
+  closeness?: MatchCloseness;
+  team1Name?: string;
+  team2Name?: string;
+  momentumScore?: number;
+}) {
   if (!closeness) return null;
 
   const levelColors = {
@@ -176,7 +186,15 @@ function MatchClosenessIndicator({ closeness }: { closeness?: MatchCloseness }) 
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-white font-bold text-sm uppercase tracking-wide">
-              Match Intensity
+              {(() => {
+                if (!team1Name || !team2Name || momentumScore === undefined) return 'Match Intensity';
+                
+                if (momentumScore > 65) return `${team1Name} Dominating`;
+                if (momentumScore > 55) return `${team1Name} Leading`;
+                if (momentumScore < 35) return `${team2Name} Dominating`;
+                if (momentumScore < 45) return `${team2Name} Leading`;
+                return 'Dead Heat';
+              })()}
             </span>
             <div className="text-white font-bold text-lg">
               {closeness.score}/100
@@ -186,7 +204,22 @@ function MatchClosenessIndicator({ closeness }: { closeness?: MatchCloseness }) 
           <div className="text-white text-sm font-medium" style={{
             textShadow: '0 1px 2px rgba(0,0,0,0.8)'
           }}>
-            {closeness.description}
+            {(() => {
+              if (!team1Name || !team2Name || momentumScore === undefined) return closeness.description;
+              
+              if (closeness.level === 'nail-biter') {
+                return `${team1Name} vs ${team2Name} - Anyone's game!`;
+              } else if (closeness.level === 'competitive') {
+                const leader = momentumScore > 50 ? team1Name : team2Name;
+                return `${leader} has the edge in this battle`;
+              } else if (closeness.level === 'one-sided') {
+                const leader = momentumScore > 50 ? team1Name : team2Name;
+                return `${leader} pulling away from the competition`;
+              } else {
+                const leader = momentumScore > 50 ? team1Name : team2Name;
+                return `${leader} completely in control`;
+              }
+            })()}
           </div>
         </div>
         
@@ -1541,7 +1574,12 @@ export default function GamifiedMatchRecording() {
           {/* Match Closeness Indicator */}
           {matchState.momentumState?.closeness && (
             <div className="mt-4">
-              <MatchClosenessIndicator closeness={matchState.momentumState.closeness} />
+              <MatchClosenessIndicator 
+                closeness={matchState.momentumState.closeness}
+                team1Name={matchState.player1?.name}
+                team2Name={matchState.player2?.name}
+                momentumScore={matchState.momentumState.momentumScore}
+              />
             </div>
           )}
         </motion.div>
