@@ -533,7 +533,10 @@ export default function GamifiedMatchRecording() {
       matchComplete: false,
       achievements: [],
       streak: { player: '', count: 0, type: 'win' },
-      config: prev.config
+      config: prev.config,
+      strategicMessages: [],
+      momentumState: undefined,
+      showVideo: prev.showVideo
     }));
     setUndoStack([]);
   };
