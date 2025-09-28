@@ -951,33 +951,32 @@ export default function GamifiedMatchRecording() {
   useEffect(() => {
     console.log('🚀 Initializing live match system...');
     
-    // Initialize match state manager with momentum engine
-    matchStateManager.initialize(momentumEngine);
-    
-    // Stop live detection during setup to prevent flickering
-    if (showConfig) {
-      console.log('⏸️ Pausing live detection during setup...');
-      matchStateManager.stopLiveDetection();
-    } else {
+    // Only initialize when not in config mode to prevent flickering
+    if (!showConfig) {
       console.log('▶️ Starting live detection for match...');
-      matchStateManager.startLiveDetection();
-    }
-    
-    // Subscribe to live match state changes
-    const unsubscribe = matchStateManager.subscribe((newLiveState) => {
-      console.log('📡 Live match state updated:', newLiveState.mode);
-      setLiveMatchState(newLiveState);
+      // Initialize match state manager with momentum engine
+      matchStateManager.initialize(momentumEngine);
       
-      // Update live mode based on stream detection
-      if (newLiveState.mode === 'live') {
-        setIsLiveMode(true);
-      }
-    });
+      // Subscribe to live match state changes
+      const unsubscribe = matchStateManager.subscribe((newLiveState) => {
+        console.log('📡 Live match state updated:', newLiveState.mode);
+        setLiveMatchState(newLiveState);
+        
+        // Update live mode based on stream detection
+        if (newLiveState.mode === 'live') {
+          setIsLiveMode(true);
+        }
+      });
 
-    return () => {
-      unsubscribe();
+      return () => {
+        unsubscribe();
+        matchStateManager.destroy();
+      };
+    } else {
+      console.log('⏸️ Skipping live detection during setup...');
+      // Make sure any existing detection is stopped
       matchStateManager.destroy();
-    };
+    }
   }, [showConfig]);
 
   // Auto-hide momentum context notification when video URL is added
