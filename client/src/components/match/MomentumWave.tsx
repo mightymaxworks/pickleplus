@@ -4,7 +4,7 @@ import { MomentumState } from './MomentumEngine';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Target, Zap, HelpCircle, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Zap, HelpCircle, X } from 'lucide-react';
 
 interface MomentumWaveProps {
   momentumState: MomentumState & {
@@ -270,7 +270,7 @@ export const MomentumWave = memo(({
               </div>
               <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-red-400 rotate-180" />
+                  <TrendingDown className="h-4 w-4 text-red-400" />
                   <span className="text-red-300 font-medium">Falling Momentum</span>
                 </div>
                 <p className="text-slate-300 text-sm">Downward wave shows momentum loss. Opportunity for the opponent to capitalize.</p>
@@ -349,6 +349,13 @@ export const MomentumWave = memo(({
     </motion.div>
   );
 
+  // Debug: Log the component state
+  console.log('MomentumWave render:', { 
+    isInteractive, 
+    waveLength: wave?.length, 
+    momentumState, 
+    hoveredPoint 
+  });
 
   return (
     <div className="relative">
@@ -372,7 +379,7 @@ export const MomentumWave = memo(({
                 {hoveredPoint.momentum > 0 ? (
                   <TrendingUp className="h-4 w-4 text-green-400" />
                 ) : (
-                  <TrendingUp className="h-4 w-4 text-red-400 rotate-180" />
+                  <TrendingDown className="h-4 w-4 text-red-400" />
                 )}
                 <Badge className={`text-xs ${hoveredPoint.momentum > 0 ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
                   Point {hoveredPoint.point + 1}
@@ -497,7 +504,10 @@ export const MomentumWave = memo(({
                 height="100%"
                 fill="transparent"
                 style={{ pointerEvents: 'all' }}
-                onMouseMove={handleMouseMove}
+                onMouseMove={(e) => {
+                  console.log('SVG rect mouse move event fired');
+                  handleMouseMove(e);
+                }}
               />
               
               {/* Center baseline */}

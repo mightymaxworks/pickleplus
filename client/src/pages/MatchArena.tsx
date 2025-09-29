@@ -1,24 +1,3 @@
-/**
- * ⚠️  CRITICAL COMPONENT - DO NOT EDIT WITHOUT APPROVAL ⚠️
- * 
- * MatchArena.tsx - Gaming Match Lobby & Player Discovery
- * 
- * This is a core component for the game lobby experience with:
- * - Player discovery and matchmaking system
- * - Challenge and partner request management
- * - Match creation wizard integration
- * - Gaming-style lobby interface
- * 
- * 🚨 PROTECTION NOTICE:
- * - Any modifications require explicit approval
- * - This component is part of the protected gaming experience
- * - For extensions, create wrapper components instead of editing directly
- * - Route: /match-arena (protected)
- * 
- * Contact: Lead developer before making changes
- * Last Protected: 2025-09-29
- */
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -946,17 +925,15 @@ export default function MatchArena() {
               const recorderData = {
                 format: matchData.format,
                 pairings: matchData.pairings,
-                selectedPlayers: matchData.selectedPlayers,
-                teamIdentity: matchData.teamIdentity  // FIX: Include teamIdentity for proper data contract
+                selectedPlayers: matchData.selectedPlayers
               };
               sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
               console.log('Match Data:', matchData);
               
-              // Navigate to gamified match recorder immediately
-              console.log('🚀 NAVIGATION: About to navigate to gamified match recording...');
-              console.log('🚀 NAVIGATION: Data being stored:', JSON.stringify(recorderData, null, 2));
-              setLocation('/gamified-match-recording');
-              console.log('🚀 NAVIGATION: setLocation called successfully');
+              // Navigate to gamified match recorder
+              setTimeout(() => {
+                setLocation('/gamified-match-recording');
+              }, 1500);
             }}
           />
         )}
@@ -1149,7 +1126,6 @@ export default function MatchArena() {
                             setChallenges(prev => prev.filter(c => c.id !== challenge.id));
                             
                             // Navigate to gamified match recorder
-                            console.log('Navigating to match recording from challenge...');
                             setLocation('/gamified-match-recording');
                           }
                         }}
