@@ -1,13 +1,17 @@
-/**
- * Simple live stream URL validator - no hooks, no complex state
- * Just validates URLs when explicitly called
- */
+import { useState, useCallback } from 'react';
 
-export interface StreamValidationResult {
+export interface LiveStreamValidation {
   isValid: boolean;
-  streamType?: 'youtube' | 'twitch' | 'vimeo' | 'direct';
+  isLoading: boolean;
   error?: string;
+  streamType?: 'youtube' | 'twitch' | 'vimeo' | 'direct';
   embedUrl?: string;
+}
+
+export interface LiveStreamValidatorHook {
+  validation: LiveStreamValidation;
+  validateStream: (url: string) => Promise<LiveStreamValidation>;
+  clearValidation: () => void;
 }
 
 // Extract video ID and create embed URL for different platforms
@@ -89,51 +93,83 @@ async function testStreamAvailability(embedUrl: string, streamType: string): Pro
 
     return false;
   } catch (error) {
+    console.warn('Stream availability test failed:', error);
     return false;
   }
 }
 
-/**
- * Simple function to validate a stream URL - no hooks, no state
- */
-export async function validateStreamUrl(url: string): Promise<StreamValidationResult> {
-  if (!url.trim()) {
-    return { isValid: false, error: 'URL is required' };
-  }
+export function useLiveStreamValidator(): LiveStreamValidatorHook {
+  const [validation, setValidation] = useState<LiveStreamValidation>({
+    isValid: false,
+    isLoading: false
+  });
 
-  try {
-    // Parse and process the URL
-    const streamInfo = processStreamUrl(url);
-    
-    if (!streamInfo) {
-      return { 
-        isValid: false, 
-        error: 'Unsupported stream format. Please use YouTube, Twitch, Vimeo, or direct stream URLs.' 
-      };
+  const validateStream = useCallback(async (url: string): Promise<LiveStreamValidation> => {
+    if (!url.trim()) {
+      const result = { isValid: false, isLoading: false, error: 'URL is required' };
+      setValidation(result);
+      return result;
     }
 
-    // Test if the stream is actually available
-    const isAvailable = await testStreamAvailability(streamInfo.embedUrl, streamInfo.streamType);
-    
-    if (!isAvailable) {
-      return { 
-        isValid: false, 
-        error: 'Stream URL is not accessible or video not found' 
+    setValidation({ isValid: false, isLoading: true });
+
+    try {
+      // Parse and process the URL
+      const streamInfo = processStreamUrl(url);
+      
+      if (!streamInfo) {
+        const result = { 
+          isValid: false, 
+          isLoading: false, 
+          error: 'Unsupported stream format. Please use YouTube, Twitch, Vimeo, or direct stream URLs.' 
+        };
+        setValidation(result);
+        return result;
+      }
+
+      // Test if the stream is actually available
+      const isAvailable = await testStreamAvailability(streamInfo.embedUrl, streamInfo.streamType);
+      
+      if (!isAvailable) {
+        const result = { 
+          isValid: false, 
+          isLoading: false, 
+          error: 'Stream URL is not accessible or video not found' 
+        };
+        setValidation(result);
+        return result;
+      }
+
+      const result = {
+        isValid: true,
+        isLoading: false,
+        streamType: streamInfo.streamType as 'youtube' | 'twitch' | 'vimeo' | 'direct',
+        embedUrl: streamInfo.embedUrl
       };
+      
+      setValidation(result);
+      return result;
+
+    } catch (error) {
+      const result = { 
+        isValid: false, 
+        isLoading: false, 
+        error: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+      setValidation(result);
+      return result;
     }
+  }, []);
 
-    return {
-      isValid: true,
-      streamType: streamInfo.streamType as 'youtube' | 'twitch' | 'vimeo' | 'direct',
-      embedUrl: streamInfo.embedUrl
-    };
+  const clearValidation = useCallback(() => {
+    setValidation({ isValid: false, isLoading: false });
+  }, []);
 
-  } catch (error) {
-    return { 
-      isValid: false, 
-      error: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
-    };
-  }
+  return {
+    validation,
+    validateStream,
+    clearValidation
+  };
 }
 
 // Generate shareable viewer link for validated live streams
@@ -144,6 +180,11 @@ export function generateViewerLink(matchId: string, streamUrl: string): string {
 }
 
 // Check if gaming features should be enabled based on validation
-export function shouldEnableGamingFeatures(result: StreamValidationResult): boolean {
-  return result.isValid && !!result.embedUrl;
+export function shouldEnableGamingFeatures(validation: LiveStreamValidation): boolean {
+  return validation.isValid && !!validation.embedUrl;
+}
+
+// Utility to check if any live stream is active (for unified gaming toggle logic)
+export function hasActiveLiveStream(validation: LiveStreamValidation): boolean {
+  return shouldEnableGamingFeatures(validation);
 }

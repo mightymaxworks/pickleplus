@@ -37,8 +37,9 @@ import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
 import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
 import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
-// Gaming overlays disabled - focus on core match recording
-// Live stream integration disabled - focus on core match recording
+import { GamingUIOverlays } from '@/components/match/GamingUIOverlays';
+import LiveStreamIntegration from '@/components/match/LiveStreamIntegration';
+import { type LiveStreamValidation } from '@/components/match/LiveStreamValidator';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -599,18 +600,38 @@ export default function GamifiedMatchRecording() {
   const [aestheticMode, setAestheticMode] = useState<'subtle' | 'esports'>('subtle');
   const [gamingOverlaysEnabled, setGamingOverlaysEnabled] = useState(false);
   
-  // Live stream features disabled
+  // Live stream validation states
+  const [liveStreamValidation, setLiveStreamValidation] = useState<LiveStreamValidation>({
+    isValid: false,
+    isLoading: false
+  });
+  const [viewerLink, setViewerLink] = useState('');
 
-  // Gaming overlays disabled - will be restored for live streaming features
+  // Enable gaming overlays when live match state is active OR live stream is validated
+  useEffect(() => {
+    const liveStateEnabled = liveMatchState.isLive && liveMatchState.gamingFeatures.crowdEnergyMeter;
+    const liveStreamEnabled = liveStreamValidation.isValid;
+    const shouldEnable = liveStateEnabled || liveStreamEnabled;
+    
+    setGamingOverlaysEnabled(shouldEnable);
+    console.log(`🎮 Gaming overlays ${shouldEnable ? 'ENABLED' : 'DISABLED'} - Live State: ${liveStateEnabled}, Live Stream: ${liveStreamEnabled}`);
+  }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter, liveStreamValidation.isValid]);
 
-  // Live stream handlers disabled
+  // Live stream validation handlers
+  const handleLiveStreamValidation = (validation: LiveStreamValidation) => {
+    setLiveStreamValidation(validation);
+    console.log('🎥 Live stream validation updated:', validation);
+  };
 
   const handleGamingFeaturesToggle = (enabled: boolean) => {
     console.log(`🎮 Gaming features ${enabled ? 'ENABLED' : 'DISABLED'} via live stream`);
     // Additional logic if needed
   };
 
-  // Viewer link handler disabled - will be restored for live streaming
+  const handleViewerLinkGenerated = (link: string) => {
+    setViewerLink(link);
+    console.log('🔗 Viewer link generated:', link);
+  };
 
   // Gaming feature test handlers
   const handleGamingTest = (trigger: string) => {
@@ -930,33 +951,25 @@ export default function GamifiedMatchRecording() {
   useEffect(() => {
     console.log('🚀 Initializing live match system...');
     
-    // Only initialize when not in config mode to prevent flickering
-    if (!showConfig) {
-      console.log('▶️ Starting live detection for match...');
-      // Initialize match state manager with momentum engine
-      matchStateManager.initialize(momentumEngine);
+    // Initialize match state manager with momentum engine
+    matchStateManager.initialize(momentumEngine);
+    
+    // Subscribe to live match state changes
+    const unsubscribe = matchStateManager.subscribe((newLiveState) => {
+      console.log('📡 Live match state updated:', newLiveState.mode);
+      setLiveMatchState(newLiveState);
       
-      // Subscribe to live match state changes
-      const unsubscribe = matchStateManager.subscribe((newLiveState) => {
-        console.log('📡 Live match state updated:', newLiveState.mode);
-        setLiveMatchState(newLiveState);
-        
-        // Update live mode based on stream detection
-        if (newLiveState.mode === 'live') {
-          setIsLiveMode(true);
-        }
-      });
+      // Update live mode based on stream detection
+      if (newLiveState.mode === 'live') {
+        setIsLiveMode(true);
+      }
+    });
 
-      return () => {
-        unsubscribe();
-        matchStateManager.destroy();
-      };
-    } else {
-      console.log('⏸️ Skipping live detection during setup...');
-      // Make sure any existing detection is stopped
+    return () => {
+      unsubscribe();
       matchStateManager.destroy();
-    }
-  }, [showConfig]);
+    };
+  }, []);
 
   // Auto-hide momentum context notification when video URL is added
   useEffect(() => {
@@ -1239,7 +1252,6 @@ export default function GamifiedMatchRecording() {
                       ]}
                       showStats={true}
                       intensity={0.8}
-                      staticMode={true}
                     />
                   );
                 })()}
@@ -1358,7 +1370,95 @@ export default function GamifiedMatchRecording() {
                 </motion.button>
               </div>
 
-              {/* Live Stream Integration disabled - focus on core match recording */}
+              {/* Video Configuration */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-5 w-5 text-purple-400" />
+                  <label className="text-sm text-slate-400 font-medium">Video Integration (Optional)</label>
+                </div>
+                
+                {/* Live Stream */}
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 block">Live Stream URL</label>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={tempConfig.liveStreamUrl || ''}
+                      onChange={(e) => setTempConfig(prev => ({ 
+                        ...prev, 
+                        liveStreamUrl: e.target.value,
+                        videoProvider: e.target.value ? 'hls' : undefined
+                      }))}
+                      placeholder="https://stream.example.com/live.m3u8"
+                      className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
+                    />
+                    {tempConfig.liveStreamUrl && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Recorded Video */}
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 block">Recorded Video URL</label>
+                  <input
+                    type="url"
+                    value={tempConfig.recordingUrl || ''}
+                    onChange={(e) => {
+                      const url = e.target.value;
+                      let provider: 'mp4' | 'youtube' | 'vimeo' | undefined;
+                      
+                      if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                        provider = 'youtube';
+                      } else if (url.includes('vimeo.com')) {
+                        provider = 'vimeo';
+                      } else if (url.includes('.mp4')) {
+                        provider = 'mp4';
+                      }
+                      
+                      setTempConfig(prev => ({ 
+                        ...prev, 
+                        recordingUrl: url,
+                        videoProvider: provider
+                      }));
+                    }}
+                    placeholder="YouTube, Vimeo, or MP4 URL"
+                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
+                  />
+                  {tempConfig.recordingUrl && (
+                    <div className="text-xs text-slate-500">
+                      Detected: {tempConfig.videoProvider === 'youtube' ? 'YouTube' : 
+                                tempConfig.videoProvider === 'vimeo' ? 'Vimeo' : 
+                                tempConfig.videoProvider === 'mp4' ? 'MP4 Video' : 'Unknown format'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Video Sync Offset */}
+                {(tempConfig.liveStreamUrl || tempConfig.recordingUrl) && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs text-slate-500">Video Sync Offset</label>
+                      <span className="text-xs text-slate-400">{tempConfig.videoSyncOffset || 0}s</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-30"
+                      max="30"
+                      step="0.5"
+                      value={tempConfig.videoSyncOffset || 0}
+                      onChange={(e) => setTempConfig(prev => ({ 
+                        ...prev, 
+                        videoSyncOffset: parseFloat(e.target.value)
+                      }))}
+                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="text-xs text-slate-600">Adjust if video doesn't match live scoring</div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <Button
@@ -1378,8 +1478,16 @@ export default function GamifiedMatchRecording() {
   if (showConfig) {
     return <MatchConfigModal />;
   }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
+    <GamingUIOverlays
+      isEnabled={gamingOverlaysEnabled}
+      aestheticMode={aestheticMode}
+      onAestheticToggle={toggleAesthetic}
+      onTestTrigger={handleGamingTest}
+      momentumState={matchState.momentumState}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1417,6 +1525,17 @@ export default function GamifiedMatchRecording() {
               Return to Arena
             </Button>
           )}
+        </div>
+        
+        {/* Live Stream Integration */}
+        <div className="mb-6">
+          <LiveStreamIntegration
+            onValidationChange={handleLiveStreamValidation}
+            onGamingFeaturesToggle={handleGamingFeaturesToggle}
+            onViewerLinkGenerated={handleViewerLinkGenerated}
+            matchId={`live-${Date.now()}`}
+            className="max-w-4xl mx-auto"
+          />
         </div>
         
         {/* Match Title */}
@@ -1612,7 +1731,7 @@ export default function GamifiedMatchRecording() {
           )}
           <MomentumWave
             momentumState={{
-              ...matchState.momentumState!,
+              ...matchState.momentumState,
               currentScore: { player1: matchState.player1.score, player2: matchState.player2.score },
               gameNumber: matchState.currentGame,
               isMatchComplete: matchState.matchComplete
@@ -1916,5 +2035,6 @@ export default function GamifiedMatchRecording() {
         onComplete={() => setMegaAnimation({ show: false, megaLevel: 1, teamColor: '#ff6b35', teamName: '' })}
       />
       </div>
+    </GamingUIOverlays>
   );
 }
