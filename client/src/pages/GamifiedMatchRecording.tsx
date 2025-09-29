@@ -602,6 +602,21 @@ export default function GamifiedMatchRecording() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   
+  // RESTORATION STEP 2: Core state management
+  const [componentError, setComponentError] = useState<string | null>(null);
+  
+  // Team theme generation
+  const getRandomTeamTheme = () => {
+    const pickleballTeamThemes = [
+      { team1: { name: "Court Crushers", color: "#FF6B35" }, team2: { name: "Net Ninjas", color: "#4ECDC4" } },
+      { team1: { name: "Paddle Pirates", color: "#45B7D1" }, team2: { name: "Serve Savages", color: "#96CEB4" } },
+      { team1: { name: "Dink Dynasty", color: "#FFEAA7" }, team2: { name: "Volley Vipers", color: "#DDA0DD" } },
+      { team1: { name: "Baseline Bombers", color: "#98D8C8" }, team2: { name: "Spin Specialists", color: "#F06292" } },
+      { team1: { name: "Power Players", color: "#FFB74D" }, team2: { name: "Precision Pros", color: "#81C784" } }
+    ];
+    return pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
+  };
+  
   // Safe session storage data extraction with detailed logging
   const getInitialPlayerNames = () => {
     try {
@@ -650,8 +665,52 @@ export default function GamifiedMatchRecording() {
 
   const initialNames = getInitialPlayerNames();
   console.log('🎯 FLOW DATA: Final player names:', initialNames);
+  
+  // RESTORATION STEP 2: Initialize team theme and basic match state
+  const teamTheme = getRandomTeamTheme();
+  
+  // Basic match state with error boundaries
+  const [matchState, setMatchState] = useState(() => {
+    try {
+      return {
+        player1: { 
+          name: initialNames.player1, 
+          id: '1', 
+          tier: 'Competitive', 
+          score: 0 
+        },
+        player2: { 
+          name: initialNames.player2, 
+          id: '2', 
+          tier: 'Competitive', 
+          score: 0 
+        },
+        gameHistory: [] as Array<{ player1Score: number; player2Score: number; winner: string }>,
+        currentGame: 1,
+        matchComplete: false,
+        achievements: [] as Array<{ type: string; message: string; timestamp: number }>,
+        streak: { player: '', count: 0, type: 'win' as 'win' | 'ace' },
+        config: {
+          bestOf: 3,
+          pointsToWin: 11,
+          winByTwo: true,
+          liveStreamUrl: '',
+          recordingUrl: '',
+          enableStats: true,
+          enableCommentary: true
+        },
+        showVideo: false,
+        strategicMessages: [] as Array<any>,
+        momentumState: undefined
+      };
+    } catch (error) {
+      console.error('🚨 STATE INIT ERROR:', error);
+      setComponentError(`Match state initialization failed: ${error.message}`);
+      return null;
+    }
+  });
 
-  // Error boundary display
+  // Error boundary displays
   if (dataError) {
     return (
       <div className="min-h-screen bg-red-900 text-white p-8">
@@ -669,22 +728,77 @@ export default function GamifiedMatchRecording() {
       </div>
     );
   }
-
-  // Success state with data flow info
-  return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <h1 className="text-4xl font-bold text-center mb-8">🏓 RESTORATION STEP 1</h1>
-      <div className="max-w-md mx-auto bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-xl mb-4">Data Flow Success!</h2>
-        <p className="text-green-400 mb-2">✅ Component mounted</p>
-        <p className="text-blue-400 mb-2">✅ Data parsing complete</p>
-        <p className="text-yellow-400 mb-4">✅ Error handling active</p>
-        
-        <div className="bg-gray-700 p-4 rounded mt-4">
-          <h3 className="font-bold mb-2">Loaded Player Names:</h3>
-          <p className="text-orange-400">Player 1: {initialNames.player1}</p>
-          <p className="text-blue-400">Player 2: {initialNames.player2}</p>
+  
+  if (componentError || !matchState) {
+    return (
+      <div className="min-h-screen bg-yellow-900 text-white p-8">
+        <h1 className="text-4xl font-bold text-center mb-8">⚠️ COMPONENT ERROR</h1>
+        <div className="max-w-md mx-auto bg-yellow-800 p-6 rounded-lg">
+          <h2 className="text-xl mb-4">State Management Issue:</h2>
+          <p className="text-yellow-200 mb-4">{componentError || 'Match state is null'}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded"
+          >
+            Reload Page
+          </button>
         </div>
+      </div>
+    );
+  }
+
+  // RESTORATION STEP 2: Enhanced success state with match info
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white p-8">
+      <h1 className="text-4xl font-bold text-center mb-8">🏓 RESTORATION STEP 2</h1>
+      <div className="max-w-2xl mx-auto">
+        
+        <div className="bg-gray-800 p-6 rounded-lg mb-6">
+          <h2 className="text-xl mb-4">Core Systems Online!</h2>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-green-400">✅ Component mounted</p>
+              <p className="text-blue-400">✅ Data parsing complete</p>
+              <p className="text-yellow-400">✅ Error handling active</p>
+            </div>
+            <div>
+              <p className="text-purple-400">✅ State management initialized</p>
+              <p className="text-cyan-400">✅ Team themes generated</p>
+              <p className="text-orange-400">✅ Match configuration ready</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-lg mb-6">
+          <h3 className="font-bold mb-4">Team Setup:</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-700 p-4 rounded" style={{borderLeft: `4px solid ${teamTheme.team1.color}`}}>
+              <h4 className="font-bold" style={{color: teamTheme.team1.color}}>{teamTheme.team1.name}</h4>
+              <p className="text-lg">{matchState.player1.name}</p>
+              <p className="text-sm text-gray-400">Score: {matchState.player1.score}</p>
+            </div>
+            <div className="bg-gray-700 p-4 rounded" style={{borderLeft: `4px solid ${teamTheme.team2.color}`}}>
+              <h4 className="font-bold" style={{color: teamTheme.team2.color}}>{teamTheme.team2.name}</h4>
+              <p className="text-lg">{matchState.player2.name}</p>
+              <p className="text-sm text-gray-400">Score: {matchState.player2.score}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="font-bold mb-4">Match Configuration:</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p>Best of: {matchState.config.bestOf}</p>
+              <p>Points to win: {matchState.config.pointsToWin}</p>
+            </div>
+            <div>
+              <p>Win by two: {matchState.config.winByTwo ? 'Yes' : 'No'}</p>
+              <p>Current game: {matchState.currentGame}</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
