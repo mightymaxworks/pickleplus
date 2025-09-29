@@ -68,6 +68,8 @@ export const MomentumWave = memo(({
   const [hoveredPoint, setHoveredPoint] = useState<HeroTooltipData | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showCombatView, setShowCombatView] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Extract state with new hype system
   const { 
@@ -106,6 +108,7 @@ export const MomentumWave = memo(({
   }, [heroMode, heroHeight]);
 
   // Generate smooth interpolated wave path using monotone cubic interpolation
+  // Now responsive to timeline position for scrubbing
   const interpolatedWave = useMemo(() => {
     if (!history || history.length < 2) {
       const centerY = effectiveHeight / 2;
@@ -119,12 +122,16 @@ export const MomentumWave = memo(({
       }];
     }
 
+    // Slice history based on timeline position for scrubbing effect
+    const maxIndex = Math.max(1, Math.floor(history.length * timelinePosition));
+    const visibleHistory = history.slice(0, maxIndex);
+
     const points: InterpolatedPoint[] = [];
     const centerY = effectiveHeight / 2;
-    const maxAmplitude = centerY * 0.85; // Slightly larger amplitude for hero mode
+    const maxAmplitude = centerY * 0.85;
 
-    history.forEach((point, index) => {
-      const x = (index / Math.max(history.length - 1, 1)) * effectiveWidth;
+    visibleHistory.forEach((point, index) => {
+      const x = (index / Math.max(history.length - 1, 1)) * effectiveWidth; // Use full history length for consistent spacing
       const y = centerY - (point.ewma * maxAmplitude);
       const isKeyMoment = turningPoints.includes(point.pointNo) || point.hypeIndex > 0.7;
       
@@ -139,7 +146,7 @@ export const MomentumWave = memo(({
     });
 
     return points;
-  }, [history, effectiveWidth, effectiveHeight, turningPoints, hypeIndex, momentum]);
+  }, [history, effectiveWidth, effectiveHeight, turningPoints, hypeIndex, momentum, timelinePosition]);
 
   // Generate SVG path using smooth curves for cinematic effect
   const wavePath = useMemo(() => {
@@ -233,10 +240,109 @@ export const MomentumWave = memo(({
     return { status, message, intensity, isComeback: status === 'active_comeback' };
   }, [currentScore, history, momentum, hypeIndex, combos, maxDeficitPerTeam]);
 
+  // Auto-playback functionality for live match experience
+  useEffect(() => {
+    if (isPlaying && history.length > 0 && timelinePosition < 1) {
+      playbackIntervalRef.current = setInterval(() => {
+        setTimelinePosition(prev => {
+          const next = prev + (1 / (history.length || 1));
+          if (next >= 1) {
+            setIsPlaying(false);
+            return 1;
+          }
+          return next;
+        });
+      }, 800); // 800ms per point for dramatic effect
+    } else {
+      if (playbackIntervalRef.current) {
+        clearInterval(playbackIntervalRef.current);
+        playbackIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (playbackIntervalRef.current) {
+        clearInterval(playbackIntervalRef.current);
+      }
+    };
+  }, [isPlaying, history.length, timelinePosition]);
+
   // Handle timeline scrubbing
   const handleTimelineScrub = useCallback((position: number) => {
     setTimelinePosition(Math.max(0, Math.min(1, position)));
+    setIsPlaying(false); // Stop playback when manually scrubbing
   }, []);
+
+  // Timeline drag handlers for desktop
+  const handleTimelineMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = (event.clientX - rect.left) / rect.width;
+    handleTimelineScrub(position);
+  }, [handleTimelineScrub]);
+
+  const handleTimelineMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const position = (event.clientX - rect.left) / rect.width;
+      handleTimelineScrub(position);
+    }
+  }, [isDragging, handleTimelineScrub]);
+
+  const handleTimelineMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Touch handlers for mobile
+  const handleTimelineTouch = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const touch = event.touches[0];
+    const position = (touch.clientX - rect.left) / rect.width;
+    handleTimelineScrub(position);
+  }, [handleTimelineScrub]);
+
+  // Keyboard controls for accessibility
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!isInteractive) return;
+      
+      switch (event.key) {
+        case ' ':
+          event.preventDefault();
+          setIsPlaying(prev => !prev);
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          handleTimelineScrub(Math.max(0, timelinePosition - 0.1));
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          handleTimelineScrub(Math.min(1, timelinePosition + 0.1));
+          break;
+        case 'Home':
+          event.preventDefault();
+          handleTimelineScrub(0);
+          break;
+        case 'End':
+          event.preventDefault();
+          handleTimelineScrub(1);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isInteractive, timelinePosition, handleTimelineScrub]);
+
+  // Global mouse up handler for drag
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalMouseUp = () => setIsDragging(false);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+      return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+    }
+  }, [isDragging]);
 
   // Handle point hover for detailed tooltips
   const handlePointHover = useCallback((event: React.MouseEvent<SVGElement>) => {
@@ -467,6 +573,63 @@ export const MomentumWave = memo(({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Timeline Controls */}
+        <div className="absolute bottom-4 right-4 flex items-center space-x-2">
+          <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2 flex items-center space-x-2">
+            {/* Playback controls */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleTimelineScrub(0)}
+              className="text-white hover:bg-white/20 p-1"
+            >
+              <SkipBack size={16} />
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="text-white hover:bg-white/20 p-1"
+            >
+              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleTimelineScrub(1)}
+              className="text-white hover:bg-white/20 p-1"
+            >
+              <SkipForward size={16} />
+            </Button>
+
+            {/* Timeline scrubber */}
+            <div 
+              className="w-32 h-2 bg-gray-700 rounded-full cursor-pointer relative"
+              onMouseDown={handleTimelineMouseDown}
+              onMouseMove={handleTimelineMouseMove}
+              onMouseUp={handleTimelineMouseUp}
+              onTouchStart={handleTimelineTouch}
+              onTouchMove={handleTimelineTouch}
+            >
+              <div 
+                className="h-full bg-gradient-to-r from-blue-400 to-red-500 rounded-full transition-all duration-100"
+                style={{ width: `${timelinePosition * 100}%` }}
+              />
+              <div 
+                className="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg cursor-grab active:cursor-grabbing"
+                style={{ left: `${timelinePosition * 100}%`, marginLeft: '-6px' }}
+              />
+            </div>
+
+            {/* Position indicator */}
+            <div className="text-xs text-gray-300 min-w-12">
+              {Math.round(timelinePosition * (history.length || 1))}/{history.length || 0}
+            </div>
+          </div>
+        </div>
 
         {/* Event overlay for special moments */}
         <div 

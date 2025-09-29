@@ -47,7 +47,7 @@ export interface MomentumState {
   history: MomentumHistoryPoint[]; // Complete point history
   turningPoints: number[]; // Point numbers where momentum shifted significantly
   maxDeficitPerTeam: { team1: number; team2: number }; // Max deficit each team has faced
-  recentDeficitWindow: Array<{ pointNo: number; deficit: number; leader: 'team1' | 'team2' }>; // Last 8 points deficit tracking
+  recentDeficitWindow: Array<{ pointNo: number; deficit: number; leader: 'team1' | 'team2' | 'tied' }>; // Last 8 points deficit tracking
   totalPoints: number;
   gamePhase: 'early' | 'mid' | 'late' | 'critical';
   closeness?: MatchCloseness;
@@ -120,6 +120,9 @@ export class MomentumEngine {
     const messages: StrategyMessage[] = [];
     const prevMomentum = this.state.momentum;
     
+    // Store previous streak state BEFORE updating for break detection
+    const prevStreak = { ...this.state.streak };
+    
     // Update mechanical momentum using EWMA
     const signal = event.scoringTeam === 'team1' ? 1 : -1;
     this.state.momentum = (1 - this.alpha) * this.state.momentum + this.alpha * signal;
@@ -169,9 +172,9 @@ export class MomentumEngine {
     // Update combos
     this.updateCombos();
     
-    // Generate strategic messages (rate limited to 1 per point)
+    // Generate strategic messages (rate limited to 1 per point) - pass prevStreak for break detection
     if (this.lastMessagePoint !== event.pointNo) {
-      messages.push(...this.generateMessages(event, prevMomentum));
+      messages.push(...this.generateMessages(event, prevMomentum, prevStreak));
       this.lastMessagePoint = event.pointNo;
     }
     
@@ -205,7 +208,7 @@ export class MomentumEngine {
     }
   }
 
-  private generateMessages(event: MomentumEvent, prevMomentum: number): StrategyMessage[] {
+  private generateMessages(event: MomentumEvent, prevMomentum: number, prevStreak?: { team: 'team1' | 'team2'; length: number }): StrategyMessage[] {
     const messages: StrategyMessage[] = [];
     const { scoringTeam, score, pointNo } = event;
     
@@ -240,8 +243,8 @@ export class MomentumEngine {
       messages.push(comebackMessage);
     }
     
-    // Service break / Momentum snatch
-    const breakMessage = this.checkBreakScenario(event);
+    // Service break / Momentum snatch - use prevStreak for accurate detection
+    const breakMessage = this.checkBreakScenario(event, prevStreak);
     if (breakMessage) {
       messages.push(breakMessage);
     }
@@ -331,7 +334,7 @@ export class MomentumEngine {
     return null;
   }
 
-  private checkBreakScenario(event: MomentumEvent): StrategyMessage | null {
+  private checkBreakScenario(event: MomentumEvent, prevStreak?: { team: 'team1' | 'team2'; length: number }): StrategyMessage | null {
     // Traditional scoring: Break of serve
     if (this.config.scoringType === 'traditional' && event.hadServe) {
       const servingTeam = event.hadServe;
@@ -340,10 +343,10 @@ export class MomentumEngine {
       }
     }
     
-    // Rally scoring: Momentum snatch (breaking 2+ streak)
-    if (this.config.scoringType === 'rally' && this.state.streak.length >= 2) {
-      const prevStreakTeam = this.state.streak.team === 'team1' ? 'team2' : 'team1';
-      if (event.scoringTeam !== prevStreakTeam) {
+    // Rally scoring: Momentum snatch (breaking opponent's 2+ streak)
+    if (this.config.scoringType === 'rally' && prevStreak && prevStreak.length >= 2) {
+      // Break occurs when scoring team differs from previous streak team
+      if (event.scoringTeam !== prevStreak.team) {
         return this.createMessage('break', '⚡ MOMENTUM SNATCH!', event.scoringTeam, 2);
       }
     }
@@ -422,13 +425,13 @@ export class MomentumEngine {
     }
     
     // Update recent deficit window (last 8 points)
-    const leader = s1 > s2 ? 'team1' : s2 > s1 ? 'team2' : 'tied';
+    const leader: 'team1' | 'team2' | 'tied' = s1 > s2 ? 'team1' : s2 > s1 ? 'team2' : 'tied';
     const deficit = Math.abs(s1 - s2);
     
     this.state.recentDeficitWindow.push({
       pointNo: this.state.totalPoints + 1,
       deficit,
-      leader: leader as 'team1' | 'team2'
+      leader
     });
     
     // Keep only last 8 points
@@ -483,14 +486,15 @@ export class MomentumEngine {
     let currentDeficit = 0;
     
     for (const point of recent) {
-      if (point.leader !== team) {
+      // Only count deficit when other team is leading (ignore tied games)
+      if (point.leader !== team && point.leader !== 'tied') {
         maxRecentDeficit = Math.max(maxRecentDeficit, point.deficit);
       }
     }
     
-    // Current deficit for this team
+    // Current deficit for this team (ignore tied games)
     const lastPoint = recent[recent.length - 1];
-    if (lastPoint.leader !== team) {
+    if (lastPoint.leader !== team && lastPoint.leader !== 'tied') {
       currentDeficit = lastPoint.deficit;
     }
     
