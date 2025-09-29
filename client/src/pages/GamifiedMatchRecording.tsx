@@ -916,6 +916,23 @@ export default function GamifiedMatchRecording() {
     return getRandomTeamTheme(); // Fallback to random theme
   });
   
+  // Extract scoring system from match data
+  const getScoringSystem = (): 'traditional' | 'rally' => {
+    try {
+      const currentMatch = sessionStorage.getItem('currentMatch');
+      if (currentMatch) {
+        const matchData = JSON.parse(currentMatch);
+        return matchData.scoringSystem || 'rally';
+      }
+    } catch (error) {
+      console.log('Could not load scoring system from session storage:', error);
+    }
+    return 'rally'; // Default to rally scoring
+  };
+
+  const [scoringSystem] = useState<'traditional' | 'rally'>(getScoringSystem());
+  const [currentServe, setCurrentServe] = useState<'team1' | 'team2'>('team1'); // Team 1 starts with serve
+
   const [matchState, setMatchState] = useState<MatchState>({
     player1: { name: playerData.player1.displayName || playerData.player1.name, id: '1', tier: 'Elite', score: 0 },
     player2: { name: playerData.player2.displayName || playerData.player2.name, id: '2', tier: 'Professional', score: 0 },
@@ -927,18 +944,18 @@ export default function GamifiedMatchRecording() {
     strategicMessages: [],
     showVideo: false,
     config: {
-      scoringType: 'traditional',
+      scoringType: scoringSystem,
       pointTarget: 11,
       matchFormat: 'best-of-3',
       winByTwo: true
     }
   });
 
-  // Initialize momentum engine
+  // Initialize momentum engine with correct scoring system
   const [momentumEngine] = useState(() => new MomentumEngine({
     pointTarget: 11,
     winByTwo: true,
-    scoringType: 'traditional',
+    scoringType: scoringSystem,
     matchFormat: 'best-of-3'
   }));
 
@@ -976,17 +993,62 @@ export default function GamifiedMatchRecording() {
     setMatchState(prev => {
       const newState = { ...prev };
       
-      if (playerId === '1') {
-        newState.player1.score++;
+      // Determine scoring team and serve state
+      const scoringTeam = playerId === '1' ? 'team1' as const : 'team2' as const;
+      const hadServe = currentServe;
+      
+      // Traditional scoring: Only serving team can score
+      if (scoringSystem === 'traditional') {
+        const isSideOut = hadServe !== scoringTeam;
+        
+        if (isSideOut) {
+          // Side-out: serve changes, NO point awarded
+          setCurrentServe(scoringTeam);
+          
+          // Still process momentum event for side-out
+          const momentumEvent = {
+            pointNo: newState.player1.score + newState.player2.score,
+            scoringTeam,
+            score: [newState.player1.score, newState.player2.score] as [number, number],
+            hadServe,
+            isSideOut: true,
+            timestamp: Date.now(),
+            tags: []
+          };
+          
+          const newMessages = momentumEngine.processPoint(momentumEvent);
+          newState.strategicMessages = [...prev.strategicMessages, ...newMessages];
+          newState.momentumState = momentumEngine.getState();
+          
+          return newState; // Return without scoring
+        } else {
+          // Serving team scores and keeps serve
+          if (playerId === '1') {
+            newState.player1.score++;
+          } else {
+            newState.player2.score++;
+          }
+          // Serve stays with current team (no change needed)
+        }
       } else {
-        newState.player2.score++;
+        // Rally scoring: every rally scores a point
+        if (playerId === '1') {
+          newState.player1.score++;
+        } else {
+          newState.player2.score++;
+        }
+        // Rally scoring: serve goes to scoring team
+        setCurrentServe(scoringTeam);
       }
       
-      // Process momentum and generate strategic messages
+      // Process momentum and generate strategic messages (for scoring rallies, not side-outs)
+      const isSideOut = false; // Not a side-out if we reached here (point was scored)
       const momentumEvent = {
         pointNo: newState.player1.score + newState.player2.score,
-        scoringTeam: playerId === '1' ? 'team1' as const : 'team2' as const,
+        scoringTeam,
         score: [newState.player1.score, newState.player2.score] as [number, number],
+        hadServe,
+        isSideOut,
         timestamp: Date.now(),
         tags: []
       };
@@ -1066,6 +1128,9 @@ export default function GamifiedMatchRecording() {
         newState.player1.score = 0;
         newState.player2.score = 0;
         newState.currentGame++;
+        
+        // Reset serve for new game - alternate starting server
+        setCurrentServe(newState.currentGame % 2 === 1 ? 'team1' : 'team2');
         
         // Check for match completion based on format
         const p1Wins = newState.gameHistory.filter(g => g.winner === newState.player1.name).length;
@@ -1700,6 +1765,8 @@ export default function GamifiedMatchRecording() {
             className="w-full"
             isInteractive={true}
             isMatchComplete={matchState.matchComplete}
+            scoringSystem={scoringSystem}
+            currentServe={currentServe}
           />
 
           {/* Match Closeness Indicator - positioned with proper spacing */}
