@@ -46,6 +46,7 @@ interface InterpolatedPoint {
   isKeyMoment: boolean;
 }
 
+
 // Revolutionary "Twitch for Pickleball" Momentum Wave Component
 export const MomentumWave = memo(({ 
   momentumState, 
@@ -771,17 +772,18 @@ export const MomentumWave = memo(({
           onMouseLeave={() => setHoveredPoint(null)}
         />
       </div>
-    );
-  }
+
+    </div>
+  );
 
   // Fallback to compact mode (not used in revolutionary design)
-  return (
-    <Card className={`p-4 ${className}`}>
-      <div className="text-center text-gray-500">
-        Hero mode disabled - enable for revolutionary experience
-      </div>
-    </Card>
-  );
+  // return (
+  //   <Card className={`p-4 ${className}`}>
+  //     <div className="text-center text-gray-500">
+  //       Hero mode disabled - enable for revolutionary experience
+  //     </div>
+  //   </Card>
+  // );
 });
 
 MomentumWave.displayName = 'MomentumWave';
