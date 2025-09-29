@@ -4171,6 +4171,102 @@ class ErrorCascadeAnalyzer {
 - **Cascade Prediction**: Predict next error after current fix
 - **Incremental Fixing**: Fix one constraint layer at a time with testing
 
+### **RULE 32B: JSX STRUCTURE VALIDATION PROTOCOL** 🏗️ **COMPONENT DEBUGGING**
+
+```typescript
+// MANDATORY: Systematic approach to JSX/TSX compilation errors - especially "Adjacent JSX elements" errors
+interface JSXValidationProtocol {
+  errorType: 'adjacent_elements' | 'unclosed_tag' | 'conditional_return' | 'fragment_missing';
+  validationMethod: 'manual_trace' | 'automated_balance' | 'architect_analysis';
+  fixStrategy: string;
+}
+
+// ❌ COMMON ERROR: Adjacent JSX elements (missing closing tags)
+function BrokenComponent() {
+  if (condition) {
+    return (
+      <div>
+        <div>Content</div>
+      </div>
+    </div>  // ❌ Extra closing tag creates "adjacent elements" error
+  );
+  }
+}
+
+// ✅ CORRECT: Properly balanced JSX structure
+function FixedComponent() {
+  if (condition) {
+    return (
+      <div>
+        <div>Content</div>
+      </div>
+    );  // ✅ Proper closing - single root element
+  }
+  
+  return <div>Fallback</div>;
+}
+
+// 🛠️ DEBUGGING TOOL: Programmatic JSX balance validator
+function validateJSXBalance(filePath: string, startLine: number, endLine: number): {
+  balanced: boolean;
+  unclosedTags: number[];
+  extraClosingTags: number[];
+} {
+  const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+  let stack: number[] = [];
+  const unclosed: number[] = [];
+  
+  for (let i = startLine; i <= endLine; i++) {
+    const line = lines[i];
+    
+    // Count opening tags (not self-closing)
+    const openMatches = line.match(/<([\w.]+)(?![^>]*\/>)/g);
+    if (openMatches) {
+      openMatches.forEach(() => stack.push(i + 1));
+    }
+    
+    // Count closing tags
+    const closeMatches = line.match(/<\/([\w.]+)>/g);
+    if (closeMatches) {
+      closeMatches.forEach(() => {
+        if (stack.length === 0) {
+          unclosed.push(i + 1); // Extra closing tag
+        } else {
+          stack.pop();
+        }
+      });
+    }
+  }
+  
+  return {
+    balanced: stack.length === 0,
+    unclosedTags: stack,
+    extraClosingTags: unclosed
+  };
+}
+```
+
+**MANDATORY JSX DEBUGGING PROTOCOL**:
+1. **Error Message Analysis**: "Adjacent JSX elements" → Missing closing tag or extra closing tag
+2. **Conditional Return Validation**: Every `if (condition) { return (...) }` must have closing `}`
+3. **Programmatic Balance Check**: Use automated tools to count opening vs closing tags
+4. **Systematic Tag Tracing**: Trace each opening tag to its corresponding closing tag
+5. **Architect Assistance**: For complex JSX structures, delegate debugging to architect tool
+6. **Incremental Validation**: Fix one structural issue at a time, test after each fix
+
+**CRITICAL JSX PATTERNS TO AVOID**:
+- ❌ Multiple root elements in conditional returns without fragments
+- ❌ Unclosed conditional blocks (missing `}` after return statement)
+- ❌ Self-closing div confusion (`<div />` vs `<div></div>`)
+- ❌ Adjacent JSX expressions without wrapper
+
+**DEBUGGING WORKFLOW**:
+1. Identify exact line number from compilation error
+2. Trace backward to find corresponding opening tag
+3. Use programmatic balance validator for complex components
+4. Call architect tool if manual tracing fails after 3 attempts
+5. Test fix immediately - don't batch JSX structure fixes
+
 ### **RULE 33: IMPLEMENTATION REALITY SYNC VERIFICATION** ⚙️ **SYSTEM STATE VALIDATION**
 
 ```typescript
