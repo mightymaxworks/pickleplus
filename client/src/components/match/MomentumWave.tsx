@@ -124,18 +124,18 @@ export const MomentumWave = memo(({
     } else if (Math.abs(momentum) > 0.8) {
       contextType = 'momentum_surge';
       contextMessage = `🌊 Incredible momentum surge! The tide is turning fast!`;
-    } else {
-      console.log('📊 Context analysis:', { 
-        contextType, 
-        scoreDiff, 
-        isLargeDeficit, 
-        isMidGameComeback, 
-        momentumFavorsTrailer,
-        momentum: momentum.toFixed(3),
-        leader,
-        trailer
-      });
     }
+    
+    console.log('📊 Context analysis:', { 
+      contextType, 
+      scoreDiff, 
+      isLargeDeficit, 
+      isMidGameComeback, 
+      momentumFavorsTrailer,
+      momentum: momentum.toFixed(3),
+      leader,
+      trailer
+    });
     
     return {
       type: contextType,
@@ -268,52 +268,55 @@ export const MomentumWave = memo(({
     return shifts;
   };
 
-  // Generate SVG path for momentum wave (responsive and robust)
+  // Generate SVG path that follows the momentum data used by dots
   const generateWavePath = () => {
-    // Create wave data from momentum history if wave array is empty/insufficient
+    // Use wave data (same as dots) or fallback to current momentum
     const waveData = wave.length > 0 ? wave : [{ y: momentum, timestamp: Date.now() }];
-    console.log('🌊 Wave generation:', { waveLength: wave.length, momentum, waveData: waveData.slice(0, 3) });
+    
+    console.log('🌊 Wave generation using same data as dots:', { 
+      waveLength: wave.length, 
+      momentum, 
+      firstPoint: waveData[0],
+      lastPoint: waveData[waveData.length - 1]
+    });
     
     if (waveData.length < 1) {
-      // Fallback: create a simple horizontal line at momentum level
       const centerY = height / 2;
-      const y = centerY - (momentum * centerY * 0.9);
-      return `M 0 ${y} L ${width} ${y}`;
-    }
-    
-    const centerY = height / 2;
-    const maxWaveHeight = centerY * 0.9; // Increased wave height for prominence
-    
-    let path = `M 0 ${centerY}`;
-    
-    // If only one point, create a simple line to current momentum
-    if (waveData.length === 1) {
-      const pointValue = typeof waveData[0] === 'object' && waveData[0].y !== undefined ? waveData[0].y : (typeof waveData[0] === 'number' ? waveData[0] : 0);
-      const y = centerY - (Number(pointValue) * maxWaveHeight);
+      const y = centerY - (momentum * centerY * 0.8);
       return `M 0 ${centerY} L ${width} ${y}`;
     }
     
-    waveData.forEach((point, index) => {
+    const centerY = height / 2;
+    const maxWaveHeight = centerY * 0.8; // Match the dots' positioning
+    
+    let path = '';
+    
+    waveData.forEach((point: any, index: number) => {
+      // Calculate x position the same way dots are positioned
       const x = (index / Math.max(waveData.length - 1, 1)) * width;
-      const pointValue = typeof point === 'object' && point.y !== undefined ? point.y : (typeof point === 'number' ? point : 0); // Handle different data structures
-      const y = centerY - (Number(pointValue) * maxWaveHeight);
+      // Use the same momentum calculation as the dots
+      const pointValue = typeof point === 'object' && point.y !== undefined ? point.y : (typeof point === 'number' ? point : 0);
+      const normalizedMomentum = Math.max(-1, Math.min(1, pointValue));
+      const y = centerY - (normalizedMomentum * maxWaveHeight);
       
       if (index === 0) {
-        path += ` L ${x} ${y}`;
+        path = `M ${x} ${y}`;
       } else {
-        // Smooth curve using quadratic bezier for better visual flow
+        // Create smooth curves connecting the exact positions where dots appear
         const prevPoint = waveData[index - 1];
-        const prevPointValue = typeof prevPoint === 'object' && prevPoint.y !== undefined ? prevPoint.y : (typeof prevPoint === 'number' ? prevPoint : 0);
         const prevX = ((index - 1) / Math.max(waveData.length - 1, 1)) * width;
-        const prevY = centerY - (Number(prevPointValue) * maxWaveHeight);
+        const prevPointValue = typeof prevPoint === 'object' && prevPoint.y !== undefined ? prevPoint.y : (typeof prevPoint === 'number' ? prevPoint : 0);
+        const prevNormalizedMomentum = Math.max(-1, Math.min(1, prevPointValue));
+        const prevY = centerY - (prevNormalizedMomentum * maxWaveHeight);
         
+        // Control point for smooth curve
         const cpX = (prevX + x) / 2;
         const cpY = (prevY + y) / 2;
         path += ` Q ${cpX} ${cpY} ${x} ${y}`;
       }
     });
     
-    console.log('🌊 Generated path:', path.substring(0, 100) + '...');
+    console.log('🌊 Wave now follows dots exactly:', path.substring(0, 100) + '...');
     return path;
   };
 
@@ -1031,14 +1034,15 @@ export const MomentumWave = memo(({
                 
                 // Special rendering for different dot types
                 if (dot.type === 'ace' || dot.type === 'gamePoint') {
-                  // Star shape for ace/special moments
-                  const starSize = 3;
-                  const starPath = `M${dot.x},${dot.y - starSize} L${dot.x + starSize * 0.3},${dot.y - starSize * 0.3} L${dot.x + starSize},${dot.y - starSize * 0.3} L${dot.x + starSize * 0.4},${dot.y + starSize * 0.2} L${dot.x + starSize * 0.6},${dot.y + starSize} L${dot.x},${dot.y + starSize * 0.5} L${dot.x - starSize * 0.6},${dot.y + starSize} L${dot.x - starSize * 0.4},${dot.y + starSize * 0.2} L${dot.x - starSize},${dot.y - starSize * 0.3} L${dot.x - starSize * 0.3},${dot.y - starSize * 0.3} Z`;
+                  // Enhanced circle for special moments - no flashing stars
+                  const specialSize = props.r * 1.3;
                   
                   return (
-                    <motion.path
-                      key={`star-${dot.index}`}
-                      d={starPath}
+                    <motion.circle
+                      key={`special-${dot.index}`}
+                      cx={dot.x}
+                      cy={dot.y}
+                      r={specialSize}
                       fill={dotColor}
                       stroke="white"
                       strokeWidth={props.strokeWidth}
@@ -1047,12 +1051,11 @@ export const MomentumWave = memo(({
                       animate={{ 
                         scale: isHovered ? 1.3 : 1, 
                         opacity: isHovered ? 1 : 0.9,
-                        rotate: dot.type === 'ace' ? [0, 360] : 0
                       }}
                       whileHover={{ scale: 1.4, opacity: 1 }}
                       transition={{ 
-                        delay: dot.index * 0.02,
-                        rotate: { duration: 2, repeat: Infinity, ease: "linear" }
+                        duration: 0.3,
+                        ease: "easeOut"
                       }}
                       className={props.className}
                       style={{
