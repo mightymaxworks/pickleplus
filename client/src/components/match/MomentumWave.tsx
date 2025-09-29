@@ -306,6 +306,33 @@ export const MomentumWave = memo(({
     handleTimelineScrub(position);
   }, [handleTimelineScrub]);
 
+  // Show chrome on any interaction - Define this first
+  const showChrome = useCallback(() => {
+    setIsChromeVisible(true);
+    setLastInteractionAt(Date.now());
+  }, []);
+
+  // Auto-hide chrome functionality
+  useEffect(() => {
+    const hideDelay = 2000; // 2 seconds
+
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+
+    hideTimeoutRef.current = setTimeout(() => {
+      if (!isDragging && !isPlaying && !isControlsExpanded && Date.now() - lastInteractionAt > hideDelay - 100) {
+        setIsChromeVisible(false);
+      }
+    }, hideDelay);
+
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, [lastInteractionAt, isDragging, isPlaying, isControlsExpanded]);
+
   // Keyboard controls for accessibility
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -341,33 +368,6 @@ export const MomentumWave = memo(({
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isInteractive, timelinePosition, handleTimelineScrub, showChrome]);
-
-  // Auto-hide chrome functionality
-  useEffect(() => {
-    const hideDelay = 2000; // 2 seconds
-
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-    }
-
-    hideTimeoutRef.current = setTimeout(() => {
-      if (!isDragging && !isPlaying && !isControlsExpanded && Date.now() - lastInteractionAt > hideDelay - 100) {
-        setIsChromeVisible(false);
-      }
-    }, hideDelay);
-
-    return () => {
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-    };
-  }, [lastInteractionAt, isDragging, isPlaying, isControlsExpanded]);
-
-  // Show chrome on any interaction
-  const showChrome = useCallback(() => {
-    setIsChromeVisible(true);
-    setLastInteractionAt(Date.now());
-  }, []);
 
   // Global mouse up handler for drag
   useEffect(() => {
