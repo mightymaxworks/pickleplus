@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { memo, useState } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { MomentumState } from './MomentumEngine';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,9 @@ interface MomentumWaveProps {
   className?: string;
   isInteractive?: boolean;
   isMatchComplete?: boolean;
+  width?: number;
+  height?: number;
+  heroMode?: boolean;
 }
 
 interface TooltipData {
@@ -31,6 +34,17 @@ interface TooltipData {
   score: { player1: number; player2: number };
 }
 
+interface PointDot {
+  index: number;
+  x: number;
+  y: number;
+  type: 'regular' | 'momentumShift' | 'streak' | 'gamePoint' | 'ace' | 'critical';
+  team: 'team1' | 'team2';
+  intensity: number; // 0-1 for animation/glow intensity
+  tooltip: string;
+  score: { player1: number; player2: number };
+}
+
 export const MomentumWave = memo(({ 
   momentumState, 
   team1Color, 
@@ -39,14 +53,97 @@ export const MomentumWave = memo(({
   team2Name = "Team 2",
   className = '', 
   isInteractive = false,
-  isMatchComplete = false 
+  isMatchComplete = false,
+  width = 400,
+  height = 80,
+  heroMode = false
 }: MomentumWaveProps) => {
   const { wave, momentum, momentumScore, streak, gamePhase, currentScore, gameNumber } = momentumState;
   const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showTutorial, setShowTutorial] = useState(false);
   
-  // Analyze momentum shifts for tooltips
+  // Analyze different types of point dots for enhanced visualization (memoized)
+  const analyzePointDots = useMemo(() => {
+    const dots: PointDot[] = [];
+    if (!wave || wave.length < 1) return dots;
+    
+    const centerY = height / 2;
+    const maxWaveHeight = centerY * 0.8;
+    
+    for (let i = 0; i < wave.length; i++) {
+      const point = wave[i];
+      if (!point || typeof point.y !== 'number') continue;
+      
+      const x = (i / Math.max(wave.length - 1, 1)) * width;
+      const y = centerY - (point.y * maxWaveHeight);
+      
+      // Determine point type based on context
+      let type: PointDot['type'] = 'regular';
+      let intensity = 0.3;
+      let tooltip = 'Point scored';
+      
+      // Check for momentum shift
+      if (i > 0) {
+        const prev = wave[i - 1];
+        const shift = Math.abs(point.y - prev.y);
+        if (shift > 0.3) {
+          type = 'momentumShift';
+          intensity = Math.min(shift, 0.8);
+          tooltip = shift > 0.5 ? 'Major momentum shift!' : 'Momentum shift';
+        }
+      }
+      
+      // Check for streaks (3+ consecutive momentum in same direction)
+      if (i >= 2) {
+        const prev1 = wave[i - 1];
+        const prev2 = wave[i - 2];
+        if ((point.y > 0 && prev1.y > 0 && prev2.y > 0) || 
+            (point.y < 0 && prev1.y < 0 && prev2.y < 0)) {
+          if (Math.abs(point.y) > 0.5) {
+            type = 'streak';
+            intensity = 0.7;
+            tooltip = 'Hot streak building!';
+          }
+        }
+      }
+      
+      // Check for critical moments (high intensity)
+      if (Math.abs(point.y) > 0.7) {
+        type = 'critical';
+        intensity = 0.9;
+        tooltip = Math.abs(point.y) > 0.8 ? 'Dominant control!' : 'Critical momentum';
+      }
+      
+      // Check for game phase context
+      if (gamePhase === 'critical' && Math.abs(point.y) > 0.4) {
+        type = 'gamePoint';
+        intensity = 1.0;
+        tooltip = 'Game point momentum!';
+      }
+      
+      const team: 'team1' | 'team2' = point.y > 0 ? 'team1' : 'team2';
+      const estimatedScore = {
+        player1: Math.floor((i + 1) * 0.6 + (point.y > 0 ? 2 : 0)),
+        player2: Math.floor((i + 1) * 0.5 + (point.y < 0 ? 2 : 0))
+      };
+      
+      dots.push({
+        index: i,
+        x,
+        y,
+        type,
+        team,
+        intensity,
+        tooltip,
+        score: currentScore || estimatedScore
+      });
+    }
+    
+    return dots;
+  }, [wave, height, width, gamePhase, currentScore]);
+
+  // Legacy function for backward compatibility
   const analyzeMomentumShifts = (): TooltipData[] => {
     const shifts: TooltipData[] = [];
     if (!wave || wave.length < 2) return shifts;
@@ -55,14 +152,13 @@ export const MomentumWave = memo(({
       const prev = wave[i - 1];
       const curr = wave[i];
       
-      // Ensure both prev and curr exist and have required properties
       if (!prev || !curr || typeof prev.y !== 'number' || typeof curr.y !== 'number') {
         continue;
       }
       
       const shift = Math.abs(curr.y - prev.y);
       
-      if (shift > 0.3) { // Significant momentum shift
+      if (shift > 0.3) {
         let reason = '';
         if (curr.y > prev.y) {
           reason = curr.y > 0.7 ? 'Dominant streak! Multiple consecutive points' : 
@@ -75,40 +171,39 @@ export const MomentumWave = memo(({
         }
         
         shifts.push({
-          x: 0, // Will be set later
-          y: 0, // Will be set later
+          x: 0,
+          y: 0,
           point: i,
           momentum: curr.y,
           reason,
           timestamp: Date.now(),
-          score: { player1: 0, player2: 0 } // Will be updated with actual scores
+          score: { player1: 0, player2: 0 }
         });
       }
     }
     return shifts;
   };
 
-  // Generate SVG path for momentum wave
+  // Generate SVG path for momentum wave (responsive)
   const generateWavePath = () => {
     if (wave.length < 2) return '';
     
-    const width = 300;
-    const height = 60;
     const centerY = height / 2;
+    const maxWaveHeight = centerY * 0.8;
     
     let path = `M 0 ${centerY}`;
     
     wave.forEach((point, index) => {
-      const x = (index / (wave.length - 1)) * width;
-      const y = centerY - (point.y * centerY * 0.8); // Scale momentum to chart height
+      const x = (index / Math.max(wave.length - 1, 1)) * width;
+      const y = centerY - (point.y * maxWaveHeight); // Scale momentum to chart height
       
       if (index === 0) {
         path += ` L ${x} ${y}`;
       } else {
         // Smooth curve using quadratic bezier
         const prevPoint = wave[index - 1];
-        const prevX = ((index - 1) / (wave.length - 1)) * width;
-        const prevY = centerY - (prevPoint.y * centerY * 0.8);
+        const prevX = ((index - 1) / Math.max(wave.length - 1, 1)) * width;
+        const prevY = centerY - (prevPoint.y * maxWaveHeight);
         
         const cpX = (prevX + x) / 2;
         const cpY = (prevY + y) / 2;
@@ -172,8 +267,9 @@ export const MomentumWave = memo(({
     setHoveredPoint(null);
   };
 
-  const wavePath = generateWavePath();
+  const wavePath = useMemo(() => generateWavePath(), [wave, width, height]);
   const momentumShifts = analyzeMomentumShifts();
+  const pointDots = analyzePointDots;
   const intensity = Math.abs(momentum);
   const glowIntensity = Math.min(intensity * 2, 1);
   
@@ -481,8 +577,8 @@ export const MomentumWave = memo(({
             </div>
             <svg 
               width="100%" 
-              height="60" 
-              viewBox="0 0 300 60" 
+              height={heroMode ? `${height}px` : "60px"} 
+              viewBox={`0 0 ${width} ${height}`} 
               className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
@@ -502,9 +598,9 @@ export const MomentumWave = memo(({
               {/* Center baseline */}
               <line
                 x1="0"
-                y1="30"
-                x2="300"
-                y2="30"
+                y1={height / 2}
+                x2={width}
+                y2={height / 2}
                 stroke="#64748b"
                 strokeWidth="1"
                 strokeDasharray="4,4"
@@ -514,7 +610,7 @@ export const MomentumWave = memo(({
               {/* Team 1 area (top half) with enhanced animations */}
               {momentum > 0 && (
                 <motion.path
-                  d={`${wavePath} L 300 30 L 0 30 Z`}
+                  d={`${wavePath} L ${width} ${height / 2} L 0 ${height / 2} Z`}
                   fill={team1Color}
                   fillOpacity={fillOpacity}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -533,7 +629,7 @@ export const MomentumWave = memo(({
               {/* Team 2 area (bottom half) with enhanced animations */}
               {momentum < 0 && (
                 <motion.path
-                  d={`${wavePath} L 300 30 L 0 30 Z`}
+                  d={`${wavePath} L ${width} ${height / 2} L 0 ${height / 2} Z`}
                   fill={team2Color}
                   fillOpacity={fillOpacity}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -563,29 +659,121 @@ export const MomentumWave = memo(({
                 }}
               />
               
-              {/* Key momentum shift indicators */}
-              {isInteractive && momentumShifts.map((shift) => (
-                <motion.circle
-                  key={shift.point}
-                  cx={(shift.point / Math.max(wave.length - 1, 1)) * 300}
-                  cy={30 - (shift.momentum * 30 * 0.8)}
-                  r="3"
-                  fill={shift.momentum > 0 ? '#10b981' : '#ef4444'}
-                  stroke="#ffffff"
-                  strokeWidth="1"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 0.8 }}
-                  transition={{ 
-                    delay: shift.point * 0.1,
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 25 
-                  }}
-                  style={{
-                    filter: `drop-shadow(0 0 4px ${shift.momentum > 0 ? '#10b981' : '#ef4444'})`
-                  }}
-                />
-              ))}
+              {/* Enhanced Point Dots - Different representations for different moment types */}
+              {pointDots.map((dot: PointDot) => {
+                const dotColor = dot.team === 'team1' ? team1Color : team2Color;
+                const isHovered = hoveredPoint?.point === dot.index;
+                
+                // Determine dot size and style based on type
+                const getDotProps = (type: PointDot['type'], intensity: number) => {
+                  switch (type) {
+                    case 'critical':
+                      return {
+                        r: 4 + intensity * 2,
+                        strokeWidth: 2,
+                        className: 'animate-pulse',
+                        filter: `drop-shadow(0 0 ${8 + intensity * 4}px ${dotColor})`
+                      };
+                    case 'gamePoint':
+                      return {
+                        r: 5,
+                        strokeWidth: 2,
+                        className: 'animate-ping',
+                        filter: `drop-shadow(0 0 12px ${dotColor})`
+                      };
+                    case 'streak':
+                      return {
+                        r: 3.5,
+                        strokeWidth: 1.5,
+                        className: '',
+                        filter: `drop-shadow(0 0 6px ${dotColor})`
+                      };
+                    case 'momentumShift':
+                      return {
+                        r: 4,
+                        strokeWidth: 2,
+                        className: '',
+                        filter: `drop-shadow(0 0 4px ${dotColor})`
+                      };
+                    case 'ace':
+                      return {
+                        r: 4,
+                        strokeWidth: 2,
+                        className: 'animate-pulse',
+                        filter: `drop-shadow(0 0 8px ${dotColor})`
+                      };
+                    default: // regular
+                      return {
+                        r: 2,
+                        strokeWidth: 1,
+                        className: '',
+                        filter: `drop-shadow(0 0 2px ${dotColor})`
+                      };
+                  }
+                };
+                
+                const props = getDotProps(dot.type, dot.intensity);
+                
+                // Special rendering for different dot types
+                if (dot.type === 'ace' || dot.type === 'gamePoint') {
+                  // Star shape for ace/special moments
+                  const starSize = 3;
+                  const starPath = `M${dot.x},${dot.y - starSize} L${dot.x + starSize * 0.3},${dot.y - starSize * 0.3} L${dot.x + starSize},${dot.y - starSize * 0.3} L${dot.x + starSize * 0.4},${dot.y + starSize * 0.2} L${dot.x + starSize * 0.6},${dot.y + starSize} L${dot.x},${dot.y + starSize * 0.5} L${dot.x - starSize * 0.6},${dot.y + starSize} L${dot.x - starSize * 0.4},${dot.y + starSize * 0.2} L${dot.x - starSize},${dot.y - starSize * 0.3} L${dot.x - starSize * 0.3},${dot.y - starSize * 0.3} Z`;
+                  
+                  return (
+                    <motion.path
+                      key={`star-${dot.index}`}
+                      d={starPath}
+                      fill={dotColor}
+                      stroke="white"
+                      strokeWidth={props.strokeWidth}
+                      opacity={isHovered ? 1 : 0.9}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ 
+                        scale: isHovered ? 1.3 : 1, 
+                        opacity: isHovered ? 1 : 0.9,
+                        rotate: dot.type === 'ace' ? [0, 360] : 0
+                      }}
+                      whileHover={{ scale: 1.4, opacity: 1 }}
+                      transition={{ 
+                        delay: dot.index * 0.02,
+                        rotate: { duration: 2, repeat: Infinity, ease: "linear" }
+                      }}
+                      className={props.className}
+                      style={{
+                        cursor: 'pointer',
+                        filter: props.filter
+                      }}
+                    />
+                  );
+                }
+                
+                // Regular circular dots with enhanced styling
+                return (
+                  <motion.circle
+                    key={`dot-${dot.index}`}
+                    cx={dot.x}
+                    cy={dot.y}
+                    r={props.r}
+                    fill={dotColor}
+                    stroke="white"
+                    strokeWidth={props.strokeWidth}
+                    opacity={isHovered ? 1 : 0.8 + dot.intensity * 0.2}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ 
+                      scale: isHovered ? 1.4 : 1, 
+                      opacity: isHovered ? 1 : 0.8 + dot.intensity * 0.2
+                    }}
+                    whileHover={{ scale: 1.5, opacity: 1 }}
+                    transition={{ delay: dot.index * 0.02 }}
+                    className={props.className}
+                    style={{
+                      cursor: 'pointer',
+                      filter: props.filter
+                    }}
+                  />
+                );
+              })}
 
               {/* Current position indicator with enhanced animation */}
               {wave.length > 0 && (
