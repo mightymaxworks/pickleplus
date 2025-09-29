@@ -298,10 +298,10 @@ export default function App() {
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
                   <Route path="/match-arena" component={MatchArena} />
                   
-                  {/* New Match Flow - Gaming-Style Match Experience */}
-                  <Route path="/match/create" component={lazyLoad(() => import('./pages/MatchCreate'))} />
-                  <Route path="/match/record/:matchId" component={lazyLoad(() => import('./pages/MatchRecord'))} />
-                  <Route path="/match/:matchId" component={lazyLoad(() => import('./pages/MatchResult'))} />
+                  {/* Unified Match Flow - All phases handled by GamifiedMatchRecording */}
+                  <Route path="/match/create" component={GamifiedMatchRecording} />
+                  <Route path="/match/record/:matchId" component={GamifiedMatchRecording} />
+                  <Route path="/match/:matchId" component={GamifiedMatchRecording} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />

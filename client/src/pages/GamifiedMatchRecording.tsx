@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useRoute } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, 
@@ -579,10 +579,15 @@ interface MatchState {
 export default function GamifiedMatchRecording() {
   const [, setLocation] = useLocation();
   
-  // Redirect to new match flow
-  useEffect(() => {
-    setLocation('/match/create');
-  }, [setLocation]);
+  // Detect current phase based on URL
+  const [isCreate] = useRoute('/match/create');
+  const [isRecord, recordParams] = useRoute('/match/record/:matchId');
+  const [isResult, resultParams] = useRoute('/match/:matchId');
+  const [isLegacy] = useRoute('/gamified-match-recording');
+  
+  // Determine current phase
+  const phase = isRecord ? 'record' : isResult ? 'result' : 'create';
+  const matchId = recordParams?.matchId || resultParams?.matchId;
   const [showConfig, setShowConfig] = useState(true);
   
   // Message expiration handler
@@ -1093,19 +1098,155 @@ export default function GamifiedMatchRecording() {
   };
 
   // Match Configuration Component
+  const MatchResultsView = () => {
+    const handlePlayAgain = () => {
+      setLocation('/match/create');
+    };
+
+    const handleViewRankings = () => {
+      setLocation('/rankings');
+    };
+
+    const winner = matchState.player1.score > matchState.player2.score ? matchState.player1.name : matchState.player2.name;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-green-500 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-40 h-40 bg-blue-500 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+
+        <div className="relative z-10 p-4">
+          <div className="flex items-center justify-between mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => setLocation('/match/create')}
+              className="text-white hover:text-orange-400"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Setup
+            </Button>
+          </div>
+
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8, type: "spring" }}
+            className="text-center mb-8"
+          >
+            <div className="text-6xl mb-4">🏆</div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {winner} Wins!
+            </h1>
+            <p className="text-xl text-gray-300">
+              Match completed
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <Card className={`p-6 border-2 transition-all ${
+              matchState.player1.score > matchState.player2.score
+                ? 'bg-gradient-to-br from-green-500/30 to-emerald-500/30 border-green-400 shadow-xl' 
+                : 'bg-slate-800 border-slate-600'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {matchState.player1.score > matchState.player2.score && (
+                    <Trophy className="h-8 w-8 text-yellow-400" />
+                  )}
+                  <div>
+                    <div className="font-bold text-white text-2xl">{matchState.player1.name}</div>
+                    <Badge className="text-sm bg-slate-600 text-slate-200">{matchState.player1.tier}</Badge>
+                  </div>
+                </div>
+                
+                <div className={`text-6xl font-bold ${
+                  matchState.player1.score > matchState.player2.score ? 'text-green-400' : 'text-white'
+                }`}>
+                  {matchState.player1.score}
+                </div>
+              </div>
+            </Card>
+
+            <Card className={`p-6 border-2 transition-all ${
+              matchState.player2.score > matchState.player1.score
+                ? 'bg-gradient-to-br from-green-500/30 to-emerald-500/30 border-green-400 shadow-xl' 
+                : 'bg-slate-800 border-slate-600'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {matchState.player2.score > matchState.player1.score && (
+                    <Trophy className="h-8 w-8 text-yellow-400" />
+                  )}
+                  <div>
+                    <div className="font-bold text-white text-2xl">{matchState.player2.name}</div>
+                    <Badge className="text-sm bg-slate-600 text-slate-200">{matchState.player2.tier}</Badge>
+                  </div>
+                </div>
+                
+                <div className={`text-6xl font-bold ${
+                  matchState.player2.score > matchState.player1.score ? 'text-green-400' : 'text-white'
+                }`}>
+                  {matchState.player2.score}
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              onClick={handlePlayAgain}
+              size="lg"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold"
+            >
+              <RotateCw className="mr-2 h-5 w-5" />
+              Play Again
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={handleViewRankings}
+              className="border-slate-600 text-white hover:bg-slate-700"
+            >
+              <Trophy className="mr-2 h-5 w-5" />
+              View Rankings
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const MatchConfigModal = () => {
     const [tempConfig, setTempConfig] = useState<MatchConfig>(matchState.config);
 
     const startMatch = () => {
+      // Generate a unique match ID
+      const matchId = `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       // Update momentum engine with new config
       momentumEngine.reset();
+      
+      const matchData = {
+        id: matchId,
+        player1: matchState.player1,
+        player2: matchState.player2,
+        config: tempConfig,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Store match data in sessionStorage
+      sessionStorage.setItem('currentMatch', JSON.stringify(matchData));
       
       setMatchState(prev => ({ 
         ...prev, 
         config: tempConfig,
         showVideo: Boolean(tempConfig.liveStreamUrl || tempConfig.recordingUrl)
       }));
-      setShowConfig(false);
+      
+      // Navigate to recording phase
+      setLocation(`/match/record/${matchId}`);
     };
 
     return (
@@ -1381,10 +1522,16 @@ export default function GamifiedMatchRecording() {
     );
   };
 
-  if (showConfig) {
+  // Phase-based rendering
+  if (phase === 'create' || showConfig) {
     return <MatchConfigModal />;
   }
 
+  if (phase === 'result') {
+    return <MatchResultsView />;
+  }
+
+  // Default to recording phase
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
