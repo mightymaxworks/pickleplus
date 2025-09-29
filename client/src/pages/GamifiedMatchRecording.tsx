@@ -580,6 +580,8 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
+  // Very first debug check - does the component even get called?
+  console.log('🎮 COMPONENT ENTRY - GamifiedMatchRecording called');
   const [showConfig, setShowConfig] = useState(true);
   
   // Message expiration handler
