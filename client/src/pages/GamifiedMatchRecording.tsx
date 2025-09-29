@@ -753,13 +753,14 @@ export default function GamifiedMatchRecording() {
     return pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
   };
 
-  // Get real player names from session storage or use defaults
+  // Get real player names and data from session storage or use defaults  
   const getInitialPlayerNames = () => {
     try {
       // First try to get current match data (from challenge acceptance)
       const currentMatch = sessionStorage.getItem('currentMatch');
       if (currentMatch) {
         const matchData = JSON.parse(currentMatch);
+        console.log("Match Data:", matchData);
         
         // Handle pairings data from match creation wizard
         if (matchData.pairings && matchData.teamIdentity) {
@@ -815,6 +816,86 @@ export default function GamifiedMatchRecording() {
   };
 
   const initialNames = getInitialPlayerNames();
+  
+  // Get complete player data including passport codes
+  const getInitialPlayerData = () => {
+    try {
+      const currentMatch = sessionStorage.getItem('currentMatch');
+      if (currentMatch) {
+        const matchData = JSON.parse(currentMatch);
+        
+        // Handle new match creation wizard format with selectedPlayers
+        if (matchData.selectedPlayers && matchData.selectedPlayers.length > 0) {
+          const currentUser = { 
+            id: 'current', 
+            name: 'Current User', 
+            displayName: 'Current User', 
+            passportCode: 'USER-001',
+            rankingPoints: 800
+          };
+          
+          const opponent = matchData.selectedPlayers[0];
+          
+          return {
+            player1: currentUser,
+            player2: {
+              id: opponent.id,
+              name: opponent.displayName || opponent.username || opponent.name,
+              displayName: opponent.displayName || opponent.username || opponent.name,
+              passportCode: opponent.passportCode || 'NO-CODE',
+              rankingPoints: opponent.rankingPoints || 0
+            }
+          };
+        }
+        
+        // Handle old format for backwards compatibility
+        if (matchData.pairings) {
+          // For pairings format, extract first player from each team
+          const player1Data = matchData.pairings.team1?.[0];
+          const player2Data = matchData.pairings.team2?.[0];
+          
+          return {
+            player1: {
+              id: player1Data?.id || 'player1',
+              name: player1Data?.displayName || player1Data?.username || 'Player 1',
+              displayName: player1Data?.displayName || player1Data?.username || 'Player 1',
+              passportCode: player1Data?.passportCode || 'NO-CODE',
+              rankingPoints: player1Data?.rankingPoints || 0
+            },
+            player2: {
+              id: player2Data?.id || 'player2', 
+              name: player2Data?.displayName || player2Data?.username || 'Player 2',
+              displayName: player2Data?.displayName || player2Data?.username || 'Player 2',
+              passportCode: player2Data?.passportCode || 'NO-CODE',
+              rankingPoints: player2Data?.rankingPoints || 0
+            }
+          };
+        }
+      }
+    } catch (error) {
+      console.log('Could not load player data from session storage:', error);
+    }
+    
+    // Fallback to defaults
+    return {
+      player1: { 
+        id: '1', 
+        name: initialNames.player1, 
+        displayName: initialNames.player1, 
+        passportCode: 'DEMO-001',
+        rankingPoints: 1200
+      },
+      player2: { 
+        id: '2', 
+        name: initialNames.player2, 
+        displayName: initialNames.player2, 
+        passportCode: 'DEMO-002',
+        rankingPoints: 950
+      }
+    };
+  };
+  
+  const playerData = getInitialPlayerData();
   
   // Get team theme from session storage or generate a fixed one
   const [teamTheme] = useState(() => {
@@ -1140,13 +1221,13 @@ export default function GamifiedMatchRecording() {
                           name: teamTheme.team1.name,
                           color: teamTheme.team1.color,
                           glowColor: teamTheme.team1.color,
-                          players: [{ id: 1, name: initialNames.player1, displayName: initialNames.player1 }]
+                          players: [playerData.player1]
                         },
                         {
                           name: teamTheme.team2.name,
                           color: teamTheme.team2.color,
                           glowColor: teamTheme.team2.color,
-                          players: [{ id: 2, name: initialNames.player2, displayName: initialNames.player2 }]
+                          players: [playerData.player2]
                         }
                       ]}
                       showStats={true}
@@ -1425,13 +1506,13 @@ export default function GamifiedMatchRecording() {
                   name: teamTheme.team1.name,
                   color: teamTheme.team1.color,
                   glowColor: teamTheme.team1.color,
-                  players: [{ id: 1, name: matchState.player1.name, displayName: matchState.player1.name }]
+                  players: [playerData.player1]
                 },
                 {
                   name: teamTheme.team2.name,
                   color: teamTheme.team2.color,
                   glowColor: teamTheme.team2.color,
-                  players: [{ id: 2, name: matchState.player2.name, displayName: matchState.player2.name }]
+                  players: [playerData.player2]
                 }
               ]}
               showStats={true}
