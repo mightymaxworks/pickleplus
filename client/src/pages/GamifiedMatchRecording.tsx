@@ -45,7 +45,8 @@ import {
   PartyPopper,
   ArrowLeft,
   BarChart3,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -669,8 +670,9 @@ export default function GamifiedMatchRecording() {
   const [showVideo, setShowVideo] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [matchTime, setMatchTime] = useState(0);
+  const [showConfig, setShowConfig] = useState(true); // Show config modal initially
   
-  const momentumEngine = useRef(new MomentumEngine({}));
+  const momentumEngine = useRef(null as any); // Simplified momentum tracking
   
   // TIMER EFFECT
   useEffect(() => {
@@ -730,21 +732,14 @@ export default function GamifiedMatchRecording() {
       setShowReaction(true);
     }
     
-    // Momentum calculation
-    const scoreUpdate = {
-      player,
-      score: currentScore,
-      opponentScore,
-      timestamp: Date.now(),
-      gameContext: {
-        currentGame: newState.currentGame,
-        gameHistory: newState.gameHistory
-      }
-    };
-    
-    const momentum = momentumEngine.current.calculateMomentum(scoreUpdate);
-    newState.momentumState = momentum.momentumState;
-    newState.strategicMessages = momentum.strategicMessages;
+    // Simple momentum calculation
+    if (currentScore > opponentScore) {
+      newState.momentumState = { 
+        value: Math.min(1, (currentScore - opponentScore) / 5),
+        direction: player,
+        intensity: 'building'
+      } as any;
+    }
     
     setMatchState(newState);
   };
@@ -803,6 +798,145 @@ export default function GamifiedMatchRecording() {
     setGameStarted(false);
     setMatchTime(0);
   };
+
+  const updateMatchConfig = (newConfig: Partial<MatchConfig>) => {
+    setMatchState(prev => ({
+      ...prev,
+      config: { ...prev.config, ...newConfig }
+    }));
+  };
+
+  // CONFIGURATION MODAL COMPONENT
+  const ConfigurationModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+    >
+      <Card className="bg-slate-800 border-orange-500 p-6 max-w-lg w-full">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold flex items-center">
+            <Settings className="w-6 h-6 mr-2 text-orange-400" />
+            Match Configuration
+          </h2>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowConfig(false)}
+            className="text-slate-400 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        <div className="space-y-6">
+          {/* SCORING TYPE */}
+          <div>
+            <h3 className="font-medium mb-3 text-orange-400">Scoring Type</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant={matchState.config.scoringType === 'traditional' ? 'default' : 'outline'}
+                onClick={() => updateMatchConfig({ scoringType: 'traditional' })}
+                className="h-auto p-4 flex flex-col items-center"
+              >
+                <Trophy className="w-6 h-6 mb-2" />
+                <span className="font-medium">Traditional</span>
+                <span className="text-xs text-slate-400">Side out scoring</span>
+              </Button>
+              <Button
+                variant={matchState.config.scoringType === 'rally' ? 'default' : 'outline'}
+                onClick={() => updateMatchConfig({ scoringType: 'rally' })}
+                className="h-auto p-4 flex flex-col items-center"
+              >
+                <Zap className="w-6 h-6 mb-2" />
+                <span className="font-medium">Rally Point</span>
+                <span className="text-xs text-slate-400">Point every serve</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* POINT TARGET */}
+          <div>
+            <h3 className="font-medium mb-3 text-orange-400">Points to Win</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {[11, 15, 21].map(points => (
+                <Button
+                  key={points}
+                  variant={matchState.config.pointTarget === points ? 'default' : 'outline'}
+                  onClick={() => updateMatchConfig({ pointTarget: points as 11 | 15 | 21 })}
+                  className="h-16 flex flex-col items-center justify-center"
+                >
+                  <span className="text-2xl font-bold">{points}</span>
+                  <span className="text-xs text-slate-400">points</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* MATCH FORMAT */}
+          <div>
+            <h3 className="font-medium mb-3 text-orange-400">Match Format</h3>
+            <div className="space-y-2">
+              {[
+                { value: 'single', label: 'Single Game', desc: 'First to target wins' },
+                { value: 'best-of-3', label: 'Best of 3', desc: 'First to win 2 games' },
+                { value: 'best-of-5', label: 'Best of 5', desc: 'First to win 3 games' }
+              ].map(format => (
+                <Button
+                  key={format.value}
+                  variant={matchState.config.matchFormat === format.value ? 'default' : 'outline'}
+                  onClick={() => updateMatchConfig({ matchFormat: format.value as any })}
+                  className="w-full h-auto p-4 flex items-center justify-between"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">{format.label}</div>
+                    <div className="text-xs text-slate-400">{format.desc}</div>
+                  </div>
+                  <Crown className="w-5 h-5" />
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* WIN BY TWO TOGGLE */}
+          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded">
+            <div>
+              <span className="font-medium">Win by Two</span>
+              <p className="text-xs text-slate-400">Must win by 2+ points</p>
+            </div>
+            <Button
+              variant={matchState.config.winByTwo ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => updateMatchConfig({ winByTwo: !matchState.config.winByTwo })}
+            >
+              {matchState.config.winByTwo ? 'ON' : 'OFF'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-8">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowConfig(false)}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={() => setShowConfig(false)}
+            className="flex-1 bg-orange-600 hover:bg-orange-700"
+          >
+            Start Match
+          </Button>
+        </div>
+      </Card>
+    </motion.div>
+  );
+
+  // SHOW CONFIGURATION MODAL IF NOT YET CONFIGURED
+  if (showConfig) {
+    return <ConfigurationModal />;
+  }
 
   // COMPLETE INTERACTIVE UI
   return (
@@ -871,6 +1005,15 @@ export default function GamifiedMatchRecording() {
               <RotateCw className="w-4 h-4 mr-1" />
               Reset
             </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowConfig(true)}
+              className="border-orange-500 text-orange-400 hover:bg-orange-500/20"
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              Config
+            </Button>
           </div>
         </div>
 
@@ -884,7 +1027,7 @@ export default function GamifiedMatchRecording() {
                   <motion.div 
                     className="h-full bg-gradient-to-r from-orange-500 to-red-500"
                     initial={{ width: "50%" }}
-                    animate={{ width: `${Math.max(10, Math.min(90, 50 + (matchState.momentumState.value * 40)))}%` }}
+                    animate={{ width: `${Math.max(10, Math.min(90, 50 + ((matchState.momentumState as any)?.value || 0) * 40))}%` }}
                     transition={{ duration: 0.5 }}
                   />
                 </div>
@@ -1073,7 +1216,7 @@ export default function GamifiedMatchRecording() {
                         <Zap className="w-4 h-4 text-orange-400" />
                         <span className="font-medium text-orange-400">{msg.type}</span>
                       </div>
-                      <p className="text-slate-300">{msg.content || 'Strategic insight'}</p>
+                      <p className="text-slate-300">{(msg as any).content || 'Strategic insight'}</p>
                     </motion.div>
                   ))}
                 </div>
