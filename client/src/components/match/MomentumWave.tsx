@@ -349,13 +349,6 @@ export const MomentumWave = memo(({
     </motion.div>
   );
 
-  // Debug: Log the component state
-  console.log('MomentumWave render:', { 
-    isInteractive, 
-    waveLength: wave?.length, 
-    momentumState, 
-    hoveredPoint 
-  });
 
   return (
     <div className="relative">
@@ -379,7 +372,7 @@ export const MomentumWave = memo(({
                 {hoveredPoint.momentum > 0 ? (
                   <TrendingUp className="h-4 w-4 text-green-400" />
                 ) : (
-                  <TrendingDown className="h-4 w-4 text-red-400" />
+                  <TrendingUp className="h-4 w-4 text-red-400 rotate-180" />
                 )}
                 <Badge className={`text-xs ${hoveredPoint.momentum > 0 ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
                   Point {hoveredPoint.point + 1}
@@ -504,10 +497,7 @@ export const MomentumWave = memo(({
                 height="100%"
                 fill="transparent"
                 style={{ pointerEvents: 'all' }}
-                onMouseMove={(e) => {
-                  console.log('SVG rect mouse move event fired');
-                  handleMouseMove(e);
-                }}
+                onMouseMove={handleMouseMove}
               />
               
               {/* Center baseline */}
