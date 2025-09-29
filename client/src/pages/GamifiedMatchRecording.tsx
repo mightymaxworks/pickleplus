@@ -32,7 +32,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { VersusScreen } from '@/components/match/VersusScreen';
 import { MomentumEngine, MomentumState, StrategyMessage, MatchCloseness } from '@/components/match/MomentumEngine';
-import { MomentumWave } from '@/components/match/MomentumWave';
+// import { MomentumWave } from '@/components/match/MomentumWave';
+import TestMomentumWave from '@/components/match/TestMomentumWave';
 import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
 import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
@@ -1643,21 +1644,7 @@ export default function GamifiedMatchRecording() {
               </Badge>
             </div>
           )}
-          <MomentumWave
-            momentumState={{
-              ...matchState.momentumState,
-              currentScore: { player1: matchState.player1.score, player2: matchState.player2.score },
-              gameNumber: matchState.currentGame,
-              isMatchComplete: matchState.matchComplete
-            }}
-            team1Color={teamTheme.team1.color}
-            team2Color={teamTheme.team2.color}
-            team1Name={matchState.player1.name}
-            team2Name={matchState.player2.name}
-            className="w-full"
-            isInteractive={true}
-            isMatchComplete={matchState.matchComplete}
-          />
+          <TestMomentumWave />
 
           {/* Match Closeness Indicator - positioned with proper spacing */}
           {matchState.momentumState?.closeness && (
