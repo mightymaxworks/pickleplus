@@ -37,9 +37,8 @@ import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
 import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
 import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
-import { GamingUIOverlays } from '@/components/match/GamingUIOverlays';
-import LiveStreamIntegration from '@/components/match/LiveStreamIntegration';
-import { type StreamValidationResult } from '@/components/match/LiveStreamValidator';
+// Gaming overlays disabled - focus on core match recording
+// Live stream integration disabled - focus on core match recording
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -600,38 +599,18 @@ export default function GamifiedMatchRecording() {
   const [aestheticMode, setAestheticMode] = useState<'subtle' | 'esports'>('subtle');
   const [gamingOverlaysEnabled, setGamingOverlaysEnabled] = useState(false);
   
-  // Live stream validation states
-  const [liveStreamValidation, setLiveStreamValidation] = useState<StreamValidationResult>({
-    isValid: false
-  });
-  const [viewerLink, setViewerLink] = useState('');
+  // Live stream features disabled
 
-  // Enable gaming overlays when live match state is active OR live stream is validated
-  useEffect(() => {
-    const liveStateEnabled = liveMatchState.isLive && liveMatchState.gamingFeatures.crowdEnergyMeter;
-    const liveStreamEnabled = liveStreamValidation.isValid;
-    const shouldEnable = liveStateEnabled || liveStreamEnabled;
-    
-    setGamingOverlaysEnabled(shouldEnable);
-    console.log(`🎮 Gaming overlays ${shouldEnable ? 'ENABLED' : 'DISABLED'} - Live State: ${liveStateEnabled}, Live Stream: ${liveStreamEnabled}`);
-  }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter, liveStreamValidation.isValid]);
+  // Gaming overlays disabled - will be restored for live streaming features
 
-  // Live stream validation handlers
-  const handleLiveStreamValidation = (isValid: boolean) => {
-    const validation: StreamValidationResult = { isValid };
-    setLiveStreamValidation(validation);
-    console.log('🎥 Live stream validation updated:', isValid);
-  };
+  // Live stream handlers disabled
 
   const handleGamingFeaturesToggle = (enabled: boolean) => {
     console.log(`🎮 Gaming features ${enabled ? 'ENABLED' : 'DISABLED'} via live stream`);
     // Additional logic if needed
   };
 
-  const handleViewerLinkGenerated = (link: string) => {
-    setViewerLink(link);
-    console.log('🔗 Viewer link generated:', link);
-  };
+  // Viewer link handler disabled - will be restored for live streaming
 
   // Gaming feature test handlers
   const handleGamingTest = (trigger: string) => {
@@ -1379,11 +1358,7 @@ export default function GamifiedMatchRecording() {
                 </motion.button>
               </div>
 
-              {/* Live Stream Integration */}
-              <LiveStreamIntegration
-                onValidationChange={handleLiveStreamValidation}
-                className=""
-              />
+              {/* Live Stream Integration disabled - focus on core match recording */}
             </div>
 
             <Button
