@@ -17,27 +17,80 @@ interface MatchConfig {
   videoSyncOffset?: number;
 }
 
-interface MatchData {
-  player1: { name: string; id: string; tier: string };
-  player2: { name: string; id: string; tier: string };
-  config: MatchConfig;
-  timestamp: number;
+// Import the exact types from the wizard
+interface Player {
+  id: number;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  passportCode: string;
+  gender?: string;
+  profileImageUrl?: string;
+  isVerified?: boolean;
+  rankingPoints?: number;
+}
+
+interface TeamIdentity {
+  team1: {
+    name: string;
+    color: string;
+    members: string[];
+  };
+  team2: {
+    name: string;
+    color: string;
+    members: string[];
+  };
+}
+
+interface MatchCreationData {
+  format: 'singles' | 'doubles';
+  selectedPlayers: Player[];
+  pairings?: { team1: Player[]; team2: Player[] };
+  matchStatus: {
+    competitiveBalance: number;
+    genderBonus: number;
+    description: string;
+  };
+  teamIdentity?: TeamIdentity;
 }
 
 export default function MatchCreate() {
   const [, setLocation] = useLocation();
   const [showWizard, setShowWizard] = useState(false);
 
-  const handleMatchCreated = (matchData: MatchData) => {
+  const handleMatchCreated = (matchData: MatchCreationData) => {
     // Generate a unique match ID and store match data
     const matchId = `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Store match data in sessionStorage for the recording page
-    sessionStorage.setItem('currentMatch', JSON.stringify({
+    // Transform wizard data to match format and store for recording page
+    const player1 = matchData.selectedPlayers[0];
+    const player2 = matchData.selectedPlayers[1];
+    
+    const matchInfo = {
       id: matchId,
-      ...matchData,
-      createdAt: new Date().toISOString()
-    }));
+      player1: {
+        name: player1.firstName || player1.username,
+        id: player1.id.toString(),
+        tier: 'Competitive' // Default tier, could be enhanced based on ranking points
+      },
+      player2: {
+        name: player2.firstName || player2.username,
+        id: player2.id.toString(),
+        tier: 'Competitive'
+      },
+      config: {
+        scoringType: 'traditional' as const,
+        pointTarget: 11 as const,
+        matchFormat: 'single' as const,
+        winByTwo: true
+      },
+      createdAt: new Date().toISOString(),
+      rawWizardData: matchData
+    };
+    
+    sessionStorage.setItem('currentMatch', JSON.stringify(matchInfo));
     
     // Navigate to the recording page
     setLocation(`/match/record/${matchId}`);
@@ -64,7 +117,6 @@ export default function MatchCreate() {
           
           <MatchCreationWizard 
             onMatchCreated={handleMatchCreated}
-            onCancel={() => setShowWizard(false)}
           />
         </div>
       </div>
