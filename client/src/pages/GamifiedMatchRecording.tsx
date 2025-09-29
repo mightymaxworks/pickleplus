@@ -577,6 +577,8 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
+  console.log('GamifiedMatchRecording component starting...');
+  
   const [, setLocation] = useLocation();
   
   // Detect current phase based on URL
@@ -849,65 +851,23 @@ export default function GamifiedMatchRecording() {
     return getRandomTeamTheme(); // Fallback to random theme
   });
   
-  const [matchState, setMatchState] = useState<MatchState>(() => {
-    // Initialize state based on current phase
-    if (phase === 'record' || phase === 'result') {
-      // Load from sessionStorage for recording/result phases
-      try {
-        const storedMatch = sessionStorage.getItem('currentMatch');
-        if (storedMatch) {
-          const matchData = JSON.parse(storedMatch);
-          return {
-            player1: { 
-              name: matchData.player1?.name || initialNames.player1, 
-              id: matchData.player1?.id || '1', 
-              tier: matchData.player1?.tier || 'Elite', 
-              score: 0 
-            },
-            player2: { 
-              name: matchData.player2?.name || initialNames.player2, 
-              id: matchData.player2?.id || '2', 
-              tier: matchData.player2?.tier || 'Professional', 
-              score: 0 
-            },
-            gameHistory: [],
-            currentGame: 1,
-            matchComplete: false,
-            achievements: [],
-            streak: { player: '', count: 0, type: 'win' },
-            strategicMessages: [],
-            showVideo: Boolean(matchData.config?.liveStreamUrl || matchData.config?.recordingUrl),
-            config: matchData.config || {
-              scoringType: 'traditional',
-              pointTarget: 11,
-              matchFormat: 'best-of-3',
-              winByTwo: true
-            }
-          };
-        }
-      } catch (e) {
-        console.error('Failed to load match data from sessionStorage:', e);
-      }
+  // Initialize with basic state - let useEffect handle loading from sessionStorage
+  const [matchState, setMatchState] = useState<MatchState>({
+    player1: { name: initialNames.player1, id: '1', tier: 'Elite', score: 0 },
+    player2: { name: initialNames.player2, id: '2', tier: 'Professional', score: 0 },
+    gameHistory: [],
+    currentGame: 1,
+    matchComplete: false,
+    achievements: [],
+    streak: { player: '', count: 0, type: 'win' },
+    strategicMessages: [],
+    showVideo: false,
+    config: {
+      scoringType: 'traditional',
+      pointTarget: 11,
+      matchFormat: 'best-of-3',
+      winByTwo: true
     }
-    
-    // Default state for create phase
-    return {
-      player1: { name: initialNames.player1, id: '1', tier: 'Elite', score: 0 },
-      player2: { name: initialNames.player2, id: '2', tier: 'Professional', score: 0 },
-      gameHistory: [],
-      currentGame: 1,
-      matchComplete: false,
-      achievements: [],
-      streak: { player: '', count: 0, type: 'win' },
-      strategicMessages: [],
-      showVideo: false,
-      config: {
-        scoringType: 'traditional',
-        pointTarget: 11,
-        matchFormat: 'best-of-3',
-        winByTwo: true
-      }
-    };
   });
 
   // Initialize momentum engine
