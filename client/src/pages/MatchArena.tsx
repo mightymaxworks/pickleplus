@@ -1,3 +1,24 @@
+/**
+ * ⚠️  CRITICAL COMPONENT - DO NOT EDIT WITHOUT APPROVAL ⚠️
+ * 
+ * MatchArena.tsx - Gaming Match Lobby & Player Discovery
+ * 
+ * This is a core component for the game lobby experience with:
+ * - Player discovery and matchmaking system
+ * - Challenge and partner request management
+ * - Match creation wizard integration
+ * - Gaming-style lobby interface
+ * 
+ * 🚨 PROTECTION NOTICE:
+ * - Any modifications require explicit approval
+ * - This component is part of the protected gaming experience
+ * - For extensions, create wrapper components instead of editing directly
+ * - Route: /match-arena (protected)
+ * 
+ * Contact: Lead developer before making changes
+ * Last Protected: 2025-09-29
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

@@ -1,3 +1,23 @@
+/**
+ * ⚠️  CRITICAL COMPONENT - DO NOT EDIT WITHOUT APPROVAL ⚠️
+ * 
+ * GamifiedMatchRecording.tsx - Gaming-style Match Recording Interface
+ * 
+ * This is a core component for the "Twitch for Pickleball" experience with:
+ * - Gaming animations and momentum tracking
+ * - Interactive analytics and achievement systems  
+ * - Real-time match recording with visual feedback
+ * 
+ * 🚨 PROTECTION NOTICE:
+ * - Any modifications require explicit approval
+ * - This component is part of the protected gaming experience
+ * - For extensions, create wrapper components instead of editing directly
+ * - Route: /gamified-match-recording (protected)
+ * 
+ * Contact: Lead developer before making changes
+ * Last Protected: 2025-09-29
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
