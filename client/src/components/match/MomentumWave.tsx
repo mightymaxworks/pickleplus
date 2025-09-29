@@ -264,17 +264,18 @@ export const MomentumWave = memo(({
 
   // Auto-playback functionality for live match experience
   useEffect(() => {
-    if (isPlaying && history.length > 0 && timelinePosition < 1) {
+    if (isPlaying && history.length > 0) {
       playbackIntervalRef.current = setInterval(() => {
         setTimelinePosition(prev => {
-          const next = prev + (1 / (history.length || 1));
+          const increment = 1 / Math.max(history.length - 1, 1); // Prevent division by zero
+          const next = prev + increment;
           if (next >= 1) {
             setIsPlaying(false);
             return 1;
           }
           return next;
         });
-      }, 800); // 800ms per point for dramatic effect
+      }, 600); // 600ms per point for smooth experience
     } else {
       if (playbackIntervalRef.current) {
         clearInterval(playbackIntervalRef.current);
@@ -611,17 +612,18 @@ export const MomentumWave = memo(({
           transition={{ duration: 0.3 }}
         />
 
-        {/* Comeback status */}
+        {/* Comeback status - positioned in top-right corner, less obtrusive */}
         <AnimatePresence>
           {comebackAnalysis?.isComeback && (
             <motion.div
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
+              className="absolute top-4 right-4 z-30"
+              initial={{ scale: 0, opacity: 0, x: 20 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0, opacity: 0, x: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <div className="bg-red-600/90 backdrop-blur-sm rounded-lg p-4 text-white text-center">
-                <div className="text-2xl font-bold">{comebackAnalysis.message}</div>
+              <div className="bg-red-600/85 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-center shadow-lg border border-red-400/20">
+                <div className="text-sm font-bold leading-tight">{comebackAnalysis.message}</div>
               </div>
             </motion.div>
           )}
