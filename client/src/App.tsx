@@ -32,8 +32,6 @@ import GamificationPrototype from '@/pages/GamificationPrototype' // Gamificatio
 import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-style match recording
 import MatchArena from '@/pages/MatchArena' // Sophisticated gaming-style match arena
 import UnifiedPrototype from '@/pages/UnifiedPrototype' // Temporary redirect
-import { SuperMatchRecorder } from '@/components/match/SuperMatchRecorder' // Adaptive match recorder
-import { MatchViewer, MatchViewerDemo } from '@/components/match/MatchViewer' // Read-only match viewer
 import { NotificationProvider, NotificationBell } from '@/components/notifications/RealtimeNotificationSystem' // Real-time gaming notifications
 
 
@@ -299,33 +297,6 @@ export default function App() {
                   <Route path="/gamification-prototype" component={GamificationPrototype} />
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
                   <Route path="/match-arena" component={MatchArena} />
-                  
-                  {/* Next-Gen Match Recording & Viewing */}
-                  <Route path="/match/create" component={() => <SuperMatchRecorder />} />
-                  <Route path="/match/watch/:id" component={({ params }: { params: { id: string } }) => {
-                    // Parse stream URL from query parameters
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const streamUrl = urlParams.get('stream') || 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0';
-                    
-                    return <MatchViewer matchData={{
-                      id: params.id,
-                      title: `Live Match ${params.id}`,
-                      team1: { name: 'Thunder Bolts', score: 15, color: '#22c55e' },
-                      team2: { name: 'Fire Hawks', score: 12, color: '#ef4444' },
-                      isLive: true,
-                      viewerCount: 1247,
-                      streamUrl: decodeURIComponent(streamUrl),
-                      momentumState: {
-                        momentum: 0.3,
-                        momentumScore: 65,
-                        streak: { team: 'team1' as const, length: 3 },
-                        wave: [],
-                        totalPoints: 27,
-                        gamePhase: 'late' as const
-                      }
-                    }} />
-                  }} />
-                  <Route path="/match/viewer-demo" component={MatchViewerDemo} />
                   
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />

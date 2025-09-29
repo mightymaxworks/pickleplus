@@ -35,11 +35,6 @@ import { MomentumEngine, MomentumState, StrategyMessage, MatchCloseness } from '
 import { MomentumWave } from '@/components/match/MomentumWave';
 import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
-import { matchStateManager, MatchState as LiveMatchState } from '@/components/match/MatchStateManager';
-import { StreamStatusIndicator } from '@/components/match/StreamStatusIndicator';
-import { GamingUIOverlays } from '@/components/match/GamingUIOverlays';
-import LiveStreamIntegration from '@/components/match/LiveStreamIntegration';
-import { type LiveStreamValidation } from '@/components/match/LiveStreamValidator';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -594,74 +589,6 @@ export default function GamifiedMatchRecording() {
   // Context UI state for momentum accuracy guidance
   const [showMomentumContext, setShowMomentumContext] = useState(true);
   const [isLiveMode, setIsLiveMode] = useState(true); // Track if user is doing live point-by-point scoring
-  const [liveMatchState, setLiveMatchState] = useState<LiveMatchState>(matchStateManager.getState());
-
-  // Gaming UI overlay states for Sprint 2
-  const [aestheticMode, setAestheticMode] = useState<'subtle' | 'esports'>('subtle');
-  const [gamingOverlaysEnabled, setGamingOverlaysEnabled] = useState(false);
-  
-  // Live stream validation states
-  const [liveStreamValidation, setLiveStreamValidation] = useState<LiveStreamValidation>({
-    isValid: false,
-    isLoading: false
-  });
-  const [viewerLink, setViewerLink] = useState('');
-
-  // Enable gaming overlays when live match state is active OR live stream is validated
-  useEffect(() => {
-    const liveStateEnabled = liveMatchState.isLive && liveMatchState.gamingFeatures.crowdEnergyMeter;
-    const liveStreamEnabled = liveStreamValidation.isValid;
-    const shouldEnable = liveStateEnabled || liveStreamEnabled;
-    
-    setGamingOverlaysEnabled(shouldEnable);
-    console.log(`🎮 Gaming overlays ${shouldEnable ? 'ENABLED' : 'DISABLED'} - Live State: ${liveStateEnabled}, Live Stream: ${liveStreamEnabled}`);
-  }, [liveMatchState.isLive, liveMatchState.gamingFeatures.crowdEnergyMeter, liveStreamValidation.isValid]);
-
-  // Live stream validation handlers
-  const handleLiveStreamValidation = (validation: LiveStreamValidation) => {
-    setLiveStreamValidation(validation);
-    console.log('🎥 Live stream validation updated:', validation);
-  };
-
-  const handleGamingFeaturesToggle = (enabled: boolean) => {
-    console.log(`🎮 Gaming features ${enabled ? 'ENABLED' : 'DISABLED'} via live stream`);
-    // Additional logic if needed
-  };
-
-  const handleViewerLinkGenerated = (link: string) => {
-    setViewerLink(link);
-    console.log('🔗 Viewer link generated:', link);
-  };
-
-  // Gaming feature test handlers
-  const handleGamingTest = (trigger: string) => {
-    console.log(`🎮 Testing gaming feature: ${trigger}`);
-    switch (trigger) {
-      case 'crowd-boost':
-        console.log('🔥 Crowd energy boost triggered!');
-        // Future: Connect to crowd energy meter
-        break;
-      case 'hype-train':
-        console.log('🚂 Hype train activated!');
-        // Future: Trigger hype train effects
-        break;
-      case 'particles':
-        console.log('✨ Particle effects triggered!');
-        // Future: Trigger particle celebration
-        break;
-      case 'celebration':
-        console.log('🎉 Victory celebration!');
-        setShowReaction({ show: true, type: 'milestone', playerName: 'Epic Player' });
-        setTimeout(() => setShowReaction({ show: false, type: 'win' }), 3000);
-        break;
-    }
-  };
-
-  const toggleAesthetic = () => {
-    const newMode = aestheticMode === 'subtle' ? 'esports' : 'subtle';
-    setAestheticMode(newMode);
-    console.log(`🎨 Aesthetic mode changed to: ${newMode}`);
-  };
 
   // Mega streak animation state
   const [megaAnimation, setMegaAnimation] = useState<{
@@ -947,30 +874,6 @@ export default function GamifiedMatchRecording() {
   const [undoStack, setUndoStack] = useState<MatchState[]>([]);
   const [showStats, setShowStats] = useState(false);
 
-  // Initialize live stream detection and match state manager
-  useEffect(() => {
-    console.log('🚀 Initializing live match system...');
-    
-    // Initialize match state manager with momentum engine
-    matchStateManager.initialize(momentumEngine);
-    
-    // Subscribe to live match state changes
-    const unsubscribe = matchStateManager.subscribe((newLiveState) => {
-      console.log('📡 Live match state updated:', newLiveState.mode);
-      setLiveMatchState(newLiveState);
-      
-      // Update live mode based on stream detection
-      if (newLiveState.mode === 'live') {
-        setIsLiveMode(true);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      matchStateManager.destroy();
-    };
-  }, []);
-
   // Auto-hide momentum context notification when video URL is added
   useEffect(() => {
     if (matchState.showVideo) {
@@ -1195,10 +1098,6 @@ export default function GamifiedMatchRecording() {
         config: tempConfig,
         showVideo: Boolean(tempConfig.liveStreamUrl || tempConfig.recordingUrl)
       }));
-
-      // Update live match state manager with momentum
-      const newMomentum = momentumEngine.getState();
-      matchStateManager.updateMomentum(newMomentum);
       setShowConfig(false);
     };
 
@@ -1480,21 +1379,14 @@ export default function GamifiedMatchRecording() {
   }
 
   return (
-    <GamingUIOverlays
-      isEnabled={gamingOverlaysEnabled}
-      aestheticMode={aestheticMode}
-      onAestheticToggle={toggleAesthetic}
-      onTestTrigger={handleGamingTest}
-      momentumState={matchState.momentumState}
-    >
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        {/* Stream Status & Back Navigation */}
+        {/* Back Navigation */}
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
@@ -1505,17 +1397,6 @@ export default function GamifiedMatchRecording() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Lobby
           </Button>
-
-          {/* Live Stream Status Indicator with Manual Toggle */}
-          <StreamStatusIndicator 
-            matchState={liveMatchState}
-            onModeToggle={(mode) => {
-              console.log('🎮 Manual mode toggle:', mode);
-              matchStateManager.setMode(mode);
-            }}
-            compact={false}
-            className="bg-slate-800/50 border-slate-600"
-          />
           
           {matchState.matchComplete && (
             <Button
@@ -1525,17 +1406,6 @@ export default function GamifiedMatchRecording() {
               Return to Arena
             </Button>
           )}
-        </div>
-        
-        {/* Live Stream Integration */}
-        <div className="mb-6">
-          <LiveStreamIntegration
-            onValidationChange={handleLiveStreamValidation}
-            onGamingFeaturesToggle={handleGamingFeaturesToggle}
-            onViewerLinkGenerated={handleViewerLinkGenerated}
-            matchId={`live-${Date.now()}`}
-            className="max-w-4xl mx-auto"
-          />
         </div>
         
         {/* Match Title */}
@@ -1881,61 +1751,13 @@ export default function GamifiedMatchRecording() {
             liveStreamUrl: matchState.config.liveStreamUrl,
             recordingUrl: matchState.config.recordingUrl,
             videoProvider: matchState.config.videoProvider,
-            videoSyncOffset: matchState.config.videoSyncOffset,
-            testingMode: true, // Enable YouTube testing functionality
-            youtubeUrl: ''
+            videoSyncOffset: matchState.config.videoSyncOffset
           }}
           isVisible={matchState.showVideo}
           onSyncOffsetChange={(offset) => {
             setMatchState(prev => ({
               ...prev,
               config: { ...prev.config, videoSyncOffset: offset }
-            }));
-          }}
-          onMomentumTest={(event) => {
-            // Simulate momentum event for testing
-            const simulatedMomentum = event.intensity * (event.type === 'point_won' || event.type === 'ace' || event.type === 'comeback' ? 1 : -1);
-            
-            // Create a fake momentum event to test the crowd energy response
-            setMatchState(prev => {
-              const newState = { ...prev };
-              if (newState.momentumState) {
-                const newMomentum = Math.max(-1, Math.min(1, newState.momentumState.momentum + simulatedMomentum * 0.3));
-                newState.momentumState = {
-                  ...newState.momentumState,
-                  momentum: newMomentum,
-                  momentumScore: Math.round((newMomentum + 1) * 50) // Convert [-1,1] to [0,100]
-                };
-              } else {
-                // Create initial momentum state for testing
-                const momentum = simulatedMomentum * 0.3;
-                newState.momentumState = {
-                  momentum,
-                  momentumScore: Math.round((momentum + 1) * 50),
-                  streak: { team: 'team1', length: 0 },
-                  wave: [],
-                  totalPoints: 0,
-                  gamePhase: 'early' as const
-                };
-              }
-              return newState;
-            });
-            
-            // Add a strategic message for testing
-            const testMessage: StrategyMessage = {
-              id: `test-${Date.now()}`,
-              type: 'momentumShift' as const,
-              priority: 1,
-              text: `Testing: ${event.description}`,
-              timestamp: Date.now(),
-              pointNo: matchState.player1.score + matchState.player2.score + 1,
-              team: event.type === 'point_won' || event.type === 'ace' || event.type === 'comeback' ? 'team1' : 'team2',
-              duration: 3000
-            };
-            
-            setMatchState(prev => ({
-              ...prev,
-              strategicMessages: [...prev.strategicMessages, testMessage]
             }));
           }}
         />
@@ -2034,7 +1856,6 @@ export default function GamifiedMatchRecording() {
         teamName={megaAnimation.teamName}
         onComplete={() => setMegaAnimation({ show: false, megaLevel: 1, teamColor: '#ff6b35', teamName: '' })}
       />
-      </div>
-    </GamingUIOverlays>
+    </div>
   );
 }
