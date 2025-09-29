@@ -582,7 +582,13 @@ interface MatchState {
 export default function GamifiedMatchRecording() {
   // Very first debug check - does the component even get called?
   console.log('🎮 COMPONENT ENTRY - GamifiedMatchRecording called');
-  const [showConfig, setShowConfig] = useState(true);
+  
+  // TEMPORARY: Return simple component to test if basic loading works - no TypeScript dependencies
+  return (
+    <div style={{minHeight: '100vh', backgroundColor: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+      <div style={{color: 'white', fontSize: '48px', fontWeight: 'bold'}}>COMPONENT LOADED SUCCESSFULLY!</div>
+    </div>
+  );
   
   // Message expiration handler
   const handleMessageExpire = (messageId: string) => {
@@ -1622,6 +1628,8 @@ export default function GamifiedMatchRecording() {
           <MomentumWave
             momentumState={{
               ...matchState.momentumState,
+              momentum: matchState.momentumState.momentum || 50,
+              momentumScore: matchState.momentumState.momentumScore || 50,
               currentScore: { player1: matchState.player1.score, player2: matchState.player2.score },
               gameNumber: matchState.currentGame,
               isMatchComplete: matchState.matchComplete
@@ -1639,10 +1647,10 @@ export default function GamifiedMatchRecording() {
           {matchState.momentumState?.closeness && (
             <div className="mt-6 relative">
               <MatchClosenessIndicator 
-                closeness={matchState.momentumState.closeness}
+                closeness={matchState.momentumState!.closeness}
                 team1Name={matchState.player1?.name}
                 team2Name={matchState.player2?.name}
-                momentumScore={matchState.momentumState.momentumScore}
+                momentumScore={matchState.momentumState!.momentumScore}
               />
             </div>
           )}
