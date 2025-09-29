@@ -24,18 +24,37 @@ export interface MatchCloseness {
   };
 }
 
+export interface MomentumHistoryPoint {
+  pointNo: number;
+  team: 'team1' | 'team2';
+  score: [number, number];
+  ewma: number; // Mechanical momentum [-1, 1]
+  dEwma: number; // Change in momentum
+  hypeIndex: number; // Visual excitement [0, 1]
+  timestamp: number;
+}
+
 export interface MomentumState {
-  momentum: number; // EWMA value [-1, 1]
+  momentum: number; // EWMA value [-1, 1] - mechanical
+  hypeIndex: number; // Visual excitement [0, 1] - for gaming effects
   momentumScore: number; // UI-friendly [0, 100]
   streak: {
     team: 'team1' | 'team2';
     length: number;
   };
   lastShiftAt?: number;
-  wave: Array<{ x: number; y: number }>;
+  wave: Array<{ x: number; y: number; hype: number }>; // Enhanced wave with hype
+  history: MomentumHistoryPoint[]; // Complete point history
+  turningPoints: number[]; // Point numbers where momentum shifted significantly
+  maxDeficitPerTeam: { team1: number; team2: number }; // Max deficit each team has faced
+  recentDeficitWindow: Array<{ pointNo: number; deficit: number; leader: 'team1' | 'team2' }>; // Last 8 points deficit tracking
   totalPoints: number;
   gamePhase: 'early' | 'mid' | 'late' | 'critical';
   closeness?: MatchCloseness;
+  combos: {
+    consecutiveHype: number; // Consecutive high-hype points
+    recentComebacks: number; // Comebacks in last 10 points
+  };
 }
 
 export interface StrategyMessage {
@@ -60,8 +79,15 @@ export interface MatchConfig {
 export class MomentumEngine {
   private state: MomentumState;
   private config: MatchConfig;
-  private alpha = 0.35; // EWMA smoothing factor
+  private alpha = 0.35; // EWMA smoothing factor for mechanical momentum
   private shiftThreshold = 0.3; // Momentum shift detection threshold
+  private hypeWeights = { // Weights for hype index calculation
+    dEwma: 0.4,        // Change in momentum
+    streakLength: 0.25, // Current streak length
+    shiftMagnitude: 0.2, // Recent momentum shifts
+    leverage: 0.1,      // Points-to-target pressure
+    deficitSeverity: 0.05 // Comeback potential
+  };
   private messageQueue: StrategyMessage[] = [];
   private gameHistory: Array<{ game: number; winner: 'team1' | 'team2'; score: [number, number] }> = [];
   private lastMessagePoint = -1;
@@ -70,11 +96,20 @@ export class MomentumEngine {
     this.config = config;
     this.state = {
       momentum: 0,
+      hypeIndex: 0,
       momentumScore: 50,
       streak: { team: 'team1', length: 0 },
       wave: [],
+      history: [],
+      turningPoints: [],
+      maxDeficitPerTeam: { team1: 0, team2: 0 },
+      recentDeficitWindow: [],
       totalPoints: 0,
-      gamePhase: 'early'
+      gamePhase: 'early',
+      combos: {
+        consecutiveHype: 0,
+        recentComebacks: 0
+      }
     };
   }
 
@@ -85,21 +120,54 @@ export class MomentumEngine {
     const messages: StrategyMessage[] = [];
     const prevMomentum = this.state.momentum;
     
-    // Update momentum using EWMA
+    // Update mechanical momentum using EWMA
     const signal = event.scoringTeam === 'team1' ? 1 : -1;
     this.state.momentum = (1 - this.alpha) * this.state.momentum + this.alpha * signal;
     this.state.momentum = Math.max(-1, Math.min(1, this.state.momentum)); // Clamp [-1, 1]
     this.state.momentumScore = Math.round(((this.state.momentum + 1) / 2) * 100);
     
-    // Update wave data
-    this.state.wave.push({ x: event.pointNo, y: this.state.momentum });
+    // Calculate momentum change
+    const dEwma = Math.abs(this.state.momentum - prevMomentum);
+    
+    // Update deficit tracking
+    this.updateDeficitTracking(event.score, event.scoringTeam);
+    
+    // Calculate hype index (visual excitement)
+    this.state.hypeIndex = this.calculateHypeIndex(dEwma, event.score, event.scoringTeam);
+    
+    // Add to history
+    const historyPoint: MomentumHistoryPoint = {
+      pointNo: event.pointNo,
+      team: event.scoringTeam,
+      score: event.score,
+      ewma: this.state.momentum,
+      dEwma,
+      hypeIndex: this.state.hypeIndex,
+      timestamp: event.timestamp
+    };
+    this.state.history.push(historyPoint);
+    
+    // Update wave data with hype
+    this.state.wave.push({ 
+      x: event.pointNo, 
+      y: this.state.momentum, 
+      hype: this.state.hypeIndex 
+    });
     this.state.totalPoints = event.pointNo;
+    
+    // Detect turning points
+    if (dEwma > this.shiftThreshold) {
+      this.state.turningPoints.push(event.pointNo);
+    }
     
     // Update game phase
     this.updateGamePhase(event.score);
     
     // Update streak
     this.updateStreak(event.scoringTeam);
+    
+    // Update combos
+    this.updateCombos();
     
     // Generate strategic messages (rate limited to 1 per point)
     if (this.lastMessagePoint !== event.pointNo) {
@@ -242,11 +310,22 @@ export class MomentumEngine {
 
   private checkComebackScenario(score: [number, number], scoringTeam: 'team1' | 'team2'): StrategyMessage | null {
     const [s1, s2] = score;
-    const deficit = scoringTeam === 'team1' ? s2 - s1 : s1 - s2;
+    const currentDeficit = scoringTeam === 'team1' ? s2 - s1 : s1 - s2;
+    const maxDeficit = scoringTeam === 'team1' ? this.state.maxDeficitPerTeam.team1 : this.state.maxDeficitPerTeam.team2;
     
-    // Comeback when trailing by 4+ points and now within 1
-    if (deficit >= 3 && deficit <= 1) {
-      return this.createMessage('comeback', '🔥 INCREDIBLE COMEBACK!', scoringTeam, 1);
+    // Major comeback: Was down 4+ points, now within 1
+    if (maxDeficit >= 4 && currentDeficit <= 1) {
+      return this.createMessage('comeback', '🔥 INCREDIBLE COMEBACK!', scoringTeam, 0);
+    }
+    
+    // Building comeback: Was down 3+ points, deficit reduced by 2+ in recent points
+    if (maxDeficit >= 3 && this.getRecentDeficitReduction(scoringTeam) >= 2) {
+      return this.createMessage('comeback', '⚡ COMEBACK BUILDING!', scoringTeam, 1);
+    }
+    
+    // Comeback completed: Was down 2+ points, now tied or leading
+    if (maxDeficit >= 2 && currentDeficit <= 0) {
+      return this.createMessage('comeback', '🎯 COMEBACK COMPLETE!', scoringTeam, 0);
     }
     
     return null;
@@ -322,6 +401,128 @@ export class MomentumEngine {
       duration,
       megaLevel
     };
+  }
+
+  // === Revolutionary Two-Layer System Helper Methods ===
+
+  /**
+   * Update deficit tracking for comeback detection
+   */
+  private updateDeficitTracking(score: [number, number], scoringTeam: 'team1' | 'team2') {
+    const [s1, s2] = score;
+    const deficit1 = s2 - s1; // Team1's deficit (positive if behind)
+    const deficit2 = s1 - s2; // Team2's deficit (positive if behind)
+    
+    // Update max deficit each team has faced
+    if (deficit1 > 0) {
+      this.state.maxDeficitPerTeam.team1 = Math.max(this.state.maxDeficitPerTeam.team1, deficit1);
+    }
+    if (deficit2 > 0) {
+      this.state.maxDeficitPerTeam.team2 = Math.max(this.state.maxDeficitPerTeam.team2, deficit2);
+    }
+    
+    // Update recent deficit window (last 8 points)
+    const leader = s1 > s2 ? 'team1' : s2 > s1 ? 'team2' : 'tied';
+    const deficit = Math.abs(s1 - s2);
+    
+    this.state.recentDeficitWindow.push({
+      pointNo: this.state.totalPoints + 1,
+      deficit,
+      leader: leader as 'team1' | 'team2'
+    });
+    
+    // Keep only last 8 points
+    if (this.state.recentDeficitWindow.length > 8) {
+      this.state.recentDeficitWindow.shift();
+    }
+  }
+
+  /**
+   * Calculate hype index - visual excitement factor
+   */
+  private calculateHypeIndex(dEwma: number, score: [number, number], scoringTeam: 'team1' | 'team2'): number {
+    const [s1, s2] = score;
+    const totalPoints = s1 + s2;
+    
+    // Component 1: Momentum change magnitude (40%)
+    const momentumComponent = Math.min(1, dEwma * 2.5) * this.hypeWeights.dEwma;
+    
+    // Component 2: Streak length excitement (25%)
+    const streakComponent = Math.min(1, this.state.streak.length / 5) * this.hypeWeights.streakLength;
+    
+    // Component 3: Recent shift magnitude (20%)
+    const recentShifts = this.state.turningPoints.filter(point => point > this.state.totalPoints - 3);
+    const shiftComponent = Math.min(1, recentShifts.length / 2) * this.hypeWeights.shiftMagnitude;
+    
+    // Component 4: Leverage - pressure from being close to target (10%)
+    const maxScore = Math.max(s1, s2);
+    const pointsToTarget = Math.max(0, this.config.pointTarget - maxScore);
+    const leverageComponent = Math.min(1, (this.config.pointTarget - pointsToTarget) / this.config.pointTarget) * this.hypeWeights.leverage;
+    
+    // Component 5: Deficit severity - comeback potential (5%)
+    const deficit = Math.abs(s1 - s2);
+    const deficitComponent = Math.min(1, deficit / 4) * this.hypeWeights.deficitSeverity;
+    
+    // Combine components
+    const rawHype = momentumComponent + streakComponent + shiftComponent + leverageComponent + deficitComponent;
+    
+    // Apply recency decay - more recent points have higher hype
+    const recencyMultiplier = Math.min(1.2, 1 + (totalPoints / 20) * 0.2);
+    
+    return Math.min(1, rawHype * recencyMultiplier);
+  }
+
+  /**
+   * Get recent deficit reduction for comeback detection
+   */
+  private getRecentDeficitReduction(team: 'team1' | 'team2'): number {
+    if (this.state.recentDeficitWindow.length < 4) return 0;
+    
+    const recent = this.state.recentDeficitWindow.slice(-4);
+    let maxRecentDeficit = 0;
+    let currentDeficit = 0;
+    
+    for (const point of recent) {
+      if (point.leader !== team) {
+        maxRecentDeficit = Math.max(maxRecentDeficit, point.deficit);
+      }
+    }
+    
+    // Current deficit for this team
+    const lastPoint = recent[recent.length - 1];
+    if (lastPoint.leader !== team) {
+      currentDeficit = lastPoint.deficit;
+    }
+    
+    return maxRecentDeficit - currentDeficit;
+  }
+
+  /**
+   * Update combo tracking for enhanced gaming effects
+   */
+  private updateCombos() {
+    // Track consecutive high-hype points
+    if (this.state.hypeIndex > 0.6) {
+      this.state.combos.consecutiveHype++;
+    } else {
+      this.state.combos.consecutiveHype = 0;
+    }
+    
+    // Track recent comebacks (sliding window of 10 points)
+    const recentHistory = this.state.history.slice(-10);
+    let comebacks = 0;
+    
+    for (let i = 1; i < recentHistory.length; i++) {
+      const prev = recentHistory[i - 1];
+      const curr = recentHistory[i];
+      
+      // Detect momentum flip with high hype
+      if (Math.sign(prev.ewma) !== Math.sign(curr.ewma) && curr.hypeIndex > 0.5) {
+        comebacks++;
+      }
+    }
+    
+    this.state.combos.recentComebacks = comebacks;
   }
 
   /**
@@ -567,11 +768,20 @@ export class MomentumEngine {
   reset() {
     this.state = {
       momentum: 0,
+      hypeIndex: 0,
       momentumScore: 50,
       streak: { team: 'team1', length: 0 },
       wave: [],
+      history: [],
+      turningPoints: [],
+      maxDeficitPerTeam: { team1: 0, team2: 0 },
+      recentDeficitWindow: [],
       totalPoints: 0,
-      gamePhase: 'early'
+      gamePhase: 'early',
+      combos: {
+        consecutiveHype: 0,
+        recentComebacks: 0
+      }
     };
     this.lastMessagePoint = -1;
   }
