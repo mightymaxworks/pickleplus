@@ -577,7 +577,7 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
-  console.log('GamifiedMatchRecording component starting...');
+  console.log('=== GamifiedMatchRecording component LOADED ===');
   
   const [, setLocation] = useLocation();
   
@@ -1563,7 +1563,7 @@ export default function GamifiedMatchRecording() {
               size="lg"
             >
               <Zap className="h-5 w-5 mr-2" />
-              Start Match Arena!
+              Start Match
             </Button>
           </Card>
         </motion.div>
