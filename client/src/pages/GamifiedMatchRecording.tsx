@@ -918,29 +918,38 @@ export default function GamifiedMatchRecording() {
 
   // Load match data when transitioning to record/result phase
   useEffect(() => {
+    console.log('useEffect triggered - phase:', phase, 'matchId:', matchId);
     if ((phase === 'record' || phase === 'result') && matchId) {
       try {
         const storedMatch = sessionStorage.getItem('currentMatch');
+        console.log('Retrieved stored match:', storedMatch);
         if (storedMatch) {
           const matchData = JSON.parse(storedMatch);
+          console.log('Parsed match data:', matchData);
           // Update state with stored match data
-          setMatchState(prev => ({
-            ...prev,
-            player1: { 
-              ...prev.player1,
-              name: matchData.player1?.name || prev.player1.name, 
-              id: matchData.player1?.id || prev.player1.id, 
-              tier: matchData.player1?.tier || prev.player1.tier
-            },
-            player2: { 
-              ...prev.player2,
-              name: matchData.player2?.name || prev.player2.name, 
-              id: matchData.player2?.id || prev.player2.id, 
-              tier: matchData.player2?.tier || prev.player2.tier
-            },
-            config: matchData.config || prev.config,
-            showVideo: Boolean(matchData.config?.liveStreamUrl || matchData.config?.recordingUrl)
-          }));
+          setMatchState(prev => {
+            const newState = {
+              ...prev,
+              player1: { 
+                ...prev.player1,
+                name: matchData.player1?.name || prev.player1.name, 
+                id: matchData.player1?.id || prev.player1.id, 
+                tier: matchData.player1?.tier || prev.player1.tier
+              },
+              player2: { 
+                ...prev.player2,
+                name: matchData.player2?.name || prev.player2.name, 
+                id: matchData.player2?.id || prev.player2.id, 
+                tier: matchData.player2?.tier || prev.player2.tier
+              },
+              config: matchData.config || prev.config,
+              showVideo: Boolean(matchData.config?.liveStreamUrl || matchData.config?.recordingUrl)
+            };
+            console.log('Updated match state:', newState);
+            return newState;
+          });
+        } else {
+          console.log('No stored match found in sessionStorage');
         }
       } catch (e) {
         console.error('Failed to load match data:', e);
@@ -1297,8 +1306,9 @@ export default function GamifiedMatchRecording() {
     const [tempConfig, setTempConfig] = useState<MatchConfig>(matchState.config);
 
     const startMatch = () => {
-      // Generate a unique match ID
-      const matchId = `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate a shorter, more user-friendly match ID
+      const matchId = Math.random().toString(36).substr(2, 8).toUpperCase();
+      console.log('Generated match ID:', matchId);
       
       // Update momentum engine with new config
       momentumEngine.reset();
@@ -1313,6 +1323,7 @@ export default function GamifiedMatchRecording() {
       
       // Store match data in sessionStorage
       sessionStorage.setItem('currentMatch', JSON.stringify(matchData));
+      console.log('Stored match data:', matchData);
       
       setMatchState(prev => ({ 
         ...prev, 
@@ -1320,6 +1331,7 @@ export default function GamifiedMatchRecording() {
         showVideo: Boolean(tempConfig.liveStreamUrl || tempConfig.recordingUrl)
       }));
       
+      console.log('About to navigate to:', `/match/record/${matchId}`);
       // Navigate to recording phase
       setLocation(`/match/record/${matchId}`);
     };
@@ -1598,15 +1610,20 @@ export default function GamifiedMatchRecording() {
   };
 
   // Phase-based rendering
+  console.log('Rendering component - phase:', phase, 'showConfig:', showConfig, 'matchId:', matchId);
+  
   if (phase === 'create' || showConfig) {
+    console.log('Rendering MatchConfigModal');
     return <MatchConfigModal />;
   }
 
   if (phase === 'result') {
+    console.log('Rendering MatchResultsView');
     return <MatchResultsView />;
   }
 
   // Default to recording phase
+  console.log('Rendering recording phase');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
