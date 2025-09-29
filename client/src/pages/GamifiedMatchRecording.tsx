@@ -25,7 +25,9 @@ import {
   PartyPopper,
   ArrowLeft,
   BarChart3,
-  X
+  X,
+  ArrowLeftRight,
+  Disc
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -479,35 +481,63 @@ function PulsingScoreButton({ children, onClick, variant = 'default', disabled =
   );
 }
 
-function GameifiedPlayerCard({ player, score, isWinning, onClick }: {
+function GameifiedPlayerCard({ player, score, isWinning, onClick, hasServe }: {
   player: { name: string; id: string; tier: string; avatar?: string };
   score: number;
   isWinning: boolean;
   onClick: () => void;
+  hasServe?: boolean;
 }) {
   return (
     <motion.div
       animate={{ 
         scale: isWinning ? 1.02 : 1,
-        borderColor: isWinning ? '#f97316' : '#374151',
-        boxShadow: isWinning ? '0 0 30px rgba(249, 115, 22, 0.4)' : 'none'
+        borderColor: hasServe ? '#3b82f6' : isWinning ? '#f97316' : '#374151',
+        boxShadow: hasServe 
+          ? '0 0 30px rgba(59, 130, 246, 0.6)' 
+          : isWinning ? '0 0 30px rgba(249, 115, 22, 0.4)' : 'none'
       }}
       transition={{ duration: 0.3 }}
       onClick={onClick}
       className="relative cursor-pointer group"
     >
       <Card className={`p-4 border-2 transition-all ${
-        isWinning 
+        hasServe 
+          ? 'bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-blue-400'
+          : isWinning 
           ? 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border-orange-400' 
           : 'bg-slate-800 border-slate-600 hover:border-slate-500'
       }`}>
+        {/* Serve glow effect */}
+        {hasServe && (
+          <motion.div
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-blue-500/20 rounded-lg"
+          />
+        )}
+        
         {/* Winner glow effect */}
-        {isWinning && (
+        {isWinning && !hasServe && (
           <motion.div
             animate={{ opacity: [0.3, 0.6, 0.3] }}
             transition={{ repeat: Infinity, duration: 2 }}
             className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-yellow-400/20 rounded-lg"
           />
+        )}
+        
+        {/* Serve indicator badge */}
+        {hasServe && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-2 -right-2 z-20"
+          >
+            <Badge className="bg-blue-500 text-white font-bold px-2 py-1 flex items-center gap-1">
+              <Disc className="h-3 w-3" />
+              SERVE
+            </Badge>
+          </motion.div>
         )}
         
         <div className="relative z-10 flex items-center justify-between">
@@ -1822,6 +1852,7 @@ export default function GamifiedMatchRecording() {
           score={matchState.player1.score}
           isWinning={isWinning('1')}
           onClick={() => !matchState.matchComplete && addPoint('1')}
+          hasServe={currentServe === 'team1'}
         />
         
         <GameifiedPlayerCard
@@ -1829,6 +1860,7 @@ export default function GamifiedMatchRecording() {
           score={matchState.player2.score}
           isWinning={isWinning('2')}
           onClick={() => !matchState.matchComplete && addPoint('2')}
+          hasServe={currentServe === 'team2'}
         />
       </div>
 
@@ -1889,6 +1921,120 @@ export default function GamifiedMatchRecording() {
           </div>
         </div>
       </Card>
+
+      {/* Traditional Scoring Rally Result Control - Only for Traditional Scoring */}
+      {scoringSystem === 'traditional' && !matchState.matchComplete && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Card className="p-6 bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-blue-500/50 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Disc className="h-5 w-5 text-blue-400" />
+              <h3 className="text-white font-semibold">Traditional Scoring - Rally Result</h3>
+            </div>
+            
+            <div className="text-center mb-4">
+              <Badge className="bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                Current Serve: {currentServe === 'team1' ? matchState.player1.name : matchState.player2.name}
+              </Badge>
+            </div>
+
+            <div className="space-y-4">
+              {/* Player 1 Rally Result */}
+              <div className="space-y-2">
+                <div className="text-center text-white font-medium flex items-center justify-center gap-2">
+                  {matchState.player1.name} Won Rally
+                  {currentServe === 'team1' && <Disc className="h-4 w-4 text-blue-400" />}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div data-testid="button-point-player1">
+                    <PulsingScoreButton
+                      onClick={() => addPoint('1')}
+                      variant={currentServe === 'team1' ? 'winning' : 'default'}
+                      disabled={currentServe !== 'team1'}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <Plus className="h-5 w-5" />
+                        <span className="text-sm font-semibold">POINT +1</span>
+                        <span className="text-xs opacity-80">Score & Keep Serve</span>
+                      </div>
+                    </PulsingScoreButton>
+                  </div>
+                  
+                  <div data-testid="button-sideout-player1">
+                    <PulsingScoreButton
+                      onClick={() => addPoint('1')}
+                      variant="default"
+                      disabled={currentServe === 'team1'}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <ArrowLeftRight className="h-5 w-5" />
+                        <span className="text-sm font-semibold">SIDE-OUT</span>
+                        <span className="text-xs opacity-80">Serve Changes</span>
+                      </div>
+                    </PulsingScoreButton>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-600"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-slate-800 px-2 text-slate-400">OR</span>
+                </div>
+              </div>
+
+              {/* Player 2 Rally Result */}
+              <div className="space-y-2">
+                <div className="text-center text-white font-medium flex items-center justify-center gap-2">
+                  {matchState.player2.name} Won Rally
+                  {currentServe === 'team2' && <Disc className="h-4 w-4 text-blue-400" />}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div data-testid="button-point-player2">
+                    <PulsingScoreButton
+                      onClick={() => addPoint('2')}
+                      variant={currentServe === 'team2' ? 'winning' : 'default'}
+                      disabled={currentServe !== 'team2'}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <Plus className="h-5 w-5" />
+                        <span className="text-sm font-semibold">POINT +1</span>
+                        <span className="text-xs opacity-80">Score & Keep Serve</span>
+                      </div>
+                    </PulsingScoreButton>
+                  </div>
+                  
+                  <div data-testid="button-sideout-player2">
+                    <PulsingScoreButton
+                      onClick={() => addPoint('2')}
+                      variant="default"
+                      disabled={currentServe === 'team2'}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <ArrowLeftRight className="h-5 w-5" />
+                        <span className="text-sm font-semibold">SIDE-OUT</span>
+                        <span className="text-xs opacity-80">Serve Changes</span>
+                      </div>
+                    </PulsingScoreButton>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Helper text */}
+            <div data-testid="text-traditional-scoring-help" className="mt-4 text-xs text-slate-400 text-center bg-slate-800/50 rounded-lg p-3">
+              💡 <span className="text-blue-300">Traditional Scoring:</span> Only the serving team can score points. 
+              If the receiving team wins the rally, it's a <span className="text-orange-300">side-out</span> (serve changes, no point scored).
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Strategic Message Toasts */}
       <MessageToast

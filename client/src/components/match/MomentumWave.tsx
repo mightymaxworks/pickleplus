@@ -623,16 +623,32 @@ export const MomentumWave = memo(({
             <Badge variant="secondary">
               {currentScore?.player1 || 0}
             </Badge>
-            {/* Service indicator for traditional scoring */}
+            {/* Service indicator for traditional scoring - Enhanced visibility */}
             {scoringSystem === 'traditional' && currentServe === 'team1' && (
               <motion.div
-                className="flex items-center space-x-1 px-2 py-1 rounded-full bg-green-500/20 border border-green-500/50"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500 }}
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-blue-500/30 border-2 border-blue-400 backdrop-blur-sm"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  boxShadow: [
+                    '0 0 20px rgba(59, 130, 246, 0.6)',
+                    '0 0 30px rgba(59, 130, 246, 0.8)',
+                    '0 0 20px rgba(59, 130, 246, 0.6)'
+                  ]
+                }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 500,
+                  boxShadow: {
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
+                }}
               >
-                <Zap className="w-3 h-3 text-green-400" />
-                <span className="text-xs text-green-400 font-semibold">SERVE</span>
+                <Zap className="w-4 h-4 text-blue-300" />
+                <span className="text-sm text-blue-200 font-bold">SERVE</span>
               </motion.div>
             )}
           </div>
@@ -640,16 +656,32 @@ export const MomentumWave = memo(({
 
         <div className="absolute top-4 right-4 flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            {/* Service indicator for traditional scoring */}
+            {/* Service indicator for traditional scoring - Enhanced visibility */}
             {scoringSystem === 'traditional' && currentServe === 'team2' && (
               <motion.div
-                className="flex items-center space-x-1 px-2 py-1 rounded-full bg-green-500/20 border border-green-500/50"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500 }}
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-blue-500/30 border-2 border-blue-400 backdrop-blur-sm"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  boxShadow: [
+                    '0 0 20px rgba(59, 130, 246, 0.6)',
+                    '0 0 30px rgba(59, 130, 246, 0.8)',
+                    '0 0 20px rgba(59, 130, 246, 0.6)'
+                  ]
+                }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 500,
+                  boxShadow: {
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
+                }}
               >
-                <span className="text-xs text-green-400 font-semibold">SERVE</span>
-                <Zap className="w-3 h-3 text-green-400" />
+                <span className="text-sm text-blue-200 font-bold">SERVE</span>
+                <Zap className="w-4 h-4 text-blue-300" />
               </motion.div>
             )}
             <Badge variant="secondary">
