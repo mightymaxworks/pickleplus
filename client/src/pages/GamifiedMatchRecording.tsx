@@ -596,15 +596,95 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
-  // MINIMAL TEST VERSION - Remove all complex imports that might be causing crashes
+  console.log('🎯 RESTORATION: GamifiedMatchRecording initializing with error handling');
+  
+  // SAFE DATA LOADING with comprehensive error handling
+  const [dataError, setDataError] = useState<string | null>(null);
+  const [showConfig, setShowConfig] = useState(false);
+  
+  // Safe session storage data extraction with detailed logging
+  const getInitialPlayerNames = () => {
+    try {
+      const currentMatch = sessionStorage.getItem('currentMatch');
+      console.log('🔍 FLOW DATA: sessionStorage currentMatch raw:', currentMatch);
+      
+      if (currentMatch) {
+        const matchData = JSON.parse(currentMatch);
+        console.log('🔍 FLOW DATA: Parsed matchData structure:', Object.keys(matchData));
+        console.log('🔍 FLOW DATA: Full matchData:', matchData);
+        
+        // Handle pairings data from match creation wizard
+        if (matchData.pairings && matchData.teamIdentity) {
+          console.log('✅ FLOW DATA: Found pairings and teamIdentity');
+          return {
+            player1: matchData.pairings.team1.players[0]?.name || 'Player 1',
+            player2: matchData.pairings.team2.players[0]?.name || 'Player 2'
+          };
+        }
+        
+        // Handle direct player names
+        if (matchData.playerNames) {
+          console.log('✅ FLOW DATA: Found direct playerNames');
+          return {
+            player1: matchData.playerNames.player1 || 'Player 1',
+            player2: matchData.playerNames.player2 || 'Player 2'
+          };
+        }
+        
+        console.log('⚠️ FLOW DATA: Data format not recognized, using fallbacks');
+      } else {
+        console.log('⚠️ FLOW DATA: No sessionStorage data found');
+      }
+    } catch (error) {
+      console.error('🚨 FLOW DATA ERROR:', error);
+      setDataError(`Data parsing error: ${error.message}`);
+    }
+    
+    // Fallback defaults
+    console.log('🔄 FLOW DATA: Using fallback defaults');
+    return {
+      player1: 'Player 1',
+      player2: 'Player 2'
+    };
+  };
+
+  const initialNames = getInitialPlayerNames();
+  console.log('🎯 FLOW DATA: Final player names:', initialNames);
+
+  // Error boundary display
+  if (dataError) {
+    return (
+      <div className="min-h-screen bg-red-900 text-white p-8">
+        <h1 className="text-4xl font-bold text-center mb-8">⚠️ DATA ERROR DETECTED</h1>
+        <div className="max-w-md mx-auto bg-red-800 p-6 rounded-lg">
+          <h2 className="text-xl mb-4">Navigation Data Issue:</h2>
+          <p className="text-red-200 mb-4">{dataError}</p>
+          <button 
+            onClick={() => setDataError(null)}
+            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+          >
+            Continue with Defaults
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state with data flow info
   return (
     <div className="min-h-screen bg-black text-white p-8">
-      <h1 className="text-4xl font-bold text-center mb-8">🏓 MINIMAL TEST VERSION</h1>
+      <h1 className="text-4xl font-bold text-center mb-8">🏓 RESTORATION STEP 1</h1>
       <div className="max-w-md mx-auto bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-xl mb-4">If you see this, routing works!</h2>
-        <p className="text-green-400">✅ Component mounted successfully</p>
-        <p className="text-blue-400">✅ No import crashes</p>
-        <p className="text-yellow-400">⚠️ Complex features temporarily disabled</p>
+        <h2 className="text-xl mb-4">Data Flow Success!</h2>
+        <p className="text-green-400 mb-2">✅ Component mounted</p>
+        <p className="text-blue-400 mb-2">✅ Data parsing complete</p>
+        <p className="text-yellow-400 mb-4">✅ Error handling active</p>
+        
+        <div className="bg-gray-700 p-4 rounded mt-4">
+          <h3 className="font-bold mb-2">Loaded Player Names:</h3>
+          <p className="text-orange-400">Player 1: {initialNames.player1}</p>
+          <p className="text-blue-400">Player 2: {initialNames.player2}</p>
+        </div>
       </div>
     </div>
   );
