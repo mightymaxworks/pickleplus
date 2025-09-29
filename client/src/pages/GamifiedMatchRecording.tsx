@@ -1,5 +1,8 @@
+// BACKUP - Original working version before URL restructure
+// This file can be used to rollback if the new structure has issues
+// To rollback: rename this to GamifiedMatchRecording.tsx and delete the split files
+
 import React, { useState, useEffect } from 'react';
-import { useLocation, useRoute } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, 
@@ -36,7 +39,6 @@ import { MomentumEngine, MomentumState, StrategyMessage, MatchCloseness } from '
 import { MomentumWave } from '@/components/match/MomentumWave';
 import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
-import { MatchCreationWizard } from '@/components/match/MatchCreationWizard';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -127,6 +129,9 @@ function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
   );
 }
 
+import { useLocation, useRoute } from 'wouter';
+import { MatchCreationWizard } from '@/components/match/MatchCreationWizard';
+
 // Types
 interface Player {
   id: number;
@@ -182,14 +187,11 @@ interface MatchState {
   showVideo: boolean;
 }
 
-// Generate shorter match ID
+// Generate match ID (keep original format for compatibility)
 const generateMatchId = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 10);
+  return `match_${timestamp}_${random}`;
 };
 
 export default function GamifiedMatchRecording() {
@@ -209,8 +211,23 @@ export default function GamifiedMatchRecording() {
   
   console.log('Route detection:', { isCreate, isRecord, isResult, phase, matchId });
 
-  // State management
-  const [matchData, setMatchData] = useState<MatchCreationData | null>(null);
+  // State management with sessionStorage hydration
+  const [matchData, setMatchData] = useState<MatchCreationData | null>(() => {
+    // Load from sessionStorage on mount if we're in record/result phase
+    if (phase !== 'create' && matchId) {
+      try {
+        const stored = sessionStorage.getItem(`match:${matchId}`);
+        if (stored) {
+          console.log('Loading match data from sessionStorage for:', matchId);
+          return JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error('Failed to load match data from sessionStorage:', error);
+      }
+    }
+    return null;
+  });
+  
   const [matchState, setMatchState] = useState<MatchState>({
     isMatchActive: false,
     currentGame: 1,
@@ -238,7 +255,7 @@ export default function GamifiedMatchRecording() {
   const [showReaction, setShowReaction] = useState(false);
   const [reactionType, setReactionType] = useState<'win' | 'ace' | 'streak' | 'milestone'>('win');
 
-  // Handle match creation
+  // Handle match creation with sessionStorage persistence
   const handleMatchCreated = (data: MatchCreationData) => {
     console.log('Match created with data:', data);
     setMatchData(data);
@@ -248,8 +265,16 @@ export default function GamifiedMatchRecording() {
       isMatchActive: true
     }));
     
-    // Generate and navigate to record phase
+    // Generate and persist match data
     const newMatchId = generateMatchId();
+    try {
+      sessionStorage.setItem(`match:${newMatchId}`, JSON.stringify(data));
+      console.log('Persisted match data to sessionStorage with ID:', newMatchId);
+    } catch (error) {
+      console.error('Failed to persist match data:', error);
+    }
+    
+    // Navigate to record phase
     console.log('Navigating to match recording with ID:', newMatchId);
     setLocation(`/match/record/${newMatchId}`);
   };
@@ -320,15 +345,29 @@ export default function GamifiedMatchRecording() {
   // Record phase component  
   const RecordPhase = () => {
     if (!matchData) {
-      // Try to load from sessionStorage or redirect back
+      // Show loading/recovery UI instead of immediate error
       return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 flex items-center justify-center">
-          <Card className="p-6 text-center">
-            <h2 className="text-xl font-bold text-white mb-4">Match Not Found</h2>
-            <p className="text-slate-300 mb-4">The match data could not be loaded.</p>
-            <Button onClick={() => setLocation('/match/create')}>
-              Create New Match
-            </Button>
+          <Card className="p-6 text-center max-w-md">
+            <h2 className="text-xl font-bold text-white mb-4">Loading Match...</h2>
+            <p className="text-slate-300 mb-4">
+              {matchId ? 'Recovering match data...' : 'Match session not found.'}
+            </p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => setLocation('/match/create')}
+                className="w-full bg-orange-600 hover:bg-orange-700"
+              >
+                Create New Match
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline" 
+                className="w-full"
+              >
+                Reload Page
+              </Button>
+            </div>
           </Card>
         </div>
       );
