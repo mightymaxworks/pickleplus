@@ -4,7 +4,7 @@ import { MomentumState } from './MomentumEngine';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Target, Zap, HelpCircle, X } from 'lucide-react';
+import { TrendingUp, Target, Zap, HelpCircle, X } from 'lucide-react';
 
 interface MomentumWaveProps {
   momentumState: MomentumState & {
@@ -270,7 +270,7 @@ export const MomentumWave = memo(({
               </div>
               <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingDown className="h-4 w-4 text-red-400" />
+                  <TrendingUp className="h-4 w-4 text-red-400 rotate-180" />
                   <span className="text-red-300 font-medium">Falling Momentum</span>
                 </div>
                 <p className="text-slate-300 text-sm">Downward wave shows momentum loss. Opportunity for the opponent to capitalize.</p>
