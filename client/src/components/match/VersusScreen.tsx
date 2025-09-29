@@ -147,7 +147,7 @@ const VersusPlayerChip = ({
         }}
         whileHover={{ scale: 1.05 }}
       >
-        {player.displayName?.charAt(0) || player.name.charAt(0)}
+        {player.displayName?.charAt(0) || player.name?.charAt(0) || '?'}
         
         {/* Rank badge for non-mini modes */}
         {!isCompact && player.rankingPoints && (
@@ -167,11 +167,11 @@ const VersusPlayerChip = ({
       {/* Player info */}
       <div className={`${side === 'right' ? 'text-right' : 'text-left'}`}>
         <div className={`font-semibold text-white ${isCompact ? 'text-xs' : 'text-sm'}`}>
-          {player.displayName || player.name}
+          {player.displayName || player.name || 'Unknown Player'}
         </div>
         {!isCompact && (
           <div className="text-xs text-slate-400 font-mono">
-            {player.passportCode}
+            {player.passportCode || 'NO-CODE'}
           </div>
         )}
       </div>
