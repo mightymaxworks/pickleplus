@@ -582,12 +582,14 @@ export default function GamifiedMatchRecording() {
   // Detect current phase based on URL
   const [isCreate] = useRoute('/match/create');
   const [isRecord, recordParams] = useRoute('/match/record/:matchId');
-  const [isResult, resultParams] = useRoute('/match/:matchId');
+  const [isResult, resultParams] = useRoute('/match/result/:matchId');
   const [isLegacy] = useRoute('/gamified-match-recording');
   
   // Determine current phase
   const phase = isRecord ? 'record' : isResult ? 'result' : 'create';
   const matchId = recordParams?.matchId || resultParams?.matchId;
+  
+  console.log('Route detection:', { isCreate, isRecord, isResult, phase, matchId });
   const [showConfig, setShowConfig] = useState(true);
   
   // Message expiration handler
