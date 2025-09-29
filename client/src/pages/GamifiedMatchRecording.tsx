@@ -1241,17 +1241,23 @@ export default function GamifiedMatchRecording() {
               <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
                 <div className="flex items-center justify-center gap-3 text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Users className="h-3 w-3 text-white" />
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                      {playerData.player1.displayName?.charAt(0) || playerData.player1.name?.charAt(0) || 'U'}
                     </div>
-                    <span className="text-blue-300 font-medium">{initialNames.player1}</span>
+                    <div className="text-left">
+                      <div className="text-blue-300 font-medium">{playerData.player1.displayName || playerData.player1.name}</div>
+                      <div className="text-xs text-slate-400 font-mono">{playerData.player1.passportCode}</div>
+                    </div>
                   </div>
                   <span className="text-slate-400 font-bold">vs</span>
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                      <Users className="h-3 w-3 text-white" />
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                      {playerData.player2.displayName?.charAt(0) || playerData.player2.name?.charAt(0) || 'P'}
                     </div>
-                    <span className="text-red-300 font-medium">{initialNames.player2}</span>
+                    <div className="text-right">
+                      <div className="text-red-300 font-medium">{playerData.player2.displayName || playerData.player2.name}</div>
+                      <div className="text-xs text-slate-400 font-mono">{playerData.player2.passportCode}</div>
+                    </div>
                   </div>
                 </div>
               </div>
