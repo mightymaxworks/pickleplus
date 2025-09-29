@@ -596,6 +596,7 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
+  console.log('🎯 DEBUG: GamifiedMatchRecording component initializing'); // DEBUG LOG
   const [showConfig, setShowConfig] = useState(false);  // TEMPORARILY DISABLE CONFIG MODAL
   
   // Message expiration handler
@@ -778,8 +779,10 @@ export default function GamifiedMatchRecording() {
     try {
       // First try to get current match data (from challenge acceptance)
       const currentMatch = sessionStorage.getItem('currentMatch');
+      console.log('🔍 DEBUG: sessionStorage currentMatch:', currentMatch); // DEBUG LOG
       if (currentMatch) {
         const matchData = JSON.parse(currentMatch);
+        console.log('🔍 DEBUG: Parsed matchData:', matchData); // DEBUG LOG
         
         // Handle pairings data from match creation wizard
         if (matchData.pairings && matchData.teamIdentity) {
@@ -824,7 +827,7 @@ export default function GamifiedMatchRecording() {
         }
       }
     } catch (error) {
-      console.log('Could not load player names from session storage:', error);
+      console.error('🚨 ERROR loading player names from session storage:', error);
     }
     
     // Fallback to defaults if no session storage data
