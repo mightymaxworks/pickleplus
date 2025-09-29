@@ -930,10 +930,9 @@ export default function MatchArena() {
               sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
               console.log('Match Data:', matchData);
               
-              // Navigate to gamified match recorder
-              setTimeout(() => {
-                setLocation('/gamified-match-recording');
-              }, 1500);
+              // Navigate to gamified match recorder immediately
+              console.log('Navigating to gamified match recording...');
+              setLocation('/gamified-match-recording');
             }}
           />
         )}
@@ -1126,6 +1125,7 @@ export default function MatchArena() {
                             setChallenges(prev => prev.filter(c => c.id !== challenge.id));
                             
                             // Navigate to gamified match recorder
+                            console.log('Navigating to match recording from challenge...');
                             setLocation('/gamified-match-recording');
                           }
                         }}
