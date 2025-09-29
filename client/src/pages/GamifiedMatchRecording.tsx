@@ -917,8 +917,8 @@ export default function GamifiedMatchRecording() {
   });
   
   const [matchState, setMatchState] = useState<MatchState>({
-    player1: { name: initialNames.player1, id: '1', tier: 'Elite', score: 0 },
-    player2: { name: initialNames.player2, id: '2', tier: 'Professional', score: 0 },
+    player1: { name: playerData.player1.displayName || playerData.player1.name, id: '1', tier: 'Elite', score: 0 },
+    player2: { name: playerData.player2.displayName || playerData.player2.name, id: '2', tier: 'Professional', score: 0 },
     gameHistory: [],
     currentGame: 1,
     matchComplete: false,
