@@ -22,6 +22,7 @@ interface MomentumWaveProps {
   width?: number;
   height?: number;
   heroMode?: boolean;
+  onSpecialMoment?: (type: 'ace' | 'winner' | 'megaStreak' | 'comeback') => void;
 }
 
 interface TooltipData {
@@ -56,12 +57,17 @@ export const MomentumWave = memo(({
   isMatchComplete = false,
   width = 400,
   height = 80,
-  heroMode = false
+  heroMode = false,
+  onSpecialMoment
 }: MomentumWaveProps) => {
   const { wave, momentum, momentumScore, streak, gamePhase, currentScore, gameNumber } = momentumState;
   const [hoveredPoint, setHoveredPoint] = useState<TooltipData | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showTutorial, setShowTutorial] = useState(false);
+  const [specialMomentTrigger, setSpecialMomentTrigger] = useState<{
+    type: 'ace' | 'winner' | 'megaStreak' | 'comeback';
+    timestamp: number;
+  } | null>(null);
   
   // Analyze different types of point dots for enhanced visualization (memoized)
   const analyzePointDots = useMemo(() => {
@@ -645,20 +651,208 @@ export const MomentumWave = memo(({
                 />
               )}
               
-              {/* Wave line */}
-              <motion.path
-                d={wavePath}
-                stroke={dominantColor}
-                strokeWidth="2"
-                fill="none"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                style={{
-                  filter: `drop-shadow(0 0 ${4 + glowIntensity * 8}px ${dominantColor})`
-                }}
-              />
+              {/* Enhanced Wave Line with 3D Effects during Special Moments */}
+              <motion.g>
+                {/* Main wave line with enhanced animations */}
+                <motion.path
+                  d={wavePath}
+                  stroke={dominantColor}
+                  strokeWidth={heroMode ? "4" : "3"}
+                  fill="none"
+                  initial={{ pathLength: 0 }}
+                  animate={{ 
+                    pathLength: 1,
+                    strokeWidth: gamePhase === 'critical' ? [3, 5, 3] : 3
+                  }}
+                  transition={{ 
+                    duration: 0.8, 
+                    ease: "easeOut",
+                    strokeWidth: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                  style={{
+                    filter: `drop-shadow(0 0 ${6 + glowIntensity * 12}px ${dominantColor})`
+                  }}
+                />
+                
+                {/* 3D Effect Layer - Animated during special moments */}
+                {(gamePhase === 'critical' || Math.abs(momentum) > 0.6) && (
+                  <>
+                    {/* Shadow/depth layer */}
+                    <motion.path
+                      d={wavePath}
+                      stroke={dominantColor}
+                      strokeWidth="8"
+                      fill="none"
+                      opacity="0.3"
+                      initial={{ opacity: 0, scale: 1 }}
+                      animate={{ 
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.02, 1],
+                        y: [0, 2, 0]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      style={{
+                        filter: `blur(2px) drop-shadow(0 4px ${8 + glowIntensity * 8}px ${dominantColor}40)`
+                      }}
+                    />
+                    
+                    {/* Highlight layer for 3D effect */}
+                    <motion.path
+                      d={wavePath}
+                      stroke="white"
+                      strokeWidth="1"
+                      fill="none"
+                      opacity="0.8"
+                      initial={{ opacity: 0 }}
+                      animate={{ 
+                        opacity: [0.8, 1, 0.8],
+                        y: [-1, -2, -1]
+                      }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      style={{
+                        filter: `drop-shadow(0 0 4px white)`
+                      }}
+                    />
+                  </>
+                )}
+                
+                {/* Particle effects during mega streaks */}
+                {streak && streak.length >= 3 && (
+                  <motion.g>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <motion.circle
+                        key={`particle-${i}`}
+                        cx={150 + i * 40}
+                        cy={height / 2}
+                        r="2"
+                        fill={dominantColor}
+                        initial={{ opacity: 0, scale: 0, y: 0 }}
+                        animate={{ 
+                          opacity: [0, 1, 0],
+                          scale: [0, 1.5, 0],
+                          y: [0, -20, -40],
+                          x: [0, Math.random() * 20 - 10, Math.random() * 40 - 20]
+                        }}
+                        transition={{ 
+                          duration: 1.5, 
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                          ease: "easeOut"
+                        }}
+                      />
+                    ))}
+                  </motion.g>
+                )}
+              </motion.g>
               
+              {/* Special Moment 3D Explosion Animation */}
+              {specialMomentTrigger && Date.now() - specialMomentTrigger.timestamp < 3000 && (
+                <motion.g>
+                  {/* Central explosion burst */}
+                  <motion.circle
+                    cx={width / 2}
+                    cy={height / 2}
+                    r="5"
+                    fill={dominantColor}
+                    initial={{ r: 5, opacity: 1, scale: 1 }}
+                    animate={{ 
+                      r: [5, 50, 80],
+                      opacity: [1, 0.8, 0],
+                      scale: [1, 2, 3]
+                    }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                  />
+                  
+                  {/* Radiating energy waves */}
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <motion.line
+                      key={`energy-${i}`}
+                      x1={width / 2}
+                      y1={height / 2}
+                      x2={width / 2 + Math.cos(i * Math.PI / 4) * 30}
+                      y2={height / 2 + Math.sin(i * Math.PI / 4) * 30}
+                      stroke={dominantColor}
+                      strokeWidth="3"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{
+                        opacity: [0, 1, 0],
+                        scale: [0, 1, 1.5],
+                        x2: width / 2 + Math.cos(i * Math.PI / 4) * 80,
+                        y2: height / 2 + Math.sin(i * Math.PI / 4) * 80
+                      }}
+                      transition={{
+                        duration: 1.2,
+                        delay: i * 0.1,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        filter: `drop-shadow(0 0 4px ${dominantColor})`
+                      }}
+                    />
+                  ))}
+                  
+                  {/* Spiral particle effect */}
+                  {Array.from({ length: 12 }).map((_, i) => {
+                    const angle = (i / 12) * Math.PI * 2;
+                    return (
+                      <motion.circle
+                        key={`spiral-${i}`}
+                        cx={width / 2}
+                        cy={height / 2}
+                        r="2"
+                        fill="white"
+                        initial={{ opacity: 1, scale: 0.5 }}
+                        animate={{
+                          opacity: [1, 0.8, 0],
+                          scale: [0.5, 1, 0],
+                          x: Math.cos(angle + Date.now() * 0.01) * (40 + i * 5),
+                          y: Math.sin(angle + Date.now() * 0.01) * (20 + i * 3)
+                        }}
+                        transition={{
+                          duration: 2,
+                          delay: i * 0.05,
+                          ease: "easeOut"
+                        }}
+                      />
+                    );
+                  })}
+                  
+                  {/* Text overlay for special moment */}
+                  <motion.text
+                    x={width / 2}
+                    y={height / 2 - 20}
+                    textAnchor="middle"
+                    fontSize="16"
+                    fontWeight="bold"
+                    fill="white"
+                    initial={{ opacity: 0, y: height / 2 }}
+                    animate={{ 
+                      opacity: [0, 1, 1, 0],
+                      y: [height / 2, height / 2 - 20, height / 2 - 25, height / 2 - 30],
+                      scale: [0.5, 1.2, 1, 0.8]
+                    }}
+                    transition={{ duration: 2.5, ease: "easeOut" }}
+                    style={{
+                      filter: `drop-shadow(0 0 4px black)`,
+                      textShadow: '0 0 8px rgba(255,255,255,0.8)'
+                    }}
+                  >
+                    {specialMomentTrigger.type === 'megaStreak' ? '🔥 MEGA STREAK!' :
+                     specialMomentTrigger.type === 'comeback' ? '⚡ COMEBACK!' :
+                     specialMomentTrigger.type === 'ace' ? '🎯 ACE!' :
+                     '🏆 WINNER!'}
+                  </motion.text>
+                </motion.g>
+              )}
+
               {/* Enhanced Point Dots - Different representations for different moment types */}
               {pointDots.map((dot: PointDot) => {
                 const dotColor = dot.team === 'team1' ? team1Color : team2Color;
