@@ -298,8 +298,8 @@ export default function App() {
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
                   <Route path="/match-arena" component={MatchArena} />
                   
-                  {/* UDF-Compliant Match Flow - Streamlined scorer interface */}
-                  <Route path="/match/create" component={lazyLoad(() => import('./pages/StreamlinedMatchDemo'))} />
+                  {/* UDF-Compliant Match Flow - MatchArena unified prototype styling */}
+                  <Route path="/match/create" component={MatchArena} />
                   <Route path="/match/record/:matchId" component={GamifiedMatchRecording} />
                   <Route path="/match/:matchId" component={GamifiedMatchRecording} />
                   
