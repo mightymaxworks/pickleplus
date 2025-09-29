@@ -18,7 +18,7 @@
  * Last Protected: 2025-09-29
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, 
@@ -596,208 +596,520 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
-  console.log('🎯 RESTORATION: GamifiedMatchRecording initializing with error handling');
+  console.log('🎯 FULL RESTORATION: GamifiedMatchRecording with complete functionality');
   
-  // SAFE DATA LOADING with comprehensive error handling
-  const [dataError, setDataError] = useState<string | null>(null);
-  const [showConfig, setShowConfig] = useState(false);
-  
-  // RESTORATION STEP 2: Core state management
-  const [componentError, setComponentError] = useState<string | null>(null);
-  
-  // Team theme generation
-  const getRandomTeamTheme = () => {
-    const pickleballTeamThemes = [
-      { team1: { name: "Court Crushers", color: "#FF6B35" }, team2: { name: "Net Ninjas", color: "#4ECDC4" } },
-      { team1: { name: "Paddle Pirates", color: "#45B7D1" }, team2: { name: "Serve Savages", color: "#96CEB4" } },
-      { team1: { name: "Dink Dynasty", color: "#FFEAA7" }, team2: { name: "Volley Vipers", color: "#DDA0DD" } },
-      { team1: { name: "Baseline Bombers", color: "#98D8C8" }, team2: { name: "Spin Specialists", color: "#F06292" } },
-      { team1: { name: "Power Players", color: "#FFB74D" }, team2: { name: "Precision Pros", color: "#81C784" } }
-    ];
-    return pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
-  };
-  
-  // Safe session storage data extraction with detailed logging
+  // Initialize session storage data safely
   const getInitialPlayerNames = () => {
     try {
       const currentMatch = sessionStorage.getItem('currentMatch');
-      console.log('🔍 FLOW DATA: sessionStorage currentMatch raw:', currentMatch);
-      
       if (currentMatch) {
         const matchData = JSON.parse(currentMatch);
-        console.log('🔍 FLOW DATA: Parsed matchData structure:', Object.keys(matchData));
-        console.log('🔍 FLOW DATA: Full matchData:', matchData);
-        
-        // Handle pairings data from match creation wizard
         if (matchData.pairings && matchData.teamIdentity) {
-          console.log('✅ FLOW DATA: Found pairings and teamIdentity');
           return {
             player1: matchData.pairings.team1.players[0]?.name || 'Player 1',
             player2: matchData.pairings.team2.players[0]?.name || 'Player 2'
           };
         }
-        
-        // Handle direct player names
         if (matchData.playerNames) {
-          console.log('✅ FLOW DATA: Found direct playerNames');
           return {
             player1: matchData.playerNames.player1 || 'Player 1',
             player2: matchData.playerNames.player2 || 'Player 2'
           };
         }
-        
-        console.log('⚠️ FLOW DATA: Data format not recognized, using fallbacks');
-      } else {
-        console.log('⚠️ FLOW DATA: No sessionStorage data found');
       }
     } catch (error) {
-      console.error('🚨 FLOW DATA ERROR:', error);
-      setDataError(`Data parsing error: ${error.message}`);
+      console.error('Session data parsing error:', error);
     }
-    
-    // Fallback defaults
-    console.log('🔄 FLOW DATA: Using fallback defaults');
-    return {
-      player1: 'Player 1',
-      player2: 'Player 2'
-    };
+    return { player1: 'Player 1', player2: 'Player 2' };
   };
 
   const initialNames = getInitialPlayerNames();
-  console.log('🎯 FLOW DATA: Final player names:', initialNames);
   
-  // RESTORATION STEP 2: Initialize team theme and basic match state
-  const teamTheme = getRandomTeamTheme();
+  // Team theme generation
+  const pickleballTeamThemes = [
+    { team1: { name: "Court Crushers", color: "#FF6B35" }, team2: { name: "Net Ninjas", color: "#4ECDC4" } },
+    { team1: { name: "Paddle Pirates", color: "#45B7D1" }, team2: { name: "Serve Savages", color: "#96CEB4" } },
+    { team1: { name: "Dink Dynasty", color: "#FFEAA7" }, team2: { name: "Volley Vipers", color: "#DDA0DD" } },
+    { team1: { name: "Baseline Bombers", color: "#98D8C8" }, team2: { name: "Spin Specialists", color: "#F06292" } },
+    { team1: { name: "Power Players", color: "#FFB74D" }, team2: { name: "Precision Pros", color: "#81C784" } }
+  ];
   
-  // Basic match state with error boundaries
-  const [matchState, setMatchState] = useState(() => {
-    try {
-      return {
-        player1: { 
-          name: initialNames.player1, 
-          id: '1', 
-          tier: 'Competitive', 
-          score: 0 
-        },
-        player2: { 
-          name: initialNames.player2, 
-          id: '2', 
-          tier: 'Competitive', 
-          score: 0 
-        },
-        gameHistory: [] as Array<{ player1Score: number; player2Score: number; winner: string }>,
-        currentGame: 1,
-        matchComplete: false,
-        achievements: [] as Array<{ type: string; message: string; timestamp: number }>,
-        streak: { player: '', count: 0, type: 'win' as 'win' | 'ace' },
-        config: {
-          bestOf: 3,
-          pointsToWin: 11,
-          winByTwo: true,
-          liveStreamUrl: '',
-          recordingUrl: '',
-          enableStats: true,
-          enableCommentary: true
-        },
-        showVideo: false,
-        strategicMessages: [] as Array<any>,
-        momentumState: undefined
-      };
-    } catch (error) {
-      console.error('🚨 STATE INIT ERROR:', error);
-      setComponentError(`Match state initialization failed: ${error.message}`);
-      return null;
-    }
+  const teamTheme = pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
+
+  // COMPLETE MATCH STATE MANAGEMENT
+  const [matchState, setMatchState] = useState<MatchState>({
+    player1: { name: initialNames.player1, id: '1', tier: 'Competitive', score: 0 },
+    player2: { name: initialNames.player2, id: '2', tier: 'Competitive', score: 0 },
+    gameHistory: [],
+    currentGame: 1,
+    matchComplete: false,
+    achievements: [],
+    streak: { player: '', count: 0, type: 'win' },
+    config: {
+      scoringType: 'traditional',
+      pointTarget: 11,
+      matchFormat: 'best-of-3',
+      winByTwo: true,
+      liveStreamUrl: '',
+      recordingUrl: '',
+      videoProvider: 'hls',
+      videoSyncOffset: 0
+    },
+    showVideo: false,
+    strategicMessages: [],
+    momentumState: undefined
   });
 
-  // Error boundary displays
-  if (dataError) {
-    return (
-      <div className="min-h-screen bg-red-900 text-white p-8">
-        <h1 className="text-4xl font-bold text-center mb-8">⚠️ DATA ERROR DETECTED</h1>
-        <div className="max-w-md mx-auto bg-red-800 p-6 rounded-lg">
-          <h2 className="text-xl mb-4">Navigation Data Issue:</h2>
-          <p className="text-red-200 mb-4">{dataError}</p>
-          <button 
-            onClick={() => setDataError(null)}
-            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
-          >
-            Continue with Defaults
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ANIMATION AND UI STATE
+  const [showReaction, setShowReaction] = useState(false);
+  const [reactionType, setReactionType] = useState<'win' | 'ace' | 'streak' | 'milestone'>('win');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [undoStack, setUndoStack] = useState<MatchState[]>([]);
+  const [showVideo, setShowVideo] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [matchTime, setMatchTime] = useState(0);
   
-  if (componentError || !matchState) {
-    return (
-      <div className="min-h-screen bg-yellow-900 text-white p-8">
-        <h1 className="text-4xl font-bold text-center mb-8">⚠️ COMPONENT ERROR</h1>
-        <div className="max-w-md mx-auto bg-yellow-800 p-6 rounded-lg">
-          <h2 className="text-xl mb-4">State Management Issue:</h2>
-          <p className="text-yellow-200 mb-4">{componentError || 'Match state is null'}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const momentumEngine = useRef(new MomentumEngine({}));
+  
+  // TIMER EFFECT
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (gameStarted && !matchState.matchComplete) {
+      interval = setInterval(() => {
+        setMatchTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [gameStarted, matchState.matchComplete]);
 
-  // RESTORATION STEP 2: Enhanced success state with match info
+  // SCORE FUNCTIONS
+  const addPoint = (player: 'player1' | 'player2') => {
+    if (matchState.matchComplete) return;
+    
+    if (!gameStarted) setGameStarted(true);
+    
+    setUndoStack(prev => [...prev, matchState]);
+    
+    const newState = { ...matchState };
+    newState[player].score++;
+    
+    const opponent = player === 'player1' ? 'player2' : 'player1';
+    const currentScore = newState[player].score;
+    const opponentScore = newState[opponent].score;
+    
+    // Check for game win
+    const isGameWon = currentScore >= newState.config.pointTarget && 
+                     (!newState.config.winByTwo || (currentScore - opponentScore) >= 2);
+    
+    if (isGameWon) {
+      // Add to game history
+      newState.gameHistory.push({
+        player1Score: newState.player1.score,
+        player2Score: newState.player2.score,
+        winner: player
+      });
+      
+      // Check for match win
+      const gamesWon = newState.gameHistory.filter(game => game.winner === player).length;
+      const gamesToWin = Math.ceil(newState.config.matchFormat === 'best-of-3' ? 3 : 5 / 2);
+      
+      if (gamesWon >= gamesToWin) {
+        newState.matchComplete = true;
+        setReactionType('milestone');
+        showAchievement('match-win');
+      } else {
+        // Reset for next game
+        newState.player1.score = 0;
+        newState.player2.score = 0;
+        newState.currentGame++;
+        setReactionType('win');
+        showAchievement('game-win');
+      }
+      
+      setShowReaction(true);
+    }
+    
+    // Momentum calculation
+    const scoreUpdate = {
+      player,
+      score: currentScore,
+      opponentScore,
+      timestamp: Date.now(),
+      gameContext: {
+        currentGame: newState.currentGame,
+        gameHistory: newState.gameHistory
+      }
+    };
+    
+    const momentum = momentumEngine.current.calculateMomentum(scoreUpdate);
+    newState.momentumState = momentum.momentumState;
+    newState.strategicMessages = momentum.strategicMessages;
+    
+    setMatchState(newState);
+  };
+
+  const subtractPoint = (player: 'player1' | 'player2') => {
+    if (matchState[player].score > 0) {
+      setUndoStack(prev => [...prev, matchState]);
+      setMatchState(prev => ({
+        ...prev,
+        [player]: { ...prev[player], score: prev[player].score - 1 }
+      }));
+    }
+  };
+
+  const undoLastAction = () => {
+    if (undoStack.length > 0) {
+      const previousState = undoStack[undoStack.length - 1];
+      setMatchState(previousState);
+      setUndoStack(prev => prev.slice(0, -1));
+    }
+  };
+
+  const showAchievement = (type: string) => {
+    const messages: Record<string, string> = {
+      'game-win': 'Game Won! 🏆',
+      'match-win': 'Match Complete! 👑',
+      'comeback': 'Epic Comeback! 🔥',
+      'streak': 'Win Streak! ⚡'
+    };
+    
+    setToastMessage(messages[type] || 'Achievement Unlocked!');
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const resetMatch = () => {
+    setMatchState({
+      ...matchState,
+      player1: { ...matchState.player1, score: 0 },
+      player2: { ...matchState.player2, score: 0 },
+      gameHistory: [],
+      currentGame: 1,
+      matchComplete: false,
+      achievements: [],
+      streak: { player: '', count: 0, type: 'win' },
+      strategicMessages: [],
+      momentumState: undefined
+    });
+    setUndoStack([]);
+    setGameStarted(false);
+    setMatchTime(0);
+  };
+
+  // COMPLETE INTERACTIVE UI
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white p-8">
-      <h1 className="text-4xl font-bold text-center mb-8">🏓 RESTORATION STEP 2</h1>
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white relative">
+      
+      {/* EXPLOSIVE REACTIONS */}
+      <ExplosiveReaction 
+        show={showReaction} 
+        type={reactionType}
+        playerName={reactionType === 'milestone' ? 
+          (matchState.gameHistory[matchState.gameHistory.length - 1]?.winner === 'player1' ? 
+            matchState.player1.name : matchState.player2.name) : undefined}
+        onComplete={() => setShowReaction(false)} 
+      />
+
+      {/* SIMPLE TOAST NOTIFICATIONS */}
+      {showToast && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+        >
+          {toastMessage}
+        </motion.div>
+      )}
+
+      <div className="p-4 max-w-6xl mx-auto">
         
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h2 className="text-xl mb-4">Core Systems Online!</h2>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <p className="text-green-400">✅ Component mounted</p>
-              <p className="text-blue-400">✅ Data parsing complete</p>
-              <p className="text-yellow-400">✅ Error handling active</p>
-            </div>
-            <div>
-              <p className="text-purple-400">✅ State management initialized</p>
-              <p className="text-cyan-400">✅ Team themes generated</p>
-              <p className="text-orange-400">✅ Match configuration ready</p>
-            </div>
+        {/* HEADER WITH CONTROLS */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <motion.h1 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent"
+            >
+              🏓 EPIC MATCH CENTER
+            </motion.h1>
+            <Badge variant="outline" className="border-orange-500 text-orange-400">
+              Game {matchState.currentGame}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="border-blue-500 text-blue-400">
+              <Timer className="w-4 h-4 mr-1" />
+              {formatTime(matchTime)}
+            </Badge>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={undoLastAction}
+              disabled={undoStack.length === 0}
+              className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/20"
+            >
+              <Undo2 className="w-4 h-4 mr-1" />
+              Undo
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={resetMatch}
+              className="border-red-500 text-red-400 hover:bg-red-500/20"
+            >
+              <RotateCw className="w-4 h-4 mr-1" />
+              Reset
+            </Button>
           </div>
         </div>
 
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h3 className="font-bold mb-4">Team Setup:</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-700 p-4 rounded" style={{borderLeft: `4px solid ${teamTheme.team1.color}`}}>
-              <h4 className="font-bold" style={{color: teamTheme.team1.color}}>{teamTheme.team1.name}</h4>
-              <p className="text-lg">{matchState.player1.name}</p>
-              <p className="text-sm text-gray-400">Score: {matchState.player1.score}</p>
-            </div>
-            <div className="bg-gray-700 p-4 rounded" style={{borderLeft: `4px solid ${teamTheme.team2.color}`}}>
-              <h4 className="font-bold" style={{color: teamTheme.team2.color}}>{teamTheme.team2.name}</h4>
-              <p className="text-lg">{matchState.player2.name}</p>
-              <p className="text-sm text-gray-400">Score: {matchState.player2.score}</p>
-            </div>
+        {/* MOMENTUM INDICATOR */}
+        {matchState.momentumState && (
+          <div className="mb-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <div className="p-4">
+                <h3 className="text-sm font-medium mb-2 text-center">Match Momentum</h3>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-orange-500 to-red-500"
+                    initial={{ width: "50%" }}
+                    animate={{ width: `${Math.max(10, Math.min(90, 50 + (matchState.momentumState.value * 40)))}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+            </Card>
           </div>
+        )}
+
+        {/* MAIN SCORE DISPLAY */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          
+          {/* PLAYER 1 SECTION */}
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+              <div className="p-6">
+                <div 
+                  className="text-center border-l-4 pl-4 mb-4"
+                  style={{ borderColor: teamTheme.team1.color }}
+                >
+                  <h2 
+                    className="text-xl font-bold mb-1"
+                    style={{ color: teamTheme.team1.color }}
+                  >
+                    {teamTheme.team1.name}
+                  </h2>
+                  <p className="text-lg text-slate-300">{matchState.player1.name}</p>
+                  <Badge className="mt-2 bg-blue-600">{matchState.player1.tier}</Badge>
+                </div>
+                
+                <div className="text-center mb-6">
+                  <motion.div
+                    key={matchState.player1.score}
+                    initial={{ scale: 1.5, color: teamTheme.team1.color }}
+                    animate={{ scale: 1, color: '#ffffff' }}
+                    transition={{ duration: 0.3 }}
+                    className="text-6xl font-bold mb-2"
+                  >
+                    {matchState.player1.score}
+                  </motion.div>
+                  <p className="text-sm text-slate-400">Current Score</p>
+                </div>
+
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    onClick={() => addPoint('player1')}
+                    disabled={matchState.matchComplete}
+                    className="bg-green-600 hover:bg-green-700 flex-1"
+                    size="lg"
+                  >
+                    <Plus className="w-5 h-5 mr-1" />
+                    Point
+                  </Button>
+                  <Button 
+                    onClick={() => subtractPoint('player1')}
+                    disabled={matchState.player1.score === 0}
+                    variant="outline"
+                    className="border-red-500 text-red-400 hover:bg-red-500/20"
+                    size="lg"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* PLAYER 2 SECTION */}
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+              <div className="p-6">
+                <div 
+                  className="text-center border-l-4 pl-4 mb-4"
+                  style={{ borderColor: teamTheme.team2.color }}
+                >
+                  <h2 
+                    className="text-xl font-bold mb-1"
+                    style={{ color: teamTheme.team2.color }}
+                  >
+                    {teamTheme.team2.name}
+                  </h2>
+                  <p className="text-lg text-slate-300">{matchState.player2.name}</p>
+                  <Badge className="mt-2 bg-blue-600">{matchState.player2.tier}</Badge>
+                </div>
+                
+                <div className="text-center mb-6">
+                  <motion.div
+                    key={matchState.player2.score}
+                    initial={{ scale: 1.5, color: teamTheme.team2.color }}
+                    animate={{ scale: 1, color: '#ffffff' }}
+                    transition={{ duration: 0.3 }}
+                    className="text-6xl font-bold mb-2"
+                  >
+                    {matchState.player2.score}
+                  </motion.div>
+                  <p className="text-sm text-slate-400">Current Score</p>
+                </div>
+
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    onClick={() => addPoint('player2')}
+                    disabled={matchState.matchComplete}
+                    className="bg-green-600 hover:bg-green-700 flex-1"
+                    size="lg"
+                  >
+                    <Plus className="w-5 h-5 mr-1" />
+                    Point
+                  </Button>
+                  <Button 
+                    onClick={() => subtractPoint('player2')}
+                    disabled={matchState.player2.score === 0}
+                    variant="outline"
+                    className="border-red-500 text-red-400 hover:bg-red-500/20"
+                    size="lg"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
         </div>
 
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <h3 className="font-bold mb-4">Match Configuration:</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p>Best of: {matchState.config.bestOf}</p>
-              <p>Points to win: {matchState.config.pointsToWin}</p>
+        {/* GAME HISTORY & STRATEGIC MESSAGES */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* GAME HISTORY */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <div className="p-4">
+              <h3 className="font-bold mb-4 flex items-center">
+                <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
+                Game History
+              </h3>
+              
+              {matchState.gameHistory.length === 0 ? (
+                <p className="text-slate-400 text-center py-8">No games completed yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {matchState.gameHistory.map((game, index) => (
+                    <div key={index} className="flex items-center justify-between bg-slate-700/50 p-3 rounded">
+                      <span className="text-sm">Game {index + 1}</span>
+                      <div className="flex items-center gap-4">
+                        <span className={game.winner === 'player1' ? 'text-green-400 font-bold' : 'text-slate-400'}>
+                          {game.player1Score}
+                        </span>
+                        <span className="text-slate-500">-</span>
+                        <span className={game.winner === 'player2' ? 'text-green-400 font-bold' : 'text-slate-400'}>
+                          {game.player2Score}
+                        </span>
+                      </div>
+                      <Crown className={`w-4 h-4 ${game.winner === 'player1' ? 'text-yellow-400' : 'text-blue-400'}`} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div>
-              <p>Win by two: {matchState.config.winByTwo ? 'Yes' : 'No'}</p>
-              <p>Current game: {matchState.currentGame}</p>
+          </Card>
+
+          {/* STRATEGIC MESSAGES */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <div className="p-4">
+              <h3 className="font-bold mb-4 flex items-center">
+                <Activity className="w-5 h-5 mr-2 text-blue-400" />
+                Live Analysis
+              </h3>
+              
+              {matchState.strategicMessages.length === 0 ? (
+                <p className="text-slate-400 text-center py-8">Analysis will appear as the match progresses</p>
+              ) : (
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {matchState.strategicMessages.map((msg, index) => (
+                    <motion.div 
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-slate-700/50 p-3 rounded text-sm"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Zap className="w-4 h-4 text-orange-400" />
+                        <span className="font-medium text-orange-400">{msg.type}</span>
+                      </div>
+                      <p className="text-slate-300">{msg.content || 'Strategic insight'}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          </Card>
         </div>
+
+        {/* MATCH COMPLETE OVERLAY */}
+        {matchState.matchComplete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          >
+            <Card className="bg-slate-800 border-yellow-500 p-8 text-center max-w-md">
+              <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold mb-4">🏆 MATCH COMPLETE!</h2>
+              <p className="text-xl mb-6">
+                {matchState.gameHistory.filter(g => g.winner === 'player1').length > 
+                 matchState.gameHistory.filter(g => g.winner === 'player2').length ? 
+                 `${matchState.player1.name} Wins!` : `${matchState.player2.name} Wins!`}
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={resetMatch} className="bg-blue-600 hover:bg-blue-700">
+                  <RotateCw className="w-4 h-4 mr-2" />
+                  New Match
+                </Button>
+                <Button variant="outline" onClick={() => window.history.back()}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Arena
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+        )}
 
       </div>
     </div>
