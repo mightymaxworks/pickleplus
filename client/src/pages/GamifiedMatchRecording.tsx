@@ -1404,13 +1404,6 @@ export default function GamifiedMatchRecording() {
     return <MatchConfigModal />;
   }
 
-  console.log('🐛 About to render main interface:', {
-    gamingOverlaysEnabled,
-    aestheticMode,
-    matchState: matchState.config,
-    momentumState: matchState.momentumState
-  });
-
   return (
     <GamingUIOverlays
       isEnabled={gamingOverlaysEnabled}
