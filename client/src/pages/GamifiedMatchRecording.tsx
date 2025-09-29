@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, 
@@ -576,6 +577,12 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
+  const [, setLocation] = useLocation();
+  
+  // Redirect to new match flow
+  useEffect(() => {
+    setLocation('/match/create');
+  }, [setLocation]);
   const [showConfig, setShowConfig] = useState(true);
   
   // Message expiration handler
