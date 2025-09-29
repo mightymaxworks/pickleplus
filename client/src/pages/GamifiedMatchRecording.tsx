@@ -597,6 +597,12 @@ interface MatchState {
 
 export default function GamifiedMatchRecording() {
   console.log('🎯 DEBUG: GamifiedMatchRecording component initializing'); // DEBUG LOG
+  
+  // SUPER SIMPLE TEST - if this doesn't appear, component never mounts
+  if (typeof window !== 'undefined') {
+    console.log('🌍 WINDOW CHECK: Component mounting in browser'); 
+  }
+  
   const [showConfig, setShowConfig] = useState(false);  // TEMPORARILY DISABLE CONFIG MODAL
   
   // Message expiration handler

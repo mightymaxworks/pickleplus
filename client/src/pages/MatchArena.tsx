@@ -953,8 +953,10 @@ export default function MatchArena() {
               console.log('Match Data:', matchData);
               
               // Navigate to gamified match recorder immediately
-              console.log('Navigating to gamified match recording...');
+              console.log('🚀 NAVIGATION: About to navigate to gamified match recording...');
+              console.log('🚀 NAVIGATION: Data being stored:', JSON.stringify(recorderData, null, 2));
               setLocation('/gamified-match-recording');
+              console.log('🚀 NAVIGATION: setLocation called successfully');
             }}
           />
         )}
