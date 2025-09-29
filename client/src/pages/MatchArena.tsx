@@ -946,7 +946,8 @@ export default function MatchArena() {
               const recorderData = {
                 format: matchData.format,
                 pairings: matchData.pairings,
-                selectedPlayers: matchData.selectedPlayers
+                selectedPlayers: matchData.selectedPlayers,
+                teamIdentity: matchData.teamIdentity  // FIX: Include teamIdentity for proper data contract
               };
               sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
               console.log('Match Data:', matchData);
