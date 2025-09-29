@@ -41,6 +41,7 @@ interface TeamIdentity {
 
 interface MatchCreationData {
   format: 'singles' | 'doubles';
+  scoringSystem: 'traditional' | 'rally';
   selectedPlayers: Player[];
   pairings?: { team1: Player[]; team2: Player[] };
   matchStatus: {
@@ -237,6 +238,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<WizardStep>('format');
   const [matchFormat, setMatchFormat] = useState<'singles' | 'doubles'>('singles');
+  const [scoringSystem, setScoringSystem] = useState<'traditional' | 'rally'>('rally');
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [pairings, setPairings] = useState<{ team1: Player[]; team2: Player[] } | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -395,6 +397,7 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
         const teamTheme = getRandomTeamTheme();
         const matchData: MatchCreationData = {
           format: matchFormat,
+          scoringSystem,
           selectedPlayers,
           pairings: pairings || undefined,
           matchStatus: calculateMatchStatus(),
@@ -522,6 +525,43 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                   <Users className="h-6 w-6" />
                   <span className="font-medium">Doubles</span>
                   <span className="text-xs opacity-75">2 vs 2</span>
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="bg-slate-800/50 border-slate-700/50 p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-purple-400" />
+                Choose Scoring System
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant={scoringSystem === 'rally' ? 'default' : 'outline'}
+                  onClick={() => setScoringSystem('rally')}
+                  className={`h-24 flex-col gap-2 ${
+                    scoringSystem === 'rally' 
+                      ? 'bg-purple-500 hover:bg-purple-600 text-white' 
+                      : 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                  }`}
+                  data-testid="button-rally-scoring"
+                >
+                  <Zap className="h-6 w-6" />
+                  <span className="font-medium">Rally Scoring</span>
+                  <span className="text-xs opacity-75">Every rally scores</span>
+                </Button>
+                <Button
+                  variant={scoringSystem === 'traditional' ? 'default' : 'outline'}
+                  onClick={() => setScoringSystem('traditional')}
+                  className={`h-24 flex-col gap-2 ${
+                    scoringSystem === 'traditional' 
+                      ? 'bg-purple-500 hover:bg-purple-600 text-white' 
+                      : 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                  }`}
+                  data-testid="button-traditional-scoring"
+                >
+                  <Crown className="h-6 w-6" />
+                  <span className="font-medium">Traditional</span>
+                  <span className="text-xs opacity-75">Side-out scoring</span>
                 </Button>
               </div>
             </Card>

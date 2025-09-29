@@ -8,6 +8,7 @@ export interface MomentumEvent {
   scoringTeam: 'team1' | 'team2';
   score: [number, number]; // [team1Score, team2Score]
   hadServe?: 'team1' | 'team2';
+  isSideOut?: boolean; // True if traditional scoring and rally won without serve (no point scored)
   timestamp: number;
   tags: string[];
 }
@@ -31,6 +32,7 @@ export interface MomentumHistoryPoint {
   ewma: number; // Mechanical momentum [-1, 1]
   dEwma: number; // Change in momentum
   hypeIndex: number; // Visual excitement [0, 1]
+  isSideOut?: boolean; // True for side-outs in traditional scoring
   timestamp: number;
 }
 
@@ -124,8 +126,12 @@ export class MomentumEngine {
     const prevStreak = { ...this.state.streak };
     
     // Update mechanical momentum using EWMA
+    // For traditional scoring side-outs, reduce momentum impact (0.6x multiplier)
     const signal = event.scoringTeam === 'team1' ? 1 : -1;
-    this.state.momentum = (1 - this.alpha) * this.state.momentum + this.alpha * signal;
+    const sideOutMultiplier = (this.config.scoringType === 'traditional' && event.isSideOut) ? 0.6 : 1.0;
+    const effectiveAlpha = this.alpha * sideOutMultiplier;
+    
+    this.state.momentum = (1 - effectiveAlpha) * this.state.momentum + effectiveAlpha * signal;
     this.state.momentum = Math.max(-1, Math.min(1, this.state.momentum)); // Clamp [-1, 1]
     this.state.momentumScore = Math.round(((this.state.momentum + 1) / 2) * 100);
     
@@ -146,6 +152,7 @@ export class MomentumEngine {
       ewma: this.state.momentum,
       dEwma,
       hypeIndex: this.state.hypeIndex,
+      isSideOut: event.isSideOut,
       timestamp: event.timestamp
     };
     this.state.history.push(historyPoint);
@@ -210,7 +217,27 @@ export class MomentumEngine {
 
   private generateMessages(event: MomentumEvent, prevMomentum: number, prevStreak?: { team: 'team1' | 'team2'; length: number }): StrategyMessage[] {
     const messages: StrategyMessage[] = [];
-    const { scoringTeam, score, pointNo } = event;
+    const { scoringTeam, score, pointNo, isSideOut } = event;
+    
+    // Traditional Scoring: Side-Out messages (serve changes without point)
+    if (this.config.scoringType === 'traditional' && isSideOut) {
+      const sideOutMessages = [
+        '🔄 SIDE OUT!',
+        '⚡ SERVE SNATCHED!',
+        '🎯 BREAKING SERVE!',
+        '💪 SERVE EARNED!'
+      ];
+      const message = sideOutMessages[Math.floor(Math.random() * sideOutMessages.length)];
+      messages.push(this.createMessage('break', message, scoringTeam, 2));
+      return messages; // Side-out is the primary message, no additional messages
+    }
+    
+    // Traditional Scoring: Service hold messages
+    if (this.config.scoringType === 'traditional' && !isSideOut && event.hadServe === scoringTeam) {
+      if (this.state.streak.length >= 3 && this.state.streak.team === scoringTeam) {
+        messages.push(this.createMessage('streak', '🏆 HOLDING SERVE!', scoringTeam, 2));
+      }
+    }
     
     // First Blood - First point of the match
     if (pointNo === 1) {
