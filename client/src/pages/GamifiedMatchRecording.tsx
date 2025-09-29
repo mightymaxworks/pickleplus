@@ -596,7 +596,7 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
-  const [showConfig, setShowConfig] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);  // TEMPORARILY DISABLE CONFIG MODAL
   
   // Message expiration handler
   const handleMessageExpire = (messageId: string) => {
