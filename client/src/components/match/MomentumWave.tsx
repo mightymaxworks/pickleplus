@@ -69,7 +69,11 @@ export const MomentumWave = memo(({
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showCombatView, setShowCombatView] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isChromeVisible, setIsChromeVisible] = useState(true);
+  const [lastInteractionAt, setLastInteractionAt] = useState(Date.now());
+  const [isControlsExpanded, setIsControlsExpanded] = useState(false);
   const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Extract state with new hype system
   const { 
@@ -307,6 +311,9 @@ export const MomentumWave = memo(({
     const handleKeyPress = (event: KeyboardEvent) => {
       if (!isInteractive) return;
       
+      // Show chrome on any keypress
+      showChrome();
+      
       switch (event.key) {
         case ' ':
           event.preventDefault();
@@ -333,7 +340,34 @@ export const MomentumWave = memo(({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isInteractive, timelinePosition, handleTimelineScrub]);
+  }, [isInteractive, timelinePosition, handleTimelineScrub, showChrome]);
+
+  // Auto-hide chrome functionality
+  useEffect(() => {
+    const hideDelay = 2000; // 2 seconds
+
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+
+    hideTimeoutRef.current = setTimeout(() => {
+      if (!isDragging && !isPlaying && !isControlsExpanded && Date.now() - lastInteractionAt > hideDelay - 100) {
+        setIsChromeVisible(false);
+      }
+    }, hideDelay);
+
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, [lastInteractionAt, isDragging, isPlaying, isControlsExpanded]);
+
+  // Show chrome on any interaction
+  const showChrome = useCallback(() => {
+    setIsChromeVisible(true);
+    setLastInteractionAt(Date.now());
+  }, []);
 
   // Global mouse up handler for drag
   useEffect(() => {
@@ -344,8 +378,34 @@ export const MomentumWave = memo(({
     }
   }, [isDragging]);
 
+  // Global interaction handlers
+  useEffect(() => {
+    const handleMouseMove = () => showChrome();
+    const handleTouch = () => showChrome();
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchstart', handleTouch);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchstart', handleTouch);
+    };
+  }, [showChrome]);
+
+  // Handle "scrub anywhere" functionality
+  const handleWaveClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isInteractive) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const position = x / rect.width;
+    
+    handleTimelineScrub(position);
+    showChrome();
+  }, [isInteractive, handleTimelineScrub, showChrome]);
+
   // Handle point hover for detailed tooltips
-  const handlePointHover = useCallback((event: React.MouseEvent<SVGElement>) => {
+  const handlePointHover = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!isInteractive) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
@@ -353,6 +413,7 @@ export const MomentumWave = memo(({
     const y = event.clientY - rect.top;
 
     setMousePosition({ x: event.clientX, y: event.clientY });
+    showChrome();
 
     // Find closest point for tooltip
     const pointIndex = Math.round((x / effectiveWidth) * Math.max(interpolatedWave.length - 1, 0));
@@ -375,7 +436,7 @@ export const MomentumWave = memo(({
         team: historyPoint.team
       });
     }
-  }, [isInteractive, effectiveWidth, interpolatedWave, history]);
+  }, [isInteractive, effectiveWidth, interpolatedWave, history, showChrome]);
 
   // Generate contextual reason for each point
   const generatePointReason = (point: any) => {
@@ -516,23 +577,21 @@ export const MomentumWave = memo(({
           </div>
         </div>
 
-        {/* Hype meter */}
-        <div className="absolute bottom-4 left-4">
-          <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
-            <div className="text-white text-sm mb-2">HYPE METER</div>
-            <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-blue-400 to-red-500"
-                style={{ width: `${hypeIndex * 100}%` }}
-                animate={{ width: `${hypeIndex * 100}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-            <div className="text-xs text-gray-300 mt-1">
-              {Math.round(hypeIndex * 100)}% intensity
-            </div>
-          </div>
-        </div>
+        {/* Top edge hype indicator */}
+        <motion.div 
+          className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-60"
+          style={{
+            background: `linear-gradient(90deg, 
+              rgba(59, 130, 246, ${hypeIndex * 0.8}) 0%, 
+              rgba(239, 68, 68, ${hypeIndex}) 50%, 
+              rgba(59, 130, 246, ${hypeIndex * 0.8}) 100%)`
+          }}
+          animate={{ 
+            scaleX: hypeIndex,
+            opacity: 0.4 + (hypeIndex * 0.6)
+          }}
+          transition={{ duration: 0.3 }}
+        />
 
         {/* Comeback status */}
         <AnimatePresence>
@@ -574,66 +633,120 @@ export const MomentumWave = memo(({
           )}
         </AnimatePresence>
 
-        {/* Timeline Controls */}
-        <div className="absolute bottom-4 right-4 flex items-center space-x-2">
-          <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2 flex items-center space-x-2">
-            {/* Playback controls */}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleTimelineScrub(0)}
-              className="text-white hover:bg-white/20 p-1"
-            >
-              <SkipBack size={16} />
-            </Button>
-            
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="text-white hover:bg-white/20 p-1"
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-            </Button>
-            
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleTimelineScrub(1)}
-              className="text-white hover:bg-white/20 p-1"
-            >
-              <SkipForward size={16} />
-            </Button>
-
-            {/* Timeline scrubber */}
-            <div 
-              className="w-32 h-2 bg-gray-700 rounded-full cursor-pointer relative"
+        {/* Bottom edge timeline scrubber */}
+        <AnimatePresence>
+          {(isChromeVisible || isDragging) && (
+            <motion.div 
+              className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 cursor-pointer"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.2 }}
               onMouseDown={handleTimelineMouseDown}
               onMouseMove={handleTimelineMouseMove}
               onMouseUp={handleTimelineMouseUp}
               onTouchStart={handleTimelineTouch}
               onTouchMove={handleTimelineTouch}
             >
-              <div 
-                className="h-full bg-gradient-to-r from-blue-400 to-red-500 rounded-full transition-all duration-100"
+              <motion.div 
+                className="h-full bg-gradient-to-r from-blue-400 to-red-500 transition-all duration-100"
                 style={{ width: `${timelinePosition * 100}%` }}
               />
-              <div 
-                className="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg cursor-grab active:cursor-grabbing"
-                style={{ left: `${timelinePosition * 100}%`, marginLeft: '-6px' }}
-              />
-            </div>
+              
+              {/* Draggable thumb - only show during interaction */}
+              <AnimatePresence>
+                {(isDragging || isChromeVisible) && (
+                  <motion.div 
+                    className="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg cursor-grab active:cursor-grabbing border border-gray-300"
+                    style={{ left: `${timelinePosition * 100}%`, marginLeft: '-6px' }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Position indicator */}
-            <div className="text-xs text-gray-300 min-w-12">
-              {Math.round(timelinePosition * (history.length || 1))}/{history.length || 0}
-            </div>
-          </div>
-        </div>
+        {/* Floating playback FAB */}
+        <AnimatePresence>
+          {(isChromeVisible || isPlaying) && (
+            <motion.div 
+              className="absolute bottom-4 right-4"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.2 }}
+              onMouseEnter={() => setIsControlsExpanded(true)}
+              onMouseLeave={() => setIsControlsExpanded(false)}
+              onFocus={() => setIsControlsExpanded(true)}
+              onBlur={() => setIsControlsExpanded(false)}
+            >
+              {/* Expanded controls */}
+              <AnimatePresence>
+                {isControlsExpanded && (
+                  <motion.div 
+                    className="absolute bottom-16 right-0 flex flex-col space-y-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => { handleTimelineScrub(0); showChrome(); }}
+                      className="bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
+                      aria-label="Skip to beginning"
+                    >
+                      <SkipBack size={14} />
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => { handleTimelineScrub(1); showChrome(); }}
+                      className="bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 h-8 w-8 p-0 rounded-full"
+                      aria-label="Skip to end"
+                    >
+                      <SkipForward size={14} />
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        {/* Event overlay for special moments */}
+              {/* Main FAB */}
+              <Button
+                size="lg"
+                variant="ghost"
+                onClick={() => { setIsPlaying(!isPlaying); showChrome(); }}
+                className="bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 h-12 w-12 p-0 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                aria-label={isPlaying ? "Pause playback" : "Start playback"}
+              >
+                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+              </Button>
+
+              {/* Position indicator */}
+              {isControlsExpanded && (
+                <motion.div 
+                  className="absolute -top-8 right-0 bg-black/50 backdrop-blur-sm rounded px-2 py-1 text-xs text-white whitespace-nowrap"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                >
+                  {Math.round(timelinePosition * (history.length || 1))}/{history.length || 0}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Interactive overlay - scrub anywhere */}
         <div 
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 cursor-pointer"
+          onClick={handleWaveClick}
           onMouseMove={handlePointHover}
           onMouseLeave={() => setHoveredPoint(null)}
         />
