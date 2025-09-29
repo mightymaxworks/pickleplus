@@ -78,7 +78,7 @@ export const MomentumWave = memo(({
   // Extract state with new hype system
   const { 
     wave, 
-    history, 
+    history: rawHistory, 
     momentum, 
     hypeIndex, 
     streak, 
@@ -88,6 +88,24 @@ export const MomentumWave = memo(({
     combos,
     maxDeficitPerTeam
   } = momentumState;
+
+  // Create demo history if no real data for playback functionality
+  const history = useMemo(() => {
+    if (rawHistory.length > 0) return rawHistory;
+    
+    // Demo data for playback when no real match history exists
+    return [
+      { pointNo: 1, momentum: 0.2, hype: 0.3, score: { player1: 1, player2: 0 }, team: 'team1', reason: "Strong serve", timestamp: Date.now() - 10000, x: 0.1, y: 0.6 },
+      { pointNo: 2, momentum: -0.1, hype: 0.4, score: { player1: 1, player2: 1 }, team: 'team2', reason: "Quick return", timestamp: Date.now() - 9000, x: 0.2, y: 0.4 },
+      { pointNo: 3, momentum: 0.3, hype: 0.6, score: { player1: 2, player2: 1 }, team: 'team1', reason: "Perfect shot", timestamp: Date.now() - 8000, x: 0.3, y: 0.7 },
+      { pointNo: 4, momentum: -0.2, hype: 0.5, score: { player1: 2, player2: 2 }, team: 'team2', reason: "Defensive play", timestamp: Date.now() - 7000, x: 0.4, y: 0.3 },
+      { pointNo: 5, momentum: 0.5, hype: 0.8, score: { player1: 3, player2: 2 }, team: 'team1', reason: "Spectacular rally", timestamp: Date.now() - 6000, x: 0.5, y: 0.8 },
+      { pointNo: 6, momentum: -0.3, hype: 0.7, score: { player1: 3, player2: 3 }, team: 'team2', reason: "Counter attack", timestamp: Date.now() - 5000, x: 0.6, y: 0.2 },
+      { pointNo: 7, momentum: 0.4, hype: 0.9, score: { player1: 4, player2: 3 }, team: 'team1', reason: "Match point approach", timestamp: Date.now() - 4000, x: 0.7, y: 0.9 },
+      { pointNo: 8, momentum: -0.4, hype: 0.85, score: { player1: 4, player2: 4 }, team: 'team2', reason: "Clutch save", timestamp: Date.now() - 3000, x: 0.8, y: 0.1 },
+      { pointNo: 9, momentum: 0.6, hype: 1.0, score: { player1: 5, player2: 4 }, team: 'team1', reason: "WINNING SHOT!", timestamp: Date.now() - 2000, x: 0.9, y: 0.95 }
+    ] as WavePoint[];
+  }, [rawHistory]);
 
   // Hero Mode: Use full viewport width and 25% height for epic presentation
   const heroHeight = typeof window !== 'undefined' ? window.innerHeight * 0.25 : 300;
