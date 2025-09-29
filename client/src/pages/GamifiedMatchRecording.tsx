@@ -1375,10 +1375,16 @@ export default function GamifiedMatchRecording() {
     );
   };
 
+  // Debug logging
+  console.log('🎮 GamifiedMatchRecording render - showConfig:', showConfig);
+  console.log('🎮 matchState:', matchState);
+  
   if (showConfig) {
+    console.log('🎮 Rendering MatchConfigModal');
     return <MatchConfigModal />;
   }
 
+  console.log('🎮 Rendering main match interface');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
