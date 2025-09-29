@@ -55,8 +55,8 @@ export const MomentumWave = memo(({
   className = '', 
   isInteractive = false,
   isMatchComplete = false,
-  width = 400,
-  height = 120, // Increased default height for prominence
+  width = 600,
+  height = 200, // Much larger for key feature prominence
   heroMode = false,
   onSpecialMoment
 }: MomentumWaveProps) => {
@@ -71,7 +71,11 @@ export const MomentumWave = memo(({
   
   // Contextual comeback detection and analysis
   const contextualAnalysis = useMemo(() => {
-    if (!currentScore) return null;
+    if (!currentScore) {
+      console.log('❌ No currentScore for contextual analysis:', currentScore);
+      return null;
+    }
+    console.log('🔍 Analyzing context:', { currentScore, momentum });
     
     const { player1, player2 } = currentScore;
     const scoreDiff = Math.abs(player1 - player2);
@@ -96,6 +100,7 @@ export const MomentumWave = memo(({
       contextType = 'major_comeback';
       contextMessage = `🔥 EPIC COMEBACK! Down ${scoreDiff}, but fighting back with incredible momentum!`;
       contextIntensity = 1.0;
+      console.log('🔥 MAJOR COMEBACK DETECTED!', { scoreDiff, momentum, leader, trailer });
       
       // Trigger special moment if not already triggered recently
       if (!specialMomentTrigger || Date.now() - specialMomentTrigger.timestamp > 5000) {
@@ -108,6 +113,7 @@ export const MomentumWave = memo(({
       contextType = 'comeback';
       contextMessage = `⚡ Comeback building! Down ${scoreDiff} but momentum is shifting dramatically!`;
       contextIntensity = Math.min(contextIntensity * 1.3, 1.0);
+      console.log('⚡ COMEBACK BUILDING!', { scoreDiff, momentum, leader, trailer });
     } else if (isCloseGame && Math.abs(momentum) > 0.6) {
       contextType = 'clutch';
       contextMessage = `🎯 CLUTCH TIME! Tied game with massive momentum swing!`;
@@ -118,6 +124,17 @@ export const MomentumWave = memo(({
     } else if (Math.abs(momentum) > 0.8) {
       contextType = 'momentum_surge';
       contextMessage = `🌊 Incredible momentum surge! The tide is turning fast!`;
+    } else {
+      console.log('📊 Context analysis:', { 
+        contextType, 
+        scoreDiff, 
+        isLargeDeficit, 
+        isMidGameComeback, 
+        momentumFavorsTrailer,
+        momentum: momentum.toFixed(3),
+        leader,
+        trailer
+      });
     }
     
     return {
@@ -255,6 +272,7 @@ export const MomentumWave = memo(({
   const generateWavePath = () => {
     // Create wave data from momentum history if wave array is empty/insufficient
     const waveData = wave.length > 0 ? wave : [{ y: momentum, timestamp: Date.now() }];
+    console.log('🌊 Wave generation:', { waveLength: wave.length, momentum, waveData: waveData.slice(0, 3) });
     
     if (waveData.length < 1) {
       // Fallback: create a simple horizontal line at momentum level
@@ -295,6 +313,7 @@ export const MomentumWave = memo(({
       }
     });
     
+    console.log('🌊 Generated path:', path.substring(0, 100) + '...');
     return path;
   };
 
@@ -685,7 +704,7 @@ export const MomentumWave = memo(({
             </div>
             <svg 
               width="100%" 
-              height={heroMode ? `${height}px` : "60px"} 
+              height={`${height}px`}
               viewBox={`0 0 ${width} ${height}`} 
               className={`overflow-visible ${isInteractive ? 'cursor-crosshair' : ''}`}
               onMouseMove={handleMouseMove}
@@ -759,7 +778,7 @@ export const MomentumWave = memo(({
                 <motion.path
                   d={wavePath}
                   stroke={dominantColor}
-                  strokeWidth={heroMode ? "4" : "3"}
+                  strokeWidth="8"
                   fill="none"
                   initial={{ pathLength: 0 }}
                   animate={{ 
@@ -965,24 +984,24 @@ export const MomentumWave = memo(({
                   switch (type) {
                     case 'critical':
                       return {
-                        r: 4 + intensity * 2,
-                        strokeWidth: 2,
+                        r: 8 + intensity * 3,
+                        strokeWidth: 3,
                         className: 'animate-pulse',
-                        filter: `drop-shadow(0 0 ${8 + intensity * 4}px ${dotColor})`
+                        filter: `drop-shadow(0 0 ${12 + intensity * 6}px ${dotColor})`
                       };
                     case 'gamePoint':
                       return {
-                        r: 5,
-                        strokeWidth: 2,
+                        r: 10,
+                        strokeWidth: 3,
                         className: 'animate-ping',
-                        filter: `drop-shadow(0 0 12px ${dotColor})`
+                        filter: `drop-shadow(0 0 16px ${dotColor})`
                       };
                     case 'streak':
                       return {
-                        r: 3.5,
-                        strokeWidth: 1.5,
+                        r: 6,
+                        strokeWidth: 2,
                         className: '',
-                        filter: `drop-shadow(0 0 6px ${dotColor})`
+                        filter: `drop-shadow(0 0 10px ${dotColor})`
                       };
                     case 'momentumShift':
                       return {
@@ -1000,10 +1019,10 @@ export const MomentumWave = memo(({
                       };
                     default: // regular
                       return {
-                        r: 2,
-                        strokeWidth: 1,
+                        r: 5,
+                        strokeWidth: 2,
                         className: '',
-                        filter: `drop-shadow(0 0 2px ${dotColor})`
+                        filter: `drop-shadow(0 0 8px ${dotColor}80)`
                       };
                   }
                 };
