@@ -1405,14 +1405,7 @@ export default function GamifiedMatchRecording() {
   }
 
   return (
-    <GamingUIOverlays
-      isEnabled={gamingOverlaysEnabled}
-      aestheticMode={aestheticMode}
-      onAestheticToggle={toggleAesthetic}
-      onTestTrigger={handleGamingTest}
-      momentumState={matchState.momentumState}
-    >
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       {/* Header with game feel */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1949,6 +1942,5 @@ export default function GamifiedMatchRecording() {
         onComplete={() => setMegaAnimation({ show: false, megaLevel: 1, teamColor: '#ff6b35', teamName: '' })}
       />
       </div>
-    </GamingUIOverlays>
   );
 }
