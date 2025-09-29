@@ -56,7 +56,7 @@ export const MomentumWave = memo(({
   isInteractive = false,
   isMatchComplete = false,
   width = 400,
-  height = 80,
+  height = 120, // Increased default height for prominence
   heroMode = false,
   onSpecialMoment
 }: MomentumWaveProps) => {
@@ -68,6 +68,67 @@ export const MomentumWave = memo(({
     type: 'ace' | 'winner' | 'megaStreak' | 'comeback';
     timestamp: number;
   } | null>(null);
+  
+  // Contextual comeback detection and analysis
+  const contextualAnalysis = useMemo(() => {
+    if (!currentScore) return null;
+    
+    const { player1, player2 } = currentScore;
+    const scoreDiff = Math.abs(player1 - player2);
+    const totalPoints = player1 + player2;
+    const leader = player1 > player2 ? 1 : player2 > player1 ? 2 : 0;
+    const trailer = leader === 1 ? 2 : leader === 2 ? 1 : 0;
+    
+    // Detect significant comeback scenarios
+    const isLargeDeficit = scoreDiff >= 3;
+    const isMidGameComeback = totalPoints >= 8 && scoreDiff >= 2;
+    const isCloseGame = scoreDiff <= 1 && totalPoints >= 6;
+    
+    // Analyze momentum in context of score
+    const momentumFavorsTrailer = (trailer === 1 && momentum > 0.4) || (trailer === 2 && momentum < -0.4);
+    const momentumFavorsLeader = (leader === 1 && momentum > 0.4) || (leader === 2 && momentum < -0.4);
+    
+    let contextType = 'normal';
+    let contextMessage = '';
+    let contextIntensity = Math.abs(momentum);
+    
+    if (isLargeDeficit && momentumFavorsTrailer) {
+      contextType = 'major_comeback';
+      contextMessage = `🔥 EPIC COMEBACK! Down ${scoreDiff}, but fighting back with incredible momentum!`;
+      contextIntensity = 1.0;
+      
+      // Trigger special moment if not already triggered recently
+      if (!specialMomentTrigger || Date.now() - specialMomentTrigger.timestamp > 5000) {
+        setTimeout(() => setSpecialMomentTrigger({
+          type: 'comeback',
+          timestamp: Date.now()
+        }), 100);
+      }
+    } else if (isMidGameComeback && momentumFavorsTrailer) {
+      contextType = 'comeback';
+      contextMessage = `⚡ Comeback building! Down ${scoreDiff} but momentum is shifting dramatically!`;
+      contextIntensity = Math.min(contextIntensity * 1.3, 1.0);
+    } else if (isCloseGame && Math.abs(momentum) > 0.6) {
+      contextType = 'clutch';
+      contextMessage = `🎯 CLUTCH TIME! Tied game with massive momentum swing!`;
+      contextIntensity = Math.min(contextIntensity * 1.2, 1.0);
+    } else if (momentumFavorsLeader && scoreDiff >= 2) {
+      contextType = 'domination';
+      contextMessage = `💪 Dominant performance! Leading ${scoreDiff} with sustained momentum!`;
+    } else if (Math.abs(momentum) > 0.8) {
+      contextType = 'momentum_surge';
+      contextMessage = `🌊 Incredible momentum surge! The tide is turning fast!`;
+    }
+    
+    return {
+      type: contextType,
+      message: contextMessage,
+      intensity: contextIntensity,
+      scoreDiff,
+      isComeback: contextType.includes('comeback'),
+      isClutch: contextType === 'clutch'
+    };
+  }, [currentScore, momentum, specialMomentTrigger]);
   
   // Analyze different types of point dots for enhanced visualization (memoized)
   const analyzePointDots = useMemo(() => {
@@ -190,26 +251,43 @@ export const MomentumWave = memo(({
     return shifts;
   };
 
-  // Generate SVG path for momentum wave (responsive)
+  // Generate SVG path for momentum wave (responsive and robust)
   const generateWavePath = () => {
-    if (wave.length < 2) return '';
+    // Create wave data from momentum history if wave array is empty/insufficient
+    const waveData = wave.length > 0 ? wave : [{ y: momentum, timestamp: Date.now() }];
+    
+    if (waveData.length < 1) {
+      // Fallback: create a simple horizontal line at momentum level
+      const centerY = height / 2;
+      const y = centerY - (momentum * centerY * 0.9);
+      return `M 0 ${y} L ${width} ${y}`;
+    }
     
     const centerY = height / 2;
-    const maxWaveHeight = centerY * 0.8;
+    const maxWaveHeight = centerY * 0.9; // Increased wave height for prominence
     
     let path = `M 0 ${centerY}`;
     
-    wave.forEach((point, index) => {
-      const x = (index / Math.max(wave.length - 1, 1)) * width;
-      const y = centerY - (point.y * maxWaveHeight); // Scale momentum to chart height
+    // If only one point, create a simple line to current momentum
+    if (waveData.length === 1) {
+      const pointValue = typeof waveData[0] === 'object' && waveData[0].y !== undefined ? waveData[0].y : (typeof waveData[0] === 'number' ? waveData[0] : 0);
+      const y = centerY - (Number(pointValue) * maxWaveHeight);
+      return `M 0 ${centerY} L ${width} ${y}`;
+    }
+    
+    waveData.forEach((point, index) => {
+      const x = (index / Math.max(waveData.length - 1, 1)) * width;
+      const pointValue = typeof point === 'object' && point.y !== undefined ? point.y : (typeof point === 'number' ? point : 0); // Handle different data structures
+      const y = centerY - (Number(pointValue) * maxWaveHeight);
       
       if (index === 0) {
         path += ` L ${x} ${y}`;
       } else {
-        // Smooth curve using quadratic bezier
-        const prevPoint = wave[index - 1];
-        const prevX = ((index - 1) / Math.max(wave.length - 1, 1)) * width;
-        const prevY = centerY - (prevPoint.y * maxWaveHeight);
+        // Smooth curve using quadratic bezier for better visual flow
+        const prevPoint = waveData[index - 1];
+        const prevPointValue = typeof prevPoint === 'object' && prevPoint.y !== undefined ? prevPoint.y : (typeof prevPoint === 'number' ? prevPoint : 0);
+        const prevX = ((index - 1) / Math.max(waveData.length - 1, 1)) * width;
+        const prevY = centerY - (Number(prevPointValue) * maxWaveHeight);
         
         const cpX = (prevX + x) / 2;
         const cpY = (prevY + y) / 2;
@@ -277,7 +355,8 @@ export const MomentumWave = memo(({
   const momentumShifts = analyzeMomentumShifts();
   const pointDots = analyzePointDots;
   const intensity = Math.abs(momentum);
-  const glowIntensity = Math.min(intensity * 2, 1);
+  const contextIntensity = contextualAnalysis?.intensity || intensity;
+  const glowIntensity = Math.min(contextIntensity * 2, 1);
   
   // Determine dominant team and colors
   const dominantTeam = momentum > 0 ? 'team1' : 'team2';
@@ -525,6 +604,29 @@ export const MomentumWave = memo(({
               <span className="text-xs text-slate-400 ml-1">%</span>
             </div>
           </div>
+          
+          {/* Contextual Comeback & Situation Analysis */}
+          {contextualAnalysis?.message && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className={`mt-2 px-3 py-1.5 rounded-lg text-xs font-medium text-center ${
+                contextualAnalysis.isComeback 
+                  ? 'bg-gradient-to-r from-orange-500/30 to-red-500/30 text-orange-200 border border-orange-500/50' 
+                  : contextualAnalysis.isClutch
+                  ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-purple-200 border border-purple-500/50'
+                  : 'bg-gradient-to-r from-blue-500/30 to-green-500/30 text-blue-200 border border-blue-500/50'
+              }`}
+              style={{
+                animation: contextualAnalysis.isComeback || contextualAnalysis.isClutch 
+                  ? 'pulse 2s infinite' 
+                  : 'none'
+              }}
+            >
+              {contextualAnalysis.message}
+            </motion.div>
+          )}
         </div>
 
         {/* Wave Visualization */}
