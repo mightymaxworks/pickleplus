@@ -2,12 +2,31 @@
  * Match routes for the application
  */
 import express from 'express';
+import { z } from 'zod';
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
 import { db } from '../db';
 import { matches, matchVerifications } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
+import { notifyPlayersForVerification, notifyMatchVerified } from '../utils/matchNotifications';
+
+// Validation schemas
+const gameScoreSchema = z.object({
+  team1: z.number().int().min(0).max(99),
+  team2: z.number().int().min(0).max(99)
+});
+
+const submitScoresSchema = z.object({
+  games: z.array(gameScoreSchema).min(1).max(5),
+  matchDate: z.string().optional(),
+  notes: z.string().max(1000).optional(),
+  winnerId: z.number().optional()
+});
+
+const verifyMatchSchema = z.object({
+  approve: z.boolean()
+});
 
 /**
  * Register match routes with the Express application
@@ -134,6 +153,299 @@ export function registerMatchRoutes(app: express.Express): void {
     } catch (error) {
       console.error('[Match Get] Error:', error);
       res.status(500).json({ error: 'Failed to fetch match' });
+    }
+  });
+  
+  // Submit match scores for verification
+  app.post('/api/matches/:serial/scores', isAuthenticated, async (req, res) => {
+    try {
+      const { serial } = req.params;
+      const currentUserId = (req.user as any)?.id;
+      
+      // VALIDATION: Validate request body with Zod
+      const validation = submitScoresSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validation.error.errors 
+        });
+      }
+      
+      const { games, matchDate, notes } = validation.data;
+      
+      console.log('[Match Scores] Submitting scores:', { serial, games });
+      
+      // Find match by serial
+      const [match] = await db
+        .select()
+        .from(matches)
+        .where(eq(matches.serial, serial))
+        .limit(1);
+      
+      if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
+      
+      // STATE MACHINE: Check if match is already verified/rejected
+      if (match.validationStatus === 'verified') {
+        return res.status(400).json({ error: 'Match already verified - cannot modify scores' });
+      }
+      if (match.validationStatus === 'rejected') {
+        return res.status(400).json({ error: 'Match was rejected - cannot modify scores' });
+      }
+      
+      // SECURITY: Verify current user is a participant
+      const playerIds = [
+        match.playerOneId,
+        match.playerTwoId,
+        match.playerOnePartnerId,
+        match.playerTwoPartnerId
+      ].filter((id): id is number => id !== null);
+      
+      if (!playerIds.includes(currentUserId)) {
+        return res.status(403).json({ error: 'You must be a participant in this match' });
+      }
+      
+      // Check if user already submitted
+      const [verification] = await db
+        .select()
+        .from(matchVerifications)
+        .where(and(
+          eq(matchVerifications.matchId, match.id),
+          eq(matchVerifications.userId, currentUserId)
+        ))
+        .limit(1);
+      
+      if (verification && verification.status === 'verified') {
+        return res.status(400).json({ error: 'You have already submitted scores for this match' });
+      }
+      
+      // Format game scores for storage
+      const formattedGames = games.map((game, index) => ({
+        gameNumber: index + 1,
+        team1: game.team1,
+        team2: game.team2
+      }));
+      
+      // Determine winner based on games won
+      let team1Wins = 0;
+      let team2Wins = 0;
+      games.forEach((game) => {
+        if (game.team1 > game.team2) team1Wins++;
+        else if (game.team2 > game.team1) team2Wins++;
+      });
+      
+      // WINNER LOGIC FIX: Reject ties (best-of format should prevent ties)
+      if (team1Wins === team2Wins) {
+        return res.status(400).json({ 
+          error: 'Match cannot end in a tie - verify game scores' 
+        });
+      }
+      
+      const winnerTeam = team1Wins > team2Wins ? 1 : 2;
+      const actualWinnerId = winnerTeam === 1 ? match.playerOneId : match.playerTwoId;
+      
+      // Parse existing notes safely
+      let existingNotes: any = {};
+      try {
+        if (match.notes) {
+          existingNotes = JSON.parse(match.notes);
+        }
+      } catch (parseError) {
+        console.error('[Match Scores] Failed to parse existing notes:', parseError);
+        // Continue with empty notes
+      }
+      
+      // Update match with scores and winner
+      await db.update(matches)
+        .set({
+          scorePlayerOne: String(team1Wins),
+          scorePlayerTwo: String(team2Wins),
+          winnerId: actualWinnerId,
+          matchDate: matchDate ? new Date(matchDate) : new Date(),
+          validationStatus: 'in_review', // Mark as under review
+          notes: JSON.stringify({ 
+            ...existingNotes,
+            games: formattedGames,
+            submittedNotes: notes,
+            submittedBy: currentUserId,
+            submittedAt: new Date().toISOString()
+          })
+        })
+        .where(eq(matches.id, match.id));
+      
+      // Update verification status for submitting user
+      if (verification) {
+        await db.update(matchVerifications)
+          .set({
+            status: 'verified',
+            verifiedAt: new Date()
+          })
+          .where(eq(matchVerifications.id, verification.id));
+      }
+      
+      // Send notifications to other players
+      const otherPlayers = playerIds.filter(id => id !== currentUserId);
+      const currentUser = req.user as any;
+      
+      await notifyPlayersForVerification({
+        matchSerial: serial,
+        submitterName: currentUser.displayName || currentUser.username,
+        playerIds: otherPlayers,
+        notificationType: 'match_verification'
+      });
+      
+      // Check if all players have verified
+      const allVerifications = await db
+        .select()
+        .from(matchVerifications)
+        .where(eq(matchVerifications.matchId, match.id));
+      
+      const allVerified = allVerifications.every(v => v.status === 'verified');
+      
+      if (allVerified) {
+        await db.update(matches)
+          .set({ validationStatus: 'verified' })
+          .where(eq(matches.id, match.id));
+        
+        console.log('[Match Scores] All players verified - match completed');
+        
+        // Notify all players that match is verified
+        await notifyMatchVerified(serial, playerIds);
+        
+        // TODO: Calculate and award points
+      }
+      
+      res.json({ 
+        success: true,
+        message: 'Scores submitted successfully',
+        allVerified,
+        pendingVerifications: allVerifications.filter(v => v.status === 'pending').length
+      });
+      
+    } catch (error) {
+      console.error('[Match Scores] Error:', error);
+      res.status(500).json({ error: 'Failed to submit scores' });
+    }
+  });
+  
+  // Player verification endpoint (approve/reject match scores)
+  app.post('/api/matches/:serial/verify', isAuthenticated, async (req, res) => {
+    try {
+      const { serial } = req.params;
+      const currentUserId = (req.user as any)?.id;
+      
+      // VALIDATION: Validate request body with Zod
+      const validation = verifyMatchSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request body', 
+          details: validation.error.errors 
+        });
+      }
+      
+      const { approve } = validation.data;
+      
+      console.log('[Match Verify] Processing verification:', { serial, approve, userId: currentUserId });
+      
+      // Find match by serial
+      const [match] = await db
+        .select()
+        .from(matches)
+        .where(eq(matches.serial, serial))
+        .limit(1);
+      
+      if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
+      
+      // STATE MACHINE: Check if match is already finalized
+      if (match.validationStatus === 'verified') {
+        return res.status(400).json({ error: 'Match already verified - cannot change verification' });
+      }
+      if (match.validationStatus === 'rejected') {
+        return res.status(400).json({ error: 'Match already rejected - cannot change verification' });
+      }
+      
+      // SECURITY: Find user's verification record (this also checks participation)
+      const [verification] = await db
+        .select()
+        .from(matchVerifications)
+        .where(and(
+          eq(matchVerifications.matchId, match.id),
+          eq(matchVerifications.userId, currentUserId)
+        ))
+        .limit(1);
+      
+      if (!verification) {
+        return res.status(403).json({ error: 'You are not a participant in this match' });
+      }
+      
+      // IDEMPOTENCY: Check if already processed
+      if (verification.status !== 'pending') {
+        return res.status(400).json({ 
+          error: `Verification already ${verification.status}`,
+          currentStatus: verification.status
+        });
+      }
+      
+      // Update verification status
+      const newStatus = approve ? 'verified' : 'rejected';
+      await db.update(matchVerifications)
+        .set({
+          status: newStatus,
+          verifiedAt: new Date()
+        })
+        .where(eq(matchVerifications.id, verification.id));
+      
+      console.log('[Match Verify] Verification updated:', { status: newStatus });
+      
+      // Check if all players have verified or any rejected
+      const allVerifications = await db
+        .select()
+        .from(matchVerifications)
+        .where(eq(matchVerifications.matchId, match.id));
+      
+      const allVerified = allVerifications.every(v => v.status === 'verified');
+      const anyRejected = allVerifications.some(v => v.status === 'rejected');
+      
+      // FINALIZATION: Atomically finalize match if all verified or any rejected
+      if (anyRejected) {
+        await db.update(matches)
+          .set({ validationStatus: 'rejected' })
+          .where(eq(matches.id, match.id));
+        
+        console.log('[Match Verify] Match rejected by one or more players');
+      } else if (allVerified) {
+        await db.update(matches)
+          .set({ validationStatus: 'verified' })
+          .where(eq(matches.id, match.id));
+        
+        console.log('[Match Verify] All players verified - match completed');
+        
+        // Notify all players
+        const playerIds = [
+          match.playerOneId,
+          match.playerTwoId,
+          match.playerOnePartnerId,
+          match.playerTwoPartnerId
+        ].filter((id): id is number => id !== null);
+        
+        await notifyMatchVerified(serial, playerIds);
+        
+        // TODO: Calculate and award points
+      }
+      
+      res.json({
+        success: true,
+        status: newStatus,
+        allVerified,
+        anyRejected
+      });
+      
+    } catch (error) {
+      console.error('[Match Verify] Error:', error);
+      res.status(500).json({ error: 'Failed to process verification' });
     }
   });
   

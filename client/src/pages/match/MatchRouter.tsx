@@ -1,5 +1,6 @@
 import { useParams, Redirect } from 'wouter';
 import QuickMatchRecorder from './QuickMatchRecorder';
+import MatchVerification from './MatchVerification';
 import GamifiedMatchRecording from '../GamifiedMatchRecording';
 
 /**
@@ -21,6 +22,9 @@ export default function MatchRouter() {
       
     case 'quick':
       return <QuickMatchRecorder />;
+      
+    case 'verify':
+      return <MatchVerification />;
       
     case 'coaching':
       // TODO: Build coaching analysis tool
