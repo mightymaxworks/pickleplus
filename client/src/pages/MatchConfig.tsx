@@ -226,14 +226,14 @@ export default function MatchConfig() {
       return;
     }
 
+    // Save configuration to sessionStorage for all modes
+    sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
+    
+    // Save scoring preference to localStorage
+    localStorage.setItem('pkl:lastScoringMode', config.scoringType);
+
     try {
-      // Save configuration to sessionStorage for fallback
-      sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
-      
-      // Save scoring preference to localStorage
-      localStorage.setItem('pkl:lastScoringMode', config.scoringType);
-      
-      // Create match with unique serial
+      // Try to create match with backend API
       const response = await fetch('/api/matches/create', {
         method: 'POST',
         headers: {
@@ -247,20 +247,34 @@ export default function MatchConfig() {
         })
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to create match');
+      if (response.ok) {
+        const { serial, mode } = await response.json();
+        console.log('[Match Created]', { serial, mode });
+        
+        // Navigate to unique match URL
+        navigate(`/match/${serial}/${mode}`);
+        return;
       }
       
-      const { serial, mode } = await response.json();
-      console.log('[Match Created]', { serial, mode });
+      // If 401 (not logged in), generate demo serial for testing
+      if (response.status === 401) {
+        console.log('[Match Creation] Not logged in - using demo serial for testing');
+        const demoSerial = `MDEMO${Date.now().toString().slice(-8)}`;
+        console.log('[Demo Match]', { serial: demoSerial, mode: config.recordingMode });
+        
+        // Navigate to unique match URL with demo serial
+        navigate(`/match/${demoSerial}/${config.recordingMode}`);
+        return;
+      }
       
-      // Navigate to unique match URL
-      navigate(`/match/${serial}/${mode}`);
+      throw new Error('Failed to create match');
       
     } catch (error) {
       console.error('[Match Creation Error]', error);
-      // Fallback to old flow
-      navigate('/gamified-match-recording');
+      // Final fallback: generate client-side serial
+      const fallbackSerial = `MTEST${Date.now().toString().slice(-8)}`;
+      console.log('[Fallback Match]', { serial: fallbackSerial, mode: config.recordingMode });
+      navigate(`/match/${fallbackSerial}/${config.recordingMode}`);
     }
   };
 

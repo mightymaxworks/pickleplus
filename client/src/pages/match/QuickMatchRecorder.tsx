@@ -39,6 +39,40 @@ export default function QuickMatchRecorder() {
   useEffect(() => {
     const loadMatch = async () => {
       try {
+        // Check if this is a demo/test serial (not logged in)
+        const isDemoSerial = serial?.startsWith('MDEMO') || serial?.startsWith('MTEST');
+        
+        if (isDemoSerial) {
+          console.log('[Quick Recorder] Using demo mode - loading from sessionStorage');
+          const storedConfig = sessionStorage.getItem('pkl:matchConfig');
+          
+          if (storedConfig) {
+            const config = JSON.parse(storedConfig);
+            setMatchData({
+              match: { serial, status: 'pending' },
+              verifications: [],
+              config
+            });
+            
+            // Initialize games based on match format
+            const format = config?.matchFormat || 'single';
+            const initialGames = format === 'best-of-5' ? 3 : format === 'best-of-3' ? 2 : 1;
+            setGames(Array(initialGames).fill(null).map(() => ({ team1: 0, team2: 0 })));
+          } else {
+            // Fallback config
+            setMatchData({
+              match: { serial, status: 'pending' },
+              verifications: [],
+              config: { matchFormat: 'best-of-3', scoringType: 'rally', pointTarget: 11 }
+            });
+            setGames([{ team1: 0, team2: 0 }, { team1: 0, team2: 0 }]);
+          }
+          
+          setLoading(false);
+          return;
+        }
+        
+        // Try to load from backend API
         const response = await fetch(`/api/matches/${serial}`, {
           credentials: 'include'
         });
@@ -114,7 +148,31 @@ export default function QuickMatchRecorder() {
     setSubmitting(true);
     
     try {
-      // TODO: Submit match scores to backend
+      const isDemoSerial = serial?.startsWith('MDEMO') || serial?.startsWith('MTEST');
+      
+      // For demo mode, simulate success
+      if (isDemoSerial) {
+        console.log('[Quick Recorder] Demo submission:', {
+          serial,
+          games,
+          matchDate,
+          notes,
+          winnerId: calculateWinner()
+        });
+        
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        setSubmitted(true);
+        toast({
+          title: '✅ Demo Match Submitted!',
+          description: 'In production, all players would verify this match',
+          duration: 3000
+        });
+        return;
+      }
+      
+      // Submit to backend API
       const response = await fetch(`/api/matches/${serial}/scores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
