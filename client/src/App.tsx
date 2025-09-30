@@ -299,6 +299,9 @@ export default function App() {
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
                   <Route path="/match-arena" component={MatchArena} />
                   
+                  {/* Unique Match URLs with Serial IDs */}
+                  <Route path="/match/:serial/:mode" component={lazyLoad(() => import('./pages/match/MatchRouter'))} />
+                  
                   {/* API Testing Interface for Developers */}
                   <Route path="/api-testing" component={APITesting} />
                   {/* <Route path="/coaching-ecosystem-demo" component={lazyLoad(() => import('./pages/CoachingEcosystemDemo'))} /> */}
