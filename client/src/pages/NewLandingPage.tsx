@@ -173,7 +173,7 @@ export default function NewLandingPage() {
             >
               <Badge className="px-4 py-2 text-sm bg-orange-500/20 text-orange-400 border-orange-500/50 backdrop-blur-sm">
                 <Sparkles className="w-4 h-4 mr-2 inline" />
-                The Future of Pickleball Tracking
+                We Re-Invented Pickleball
               </Badge>
             </motion.div>
             
@@ -184,10 +184,10 @@ export default function NewLandingPage() {
               transition={{ delay: 0.4, duration: 0.8 }}
               className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
             >
-              <span className="text-white">Turn Every Match</span>
+              <span className="text-white">The First</span>
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500">
-                Into Your Legend
+                Pickleball Operating System
               </span>
             </motion.h1>
             
@@ -198,9 +198,9 @@ export default function NewLandingPage() {
               transition={{ delay: 0.6, duration: 0.8 }}
               className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto"
             >
-              Track your journey. Verify your wins. Build your reputation.
+              We didn't just build a tracker. We transformed how the game is played, verified, and experienced.
               <br className="hidden md:block" />
-              <span className="text-orange-400 font-semibold">Where Players Become Legends.</span>
+              <span className="text-orange-400 font-semibold">From Casual Players to Pro Competitors — Where Players Become Legends.</span>
             </motion.p>
             
             {/* CTA Buttons */}

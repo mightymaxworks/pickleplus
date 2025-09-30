@@ -70,17 +70,31 @@ export default function MascotLoader({
           ease: "easeInOut"
         }}
       >
+        {/* Glowing background effect */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full blur-2xl opacity-30"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
         <img 
           src={pickleCharacterPath}
           alt="Pickle Mascot"
-          className={`${currentSize.character} object-contain`}
+          className={`${currentSize.character} object-contain relative z-10`}
         />
         
-        {/* Floating particles around mascot */}
+        {/* Enhanced floating particles with gaming colors */}
         <motion.div
-          className="absolute -top-2 -right-2 w-3 h-3 bg-orange-400 rounded-full"
+          className="absolute -top-2 -right-2 w-3 h-3 bg-orange-500 rounded-full shadow-lg shadow-orange-500/50"
           animate={{
-            scale: [1, 1.3, 1],
+            scale: [1, 1.5, 1],
             opacity: [0.7, 1, 0.7]
           }}
           transition={{
@@ -90,10 +104,10 @@ export default function MascotLoader({
           }}
         />
         <motion.div
-          className="absolute -bottom-1 -left-1 w-2 h-2 bg-cyan-400 rounded-full"
+          className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-pink-500 rounded-full shadow-lg shadow-pink-500/50"
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.5, 1, 0.5]
+            scale: [1, 1.3, 1],
+            opacity: [0.6, 1, 0.6]
           }}
           transition={{
             duration: 1.8,
@@ -102,10 +116,10 @@ export default function MascotLoader({
           }}
         />
         <motion.div
-          className="absolute top-1 -left-3 w-1.5 h-1.5 bg-purple-400 rounded-full"
+          className="absolute top-1 -left-3 w-2 h-2 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"
           animate={{
             scale: [1, 1.4, 1],
-            opacity: [0.6, 1, 0.6]
+            opacity: [0.7, 1, 0.7]
           }}
           transition={{
             duration: 2.2,
@@ -115,9 +129,9 @@ export default function MascotLoader({
         />
       </motion.div>
 
-      {/* Loading Message */}
+      {/* Loading Message - Gaming Style */}
       <motion.h3 
-        className="text-lg font-semibold text-gray-900 mb-2 text-center"
+        className="text-lg font-semibold text-white mb-2 text-center tracking-wide"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -125,14 +139,14 @@ export default function MascotLoader({
         {message}
       </motion.h3>
 
-      {/* Loading Dots */}
-      <div className="flex space-x-1 mb-6">
+      {/* Loading Dots - Gaming Colors */}
+      <div className="flex space-x-2 mb-6">
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="w-2 h-2 bg-gradient-to-r from-orange-500 to-cyan-500 rounded-full"
+            className="w-2.5 h-2.5 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full shadow-lg shadow-orange-500/30"
             animate={{
-              scale: [1, 1.4, 1],
+              scale: [1, 1.5, 1],
               opacity: [0.5, 1, 0.5]
             }}
             transition={{
@@ -144,7 +158,7 @@ export default function MascotLoader({
         ))}
       </div>
 
-      {/* Rotating Quotes */}
+      {/* Rotating Quotes - Gaming Theme */}
       {showQuotes && (
         <div className="max-w-md mx-auto h-16 flex items-center">
           <AnimatePresence mode="wait">
@@ -154,7 +168,7 @@ export default function MascotLoader({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-center text-gray-600 italic text-sm leading-relaxed"
+              className="text-center text-gray-400 italic text-sm leading-relaxed"
             >
               "{pickleballQuotes[currentQuote]}"
             </motion.p>
@@ -162,11 +176,11 @@ export default function MascotLoader({
         </div>
       )}
 
-      {/* Progress Bar */}
+      {/* Progress Bar - Gaming Style */}
       <div className="w-full max-w-xs mt-4">
-        <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-slate-800/50 rounded-full overflow-hidden border border-slate-700/50">
           <motion.div
-            className="h-full bg-gradient-to-r from-orange-500 to-cyan-500 rounded-full"
+            className="h-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-full shadow-lg shadow-orange-500/50"
             animate={{
               x: ['-100%', '100%']
             }}
@@ -199,7 +213,7 @@ export function MascotLoaderInline({ message = "Loading..." }: { message?: strin
           ease: "linear"
         }}
       />
-      <span className="text-gray-600 text-sm">{message}</span>
+      <span className="text-gray-300 text-sm">{message}</span>
     </div>
   );
 }
@@ -219,8 +233,16 @@ export function MascotLoaderOverlay({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center"
+      className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 backdrop-blur-sm z-50 flex items-center justify-center"
     >
+      {/* Animated grid pattern background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `linear-gradient(#ea580c 1px, transparent 1px), linear-gradient(90deg, #ea580c 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
+      
       <MascotLoader message={message} size="lg" />
     </motion.div>
   );
