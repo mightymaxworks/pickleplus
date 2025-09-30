@@ -43,7 +43,7 @@ export default function MatchVerification() {
       const matchData = await response.json();
       
       // Parse scores from notes
-      let scores = { games: [] };
+      let scores: { games: any[]; notes?: string } = { games: [] };
       try {
         const notes = JSON.parse(matchData.match.notes || '{}');
         scores = { games: notes.games || [], notes: notes.submittedNotes };

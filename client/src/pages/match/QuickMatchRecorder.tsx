@@ -155,6 +155,34 @@ export default function QuickMatchRecorder() {
       });
       return;
     }
+    
+    // Check for ties - each game must have a winner
+    const hasTies = games.some(game => game.team1 === game.team2);
+    if (hasTies) {
+      toast({
+        title: 'Invalid Scores',
+        description: 'Each game must have a winner (no ties allowed)',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Check for overall match tie
+    let team1Wins = 0;
+    let team2Wins = 0;
+    games.forEach(game => {
+      if (game.team1 > game.team2) team1Wins++;
+      else if (game.team2 > game.team1) team2Wins++;
+    });
+    
+    if (team1Wins === team2Wins) {
+      toast({
+        title: 'Match Tie Detected',
+        description: 'The match cannot end in a tie. Please add another game.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setSubmitting(true);
     
