@@ -5,8 +5,9 @@ import express from 'express';
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
 import { db } from '../db';
-import { matches } from '../../shared/schema';
+import { matches, matchVerifications } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { createId } from '@paralleldrive/cuid2';
 
 /**
  * Register match routes with the Express application
@@ -14,6 +15,127 @@ import { eq } from 'drizzle-orm';
  */
 export function registerMatchRoutes(app: express.Express): void {
   console.log("[API] Registering Match API routes");
+  
+  // Central Fork: Create match with unique serial for routing
+  app.post('/api/matches/create', isAuthenticated, async (req, res) => {
+    try {
+      console.log('[Match Create] Creating match with config:', req.body);
+      
+      const { mode, config, players } = req.body;
+      const currentUserId = (req.user as any)?.id;
+      
+      if (!mode || !config || !players) {
+        return res.status(400).json({ error: 'Missing required fields: mode, config, players' });
+      }
+      
+      // Generate unique serial ID (format: Mabc123xyz - full cuid2)
+      const serial = `M${createId()}`;
+      
+      // Extract and deduplicate player IDs
+      const playerIds = Array.from(new Set([
+        players.player1?.id,
+        players.player2?.id,
+        players.player1Partner?.id,
+        players.player2Partner?.id
+      ].filter(Boolean)));
+      
+      if (playerIds.length < 2) {
+        return res.status(400).json({ error: 'At least 2 unique players required' });
+      }
+      
+      // SECURITY: Verify current user is a participant
+      if (!playerIds.includes(currentUserId)) {
+        return res.status(403).json({ error: 'You must be a participant in the match' });
+      }
+      
+      // Determine format: singles if only 2 players, doubles if 4
+      const formatType = playerIds.length === 2 ? 'singles' : 'doubles';
+      
+      // Create match record with PENDING_VERIFICATION status
+      const [match] = await db.insert(matches).values({
+        serial,
+        playerOneId: playerIds[0],
+        playerTwoId: playerIds[1],
+        playerOnePartnerId: playerIds[2] || null,
+        playerTwoPartnerId: playerIds[3] || null,
+        winnerId: playerIds[0], // Temporary placeholder - will be set after scoring
+        scorePlayerOne: 'pending',
+        scorePlayerTwo: 'pending',
+        formatType,
+        scoringSystem: config.scoringType || 'traditional',
+        pointsToWin: config.pointTarget || 11,
+        matchType: 'casual',
+        validationStatus: 'pending',
+        matchDate: new Date(),
+        notes: JSON.stringify({ mode, config }) // Store config for later use
+      }).returning();
+      
+      // Create verification records for all players
+      const verificationPromises = playerIds.map(playerId => 
+        db.insert(matchVerifications).values({
+          matchId: match.id,
+          userId: playerId,
+          status: 'pending'
+        })
+      );
+      
+      await Promise.all(verificationPromises);
+      
+      console.log('[Match Create] Match created:', { serial, matchId: match.id });
+      
+      res.json({ 
+        serial,
+        matchId: match.id,
+        mode
+      });
+      
+    } catch (error) {
+      console.error('[Match Create] Error:', error);
+      res.status(500).json({ error: 'Failed to create match' });
+    }
+  });
+  
+  // Get match by serial
+  app.get('/api/matches/:serial', async (req, res) => {
+    try {
+      const { serial } = req.params;
+      
+      const [match] = await db
+        .select()
+        .from(matches)
+        .where(eq(matches.serial, serial))
+        .limit(1);
+      
+      if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
+      
+      // Get verifications for this match
+      const verifications = await db
+        .select()
+        .from(matchVerifications)
+        .where(eq(matchVerifications.matchId, match.id));
+      
+      // Parse config from notes if available
+      let config = null;
+      try {
+        const notesData = JSON.parse(match.notes || '{}');
+        config = notesData.config;
+      } catch {
+        // Ignore parse errors
+      }
+      
+      res.json({
+        match,
+        verifications,
+        config
+      });
+      
+    } catch (error) {
+      console.error('[Match Get] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch match' });
+    }
+  });
   
   // Match creation endpoint for recording new matches
   app.post('/api/matches', isAuthenticated, async (req, res) => {

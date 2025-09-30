@@ -1504,6 +1504,7 @@ export const rankingTierHistory = pgTable("ranking_tier_history", {
 // Matches table
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
+  serial: varchar("serial", { length: 20 }).unique(), // Unique match identifier (e.g., Mabc123xyz)
   matchDate: timestamp("match_date"),
   // Player information
   playerOneId: integer("player_one_id").notNull().references(() => users.id),
@@ -1553,6 +1554,18 @@ export const matches = pgTable("matches", {
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
+});
+
+// Match Verifications table - Tracks individual player approvals for match scores
+export const matchVerifications = pgTable("match_verifications", {
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id").notNull().references(() => matches.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, rejected
+  rejectionReason: text("rejection_reason"),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Ranking history table
@@ -1837,6 +1850,9 @@ export const insertMatchSchema = createInsertSchema(matches)
     path: ["playerTwoId"],
   });
 
+export const insertMatchVerificationSchema = createInsertSchema(matchVerifications)
+  .omit({ id: true, createdAt: true, updatedAt: true, verifiedAt: true });
+
 export const insertRankingHistorySchema = createInsertSchema(rankingHistory)
   .omit({ id: true, createdAt: true });
 
@@ -1932,6 +1948,9 @@ export {
 };
 
 // Match type is now exported from admin match management re-export above
+
+export type MatchVerification = typeof matchVerifications.$inferSelect;
+export type InsertMatchVerification = z.infer<typeof insertMatchVerificationSchema>;
 
 export type RankingHistory = typeof rankingHistory.$inferSelect;
 export type InsertRankingHistory = z.infer<typeof insertRankingHistorySchema>;

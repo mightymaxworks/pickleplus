@@ -220,33 +220,47 @@ export default function MatchConfig() {
     navigate('/match-arena');
   };
 
-  const startMatch = () => {
+  const startMatch = async () => {
     if (!config.recordingMode) {
       console.error('No recording mode selected');
       return;
     }
 
-    // Save configuration to sessionStorage for modes to read
-    sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
-    
-    // Save scoring preference to localStorage
-    localStorage.setItem('pkl:lastScoringMode', config.scoringType);
-    
-    // Smart routing based on selected recording mode
-    switch (config.recordingMode) {
-      case 'live':
-        navigate('/gamified-match-recording');
-        break;
-      case 'quick':
-        // TODO: Build quick match recorder
-        console.log('Quick recorder coming soon');
-        navigate('/gamified-match-recording'); // Temporary fallback
-        break;
-      case 'coaching':
-        // TODO: Build coaching analysis tool
-        console.log('Coaching analysis coming soon');
-        navigate('/gamified-match-recording'); // Temporary fallback
-        break;
+    try {
+      // Save configuration to sessionStorage for fallback
+      sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
+      
+      // Save scoring preference to localStorage
+      localStorage.setItem('pkl:lastScoringMode', config.scoringType);
+      
+      // Create match with unique serial
+      const response = await fetch('/api/matches/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          mode: config.recordingMode,
+          config,
+          players: playerData
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create match');
+      }
+      
+      const { serial, mode } = await response.json();
+      console.log('[Match Created]', { serial, mode });
+      
+      // Navigate to unique match URL
+      navigate(`/match/${serial}/${mode}`);
+      
+    } catch (error) {
+      console.error('[Match Creation Error]', error);
+      // Fallback to old flow
+      navigate('/gamified-match-recording');
     }
   };
 
