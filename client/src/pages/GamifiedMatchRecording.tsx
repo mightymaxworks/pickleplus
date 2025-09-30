@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { 
   Trophy, 
   Zap, 
@@ -27,7 +28,8 @@ import {
   BarChart3,
   X,
   ArrowLeftRight,
-  Disc
+  Disc,
+  Loader2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +39,8 @@ import { MomentumEngine, MomentumState, StrategyMessage, MatchCloseness } from '
 import { MomentumWave } from '@/components/match/MomentumWave';
 import { MessageToast } from '@/components/match/MessageToast';
 import { VideoDock } from '@/components/match/VideoDock';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Enhanced Micro-Feedback Components for Gaming Feel
 function ExplosiveReaction({ show, type, onComplete, playerName, context }: {
@@ -606,6 +610,12 @@ interface MatchState {
 }
 
 export default function GamifiedMatchRecording() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  const [isSaving, setIsSaving] = useState(false);
+  const [matchSaved, setMatchSaved] = useState(false);
+  
   // Message expiration handler
   const handleMessageExpire = (messageId: string) => {
     setMatchState(prev => ({
@@ -1285,6 +1295,108 @@ export default function GamifiedMatchRecording() {
     window.location.href = '/match-config';
   };
 
+  // Save match and award points using official algorithm
+  const saveMatch = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to save matches',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (matchSaved) {
+      toast({
+        title: 'Already Saved',
+        description: 'This match has already been saved',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      console.log('[Live Tracker] Saving match with official algorithm');
+      
+      // Convert game history to format expected by API
+      const games = matchState.gameHistory.map(game => ({
+        team1: game.player1Score,
+        team2: game.player2Score
+      }));
+
+      // Determine winner
+      const p1Wins = matchState.gameHistory.filter(g => g.winner === matchState.player1.name).length;
+      const p2Wins = matchState.gameHistory.filter(g => g.winner === matchState.player2.name).length;
+      const winnerId = p1Wins > p2Wins ? user.id : null; // This assumes current user is player 1
+
+      // Create match with unique serial
+      const createResponse = await fetch('/api/matches/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          mode: 'quick',
+          config: {
+            matchFormat: matchState.config.matchFormat,
+            scoringType: matchState.config.scoringType,
+            pointTarget: matchState.config.pointTarget
+          },
+          players: {
+            player1: { id: user.id, name: matchState.player1.name },
+            player2: { id: null, name: matchState.player2.name } // TODO: Get real player 2 ID
+          }
+        })
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Failed to create match');
+      }
+
+      const { serial } = await createResponse.json();
+      console.log('[Live Tracker] Match created with serial:', serial);
+
+      // Submit scores for verification
+      const scoresResponse = await fetch(`/api/matches/${serial}/scores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          games,
+          matchDate: new Date().toISOString().split('T')[0],
+          notes: `Live tracked match - ${matchState.config.matchFormat}`,
+          winnerId
+        })
+      });
+
+      if (!scoresResponse.ok) {
+        throw new Error('Failed to submit scores');
+      }
+
+      setMatchSaved(true);
+      toast({
+        title: '✅ Match Saved!',
+        description: 'Match recorded and submitted for verification. Points will be awarded after all players verify.',
+        duration: 5000
+      });
+
+      // Navigate to verification page after 2 seconds
+      setTimeout(() => {
+        navigate(`/match/${serial}/verify`);
+      }, 2000);
+
+    } catch (error) {
+      console.error('[Live Tracker] Save error:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save match',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const isWinning = (playerId: string) => {
     if (playerId === '1') {
       return matchState.player1.score > matchState.player2.score;
@@ -1773,11 +1885,52 @@ export default function GamifiedMatchRecording() {
                 </div>
               ))}
             </div>
+            
+            {/* Save Match Button - Uses Official Algorithm */}
+            {user && !matchSaved && (
+              <div className="mb-4">
+                <Button
+                  onClick={saveMatch}
+                  disabled={isSaving}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  data-testid="button-save-match"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Match & Award Points
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-white/70 mt-2">
+                  Uses official algorithm: System B (3/1) with age & gender multipliers
+                </p>
+              </div>
+            )}
+            
+            {matchSaved && (
+              <div className="mb-4 p-3 bg-green-500/20 rounded-lg border border-green-500/30">
+                <div className="flex items-center text-white">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  <span className="font-medium">Match Saved Successfully!</span>
+                </div>
+                <p className="text-xs text-white/70 mt-1">
+                  Navigating to verification page...
+                </p>
+              </div>
+            )}
+            
             <div className="flex gap-3">
               <Button
                 onClick={resetMatch}
                 variant="outline"
                 className="text-white border-white hover:bg-white hover:text-orange-500"
+                data-testid="button-reset-match"
               >
                 <RotateCw className="h-4 w-4 mr-2" />
                 Same Settings
@@ -1785,6 +1938,7 @@ export default function GamifiedMatchRecording() {
               <Button
                 onClick={startNewMatch}
                 className="bg-white text-orange-500 hover:bg-slate-100"
+                data-testid="button-new-match"
               >
                 <PartyPopper className="h-4 w-4 mr-2" />
                 New Match
