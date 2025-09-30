@@ -25,15 +25,19 @@
 **CONTEXT**: Complete reimagining of Pickle+ as trading card universe while preserving ALL existing algorithms and functionality. Every user becomes a collectible trading card, transforming functional interactions into engaging collection-building experiences.
 
 ### **CHANGELOG v4.2.0** 📋
-*September 30, 2025 - Routing Architecture Standards*
+*September 30, 2025 - Routing Architecture + User Flow Decision Points*
 
 **ADDED**:
 - **RULE RT-01**: Separation of Concerns for Routes - Mandatory separation of configuration, presentation, and business logic into distinct routes when they serve different user intents
+- **RULE UX-12**: Central Fork Decision Point Pattern - All multi-mode workflows must use centralized configuration page as decision fork where users choose interaction mode AFTER seeing full context
 - **File Size Guidelines**: Routes exceeding 1500 lines should be investigated for separation opportunities
 - **Data Passing Patterns**: Standardized patterns for passing data between routes (sessionStorage, URL params, route state)
+- **Mode-Agnostic Configuration Contract**: Standardized interface for multi-mode workflows with explicit recordingMode field
+- **Progressive Disclosure Pattern**: Defer "how" decisions until users see "who" and "what" context
 - **Case Study**: Documented MatchConfig separation (2093 lines → 483 + 1808 lines with 285 lines saved through component extraction)
+- **UX Principles**: Decision After Context, Single Setup Multiple Consumers, Late Binding, Explicit Intent Capture
 
-**CONTEXT**: Critical architectural standards added to prevent mixed concerns in routes that lead to massive files (2000+ lines), debugging difficulties, poor testability, and confused mental models where URL doesn't match content. Based on successful separation of /match-config from /gamified-match-recording.
+**CONTEXT**: Critical architectural standards added to prevent mixed concerns in routes that lead to massive files (2000+ lines), debugging difficulties, poor testability, and confused mental models where URL doesn't match content. Enhanced with Central Fork pattern based on Match Recording architecture where /match-config becomes the decision point for Live Tracker, Quick Recorder, and Coaching Analysis modes.
 
 ### **CHANGELOG v4.1.0** 📋
 *September 27, 2025 - Navigation Architecture Standards*
@@ -5386,4 +5390,343 @@ const handleKeyboardNavigation = (event: KeyboardEvent) => {
 
 ---
 
-**[End of Document - UDF v4.0.0 - Trading Card Platform Architecture + Typography System + Algorithm Compliance Standards]**
+## 🎯 USER FLOW & DECISION POINT ARCHITECTURE
+
+### **RULE UX-12: CENTRAL FORK DECISION POINT PATTERN**
+**All multi-mode workflows must use a centralized configuration page as the decision fork where users choose their interaction mode AFTER seeing full context.**
+
+**PROBLEM SOLVED**: Prevents premature mode selection, duplicate configuration logic, and context loss by deferring the "how" decision until users see the "who" and "what".
+
+#### **MANDATORY PATTERN: Lobby → Config → Mode**
+
+```
+┌──────────────────────────────────────────┐
+│  PHASE 1: Match Creation (Lobby)         │
+│  - Select opponents                       │
+│  - Validate player data                   │
+│  - Pass to config via sessionStorage      │
+└────────────────┬─────────────────────────┘
+                 ↓
+┌──────────────────────────────────────────┐
+│  PHASE 2: Configuration + Fork           │
+│  /match-config (Central Decision Point)  │
+│                                           │
+│  Step 1: Configure Match Settings        │
+│  ├─ Scoring type (traditional/rally)     │
+│  ├─ Point target (11/15/21)              │
+│  ├─ Format (single/best-of-3/5)          │
+│  └─ Win by two (yes/no)                  │
+│                                           │
+│  Step 2: Select Recording Mode (FORK)    │
+│  ┌──────────────────────────────────┐    │
+│  │ 📊 Live Score Tracker            │    │
+│  │    Point-by-point, momentum      │    │
+│  ├──────────────────────────────────┤    │
+│  │ ⚡ Quick Match Recorder          │    │
+│  │    Enter final scores only       │    │
+│  ├──────────────────────────────────┤    │
+│  │ 🎓 Coaching Analysis             │    │
+│  │    Video + shot analysis         │    │
+│  └──────────────────────────────────┘    │
+└────┬─────────┬──────────┬────────────────┘
+     ↓         ↓          ↓
+   Mode 1    Mode 2    Mode 3
+```
+
+#### **IMPLEMENTATION REQUIREMENTS**
+
+**1. Mode-Agnostic Configuration Contract**
+```typescript
+// sessionStorage: pkl:matchConfig
+interface MatchConfig {
+  // Player data (mode-agnostic)
+  players?: Player[];
+  pairings?: TeamPairings;
+  teamIdentity?: TeamIdentity;
+  
+  // Match settings (mode-agnostic)
+  scoringType: 'traditional' | 'rally';
+  pointTarget: 11 | 15 | 21;
+  matchFormat: 'single' | 'best-of-3' | 'best-of-5';
+  winByTwo: boolean;
+  
+  // Mode selection (CRITICAL)
+  recordingMode: 'live' | 'quick' | 'coaching';
+  
+  // Optional mode-specific
+  liveStreamUrl?: string;
+  recordingUrl?: string;
+  videoProvider?: 'hls' | 'mp4' | 'youtube';
+}
+```
+
+**2. Smart Routing Logic**
+```typescript
+const startMatch = () => {
+  // Save complete config including recordingMode
+  sessionStorage.setItem('pkl:matchConfig', JSON.stringify({
+    ...config,
+    recordingMode // ← MUST include chosen mode
+  }));
+  
+  // Route based on selected mode
+  switch (recordingMode) {
+    case 'live':
+      navigate('/gamified-match-recording');
+      break;
+    case 'quick':
+      navigate('/quick-match-recorder');
+      break;
+    case 'coaching':
+      navigate('/coaching-analysis');
+      break;
+  }
+};
+```
+
+**3. Mode Selection UI Pattern**
+```jsx
+<div className="recording-mode-selector">
+  <h3>How do you want to record this match?</h3>
+  
+  {/* Each option shows: Icon, Title, Description, Use Case */}
+  <ModeOption
+    icon={<PlayCircle />}
+    title="Live Score Tracker"
+    description="Track every point in real-time with momentum visualization"
+    useCase="⏱️ During the match"
+    selected={recordingMode === 'live'}
+    onClick={() => setRecordingMode('live')}
+  />
+  
+  <ModeOption
+    icon={<Zap />}
+    title="Quick Match Recorder"
+    description="Just enter the final scores - done in 30 seconds"
+    useCase="⚡ After the match"
+    selected={recordingMode === 'quick'}
+    onClick={() => setRecordingMode('quick')}
+  />
+  
+  <ModeOption
+    icon={<Video />}
+    title="Coaching Analysis"
+    description="Upload video and analyze shot-by-shot"
+    useCase="🎓 Coach/Training mode"
+    selected={recordingMode === 'coaching'}
+    onClick={() => setRecordingMode('coaching')}
+  />
+</div>
+
+<Button 
+  onClick={startMatch}
+  disabled={!recordingMode}
+>
+  Start {getModeLabel(recordingMode)}
+</Button>
+```
+
+#### **MODE CONTRACT REQUIREMENTS**
+
+**All recording modes MUST**:
+1. **Read from sessionStorage**: Load `pkl:matchConfig` on mount
+2. **Validate config**: Redirect to `/match-arena` if missing/invalid with explanatory toast
+3. **Pure consumers**: NEVER mutate the config schema
+4. **Respect recordingMode**: Use it for analytics, UI copy, and conditional features
+5. **Back navigation**: Return to `/match-config` with state intact
+
+**Example Mode Implementation**:
+```typescript
+function LiveScoreTracker() {
+  const [config, setConfig] = useState<MatchConfig | null>(null);
+  
+  useEffect(() => {
+    // Load config from sessionStorage
+    const savedConfig = sessionStorage.getItem('pkl:matchConfig');
+    
+    if (!savedConfig) {
+      // Missing config - redirect with explanation
+      toast.error('Match configuration missing. Please start from Match Arena.');
+      navigate('/match-arena');
+      return;
+    }
+    
+    try {
+      const parsedConfig = JSON.parse(savedConfig);
+      
+      // Validate required fields
+      if (!parsedConfig.players || !parsedConfig.recordingMode) {
+        throw new Error('Invalid config structure');
+      }
+      
+      setConfig(parsedConfig);
+      
+      // Log mode selection for analytics
+      analytics.track('match_mode_started', {
+        mode: parsedConfig.recordingMode,
+        scoringType: parsedConfig.scoringType,
+        format: parsedConfig.matchFormat
+      });
+      
+    } catch (error) {
+      toast.error('Invalid match configuration. Please try again.');
+      navigate('/match-arena');
+    }
+  }, []);
+  
+  if (!config) return <LoadingSpinner />;
+  
+  // Mode implementation...
+}
+```
+
+#### **UX PRINCIPLES ENFORCED**
+
+**1. Decision After Context**
+- Users see WHO they're playing and WHAT the rules are BEFORE choosing HOW to record
+- Matches mental model: "I know my opponent and settings, now I'll decide how to track it"
+- Prevents context switching and re-entry
+
+**2. Single Setup, Multiple Consumers**
+- Configuration captured ONCE in mode-agnostic format
+- All modes consume same contract without reconfiguration
+- Eliminates duplicate setup logic
+
+**3. Late Binding with Preservable State**
+- Mode selection deferred until full context visible
+- State persisted in sessionStorage for back/forward navigation
+- Deep links honor the same contract
+
+**4. Explicit Intent Capture**
+- `recordingMode` is first-class data driving routing, UI, analytics
+- No implicit assumptions about user intent
+- Clear separation between "what" (config) and "how" (mode)
+
+**5. Progressive Disclosure**
+- Don't force mode commitment in lobby (premature)
+- Defer choice to config page where context is complete
+- Present all options with clear use cases
+
+#### **ANTI-PATTERNS PREVENTED**
+
+❌ **Embedding Setup Inside Mode Pages**
+- Creates coupling and duplication
+- Forces users to reconfigure for different modes
+
+❌ **Forcing Mode Selection in Lobby**
+- Premature choice without full context
+- Users don't know match details yet
+
+❌ **Implicit Routing Without Intent Persistence**
+- Surprising transitions
+- Lost context on navigation
+
+❌ **Re-asking Configuration in Each Mode**
+- User fatigue
+- Inconsistent data across modes
+
+#### **CASE STUDY: Match Recording Architecture**
+
+**Before (Anti-pattern)**:
+```jsx
+// ❌ Match Arena directly routes to one mode
+<Button onClick={() => navigate('/gamified-match-recording')}>
+  Start Match
+</Button>
+// Problem: No choice, hardcoded assumption
+```
+
+**After (Correct Pattern)**:
+```jsx
+// ✅ Match Arena → Config → User chooses mode
+<Button onClick={() => navigate('/match-config')}>
+  Configure Match
+</Button>
+
+// In /match-config:
+<ModeSelector onSelect={setRecordingMode} />
+<Button onClick={startMatch}>
+  Start {recordingMode}
+</Button>
+```
+
+**Benefits Realized**:
+- 3 recording modes share 1 configuration flow
+- 285 lines of duplicate code eliminated
+- Users make informed mode choice with full context
+- Easy to add new modes without touching lobby/config
+
+#### **TELEMETRY REQUIREMENTS**
+
+Track mode selection for UX validation:
+```typescript
+analytics.track('match_config_mode_selected', {
+  mode: recordingMode,
+  scoringType: config.scoringType,
+  matchFormat: config.matchFormat,
+  timeToDecision: performance.now() - configLoadTime
+});
+```
+
+#### **TESTING REQUIREMENTS**
+
+**1. Config Persistence Tests**
+```typescript
+it('preserves config across navigation', async () => {
+  // Create match in arena
+  await createMatch({ opponent: 'Alex' });
+  
+  // Navigate to config
+  expect(location.pathname).toBe('/match-config');
+  
+  // Verify config loaded
+  const config = JSON.parse(sessionStorage.getItem('pkl:matchConfig'));
+  expect(config.players).toBeDefined();
+  
+  // Select mode
+  selectMode('live');
+  clickStart();
+  
+  // Verify mode received config
+  expect(location.pathname).toBe('/gamified-match-recording');
+  expect(config.recordingMode).toBe('live');
+});
+```
+
+**2. Invalid State Handling**
+```typescript
+it('redirects when config missing', async () => {
+  // Clear sessionStorage
+  sessionStorage.clear();
+  
+  // Try to access mode directly
+  navigate('/gamified-match-recording');
+  
+  // Should redirect to arena with toast
+  expect(location.pathname).toBe('/match-arena');
+  expect(getToast()).toContain('Please start from Match Arena');
+});
+```
+
+**3. Back Navigation Preservation**
+```typescript
+it('preserves state on back navigation', async () => {
+  // Configure match
+  configureMatch({ scoringType: 'rally' });
+  selectMode('quick');
+  
+  // Go back
+  navigateBack();
+  
+  // Config should be preserved
+  expect(location.pathname).toBe('/match-config');
+  expect(getSelectedMode()).toBe('quick');
+  expect(getScoringType()).toBe('rally');
+});
+```
+
+**ENFORCEMENT**: All multi-mode workflows must implement the Central Fork pattern with mode-agnostic config, explicit intent capture, and proper state preservation before deployment.
+
+---
+
+**[End of Document - UDF v4.2.0 - Trading Card Platform + Routing Architecture + User Flow Decision Points]**
