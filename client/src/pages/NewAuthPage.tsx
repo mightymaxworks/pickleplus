@@ -228,9 +228,9 @@ export default function NewAuthPage() {
             <Card className="shadow-2xl border border-slate-800 bg-slate-800/50 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login" className="text-sm">{t('auth.signIn', 'Sign In')}</TabsTrigger>
-                    <TabsTrigger value="register" className="text-sm">{t('auth.createAccount', 'Create Account')}</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-900/50 border border-slate-700">
+                    <TabsTrigger value="login" className="text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-400">{t('auth.signIn', 'Sign In')}</TabsTrigger>
+                    <TabsTrigger value="register" className="text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-400">{t('auth.createAccount', 'Create Account')}</TabsTrigger>
                   </TabsList>
                   
                   {/* Login Tab */}
@@ -242,14 +242,14 @@ export default function NewAuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.usernameOrEmail', 'Username or Email')}</FormLabel>
+                              <FormLabel className="text-gray-300">{t('auth.usernameOrEmail', 'Username or Email')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
                                     placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
-                                    className="pl-10"
+                                    className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                   />
                                 </div>
                               </FormControl>
@@ -263,7 +263,7 @@ export default function NewAuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('auth.password', 'Password')}</FormLabel>
+                              <FormLabel className="text-gray-300">{t('auth.password', 'Password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -271,7 +271,7 @@ export default function NewAuthPage() {
                                     {...field} 
                                     type="password"
                                     placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
-                                    className="pl-10"
+                                    className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                   />
                                 </div>
                               </FormControl>
@@ -291,7 +291,7 @@ export default function NewAuthPage() {
                                   onCheckedChange={field.onChange}
                                 />
                               </FormControl>
-                              <FormLabel className="text-sm font-normal">
+                              <FormLabel className="text-sm font-normal text-gray-300">
                                 {t('auth.rememberMe', 'Remember me for 30 days')}
                               </FormLabel>
                             </FormItem>
@@ -419,7 +419,7 @@ export default function NewAuthPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium">{t('auth.email', 'Email Address')} *</FormLabel>
+                              <FormLabel className="text-sm font-medium text-gray-300">{t('auth.email', 'Email Address')} *</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -427,7 +427,7 @@ export default function NewAuthPage() {
                                     {...field} 
                                     type="email"
                                     placeholder={t('auth.emailPlaceholder', 'your.email@example.com')}
-                                    className="pl-10 h-11"
+                                    className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                   />
                                 </div>
                               </FormControl>
@@ -443,7 +443,7 @@ export default function NewAuthPage() {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-medium">{t('auth.password', 'Password')} *</FormLabel>
+                                <FormLabel className="text-sm font-medium text-gray-300">{t('auth.password', 'Password')} *</FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -451,7 +451,7 @@ export default function NewAuthPage() {
                                       {...field} 
                                       type="password"
                                       placeholder={t('auth.createPassword', 'Create a strong password (8+ characters)')}
-                                      className="pl-10 h-11"
+                                      className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                     />
                                   </div>
                                 </FormControl>
@@ -465,7 +465,7 @@ export default function NewAuthPage() {
                             name="confirmPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-medium">{t('auth.confirmPassword', 'Confirm Password')} *</FormLabel>
+                                <FormLabel className="text-sm font-medium text-gray-300">{t('auth.confirmPassword', 'Confirm Password')} *</FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -473,7 +473,7 @@ export default function NewAuthPage() {
                                       {...field} 
                                       type="password"
                                       placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm your password')}
-                                      className="pl-10 h-11"
+                                      className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                     />
                                   </div>
                                 </FormControl>
@@ -490,7 +490,7 @@ export default function NewAuthPage() {
                             name="yearOfBirth"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-medium">{t('auth.yearOfBirth', 'Year of Birth')} *</FormLabel>
+                                <FormLabel className="text-sm font-medium text-gray-300">{t('auth.yearOfBirth', 'Year of Birth')} *</FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -500,7 +500,7 @@ export default function NewAuthPage() {
                                       min="1920"
                                       max={new Date().getFullYear() - 13}
                                       placeholder="1990"
-                                      className="pl-10 h-11"
+                                      className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                       onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                                     />
                                   </div>
@@ -515,16 +515,16 @@ export default function NewAuthPage() {
                             name="gender"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-medium">{t('gender', 'Gender')} *</FormLabel>
+                                <FormLabel className="text-sm font-medium text-gray-300">{t('gender', 'Gender')} *</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
-                                    <SelectTrigger className="h-11">
-                                      <SelectValue placeholder={t('selectGender', 'Select gender')} />
+                                    <SelectTrigger className="h-11 bg-slate-900/50 border-slate-700 text-white">
+                                      <SelectValue placeholder={t('selectGender', 'Select gender')} className="text-gray-500" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="male">{t('male', 'Male')}</SelectItem>
-                                    <SelectItem value="female">{t('female', 'Female')}</SelectItem>
+                                  <SelectContent className="bg-slate-800 border-slate-700">
+                                    <SelectItem value="male" className="text-white hover:bg-slate-700">{t('male', 'Male')}</SelectItem>
+                                    <SelectItem value="female" className="text-white hover:bg-slate-700">{t('female', 'Female')}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -539,7 +539,7 @@ export default function NewAuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium">
+                              <FormLabel className="text-sm font-medium text-gray-300">
                                 {t('auth.username', 'Username')} 
                                 <span className="text-gray-400 text-xs font-normal ml-1">(optional)</span>
                               </FormLabel>
@@ -549,12 +549,12 @@ export default function NewAuthPage() {
                                   <Input 
                                     {...field} 
                                     placeholder={t('auth.usernamePlaceholderRegister', 'Choose a unique username or leave blank')}
-                                    className="pl-10 h-11"
+                                    className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                   />
                                 </div>
                               </FormControl>
                               <FormMessage />
-                              <p className="text-xs text-gray-500 mt-1">We'll create one automatically if left blank - you can change it later</p>
+                              <p className="text-xs text-gray-400 mt-1">We'll create one automatically if left blank - you can change it later</p>
                             </FormItem>
                           )}
                         />
@@ -572,7 +572,7 @@ export default function NewAuthPage() {
                                   onCheckedChange={field.onChange}
                                 />
                               </FormControl>
-                              <FormLabel className="text-sm font-normal">
+                              <FormLabel className="text-sm font-normal text-gray-300">
                                 {t('auth.agreeToTerms', 'I agree to the Terms of Service and Privacy Policy')}
                               </FormLabel>
                               <FormMessage />

@@ -232,16 +232,42 @@ export default function NewLandingPage() {
               </Button>
             </motion.div>
             
-            {/* Stats */}
+            {/* Gaming Features Highlight */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.8 }}
-              className="grid grid-cols-3 gap-8 max-w-3xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto"
             >
-              <StatCounter value={10000} label="Matches Recorded" suffix="+" />
-              <StatCounter value={5000} label="Active Players" suffix="+" />
-              <StatCounter value={50000} label="Points Awarded" suffix="+" />
+              <div className="flex items-center justify-center gap-3 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4">
+                <div className="p-2 bg-gradient-to-br from-orange-500 to-pink-500 rounded-lg">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-gray-400">Real-Time</div>
+                  <div className="text-white font-semibold">Match Tracking</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center gap-3 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-gray-400">Verified</div>
+                  <div className="text-white font-semibold">Every Match</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center gap-3 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4">
+                <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+                  <Trophy className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-gray-400">Official</div>
+                  <div className="text-white font-semibold">Rankings</div>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         </div>
