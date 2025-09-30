@@ -946,17 +946,32 @@ export default function GamifiedMatchRecording() {
     return getRandomTeamTheme(); // Fallback to random theme
   });
   
-  // Extract scoring system from match data
+  // Extract scoring system from URL query parameter, localStorage, or default to rally
   const getScoringSystem = (): 'traditional' | 'rally' => {
+    // First, check URL query parameter
     try {
-      const currentMatch = sessionStorage.getItem('currentMatch');
-      if (currentMatch) {
-        const matchData = JSON.parse(currentMatch);
-        return matchData.scoringSystem || 'rally';
+      const urlParams = new URLSearchParams(window.location.search);
+      const scoringParam = urlParams.get('scoring');
+      if (scoringParam === 'traditional' || scoringParam === 'rally') {
+        console.log('Scoring system from URL:', scoringParam);
+        return scoringParam;
       }
     } catch (error) {
-      console.log('Could not load scoring system from session storage:', error);
+      console.log('Could not read scoring system from URL:', error);
     }
+
+    // Second, check localStorage for last used preference
+    try {
+      const lastScoringMode = localStorage.getItem('pkl:lastScoringMode');
+      if (lastScoringMode === 'traditional' || lastScoringMode === 'rally') {
+        console.log('Scoring system from localStorage:', lastScoringMode);
+        return lastScoringMode;
+      }
+    } catch (error) {
+      console.log('Could not load scoring system from localStorage:', error);
+    }
+
+    console.log('Scoring system defaulting to: rally');
     return 'rally'; // Default to rally scoring
   };
 

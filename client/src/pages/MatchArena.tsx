@@ -928,11 +928,15 @@ export default function MatchArena() {
                 selectedPlayers: matchData.selectedPlayers
               };
               sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
+              
+              // Store scoring preference
+              localStorage.setItem('pkl:lastScoringMode', matchData.scoringSystem);
+              
               console.log('Match Data:', matchData);
               
-              // Navigate to gamified match recorder
+              // Navigate to gamified match recorder with scoring system in URL
               setTimeout(() => {
-                setLocation('/gamified-match-recording');
+                setLocation(`/gamified-match-recording?scoring=${matchData.scoringSystem}`);
               }, 1500);
             }}
           />

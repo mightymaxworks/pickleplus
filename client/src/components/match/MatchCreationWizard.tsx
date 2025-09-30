@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Users, UserCheck, UserMinus, Trophy, Gamepad2, 
   ArrowRight, ArrowLeft, Shuffle, CheckCircle2, Target,
-  Hash, User, Crown, Star, Zap
+  Hash, User, Crown, Star, Zap, Shield
 } from 'lucide-react';
 import { SmartPlayerSearch } from './SmartPlayerSearch';
 import { VersusScreen } from './VersusScreen';
@@ -991,6 +991,56 @@ export function MatchCreationWizard({ onMatchCreated }: MatchCreationWizardProps
                     </div>
                   );
                 })()}
+              </div>
+            </Card>
+
+            {/* Scoring System Selection - Added at Review Step */}
+            <Card className="bg-slate-800/50 border-slate-700/50 p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-400" />
+                Choose Scoring System
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant={scoringSystem === 'rally' ? 'default' : 'outline'}
+                  onClick={() => setScoringSystem('rally')}
+                  className={`h-auto p-4 flex flex-col items-start gap-2 ${
+                    scoringSystem === 'rally'
+                      ? 'bg-orange-500 hover:bg-orange-600 border-orange-400'
+                      : 'border-slate-600 hover:bg-slate-700'
+                  }`}
+                  data-testid="button-scoring-rally"
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    <span className="font-bold text-lg">Rally Scoring</span>
+                  </div>
+                  <p className="text-sm text-left opacity-90">
+                    Every rally scores a point, regardless of who serves
+                  </p>
+                </Button>
+                
+                <Button
+                  variant={scoringSystem === 'traditional' ? 'default' : 'outline'}
+                  onClick={() => setScoringSystem('traditional')}
+                  className={`h-auto p-4 flex flex-col items-start gap-2 ${
+                    scoringSystem === 'traditional'
+                      ? 'bg-blue-500 hover:bg-blue-600 border-blue-400'
+                      : 'border-slate-600 hover:bg-slate-700'
+                  }`}
+                  data-testid="button-scoring-traditional"
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    <span className="font-bold text-lg">Traditional</span>
+                  </div>
+                  <p className="text-sm text-left opacity-90">
+                    Only the serving side can score points
+                  </p>
+                </Button>
+              </div>
+              <div className="mt-3 text-xs text-slate-400 text-center">
+                💡 You can change this preference for each match
               </div>
             </Card>
           </motion.div>
