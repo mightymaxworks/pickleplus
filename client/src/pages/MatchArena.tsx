@@ -939,7 +939,7 @@ export default function MatchArena() {
               
               // Navigate to match configuration first
               setTimeout(() => {
-                setLocation(`/match-config?scoring=${matchData.scoringSystem}`);
+                setLocation('/match-config');
               }, 1500);
             }}
           />
