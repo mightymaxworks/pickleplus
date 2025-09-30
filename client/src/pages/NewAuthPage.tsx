@@ -169,7 +169,7 @@ export default function NewAuthPage() {
         message={activeTab === "login" ? t('auth.signingIn', 'Signing you in...') : t('auth.creatingPassport', 'Creating your player passport...')}
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
+      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
         <div className="min-h-screen flex">
         {/* Left Side - Form */}
         <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
@@ -183,33 +183,49 @@ export default function NewAuthPage() {
             <div className="text-center mb-8">
               <Button
                 variant="ghost"
-                className="mb-6 text-gray-600 hover:text-gray-900"
+                className="mb-6 text-gray-400 hover:text-white"
                 onClick={() => setLocation("/")}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('auth.backToHome', 'Back to Home')}
               </Button>
               
-              <img 
-                src={pickleLogoPath} 
-                alt="Pickle+"
-                className="h-12 mx-auto mb-4"
-              />
+              {/* Use gaming logo instead of old logo */}
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <svg width="60" height="60" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4 L32 12 L32 28 L20 36 L8 28 L8 12 Z" fill="url(#pickleGradient)" stroke="url(#pickleStroke)" strokeWidth="2" />
+                    <line x1="20" y1="14" x2="20" y2="26" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="14" y1="20" x2="26" y2="20" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                    <defs>
+                      <linearGradient id="pickleGradient" x1="8" y1="4" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#FF5722" />
+                        <stop offset="100%" stopColor="#E91E63" />
+                      </linearGradient>
+                      <linearGradient id="pickleStroke" x1="8" y1="4" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#FF6B45" />
+                        <stop offset="100%" stopColor="#FF4081" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 blur-xl opacity-50 bg-gradient-to-r from-orange-500 to-pink-500 -z-10" />
+                </div>
+              </div>
               
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 {activeTab === "login" ? t('auth.welcomeBack', 'Welcome Back') : t('auth.createPassport', 'Create Your Passport')}
               </h1>
               
-              <p className="text-gray-600">
+              <p className="text-gray-400">
                 {activeTab === "login" 
                   ? t('auth.signInDescription', 'Sign in to access your player dashboard')
-                  : t('auth.joinRevolution', 'Join the transparent ranking revolution')
+                  : <><span className="text-orange-400">Where Players Become Legends</span> - {t('auth.joinRevolution', 'Join the revolution')}</>
                 }
               </p>
             </div>
 
             {/* Auth Form */}
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <Card className="shadow-2xl border border-slate-800 bg-slate-800/50 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -284,7 +300,7 @@ export default function NewAuthPage() {
 
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-3 rounded-lg font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
                           disabled={isLoading}
                         >
                           {isLoading ? t('auth.loggingIn', 'Signing In...') : t('auth.signInToDashboard', 'Sign In to Dashboard')}
@@ -293,10 +309,10 @@ export default function NewAuthPage() {
                         {/* OAuth Login Section */}
                         <div className="relative">
                           <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-gray-300" />
+                            <span className="w-full border-t border-slate-700" />
                           </div>
                           <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                            <span className="bg-slate-800 px-2 text-gray-400">Or continue with</span>
                           </div>
                         </div>
 
@@ -384,7 +400,7 @@ export default function NewAuthPage() {
                         <div className="text-center">
                           <a
                             href="/forgot-password"
-                            className="text-sm text-gray-600 hover:text-orange-600 transition-colors duration-200 inline-block mt-2"
+                            className="text-sm text-gray-400 hover:text-orange-400 transition-colors duration-200 inline-block mt-2"
                           >
                             {t('forgotPassword', 'Forgot your password?')}
                           </a>
@@ -566,7 +582,7 @@ export default function NewAuthPage() {
 
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-3 rounded-lg font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
                           disabled={isLoading}
                         >
                           {isLoading ? t('auth.creatingAccount', 'Creating Account...') : t('auth.createPassportButton', 'Create My Player Passport')}
@@ -581,7 +597,7 @@ export default function NewAuthPage() {
         </div>
 
         {/* Right Side - Hero/Brand Showcase */}
-        <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-orange-500 via-orange-400 to-cyan-400 relative overflow-hidden">
+        <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden border-l border-slate-800">
           <div className="flex flex-col justify-center items-center text-white p-12 relative z-10">
             <motion.div
               initial="hidden"
@@ -589,54 +605,70 @@ export default function NewAuthPage() {
               variants={slideIn}
               className="text-center"
             >
-              {/* Character */}
-              <motion.img 
-                src={pickleCharacterPath}
-                alt="Pickle Character"
-                className="h-32 w-32 mx-auto mb-8"
+              {/* Gaming Logo */}
+              <motion.div
+                className="relative mb-8 flex justify-center"
                 animate={{ 
                   y: [0, -10, 0],
-                  rotate: [0, 5, -5, 0]
                 }}
                 transition={{ 
                   duration: 4,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-              />
+              >
+                <div className="relative">
+                  <svg width="120" height="120" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4 L32 12 L32 28 L20 36 L8 28 L8 12 Z" fill="url(#pickleGradientSide)" stroke="url(#pickleStrokeSide)" strokeWidth="2" />
+                    <line x1="20" y1="14" x2="20" y2="26" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="14" y1="20" x2="26" y2="20" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                    <defs>
+                      <linearGradient id="pickleGradientSide" x1="8" y1="4" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#FF5722" />
+                        <stop offset="100%" stopColor="#E91E63" />
+                      </linearGradient>
+                      <linearGradient id="pickleStrokeSide" x1="8" y1="4" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#FF6B45" />
+                        <stop offset="100%" stopColor="#FF4081" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 blur-2xl opacity-50 bg-gradient-to-r from-orange-500 to-pink-500 -z-10" />
+                </div>
+              </motion.div>
 
-              <h2 className="text-3xl font-bold mb-4">
-                Welcome to the Future
+              <h2 className="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400">
+                Where Players Become Legends
               </h2>
               
-              <p className="text-xl mb-6 opacity-90">
-                Your digital player passport awaits. Join thousands of players using the most transparent ranking system in pickleball.
+              <p className="text-xl mb-8 text-gray-300">
+                Your digital player passport awaits. Join the transparent ranking revolution.
               </p>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-center text-white/90">
-                  <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-                  <span>Fair age-adjusted rankings</span>
+                <div className="flex items-center justify-start text-gray-300">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                  <span>Live Match Tracking & Verification</span>
                 </div>
-                <div className="flex items-center justify-center text-white/90">
-                  <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-                  <span>QR code court integration</span>
+                <div className="flex items-center justify-start text-gray-300">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                  <span>Official System B Rankings</span>
                 </div>
-                <div className="flex items-center justify-center text-white/90">
-                  <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-                  <span>Real-time profile progression</span>
+                <div className="flex items-center justify-start text-gray-300">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                  <span>QR Code Player Passports</span>
                 </div>
-                <div className="flex items-center justify-center text-white/90">
-                  <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-                  <span>Transparent algorithm</span>
+                <div className="flex items-center justify-start text-gray-300">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                  <span>Transparent Algorithm</span>
                 </div>
               </div>
             </motion.div>
           </div>
 
           {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform rotate-12 scale-150"></div>
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent transform rotate-12 scale-150"></div>
           </div>
         </div>
       </div>
