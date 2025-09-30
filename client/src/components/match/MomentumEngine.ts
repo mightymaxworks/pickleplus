@@ -57,11 +57,20 @@ export interface MomentumState {
     consecutiveHype: number; // Consecutive high-hype points
     recentComebacks: number; // Comebacks in last 10 points
   };
+  traditionalScoring?: {
+    consecutiveSideOuts: number; // Count of side-outs in a row
+    totalSideOuts: number; // Total side-outs in the game
+    lastRallyOutcome: 'point' | 'sideout' | null; // Last rally result
+    serveDominance: { // Track how many consecutive points teams held serve
+      team1: number;
+      team2: number;
+    };
+  };
 }
 
 export interface StrategyMessage {
   id: string;
-  type: 'firstBlood' | 'streak' | 'megaStreak' | 'momentumShift' | 'clutchSave' | 'comeback' | 'gamePoint' | 'matchPoint' | 'break' | 'deuce';
+  type: 'firstBlood' | 'streak' | 'megaStreak' | 'momentumShift' | 'clutchSave' | 'comeback' | 'gamePoint' | 'matchPoint' | 'break' | 'deuce' | 'sideout' | 'servehold' | 'defensiveBattle';
   priority: 0 | 1 | 2 | 3; // 0=highest, 3=lowest
   text: string;
   timestamp: number;
@@ -111,7 +120,13 @@ export class MomentumEngine {
       combos: {
         consecutiveHype: 0,
         recentComebacks: 0
-      }
+      },
+      traditionalScoring: config.scoringType === 'traditional' ? {
+        consecutiveSideOuts: 0,
+        totalSideOuts: 0,
+        lastRallyOutcome: null,
+        serveDominance: { team1: 0, team2: 0 }
+      } : undefined
     };
   }
 
@@ -179,6 +194,9 @@ export class MomentumEngine {
     // Update combos
     this.updateCombos();
     
+    // Update traditional scoring tracking
+    this.updateTraditionalScoringTracking(event);
+    
     // Generate strategic messages (rate limited to 1 per point) - pass prevStreak for break detection
     if (this.lastMessagePoint !== event.pointNo) {
       messages.push(...this.generateMessages(event, prevMomentum, prevStreak));
@@ -219,23 +237,43 @@ export class MomentumEngine {
     const messages: StrategyMessage[] = [];
     const { scoringTeam, score, pointNo, isSideOut } = event;
     
-    // Traditional Scoring: Side-Out messages (serve changes without point)
-    if (this.config.scoringType === 'traditional' && isSideOut) {
-      const sideOutMessages = [
-        '🔄 SIDE OUT!',
-        '⚡ SERVE SNATCHED!',
-        '🎯 BREAKING SERVE!',
-        '💪 SERVE EARNED!'
-      ];
-      const message = sideOutMessages[Math.floor(Math.random() * sideOutMessages.length)];
-      messages.push(this.createMessage('break', message, scoringTeam, 2));
+    // Traditional Scoring: Side-Out messages with contextual patterns
+    if (this.config.scoringType === 'traditional' && isSideOut && this.state.traditionalScoring) {
+      const { consecutiveSideOuts, totalSideOuts } = this.state.traditionalScoring;
+      
+      // Consecutive side-outs pattern detected
+      if (consecutiveSideOuts >= 4) {
+        messages.push(this.createMessage('defensiveBattle', '🛡️ DEFENSIVE GRIND! Neither team can hold serve!', scoringTeam, 1));
+      } else if (consecutiveSideOuts === 3) {
+        messages.push(this.createMessage('sideout', '⚔️ BACK-AND-FORTH BATTLE! Serve keeps changing!', scoringTeam, 2));
+      } else if (consecutiveSideOuts === 2) {
+        messages.push(this.createMessage('sideout', '🔄 TRADING SERVES! Tight defensive play!', scoringTeam, 2));
+      } else {
+        // Single side-out - use varied messages
+        const sideOutMessages = [
+          '🔄 SIDE OUT!',
+          '⚡ SERVE SNATCHED!',
+          '🎯 BREAKING SERVE!',
+          '💪 SERVE EARNED!'
+        ];
+        const message = sideOutMessages[Math.floor(Math.random() * sideOutMessages.length)];
+        messages.push(this.createMessage('sideout', message, scoringTeam, 2));
+      }
       return messages; // Side-out is the primary message, no additional messages
     }
     
-    // Traditional Scoring: Service hold messages
-    if (this.config.scoringType === 'traditional' && !isSideOut && event.hadServe === scoringTeam) {
-      if (this.state.streak.length >= 3 && this.state.streak.team === scoringTeam) {
-        messages.push(this.createMessage('streak', '🏆 HOLDING SERVE!', scoringTeam, 2));
+    // Traditional Scoring: Service hold messages with dominance context
+    if (this.config.scoringType === 'traditional' && !isSideOut && event.hadServe === scoringTeam && this.state.traditionalScoring) {
+      const serveDominance = scoringTeam === 'team1' 
+        ? this.state.traditionalScoring.serveDominance.team1 
+        : this.state.traditionalScoring.serveDominance.team2;
+      
+      if (serveDominance >= 5) {
+        messages.push(this.createMessage('servehold', '⚡ SERVE DOMINATION! Unstoppable on serve!', scoringTeam, 1));
+      } else if (serveDominance >= 3) {
+        messages.push(this.createMessage('servehold', '🔥 HOLDING SERVE! Strong service game!', scoringTeam, 2));
+      } else if (this.state.streak.length >= 3 && this.state.streak.team === scoringTeam) {
+        messages.push(this.createMessage('servehold', '💪 SERVE CONTROL! Maintaining momentum!', scoringTeam, 2));
       }
     }
     
@@ -554,6 +592,41 @@ export class MomentumEngine {
     }
     
     this.state.combos.recentComebacks = comebacks;
+  }
+
+  /**
+   * Update traditional scoring tracking for side-out pattern detection
+   */
+  private updateTraditionalScoringTracking(event: MomentumEvent) {
+    if (!this.state.traditionalScoring || this.config.scoringType !== 'traditional') return;
+    
+    const { isSideOut, scoringTeam, hadServe } = event;
+    
+    if (isSideOut) {
+      // Side-out occurred
+      this.state.traditionalScoring.consecutiveSideOuts++;
+      this.state.traditionalScoring.totalSideOuts++;
+      this.state.traditionalScoring.lastRallyOutcome = 'sideout';
+      
+      // Reset serve dominance for both teams on side-out
+      this.state.traditionalScoring.serveDominance.team1 = 0;
+      this.state.traditionalScoring.serveDominance.team2 = 0;
+    } else {
+      // Point scored (team held serve)
+      this.state.traditionalScoring.consecutiveSideOuts = 0;
+      this.state.traditionalScoring.lastRallyOutcome = 'point';
+      
+      // Increment serve dominance for the team that held serve
+      if (hadServe === scoringTeam) {
+        if (scoringTeam === 'team1') {
+          this.state.traditionalScoring.serveDominance.team1++;
+          this.state.traditionalScoring.serveDominance.team2 = 0; // Reset opponent
+        } else {
+          this.state.traditionalScoring.serveDominance.team2++;
+          this.state.traditionalScoring.serveDominance.team1 = 0; // Reset opponent
+        }
+      }
+    }
   }
 
   /**
