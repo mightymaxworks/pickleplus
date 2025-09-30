@@ -6,10 +6,11 @@ import { z } from 'zod';
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
 import { db } from '../db';
-import { matches, matchVerifications } from '../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { matches, matchVerifications, users } from '../../shared/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { notifyPlayersForVerification, notifyMatchVerified } from '../utils/matchNotifications';
+import { calculateMatchPoints, type PlayerMatchData } from '../../shared/utils/matchPointsCalculator';
 
 // Validation schemas
 const gameScoreSchema = z.object({
@@ -27,6 +28,80 @@ const submitScoresSchema = z.object({
 const verifyMatchSchema = z.object({
   approve: z.boolean()
 });
+
+/**
+ * Calculate and award points to all players in a verified match
+ * Uses official algorithm utilities to ensure System B compliance
+ */
+async function calculateAndAwardPoints(match: any): Promise<void> {
+  console.log('[Points] Calculating points for verified match:', match.serial);
+  
+  // Get all player IDs
+  const playerIds = [
+    match.playerOneId,
+    match.playerTwoId,
+    match.playerOnePartnerId,
+    match.playerTwoPartnerId
+  ].filter((id): id is number => id !== null);
+  
+  // Fetch player data from database
+  const playersData = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      gender: users.gender,
+      rankingPoints: users.rankingPoints,
+      dateOfBirth: users.dateOfBirth
+    })
+    .from(users)
+    .where(sql`${users.id} IN (${sql.join(playerIds.map(id => sql`${id}`), sql`, `)})`);
+  
+  // Determine match format
+  const matchFormat = playerIds.length === 2 ? 'singles' : 'doubles';
+  
+  // Build player match data
+  const playersMatchData: PlayerMatchData[] = playersData.map(player => ({
+    playerId: player.id,
+    username: player.username,
+    isWin: player.id === match.winnerId || 
+           (matchFormat === 'doubles' && 
+            (player.id === match.playerOneId || player.id === match.playerOnePartnerId) &&
+            (match.winnerId === match.playerOneId || match.winnerId === match.playerOnePartnerId)),
+    gender: player.gender as 'male' | 'female' | undefined,
+    currentRankingPoints: Number(player.rankingPoints) || 0,
+    eventType: 'casual' // Default for friendly matches
+  }));
+  
+  // Calculate points using official algorithm
+  const pointsResults = calculateMatchPoints(playersMatchData, matchFormat);
+  
+  console.log('[Points] Calculated results:', pointsResults);
+  
+  // Award points to each player (ADDITIVE - never replace)
+  for (const result of pointsResults) {
+    console.log(`[Points] Awarding ${result.rankingPointsEarned} ranking points to player ${result.username}`);
+    
+    // CRITICAL: Use additive SQL operation to preserve tournament history
+    await db.execute(sql`
+      UPDATE users
+      SET 
+        ranking_points = ranking_points + ${result.rankingPointsEarned},
+        pickle_points = pickle_points + ${result.picklePointsEarned},
+        total_matches = total_matches + 1,
+        matches_won = matches_won + ${result.rankingPointsEarned >= 3 ? 1 : 0}
+      WHERE id = ${result.playerId}
+    `);
+  }
+  
+  // Update match with awarded points
+  await db.update(matches)
+    .set({ 
+      pointsAwarded: Math.round(pointsResults.reduce((sum, r) => sum + r.rankingPointsEarned, 0))
+    })
+    .where(eq(matches.id, match.id));
+  
+  console.log('[Points] Points awarded successfully');
+}
 
 /**
  * Register match routes with the Express application
@@ -310,10 +385,17 @@ export function registerMatchRoutes(app: express.Express): void {
         
         console.log('[Match Scores] All players verified - match completed');
         
+        // Calculate and award points using official algorithm
+        try {
+          await calculateAndAwardPoints(match);
+          console.log('[Match Scores] Points calculated and awarded successfully');
+        } catch (pointsError) {
+          console.error('[Match Scores] Error calculating points:', pointsError);
+          // Continue with notification even if points calculation fails
+        }
+        
         // Notify all players that match is verified
         await notifyMatchVerified(serial, playerIds);
-        
-        // TODO: Calculate and award points
       }
       
       res.json({ 
@@ -423,6 +505,15 @@ export function registerMatchRoutes(app: express.Express): void {
         
         console.log('[Match Verify] All players verified - match completed');
         
+        // Calculate and award points using official algorithm
+        try {
+          await calculateAndAwardPoints(match);
+          console.log('[Match Verify] Points calculated and awarded successfully');
+        } catch (pointsError) {
+          console.error('[Match Verify] Error calculating points:', pointsError);
+          // Continue with notification even if points calculation fails
+        }
+        
         // Notify all players
         const playerIds = [
           match.playerOneId,
@@ -432,8 +523,6 @@ export function registerMatchRoutes(app: express.Express): void {
         ].filter((id): id is number => id !== null);
         
         await notifyMatchVerified(serial, playerIds);
-        
-        // TODO: Calculate and award points
       }
       
       res.json({
