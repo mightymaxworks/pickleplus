@@ -926,7 +926,9 @@ export default function MatchArena() {
                 format: matchData.format,
                 pairings: matchData.pairings,
                 selectedPlayers: matchData.selectedPlayers,
-                scoringSystem: matchData.scoringSystem // Pass scoring system for MatchConfig
+                scoringSystem: matchData.scoringSystem, // Pass scoring system for MatchConfig
+                teamIdentity: matchData.teamIdentity, // Include team theme
+                matchStatus: matchData.matchStatus // Include match status for bonus info
               };
               sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
               

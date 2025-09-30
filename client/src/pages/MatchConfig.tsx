@@ -44,9 +44,59 @@ export default function MatchConfig() {
       const currentMatch = sessionStorage.getItem('currentMatch');
       if (currentMatch) {
         const matchData = JSON.parse(currentMatch);
+        console.log('MatchConfig - Raw match data:', matchData);
         
-        // Handle new format with direct player1/player2
+        // Priority 1: Handle pairings format (doubles matches)
+        if (matchData.pairings && matchData.pairings.team1 && matchData.pairings.team2) {
+          const player1Data = matchData.pairings.team1[0];
+          const player2Data = matchData.pairings.team2[0];
+          
+          if (player1Data && player2Data) {
+            console.log('MatchConfig - Using pairings format (doubles)');
+            return {
+              player1: {
+                id: player1Data.id || 'player1',
+                name: player1Data.displayName || player1Data.username || 'Player 1',
+                displayName: player1Data.displayName || player1Data.username || 'Player 1',
+                passportCode: player1Data.passportCode || 'NO-CODE',
+                rankingPoints: player1Data.rankingPoints || 0
+              },
+              player2: {
+                id: player2Data.id || 'player2', 
+                name: player2Data.displayName || player2Data.username || 'Player 2',
+                displayName: player2Data.displayName || player2Data.username || 'Player 2',
+                passportCode: player2Data.passportCode || 'NO-CODE',
+                rankingPoints: player2Data.rankingPoints || 0
+              }
+            };
+          }
+        }
+        
+        // Priority 2: Handle selectedPlayers format (singles matches - opponent is in array)
+        if (matchData.selectedPlayers && matchData.selectedPlayers.length > 0) {
+          const opponentData = matchData.selectedPlayers[0];
+          console.log('MatchConfig - Using selectedPlayers format (singles)');
+          return {
+            player1: {
+              id: 'current-user',
+              name: 'You',
+              displayName: 'You',
+              passportCode: 'YOUR-CODE',
+              rankingPoints: 1000
+            },
+            player2: {
+              id: opponentData.id || 'player2',
+              name: opponentData.displayName || opponentData.username || 'Opponent',
+              displayName: opponentData.displayName || opponentData.username || 'Opponent',
+              passportCode: opponentData.passportCode || 'NO-CODE',
+              rankingPoints: opponentData.rankingPoints || 0
+            }
+          };
+        }
+        
+        // Priority 3: Handle direct player1/player2 format (challenges)
         if (matchData.player1 && matchData.player2) {
+          console.log('MatchConfig - Using direct player format (challenge)');
           return {
             player1: {
               id: matchData.player1.id || 'player1',
@@ -64,35 +114,13 @@ export default function MatchConfig() {
             }
           };
         }
-        
-        // Handle old format with pairings (backwards compatibility)
-        if (matchData.pairings) {
-          const player1Data = matchData.pairings.team1?.[0];
-          const player2Data = matchData.pairings.team2?.[0];
-          
-          return {
-            player1: {
-              id: player1Data?.id || 'player1',
-              name: player1Data?.displayName || player1Data?.username || 'Player 1',
-              displayName: player1Data?.displayName || player1Data?.username || 'Player 1',
-              passportCode: player1Data?.passportCode || 'NO-CODE',
-              rankingPoints: player1Data?.rankingPoints || 0
-            },
-            player2: {
-              id: player2Data?.id || 'player2', 
-              name: player2Data?.displayName || player2Data?.username || 'Player 2',
-              displayName: player2Data?.displayName || player2Data?.username || 'Player 2',
-              passportCode: player2Data?.passportCode || 'NO-CODE',
-              rankingPoints: player2Data?.rankingPoints || 0
-            }
-          };
-        }
       }
     } catch (error) {
-      console.log('Could not load player data from session storage:', error);
+      console.error('MatchConfig - Error loading player data:', error);
     }
     
     // Fallback to defaults
+    console.warn('MatchConfig - Using fallback demo data');
     return {
       player1: { 
         id: '1', 
@@ -112,6 +140,7 @@ export default function MatchConfig() {
   };
 
   const playerData = getInitialPlayerData();
+  console.log('MatchConfig - Final player data:', playerData);
 
   // Get team theme from session storage or generate a fixed one
   const [teamTheme] = useState(() => {
@@ -227,49 +256,73 @@ export default function MatchConfig() {
             </div>
             <p className="text-slate-400">Configure your match settings</p>
             
-            {/* Epic Full-Screen Versus Preview */}
-            <div className="mt-6">
-              <VersusScreen
-                mode="mid"
-                teams={[
-                  {
-                    name: teamTheme.team1.name,
-                    color: teamTheme.team1.color,
-                    glowColor: teamTheme.team1.color,
-                    players: [playerData.player1]
-                  },
-                  {
-                    name: teamTheme.team2.name,
-                    color: teamTheme.team2.color,
-                    glowColor: teamTheme.team2.color,
-                    players: [playerData.player2]
-                  }
-                ]}
-                showStats={true}
-                intensity={0.8}
-              />
-            </div>
-            
-            {/* Player Names Display */}
-            <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-              <div className="flex items-center justify-center gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    {playerData.player1.displayName?.charAt(0) || playerData.player1.name?.charAt(0) || 'U'}
+            {/* Compact Versus Preview */}
+            <div className="mt-6 -mx-6">
+              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 border-y border-slate-700">
+                <div className="flex items-center justify-between gap-4">
+                  {/* Team 1 */}
+                  <div className="flex-1 text-left">
+                    <div 
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg"
+                      style={{ 
+                        backgroundColor: `${teamTheme.team1.color}20`,
+                        borderLeft: `3px solid ${teamTheme.team1.color}`
+                      }}
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                        style={{ backgroundColor: teamTheme.team1.color }}
+                      >
+                        {playerData.player1.displayName?.charAt(0) || playerData.player1.name?.charAt(0) || 'P'}
+                      </div>
+                      <div>
+                        <div className="text-white font-bold text-sm">
+                          {playerData.player1.displayName || playerData.player1.name}
+                        </div>
+                        <div className="text-xs text-slate-400 font-mono">
+                          {playerData.player1.passportCode}
+                        </div>
+                        <div className="text-xs" style={{ color: teamTheme.team1.color }}>
+                          {playerData.player1.rankingPoints} pts
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <div className="text-blue-300 font-medium">{playerData.player1.displayName || playerData.player1.name}</div>
-                    <div className="text-xs text-slate-400 font-mono">{playerData.player1.passportCode}</div>
+
+                  {/* VS Badge */}
+                  <div className="flex-shrink-0">
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-black text-lg px-4 py-2 rounded-lg shadow-lg transform rotate-3">
+                      VS
+                    </div>
                   </div>
-                </div>
-                <span className="text-slate-400 font-bold">vs</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    {playerData.player2.displayName?.charAt(0) || playerData.player2.name?.charAt(0) || 'P'}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-red-300 font-medium">{playerData.player2.displayName || playerData.player2.name}</div>
-                    <div className="text-xs text-slate-400 font-mono">{playerData.player2.passportCode}</div>
+
+                  {/* Team 2 */}
+                  <div className="flex-1 text-right">
+                    <div 
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg"
+                      style={{ 
+                        backgroundColor: `${teamTheme.team2.color}20`,
+                        borderRight: `3px solid ${teamTheme.team2.color}`
+                      }}
+                    >
+                      <div>
+                        <div className="text-white font-bold text-sm">
+                          {playerData.player2.displayName || playerData.player2.name}
+                        </div>
+                        <div className="text-xs text-slate-400 font-mono">
+                          {playerData.player2.passportCode}
+                        </div>
+                        <div className="text-xs" style={{ color: teamTheme.team2.color }}>
+                          {playerData.player2.rankingPoints} pts
+                        </div>
+                      </div>
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                        style={{ backgroundColor: teamTheme.team2.color }}
+                      >
+                        {playerData.player2.displayName?.charAt(0) || playerData.player2.name?.charAt(0) || 'P'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
