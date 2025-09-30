@@ -33,7 +33,6 @@ export default function QuickMatchRecorder() {
   const [games, setGames] = useState<GameScore[]>([{ team1: 0, team2: 0 }]);
   const [matchDate, setMatchDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
-  const [submitted, setSubmitted] = useState(false);
 
   // Load match data
   useEffect(() => {
@@ -121,7 +120,7 @@ export default function QuickMatchRecorder() {
     setGames(newGames);
   };
 
-  const calculateWinner = () => {
+  const calculateWinningTeam = () => {
     let team1Wins = 0;
     let team2Wins = 0;
     
@@ -131,6 +130,18 @@ export default function QuickMatchRecorder() {
     });
     
     return team1Wins > team2Wins ? 1 : 2;
+  };
+  
+  const getWinnerPlayerId = () => {
+    const winningTeam = calculateWinningTeam();
+    const match = matchData?.match;
+    
+    if (!match) return null;
+    
+    // Return the player ID of the winning team
+    // For singles: playerOneId or playerTwoId
+    // For doubles: return team captain (player, not partner) for simplicity
+    return winningTeam === 1 ? match.playerOneId : match.playerTwoId;
   };
 
   const handleSubmit = async () => {
@@ -152,23 +163,40 @@ export default function QuickMatchRecorder() {
       
       // For demo mode, simulate success
       if (isDemoSerial) {
+        const demoWinnerId = calculateWinningTeam(); // Use team index for demo
         console.log('[Quick Recorder] Demo submission:', {
           serial,
           games,
           matchDate,
           notes,
-          winnerId: calculateWinner()
+          winnerId: demoWinnerId
         });
         
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        setSubmitted(true);
         toast({
           title: '✅ Demo Match Submitted!',
           description: 'In production, all players would verify this match',
           duration: 3000
         });
+        
+        // Navigate to demo verification page after delay
+        setTimeout(() => {
+          navigate(`/match/${serial}/verify`);
+        }, 2000);
+        return;
+      }
+      
+      // Production mode: get real player ID
+      const winnerId = getWinnerPlayerId();
+      if (!winnerId) {
+        toast({
+          title: 'Error',
+          description: 'Could not determine winner - please try again',
+          variant: 'destructive'
+        });
+        setSubmitting(false);
         return;
       }
       
@@ -181,17 +209,21 @@ export default function QuickMatchRecorder() {
           games,
           matchDate,
           notes,
-          winnerId: calculateWinner()
+          winnerId
         })
       });
 
       if (response.ok) {
-        setSubmitted(true);
         toast({
           title: '✅ Match Submitted!',
-          description: 'Waiting for player verification...',
-          duration: 3000
+          description: 'Redirecting to verification page...',
+          duration: 2000
         });
+        
+        // Navigate to verification page after short delay
+        setTimeout(() => {
+          navigate(`/match/${serial}/verify`);
+        }, 2000);
       } else {
         throw new Error('Submission failed');
       }
@@ -230,62 +262,6 @@ export default function QuickMatchRecorder() {
             Back to Lobby
           </Button>
         </Card>
-      </div>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-md w-full"
-        >
-          <Card className="p-8 bg-slate-800 border-slate-700 text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring' }}
-            >
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="h-10 w-10 text-green-400" />
-              </div>
-            </motion.div>
-            
-            <h2 className="text-2xl font-bold text-white mb-2">Match Submitted!</h2>
-            <p className="text-slate-400 mb-2">Waiting for player verification...</p>
-            <p className="text-sm text-slate-500 mb-6">All players must approve before points are awarded</p>
-            
-            <div className="space-y-3">
-              <Button 
-                onClick={() => navigate('/match-arena')}
-                className="w-full bg-orange-500 hover:bg-orange-600"
-              >
-                <PlayCircle className="h-4 w-4 mr-2" />
-                Record Another Match
-              </Button>
-              
-              <Button 
-                onClick={() => navigate('/rankings')}
-                variant="outline"
-                className="w-full border-slate-600 hover:bg-slate-700"
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                View Rankings
-              </Button>
-              
-              <Button 
-                onClick={() => navigate('/')}
-                variant="ghost"
-                className="w-full text-slate-400 hover:text-white"
-              >
-                <Home className="h-4 w-4 mr-2" />
-                Back to Lobby
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
       </div>
     );
   }
