@@ -6,7 +6,9 @@ import {
   CheckCircle,
   Camera,
   Zap,
-  ArrowLeft
+  ArrowLeft,
+  PlayCircle,
+  Video
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ interface MatchConfig {
   pointTarget: 11 | 15 | 21;
   matchFormat: 'single' | 'best-of-3' | 'best-of-5';
   winByTwo: boolean;
+  recordingMode?: 'live' | 'quick' | 'coaching';
   liveStreamUrl?: string;
   recordingUrl?: string;
   videoProvider?: 'hls' | 'mp4' | 'youtube' | 'vimeo';
@@ -218,14 +221,33 @@ export default function MatchConfig() {
   };
 
   const startMatch = () => {
-    // Save configuration to sessionStorage for GamifiedMatchRecording to read
+    if (!config.recordingMode) {
+      console.error('No recording mode selected');
+      return;
+    }
+
+    // Save configuration to sessionStorage for modes to read
     sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
     
     // Save scoring preference to localStorage
     localStorage.setItem('pkl:lastScoringMode', config.scoringType);
     
-    // Navigate to point-by-point recording
-    navigate('/gamified-match-recording');
+    // Smart routing based on selected recording mode
+    switch (config.recordingMode) {
+      case 'live':
+        navigate('/gamified-match-recording');
+        break;
+      case 'quick':
+        // TODO: Build quick match recorder
+        console.log('Quick recorder coming soon');
+        navigate('/gamified-match-recording'); // Temporary fallback
+        break;
+      case 'coaching':
+        // TODO: Build coaching analysis tool
+        console.log('Coaching analysis coming soon');
+        navigate('/gamified-match-recording'); // Temporary fallback
+        break;
+    }
   };
 
   return (
@@ -422,6 +444,112 @@ export default function MatchConfig() {
               </motion.button>
             </div>
 
+            {/* Recording Mode Selection - CENTRAL FORK */}
+            <div className="space-y-3 pt-4 border-t border-slate-700">
+              <label className="text-sm text-slate-300 font-semibold block">
+                How do you want to record this match?
+              </label>
+              
+              {/* Live Score Tracker */}
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setConfig(prev => ({ ...prev, recordingMode: 'live' }))}
+                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                  config.recordingMode === 'live' 
+                    ? 'border-blue-500 bg-blue-500/20' 
+                    : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    config.recordingMode === 'live' ? 'bg-blue-500' : 'bg-slate-600'
+                  }`}>
+                    <PlayCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-white font-bold">Live Score Tracker</h3>
+                      {config.recordingMode === 'live' && (
+                        <CheckCircle className="h-4 w-4 text-blue-400" />
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Track every point in real-time with momentum visualization
+                    </p>
+                    <span className="text-xs text-slate-400 mt-1 inline-block">
+                      ⏱️ During the match
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Quick Match Recorder */}
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setConfig(prev => ({ ...prev, recordingMode: 'quick' }))}
+                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                  config.recordingMode === 'quick' 
+                    ? 'border-green-500 bg-green-500/20' 
+                    : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    config.recordingMode === 'quick' ? 'bg-green-500' : 'bg-slate-600'
+                  }`}>
+                    <Zap className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-white font-bold">Quick Match Recorder</h3>
+                      {config.recordingMode === 'quick' && (
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Just enter the final scores - done in 30 seconds
+                    </p>
+                    <span className="text-xs text-slate-400 mt-1 inline-block">
+                      ⚡ After the match
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Coaching Analysis */}
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setConfig(prev => ({ ...prev, recordingMode: 'coaching' }))}
+                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                  config.recordingMode === 'coaching' 
+                    ? 'border-purple-500 bg-purple-500/20' 
+                    : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    config.recordingMode === 'coaching' ? 'bg-purple-500' : 'bg-slate-600'
+                  }`}>
+                    <Video className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-white font-bold">Coaching Analysis</h3>
+                      {config.recordingMode === 'coaching' && (
+                        <CheckCircle className="h-4 w-4 text-purple-400" />
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Upload video and analyze shot-by-shot with coaching notes
+                    </p>
+                    <span className="text-xs text-slate-400 mt-1 inline-block">
+                      🎓 Coach/Training mode
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+
             {/* Video Configuration */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -515,12 +643,39 @@ export default function MatchConfig() {
 
           <Button
             onClick={startMatch}
-            className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3"
+            disabled={!config.recordingMode}
+            className={`w-full mt-6 font-bold py-3 ${
+              config.recordingMode 
+                ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+            }`}
             size="lg"
             data-testid="button-start-match"
           >
-            <Zap className="h-5 w-5 mr-2" />
-            Start Match
+            {config.recordingMode === 'live' && (
+              <>
+                <PlayCircle className="h-5 w-5 mr-2" />
+                Start Live Tracking
+              </>
+            )}
+            {config.recordingMode === 'quick' && (
+              <>
+                <Zap className="h-5 w-5 mr-2" />
+                Quick Entry
+              </>
+            )}
+            {config.recordingMode === 'coaching' && (
+              <>
+                <Video className="h-5 w-5 mr-2" />
+                Start Analysis
+              </>
+            )}
+            {!config.recordingMode && (
+              <>
+                <Gamepad2 className="h-5 w-5 mr-2" />
+                Select Recording Mode
+              </>
+            )}
           </Button>
         </Card>
       </motion.div>
