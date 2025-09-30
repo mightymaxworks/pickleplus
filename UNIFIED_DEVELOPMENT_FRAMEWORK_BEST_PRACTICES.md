@@ -24,6 +24,17 @@
 
 **CONTEXT**: Complete reimagining of Pickle+ as trading card universe while preserving ALL existing algorithms and functionality. Every user becomes a collectible trading card, transforming functional interactions into engaging collection-building experiences.
 
+### **CHANGELOG v4.2.0** 📋
+*September 30, 2025 - Routing Architecture Standards*
+
+**ADDED**:
+- **RULE RT-01**: Separation of Concerns for Routes - Mandatory separation of configuration, presentation, and business logic into distinct routes when they serve different user intents
+- **File Size Guidelines**: Routes exceeding 1500 lines should be investigated for separation opportunities
+- **Data Passing Patterns**: Standardized patterns for passing data between routes (sessionStorage, URL params, route state)
+- **Case Study**: Documented MatchConfig separation (2093 lines → 483 + 1808 lines with 285 lines saved through component extraction)
+
+**CONTEXT**: Critical architectural standards added to prevent mixed concerns in routes that lead to massive files (2000+ lines), debugging difficulties, poor testability, and confused mental models where URL doesn't match content. Based on successful separation of /match-config from /gamified-match-recording.
+
 ### **CHANGELOG v4.1.0** 📋
 *September 27, 2025 - Navigation Architecture Standards*
 
@@ -245,6 +256,107 @@ describe('Navigation Architecture', () => {
   });
 });
 ```
+
+## 🛣️ ROUTING ARCHITECTURE STANDARDS
+
+### **RULE RT-01: SEPARATION OF CONCERNS FOR ROUTES**
+**Each route must have ONE clear responsibility. Configuration, presentation, and business logic must be separated into distinct routes when they serve different user intents.**
+
+**Problem:**
+Routes that mix multiple concerns (e.g., configuration UI + recording UI in the same component) lead to:
+- Massive file sizes (2000+ lines) that are difficult to maintain
+- Debugging difficulties - changes to one concern affect others
+- State management complexity - conditional rendering based on workflow stage
+- Poor testability - cannot test configuration independently from recording
+- Confused mental models - URL doesn't match what user sees
+
+**Example Violation - Before:**
+```tsx
+// ❌ FORBIDDEN - Mixed concerns in single route
+// /gamified-match-recording (2093 lines)
+export default function GamifiedMatchRecording() {
+  const [showConfig, setShowConfig] = useState(true);
+  
+  // 300+ lines of configuration UI
+  const MatchConfigModal = () => { /* ... */ };
+  
+  // 1800+ lines of recording UI
+  
+  if (showConfig) {
+    return <MatchConfigModal />; // URL says "recording" but shows config!
+  }
+  
+  return <RecordingInterface />;
+}
+```
+
+**Correct Implementation - After:**
+```tsx
+// ✅ CORRECT - Separated routes with clear responsibilities
+
+// /match-config (483 lines) - Configuration only
+export default function MatchConfig() {
+  const [config, setConfig] = useState({...});
+  
+  const startMatch = () => {
+    sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
+    navigate('/gamified-match-recording');
+  };
+  
+  return <ConfigurationUI />;
+}
+
+// /gamified-match-recording (1808 lines) - Recording only
+export default function GamifiedMatchRecording() {
+  const config = JSON.parse(sessionStorage.getItem('pkl:matchConfig') || '{}');
+  
+  // No configuration UI here - only recording interface
+  return <RecordingInterface config={config} />;
+}
+```
+
+**Implementation Requirements:**
+1. **Single Responsibility**: Each route serves one user intent (configure, record, analyze, etc.)
+2. **Clear Navigation**: Route URLs must accurately reflect what the user will see
+3. **Data Passing**: Use sessionStorage, URL params, or route state to pass data between routes
+4. **No Conditional Rendering**: Routes should not hide/show completely different UIs based on state
+5. **File Size Guideline**: If a route file exceeds 1500 lines, investigate separation opportunities
+6. **Shared Components**: Extract common UI elements to shared components to avoid duplication
+
+**Benefits:**
+- ✅ Smaller, focused files easier to understand and maintain
+- ✅ Independent testing of each workflow stage
+- ✅ Clear mental model - URL matches content
+- ✅ Better code reusability through component extraction
+- ✅ Easier debugging - changes are isolated to their concern
+- ✅ Deep linking - can bookmark/share specific workflow stages
+
+**Data Passing Patterns:**
+```tsx
+// Pattern 1: sessionStorage for complex objects
+sessionStorage.setItem('pkl:matchConfig', JSON.stringify(config));
+const config = JSON.parse(sessionStorage.getItem('pkl:matchConfig') || '{}');
+
+// Pattern 2: URL params for simple values
+navigate(`/match-recording?mode=live&scoring=traditional`);
+const params = new URLSearchParams(location.search);
+
+// Pattern 3: wouter state (if using wouter)
+navigate('/next-route', { state: { config } });
+```
+
+**Testing Requirements:**
+- Test each route independently
+- Test data flow between routes (config saved → config loaded)
+- Test fallback behavior when data is missing
+- Test deep linking to each route directly
+
+**Case Study: MatchConfig Separation (September 2025)**
+- **Before**: GamifiedMatchRecording.tsx = 2093 lines (config + recording mixed)
+- **After**: MatchConfig.tsx = 483 lines, GamifiedMatchRecording.tsx = 1808 lines
+- **Result**: 285 lines saved through component extraction, clearer separation of concerns
+
+---
 
 ## 🚨 CRITICAL COMPLIANCE REQUIREMENTS
 
