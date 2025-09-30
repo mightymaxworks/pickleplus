@@ -1295,7 +1295,7 @@ export default function GamifiedMatchRecording() {
     window.location.href = '/match-config';
   };
 
-  // Save match and award points using official algorithm
+  // Save match and submit for verification (uses official algorithm)
   const saveMatch = async () => {
     if (!user) {
       toast({
@@ -1314,21 +1314,66 @@ export default function GamifiedMatchRecording() {
       return;
     }
 
+    // VALIDATION: Check we have at least one completed game
+    if (matchState.gameHistory.length === 0) {
+      toast({
+        title: 'No Games Recorded',
+        description: 'Please complete at least one game before saving',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // VALIDATION: Ensure match config is valid
+    if (!matchState.config.scoringType || !matchState.config.pointTarget) {
+      toast({
+        title: 'Invalid Configuration',
+        description: 'Match configuration is incomplete',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
       console.log('[Live Tracker] Saving match with official algorithm');
       
-      // Convert game history to format expected by API
+      // Convert game history to API format (team1 = player1, team2 = player2)
       const games = matchState.gameHistory.map(game => ({
         team1: game.player1Score,
         team2: game.player2Score
       }));
 
-      // Determine winner
+      // Determine overall winner based on games won
       const p1Wins = matchState.gameHistory.filter(g => g.winner === matchState.player1.name).length;
       const p2Wins = matchState.gameHistory.filter(g => g.winner === matchState.player2.name).length;
-      const winnerId = p1Wins > p2Wins ? user.id : null; // This assumes current user is player 1
+      
+      // Validate no tie
+      if (p1Wins === p2Wins) {
+        toast({
+          title: 'Match Tied',
+          description: 'Cannot save a tied match - please complete additional game',
+          variant: 'destructive'
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      // NOTE: This is a limitation - we need player search functionality
+      // For now, this will only work if both players are pre-configured
+      // TODO: Add player search UI to get real player IDs before match starts
+      toast({
+        title: 'Player Search Required',
+        description: 'This feature requires player search to be implemented first. Coming soon!',
+        variant: 'destructive'
+      });
+      setIsSaving(false);
+      return;
+
+      // DISABLED CODE - Will be enabled when player search is implemented
+      /*
+      const winnerId = p1Wins > p2Wins ? player1RealId : player2RealId;
 
       // Create match with unique serial
       const createResponse = await fetch('/api/matches/create', {
@@ -1343,20 +1388,21 @@ export default function GamifiedMatchRecording() {
             pointTarget: matchState.config.pointTarget
           },
           players: {
-            player1: { id: user.id, name: matchState.player1.name },
-            player2: { id: null, name: matchState.player2.name } // TODO: Get real player 2 ID
+            player1: { id: player1RealId, name: matchState.player1.name },
+            player2: { id: player2RealId, name: matchState.player2.name }
           }
         })
       });
 
       if (!createResponse.ok) {
-        throw new Error('Failed to create match');
+        const errorData = await createResponse.json();
+        throw new Error(errorData.error || 'Failed to create match');
       }
 
       const { serial } = await createResponse.json();
       console.log('[Live Tracker] Match created with serial:', serial);
 
-      // Submit scores for verification
+      // Submit scores for verification (triggers official algorithm)
       const scoresResponse = await fetch(`/api/matches/${serial}/scores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1370,13 +1416,14 @@ export default function GamifiedMatchRecording() {
       });
 
       if (!scoresResponse.ok) {
-        throw new Error('Failed to submit scores');
+        const errorData = await scoresResponse.json();
+        throw new Error(errorData.error || 'Failed to submit scores');
       }
 
       setMatchSaved(true);
       toast({
-        title: '✅ Match Saved!',
-        description: 'Match recorded and submitted for verification. Points will be awarded after all players verify.',
+        title: '✅ Match Submitted for Verification!',
+        description: 'Points will be awarded after all players verify the match.',
         duration: 5000
       });
 
@@ -1384,6 +1431,7 @@ export default function GamifiedMatchRecording() {
       setTimeout(() => {
         navigate(`/match/${serial}/verify`);
       }, 2000);
+      */
 
     } catch (error) {
       console.error('[Live Tracker] Save error:', error);
@@ -1886,29 +1934,31 @@ export default function GamifiedMatchRecording() {
               ))}
             </div>
             
-            {/* Save Match Button - Uses Official Algorithm */}
+            {/* Save Match Button - Uses Official Algorithm (Requires Player Search Feature) */}
             {user && !matchSaved && (
               <div className="mb-4">
                 <Button
                   onClick={saveMatch}
                   disabled={isSaving}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white opacity-60 cursor-not-allowed"
                   data-testid="button-save-match"
+                  title="Requires player search feature"
                 >
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
+                      Validating...
                     </>
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Save Match & Award Points
+                      Submit for Verification
                     </>
                   )}
                 </Button>
                 <p className="text-xs text-white/70 mt-2">
-                  Uses official algorithm: System B (3/1) with age & gender multipliers
+                  <strong>Coming Soon:</strong> Requires player search to link real user accounts.<br/>
+                  When enabled: Uses official algorithm (System B 3/1 + age/gender multipliers). Points awarded after verification.
                 </p>
               </div>
             )}
