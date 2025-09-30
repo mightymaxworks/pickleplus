@@ -136,9 +136,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/auth/facebook/callback', 
     passport.authenticate('facebook', { failureRedirect: '/login' }),
     (req, res) => {
-      // Successful authentication, redirect to dashboard
-      console.log('[Facebook OAuth] Successful authentication, redirecting to dashboard');
-      res.redirect('/');
+      // Successful authentication, redirect to unified prototype
+      console.log('[Facebook OAuth] Successful authentication, redirecting to unified prototype');
+      res.redirect('/unified-prototype');
     }
   );
 
@@ -148,9 +148,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/auth/kakao/callback', 
     passport.authenticate('kakao', { failureRedirect: '/login' }),
     (req, res) => {
-      // Successful authentication, redirect to dashboard
-      console.log('[Kakao OAuth] Successful authentication, redirecting to dashboard');
-      res.redirect('/');
+      // Successful authentication, redirect to unified prototype
+      console.log('[Kakao OAuth] Successful authentication, redirecting to unified prototype');
+      res.redirect('/unified-prototype');
     }
   );
 
@@ -160,9 +160,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/auth/line/callback', 
     passport.authenticate('line', { failureRedirect: '/login' }),
     (req, res) => {
-      // Successful authentication, redirect to dashboard
-      console.log('[Line OAuth] Successful authentication, redirecting to dashboard');
-      res.redirect('/');
+      // Successful authentication, redirect to unified prototype
+      console.log('[Line OAuth] Successful authentication, redirecting to unified prototype');
+      res.redirect('/unified-prototype');
     }
   );
 
@@ -250,8 +250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[WeChat OAuth] Login error:', err);
             return res.redirect('/login?error=login_failed');
           }
-          console.log('[WeChat OAuth] Successful authentication, redirecting to dashboard');
-          res.redirect('/');
+          console.log('[WeChat OAuth] Successful authentication, redirecting to unified prototype');
+          res.redirect('/unified-prototype');
         });
       } else {
         // Create new user from WeChat profile
@@ -275,8 +275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('[WeChat OAuth] Login error:', err);
             return res.redirect('/login?error=login_failed');
           }
-          console.log('[WeChat OAuth] Successful authentication, redirecting to dashboard');
-          res.redirect('/');
+          console.log('[WeChat OAuth] Successful authentication, redirecting to unified prototype');
+          res.redirect('/unified-prototype');
         });
       }
       

@@ -122,7 +122,7 @@ export default function NewAuthPage() {
         description: "Successfully logged in to your player passport.",
         variant: "success",
       });
-      setLocation("/dashboard");
+      setLocation("/unified-prototype");
     } catch (error: any) {
       toast({
         title: "Login Failed",
@@ -149,7 +149,7 @@ export default function NewAuthPage() {
         description: "Your player passport has been created successfully.",
         variant: "success",
       });
-      setLocation("/dashboard");
+      setLocation("/unified-prototype");
     } catch (error: any) {
       toast({
         title: "Registration Failed",
