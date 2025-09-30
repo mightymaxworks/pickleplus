@@ -144,7 +144,7 @@ const GamingLoader = () => (
 
 // Loading fallback component shown during lazy loading
 export const LazyLoadingFallback = () => (
-  <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+  <div className="fixed inset-0 w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
     {/* Animated grid pattern background */}
     <div className="absolute inset-0 opacity-10">
       <div className="absolute inset-0" style={{

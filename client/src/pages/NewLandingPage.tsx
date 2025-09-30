@@ -187,7 +187,7 @@ export default function NewLandingPage() {
               <span className="text-white">Next-Gen</span>
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500">
-                Competitive Platform
+                Pickleball Passport
               </span>
             </motion.h1>
             
@@ -198,7 +198,7 @@ export default function NewLandingPage() {
               transition={{ delay: 0.6, duration: 0.8 }}
               className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto"
             >
-              Track every match. Verify every win. Build your legacy.
+              Your verified digital identity for competitive pickleball. Track every match. Verify every win. Build your legacy.
               <br className="hidden md:block" />
               <span className="text-orange-400 font-semibold">From Weekend Warriors to Elite Champions — Where Players Become Legends.</span>
             </motion.p>
