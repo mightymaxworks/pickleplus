@@ -925,7 +925,8 @@ export default function MatchArena() {
               const recorderData = {
                 format: matchData.format,
                 pairings: matchData.pairings,
-                selectedPlayers: matchData.selectedPlayers
+                selectedPlayers: matchData.selectedPlayers,
+                scoringSystem: matchData.scoringSystem // Pass scoring system for MatchConfig
               };
               sessionStorage.setItem('currentMatch', JSON.stringify(recorderData));
               
@@ -934,9 +935,9 @@ export default function MatchArena() {
               
               console.log('Match Data:', matchData);
               
-              // Navigate to gamified match recorder with scoring system in URL
+              // Navigate to match configuration first
               setTimeout(() => {
-                setLocation(`/gamified-match-recording?scoring=${matchData.scoringSystem}`);
+                setLocation(`/match-config?scoring=${matchData.scoringSystem}`);
               }, 1500);
             }}
           />
@@ -1129,8 +1130,8 @@ export default function MatchArena() {
                             // Remove challenge from list
                             setChallenges(prev => prev.filter(c => c.id !== challenge.id));
                             
-                            // Navigate to gamified match recorder
-                            setLocation('/gamified-match-recording');
+                            // Navigate to match configuration first
+                            setLocation('/match-config');
                           }
                         }}
                       >

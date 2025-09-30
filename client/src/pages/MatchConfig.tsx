@@ -134,26 +134,46 @@ export default function MatchConfig() {
 
   // Get default scoring system
   const getScoringSystem = (): 'traditional' | 'rally' => {
+    // Priority 1: Check URL params (explicit user choice)
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const scoringParam = urlParams.get('scoring');
       if (scoringParam === 'traditional' || scoringParam === 'rally') {
+        console.log('Scoring system from URL:', scoringParam);
         return scoringParam;
       }
     } catch (error) {
       console.log('Could not read scoring system from URL:', error);
     }
 
+    // Priority 2: Check sessionStorage for match data (from MatchArena)
+    try {
+      const currentMatch = sessionStorage.getItem('currentMatch');
+      if (currentMatch) {
+        const matchData = JSON.parse(currentMatch);
+        if (matchData.scoringSystem === 'traditional' || matchData.scoringSystem === 'rally') {
+          console.log('Scoring system from match data:', matchData.scoringSystem);
+          return matchData.scoringSystem;
+        }
+      }
+    } catch (error) {
+      console.log('Could not read scoring system from match data:', error);
+    }
+
+    // Priority 3: Check localStorage (last used preference)
     try {
       const lastScoringMode = localStorage.getItem('pkl:lastScoringMode');
       if (lastScoringMode === 'traditional' || lastScoringMode === 'rally') {
+        console.log('Scoring system from localStorage:', lastScoringMode);
         return lastScoringMode;
       }
     } catch (error) {
       console.log('Could not load scoring system from localStorage:', error);
     }
 
-    return 'rally';
+    // Default to traditional scoring (standard pickleball rules)
+    console.log('Scoring system defaulting to: traditional');
+    return 'traditional';
   };
 
   // Initialize configuration state
