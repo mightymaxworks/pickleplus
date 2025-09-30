@@ -598,13 +598,12 @@ export function registerMatchRoutes(app: express.Express): void {
         }
       }
 
-      // Calculate points according to agreed system: 3 points for win, 1 point for loss
-      const winnerPoints = 3;
-      const loserPoints = 1;
-
       // Check if user is admin - admins get auto-completed matches
       const user = req.user as any;
       const isAdmin = user?.isAdmin || false;
+      
+      // ALGORITHM COMPLIANCE: Points calculated only after verification or for admin matches
+      // Regular matches must go through verification workflow before points are awarded
       
       // CRITICAL DUPLICATE DETECTION: Check for duplicate matches
       const matchDate = scheduledDate ? new Date(scheduledDate) : new Date();
@@ -646,16 +645,34 @@ export function registerMatchRoutes(app: express.Express): void {
         notes: `${notes || ''} [Game Scores: ${detailedScores}]`.trim(),
         tournamentId: validTournamentId,
         matchDate: matchDate,
-        pointsAwarded: winnerPoints,
+        pointsAwarded: 0, // Points calculated after verification
         xpAwarded: 0
       });
 
-      // ENHANCED: Use Multi-Age Group Ranking Service for UDF algorithm compliance
-      try {
-        const { MultiDimensionalRankingService } = await import('../modules/ranking/service');
-        const multiDimensionalRankingService = new MultiDimensionalRankingService();
+      // ALGORITHM COMPLIANCE: Only award points for admin-verified matches
+      // Regular matches must complete verification workflow first
+      if (isAdmin) {
+        console.log('[ADMIN MATCH] Calculating points immediately for admin-verified match');
         
-        console.log('[MULTI-AGE COMPLIANCE] Using enhanced MultiDimensionalRankingService for points calculation');
+        // Use official algorithm for point calculation
+        try {
+          await calculateAndAwardPoints(newMatch);
+          console.log('[ADMIN MATCH] Points calculated and awarded successfully');
+        } catch (pointsError) {
+          console.error('[ADMIN MATCH] Error calculating points:', pointsError);
+        }
+      }
+      
+      // LEGACY: Multi-Age Group Ranking Service (being phased out in favor of official algorithm)
+      // TODO: Remove this section after confirming all matches use calculateAndAwardPoints
+      try {
+        if (!isAdmin) {
+          console.log('[MATCH CREATION] Non-admin match created - awaiting verification before points calculation');
+        } else {
+          const { MultiDimensionalRankingService } = await import('../modules/ranking/service');
+          const multiDimensionalRankingService = new MultiDimensionalRankingService();
+          
+          console.log('[MULTI-AGE COMPLIANCE] Using enhanced MultiDimensionalRankingService for multi-age updates');
         
         // Process match using multi-age group ranking updates
         const playerOneIdResolved = playerOneId || (req.user as any)?.id;
@@ -783,37 +800,13 @@ export function registerMatchRoutes(app: express.Express): void {
           console.log(`[MULTI-AGE COMPLIANCE] Partner ${playerId}: +${picklePointsToAdd} pickle points`);
         }
         
-        console.log('[MULTI-AGE COMPLIANCE] Successfully processed all player rewards with multi-age group algorithm');
+          console.log('[MULTI-AGE COMPLIANCE] Successfully processed all player rewards with multi-age group algorithm');
+        }
       } catch (error) {
-        console.error(`[UDF COMPLIANCE] Error using enhanced MatchRewardService: ${(error as Error).message}`);
-        // Fallback to basic points to ensure match creation doesn't fail
-        console.log('[FALLBACK] Using basic points calculation as fallback');
-        
-        const playerOneIdResolved = playerOneId || (req.user as any)?.id;
-        const allPlayerIds = [
-          playerOneIdResolved,
-          playerTwoId,
-          playerOnePartnerId,
-          playerTwoPartnerId
-        ].filter(id => id);
-
-        const isTeamOneWinner = winnerId === playerOneIdResolved;
-        const winningTeam = isTeamOneWinner 
-          ? [playerOneIdResolved, playerOnePartnerId].filter(id => id)
-          : [playerTwoId, playerTwoPartnerId].filter(id => id);
-
-        for (const playerId of allPlayerIds) {
-          const isWinner = winningTeam.includes(playerId);
-          const points = isWinner ? 3 : 1;
-          const picklePoints = Math.round(points * 1.5);
-          
-          await storage.updateUserPicklePoints(playerId, picklePoints);
-          await storage.updateUserRankingPoints(playerId, points, formatType === 'doubles' ? 'doubles' : 'singles');
-          
-          // CRITICAL FIX: Update match statistics in fallback too
-          await storage.updateUserMatchStatistics(playerId, isWinner);
-          
-          console.log(`[FALLBACK] Player ${playerId}: +${points} ranking points, +${picklePoints} pickle points`);
+        if (isAdmin) {
+          console.error(`[UDF COMPLIANCE] Error using enhanced MatchRewardService: ${(error as Error).message}`);
+          // For admin matches, fallback is already handled by calculateAndAwardPoints
+          console.log('[ADMIN MATCH] Points already calculated by official algorithm');
         }
       }
 
