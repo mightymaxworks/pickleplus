@@ -12,8 +12,18 @@ import MascotLoader from '@/components/ui/MascotLoader';
 
 // Loading fallback component shown during lazy loading
 export const LazyLoadingFallback = () => (
-  <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center">
-    <MascotLoader message="Getting things ready..." size="md" />
+  <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
+    {/* Animated grid pattern background */}
+    <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0" style={{
+        backgroundImage: `linear-gradient(#ea580c 1px, transparent 1px), linear-gradient(90deg, #ea580c 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }} />
+    </div>
+    
+    <div className="relative z-10">
+      <MascotLoader message="Getting things ready..." size="md" />
+    </div>
   </div>
 );
 
