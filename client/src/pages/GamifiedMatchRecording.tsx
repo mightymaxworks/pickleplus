@@ -1043,7 +1043,7 @@ export default function GamifiedMatchRecording() {
       const hadServe = currentServe;
       
       // Traditional scoring: Only serving team can score
-      if (scoringSystem === 'traditional') {
+      if (prev.config.scoringType === 'traditional') {
         const isSideOut = hadServe !== scoringTeam;
         
         if (isSideOut) {
@@ -1561,9 +1561,10 @@ export default function GamifiedMatchRecording() {
               onClick={startMatch}
               className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3"
               size="lg"
+              data-testid="button-start-match"
             >
               <Zap className="h-5 w-5 mr-2" />
-              Start Match Arena!
+              Start Match
             </Button>
           </Card>
         </motion.div>
@@ -1889,22 +1890,36 @@ export default function GamifiedMatchRecording() {
         <div className="grid grid-cols-2 gap-6">
           {/* Player 1 Controls */}
           <div className="space-y-3">
-            <div className="text-center text-white font-semibold">{matchState.player1.name}</div>
+            <div className="text-center text-white font-semibold flex items-center justify-center gap-2">
+              {matchState.player1.name}
+              {currentServe === 'team1' && matchState.config.scoringType === 'traditional' && (
+                <Disc className="h-4 w-4 text-blue-400 animate-pulse" />
+              )}
+            </div>
             <div className="flex gap-2">
               <PulsingScoreButton
                 onClick={() => removePoint('1')}
                 variant="danger"
                 disabled={matchState.matchComplete || matchState.player1.score === 0}
+                data-testid="button-minus-player1"
               >
                 <Minus className="h-6 w-6" />
               </PulsingScoreButton>
-              <PulsingScoreButton
-                onClick={() => addPoint('1')}
-                variant={isWinning('1') ? 'winning' : 'default'}
-                disabled={matchState.matchComplete}
-              >
-                <Plus className="h-6 w-6" />
-              </PulsingScoreButton>
+              <div className="flex flex-col gap-1">
+                <PulsingScoreButton
+                  onClick={() => addPoint('1')}
+                  variant={isWinning('1') ? 'winning' : 'default'}
+                  disabled={matchState.matchComplete}
+                  data-testid="button-plus-player1"
+                >
+                  <Plus className="h-6 w-6" />
+                </PulsingScoreButton>
+                <div className="text-xs text-center text-slate-400 font-medium">
+                  {matchState.config.scoringType === 'traditional' 
+                    ? (currentServe === 'team1' ? '✓ Point' : '⟳ Side-out')
+                    : 'Point'}
+                </div>
+              </div>
               <div className="flex-1 flex items-center justify-center bg-slate-700 rounded-xl">
                 <span className="text-3xl font-bold text-white">{matchState.player1.score}</span>
               </div>
@@ -1913,22 +1928,36 @@ export default function GamifiedMatchRecording() {
 
           {/* Player 2 Controls */}
           <div className="space-y-3">
-            <div className="text-center text-white font-semibold">{matchState.player2.name}</div>
+            <div className="text-center text-white font-semibold flex items-center justify-center gap-2">
+              {matchState.player2.name}
+              {currentServe === 'team2' && matchState.config.scoringType === 'traditional' && (
+                <Disc className="h-4 w-4 text-blue-400 animate-pulse" />
+              )}
+            </div>
             <div className="flex gap-2">
               <div className="flex-1 flex items-center justify-center bg-slate-700 rounded-xl">
                 <span className="text-3xl font-bold text-white">{matchState.player2.score}</span>
               </div>
-              <PulsingScoreButton
-                onClick={() => addPoint('2')}
-                variant={isWinning('2') ? 'winning' : 'default'}
-                disabled={matchState.matchComplete}
-              >
-                <Plus className="h-6 w-6" />
-              </PulsingScoreButton>
+              <div className="flex flex-col gap-1">
+                <PulsingScoreButton
+                  onClick={() => addPoint('2')}
+                  variant={isWinning('2') ? 'winning' : 'default'}
+                  disabled={matchState.matchComplete}
+                  data-testid="button-plus-player2"
+                >
+                  <Plus className="h-6 w-6" />
+                </PulsingScoreButton>
+                <div className="text-xs text-center text-slate-400 font-medium">
+                  {matchState.config.scoringType === 'traditional' 
+                    ? (currentServe === 'team2' ? '✓ Point' : '⟳ Side-out')
+                    : 'Point'}
+                </div>
+              </div>
               <PulsingScoreButton
                 onClick={() => removePoint('2')}
                 variant="danger"
                 disabled={matchState.matchComplete || matchState.player2.score === 0}
+                data-testid="button-minus-player2"
               >
                 <Minus className="h-6 w-6" />
               </PulsingScoreButton>
@@ -1937,119 +1966,7 @@ export default function GamifiedMatchRecording() {
         </div>
       </Card>
 
-      {/* Traditional Scoring Rally Result Control - Only for Traditional Scoring */}
-      {scoringSystem === 'traditional' && !matchState.matchComplete && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <Card className="p-6 bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-blue-500/50 backdrop-blur-sm">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Disc className="h-5 w-5 text-blue-400" />
-              <h3 className="text-white font-semibold">Traditional Scoring - Rally Result</h3>
-            </div>
-            
-            <div className="text-center mb-4">
-              <Badge className="bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                Current Serve: {currentServe === 'team1' ? matchState.player1.name : matchState.player2.name}
-              </Badge>
-            </div>
-
-            <div className="space-y-4">
-              {/* Player 1 Rally Result */}
-              <div className="space-y-2">
-                <div className="text-center text-white font-medium flex items-center justify-center gap-2">
-                  {matchState.player1.name} Won Rally
-                  {currentServe === 'team1' && <Disc className="h-4 w-4 text-blue-400" />}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div data-testid="button-point-player1">
-                    <PulsingScoreButton
-                      onClick={() => addPoint('1')}
-                      variant={currentServe === 'team1' ? 'winning' : 'default'}
-                      disabled={currentServe !== 'team1'}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <Plus className="h-5 w-5" />
-                        <span className="text-sm font-semibold">POINT +1</span>
-                        <span className="text-xs opacity-80">Score & Keep Serve</span>
-                      </div>
-                    </PulsingScoreButton>
-                  </div>
-                  
-                  <div data-testid="button-sideout-player1">
-                    <PulsingScoreButton
-                      onClick={() => addPoint('1')}
-                      variant="default"
-                      disabled={currentServe === 'team1'}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <ArrowLeftRight className="h-5 w-5" />
-                        <span className="text-sm font-semibold">SIDE-OUT</span>
-                        <span className="text-xs opacity-80">Serve Changes</span>
-                      </div>
-                    </PulsingScoreButton>
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-600"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-slate-800 px-2 text-slate-400">OR</span>
-                </div>
-              </div>
-
-              {/* Player 2 Rally Result */}
-              <div className="space-y-2">
-                <div className="text-center text-white font-medium flex items-center justify-center gap-2">
-                  {matchState.player2.name} Won Rally
-                  {currentServe === 'team2' && <Disc className="h-4 w-4 text-blue-400" />}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div data-testid="button-point-player2">
-                    <PulsingScoreButton
-                      onClick={() => addPoint('2')}
-                      variant={currentServe === 'team2' ? 'winning' : 'default'}
-                      disabled={currentServe !== 'team2'}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <Plus className="h-5 w-5" />
-                        <span className="text-sm font-semibold">POINT +1</span>
-                        <span className="text-xs opacity-80">Score & Keep Serve</span>
-                      </div>
-                    </PulsingScoreButton>
-                  </div>
-                  
-                  <div data-testid="button-sideout-player2">
-                    <PulsingScoreButton
-                      onClick={() => addPoint('2')}
-                      variant="default"
-                      disabled={currentServe === 'team2'}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <ArrowLeftRight className="h-5 w-5" />
-                        <span className="text-sm font-semibold">SIDE-OUT</span>
-                        <span className="text-xs opacity-80">Serve Changes</span>
-                      </div>
-                    </PulsingScoreButton>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Helper text */}
-            <div data-testid="text-traditional-scoring-help" className="mt-4 text-xs text-slate-400 text-center bg-slate-800/50 rounded-lg p-3">
-              💡 <span className="text-blue-300">Traditional Scoring:</span> Only the serving team can score points. 
-              If the receiving team wins the rally, it's a <span className="text-orange-300">side-out</span> (serve changes, no point scored).
-            </div>
-          </Card>
-        </motion.div>
-      )}
+      {/* Traditional Scoring Card Removed - Logic now integrated into main score controls above */}
 
       {/* Strategic Message Toasts */}
       <MessageToast
