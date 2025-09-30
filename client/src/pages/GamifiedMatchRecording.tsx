@@ -791,69 +791,7 @@ export default function GamifiedMatchRecording() {
     return pickleballTeamThemes[Math.floor(Math.random() * pickleballTeamThemes.length)];
   };
 
-  // Get real player names and data from session storage or use defaults  
-  const getInitialPlayerNames = () => {
-    try {
-      // First try to get current match data (from challenge acceptance)
-      const currentMatch = sessionStorage.getItem('currentMatch');
-      if (currentMatch) {
-        const matchData = JSON.parse(currentMatch);
-        console.log("Match Data:", matchData);
-        
-        // Handle pairings data from match creation wizard
-        if (matchData.pairings && matchData.teamIdentity) {
-          return {
-            player1: matchData.teamIdentity.team1.name,
-            player2: matchData.teamIdentity.team2.name
-          };
-        } else if (matchData.pairings) {
-          const team1Names = matchData.pairings.team1.map((p: any) => p.displayName || p.username || p.name).join(' & ');
-          const team2Names = matchData.pairings.team2.map((p: any) => p.displayName || p.username || p.name).join(' & ');
-          return {
-            player1: team1Names,
-            player2: team2Names
-          };
-        }
-        
-        // Fallback to simple player1/player2 format
-        return {
-          player1: matchData.player1,
-          player2: matchData.player2
-        };
-      }
-      
-      // Fallback to old format for backwards compatibility
-      const storedNames = sessionStorage.getItem('realPlayerNames');
-      if (storedNames) {
-        const playerNames = JSON.parse(storedNames);
-        
-        // Check if it's a doubles match (has team players)
-        if (playerNames.team1Player1 && playerNames.team2Player1) {
-          return {
-            player1: `${playerNames.team1Player1} & ${playerNames.team1Player2}`,
-            player2: `${playerNames.team2Player1} & ${playerNames.team2Player2}`
-          };
-        }
-        // Singles match
-        else if (playerNames.player1 && playerNames.player2) {
-          return {
-            player1: playerNames.player1,
-            player2: playerNames.player2
-          };
-        }
-      }
-    } catch (error) {
-      console.log('Could not load player names from session storage:', error);
-    }
-    
-    // Fallback to defaults if no session storage data
-    return {
-      player1: 'Alex Chen',
-      player2: 'Sarah Martinez'
-    };
-  };
-
-  const initialNames = getInitialPlayerNames();
+  // REMOVED: Old getInitialPlayerNames - now using getInitialPlayerData only
   
   // Get complete player data including passport codes
   const getInitialPlayerData = () => {
@@ -861,23 +799,28 @@ export default function GamifiedMatchRecording() {
       const currentMatch = sessionStorage.getItem('currentMatch');
       if (currentMatch) {
         const matchData = JSON.parse(currentMatch);
+        console.log('[Live Tracker] Loading match data from sessionStorage:', matchData);
         
         // Handle new match creation wizard format with selectedPlayers
         if (matchData.selectedPlayers && matchData.selectedPlayers.length > 0) {
-          const currentUser = { 
-            id: 'current', 
-            name: 'Current User', 
-            displayName: 'Current User', 
-            passportCode: 'USER-001',
-            rankingPoints: 800
-          };
-          
           const opponent = matchData.selectedPlayers[0];
           
+          // Use real logged-in user ID if available
+          const currentUserId = user?.id || 'current';
+          const currentUserName = user?.displayName || user?.username || 'You';
+          
+          console.log('[Live Tracker] Using selectedPlayers format - Player1:', currentUserId, 'Player2:', opponent.id);
+          
           return {
-            player1: currentUser,
+            player1: { 
+              id: currentUserId, 
+              name: currentUserName, 
+              displayName: currentUserName, 
+              passportCode: user?.passportCode || 'USER-001',
+              rankingPoints: user?.rankingPoints || 800
+            },
             player2: {
-              id: opponent.id,
+              id: opponent.id?.toString() || 'player2',
               name: opponent.displayName || opponent.username || opponent.name,
               displayName: opponent.displayName || opponent.username || opponent.name,
               passportCode: opponent.passportCode || 'NO-CODE',
@@ -886,22 +829,24 @@ export default function GamifiedMatchRecording() {
           };
         }
         
-        // Handle old format for backwards compatibility
+        // Handle pairings format (doubles) or direct player1/player2 format (challenges)
         if (matchData.pairings) {
           // For pairings format, extract first player from each team
           const player1Data = matchData.pairings.team1?.[0];
           const player2Data = matchData.pairings.team2?.[0];
           
+          console.log('[Live Tracker] Using pairings format - Player1:', player1Data?.id, 'Player2:', player2Data?.id);
+          
           return {
             player1: {
-              id: player1Data?.id || 'player1',
+              id: player1Data?.id?.toString() || 'player1',
               name: player1Data?.displayName || player1Data?.username || 'Player 1',
               displayName: player1Data?.displayName || player1Data?.username || 'Player 1',
               passportCode: player1Data?.passportCode || 'NO-CODE',
               rankingPoints: player1Data?.rankingPoints || 0
             },
             player2: {
-              id: player2Data?.id || 'player2', 
+              id: player2Data?.id?.toString() || 'player2', 
               name: player2Data?.displayName || player2Data?.username || 'Player 2',
               displayName: player2Data?.displayName || player2Data?.username || 'Player 2',
               passportCode: player2Data?.passportCode || 'NO-CODE',
@@ -909,24 +854,47 @@ export default function GamifiedMatchRecording() {
             }
           };
         }
+        
+        // Handle direct player1/player2 format (challenges)
+        if (matchData.player1 && matchData.player2) {
+          console.log('[Live Tracker] Using direct player format - Player1:', matchData.player1.id, 'Player2:', matchData.player2.id);
+          
+          return {
+            player1: {
+              id: matchData.player1.id?.toString() || 'player1',
+              name: matchData.player1.displayName || matchData.player1.username || matchData.player1.name || 'Player 1',
+              displayName: matchData.player1.displayName || matchData.player1.username || matchData.player1.name || 'Player 1',
+              passportCode: matchData.player1.passportCode || 'NO-CODE',
+              rankingPoints: matchData.player1.rankingPoints || 0
+            },
+            player2: {
+              id: matchData.player2.id?.toString() || 'player2',
+              name: matchData.player2.displayName || matchData.player2.username || matchData.player2.name || 'Player 2',
+              displayName: matchData.player2.displayName || matchData.player2.username || matchData.player2.name || 'Player 2',
+              passportCode: matchData.player2.passportCode || 'NO-CODE',
+              rankingPoints: matchData.player2.rankingPoints || 0
+            }
+          };
+        }
       }
     } catch (error) {
-      console.log('Could not load player data from session storage:', error);
+      console.error('[Live Tracker] Error loading player data from sessionStorage:', error);
     }
     
     // Fallback to defaults
+    console.warn('[Live Tracker] Using fallback demo data - no valid match data in sessionStorage');
     return {
       player1: { 
-        id: '1', 
-        name: initialNames.player1, 
-        displayName: initialNames.player1, 
-        passportCode: 'DEMO-001',
-        rankingPoints: 1200
+        id: user?.id?.toString() || '1', 
+        name: user?.displayName || user?.username || 'Alex Chen', 
+        displayName: user?.displayName || user?.username || 'Alex Chen', 
+        passportCode: user?.passportCode || 'DEMO-001',
+        rankingPoints: user?.rankingPoints || 1200
       },
       player2: { 
         id: '2', 
-        name: initialNames.player2, 
-        displayName: initialNames.player2, 
+        name: 'Sarah Martinez', 
+        displayName: 'Sarah Martinez', 
         passportCode: 'DEMO-002',
         rankingPoints: 950
       }
@@ -1273,10 +1241,9 @@ export default function GamifiedMatchRecording() {
   };
 
   const resetMatch = () => {
-    const resetNames = getInitialPlayerNames();
     setMatchState(prev => ({
-      player1: { name: resetNames.player1, id: '1', tier: 'Elite', score: 0 },
-      player2: { name: resetNames.player2, id: '2', tier: 'Professional', score: 0 },
+      player1: { name: playerData.player1.displayName, id: playerData.player1.id, tier: 'Elite', score: 0 },
+      player2: { name: playerData.player2.displayName, id: playerData.player2.id, tier: 'Professional', score: 0 },
       gameHistory: [],
       currentGame: 1,
       matchComplete: false,
@@ -1360,19 +1327,23 @@ export default function GamifiedMatchRecording() {
         return;
       }
 
-      // NOTE: This is a limitation - we need player search functionality
-      // For now, this will only work if both players are pre-configured
-      // TODO: Add player search UI to get real player IDs before match starts
-      toast({
-        title: 'Player Search Required',
-        description: 'This feature requires player search to be implemented first. Coming soon!',
-        variant: 'destructive'
-      });
-      setIsSaving(false);
-      return;
+      // Get real player IDs from playerData (loaded from sessionStorage)
+      const player1RealId = playerData.player1.id;
+      const player2RealId = playerData.player2.id;
+      
+      console.log('[Live Tracker] Using player IDs from sessionStorage:', { player1RealId, player2RealId });
+      
+      // Validate we have real player IDs
+      if (!player1RealId || !player2RealId || player1RealId === player2RealId) {
+        toast({
+          title: 'Invalid Player Data',
+          description: 'Could not find valid player information. Please start match from the Match Arena.',
+          variant: 'destructive'
+        });
+        setIsSaving(false);
+        return;
+      }
 
-      // DISABLED CODE - Will be enabled when player search is implemented
-      /*
       const winnerId = p1Wins > p2Wins ? player1RealId : player2RealId;
 
       // Create match with unique serial
@@ -1431,7 +1402,6 @@ export default function GamifiedMatchRecording() {
       setTimeout(() => {
         navigate(`/match/${serial}/verify`);
       }, 2000);
-      */
 
     } catch (error) {
       console.error('[Live Tracker] Save error:', error);
@@ -1934,20 +1904,19 @@ export default function GamifiedMatchRecording() {
               ))}
             </div>
             
-            {/* Save Match Button - Uses Official Algorithm (Requires Player Search Feature) */}
+            {/* Save Match Button - Uses Official Algorithm */}
             {user && !matchSaved && (
               <div className="mb-4">
                 <Button
                   onClick={saveMatch}
                   disabled={isSaving}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white opacity-60 cursor-not-allowed"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   data-testid="button-save-match"
-                  title="Requires player search feature"
                 >
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Validating...
+                      Submitting...
                     </>
                   ) : (
                     <>
@@ -1957,8 +1926,8 @@ export default function GamifiedMatchRecording() {
                   )}
                 </Button>
                 <p className="text-xs text-white/70 mt-2">
-                  <strong>Coming Soon:</strong> Requires player search to link real user accounts.<br/>
-                  When enabled: Uses official algorithm (System B 3/1 + age/gender multipliers). Points awarded after verification.
+                  Uses official algorithm: System B (3/1) + age & gender multipliers.<br/>
+                  Points awarded after all players verify the match.
                 </p>
               </div>
             )}
