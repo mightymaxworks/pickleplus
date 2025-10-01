@@ -33,10 +33,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 
-// Passport border types based on ranking/achievements
-type PassportBorder = 'bronze' | 'silver' | 'gold' | 'diamond' | 'legendary';
+// Official 4-tier player classification system
+type PlayerTier = 'recreational' | 'competitive' | 'elite' | 'professional';
 
-interface BorderConfig {
+interface TierConfig {
   name: string;
   gradient: string;
   icon: React.ElementType;
@@ -45,46 +45,39 @@ interface BorderConfig {
   requirement: string;
 }
 
-const borderConfigs: Record<PassportBorder, BorderConfig> = {
-  bronze: {
-    name: 'Bronze Foundation',
-    gradient: 'from-amber-600 via-amber-500 to-amber-600',
+// Aligned with official tier system from PassportHero
+const tierConfigs: Record<PlayerTier, TierConfig> = {
+  recreational: {
+    name: 'Recreational',
+    gradient: 'from-slate-600 via-slate-700 to-slate-800',
     icon: Shield,
-    color: 'text-amber-400',
-    description: 'Building your foundation',
-    requirement: '0-999 ranking points'
-  },
-  silver: {
-    name: 'Silver Precision', 
-    gradient: 'from-slate-400 via-slate-300 to-slate-400',
-    icon: Target,
     color: 'text-slate-300',
-    description: 'Consistent performance',
-    requirement: '1000-1499 ranking points'
+    description: 'Building your foundation',
+    requirement: '0-299 ranking points'
   },
-  gold: {
-    name: 'Gold Excellence',
-    gradient: 'from-yellow-500 via-yellow-400 to-yellow-500',
+  competitive: {
+    name: 'Competitive',
+    gradient: 'from-blue-600 via-blue-700 to-blue-800',
+    icon: Target,
+    color: 'text-blue-300',
+    description: 'Rising through the ranks',
+    requirement: '300-999 ranking points'
+  },
+  elite: {
+    name: 'Elite',
+    gradient: 'from-purple-600 via-purple-700 to-indigo-800',
     icon: Award,
-    color: 'text-yellow-400',
-    description: 'Proven excellence',
-    requirement: '1500+ ranking points'
+    color: 'text-purple-300',
+    description: 'Mastering the game',
+    requirement: '1000-1799 ranking points'
   },
-  diamond: {
-    name: 'Diamond Elite',
-    gradient: 'from-cyan-400 via-blue-400 to-purple-400',
+  professional: {
+    name: 'Professional',
+    gradient: 'from-orange-500 via-orange-600 to-red-700',
     icon: Crown,
-    color: 'text-cyan-400',
-    description: 'Elite mastery',
-    requirement: 'Regional top 100'
-  },
-  legendary: {
-    name: 'Legendary Status',
-    gradient: 'from-purple-500 via-pink-500 to-purple-500',
-    icon: Sparkles,
-    color: 'text-purple-400',
-    description: 'Legendary achievement',
-    requirement: 'Regional top 10'
+    color: 'text-orange-300',
+    description: 'Elite professional status',
+    requirement: '1800+ ranking points'
   }
 };
 
@@ -92,8 +85,8 @@ interface PassportPhotoUploadProps {
   currentPhoto?: string;
   playerName: string;
   rankingPoints: number;
-  localRank: number;
-  onPhotoSave: (photoData: string, border: PassportBorder) => void;
+  tier: PlayerTier;
+  onPhotoSave: (photoData: string) => void;
   onClose: () => void;
 }
 
@@ -101,7 +94,7 @@ export default function PassportPhotoUpload({
   currentPhoto,
   playerName,
   rankingPoints,
-  localRank,
+  tier,
   onPhotoSave,
   onClose
 }: PassportPhotoUploadProps) {
@@ -115,17 +108,8 @@ export default function PassportPhotoUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Determine border based on ranking
-  const getBorderType = (): PassportBorder => {
-    if (localRank <= 10) return 'legendary';
-    if (localRank <= 100) return 'diamond';
-    if (rankingPoints >= 1500) return 'gold';
-    if (rankingPoints >= 1000) return 'silver';
-    return 'bronze';
-  };
-
-  const borderType = getBorderType();
-  const borderConfig = borderConfigs[borderType];
+  // Use tier directly (passed from parent)
+  const tierConfig = tierConfigs[tier];
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -176,7 +160,7 @@ export default function PassportPhotoUpload({
     if (!canvasRef.current) return;
     
     const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.9);
-    onPhotoSave(dataUrl, borderType);
+    onPhotoSave(dataUrl);
   };
 
   return (
@@ -210,16 +194,16 @@ export default function PassportPhotoUpload({
             </Button>
           </div>
 
-          {/* Border Achievement Display */}
+          {/* Tier Achievement Display */}
           <div className="mt-4 p-4 bg-slate-800 rounded-lg">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 bg-gradient-to-r ${borderConfig.gradient} rounded-full flex items-center justify-center`}>
-                <borderConfig.icon className="h-5 w-5 text-white" />
+              <div className={`w-10 h-10 bg-gradient-to-r ${tierConfig.gradient} rounded-full flex items-center justify-center`}>
+                <tierConfig.icon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <div className={`font-semibold ${borderConfig.color}`}>{borderConfig.name}</div>
-                <div className="text-slate-400 text-sm">{borderConfig.description}</div>
-                <div className="text-xs text-slate-500">{borderConfig.requirement}</div>
+                <div className={`font-semibold ${tierConfig.color}`}>{tierConfig.name}</div>
+                <div className="text-slate-400 text-sm">{tierConfig.description}</div>
+                <div className="text-xs text-slate-500">{tierConfig.requirement}</div>
               </div>
             </div>
           </div>
@@ -272,10 +256,10 @@ export default function PassportPhotoUpload({
           {/* Preview and Editing */}
           {previewUrl && (
             <div className="space-y-4">
-              {/* Photo Preview with Border */}
+              {/* Photo Preview with Tier Border */}
               <div className="flex justify-center">
                 <div className="relative">
-                  <div className={`w-80 h-80 bg-gradient-to-r ${borderConfig.gradient} p-1 rounded-2xl`}>
+                  <div className={`w-80 h-80 bg-gradient-to-r ${tierConfig.gradient} p-1 rounded-2xl`}>
                     <div className="w-full h-full bg-slate-900 rounded-xl overflow-hidden">
                       <img
                         src={previewUrl}
@@ -291,11 +275,11 @@ export default function PassportPhotoUpload({
                     </div>
                   </div>
                   
-                  {/* Achievement Badge */}
+                  {/* Tier Badge */}
                   <div className="absolute -top-2 -right-2">
-                    <Badge className={`${borderConfig.color} bg-slate-900/90 border-current`}>
-                      <borderConfig.icon className="h-3 w-3 mr-1" />
-                      {borderConfig.name}
+                    <Badge className={`${tierConfig.color} bg-slate-900/90 border-current`}>
+                      <tierConfig.icon className="h-3 w-3 mr-1" />
+                      {tierConfig.name}
                     </Badge>
                   </div>
                 </div>

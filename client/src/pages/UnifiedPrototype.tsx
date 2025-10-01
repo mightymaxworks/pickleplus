@@ -702,13 +702,11 @@ function PassportModeContent({
 }: { 
   player: PlayerData;
   passportPhoto?: string;
-  onPhotoUpload: () => void;
+  onPhotoUpload: (photoData: string) => void;
 }) {
   const { toast } = useToast();
   const [codeRevealed, setCodeRevealed] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-  const config = tierConfig[player.tier];
-  const TierIcon = config.icon;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(player.passportCode);
@@ -725,55 +723,16 @@ function PassportModeContent({
 
   return (
     <div className="space-y-6">
-      {/* Passport Hero - Centralized Identity */}
+      {/* Passport Hero - Centralized Identity with Photo Upload */}
       <PassportHero 
         player={player}
         codeRevealed={codeRevealed}
+        passportPhoto={passportPhoto}
         onToggleReveal={() => setCodeRevealed(!codeRevealed)}
         onCopy={handleCopy}
         onShowQR={handleShowQR}
+        onPhotoUpload={onPhotoUpload}
       />
-      
-      {/* Player Photo Section */}
-      <Card className="p-6 bg-slate-900/50 border-slate-700">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Camera className="h-5 w-5" />
-          Player Photo
-        </h3>
-        
-        <div className="text-center">
-          <div className="relative inline-block">
-            {passportPhoto ? (
-              <div className="w-32 h-32 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 p-1 rounded-full mx-auto mb-4">
-                <img 
-                  src={passportPhoto} 
-                  alt={player.name}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-slate-600">
-                <TierIcon className="h-16 w-16 text-slate-400" />
-              </div>
-            )}
-            
-            {/* Photo Upload Button */}
-            <Button
-              onClick={onPhotoUpload}
-              className="absolute -bottom-2 right-0 w-8 h-8 p-0 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg"
-              title="Upload passport photo"
-            >
-              <Camera className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {!passportPhoto && (
-            <p className="text-slate-400 text-sm">
-              Add a photo to personalize your passport
-            </p>
-          )}
-        </div>
-      </Card>
       
       {/* Additional Stats - Simplified */}
       <Card className="p-6 bg-slate-900/50 border-slate-700">
@@ -2494,7 +2453,6 @@ export default function UnifiedPrototype() {
   
   const triggerChallengeReaction = () => setShowChallengeReaction(true);
   const triggerPhotoReaction = () => setShowPhotoReaction(true);
-  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [passportPhoto, setPassportPhoto] = useState<string | undefined>(undefined);
   const [notifications, setNotifications] = useState<Array<{
     id: string;
@@ -2542,15 +2500,14 @@ export default function UnifiedPrototype() {
   };
 
   // Handle passport photo save
-  const handlePhotoSave = (photoData: string, border: string) => {
+  const handlePhotoSave = (photoData: string) => {
     setPassportPhoto(photoData);
-    setShowPhotoUpload(false);
     
     // Add a notification about the photo update
     setNotifications(prev => [{
       id: Date.now().toString(),
       type: 'system',
-      message: `Passport photo updated with ${border} border!`,
+      message: `Passport photo updated!`,
       timestamp: new Date(),
       read: false
     }, ...prev].slice(0, 10));
@@ -2580,7 +2537,7 @@ export default function UnifiedPrototype() {
               <PassportModeContent 
                 player={mockPlayer}
                 passportPhoto={passportPhoto}
-                onPhotoUpload={() => setShowPhotoUpload(true)}
+                onPhotoUpload={handlePhotoSave}
               />
             )}
             {/* Play tab redirects to /match-arena */}
@@ -2589,20 +2546,6 @@ export default function UnifiedPrototype() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Photo Upload Modal */}
-      <AnimatePresence>
-        {showPhotoUpload && (
-          <PassportPhotoUpload
-            currentPhoto={passportPhoto}
-            playerName={mockPlayer.name}
-            rankingPoints={mockPlayer.rankingPoints}
-            localRank={mockPlayer.localRank}
-            onPhotoSave={handlePhotoSave}
-            onClose={() => setShowPhotoUpload(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Bottom Navigation */}
       <NavigationTabs activeTab={activeTab} onTabChange={(tab) => {

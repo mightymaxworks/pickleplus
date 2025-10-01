@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { 
   IdCard, 
   Shield, 
@@ -7,11 +8,14 @@ import {
   Eye,
   EyeOff,
   Copy,
-  QrCode
+  QrCode,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import PassportPhotoUpload from './PassportPhotoUpload';
 
 // Types
 export type PlayerTier = 'recreational' | 'competitive' | 'elite' | 'professional';
@@ -100,40 +104,82 @@ export function getTierStyling(tier: PlayerTier) {
 interface PassportHeroProps {
   player: PlayerData;
   codeRevealed: boolean;
+  passportPhoto?: string;
   onToggleReveal: () => void;
   onCopy: () => void;
   onShowQR: () => void;
+  onPhotoUpload: (photoData: string) => void;
 }
 
 // Passport Hero Component - Enhanced tier differentiation
 export default function PassportHero({ 
   player, 
-  codeRevealed, 
+  codeRevealed,
+  passportPhoto,
   onToggleReveal, 
   onCopy, 
-  onShowQR 
+  onShowQR,
+  onPhotoUpload
 }: PassportHeroProps) {
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const config = tierConfig[player.tier];
   const styling = getTierStyling(player.tier);
   const TierIcon = config.icon;
   const formattedCode = codeRevealed ? formatPassportCode(player.passportCode) : maskPassportCode(player.passportCode, false);
 
+  const handlePhotoSave = (photoData: string) => {
+    onPhotoUpload(photoData);
+    setShowPhotoUpload(false);
+  };
+
   return (
-    <Card className={`p-6 bg-gradient-to-br ${styling.gradient} ${styling.border} ${styling.glow} mb-6 relative overflow-hidden`}>
-      {/* Tier watermark/pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-4 right-4">
-          <TierIcon className="h-24 w-24 text-white/20" />
+    <>
+      <Card className={`p-6 bg-gradient-to-br ${styling.gradient} ${styling.border} ${styling.glow} mb-6 relative overflow-hidden`}>
+        {/* Tier watermark/pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-4 right-4">
+            <TierIcon className="h-24 w-24 text-white/20" />
+          </div>
+          <div className="absolute bottom-4 left-4 text-white/10 font-bold text-6xl">
+            {styling.priority}
+          </div>
         </div>
-        <div className="absolute bottom-4 left-4 text-white/10 font-bold text-6xl">
-          {styling.priority}
-        </div>
-      </div>
-      
-      <div className="relative z-10">
-        <div className="text-center">
-          {/* Enhanced Player Identity with tier prominence */}
-          <div className="flex items-center justify-center gap-4 mb-6">
+        
+        <div className="relative z-10">
+          <div className="text-center">
+            {/* Passport Photo Section with Tier Border */}
+            <div className="flex justify-center mb-6">
+              <div className="relative group">
+                <div className={`w-32 h-32 md:w-40 md:h-40 bg-gradient-to-r ${styling.iconBg} p-1 rounded-2xl shadow-2xl ${styling.glow} transition-transform group-hover:scale-105`}>
+                  <div className="w-full h-full bg-slate-900 rounded-xl overflow-hidden">
+                    {passportPhoto ? (
+                      <img 
+                        src={passportPhoto} 
+                        alt={`${player.name} passport photo`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Camera className="h-12 w-12 text-white/40" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Upload/Edit Button Overlay */}
+                <button
+                  onClick={() => setShowPhotoUpload(true)}
+                  className={`absolute -bottom-2 -right-2 ${styling.badge} p-2 rounded-full shadow-lg border-2 border-white/30 hover:scale-110 transition-transform`}
+                  data-testid="button-upload-photo"
+                  aria-label={passportPhoto ? "Edit passport photo" : "Upload passport photo"}
+                >
+                  {passportPhoto ? <Camera className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Enhanced Player Identity with tier prominence */}
+            <div className="flex items-center justify-center gap-4 mb-6">
             <div className={`w-16 h-16 bg-gradient-to-r ${styling.iconBg} rounded-full flex items-center justify-center border-2 border-white/30 shadow-lg`}>
               <TierIcon className="h-8 w-8 text-white" />
             </div>
@@ -212,5 +258,18 @@ export default function PassportHero({
         </div>
       </div>
     </Card>
+
+    {/* Photo Upload Modal */}
+    {showPhotoUpload && (
+      <PassportPhotoUpload
+        currentPhoto={passportPhoto}
+        playerName={player.name}
+        rankingPoints={player.rankingPoints}
+        tier={player.tier}
+        onPhotoSave={handlePhotoSave}
+        onClose={() => setShowPhotoUpload(false)}
+      />
+    )}
+    </>
   );
 }
