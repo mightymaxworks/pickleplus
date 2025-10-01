@@ -296,6 +296,7 @@ export default function App() {
                   <Route path="/unified-prototype" component={lazyLoad(() => import('./pages/UnifiedPrototype'))} />
                   <Route path="/gamification-prototype" component={GamificationPrototype} />
                   <Route path="/match-config" component={lazyLoad(() => import('./pages/MatchConfig'))} />
+                  <Route path="/pending-certifications" component={lazyLoad(() => import('./pages/PendingCertifications'))} />
                   <Route path="/gamified-match-recording" component={GamifiedMatchRecording} />
                   <Route path="/match-arena" component={MatchArena} />
                   
