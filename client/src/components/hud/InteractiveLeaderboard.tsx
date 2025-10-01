@@ -188,156 +188,166 @@ function LeaderboardRow({
         )}
 
         {/* Content */}
-        <div className="relative z-10 flex items-center gap-4 p-4">
-          {/* Rank Badge */}
-          <div className="flex-shrink-0 w-12 flex items-center justify-center">
-            {rankIcon ? (
-              <div className="relative">
+        <div className="relative z-10 p-4">
+          {/* Mobile & Desktop Layout */}
+          <div className="flex items-start gap-3">
+            {/* Left Side: Rank + Avatar */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Rank Badge */}
+              <div className="w-10 md:w-12 flex items-center justify-center">
+                {rankIcon ? (
+                  <div className="relative">
+                    <div 
+                      className="absolute inset-0 blur-md"
+                      style={{ background: rankIcon.color }}
+                    />
+                    <rankIcon.Icon 
+                      className="relative w-6 h-6 md:w-8 md:h-8"
+                      style={{ color: rankIcon.color }}
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    className="text-lg md:text-2xl font-bold tabular-nums"
+                    style={{
+                      background: primaryGradient,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                  >
+                    #{currentRank.rank}
+                  </div>
+                )}
+              </div>
+
+              {/* Avatar Placeholder */}
+              <div 
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 transition-colors duration-300 flex-shrink-0"
+                style={{
+                  borderColor: isHovered ? tierStyle.color : 'rgba(255,255,255,0.2)',
+                  background: `linear-gradient(135deg, ${tierStyle.color}33, ${tierStyle.color}11)`
+                }}
+              >
                 <div 
-                  className="absolute inset-0 blur-md"
-                  style={{ background: rankIcon.color }}
-                />
-                <rankIcon.Icon 
-                  className="relative w-8 h-8"
-                  style={{ color: rankIcon.color }}
-                />
-              </div>
-            ) : (
-              <div 
-                className="text-2xl font-bold tabular-nums"
-                style={{
-                  background: primaryGradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                #{currentRank.rank}
-              </div>
-            )}
-          </div>
-
-          {/* Avatar Placeholder */}
-          <div 
-            className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors duration-300"
-            style={{
-              borderColor: isHovered ? tierStyle.color : 'rgba(255,255,255,0.2)',
-              background: `linear-gradient(135deg, ${tierStyle.color}33, ${tierStyle.color}11)`
-            }}
-          >
-            <div 
-              className="text-xl font-bold"
-              style={{ color: tierStyle.color }}
-            >
-              {player.name.charAt(0)}
-            </div>
-          </div>
-
-          {/* Player Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="font-bold text-white truncate">
-                {player.name}
-                {isCurrentPlayer && (
-                  <span className="ml-2 text-xs text-[#f97316]">(You)</span>
-                )}
-              </div>
-              <div 
-                className="px-2 py-0.5 text-[10px] rounded-full font-medium uppercase tracking-wider"
-                style={{
-                  background: `${tierStyle.color}22`,
-                  color: tierStyle.color
-                }}
-              >
-                {tierStyle.name}
-              </div>
-            </div>
-            
-            {/* Multi-Ranking Badges */}
-            <div className="flex items-center gap-2 mb-1">
-              <div 
-                className={`px-2 py-0.5 text-[10px] rounded-full font-medium transition-all ${
-                  activeRankingType === 'singles' 
-                    ? 'bg-white/20 text-white border border-white/30' 
-                    : 'bg-white/5 text-white/50'
-                }`}
-                data-testid={`singles-rank-${player.id}`}
-              >
-                S: #{player.rankings.singlesRank}
-              </div>
-              <div 
-                className={`px-2 py-0.5 text-[10px] rounded-full font-medium transition-all ${
-                  activeRankingType === 'doubles' 
-                    ? 'bg-white/20 text-white border border-white/30' 
-                    : 'bg-white/5 text-white/50'
-                }`}
-                data-testid={`doubles-rank-${player.id}`}
-              >
-                D: #{player.rankings.doublesRank}
-              </div>
-              <div 
-                className={`px-2 py-0.5 text-[10px] rounded-full font-medium transition-all ${
-                  activeRankingType === 'mixed' 
-                    ? 'bg-white/20 text-white border border-white/30' 
-                    : 'bg-white/5 text-white/50'
-                }`}
-                data-testid={`mixed-rank-${player.id}`}
-              >
-                M: #{player.rankings.mixedRank}
+                  className="text-lg md:text-xl font-bold"
+                  style={{ color: tierStyle.color }}
+                >
+                  {player.name.charAt(0)}
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-white/60">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {player.location}
-                {player.distance !== undefined && (
-                  <span className="ml-1">
-                    ({player.distance < 1 
-                      ? `${Math.round(player.distance * 1000)}m` 
-                      : `${player.distance}km`})
-                  </span>
-                )}
+            {/* Middle: Player Info (Flex-1) */}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              {/* Name & Tier */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="font-bold text-white text-sm md:text-base truncate">
+                  {player.name}
+                  {isCurrentPlayer && (
+                    <span className="ml-2 text-xs text-[#f97316]">(You)</span>
+                  )}
+                </div>
+                <div 
+                  className="px-2 py-0.5 text-[9px] md:text-[10px] rounded-full font-medium uppercase tracking-wider flex-shrink-0"
+                  style={{
+                    background: `${tierStyle.color}22`,
+                    color: tierStyle.color
+                  }}
+                >
+                  {tierStyle.name}
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <Zap className="w-3 h-3" />
-                {winRate}% WR
+              
+              {/* Multi-Ranking Badges */}
+              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                <div 
+                  className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] rounded-full font-medium transition-all ${
+                    activeRankingType === 'singles' 
+                      ? 'bg-white/20 text-white border border-white/30' 
+                      : 'bg-white/5 text-white/50'
+                  }`}
+                  data-testid={`singles-rank-${player.id}`}
+                >
+                  S: #{player.rankings.singlesRank}
+                </div>
+                <div 
+                  className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] rounded-full font-medium transition-all ${
+                    activeRankingType === 'doubles' 
+                      ? 'bg-white/20 text-white border border-white/30' 
+                      : 'bg-white/5 text-white/50'
+                  }`}
+                  data-testid={`doubles-rank-${player.id}`}
+                >
+                  D: #{player.rankings.doublesRank}
+                </div>
+                <div 
+                  className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] rounded-full font-medium transition-all ${
+                    activeRankingType === 'mixed' 
+                      ? 'bg-white/20 text-white border border-white/30' 
+                      : 'bg-white/5 text-white/50'
+                  }`}
+                  data-testid={`mixed-rank-${player.id}`}
+                >
+                  M: #{player.rankings.mixedRank}
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Stats */}
-          <div className="flex-shrink-0 text-right">
-            <div 
-              className="text-xl font-bold tabular-nums mb-1"
-              style={{
-                background: primaryGradient,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
-            >
-              {currentRank.points.toLocaleString()}
+              {/* Location & Win Rate - Hidden on smallest screens */}
+              <div className="hidden sm:flex items-center gap-2 md:gap-3 text-xs text-white/60 flex-wrap">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{player.location}</span>
+                  {player.distance !== undefined && (
+                    <span>
+                      ({player.distance < 1 
+                        ? `${Math.round(player.distance * 1000)}m` 
+                        : `${player.distance}km`})
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Zap className="w-3 h-3 flex-shrink-0" />
+                  {winRate}% WR
+                </div>
+              </div>
             </div>
-            <div className="text-xs text-white/40">
-              {currentRank.wins}-{currentRank.losses}
+
+            {/* Right Side: Stats & Challenge Button */}
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              {/* Stats */}
+              <div className="text-right">
+                <div 
+                  className="text-base md:text-xl font-bold tabular-nums"
+                  style={{
+                    background: primaryGradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}
+                >
+                  {currentRank.points.toLocaleString()}
+                </div>
+                <div className="text-[10px] md:text-xs text-white/40">
+                  {currentRank.wins}-{currentRank.losses}
+                </div>
+              </div>
+
+              {/* Challenge Button */}
+              {!isCurrentPlayer && player.isChallengeable && (
+                <Button
+                  size="sm"
+                  onClick={() => onChallenge?.(player, activeRankingType)}
+                  className="relative overflow-hidden bg-gradient-to-r from-[#f97316] via-[#ec4899] to-[#a855f7] hover:opacity-90 text-white border-0 text-xs md:text-sm px-2 md:px-3 py-1 md:py-2"
+                  data-testid={`challenge-button-${player.id}`}
+                >
+                  <Swords className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  <span className="hidden sm:inline">Challenge</span>
+                  <span className="sm:hidden">Go</span>
+                </Button>
+              )}
             </div>
           </div>
-
-          {/* Challenge Button */}
-          {!isCurrentPlayer && player.isChallengeable && (
-            <div className="flex-shrink-0">
-              <Button
-                size="sm"
-                onClick={() => onChallenge?.(player, activeRankingType)}
-                className="relative overflow-hidden bg-gradient-to-r from-[#f97316] via-[#ec4899] to-[#a855f7] hover:opacity-90 text-white border-0"
-                data-testid={`challenge-button-${player.id}`}
-              >
-                <Swords className="w-4 h-4 mr-1" />
-                Challenge
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Scan Line Effect */}
