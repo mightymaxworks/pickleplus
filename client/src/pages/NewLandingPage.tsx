@@ -128,25 +128,26 @@ export default function NewLandingPage() {
       
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <PicklePlusGamingLogo animated />
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4">
               <LanguageToggle />
               <Button 
                 variant="ghost" 
-                className="text-gray-300 hover:text-white"
+                className="text-gray-300 hover:text-white text-xs sm:text-sm px-2 sm:px-4"
                 onClick={() => setLocation("/login")}
               >
                 Sign In
               </Button>
               <Button 
-                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg shadow-orange-500/25"
+                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg shadow-orange-500/25 text-xs sm:text-sm px-2 sm:px-4"
                 onClick={() => setLocation("/register")}
               >
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <span className="hidden sm:inline">Get Started</span>
+                <span className="sm:hidden">Start</span>
+                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
