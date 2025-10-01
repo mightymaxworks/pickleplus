@@ -66,14 +66,27 @@ async function calculateAndAwardPoints(match: any): Promise<void> {
   // Determine match format
   const matchFormat = playerIds.length === 2 ? 'singles' : 'doubles';
   
+  // CRITICAL: Determine winning team IDs for doubles
+  let winningTeamIds: number[] = [];
+  if (matchFormat === 'doubles') {
+    // Check which team the winnerId belongs to
+    const team1Ids = [match.playerOneId, match.playerOnePartnerId].filter((id): id is number => id !== null);
+    const team2Ids = [match.playerTwoId, match.playerTwoPartnerId].filter((id): id is number => id !== null);
+    
+    if (team1Ids.includes(match.winnerId)) {
+      winningTeamIds = team1Ids; // Team 1 won
+    } else if (team2Ids.includes(match.winnerId)) {
+      winningTeamIds = team2Ids; // Team 2 won
+    }
+  }
+  
   // Build player match data
   const playersMatchData: PlayerMatchData[] = playersData.map(player => ({
     playerId: player.id,
     username: player.username,
-    isWin: player.id === match.winnerId || 
-           (matchFormat === 'doubles' && 
-            (player.id === match.playerOneId || player.id === match.playerOnePartnerId) &&
-            (match.winnerId === match.playerOneId || match.winnerId === match.playerOnePartnerId)),
+    isWin: matchFormat === 'singles' 
+      ? player.id === match.winnerId 
+      : winningTeamIds.includes(player.id),
     gender: player.gender as 'male' | 'female' | undefined,
     currentRankingPoints: Number(player.rankingPoints) || 0,
     eventType: 'casual' // Default for friendly matches
@@ -184,7 +197,7 @@ export function registerMatchRoutes(app: express.Express): void {
       // Determine format: singles if only 2 players, doubles if 4
       const formatType = playerIds.length === 2 ? 'singles' : 'doubles';
       
-      // Create match record with PENDING_VERIFICATION status
+      // Create match record with PENDING certification status
       const [match] = await db.insert(matches).values({
         serial,
         playerOneId: playerIds[0],
@@ -198,6 +211,8 @@ export function registerMatchRoutes(app: express.Express): void {
         scoringSystem: config.scoringType || 'traditional',
         pointsToWin: config.pointTarget || 11,
         matchType: 'casual',
+        certificationStatus: 'pending', // Primary verification field
+        // DEPRECATED: Keeping validationStatus for backward compatibility
         validationStatus: 'pending',
         matchDate: new Date(),
         notes: JSON.stringify({ mode, config }) // Store config for later use
@@ -300,12 +315,15 @@ export function registerMatchRoutes(app: express.Express): void {
         return res.status(404).json({ error: 'Match not found' });
       }
       
-      // STATE MACHINE: Check if match is already verified/rejected
-      if (match.validationStatus === 'verified') {
-        return res.status(400).json({ error: 'Match already verified - cannot modify scores' });
+      // STATE MACHINE: Check if match is already certified/disputed
+      if (match.certificationStatus === 'certified') {
+        return res.status(400).json({ error: 'Match already certified - cannot modify scores' });
       }
-      if (match.validationStatus === 'rejected') {
-        return res.status(400).json({ error: 'Match was rejected - cannot modify scores' });
+      if (match.certificationStatus === 'disputed') {
+        return res.status(400).json({ error: 'Match was disputed - cannot modify scores' });
+      }
+      if (match.certificationStatus === 'expired') {
+        return res.status(400).json({ error: 'Match certification expired - cannot modify scores' });
       }
       
       // SECURITY: Verify current user is a participant
@@ -377,7 +395,9 @@ export function registerMatchRoutes(app: express.Express): void {
           scorePlayerTwo: String(team2Wins),
           winnerId: actualWinnerId,
           matchDate: matchDate ? new Date(matchDate) : new Date(),
-          validationStatus: 'in_review', // Mark as under review
+          certificationStatus: 'pending', // Awaiting certification from all players
+          // DEPRECATED: Keeping validationStatus for backward compatibility
+          validationStatus: 'in_review',
           notes: JSON.stringify({ 
             ...existingNotes,
             games: formattedGames,
@@ -419,14 +439,22 @@ export function registerMatchRoutes(app: express.Express): void {
       
       if (allVerified) {
         await db.update(matches)
-          .set({ validationStatus: 'verified' })
+          .set({ 
+            certificationStatus: 'certified',
+            isVerified: true,
+            // DEPRECATED: Keeping validationStatus for backward compatibility
+            validationStatus: 'verified'
+          })
           .where(eq(matches.id, match.id));
         
-        console.log('[Match Scores] All players verified - match completed');
+        console.log('[Match Scores] All players verified - match certified');
+        
+        // CRITICAL: Refetch match to get updated winner and scores
+        const [updatedMatch] = await db.select().from(matches).where(eq(matches.id, match.id));
         
         // Calculate and award points using official algorithm
         try {
-          await calculateAndAwardPoints(match);
+          await calculateAndAwardPoints(updatedMatch);
           console.log('[Match Scores] Points calculated and awarded successfully');
         } catch (pointsError) {
           console.error('[Match Scores] Error calculating points:', pointsError);
@@ -481,11 +509,14 @@ export function registerMatchRoutes(app: express.Express): void {
       }
       
       // STATE MACHINE: Check if match is already finalized
-      if (match.validationStatus === 'verified') {
-        return res.status(400).json({ error: 'Match already verified - cannot change verification' });
+      if (match.certificationStatus === 'certified') {
+        return res.status(400).json({ error: 'Match already certified - cannot change certification' });
       }
-      if (match.validationStatus === 'rejected') {
-        return res.status(400).json({ error: 'Match already rejected - cannot change verification' });
+      if (match.certificationStatus === 'disputed') {
+        return res.status(400).json({ error: 'Match already disputed - cannot change certification' });
+      }
+      if (match.certificationStatus === 'expired') {
+        return res.status(400).json({ error: 'Match certification expired - cannot change' });
       }
       
       // SECURITY: Find user's verification record (this also checks participation)
@@ -533,20 +564,32 @@ export function registerMatchRoutes(app: express.Express): void {
       // FINALIZATION: Atomically finalize match if all verified or any rejected
       if (anyRejected) {
         await db.update(matches)
-          .set({ validationStatus: 'rejected' })
+          .set({ 
+            certificationStatus: 'disputed',
+            // DEPRECATED: Keeping validationStatus for backward compatibility
+            validationStatus: 'rejected'
+          })
           .where(eq(matches.id, match.id));
         
-        console.log('[Match Verify] Match rejected by one or more players');
+        console.log('[Match Verify] Match disputed by one or more players');
       } else if (allVerified) {
         await db.update(matches)
-          .set({ validationStatus: 'verified' })
+          .set({ 
+            certificationStatus: 'certified',
+            isVerified: true,
+            // DEPRECATED: Keeping validationStatus for backward compatibility
+            validationStatus: 'verified'
+          })
           .where(eq(matches.id, match.id));
         
-        console.log('[Match Verify] All players verified - match completed');
+        console.log('[Match Verify] All players verified - match certified');
+        
+        // CRITICAL: Refetch match to get updated winner and scores
+        const [updatedMatch] = await db.select().from(matches).where(eq(matches.id, match.id));
         
         // Calculate and award points using official algorithm
         try {
-          await calculateAndAwardPoints(match);
+          await calculateAndAwardPoints(updatedMatch);
           console.log('[Match Verify] Points calculated and awarded successfully');
         } catch (pointsError) {
           console.error('[Match Verify] Error calculating points:', pointsError);
@@ -679,7 +722,10 @@ export function registerMatchRoutes(app: express.Express): void {
         winnerId,
         matchType: matchType || 'casual',
         formatType: formatType || 'singles',
-        validationStatus: isAdmin ? 'validated' : 'pending', // Admin matches auto-complete
+        certificationStatus: isAdmin ? 'certified' : 'pending', // Admin matches auto-certified
+        isVerified: isAdmin,
+        // DEPRECATED: Keeping validationStatus for backward compatibility (use 'verified' not 'validated')
+        validationStatus: isAdmin ? 'verified' : 'pending',
         validationCompletedAt: isAdmin ? new Date() : null,
         notes: `${notes || ''} [Game Scores: ${detailedScores}]`.trim(),
         tournamentId: validTournamentId,
@@ -970,7 +1016,8 @@ export function registerMatchRoutes(app: express.Express): void {
         formatType: config?.matchFormat === 'single' ? 'singles' : 'doubles',
         scoringSystem: config?.scoringType || 'traditional',
         pointsToWin: config?.pointTarget || 11,
-        validationStatus: 'pending'
+        // DEPRECATED: validationStatus replaced by certificationStatus
+        validationStatus: 'pending' // Kept for backward compatibility only
       }).returning();
 
       res.json({
