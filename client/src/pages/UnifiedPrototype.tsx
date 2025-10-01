@@ -59,6 +59,7 @@ import PassportHero, { PlayerData, PlayerTier, tierConfig, getTierStyling, forma
 import HexagonalStats from '@/components/hud/HexagonalStats';
 import InteractiveLeaderboard from '@/components/hud/InteractiveLeaderboard';
 import ContentFeed from '@/components/hud/ContentFeed';
+import BattleLogHistory from '@/components/hud/BattleLogHistory';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -410,6 +411,85 @@ const mockContentFeed = [
     },
     tags: ['Footwork', 'Drills', 'Fundamentals'],
     isRelevant: false
+  }
+];
+
+// Mock match history data
+const mockMatchHistory = [
+  {
+    id: '1',
+    result: 'victory' as const,
+    opponent: {
+      name: 'David Kim',
+      rankingPoints: 1523,
+      tier: 'elite' as const
+    },
+    score: { player: 11, opponent: 7 },
+    pointsChange: 34,
+    date: 'Today',
+    location: 'Vancouver Community Center',
+    matchType: 'singles' as const,
+    duration: '28 min'
+  },
+  {
+    id: '2',
+    result: 'victory' as const,
+    opponent: {
+      name: 'Lisa Anderson',
+      rankingPoints: 1456,
+      tier: 'elite' as const
+    },
+    score: { player: 11, opponent: 9 },
+    pointsChange: 28,
+    date: 'Yesterday',
+    location: 'Richmond Sports Complex',
+    matchType: 'singles' as const,
+    duration: '35 min'
+  },
+  {
+    id: '3',
+    result: 'defeat' as const,
+    opponent: {
+      name: 'Emma Wilson',
+      rankingPoints: 1892,
+      tier: 'professional' as const
+    },
+    score: { player: 8, opponent: 11 },
+    pointsChange: -15,
+    date: '2 days ago',
+    location: 'Burnaby Lake Park',
+    matchType: 'singles' as const,
+    duration: '42 min'
+  },
+  {
+    id: '4',
+    result: 'victory' as const,
+    opponent: {
+      name: 'James Lee',
+      rankingPoints: 1198,
+      tier: 'elite' as const
+    },
+    score: { player: 11, opponent: 6 },
+    pointsChange: 22,
+    date: '3 days ago',
+    location: 'Vancouver Community Center',
+    matchType: 'singles' as const,
+    duration: '25 min'
+  },
+  {
+    id: '5',
+    result: 'victory' as const,
+    opponent: {
+      name: 'Maria Garcia',
+      rankingPoints: 1134,
+      tier: 'elite' as const
+    },
+    score: { player: 11, opponent: 8 },
+    pointsChange: 19,
+    date: '5 days ago',
+    location: 'Surrey Recreation Center',
+    matchType: 'singles' as const,
+    duration: '31 min'
   }
 ];
 
@@ -956,6 +1036,9 @@ function PassportModeContent({
 
       {/* Personalized Content Feed */}
       <ContentFeed items={mockContentFeed} />
+
+      {/* Battle Log - Match History */}
+      <BattleLogHistory matches={mockMatchHistory} />
       
       {/* QR Code Modal */}
       <QRCodeModal 
