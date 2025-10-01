@@ -1571,6 +1571,15 @@ export const matches = pgTable("matches", {
   rankingPointMultiplier: integer("ranking_point_multiplier").default(100), // Percentage multiplier for ranking points
   dailyMatchCount: integer("daily_match_count").default(1), // Which match of the day is this
   
+  // Score Certification System (Quick Recording Mode)
+  recordingMode: varchar("recording_mode", { length: 20 }).default("live"), // live, quick
+  certificationExpiresAt: timestamp("certification_expires_at"), // 24h from creation for quick mode
+  playerOneCertified: boolean("player_one_certified").default(false),
+  playerTwoCertified: boolean("player_two_certified").default(false),
+  playerOnePartnerCertified: boolean("player_one_partner_certified").default(false),
+  playerTwoPartnerCertified: boolean("player_two_partner_certified").default(false),
+  certificationStatus: varchar("certification_status", { length: 20 }).default("pending"), // pending, certified, expired, disputed
+  
   // Additional information
   notes: text("notes"),
   xpAwarded: integer("xp_awarded").default(0),
