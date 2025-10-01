@@ -186,7 +186,7 @@ router.post('/:id/respond', async (req, res) => {
       VALUES (
         ${challenge.challengerId},
         'challenge_response',
-        'Challenge ${actionText}!',
+        ${`Challenge ${actionText}!`},
         ${`${challenged.displayName || challenged.username} ${actionText} your ${challenge.matchType} challenge${action === 'accept' ? '. Prepare for battle!' : '.'}`},
         ${challenge.id},
         'match_challenge',
