@@ -189,6 +189,18 @@ import {
   type ProcessConnectionRequest
 } from './schema/student-coach-connections';
 
+// Import match challenges schema (Sprint 2 - Gaming HUD Enhancement)
+import {
+  matchChallenges,
+  matchChallengesRelations,
+  insertMatchChallengeSchema,
+  respondToChallengeSchema,
+  type MatchChallenge,
+  type InsertMatchChallenge,
+  type RespondToChallenge,
+  type MatchChallengeWithUsers
+} from './schema/match-challenges';
+
 // Import coach-facility partnerships schema (PKL-278651-FACILITY-MGMT-002)
 import {
   coachFacilityPartnerships,
@@ -1034,6 +1046,19 @@ export const users = pgTable("users", {
   womensDoublesRankingPoints: integer("womens_doubles_ranking_points").default(0), // Women's doubles ranking points
   mixedDoublesMenRankingPoints: integer("mixed_doubles_men_ranking_points").default(0), // Mixed doubles men's ranking points
   mixedDoublesWomenRankingPoints: integer("mixed_doubles_women_ranking_points").default(0), // Mixed doubles women's ranking points
+  
+  // Multi-ranking win/loss tracking (Sprint 2 - Gaming HUD Enhancement)
+  singlesWins: integer("singles_wins").default(0),
+  singlesLosses: integer("singles_losses").default(0),
+  mensDoublesWins: integer("mens_doubles_wins").default(0),
+  mensDoublesLosses: integer("mens_doubles_losses").default(0),
+  womensDoublesWins: integer("womens_doubles_wins").default(0),
+  womensDoublesLosses: integer("womens_doubles_losses").default(0),
+  mixedDoublesMenWins: integer("mixed_doubles_men_wins").default(0),
+  mixedDoublesMenLosses: integer("mixed_doubles_men_losses").default(0),
+  mixedDoublesWomenWins: integer("mixed_doubles_women_wins").default(0),
+  mixedDoublesWomenLosses: integer("mixed_doubles_women_losses").default(0),
+  
   isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   // Note: rankingTier is calculated at runtime based on ranking points
   // rankingTier: varchar("ranking_tier", { length: 20 }).default("bronze"),
@@ -3198,3 +3223,15 @@ export {
   type EventRegistration as FacilityEventRegistration, type InsertEventRegistration as InsertFacilityEventRegistration,
   type RevenueAnalytics, type InsertRevenueAnalytics
 } from './schema/coach-facility-partnerships';
+
+// Export match challenges schemas (Sprint 2 - Gaming HUD Enhancement)
+export {
+  matchChallenges,
+  matchChallengesRelations,
+  insertMatchChallengeSchema,
+  respondToChallengeSchema,
+  type MatchChallenge,
+  type InsertMatchChallenge,
+  type RespondToChallenge,
+  type MatchChallengeWithUsers
+};
