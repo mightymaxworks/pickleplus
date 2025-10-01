@@ -57,6 +57,7 @@ import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 import PassportHero, { PlayerData, PlayerTier, tierConfig, getTierStyling, formatPassportCode } from '@/components/passport/PassportHero';
 import HexagonalStats from '@/components/hud/HexagonalStats';
+import InteractiveLeaderboard from '@/components/hud/InteractiveLeaderboard';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -218,6 +219,106 @@ const mockPlayer: PlayerData = {
     pointsNeeded: 553,
   },
 };
+
+// Mock leaderboard data for InteractiveLeaderboard
+const mockLeaderboardPlayers = [
+  {
+    id: '1',
+    rank: 1,
+    name: 'Sarah Martinez',
+    rankingPoints: 2156,
+    tier: 'professional' as const,
+    location: 'Vancouver, BC',
+    distance: 2.3,
+    winRate: 89,
+    recentChange: +47,
+    isChallengeable: true
+  },
+  {
+    id: '2',
+    rank: 2,
+    name: 'Mike Johnson',
+    rankingPoints: 2089,
+    tier: 'professional' as const,
+    location: 'Burnaby, BC',
+    distance: 5.1,
+    winRate: 87,
+    recentChange: -12,
+    isChallengeable: false
+  },
+  {
+    id: '3',
+    rank: 3,
+    name: 'Emma Wilson',
+    rankingPoints: 1892,
+    tier: 'professional' as const,
+    location: 'Richmond, BC',
+    distance: 3.7,
+    winRate: 85,
+    recentChange: +28,
+    isChallengeable: true
+  },
+  {
+    id: '4',
+    rank: 4,
+    name: 'David Kim',
+    rankingPoints: 1523,
+    tier: 'elite' as const,
+    location: 'Vancouver, BC',
+    distance: 1.2,
+    winRate: 79,
+    recentChange: +15,
+    isChallengeable: true
+  },
+  {
+    id: '5',
+    rank: 5,
+    name: 'Lisa Anderson',
+    rankingPoints: 1456,
+    tier: 'elite' as const,
+    location: 'Surrey, BC',
+    distance: 12.5,
+    winRate: 74,
+    recentChange: -8,
+    isChallengeable: true
+  },
+  {
+    id: 'current',
+    rank: 6,
+    name: 'Alex Chen',
+    rankingPoints: 1247,
+    tier: 'elite' as const,
+    location: 'Vancouver, BC',
+    distance: 0,
+    winRate: 73,
+    recentChange: +34,
+    isChallengeable: false
+  },
+  {
+    id: '7',
+    rank: 7,
+    name: 'James Lee',
+    rankingPoints: 1198,
+    tier: 'elite' as const,
+    location: 'Coquitlam, BC',
+    distance: 8.9,
+    winRate: 71,
+    recentChange: 0,
+    isChallengeable: true
+  },
+  {
+    id: '8',
+    rank: 8,
+    name: 'Maria Garcia',
+    rankingPoints: 1134,
+    tier: 'elite' as const,
+    location: 'New Westminster, BC',
+    distance: 6.4,
+    winRate: 69,
+    recentChange: +19,
+    isChallengeable: true
+  }
+];
 
 const mockRankings: RankedPlayer[] = [
   {
@@ -744,6 +845,19 @@ function PassportModeContent({
           totalMatches: 100,
           currentStreak: 5,
           bestStreak: 12
+        }}
+      />
+
+      {/* Interactive Leaderboard with Challenge System */}
+      <InteractiveLeaderboard
+        players={mockLeaderboardPlayers}
+        currentPlayerId={player.id}
+        onChallenge={(challengedPlayer) => {
+          toast({
+            title: "Challenge Issued!",
+            description: `Challenge sent to ${challengedPlayer.name}. They have 24h to respond.`,
+            duration: 3000
+          });
         }}
       />
       
