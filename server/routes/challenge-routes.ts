@@ -227,6 +227,231 @@ router.post('/:id/respond', async (req, res) => {
 });
 
 /**
+ * GET /api/challenges/:id
+ * Get challenge details by ID
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const challengeId = parseInt(req.params.id);
+    if (isNaN(challengeId)) {
+      return res.status(400).json({ error: 'Invalid challenge ID' });
+    }
+
+    // Fetch challenge with all player details
+    const [challenge] = await db.select()
+      .from(matchChallenges)
+      .where(eq(matchChallenges.id, challengeId));
+
+    if (!challenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+
+    // Verify user is involved in this challenge
+    const isInvolved = 
+      challenge.challengerId === userId ||
+      challenge.challengedId === userId ||
+      challenge.challengerPartnerId === userId ||
+      challenge.challengedPartnerId === userId;
+
+    if (!isInvolved) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Fetch all player details
+    const [challenger] = await db.select().from(users).where(eq(users.id, challenge.challengerId));
+    const [challenged] = await db.select().from(users).where(eq(users.id, challenge.challengedId));
+    
+    let challengerPartner = null;
+    let challengedPartner = null;
+
+    if (challenge.challengerPartnerId) {
+      [challengerPartner] = await db.select().from(users).where(eq(users.id, challenge.challengerPartnerId));
+    }
+    if (challenge.challengedPartnerId) {
+      [challengedPartner] = await db.select().from(users).where(eq(users.id, challenge.challengedPartnerId));
+    }
+
+    res.json({
+      id: challenge.id,
+      matchType: challenge.matchType,
+      status: challenge.status,
+      message: challenge.message,
+      createdAt: challenge.createdAt,
+      expiresAt: challenge.expiresAt,
+      sourceContext: challenge.sourceContext,
+      challenger: {
+        id: challenger.id,
+        displayName: challenger.displayName,
+        username: challenger.username,
+        passportCode: challenger.passportCode,
+        rankingPoints: challenger.rankingPoints
+      },
+      challenged: {
+        id: challenged.id,
+        displayName: challenged.displayName,
+        username: challenged.username,
+        passportCode: challenged.passportCode,
+        rankingPoints: challenged.rankingPoints
+      },
+      challengerPartner: challengerPartner ? {
+        id: challengerPartner.id,
+        displayName: challengerPartner.displayName,
+        username: challengerPartner.username,
+        passportCode: challengerPartner.passportCode,
+        rankingPoints: challengerPartner.rankingPoints
+      } : null,
+      challengedPartner: challengedPartner ? {
+        id: challengedPartner.id,
+        displayName: challengedPartner.displayName,
+        username: challengedPartner.username,
+        passportCode: challengedPartner.passportCode,
+        rankingPoints: challengedPartner.rankingPoints
+      } : null
+    });
+
+  } catch (error) {
+    console.error('[Challenge Routes] Error fetching challenge details:', error);
+    res.status(500).json({ error: 'Failed to fetch challenge' });
+  }
+});
+
+/**
+ * POST /api/challenges/:id/ready
+ * Mark player as ready for match
+ */
+router.post('/:id/ready', async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const challengeId = parseInt(req.params.id);
+    if (isNaN(challengeId)) {
+      return res.status(400).json({ error: 'Invalid challenge ID' });
+    }
+
+    const { ready } = req.body;
+    if (typeof ready !== 'boolean') {
+      return res.status(400).json({ error: 'Ready status must be boolean' });
+    }
+
+    // Fetch challenge
+    const [challenge] = await db.select()
+      .from(matchChallenges)
+      .where(eq(matchChallenges.id, challengeId));
+
+    if (!challenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+
+    // Verify user is involved
+    const isInvolved = 
+      challenge.challengerId === userId ||
+      challenge.challengedId === userId ||
+      challenge.challengerPartnerId === userId ||
+      challenge.challengedPartnerId === userId;
+
+    if (!isInvolved) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Update ready status based on user role
+    const updateData: any = {};
+    if (challenge.challengerId === userId) {
+      updateData.challengerReady = ready;
+    } else if (challenge.challengedId === userId) {
+      updateData.challengedReady = ready;
+    } else if (challenge.challengerPartnerId === userId) {
+      updateData.challengerPartnerReady = ready;
+    } else if (challenge.challengedPartnerId === userId) {
+      updateData.challengedPartnerReady = ready;
+    }
+
+    await db.update(matchChallenges)
+      .set(updateData)
+      .where(eq(matchChallenges.id, challengeId));
+
+    // Check if all players are ready
+    const [updatedChallenge] = await db.select().from(matchChallenges).where(eq(matchChallenges.id, challengeId));
+    const allReady = 
+      updatedChallenge.challengerReady &&
+      updatedChallenge.challengedReady &&
+      (updatedChallenge.challengerPartnerId ? updatedChallenge.challengerPartnerReady : true) &&
+      (updatedChallenge.challengedPartnerId ? updatedChallenge.challengedPartnerReady : true);
+
+    res.json({
+      success: true,
+      allReady
+    });
+
+  } catch (error) {
+    console.error('[Challenge Routes] Error updating ready status:', error);
+    res.status(500).json({ error: 'Failed to update ready status' });
+  }
+});
+
+/**
+ * GET /api/challenges/:id/status
+ * Get current ready status for all players
+ */
+router.get('/:id/status', async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const challengeId = parseInt(req.params.id);
+    if (isNaN(challengeId)) {
+      return res.status(400).json({ error: 'Invalid challenge ID' });
+    }
+
+    const [challenge] = await db.select()
+      .from(matchChallenges)
+      .where(eq(matchChallenges.id, challengeId));
+
+    if (!challenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+
+    // Verify user is involved
+    const isInvolved = 
+      challenge.challengerId === userId ||
+      challenge.challengedId === userId ||
+      challenge.challengerPartnerId === userId ||
+      challenge.challengedPartnerId === userId;
+
+    if (!isInvolved) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const allReady = 
+      challenge.challengerReady &&
+      challenge.challengedReady &&
+      (challenge.challengerPartnerId ? challenge.challengerPartnerReady : true) &&
+      (challenge.challengedPartnerId ? challenge.challengedPartnerReady : true);
+
+    res.json({
+      challengerReady: challenge.challengerReady || false,
+      challengedReady: challenge.challengedReady || false,
+      challengerPartnerReady: challenge.challengerPartnerReady || false,
+      challengedPartnerReady: challenge.challengedPartnerReady || false,
+      allReady
+    });
+
+  } catch (error) {
+    console.error('[Challenge Routes] Error fetching ready status:', error);
+    res.status(500).json({ error: 'Failed to fetch ready status' });
+  }
+});
+
+/**
  * GET /api/challenges/incoming
  * Get pending challenges for current user
  */

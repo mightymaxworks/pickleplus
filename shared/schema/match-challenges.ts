@@ -1,7 +1,7 @@
 // Match Challenges Schema (Sprint 2 - Gaming HUD Enhancement)
 // Handles player-to-player match challenges with multi-ranking support
 
-import { pgTable, serial, integer, varchar, text, timestamp, json, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, timestamp, json, boolean, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -23,6 +23,12 @@ export const matchChallenges = pgTable("match_challenges", {
   
   // Challenge status
   status: varchar("status", { length: 20 }).notNull().default('pending'), // 'pending', 'accepted', 'declined', 'expired', 'completed', 'cancelled'
+  
+  // Ready status for gaming lobby (added Sprint 2 - Task 7)
+  challengerReady: boolean("challenger_ready").notNull().default(false),
+  challengedReady: boolean("challenged_ready").notNull().default(false),
+  challengerPartnerReady: boolean("challenger_partner_ready").notNull().default(false),
+  challengedPartnerReady: boolean("challenged_partner_ready").notNull().default(false),
   
   // Source tracking
   createdVia: varchar("created_via", { length: 30 }).notNull(), // 'leaderboard', 'profile', 'match-arena', 'direct'

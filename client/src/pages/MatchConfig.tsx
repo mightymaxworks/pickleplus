@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { 
@@ -8,12 +8,17 @@ import {
   Zap,
   ArrowLeft,
   PlayCircle,
-  Video
+  Video,
+  Users,
+  Loader2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { VersusScreen } from '@/components/match/VersusScreen';
 import { PulsingScoreButton } from '@/components/match/PulsingScoreButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 // Match Configuration Interface
 interface MatchConfig {
@@ -40,6 +45,16 @@ function getRandomTeamTheme() {
 
 export default function MatchConfig() {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Challenge-specific state
+  const [challengeData, setChallengeData] = useState<any>(null);
+  const [isLoadingChallenge, setIsLoadingChallenge] = useState(false);
+  const [isChallenge, setIsChallenge] = useState(false);
+  const [challengeId, setChallengeId] = useState<number | null>(null);
+  const [playerReadyStatus, setPlayerReadyStatus] = useState<Record<number, boolean>>({});
+  const [confirmedCount, setConfirmedCount] = useState(0);
 
   // Get player data from session storage
   const getInitialPlayerData = () => {
@@ -216,9 +231,183 @@ export default function MatchConfig() {
     winByTwo: true
   });
 
+  // Load challenge data if challenge parameter exists
+  useEffect(() => {
+    const loadChallengeData = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const challengeIdParam = urlParams.get('challenge');
+        
+        if (!challengeIdParam) {
+          setIsChallenge(false);
+          return;
+        }
+
+        const parsedChallengeId = parseInt(challengeIdParam);
+        if (isNaN(parsedChallengeId)) {
+          console.error('[MatchConfig] Invalid challenge ID');
+          setIsChallenge(false);
+          return;
+        }
+
+        setIsChallenge(true);
+        setChallengeId(parsedChallengeId);
+        setIsLoadingChallenge(true);
+
+        // Fetch challenge data from API
+        const response = await apiRequest(`/api/challenges/${parsedChallengeId}`, 'GET');
+        
+        if (!response) {
+          toast({
+            title: "Challenge Not Found",
+            description: "This challenge doesn't exist or has expired.",
+            variant: "destructive"
+          });
+          navigate('/unified-prototype');
+          return;
+        }
+
+        setChallengeData(response);
+
+        // Write challenge data to sessionStorage in expected format
+        const matchData = {
+          source: 'challenge',
+          challengeId: response.id,
+          matchType: response.matchType,
+          player1: response.challenger,
+          player2: response.challenged,
+        };
+
+        // Add partners if doubles/mixed
+        if (response.matchType === 'doubles' || response.matchType === 'mixed') {
+          matchData.pairings = {
+            team1: [response.challenger, response.challengerPartner],
+            team2: [response.challenged, response.challengedPartner]
+          };
+        }
+
+        sessionStorage.setItem('currentMatch', JSON.stringify(matchData));
+        console.log('[MatchConfig] Challenge data loaded:', matchData);
+
+        // Initialize player ready status
+        const initialStatus: Record<number, boolean> = {
+          [response.challenger.id]: false,
+          [response.challenged.id]: false
+        };
+
+        if (response.challengerPartner) {
+          initialStatus[response.challengerPartner.id] = false;
+        }
+        if (response.challengedPartner) {
+          initialStatus[response.challengedPartner.id] = false;
+        }
+
+        setPlayerReadyStatus(initialStatus);
+
+      } catch (error) {
+        console.error('[MatchConfig] Error loading challenge:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load challenge data.",
+          variant: "destructive"
+        });
+        navigate('/unified-prototype');
+      } finally {
+        setIsLoadingChallenge(false);
+      }
+    };
+
+    loadChallengeData();
+  }, []);
+
+  // Update confirmed count when player status changes
+  useEffect(() => {
+    const count = Object.values(playerReadyStatus).filter(Boolean).length;
+    setConfirmedCount(count);
+  }, [playerReadyStatus]);
+
   const goBackToPrototype = () => {
     navigate('/match-arena');
   };
+
+  // Poll for ready status updates
+  useEffect(() => {
+    if (!isChallenge || !challengeId || !challengeData) return;
+
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(`/api/challenges/${challengeId}/status`, {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const status = await response.json();
+          setPlayerReadyStatus({
+            [challengeData.challenger.id]: status.challengerReady,
+            [challengeData.challenged.id]: status.challengedReady,
+            ...(challengeData.challengerPartner ? { [challengeData.challengerPartner.id]: status.challengerPartnerReady } : {}),
+            ...(challengeData.challengedPartner ? { [challengeData.challengedPartner.id]: status.challengedPartnerReady } : {})
+          });
+        }
+      } catch (error) {
+        console.error('[MatchConfig] Error polling ready status:', error);
+      }
+    };
+
+    // Poll immediately and then every 2 seconds
+    pollStatus();
+    const interval = setInterval(pollStatus, 2000);
+    
+    return () => clearInterval(interval);
+  }, [isChallenge, challengeId, challengeData]);
+
+  // Handle player ready confirmation
+  const handleConfirmReady = async () => {
+    if (!challengeData || !user || !challengeId) return;
+
+    try {
+      const response = await fetch(`/api/challenges/${challengeId}/ready`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ready: true })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update local state immediately for instant feedback
+        setPlayerReadyStatus(prev => ({
+          ...prev,
+          [user.id]: true
+        }));
+
+        toast({
+          title: "Ready to Play ✓",
+          description: result.allReady 
+            ? "All players ready! Match starting soon..." 
+            : "Waiting for other players to confirm...",
+          duration: 3000,
+        });
+      } else {
+        throw new Error('Failed to confirm ready');
+      }
+
+    } catch (error) {
+      console.error('[MatchConfig] Error confirming ready:', error);
+      toast({
+        title: "Error",
+        description: "Failed to confirm ready status.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Check if current user is the initiating player (challenger)
+  const isInitiatingPlayer = isChallenge && user && challengeData && user.id === challengeData.challenger.id;
+  
+  // Check if current user has confirmed ready
+  const currentUserConfirmed = user ? playerReadyStatus[user.id] || false : false;
 
   const startMatch = async () => {
     if (!config.recordingMode) {
@@ -277,6 +466,70 @@ export default function MatchConfig() {
       navigate(`/match/${fallbackSerial}/${config.recordingMode}`);
     }
   };
+
+  // Loading screen while fetching challenge data
+  if (isLoadingChallenge) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <Card className="p-8 bg-slate-800 border-slate-700">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 text-orange-400 animate-spin" />
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-white mb-2">Loading Challenge</h2>
+              <p className="text-slate-400 text-sm">Fetching match details...</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Waiting screen for non-initiating players
+  if (isChallenge && !isInitiatingPlayer && challengeData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="max-w-md w-full"
+        >
+          <Card className="p-8 bg-slate-800 border-slate-700">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="p-4 bg-orange-500/20 rounded-full">
+                  <Users className="h-12 w-12 text-orange-400" />
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">Match Setup in Progress</h2>
+                <p className="text-slate-300 mb-4">
+                  Waiting for <span className="text-orange-400 font-semibold">{challengeData.challenger.displayName || challengeData.challenger.username}</span> to set match parameters...
+                </p>
+                <p className="text-sm text-slate-400">
+                  You'll be notified when it's time to confirm your readiness
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Please wait...</span>
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate('/unified-prototype')}
+                className="w-full"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
@@ -578,6 +831,138 @@ export default function MatchConfig() {
               </motion.button>
             </div>
 
+            {/* Gaming Lobby - Player Ready Check (Challenge Only) */}
+            {isChallenge && config.recordingMode && challengeData && (
+              <div className="space-y-3 pt-6 border-t border-orange-500/30">
+                <label className="text-sm text-orange-400 font-semibold block flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Player Confirmation
+                </label>
+                
+                {/* 4-Player Status Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Challenger */}
+                  <div className={`p-3 rounded-lg border-2 transition-all ${
+                    playerReadyStatus[challengeData.challenger.id]
+                      ? 'border-green-500 bg-green-500/10' 
+                      : 'border-slate-600 bg-slate-800/50 opacity-50'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {playerReadyStatus[challengeData.challenger.id] ? (
+                        <CheckCircle className="h-5 w-5 text-green-400" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border-2 border-slate-500 animate-pulse" />
+                      )}
+                      <div>
+                        <div className="text-white font-medium text-sm">
+                          {challengeData.challenger.displayName || challengeData.challenger.username}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {playerReadyStatus[challengeData.challenger.id] ? 'Ready' : 'Waiting...'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Challenged */}
+                  <div className={`p-3 rounded-lg border-2 transition-all ${
+                    playerReadyStatus[challengeData.challenged.id]
+                      ? 'border-green-500 bg-green-500/10' 
+                      : 'border-slate-600 bg-slate-800/50 opacity-50'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {playerReadyStatus[challengeData.challenged.id] ? (
+                        <CheckCircle className="h-5 w-5 text-green-400" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border-2 border-slate-500 animate-pulse" />
+                      )}
+                      <div>
+                        <div className="text-white font-medium text-sm">
+                          {challengeData.challenged.displayName || challengeData.challenged.username}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {playerReadyStatus[challengeData.challenged.id] ? 'Ready' : 'Waiting...'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Challenger Partner (if doubles/mixed) */}
+                  {challengeData.challengerPartner && (
+                    <div className={`p-3 rounded-lg border-2 transition-all ${
+                      playerReadyStatus[challengeData.challengerPartner.id]
+                        ? 'border-green-500 bg-green-500/10' 
+                        : 'border-slate-600 bg-slate-800/50 opacity-50'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {playerReadyStatus[challengeData.challengerPartner.id] ? (
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-slate-500 animate-pulse" />
+                        )}
+                        <div>
+                          <div className="text-white font-medium text-sm">
+                            {challengeData.challengerPartner.displayName || challengeData.challengerPartner.username}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {playerReadyStatus[challengeData.challengerPartner.id] ? 'Ready' : 'Waiting...'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Challenged Partner (if doubles/mixed) */}
+                  {challengeData.challengedPartner && (
+                    <div className={`p-3 rounded-lg border-2 transition-all ${
+                      playerReadyStatus[challengeData.challengedPartner.id]
+                        ? 'border-green-500 bg-green-500/10' 
+                        : 'border-slate-600 bg-slate-800/50 opacity-50'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {playerReadyStatus[challengeData.challengedPartner.id] ? (
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-slate-500 animate-pulse" />
+                        )}
+                        <div>
+                          <div className="text-white font-medium text-sm">
+                            {challengeData.challengedPartner.displayName || challengeData.challengedPartner.username}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {playerReadyStatus[challengeData.challengedPartner.id] ? 'Ready' : 'Waiting...'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Current User Confirm Button */}
+                {!currentUserConfirmed && (
+                  <Button 
+                    onClick={handleConfirmReady}
+                    className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:opacity-90"
+                    data-testid="confirm-ready-button"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    I'm Ready to Play
+                  </Button>
+                )}
+                
+                {/* Status Message */}
+                <div className="text-center">
+                  <p className="text-sm text-slate-400">
+                    {confirmedCount === Object.keys(playerReadyStatus).length ? (
+                      <span className="text-green-400 font-semibold">All players ready!</span>
+                    ) : (
+                      <span>{confirmedCount}/{Object.keys(playerReadyStatus).length} players confirmed</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Video Configuration */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -671,9 +1056,12 @@ export default function MatchConfig() {
 
           <Button
             onClick={startMatch}
-            disabled={!config.recordingMode}
+            disabled={
+              !config.recordingMode || 
+              (isChallenge && (isLoadingChallenge || !challengeData || Object.keys(playerReadyStatus).length === 0 || confirmedCount !== Object.keys(playerReadyStatus).length))
+            }
             className={`w-full mt-6 font-bold py-3 ${
-              config.recordingMode 
+              config.recordingMode && (!isChallenge || (challengeData && Object.keys(playerReadyStatus).length > 0 && confirmedCount === Object.keys(playerReadyStatus).length))
                 ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                 : 'bg-slate-600 text-slate-400 cursor-not-allowed'
             }`}
