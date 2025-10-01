@@ -998,47 +998,58 @@ function PassportModeContent({
 
   return (
     <div className="space-y-6">
-      {/* Passport Hero - Centralized Identity with Photo Upload */}
-      <PassportHero 
-        player={player}
-        codeRevealed={codeRevealed}
-        passportPhoto={passportPhoto}
-        onToggleReveal={() => setCodeRevealed(!codeRevealed)}
-        onCopy={handleCopy}
-        onShowQR={handleShowQR}
-        onPhotoUpload={onPhotoUpload}
-      />
-      
-      {/* Battle Stats - Gaming HUD Style */}
-      <HexagonalStats 
-        stats={{
-          wins: Math.round((player.winRate || 0.73) * 100),
-          losses: 100 - Math.round((player.winRate || 0.73) * 100),
-          winRate: (player.winRate || 0.73) * 100,
-          totalMatches: 100,
-          currentStreak: 5,
-          bestStreak: 12
-        }}
-      />
+      {/* 3-Column Gaming HUD Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Column 1: Passport Hero - Player Identity */}
+        <div className="lg:col-span-1 space-y-6" data-testid="column-hero">
+          <PassportHero 
+            player={player}
+            codeRevealed={codeRevealed}
+            passportPhoto={passportPhoto}
+            onToggleReveal={() => setCodeRevealed(!codeRevealed)}
+            onCopy={handleCopy}
+            onShowQR={handleShowQR}
+            onPhotoUpload={onPhotoUpload}
+          />
+        </div>
 
-      {/* Interactive Leaderboard with Challenge System */}
-      <InteractiveLeaderboard
-        players={mockLeaderboardPlayers}
-        currentPlayerId={player.id}
-        onChallenge={(challengedPlayer) => {
-          toast({
-            title: "Challenge Issued!",
-            description: `Challenge sent to ${challengedPlayer.name}. They have 24h to respond.`,
-            duration: 3000
-          });
-        }}
-      />
+        {/* Column 2: HUD Components - Stats & Competition */}
+        <div className="lg:col-span-1 space-y-6" data-testid="column-hud">
+          {/* Battle Stats - Gaming HUD Style */}
+          <HexagonalStats 
+            stats={{
+              wins: Math.round((player.winRate || 0.73) * 100),
+              losses: 100 - Math.round((player.winRate || 0.73) * 100),
+              winRate: (player.winRate || 0.73) * 100,
+              totalMatches: 100,
+              currentStreak: 5,
+              bestStreak: 12
+            }}
+          />
 
-      {/* Personalized Content Feed */}
-      <ContentFeed items={mockContentFeed} />
+          {/* Interactive Leaderboard with Challenge System */}
+          <InteractiveLeaderboard
+            players={mockLeaderboardPlayers}
+            currentPlayerId={player.id}
+            onChallenge={(challengedPlayer) => {
+              toast({
+                title: "Challenge Issued!",
+                description: `Challenge sent to ${challengedPlayer.name}. They have 24h to respond.`,
+                duration: 3000
+              });
+            }}
+          />
+        </div>
 
-      {/* Battle Log - Match History */}
-      <BattleLogHistory matches={mockMatchHistory} />
+        {/* Column 3: Content Feed & Battle Log */}
+        <div className="lg:col-span-1 space-y-6" data-testid="column-content">
+          {/* Personalized Content Feed */}
+          <ContentFeed items={mockContentFeed} />
+
+          {/* Battle Log - Match History */}
+          <BattleLogHistory matches={mockMatchHistory} />
+        </div>
+      </div>
       
       {/* QR Code Modal */}
       <QRCodeModal 
