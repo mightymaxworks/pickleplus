@@ -893,6 +893,242 @@ export function registerMatchRoutes(app: express.Express): void {
     }
   });
 
+  /**
+   * POST /api/matches/create-arena
+   * Create a new match arena with recording mode
+   */
+  app.post('/api/matches/create-arena', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const { mode, config, players } = req.body;
+
+      if (!mode || !['live', 'quick', 'coaching'].includes(mode)) {
+        return res.status(400).json({ error: 'Invalid recording mode' });
+      }
+
+      // Generate unique match serial
+      const serial = `M${createId().slice(0, 10).toUpperCase()}`;
+      
+      // Calculate 24h expiry for quick mode
+      const certificationExpiresAt = mode === 'quick' 
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+        : null;
+
+      // Create match in database with recording mode
+      const [match] = await db.insert(matches).values({
+        serial,
+        recordingMode: mode,
+        certificationExpiresAt,
+        certificationStatus: mode === 'quick' ? 'pending' : 'certified',
+        playerOneId: players?.player1?.id || userId,
+        playerTwoId: players?.player2?.id || userId,
+        playerOnePartnerId: players?.player1Partner?.id || null,
+        playerTwoPartnerId: players?.player2Partner?.id || null,
+        winnerId: userId, // Temporary, will be updated when match completes
+        scorePlayerOne: '0',
+        scorePlayerTwo: '0',
+        matchDate: new Date(),
+        formatType: config?.matchFormat === 'single' ? 'singles' : 'doubles',
+        scoringSystem: config?.scoringType || 'traditional',
+        pointsToWin: config?.pointTarget || 11,
+        validationStatus: 'pending'
+      }).returning();
+
+      res.json({
+        success: true,
+        serial,
+        matchId: match.id,
+        recordingMode: mode
+      });
+
+    } catch (error) {
+      console.error('[Create Arena Match] Error:', error);
+      res.status(500).json({ error: 'Failed to create match' });
+    }
+  });
+
+  /**
+   * POST /api/matches/:id/certify
+   * Certify a match score (quick recording mode)
+   */
+  app.post('/api/matches/:id/certify', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const matchId = parseInt(req.params.id);
+
+      if (isNaN(matchId)) {
+        return res.status(400).json({ error: 'Invalid match ID' });
+      }
+
+      // Fetch match
+      const [match] = await db.select().from(matches).where(eq(matches.id, matchId));
+
+      if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
+
+      // Verify user is involved in this match
+      const playerIds = [
+        match.playerOneId,
+        match.playerTwoId,
+        match.playerOnePartnerId,
+        match.playerTwoPartnerId
+      ].filter(id => id !== null);
+
+      if (!playerIds.includes(userId)) {
+        return res.status(403).json({ error: 'Not authorized to certify this match' });
+      }
+
+      // Check if already certified by this user
+      const isCertified = 
+        (userId === match.playerOneId && match.playerOneCertified) ||
+        (userId === match.playerTwoId && match.playerTwoCertified) ||
+        (userId === match.playerOnePartnerId && match.playerOnePartnerCertified) ||
+        (userId === match.playerTwoPartnerId && match.playerTwoPartnerCertified);
+
+      if (isCertified) {
+        return res.status(400).json({ error: 'You have already certified this match' });
+      }
+
+      // Check if certification has expired
+      if (match.certificationExpiresAt && new Date() > match.certificationExpiresAt) {
+        await db.update(matches)
+          .set({ certificationStatus: 'expired' })
+          .where(eq(matches.id, matchId));
+        return res.status(400).json({ error: 'Certification window has expired' });
+      }
+
+      // Update certification status for this player
+      const updates: any = {};
+      if (userId === match.playerOneId) updates.playerOneCertified = true;
+      if (userId === match.playerTwoId) updates.playerTwoCertified = true;
+      if (userId === match.playerOnePartnerId) updates.playerOnePartnerCertified = true;
+      if (userId === match.playerTwoPartnerId) updates.playerTwoPartnerCertified = true;
+
+      await db.update(matches).set(updates).where(eq(matches.id, matchId));
+
+      // Check if all players have certified
+      const [updatedMatch] = await db.select().from(matches).where(eq(matches.id, matchId));
+      const allCertified = 
+        updatedMatch.playerOneCertified &&
+        updatedMatch.playerTwoCertified &&
+        (!updatedMatch.playerOnePartnerId || updatedMatch.playerOnePartnerCertified) &&
+        (!updatedMatch.playerTwoPartnerId || updatedMatch.playerTwoPartnerCertified);
+
+      if (allCertified) {
+        await db.update(matches)
+          .set({ certificationStatus: 'certified', isVerified: true })
+          .where(eq(matches.id, matchId));
+        
+        // Award points when fully certified
+        await calculateAndAwardPoints(updatedMatch);
+      }
+
+      res.json({
+        success: true,
+        allCertified,
+        certificationStatus: allCertified ? 'certified' : 'pending'
+      });
+
+    } catch (error) {
+      console.error('[Match Certification] Error:', error);
+      res.status(500).json({ error: 'Failed to certify match' });
+    }
+  });
+
+  /**
+   * GET /api/matches/:id/certification-status
+   * Get certification status for a match
+   */
+  app.get('/api/matches/:id/certification-status', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const matchId = parseInt(req.params.id);
+
+      if (isNaN(matchId)) {
+        return res.status(400).json({ error: 'Invalid match ID' });
+      }
+
+      const [match] = await db.select().from(matches).where(eq(matches.id, matchId));
+
+      if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
+
+      // Verify user is involved
+      const playerIds = [
+        match.playerOneId,
+        match.playerTwoId,
+        match.playerOnePartnerId,
+        match.playerTwoPartnerId
+      ].filter(id => id !== null);
+
+      if (!playerIds.includes(userId)) {
+        return res.status(403).json({ error: 'Not authorized to view this match' });
+      }
+
+      const allCertified = 
+        match.playerOneCertified &&
+        match.playerTwoCertified &&
+        (!match.playerOnePartnerId || match.playerOnePartnerCertified) &&
+        (!match.playerTwoPartnerId || match.playerTwoPartnerCertified);
+
+      const isExpired = match.certificationExpiresAt && new Date() > match.certificationExpiresAt;
+
+      res.json({
+        playerOneCertified: match.playerOneCertified || false,
+        playerTwoCertified: match.playerTwoCertified || false,
+        playerOnePartnerCertified: match.playerOnePartnerCertified || false,
+        playerTwoPartnerCertified: match.playerTwoPartnerCertified || false,
+        allCertified,
+        certificationStatus: match.certificationStatus,
+        certificationExpiresAt: match.certificationExpiresAt,
+        isExpired,
+        recordingMode: match.recordingMode
+      });
+
+    } catch (error) {
+      console.error('[Match Certification Status] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch certification status' });
+    }
+  });
+
+  /**
+   * GET /api/matches/pending-certification
+   * Get all matches pending certification for current user
+   */
+  app.get('/api/matches/pending-certification', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+
+      const pendingMatches = await db.select()
+        .from(matches)
+        .where(
+          and(
+            eq(matches.recordingMode, 'quick'),
+            eq(matches.certificationStatus, 'pending'),
+            sql`(
+              (${matches.playerOneId} = ${userId} AND ${matches.playerOneCertified} = false) OR
+              (${matches.playerTwoId} = ${userId} AND ${matches.playerTwoCertified} = false) OR
+              (${matches.playerOnePartnerId} = ${userId} AND ${matches.playerOnePartnerCertified} = false) OR
+              (${matches.playerTwoPartnerId} = ${userId} AND ${matches.playerTwoPartnerCertified} = false)
+            )`
+          )
+        )
+        .orderBy(sql`${matches.createdAt} DESC`)
+        .limit(20);
+
+      res.json({
+        success: true,
+        matches: pendingMatches
+      });
+
+    } catch (error) {
+      console.error('[Pending Certification] Error:', error);
+      res.status(500).json({ error: 'Failed to fetch pending certifications' });
+    }
+  });
+
   // Sample match route - returns JSON data properly
   app.get('/api/matches', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
