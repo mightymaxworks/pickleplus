@@ -60,6 +60,7 @@ import HexagonalStats from '@/components/hud/HexagonalStats';
 import InteractiveLeaderboard from '@/components/hud/InteractiveLeaderboard';
 import ContentFeed from '@/components/hud/ContentFeed';
 import BattleLogHistory from '@/components/hud/BattleLogHistory';
+import SmartChallengeModal from '@/components/hud/SmartChallengeModal';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -222,103 +223,191 @@ const mockPlayer: PlayerData = {
   },
 };
 
-// Mock leaderboard data for InteractiveLeaderboard
+// Mock leaderboard data for InteractiveLeaderboard with multi-ranking
 const mockLeaderboardPlayers = [
   {
     id: '1',
-    rank: 1,
     name: 'Sarah Martinez',
-    rankingPoints: 2156,
     tier: 'professional' as const,
     location: 'Vancouver, BC',
     distance: 2.3,
-    winRate: 89,
-    recentChange: +47,
-    isChallengeable: true
+    isChallengeable: true,
+    gender: 'female' as const,
+    rankings: {
+      singlesRank: 1,
+      singlesPoints: 2156,
+      singlesWins: 138,
+      singlesLosses: 18,
+      doublesRank: 3,
+      doublesPoints: 1876,
+      doublesWins: 94,
+      doublesLosses: 21,
+      mixedRank: 2,
+      mixedPoints: 1998,
+      mixedWins: 112,
+      mixedLosses: 19
+    }
   },
   {
     id: '2',
-    rank: 2,
     name: 'Mike Johnson',
-    rankingPoints: 2089,
     tier: 'professional' as const,
     location: 'Burnaby, BC',
     distance: 5.1,
-    winRate: 87,
-    recentChange: -12,
-    isChallengeable: false
+    isChallengeable: false,
+    gender: 'male' as const,
+    rankings: {
+      singlesRank: 2,
+      singlesPoints: 2089,
+      singlesWins: 145,
+      singlesLosses: 22,
+      doublesRank: 1,
+      doublesPoints: 2143,
+      doublesWins: 156,
+      doublesLosses: 18,
+      mixedRank: 4,
+      mixedPoints: 1823,
+      mixedWins: 98,
+      mixedLosses: 26
+    }
   },
   {
     id: '3',
-    rank: 3,
     name: 'Emma Wilson',
-    rankingPoints: 1892,
     tier: 'professional' as const,
     location: 'Richmond, BC',
     distance: 3.7,
-    winRate: 85,
-    recentChange: +28,
-    isChallengeable: true
+    isChallengeable: true,
+    gender: 'female' as const,
+    rankings: {
+      singlesRank: 3,
+      singlesPoints: 1892,
+      singlesWins: 98,
+      singlesLosses: 19,
+      doublesRank: 12,
+      doublesPoints: 1456,
+      doublesWins: 67,
+      doublesLosses: 34,
+      mixedRank: 1,
+      mixedPoints: 2087,
+      mixedWins: 134,
+      mixedLosses: 15
+    }
   },
   {
     id: '4',
-    rank: 4,
     name: 'David Kim',
-    rankingPoints: 1523,
     tier: 'elite' as const,
     location: 'Vancouver, BC',
     distance: 1.2,
-    winRate: 79,
-    recentChange: +15,
-    isChallengeable: true
+    isChallengeable: true,
+    gender: 'male' as const,
+    rankings: {
+      singlesRank: 4,
+      singlesPoints: 1523,
+      singlesWins: 89,
+      singlesLosses: 24,
+      doublesRank: 2,
+      doublesPoints: 1954,
+      doublesWins: 112,
+      doublesLosses: 23,
+      mixedRank: 7,
+      mixedPoints: 1589,
+      mixedWins: 67,
+      mixedLosses: 31
+    }
   },
   {
     id: '5',
-    rank: 5,
     name: 'Lisa Anderson',
-    rankingPoints: 1456,
     tier: 'elite' as const,
     location: 'Surrey, BC',
     distance: 12.5,
-    winRate: 74,
-    recentChange: -8,
-    isChallengeable: true
+    isChallengeable: true,
+    gender: 'female' as const,
+    rankings: {
+      singlesRank: 5,
+      singlesPoints: 1456,
+      singlesWins: 74,
+      singlesLosses: 26,
+      doublesRank: 4,
+      doublesPoints: 1723,
+      doublesWins: 91,
+      doublesLosses: 24,
+      mixedRank: 3,
+      mixedPoints: 1878,
+      mixedWins: 104,
+      mixedLosses: 21
+    }
   },
   {
     id: 'current',
-    rank: 6,
     name: 'Alex Chen',
-    rankingPoints: 1247,
     tier: 'elite' as const,
     location: 'Vancouver, BC',
     distance: 0,
-    winRate: 73,
-    recentChange: +34,
-    isChallengeable: false
+    isChallengeable: false,
+    gender: 'male' as const,
+    rankings: {
+      singlesRank: 6,
+      singlesPoints: 1247,
+      singlesWins: 73,
+      singlesLosses: 27,
+      doublesRank: 5,
+      doublesPoints: 1698,
+      doublesWins: 82,
+      doublesLosses: 28,
+      mixedRank: 6,
+      mixedPoints: 1654,
+      mixedWins: 76,
+      mixedLosses: 29
+    }
   },
   {
     id: '7',
-    rank: 7,
     name: 'James Lee',
-    rankingPoints: 1198,
     tier: 'elite' as const,
     location: 'Coquitlam, BC',
     distance: 8.9,
-    winRate: 71,
-    recentChange: 0,
-    isChallengeable: true
+    isChallengeable: true,
+    gender: 'male' as const,
+    rankings: {
+      singlesRank: 7,
+      singlesPoints: 1198,
+      singlesWins: 71,
+      singlesLosses: 29,
+      doublesRank: 6,
+      doublesPoints: 1621,
+      doublesWins: 87,
+      doublesLosses: 29,
+      mixedRank: 9,
+      mixedPoints: 1543,
+      mixedWins: 78,
+      mixedLosses: 34
+    }
   },
   {
     id: '8',
-    rank: 8,
     name: 'Maria Garcia',
-    rankingPoints: 1134,
     tier: 'elite' as const,
     location: 'New Westminster, BC',
     distance: 6.4,
-    winRate: 69,
-    recentChange: +19,
-    isChallengeable: true
+    isChallengeable: true,
+    gender: 'female' as const,
+    rankings: {
+      singlesRank: 8,
+      singlesPoints: 1134,
+      singlesWins: 69,
+      singlesLosses: 31,
+      doublesRank: 7,
+      doublesPoints: 1587,
+      doublesWins: 83,
+      doublesLosses: 30,
+      mixedRank: 8,
+      mixedPoints: 1612,
+      mixedWins: 88,
+      mixedLosses: 28
+    }
   }
 ];
 
@@ -982,6 +1071,9 @@ function PassportModeContent({
   const { toast } = useToast();
   const [codeRevealed, setCodeRevealed] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [challengeOpponent, setChallengeOpponent] = useState<any>(null);
+  const [suggestedMatchType, setSuggestedMatchType] = useState<'singles' | 'doubles' | 'mixed'>('singles');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(player.passportCode);
@@ -1031,12 +1123,11 @@ function PassportModeContent({
           <InteractiveLeaderboard
             players={mockLeaderboardPlayers}
             currentPlayerId={player.id}
-            onChallenge={(challengedPlayer) => {
-              toast({
-                title: "Challenge Issued!",
-                description: `Challenge sent to ${challengedPlayer.name}. They have 24h to respond.`,
-                duration: 3000
-              });
+            currentPlayerGender="male"
+            onChallenge={(challengedPlayer, suggestedType) => {
+              setChallengeOpponent(challengedPlayer);
+              setSuggestedMatchType(suggestedType);
+              setShowChallengeModal(true);
             }}
           />
         </div>
@@ -1050,6 +1141,72 @@ function PassportModeContent({
           <BattleLogHistory matches={mockMatchHistory} />
         </div>
       </div>
+      
+      {/* Smart Challenge Modal */}
+      {challengeOpponent && (
+        <SmartChallengeModal
+          isOpen={showChallengeModal}
+          onClose={() => setShowChallengeModal(false)}
+          opponent={{
+            id: challengeOpponent.id,
+            name: challengeOpponent.name,
+            gender: challengeOpponent.gender,
+            rankings: challengeOpponent.rankings
+          }}
+          currentPlayer={{
+            id: player.id,
+            name: player.name,
+            gender: 'male',
+            rankings: mockLeaderboardPlayers.find(p => p.id === 'current')?.rankings || {
+              singlesRank: 6,
+              singlesPoints: 1247,
+              singlesWins: 73,
+              singlesLosses: 27,
+              doublesRank: 5,
+              doublesPoints: 1698,
+              doublesWins: 82,
+              doublesLosses: 28,
+              mixedRank: 6,
+              mixedPoints: 1654,
+              mixedWins: 76,
+              mixedLosses: 29
+            }
+          }}
+          suggestedMatchType={suggestedMatchType}
+          availablePartners={[
+            { id: 'p1', name: 'Chris Martinez', gender: 'male', doublesRank: 8, mixedRank: 12 },
+            { id: 'p2', name: 'Jordan Smith', gender: 'male', doublesRank: 11, mixedRank: 9 },
+            { id: 'p3', name: 'Taylor Wilson', gender: 'female', doublesRank: 6, mixedRank: 7 },
+            { id: 'p4', name: 'Sam Chen', gender: 'female', doublesRank: 9, mixedRank: 11 }
+          ]}
+          onChallengeSubmit={(matchType, partnerId) => {
+            const partnerName = partnerId 
+              ? [
+                  { id: 'p1', name: 'Chris Martinez' },
+                  { id: 'p2', name: 'Jordan Smith' },
+                  { id: 'p3', name: 'Taylor Wilson' },
+                  { id: 'p4', name: 'Sam Chen' }
+                ].find(p => p.id === partnerId)?.name 
+              : null;
+            
+            toast({
+              title: "Challenge Sent!",
+              description: partnerId 
+                ? `${matchType.charAt(0).toUpperCase() + matchType.slice(1)} challenge sent to ${challengeOpponent.name} with partner ${partnerName}. They have 24h to respond.`
+                : `${matchType.charAt(0).toUpperCase() + matchType.slice(1)} challenge sent to ${challengeOpponent.name}. They have 24h to respond.`,
+              duration: 4000
+            });
+            setShowChallengeModal(false);
+          }}
+          onFindPartner={() => {
+            toast({
+              title: "Partner Discovery",
+              description: "Opening partner search...",
+              duration: 2000
+            });
+          }}
+        />
+      )}
       
       {/* QR Code Modal */}
       <QRCodeModal 

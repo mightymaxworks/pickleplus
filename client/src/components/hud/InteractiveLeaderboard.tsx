@@ -1,28 +1,53 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Trophy, Crown, Medal, Swords, Target, MapPin, TrendingUp, TrendingDown, Minus, Zap } from 'lucide-react';
+import { Trophy, Crown, Medal, Swords, Target, MapPin, TrendingUp, TrendingDown, Minus, Zap, User, Users, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type RegionFilter = 'local' | 'regional' | 'national' | 'global';
+type RankingType = 'singles' | 'doubles' | 'mixed';
+
+interface PlayerRankings {
+  singlesRank: number;
+  singlesPoints: number;
+  singlesWins: number;
+  singlesLosses: number;
+  
+  doublesRank: number;
+  doublesPoints: number;
+  doublesWins: number;
+  doublesLosses: number;
+  
+  mixedRank: number;
+  mixedPoints: number;
+  mixedWins: number;
+  mixedLosses: number;
+}
 
 interface LeaderboardPlayer {
   id: string;
-  rank: number;
   name: string;
-  rankingPoints: number;
   tier: 'recreational' | 'competitive' | 'elite' | 'professional';
   location: string;
-  distance?: number; // km away, only for local/regional
-  winRate: number;
-  recentChange: number; // +/- points from last period
+  distance?: number;
   isChallengeable?: boolean;
   avatar?: string;
+  gender: 'male' | 'female';
+  
+  // Multi-ranking data
+  rankings: PlayerRankings;
+  
+  // Legacy fields for backward compatibility
+  rank?: number;
+  rankingPoints?: number;
+  winRate?: number;
+  recentChange?: number;
 }
 
 interface InteractiveLeaderboardProps {
   players: LeaderboardPlayer[];
   currentPlayerId: string;
-  onChallenge?: (player: LeaderboardPlayer) => void;
+  currentPlayerGender?: 'male' | 'female';
+  onChallenge?: (player: LeaderboardPlayer, suggestedMatchType: RankingType) => void;
   className?: string;
 }
 
@@ -49,6 +74,17 @@ const tierConfig = {
   }
 };
 
+const rankingTabs: Array<{ 
+  value: RankingType; 
+  label: string; 
+  icon: typeof User;
+  description: string;
+}> = [
+  { value: 'singles', label: 'Singles', icon: User, description: '1v1 Head-to-Head' },
+  { value: 'doubles', label: 'Doubles', icon: Users, description: 'Same-Gender Teams' },
+  { value: 'mixed', label: 'Mixed', icon: Shuffle, description: 'Mixed-Gender Teams' }
+];
+
 const regionFilters: Array<{ value: RegionFilter; label: string; icon: typeof MapPin }> = [
   { value: 'local', label: 'Local', icon: MapPin },
   { value: 'regional', label: 'Regional', icon: Target },
@@ -66,22 +102,55 @@ function getRankIcon(rank: number) {
 function LeaderboardRow({ 
   player, 
   isCurrentPlayer,
+  activeRankingType,
   onChallenge
 }: { 
   player: LeaderboardPlayer; 
   isCurrentPlayer: boolean;
-  onChallenge?: (player: LeaderboardPlayer) => void;
+  activeRankingType: RankingType;
+  onChallenge?: (player: LeaderboardPlayer, suggestedMatchType: RankingType) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const tierStyle = tierConfig[player.tier];
-  const rankIcon = getRankIcon(player.rank);
   const primaryGradient = 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)';
+  
+  // Get current ranking data based on active tab
+  const getCurrentRankData = () => {
+    switch (activeRankingType) {
+      case 'singles':
+        return {
+          rank: player.rankings.singlesRank,
+          points: player.rankings.singlesPoints,
+          wins: player.rankings.singlesWins,
+          losses: player.rankings.singlesLosses
+        };
+      case 'doubles':
+        return {
+          rank: player.rankings.doublesRank,
+          points: player.rankings.doublesPoints,
+          wins: player.rankings.doublesWins,
+          losses: player.rankings.doublesLosses
+        };
+      case 'mixed':
+        return {
+          rank: player.rankings.mixedRank,
+          points: player.rankings.mixedPoints,
+          wins: player.rankings.mixedWins,
+          losses: player.rankings.mixedLosses
+        };
+    }
+  };
+
+  const currentRank = getCurrentRankData();
+  const rankIcon = getRankIcon(currentRank.rank);
+  const totalMatches = currentRank.wins + currentRank.losses;
+  const winRate = totalMatches > 0 ? Math.round((currentRank.wins / totalMatches) * 100) : 0;
 
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: player.rank * 0.05 }}
+      transition={{ delay: currentRank.rank * 0.05 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className={`relative group ${isCurrentPlayer ? 'ring-2 ring-[#f97316]' : ''}`}
@@ -143,7 +212,7 @@ function LeaderboardRow({
                   backgroundClip: 'text'
                 }}
               >
-                #{player.rank}
+                #{currentRank.rank}
               </div>
             )}
           </div>
@@ -184,6 +253,40 @@ function LeaderboardRow({
               </div>
             </div>
             
+            {/* Multi-Ranking Badges */}
+            <div className="flex items-center gap-2 mb-1">
+              <div 
+                className={`px-2 py-0.5 text-[10px] rounded-full font-medium transition-all ${
+                  activeRankingType === 'singles' 
+                    ? 'bg-white/20 text-white border border-white/30' 
+                    : 'bg-white/5 text-white/50'
+                }`}
+                data-testid={`singles-rank-${player.id}`}
+              >
+                S: #{player.rankings.singlesRank}
+              </div>
+              <div 
+                className={`px-2 py-0.5 text-[10px] rounded-full font-medium transition-all ${
+                  activeRankingType === 'doubles' 
+                    ? 'bg-white/20 text-white border border-white/30' 
+                    : 'bg-white/5 text-white/50'
+                }`}
+                data-testid={`doubles-rank-${player.id}`}
+              >
+                D: #{player.rankings.doublesRank}
+              </div>
+              <div 
+                className={`px-2 py-0.5 text-[10px] rounded-full font-medium transition-all ${
+                  activeRankingType === 'mixed' 
+                    ? 'bg-white/20 text-white border border-white/30' 
+                    : 'bg-white/5 text-white/50'
+                }`}
+                data-testid={`mixed-rank-${player.id}`}
+              >
+                M: #{player.rankings.mixedRank}
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 text-xs text-white/60">
               <div className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
@@ -198,7 +301,7 @@ function LeaderboardRow({
               </div>
               <div className="flex items-center gap-1">
                 <Zap className="w-3 h-3" />
-                {player.winRate}% WR
+                {winRate}% WR
               </div>
             </div>
           </div>
@@ -214,27 +317,10 @@ function LeaderboardRow({
                 backgroundClip: 'text'
               }}
             >
-              {player.rankingPoints.toLocaleString()}
+              {currentRank.points.toLocaleString()}
             </div>
-            <div className="flex items-center justify-end gap-1 text-xs">
-              {player.recentChange > 0 && (
-                <>
-                  <TrendingUp className="w-3 h-3 text-green-400" />
-                  <span className="text-green-400">+{player.recentChange}</span>
-                </>
-              )}
-              {player.recentChange < 0 && (
-                <>
-                  <TrendingDown className="w-3 h-3 text-red-400" />
-                  <span className="text-red-400">{player.recentChange}</span>
-                </>
-              )}
-              {player.recentChange === 0 && (
-                <>
-                  <Minus className="w-3 h-3 text-white/40" />
-                  <span className="text-white/40">--</span>
-                </>
-              )}
+            <div className="text-xs text-white/40">
+              {currentRank.wins}-{currentRank.losses}
             </div>
           </div>
 
@@ -243,7 +329,7 @@ function LeaderboardRow({
             <div className="flex-shrink-0">
               <Button
                 size="sm"
-                onClick={() => onChallenge?.(player)}
+                onClick={() => onChallenge?.(player, activeRankingType)}
                 className="relative overflow-hidden bg-gradient-to-r from-[#f97316] via-[#ec4899] to-[#a855f7] hover:opacity-90 text-white border-0"
                 data-testid={`challenge-button-${player.id}`}
               >
@@ -276,16 +362,37 @@ function LeaderboardRow({
 
 export default function InteractiveLeaderboard({ 
   players, 
-  currentPlayerId, 
+  currentPlayerId,
+  currentPlayerGender = 'male',
   onChallenge,
   className = '' 
 }: InteractiveLeaderboardProps) {
-  const [activeFilter, setActiveFilter] = useState<RegionFilter>('local');
+  const [activeRankingType, setActiveRankingType] = useState<RankingType>('singles');
+  const [activeRegionFilter, setActiveRegionFilter] = useState<RegionFilter>('local');
   const primaryGradient = 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)';
+
+  // Sort players based on active ranking type
+  const sortedPlayers = [...players].sort((a, b) => {
+    switch (activeRankingType) {
+      case 'singles':
+        return a.rankings.singlesRank - b.rankings.singlesRank;
+      case 'doubles':
+        return a.rankings.doublesRank - b.rankings.doublesRank;
+      case 'mixed':
+        return a.rankings.mixedRank - b.rankings.mixedRank;
+      default:
+        return 0;
+    }
+  });
+
+  // Filter by gender for doubles (same gender)
+  const filteredPlayers = activeRankingType === 'doubles'
+    ? sortedPlayers.filter(p => p.gender === currentPlayerGender)
+    : sortedPlayers;
 
   return (
     <div className={`space-y-4 ${className}`} data-testid="interactive-leaderboard">
-      {/* Header with Region Filters */}
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -302,23 +409,23 @@ export default function InteractiveLeaderboard({
           </div>
         </div>
 
-        {/* Region Filter Tabs */}
+        {/* Ranking Type Tabs */}
         <div className="flex gap-2">
-          {regionFilters.map((filter) => {
-            const Icon = filter.icon;
-            const isActive = activeFilter === filter.value;
+          {rankingTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeRankingType === tab.value;
             
             return (
               <button
-                key={filter.value}
-                onClick={() => setActiveFilter(filter.value)}
+                key={tab.value}
+                onClick={() => setActiveRankingType(tab.value)}
                 className={`relative flex-1 px-3 py-2 text-sm font-medium transition-all duration-300 ${
                   isActive ? 'text-white' : 'text-white/60 hover:text-white/80'
                 }`}
                 style={{
                   clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)'
                 }}
-                data-testid={`filter-${filter.value}`}
+                data-testid={`ranking-tab-${tab.value}`}
               >
                 {/* Background */}
                 <div 
@@ -337,15 +444,53 @@ export default function InteractiveLeaderboard({
                     className="absolute inset-0 opacity-60"
                     style={{
                       background: primaryGradient,
-                      clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)',
-                      padding: '1px'
+                      clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)'
                     }}
                   />
                 )}
 
                 {/* Content */}
-                <div className="relative z-10 flex items-center justify-center gap-1.5">
+                <div className="relative z-10 flex flex-col items-center justify-center gap-1">
                   <Icon className="w-4 h-4" />
+                  <span className="text-xs">{tab.label}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Region Filter Tabs */}
+        <div className="flex gap-2">
+          {regionFilters.map((filter) => {
+            const Icon = filter.icon;
+            const isActive = activeRegionFilter === filter.value;
+            
+            return (
+              <button
+                key={filter.value}
+                onClick={() => setActiveRegionFilter(filter.value)}
+                className={`relative flex-1 px-2 py-1.5 text-xs font-medium transition-all duration-300 ${
+                  isActive ? 'text-white' : 'text-white/60 hover:text-white/80'
+                }`}
+                style={{
+                  clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)'
+                }}
+                data-testid={`filter-${filter.value}`}
+              >
+                {/* Background */}
+                <div 
+                  className={`absolute inset-0 transition-opacity duration-300 ${
+                    isActive ? 'opacity-20' : 'opacity-0 hover:opacity-10'
+                  }`}
+                  style={{
+                    background: primaryGradient,
+                    clipPath: 'polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%)'
+                  }}
+                />
+
+                {/* Content */}
+                <div className="relative z-10 flex items-center justify-center gap-1">
+                  <Icon className="w-3 h-3" />
                   <span>{filter.label}</span>
                 </div>
               </button>
@@ -358,18 +503,19 @@ export default function InteractiveLeaderboard({
       <div className="space-y-2">
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeFilter}
+            key={`${activeRankingType}-${activeRegionFilter}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
             className="space-y-2"
           >
-            {players.slice(0, 8).map((player) => (
+            {filteredPlayers.slice(0, 8).map((player) => (
               <LeaderboardRow
                 key={player.id}
                 player={player}
                 isCurrentPlayer={player.id === currentPlayerId}
+                activeRankingType={activeRankingType}
                 onChallenge={onChallenge}
               />
             ))}
