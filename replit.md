@@ -44,6 +44,13 @@ User wants "simple first" approach: focus initially on core pickleball tracking,
 User wants trading cards to tell development stories rather than create gambling-like speculation, focusing on educational value and skill trajectory documentation.
 User wants AI used for trajectory analysis and skill development optimization, not outcome prediction or gambling elements.
 User wants progressive feature rollout where advanced capabilities (lifestyle integration, sponsorship, talent scouting) unlock gradually as users demonstrate engagement with core features.
+User wants Player Experience 2.0 - a comprehensive Gaming HUD Command Center at `/unified-prototype` combining esports aesthetics with personalized content.
+User wants multi-platform video integration (YouTube, Vimeo, Facebook, TikTok, Douyin, Xiaohongshu) with video annotation system for coach timestamp comments.
+User wants player photo upload (headshots/avatars) with tier-colored borders displayed across all HUD sections.
+User wants regional leaderboard with challenge system - players can challenge those above them, challenges expire in 24h, acceptance flows to pre-filled match recorder.
+User wants content feed with intelligent prioritization showing coaching videos, assessments, tournament media, and articles relevant to player.
+User wants privacy levels for content (Public, Friends, Team, Private) with coach override requiring student consent.
+User wants hexagonal design system with gaming animations (particles, glows, scan lines) and orange→pink→purple gradient theme throughout.
 
 ## System Architecture
 Pickle+ uses a modern full-stack architecture with React frontend, Node.js backend, and PostgreSQL database, adhering to modular architecture and evidence-based completion standards.
@@ -88,6 +95,7 @@ The Universal Development Dashboard (UDD) at `/udd` manages development workflow
 - **AI-Powered Business Intelligence**: Revenue forecasting, demand analysis, scheduling optimization, client retention, CLV, marketing ROI, competitive intelligence.
 - **Critical Gaps Analysis System**: Deployment readiness assessment integrated into UDD.
 - **Student-Coach Connection System**: Multiple coaches per student with passport validation and approval.
+- **Player Experience 2.0**: Gaming HUD Command Center at `/unified-prototype` with hexagonal design, multi-platform video integration (YouTube, Vimeo, Facebook, TikTok, Douyin, Xiaohongshu), coach video annotations, regional leaderboard with challenge system, intelligent content feed, and comprehensive privacy controls. Full specification in `PLAYER_EXPERIENCE_2.0.md`.
 
 ### Trading Card System
 - **Card Generation**: Player, Development Story, Coach Methodology, Equipment Synergy, and Moment Cards generated dynamically from interactions and data.
