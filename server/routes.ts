@@ -1529,6 +1529,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/coach-discovery', enhancedCoachDiscoveryRoutes);
     console.log("[ROUTES] Enhanced Coach Discovery routes registered successfully");
     
+    // Challenge System (Sprint 2 - Gaming HUD Enhancement)
+    console.log("[ROUTES] Registering Match Challenge routes...");
+    const challengeRoutes = await import('./routes/challenge-routes');
+    app.use('/api/challenges', challengeRoutes.default);
+    console.log("[ROUTES] Match Challenge routes registered successfully");
+    
     console.log("[ROUTES] All modular route systems registered successfully");
     
   } catch (error) {

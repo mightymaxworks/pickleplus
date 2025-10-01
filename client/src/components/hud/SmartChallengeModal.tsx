@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Users, Shuffle, Trophy, Target, AlertCircle, Swords } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 type RankingType = 'singles' | 'doubles' | 'mixed';
 
@@ -75,6 +77,8 @@ export default function SmartChallengeModal({
 }: SmartChallengeModalProps) {
   const [selectedMatchType, setSelectedMatchType] = useState<RankingType>(suggestedMatchType);
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Reset modal state when it opens or suggested match type changes
   useEffect(() => {
@@ -119,12 +123,55 @@ export default function SmartChallengeModal({
   const pointDiff = Math.abs(matchup.yourPoints - matchup.theirPoints);
   const isHigherRanked = matchup.yourRank < matchup.theirRank;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (requiresPartner && !selectedPartnerId) {
       return; // Validation: partner required
     }
-    onChallengeSubmit(selectedMatchType, selectedPartnerId || undefined);
-    onClose();
+
+    setIsSubmitting(true);
+    
+    try {
+      // Call the challenge API
+      const response = await apiRequest('/api/challenges/create', 'POST', {
+        challengedId: opponent.id,
+        matchType: selectedMatchType,
+        challengerPartnerId: selectedPartnerId ? parseInt(selectedPartnerId) : null,
+        createdVia: 'leaderboard',
+        sourceContext: {
+          leaderboardTab: selectedMatchType,
+          challengerRank: currentPlayer.rankings?.[`${selectedMatchType}Rank`] || 0,
+          challengedRank: opponent.rankings?.[`${selectedMatchType}Rank`] || 0
+        }
+      });
+
+      if (response && response.success) {
+        const partnerName = selectedPartnerId 
+          ? availablePartners.find(p => p.id === selectedPartnerId)?.name 
+          : null;
+        
+        toast({
+          title: "Challenge Sent!",
+          description: partnerName 
+            ? `${selectedMatchType.charAt(0).toUpperCase() + selectedMatchType.slice(1)} challenge sent to ${opponent.name} with partner ${partnerName}. They have 24h to respond.`
+            : `${selectedMatchType.charAt(0).toUpperCase() + selectedMatchType.slice(1)} challenge sent to ${opponent.name}. They have 24h to respond.`,
+          duration: 4000
+        });
+
+        // Call the original callback for any additional handling
+        onChallengeSubmit(selectedMatchType, selectedPartnerId || undefined);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to send challenge:', error);
+      toast({
+        title: "Challenge Failed",
+        description: "Unable to send challenge. Please try again.",
+        variant: "destructive",
+        duration: 3000
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const primaryGradient = 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)';
@@ -313,12 +360,12 @@ export default function SmartChallengeModal({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={requiresPartner && !selectedPartnerId}
+              disabled={isSubmitting || (requiresPartner && !selectedPartnerId)}
               className="flex-1 bg-gradient-to-r from-[#f97316] via-[#ec4899] to-[#a855f7] hover:opacity-90 text-white border-0"
               data-testid="send-challenge-button"
             >
               <Swords className="w-4 h-4 mr-2" />
-              Send Challenge
+              {isSubmitting ? 'Sending...' : 'Send Challenge'}
             </Button>
           </div>
         </div>
