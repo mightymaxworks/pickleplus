@@ -75,10 +75,12 @@ export function EnhancedMatchCard({ match, onValidationComplete }: EnhancedMatch
   // Check if the current user is the winner
   const isWinner = user?.id === match.winnerId;
   
-  // Check if the match needs validation
-  const isPending = match.validationStatus === 'pending';
-  const isDisputed = match.validationStatus === 'disputed';
-  const isValidated = match.validationStatus === 'validated' || match.validationStatus === 'confirmed';
+  // Check match certification status (using new certificationStatus field)
+  const certStatus = match.certificationStatus || match.validationStatus || 'pending';
+  const isPending = certStatus === 'pending' || certStatus === 'in_review';
+  const isDisputed = certStatus === 'disputed' || certStatus === 'rejected';
+  const isValidated = match.isVerified || certStatus === 'certified' || certStatus === 'verified';
+  const isExpired = certStatus === 'expired';
 
   // Check if the current user can validate the match
   const canValidate = isPending && user?.id !== match.playerOneId;
@@ -88,7 +90,7 @@ export function EnhancedMatchCard({ match, onValidationComplete }: EnhancedMatch
 
   // Validation mutation
   const { mutate: submitValidation, isPending: isValidating } = useMutation({
-    mutationFn: () => validateMatch(match.id, true),
+    mutationFn: () => validateMatch(match.id, 'confirmed'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matchHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentMatches'] });
@@ -111,7 +113,7 @@ export function EnhancedMatchCard({ match, onValidationComplete }: EnhancedMatch
 
   // Dispute mutation
   const { mutate: submitDispute, isPending: isDisputing } = useMutation({
-    mutationFn: () => validateMatch(match.id, false),
+    mutationFn: () => validateMatch(match.id, 'disputed'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matchHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentMatches'] });

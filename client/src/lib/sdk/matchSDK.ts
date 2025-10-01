@@ -108,7 +108,11 @@ export interface RecordedMatch extends Partial<MatchData> {
   eventTier?: string;
   division?: string;
   matchType?: 'casual' | 'competitive' | 'tournament' | 'league';
-  validationStatus?: 'pending' | 'confirmed' | 'disputed' | 'validated';
+  // NEW: Primary certification status field
+  certificationStatus?: 'pending' | 'certified' | 'disputed' | 'expired';
+  isVerified?: boolean;
+  // DEPRECATED: Legacy validation status (kept for backward compatibility)
+  validationStatus?: 'pending' | 'confirmed' | 'disputed' | 'validated' | 'verified' | 'in_review' | 'rejected';
   validationRequiredBy?: string;
   validationCompletedAt?: string;
   xpAwarded?: number;
