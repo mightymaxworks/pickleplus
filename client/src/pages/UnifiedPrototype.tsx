@@ -58,6 +58,7 @@ import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 import PassportHero, { PlayerData, PlayerTier, tierConfig, getTierStyling, formatPassportCode } from '@/components/passport/PassportHero';
 import HexagonalStats from '@/components/hud/HexagonalStats';
 import InteractiveLeaderboard from '@/components/hud/InteractiveLeaderboard';
+import ContentFeed from '@/components/hud/ContentFeed';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -317,6 +318,98 @@ const mockLeaderboardPlayers = [
     winRate: 69,
     recentChange: +19,
     isChallengeable: true
+  }
+];
+
+// Mock content feed data
+const mockContentFeed = [
+  {
+    id: '1',
+    type: 'video' as const,
+    title: 'Advanced Third Shot Drop Technique',
+    description: 'Master the third shot drop with proper form and placement strategies',
+    author: 'Coach Sarah Martinez',
+    authorRole: 'Coach',
+    timestamp: '2 hours ago',
+    privacy: 'Public' as const,
+    stats: {
+      views: 234,
+      likes: 45,
+      comments: 12,
+      duration: '8:42'
+    },
+    tags: ['Technique', 'Drops', 'Advanced'],
+    isPriority: true,
+    isRelevant: true
+  },
+  {
+    id: '2',
+    type: 'assessment' as const,
+    title: 'Your Q1 2025 Skill Assessment Results',
+    description: 'Comprehensive review of your technical, tactical, physical, and mental skills',
+    author: 'Coach Mike Johnson',
+    authorRole: 'Coach',
+    timestamp: '1 day ago',
+    privacy: 'Private' as const,
+    stats: {
+      views: 3
+    },
+    tags: ['Assessment', 'Progress', 'Skills'],
+    isPriority: true,
+    isRelevant: true
+  },
+  {
+    id: '3',
+    type: 'tournament' as const,
+    title: 'Vancouver Open Championship 2025',
+    description: 'Elite division highlights and championship match recap',
+    author: 'Tournament Director',
+    authorRole: 'Admin',
+    timestamp: '3 days ago',
+    privacy: 'Public' as const,
+    stats: {
+      views: 1256,
+      likes: 187,
+      comments: 43
+    },
+    tags: ['Tournament', 'Elite', 'Vancouver'],
+    isRelevant: true
+  },
+  {
+    id: '4',
+    type: 'article' as const,
+    title: 'Mental Game: Staying Focused Under Pressure',
+    description: 'Learn techniques to maintain composure during critical match points',
+    author: 'Dr. Emma Wilson',
+    authorRole: 'Coach',
+    timestamp: '5 days ago',
+    privacy: 'Public' as const,
+    stats: {
+      views: 892,
+      likes: 156,
+      comments: 28
+    },
+    tags: ['Mental Game', 'Strategy', 'Performance'],
+    isPriority: false,
+    isRelevant: true
+  },
+  {
+    id: '5',
+    type: 'video' as const,
+    title: 'Footwork Drills for Better Court Coverage',
+    description: 'Essential footwork patterns to improve speed and positioning',
+    author: 'Coach David Kim',
+    authorRole: 'Coach',
+    timestamp: '1 week ago',
+    privacy: 'Friends' as const,
+    stats: {
+      views: 145,
+      likes: 32,
+      comments: 8,
+      duration: '12:15'
+    },
+    tags: ['Footwork', 'Drills', 'Fundamentals'],
+    isRelevant: false
   }
 ];
 
@@ -860,6 +953,9 @@ function PassportModeContent({
           });
         }}
       />
+
+      {/* Personalized Content Feed */}
+      <ContentFeed items={mockContentFeed} />
       
       {/* QR Code Modal */}
       <QRCodeModal 
