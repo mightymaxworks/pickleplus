@@ -56,6 +56,7 @@ import { Slider } from '@/components/ui/slider';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import PassportPhotoUpload from '@/components/passport/PassportPhotoUpload';
 import PassportHero, { PlayerData, PlayerTier, tierConfig, getTierStyling, formatPassportCode } from '@/components/passport/PassportHero';
+import HexagonalStats from '@/components/hud/HexagonalStats';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -734,24 +735,17 @@ function PassportModeContent({
         onPhotoUpload={onPhotoUpload}
       />
       
-      {/* Additional Stats - Simplified */}
-      <Card className="p-6 bg-slate-900/50 border-slate-700">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          Additional Stats
-        </h3>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-white">{player.picklePoints}</div>
-            <div className="text-slate-400 text-sm">Pickle Points</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-white">#{player.localRank}</div>
-            <div className="text-slate-400 text-sm">Local Rank</div>
-          </div>
-        </div>
-      </Card>
+      {/* Battle Stats - Gaming HUD Style */}
+      <HexagonalStats 
+        stats={{
+          wins: Math.round((player.winRate || 0.73) * 100),
+          losses: 100 - Math.round((player.winRate || 0.73) * 100),
+          winRate: (player.winRate || 0.73) * 100,
+          totalMatches: 100,
+          currentStreak: 5,
+          bestStreak: 12
+        }}
+      />
       
       {/* QR Code Modal */}
       <QRCodeModal 
