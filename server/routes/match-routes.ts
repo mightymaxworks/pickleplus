@@ -32,9 +32,16 @@ const verifyMatchSchema = z.object({
 /**
  * Calculate and award points to all players in a verified match
  * Uses official algorithm utilities to ensure System B compliance
+ * IDEMPOTENT: Safe to call multiple times - points only awarded once
  */
 async function calculateAndAwardPoints(match: any): Promise<void> {
   console.log('[Points] Calculating points for verified match:', match.serial);
+  
+  // IDEMPOTENCY GUARD: Check if points already awarded
+  if (match.pointsAwarded && match.pointsAwarded > 0) {
+    console.log('[Points] Points already awarded for this match, skipping');
+    return;
+  }
   
   // Get all player IDs
   const playerIds = [
@@ -77,30 +84,62 @@ async function calculateAndAwardPoints(match: any): Promise<void> {
   
   console.log('[Points] Calculated results:', pointsResults);
   
-  // Award points to each player (ADDITIVE - never replace)
-  for (const result of pointsResults) {
-    console.log(`[Points] Awarding ${result.rankingPointsEarned} ranking points to player ${result.username}`);
+  // Calculate total points to award
+  const totalPoints = Math.round(pointsResults.reduce((sum, r) => sum + r.rankingPointsEarned, 0));
+  
+  // DRIZZLE TRANSACTION: All-or-nothing points awarding with atomic lock
+  try {
+    await db.transaction(async (tx) => {
+      // ATOMIC LOCK: Lock match row and check if points already awarded
+      const lockResult = await tx.execute(sql`
+        SELECT id FROM matches
+        WHERE id = ${match.id}
+          AND (points_awarded IS NULL OR points_awarded = 0)
+        FOR UPDATE NOWAIT
+      `);
+      
+      // If no rows (already awarded or locked), skip
+      if (!lockResult || lockResult.rows.length === 0) {
+        console.log('[Points] Points already awarded or being awarded by another process, skipping');
+        return; // Transaction will rollback automatically
+      }
+      
+      // Award points to each player (ADDITIVE - never replace)
+      for (const result of pointsResults) {
+        console.log(`[Points] Awarding ${result.rankingPointsEarned} ranking points to player ${result.username}`);
+        
+        // CRITICAL: Use additive SQL operation to preserve tournament history
+        await tx.execute(sql`
+          UPDATE users
+          SET 
+            ranking_points = ranking_points + ${result.rankingPointsEarned},
+            pickle_points = pickle_points + ${result.picklePointsEarned},
+            total_matches = total_matches + 1,
+            matches_won = matches_won + ${result.rankingPointsEarned >= 3 ? 1 : 0}
+          WHERE id = ${result.playerId}
+        `);
+      }
+      
+      // Mark points as awarded (after all user updates succeed)
+      await tx.execute(sql`
+        UPDATE matches
+        SET points_awarded = ${totalPoints}
+        WHERE id = ${match.id}
+      `);
+      
+      console.log('[Points] Points awarded successfully');
+    });
     
-    // CRITICAL: Use additive SQL operation to preserve tournament history
-    await db.execute(sql`
-      UPDATE users
-      SET 
-        ranking_points = ranking_points + ${result.rankingPointsEarned},
-        pickle_points = pickle_points + ${result.picklePointsEarned},
-        total_matches = total_matches + 1,
-        matches_won = matches_won + ${result.rankingPointsEarned >= 3 ? 1 : 0}
-      WHERE id = ${result.playerId}
-    `);
+  } catch (error: any) {
+    // Handle lock contention gracefully
+    if (error.code === '55P03' || error.message?.includes('could not obtain lock')) {
+      console.log('[Points] Another process is awarding points, skipping');
+      return;
+    }
+    
+    console.error('[Points] Error awarding points, transaction rolled back:', error);
+    throw error;
   }
-  
-  // Update match with awarded points
-  await db.update(matches)
-    .set({ 
-      pointsAwarded: Math.round(pointsResults.reduce((sum, r) => sum + r.rankingPointsEarned, 0))
-    })
-    .where(eq(matches.id, match.id));
-  
-  console.log('[Points] Points awarded successfully');
 }
 
 /**
