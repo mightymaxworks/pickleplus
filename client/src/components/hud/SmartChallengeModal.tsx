@@ -133,7 +133,7 @@ export default function SmartChallengeModal({
     try {
       // Call the challenge API
       const response = await apiRequest('/api/challenges/create', 'POST', {
-        challengedId: opponent.id,
+        challengedId: typeof opponent.id === 'string' ? parseInt(opponent.id) : opponent.id,
         matchType: selectedMatchType,
         challengerPartnerId: selectedPartnerId ? parseInt(selectedPartnerId) : null,
         createdVia: 'leaderboard',

@@ -78,7 +78,7 @@ router.post('/create', async (req, res) => {
         ${`${challenger.displayName || challenger.username} challenged you to a ${validatedData.matchType} match${partnerName ? ` with partner ${partnerName}` : ''}. Respond within 24h!`},
         ${challenge.id},
         'match_challenge',
-        '/match-arena?challenge=${challenge.id}',
+        ${`/match-arena?challenge=${challenge.id}`},
         false
       )
     `);
@@ -190,7 +190,7 @@ router.post('/:id/respond', async (req, res) => {
         ${`${challenged.displayName || challenged.username} ${actionText} your ${challenge.matchType} challenge${action === 'accept' ? '. Prepare for battle!' : '.'}`},
         ${challenge.id},
         'match_challenge',
-        ${action === 'accept' ? `'/match-arena?challenge=${challenge.id}'` : null},
+        ${action === 'accept' ? `/match-arena?challenge=${challenge.id}` : null},
         false
       )
     `);
