@@ -153,8 +153,8 @@ export async function createTestUser(user: TestUser): Promise<void> {
       email: user.email,
       displayName: user.displayName,
       password: user.password,
-      gender: 'male',
-      dateOfBirth: '1990-01-01'
+      gender: user.gender,
+      dateOfBirth: `${user.yearOfBirth}-01-01`
     })
   });
   
