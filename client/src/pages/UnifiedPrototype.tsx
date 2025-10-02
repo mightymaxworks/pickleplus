@@ -64,6 +64,7 @@ import SmartChallengeModal from '@/components/hud/SmartChallengeModal';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Passport Code Utilities are now imported from PassportHero component
 
@@ -2877,6 +2878,7 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [location, setLocation] = useLocation();
+  const { user: authUser } = useAuth();
   
   // Auto-detect initial tab based on route
   const getInitialTab = (): TabMode => {
@@ -2892,6 +2894,29 @@ export default function UnifiedPrototype() {
   useEffect(() => {
     setActiveTab(getInitialTab());
   }, [location]);
+  
+  // Fetch real user data from API - always run, no demo data fallback
+  const { data: currentUser, isLoading: isLoadingUser, error: userError } = useQuery({
+    queryKey: ['/api/auth/current-user'],
+  });
+  
+  // Transform user data to PlayerData format - no demo fallback
+  const playerData: PlayerData | null = currentUser ? {
+    id: (currentUser as any).id || 'unknown',
+    name: `${(currentUser as any).firstName || ''} ${(currentUser as any).lastName || ''}`.trim() || (currentUser as any).username || 'Player',
+    tier: ((currentUser as any).tier || 'recreational') as PlayerTier,
+    rankingPoints: (currentUser as any).rankingPoints || 0,
+    picklePoints: (currentUser as any).picklePoints || 0,
+    globalRank: (currentUser as any).globalRank || 0,
+    localRank: (currentUser as any).localRank || 0,
+    passportCode: (currentUser as any).passportCode || 'LOADING',
+    recentChange: (currentUser as any).recentChange || 0,
+    winRate: (currentUser as any).winRate || 0,
+    nextMilestone: {
+      tier: (currentUser as any).nextMilestone?.tier || 'Competitive',
+      pointsNeeded: (currentUser as any).nextMilestone?.pointsNeeded || 300,
+    },
+  } : null;
   
   // Micro-feedback states
   const [showSaveReaction, setShowSaveReaction] = useState(false);
@@ -2968,11 +2993,41 @@ export default function UnifiedPrototype() {
     }, ...prev].slice(0, 10));
   };
 
+  // Show loading state while fetching user data
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading your player passport...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state if data fetch failed
+  if (userError || !playerData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center max-w-md p-6">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Unable to Load Player Data</h2>
+          <p className="text-gray-400 mb-6">
+            {userError ? 'Failed to fetch your player information. Please try again.' : 'No player data available.'}
+          </p>
+          <Button onClick={() => window.location.reload()} className="bg-orange-500 hover:bg-orange-600">
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       {/* Notifications Header */}
       <NotificationsHeader 
-        player={mockPlayer} 
+        player={playerData} 
         notifications={notifications}
         connected={connected}
         onTriggerDemo={triggerDemoNotification}
@@ -2990,14 +3045,14 @@ export default function UnifiedPrototype() {
           >
             {activeTab === 'passport' && (
               <PassportModeContent 
-                player={mockPlayer}
+                player={playerData}
                 passportPhoto={passportPhoto}
                 onPhotoUpload={handlePhotoSave}
               />
             )}
             {/* Play tab redirects to /match-arena */}
-            {activeTab === 'rankings' && <RankingsModeContent player={mockPlayer} />}
-            {activeTab === 'profile' && <ProfileModeContent player={mockPlayer} />}
+            {activeTab === 'rankings' && <RankingsModeContent player={playerData} />}
+            {activeTab === 'profile' && <ProfileModeContent player={playerData} />}
           </motion.div>
         </AnimatePresence>
       </div>
