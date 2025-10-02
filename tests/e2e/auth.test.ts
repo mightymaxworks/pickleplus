@@ -54,9 +54,7 @@ describe('Authentication Flow', () => {
 
     await register(page, testUser);
     
-    // Should redirect after successful registration
-    await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: TIMEOUT }).catch(() => {});
-    
+    // register() already waits for URL change
     const url = page.url();
     // Should not be on register page anymore
     expect(url).not.toContain('/register');
@@ -65,9 +63,7 @@ describe('Authentication Flow', () => {
   test('should login with existing credentials', async () => {
     await login(page, TEST_USERS.player1);
     
-    // Should be redirected after login (could be dashboard or another page)
-    await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: TIMEOUT }).catch(() => {});
-    
+    // login() already waits for URL change
     const url = page.url();
     // Should not be on login page anymore
     expect(url).not.toContain('/login');
