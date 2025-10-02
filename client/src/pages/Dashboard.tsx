@@ -17,12 +17,27 @@ import { StandardLayout } from '@/components/layout/StandardLayout';
 import { WelcomeOnboarding } from '@/components/onboarding/WelcomeOnboarding';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
+import { queryClient } from '@/lib/queryClient';
+import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [localUser, setLocalUser] = useState(user);
+
+  const { isPulling, pullDistance, isRefreshing } = usePullToRefresh({
+    onRefresh: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/matches'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/rankings'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/achievements'] })
+      ]);
+    },
+    threshold: 80
+  });
 
   // Update local user when auth user changes
   React.useEffect(() => {
@@ -72,7 +87,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full min-h-screen relative">
+      {isPulling && (
+        <div 
+          className={cn(
+            "ptr-indicator bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2",
+            pullDistance > 80 ? "pulling" : ""
+          )}
+        >
+          <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+          <span className="text-sm font-medium">
+            {isRefreshing ? "Refreshing..." : "Pull to refresh"}
+          </span>
+        </div>
+      )}
       <PassportDashboard 
         user={localUser} 
         onFieldChange={handleFieldChange}

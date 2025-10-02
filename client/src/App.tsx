@@ -33,6 +33,7 @@ import GamifiedMatchRecording from '@/pages/GamifiedMatchRecording' // Gaming-st
 import MatchArena from '@/pages/MatchArena' // Sophisticated gaming-style match arena
 import UnifiedPrototype from '@/pages/UnifiedPrototype' // Temporary redirect
 import { NotificationProvider, NotificationBell } from '@/components/notifications/RealtimeNotificationSystem' // Real-time gaming notifications
+import { MobileBottomNav } from '@/components/navigation/MobileBottomNav' // Mobile bottom navigation
 
 
 // Import module initializations
@@ -1280,6 +1281,7 @@ export default function App() {
           </AuthProvider>
         </LanguageProvider>
         <Toaster />
+        <MobileBottomNav />
       </QueryClientProvider>
     </div>
   )
