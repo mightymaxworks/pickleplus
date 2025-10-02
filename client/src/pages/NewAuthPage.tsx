@@ -30,6 +30,8 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string(),
@@ -99,6 +101,8 @@ export default function NewAuthPage() {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -138,6 +142,8 @@ export default function NewAuthPage() {
     setIsLoading(true);
     try {
       await register({
+        firstName: data.firstName,
+        lastName: data.lastName,
         username: data.username || "", // Use empty string for auto-generation
         email: data.email,
         password: data.password,
@@ -413,7 +419,56 @@ export default function NewAuthPage() {
                   <TabsContent value="register" className="space-y-4">
                     <Form {...registerForm}>
                       <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-5">
-                        {/* 1. EMAIL - Primary identifier */}
+                        {/* 1. NAME FIELDS - First and last name */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={registerForm.control}
+                            name="firstName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-gray-300">{t('auth.firstName', 'First Name')} *</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                    <Input 
+                                      {...field} 
+                                      type="text"
+                                      placeholder={t('auth.firstNamePlaceholder', 'John')}
+                                      className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
+                                      data-testid="input-firstName"
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={registerForm.control}
+                            name="lastName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-gray-300">{t('auth.lastName', 'Last Name')} *</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                    <Input 
+                                      {...field} 
+                                      type="text"
+                                      placeholder={t('auth.lastNamePlaceholder', 'Doe')}
+                                      className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
+                                      data-testid="input-lastName"
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* 2. EMAIL - Primary identifier */}
                         <FormField
                           control={registerForm.control}
                           name="email"
@@ -436,7 +491,7 @@ export default function NewAuthPage() {
                           )}
                         />
 
-                        {/* 2. PASSWORD FIELDS - Security credentials together */}
+                        {/* 3. PASSWORD FIELDS - Security credentials together */}
                         <div className="space-y-4">
                           <FormField
                             control={registerForm.control}
@@ -483,7 +538,7 @@ export default function NewAuthPage() {
                           />
                         </div>
 
-                        {/* 3. PERSONAL INFO - Year of birth and gender together */}
+                        {/* 4. PERSONAL INFO - Year of birth and gender together */}
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={registerForm.control}

@@ -8,7 +8,9 @@ export interface TestUser {
   username: string;
   password: string;
   email: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
+  displayName?: string;
 }
 
 export const TEST_USERS = {
@@ -16,12 +18,16 @@ export const TEST_USERS = {
     username: 'e2e_player1',
     password: 'TestPass123!',
     email: 'player1@e2etest.com',
+    firstName: 'Test',
+    lastName: 'Player1',
     displayName: 'E2E Player 1'
   },
   player2: {
     username: 'e2e_player2',
     password: 'TestPass123!',
     email: 'player2@e2etest.com',
+    firstName: 'Test',
+    lastName: 'Player2',
     displayName: 'E2E Player 2'
   }
 };
@@ -65,11 +71,11 @@ export async function login(page: Page, user: TestUser): Promise<void> {
 
 export async function register(page: Page, user: TestUser): Promise<void> {
   await page.goto(`${BASE_URL}/register`);
-  await page.waitForSelector('[data-testid="input-username"]', { timeout: TIMEOUT });
+  await page.waitForSelector('[data-testid="input-firstName"]', { timeout: TIMEOUT });
   
-  await page.type('[data-testid="input-username"]', user.username);
+  await page.type('[data-testid="input-firstName"]', user.firstName);
+  await page.type('[data-testid="input-lastName"]', user.lastName);
   await page.type('[data-testid="input-email"]', user.email);
-  await page.type('[data-testid="input-displayName"]', user.displayName);
   await page.type('[data-testid="input-password"]', user.password);
   await page.type('[data-testid="input-confirmPassword"]', user.password);
   
@@ -126,10 +132,14 @@ export async function createTestUser(user: TestUser): Promise<void> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      firstName: user.firstName,
+      lastName: user.lastName,
       username: user.username,
       email: user.email,
       displayName: user.displayName,
-      password: user.password
+      password: user.password,
+      gender: 'male',
+      dateOfBirth: '1990-01-01'
     })
   });
   

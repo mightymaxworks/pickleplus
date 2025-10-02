@@ -1986,13 +1986,13 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
     return 'recreational';
   };
   
-  // Use real data if available, fallback to mock data
+  // Use real data only - no demo fallbacks
   const allRankings = isLoadingLeaderboard 
-    ? mockRankings.slice(0, 5) // Show partial mock data while loading
+    ? [] // Show empty while loading, no mock data
     : transformLeaderboardData(leaderboardData?.leaderboard || leaderboardData?.players || leaderboardData || []);
   
-  // If real data is empty and not loading, fallback to mock data for demo
-  const rankings = (allRankings.length > 0 && !isLoadingLeaderboard) ? allRankings : mockRankings;
+  // Use only real data
+  const rankings = allRankings;
   
   // Filter rankings based on search
   const filteredRankings = rankings.filter(rankedPlayer => 

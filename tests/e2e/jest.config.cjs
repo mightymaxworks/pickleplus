@@ -9,7 +9,7 @@ module.exports = {
   },
   testTimeout: 60000,
   globalSetup: '<rootDir>/global-setup.ts',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
   globals: {
     'ts-jest': {
       tsconfig: {
