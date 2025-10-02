@@ -37,6 +37,7 @@ User wants the Pickle Points multiplier CORRECTED to exactly 1.5x throughout all
 User clarified that the 1.5x multiplier must apply PER MATCH when Pickle Points are earned, NOT as a blanket conversion of total ranking points.
 User wants all assessment references standardized to 55-skill framework.
 User wants comprehensive CI/CD testing to verify: (1) Only coaches can see coach dashboard, (2) Coaches cannot rate themselves, (3) All features work 100% through UI.
+User wants E2E testing infrastructure implemented via GitHub Actions CI/CD (Puppeteer E2E tests not feasible in Replit NixOS due to missing libxcb dependency).
 User wants L1-L5 coach weighted assessment algorithm with larger gaps between L2-L3 and L3-L4, minimal L1 influence (0.7x), and CRITICAL REQUIREMENT: All ratings remain PROVISIONAL until L4+ coach validation - only L4/L5 coaches can provide CONFIRMED ratings for official use.
 User wants UDF framework enhancements implemented to prevent future algorithm compliance errors.
 User wants native app development to unlock advanced AI integration, biometric tracking, and sophisticated trading card ecosystem that cannot be achieved on mobile web.
@@ -125,6 +126,15 @@ Comprehensive data collection balanced with user privacy and consent.
 - **Data Priorities**: Performance development, community behavior, lifestyle integration (opt-in), economic activity.
 - **Privacy & Consent**: Granular permissions, educational transparency, opt-out flexibility, user data ownership.
 - **Value Exchange**: Tiered access and features based on data sharing levels.
+
+### E2E Testing Strategy
+Comprehensive end-to-end testing via GitHub Actions CI/CD pipeline.
+- **Test Infrastructure**: Puppeteer-based E2E tests run in GitHub Actions with ubuntu-latest (Replit NixOS lacks required libxcb dependency).
+- **Test Coverage**: Authentication flows, match recording & certification, challenge system, rankings/leaderboards, notifications, mobile features.
+- **Test Files**: `tests/e2e/auth.test.ts`, `tests/e2e/match-certification.test.ts`, `tests/e2e/challenges.test.ts`.
+- **CI/CD Workflow**: `.github/workflows/e2e-tests.yml` - runs on push/PR to main/develop branches, includes Chrome installation, database setup, all test suites.
+- **Artifacts**: Screenshots and test logs uploaded with 7-day retention for debugging failures.
+- **Environment**: Tests run against PostgreSQL test database, headless Chrome with proper data-testid attributes on all interactive elements.
 
 ## External Dependencies
 - **React**: Frontend framework.
