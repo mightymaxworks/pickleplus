@@ -2,6 +2,7 @@
  * E2E Tests: Match Recording and Certification
  * Tests match creation, score submission, and multi-player certification
  */
+import { describe, test, expect, beforeAll, beforeEach, afterEach, afterAll } from '@jest/globals';
 import { Browser, Page } from 'puppeteer';
 import {
   setupBrowser,

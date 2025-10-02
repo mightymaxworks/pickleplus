@@ -2,6 +2,7 @@
  * E2E Tests: Authentication Flow
  * Tests registration, login, and logout workflows
  */
+import { describe, test, expect, beforeAll, beforeEach, afterEach, afterAll } from '@jest/globals';
 import { Browser, Page } from 'puppeteer';
 import {
   setupBrowser,
@@ -81,7 +82,7 @@ describe('Authentication Flow', () => {
     await page.click('[data-testid="button-login"]');
     
     // Wait for error - either via toast or error message
-    await page.waitForTimeout(2000); // Brief wait for error to appear
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Brief wait for error to appear
     
     // Should still be on login page (not redirected)
     const url = page.url();

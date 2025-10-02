@@ -2,6 +2,7 @@
  * E2E Tests: Challenge System
  * Tests challenge creation, acceptance, and match flow
  */
+import { describe, test, expect, beforeAll, beforeEach, afterEach, afterAll } from '@jest/globals';
 import { Browser, Page } from 'puppeteer';
 import {
   setupBrowser,

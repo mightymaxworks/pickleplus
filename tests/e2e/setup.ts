@@ -44,7 +44,18 @@ export const TIMEOUT = 30000;
 export async function setupBrowser(): Promise<Browser> {
   return await puppeteer.launch({
     headless: process.env.HEADLESS !== 'false',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--window-size=1280,720',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--single-process'
+    ],
     slowMo: process.env.SLOW_MO ? parseInt(process.env.SLOW_MO) : 0
   });
 }
