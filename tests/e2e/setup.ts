@@ -121,7 +121,35 @@ export async function screenshot(
   }
 }
 
+export async function createTestUser(user: TestUser): Promise<void> {
+  const response = await fetch(`${BASE_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: user.username,
+      email: user.email,
+      displayName: user.displayName,
+      password: user.password
+    })
+  });
+  
+  if (!response.ok && response.status !== 409) { // 409 = already exists
+    throw new Error(`Failed to create test user: ${await response.text()}`);
+  }
+}
+
 export async function cleanupTestUsers(): Promise<void> {
-  // TODO: Add API call to clean up test users
-  // This should be implemented in the backend
+  // Test users will be cleaned up manually or via database truncate
+  // In production tests, implement DELETE /api/test/users/:username endpoint
+  console.log('Test users should be cleaned up via database truncate');
+}
+
+export async function setupTestData(): Promise<void> {
+  // Create test users before running tests
+  try {
+    await createTestUser(TEST_USERS.player1);
+    await createTestUser(TEST_USERS.player2);
+  } catch (error) {
+    console.log('Test users may already exist:', error);
+  }
 }

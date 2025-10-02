@@ -65,7 +65,7 @@ jobs:
           timeout 30 bash -c 'until curl -f http://localhost:5000/api/health; do sleep 1; done'
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: npx jest --config tests/e2e/jest.config.js
         env:
           TEST_URL: http://localhost:5000
           HEADLESS: true
