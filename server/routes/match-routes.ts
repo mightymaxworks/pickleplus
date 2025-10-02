@@ -1101,6 +1101,38 @@ export function registerMatchRoutes(app: express.Express): void {
         (!updatedMatch.playerOnePartnerId || updatedMatch.playerOnePartnerCertified) &&
         (!updatedMatch.playerTwoPartnerId || updatedMatch.playerTwoPartnerCertified);
 
+      // Get certifying player's info for notifications
+      const [certifyingPlayer] = await db.select({
+        displayName: users.displayName,
+        username: users.username
+      }).from(users).where(eq(users.id, userId));
+
+      // Send WebSocket notifications to other players
+      const notificationWS = (global as any).notificationWS;
+      if (notificationWS && !allCertified) {
+        // Notify uncertified players
+        const uncertifiedPlayers = [];
+        if (!updatedMatch.playerOneCertified && updatedMatch.playerOneId !== userId) uncertifiedPlayers.push(updatedMatch.playerOneId);
+        if (!updatedMatch.playerTwoCertified && updatedMatch.playerTwoId !== userId) uncertifiedPlayers.push(updatedMatch.playerTwoId);
+        if (updatedMatch.playerOnePartnerId && !updatedMatch.playerOnePartnerCertified && updatedMatch.playerOnePartnerId !== userId) {
+          uncertifiedPlayers.push(updatedMatch.playerOnePartnerId);
+        }
+        if (updatedMatch.playerTwoPartnerId && !updatedMatch.playerTwoPartnerCertified && updatedMatch.playerTwoPartnerId !== userId) {
+          uncertifiedPlayers.push(updatedMatch.playerTwoPartnerId);
+        }
+
+        uncertifiedPlayers.forEach(playerId => {
+          notificationWS.sendToUser(playerId.toString(), {
+            type: 'match_result',
+            data: {
+              matchId: updatedMatch.id,
+              message: `${certifyingPlayer?.displayName || certifyingPlayer?.username} certified the match. Your certification is pending.`,
+              action: 'certify_required'
+            }
+          });
+        });
+      }
+
       if (allCertified) {
         await db.update(matches)
           .set({ certificationStatus: 'certified', isVerified: true })
@@ -1108,6 +1140,28 @@ export function registerMatchRoutes(app: express.Express): void {
         
         // Award points when fully certified
         await calculateAndAwardPoints(updatedMatch);
+
+        // Send WebSocket notifications to all players
+        if (notificationWS) {
+          const allPlayers = [
+            updatedMatch.playerOneId,
+            updatedMatch.playerTwoId,
+            updatedMatch.playerOnePartnerId,
+            updatedMatch.playerTwoPartnerId
+          ].filter(id => id !== null);
+
+          allPlayers.forEach(playerId => {
+            notificationWS.sendToUser(playerId!.toString(), {
+              type: 'match_result',
+              data: {
+                matchId: updatedMatch.id,
+                message: 'Match fully certified! Ranking points have been awarded.',
+                action: 'certified',
+                certificationStatus: 'certified'
+              }
+            });
+          });
+        }
       }
 
       res.json({
