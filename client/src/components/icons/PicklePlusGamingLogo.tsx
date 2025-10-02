@@ -55,7 +55,7 @@ export function PicklePlusGamingLogo({ className = "h-12 w-auto", animated = fal
           <span className="text-2xl font-bold text-white tracking-tight">PICKLE</span>
           <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">+</span>
         </div>
-        <span className="text-[10px] text-gray-400 tracking-widest uppercase font-medium -mt-1">
+        <span className="hidden sm:block text-[10px] text-gray-400 tracking-widest uppercase font-medium -mt-1">
           Where Players Become Legends
         </span>
       </div>
