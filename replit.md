@@ -1,7 +1,7 @@
-# Pickle+ - Compressed replit.md
+# Pickle+
 
 ## Overview
-Pickle+ is evolving into the world's first AI-powered trading card-based sports ecosystem, where every player and coach becomes a collectible card with dynamic stats and rarity. Initially a smart pickleball tracking app, it expands into a comprehensive life optimization and development ecosystem using pickleball as the entry point. The platform converts player development stories into valuable digital cards offering educational content, coaching, and community. Key features include AI-driven skill trajectory analysis, real-time card generation from match data, lifestyle integration via biometric tracking, and an ecosystem supporting player development, coaching, equipment optimization, and potential talent scouting/sponsorship.
+Pickle+ is an AI-powered trading card-based sports ecosystem, initially a smart pickleball tracking app, expanding into a comprehensive life optimization and development platform. It converts player development stories into valuable digital cards offering educational content, coaching, and community. Key capabilities include AI-driven skill trajectory analysis, real-time card generation from match data, lifestyle integration via biometric tracking, and an ecosystem supporting player development, coaching, equipment optimization, and potential talent scouting/sponsorship. The business vision is to create the world's first such ecosystem, leveraging pickleball as the entry point, with ambitions to expand into a broader life optimization platform.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -56,85 +56,34 @@ User wants hexagonal design system with gaming animations (particles, glows, sca
 ## System Architecture
 Pickle+ uses a modern full-stack architecture with React frontend, Node.js backend, and PostgreSQL database, adhering to modular architecture and evidence-based completion standards.
 
-### Universal Development Framework
-The Universal Development Dashboard (UDD) at `/udd` manages development workflows, pre-development protocols, and all phases of development from discussion to implementation.
+### UI/UX Decisions
+- **Styling**: Tailwind CSS, PKL-278651 design framework (Primary Orange, Secondary Blue, Inter/Roboto Mono fonts).
+- **Player Experience 2.0**: Gaming HUD Command Center at `/unified-prototype` with hexagonal design, gaming animations (particles, glows, scan lines), and orange→pink→purple gradient theme.
+- **Content Display**: Multi-platform video integration with annotation, player photo uploads with tier-colored borders, regional leaderboards, and intelligent content feeds.
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **State Management**: React hooks with Context API
-- **Styling**: Tailwind CSS for responsive design, PKL-278651 design framework (Primary Orange, Secondary Blue, Inter/Roboto Mono fonts).
-- **Routing**: React Router
+### Technical Implementations
+- **Frontend**: React 18 with TypeScript, Vite, React hooks with Context API for state management, React Router for routing.
+- **Backend**: Node.js with ES modules, Express.js, Passport.js for authentication, Drizzle ORM for database interaction, Standard FileReader API for file handling.
+- **Database**: PostgreSQL with Drizzle ORM, normalized tables (users, coach_profiles, class_templates, class_instances, journal_entries, achievements) with foreign key constraints.
 
-### Backend Architecture
-- **Runtime**: Node.js with ES modules
-- **Framework**: Express.js
-- **Authentication**: Passport.js with local strategy and session management
-- **Database ORM**: Drizzle ORM
-- **File Handling**: Standard FileReader API
-
-### Database Architecture
-- **Primary Database**: PostgreSQL
-- **ORM**: Drizzle ORM
-- **Key Tables**: users, coach_profiles, class_templates, class_instances, journal_entries, achievements.
-- **Relationships**: Normalized with foreign key constraints.
-
-### Core Features and Design Decisions
-- **Authentication System**: Secure registration, bcrypt hashing, session management.
-- **PCP Ranking System**: Points-based, performance tracking (StandardizedRankingService, DecayProtectionService, GenderBalanceService). Uses System B (3/1 base points), age multipliers, skill-based cross-gender balance. Dual ranking (Open, Age Group) and 7-tier tournament structure.
-- **4-Tier Player Classification**: Recreational (0-299), Competitive (300-999), Elite (1000-1799), Professional (1800+), with specific decay rates and tournament weighting.
-- **PickleJourney™ System**: Multi-role support, journaling with AI sentiment analysis, XP, and emotional intelligence tracking.
-- **Coach Application System**: 5-step onboarding, credential verification.
-- **Comprehensive Assessment Tool**: 42-skillset PCP assessment (Technical, Tactical, Physical, Mental).
-- **Training Center Management**: QR code facility access, class scheduling, real-time capacity.
-- **Unified Coach Hub**: Consolidates coaching features under `/coach`.
-- **Curriculum Management System**: CRUD for drills and learning content, integrated with PCP assessment.
-- **Session Management System**: End-to-end workflow for session requests, scheduling, completion.
-- **Goal Management System**: Player and coach-player goal setting with milestone tracking.
-- **Gamification Features**: XP system and achievements.
+### Feature Specifications
+- **Authentication**: Secure registration, bcrypt hashing, session management.
+- **PCP Ranking System**: Points-based (System B: 3/1 base points), performance tracking, age multipliers, skill-based cross-gender balance, dual ranking (Open, Age Group), 7-tier tournament structure.
+- **Player Classification**: 4-tier system (Recreational, Competitive, Elite, Professional) with specific decay rates.
+- **PickleJourney™ System**: Multi-role support, journaling with AI sentiment analysis, XP, emotional intelligence tracking.
+- **Coach Features**: 5-step onboarding, credential verification, 42-skillset assessment tool, unified hub (`/coach`), curriculum management, session management, goal management.
+- **Gamification**: XP system and achievements.
 - **Internationalization**: Bilingual (English and Chinese).
-- **AI-Powered Business Intelligence**: Revenue forecasting, demand analysis, scheduling optimization, client retention, CLV, marketing ROI, competitive intelligence.
-- **Critical Gaps Analysis System**: Deployment readiness assessment integrated into UDD.
-- **Student-Coach Connection System**: Multiple coaches per student with passport validation and approval.
-- **Player Experience 2.0**: Gaming HUD Command Center at `/unified-prototype` with hexagonal design, multi-platform video integration (YouTube, Vimeo, Facebook, TikTok, Douyin, Xiaohongshu), coach video annotations, regional leaderboard with challenge system, intelligent content feed, and comprehensive privacy controls. Full specification in `PLAYER_EXPERIENCE_2.0.md`.
+- **Trading Card System**: Dynamic generation of Player, Development Story, Coach Methodology, Equipment Synergy, and Moment Cards with rarity tiers and educational value.
+- **AI Integration**: Skill trajectory analysis, training effectiveness assessment, personalized development pathways, biomechanical analysis, equipment performance correlation. Development Story AI for narrative generation, breakthrough detection, mentorship matching.
+- **Native App Strategy**: Transition to native app for advanced AI, biometric integration (HealthKit, Google Fit), enhanced UX, and push notifications. Progressive feature rollout.
+- **E2E Testing**: Comprehensive end-to-end testing via GitHub Actions CI/CD pipeline using Puppeteer, targeting authentication, match recording, challenges, rankings, and mobile features.
 
-### Trading Card System
-- **Card Generation**: Player, Development Story, Coach Methodology, Equipment Synergy, and Moment Cards generated dynamically from interactions and data.
-- **Card Rarity & Value**: Common to Mythic tiers based on player points, achievements, and coach levels.
-- **Educational Value**: Cards unlock tutorials, mentorship opportunities, learning pathways, and progress tracking.
-
-### AI Integration
-Focuses on skill development trajectory analysis and educational enhancement.
-- **Core AI Engines**: Skill trajectory analysis, training effectiveness assessment, personalized development pathways, biomechanical analysis, equipment performance correlation.
-- **Development Story AI**: Automated narrative generation, breakthrough detection, challenge mapping, mentorship matching.
-- **Data Collection Framework**: Performance metrics, biometric integration (wearable device APIs), lifestyle correlation, social learning.
-
-### Native App Development Strategy
-Transition to a native app to unlock advanced AI and user experiences.
-- **Technical Migration**: Phased approach from core feature development to advanced AI integration.
-- **Advantages**: Biometric integration (HealthKit, Google Fit), enhanced UX, push notifications, App Store presence.
-- **Progressive Feature Rollout**: Gradual introduction of features from basic tracking to advanced ecosystem functionalities.
-
-### Revenue Stream Diversification
-Multi-tiered monetization strategy.
-- **Immediate**: Premium subscriptions, card pack purchases, equipment affiliate commissions, coaching marketplace fees.
-- **Advanced**: Wellness integration partnerships, corporate programs, equipment co-development, talent services.
-- **Enterprise**: Research licensing, coaching certification, international expansion, technology licensing.
-
-### Data Strategy & Privacy
-Comprehensive data collection balanced with user privacy and consent.
-- **Data Priorities**: Performance development, community behavior, lifestyle integration (opt-in), economic activity.
-- **Privacy & Consent**: Granular permissions, educational transparency, opt-out flexibility, user data ownership.
-- **Value Exchange**: Tiered access and features based on data sharing levels.
-
-### E2E Testing Strategy
-Comprehensive end-to-end testing via GitHub Actions CI/CD pipeline.
-- **Test Infrastructure**: Puppeteer-based E2E tests run in GitHub Actions with ubuntu-latest (Replit NixOS lacks required libxcb dependency).
-- **Test Coverage**: Authentication flows, match recording & certification, challenge system, rankings/leaderboards, notifications, mobile features.
-- **Test Files**: `tests/e2e/auth.test.ts`, `tests/e2e/match-certification.test.ts`, `tests/e2e/challenges.test.ts`.
-- **CI/CD Workflow**: `.github/workflows/e2e-tests.yml` - runs on push/PR to main/develop branches, includes Chrome installation, database setup, all test suites.
-- **Artifacts**: Screenshots and test logs uploaded with 7-day retention for debugging failures.
-- **Environment**: Tests run against PostgreSQL test database, headless Chrome with proper data-testid attributes on all interactive elements.
+### System Design Choices
+- **Universal Development Dashboard (UDD)**: Manages development workflows and protocols.
+- **Core AI Engines**: Focused on skill development trajectory and educational enhancement, not outcome prediction.
+- **Data Strategy**: Comprehensive collection (performance, community, lifestyle - opt-in) balanced with user privacy and consent, granular permissions, opt-out flexibility.
+- **Revenue Diversification**: Multi-tiered monetization from premium subscriptions and card pack purchases to wellness partnerships and research licensing.
 
 ## External Dependencies
 - **React**: Frontend framework.

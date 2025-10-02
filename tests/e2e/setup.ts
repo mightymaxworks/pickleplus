@@ -82,8 +82,12 @@ export async function login(page: Page, user: TestUser): Promise<void> {
   await page.type('[data-testid="input-password"]', user.password);
   await page.click('[data-testid="button-login"]');
   
-  // Wait for redirect to dashboard
-  await page.waitForNavigation({ timeout: TIMEOUT });
+  // Wait for URL to change (React Router SPA navigation)
+  await page.waitForFunction(
+    (loginUrl) => !window.location.href.includes(loginUrl),
+    { timeout: TIMEOUT },
+    '/login'
+  );
 }
 
 export async function register(page: Page, user: TestUser): Promise<void> {
@@ -107,13 +111,24 @@ export async function register(page: Page, user: TestUser): Promise<void> {
   
   await page.click('[data-testid="button-register"]');
   
-  // Wait for redirect
-  await page.waitForNavigation({ timeout: TIMEOUT });
+  // Wait for URL to change (React Router SPA navigation)
+  await page.waitForFunction(
+    (registerUrl) => !window.location.href.includes(registerUrl),
+    { timeout: TIMEOUT },
+    '/register'
+  );
 }
 
 export async function logout(page: Page): Promise<void> {
+  const currentUrl = page.url();
   await page.goto(`${BASE_URL}/logout`);
-  await page.waitForNavigation({ timeout: TIMEOUT });
+  
+  // Wait for URL to change to login page (React Router SPA navigation)
+  await page.waitForFunction(
+    (prevUrl) => window.location.href !== prevUrl && window.location.href.includes('/login'),
+    { timeout: TIMEOUT },
+    currentUrl
+  );
 }
 
 export async function waitForElement(
