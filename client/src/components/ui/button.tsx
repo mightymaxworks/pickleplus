@@ -2,6 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
+import { hapticFeedback } from "@/lib/mobile-utils";
 
 // Define the button variants using cva (class-variance-authority)
 export const buttonVariants = cva(
@@ -35,6 +36,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   children: React.ReactNode;
   asChild?: boolean;
+  haptic?: 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'none';
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
@@ -43,8 +45,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   className = "",
   children,
   asChild = false,
+  haptic = 'light',
+  onClick,
   ...props
 }, ref) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (haptic !== 'none' && haptic) {
+      hapticFeedback[haptic]();
+    }
+    onClick?.(e);
+  };
+
   if (asChild) {
     return (
       <Slot 
@@ -61,6 +72,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     <button 
       className={cn(buttonVariants({ variant, size }), className)}
       ref={ref}
+      onClick={handleClick}
       {...props}
     >
       {children}
