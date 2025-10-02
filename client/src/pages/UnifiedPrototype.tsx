@@ -2942,10 +2942,10 @@ export default function UnifiedPrototype() {
     read: boolean;
   }>>([]);
   
-  // WebSocket connection for real-time notifications - demo user
+  // WebSocket connection for real-time notifications
   const { connected, lastMessage, unreadCount } = useNotificationSocket({
-    debugMode: true,
-    autoReconnect: false, // Disable for demo mode
+    debugMode: false, // Disable debug mode for production
+    autoReconnect: true, // Enable auto-reconnect
     onMessage: (message) => {
       console.log('📡 Received notification:', message);
       if (message.type === 'new_notification') {

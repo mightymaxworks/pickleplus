@@ -10,6 +10,8 @@ export interface TestUser {
   email: string;
   firstName: string;
   lastName: string;
+  yearOfBirth: number;
+  gender: 'male' | 'female';
   displayName?: string;
 }
 
@@ -20,6 +22,8 @@ export const TEST_USERS = {
     email: 'player1@e2etest.com',
     firstName: 'Test',
     lastName: 'Player1',
+    yearOfBirth: 1990,
+    gender: 'male' as const,
     displayName: 'E2E Player 1'
   },
   player2: {
@@ -28,6 +32,8 @@ export const TEST_USERS = {
     email: 'player2@e2etest.com',
     firstName: 'Test',
     lastName: 'Player2',
+    yearOfBirth: 1992,
+    gender: 'female' as const,
     displayName: 'E2E Player 2'
   }
 };
@@ -73,11 +79,20 @@ export async function register(page: Page, user: TestUser): Promise<void> {
   await page.goto(`${BASE_URL}/register`);
   await page.waitForSelector('[data-testid="input-firstName"]', { timeout: TIMEOUT });
   
+  // Fill in all required fields
   await page.type('[data-testid="input-firstName"]', user.firstName);
   await page.type('[data-testid="input-lastName"]', user.lastName);
   await page.type('[data-testid="input-email"]', user.email);
   await page.type('[data-testid="input-password"]', user.password);
   await page.type('[data-testid="input-confirmPassword"]', user.password);
+  await page.type('[data-testid="input-yearOfBirth"]', user.yearOfBirth.toString());
+  
+  // Select gender
+  await page.click('[data-testid="select-gender"]');
+  await page.click(`[data-testid="select-gender-${user.gender}"]`);
+  
+  // Agree to terms
+  await page.click('[data-testid="checkbox-agreeToTerms"]');
   
   await page.click('[data-testid="button-register"]');
   

@@ -483,6 +483,7 @@ export default function NewAuthPage() {
                                     type="email"
                                     placeholder={t('auth.emailPlaceholder', 'your.email@example.com')}
                                     className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
+                                    data-testid="input-email"
                                   />
                                 </div>
                               </FormControl>
@@ -507,6 +508,7 @@ export default function NewAuthPage() {
                                       type="password"
                                       placeholder={t('auth.createPassword', 'Create a strong password (8+ characters)')}
                                       className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
+                                      data-testid="input-password"
                                     />
                                   </div>
                                 </FormControl>
@@ -529,6 +531,7 @@ export default function NewAuthPage() {
                                       type="password"
                                       placeholder={t('auth.confirmPasswordPlaceholder', 'Confirm your password')}
                                       className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
+                                      data-testid="input-confirmPassword"
                                     />
                                   </div>
                                 </FormControl>
@@ -557,6 +560,7 @@ export default function NewAuthPage() {
                                       placeholder="1990"
                                       className="pl-10 h-11 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                       onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                                      data-testid="input-yearOfBirth"
                                     />
                                   </div>
                                 </FormControl>
@@ -573,13 +577,13 @@ export default function NewAuthPage() {
                                 <FormLabel className="text-sm font-medium text-gray-300">{t('gender', 'Gender')} *</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
-                                    <SelectTrigger className="h-11 bg-slate-900/50 border-slate-700 text-white">
+                                    <SelectTrigger className="h-11 bg-slate-900/50 border-slate-700 text-white" data-testid="select-gender">
                                       <SelectValue placeholder={t('selectGender', 'Select gender')} className="text-gray-500" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="bg-slate-800 border-slate-700">
-                                    <SelectItem value="male" className="text-white hover:bg-slate-700">{t('male', 'Male')}</SelectItem>
-                                    <SelectItem value="female" className="text-white hover:bg-slate-700">{t('female', 'Female')}</SelectItem>
+                                    <SelectItem value="male" className="text-white hover:bg-slate-700" data-testid="select-gender-male">{t('male', 'Male')}</SelectItem>
+                                    <SelectItem value="female" className="text-white hover:bg-slate-700" data-testid="select-gender-female">{t('female', 'Female')}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -625,6 +629,7 @@ export default function NewAuthPage() {
                                 <Checkbox
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
+                                  data-testid="checkbox-agreeToTerms"
                                 />
                               </FormControl>
                               <FormLabel className="text-sm font-normal text-gray-300">
@@ -639,6 +644,7 @@ export default function NewAuthPage() {
                           type="submit"
                           className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-3 rounded-lg font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
                           disabled={isLoading}
+                          data-testid="button-register"
                         >
                           {isLoading ? t('auth.creatingAccount', 'Creating Account...') : t('auth.createPassportButton', 'Create My Player Passport')}
                         </Button>
