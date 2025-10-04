@@ -1,0 +1,197 @@
+ts-jest[ts-jest-transformer] (WARN) Define `ts-jest` config under `globals` is deprecated. Please do
+transform: {
+    <transform_regex>: ['ts-jest', { /* ts-jest config goes here in Jest */ }],
+},
+See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/presets#advanced
+Setting up E2E test environment...
+Server is ready!
+Test users may already exist: Error: Failed to create test user: {"message":"Internal Server Error"}
+    at /home/runner/work/pickleplus/pickleplus/tests/e2e/setup.ts:174:19
+    at Generator.next (<anonymous>)
+    at fulfilled (/home/runner/work/pickleplus/pickleplus/tests/e2e/setup.ts:5:58)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Test data setup complete
+  console.log
+    E2E tests completed
+
+      at Object.<anonymous> (jest.setup.cjs:32:11)
+
+FAIL tests/e2e/rankings.test.ts (309.39 s)
+  Rankings and Leaderboards E2E Tests
+    ✕ should load rankings page without authentication (30039 ms)
+    ✕ should display different ranking categories (30031 ms)
+    ✕ should display player rankings with points (30027 ms)
+    ✕ should show authenticated user their own ranking (30035 ms)
+    ✕ should filter rankings by gender category (30026 ms)
+    ✕ should filter rankings by age group (30030 ms)
+    ✕ should display ranking details when clicking on player (30031 ms)
+    ✕ should show different views for Singles, Doubles, Mixed categories (30032 ms)
+    ✕ should handle pagination if rankings list is long (30034 ms)
+    ✕ should display player tier/classification in rankings (30027 ms)
+
+  ● Rankings and Leaderboards E2E Tests › should load rankings page without authentication
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      32 |   });
+      33 |
+    > 34 |   test('should load rankings page without authentication', async () => {
+         |       ^
+      35 |     await page.goto(`${BASE_URL}/rankings`);
+      36 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      37 |     
+
+      at rankings.test.ts:34:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should display different ranking categories
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      44 |   }, TIMEOUT);
+      45 |
+    > 46 |   test('should display different ranking categories', async () => {
+         |       ^
+      47 |     await page.goto(`${BASE_URL}/rankings`);
+      48 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      49 |     
+
+      at rankings.test.ts:46:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should display player rankings with points
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      62 |   }, TIMEOUT);
+      63 |
+    > 64 |   test('should display player rankings with points', async () => {
+         |       ^
+      65 |     await page.goto(`${BASE_URL}/rankings`);
+      66 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      67 |     
+
+      at rankings.test.ts:64:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should show authenticated user their own ranking
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      77 |   }, TIMEOUT);
+      78 |
+    > 79 |   test('should show authenticated user their own ranking', async () => {
+         |       ^
+      80 |     await login(page, TEST_USERS.player1);
+      81 |     
+      82 |     await page.goto(`${BASE_URL}/rankings`);
+
+      at rankings.test.ts:79:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should filter rankings by gender category
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+       96 |   }, TIMEOUT);
+       97 |
+    >  98 |   test('should filter rankings by gender category', async () => {
+          |       ^
+       99 |     await page.goto(`${BASE_URL}/rankings`);
+      100 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      101 |     
+
+      at rankings.test.ts:98:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should filter rankings by age group
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      125 |   }, TIMEOUT);
+      126 |
+    > 127 |   test('should filter rankings by age group', async () => {
+          |       ^
+      128 |     await page.goto(`${BASE_URL}/rankings`);
+      129 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      130 |     
+
+      at rankings.test.ts:127:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should display ranking details when clicking on player
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      154 |   }, TIMEOUT);
+      155 |
+    > 156 |   test('should display ranking details when clicking on player', async () => {
+          |       ^
+      157 |     await page.goto(`${BASE_URL}/rankings`);
+      158 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      159 |     
+
+      at rankings.test.ts:156:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should show different views for Singles, Doubles, Mixed categories
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      177 |   }, TIMEOUT);
+      178 |
+    > 179 |   test('should show different views for Singles, Doubles, Mixed categories', async () => {
+          |       ^
+      180 |     await page.goto(`${BASE_URL}/rankings`);
+      181 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      182 |     
+
+      at rankings.test.ts:179:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should handle pagination if rankings list is long
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      204 |   }, TIMEOUT);
+      205 |
+    > 206 |   test('should handle pagination if rankings list is long', async () => {
+          |       ^
+      207 |     await page.goto(`${BASE_URL}/rankings`);
+      208 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      209 |     
+
+      at rankings.test.ts:206:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+  ● Rankings and Leaderboards E2E Tests › should display player tier/classification in rankings
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      228 |   }, TIMEOUT);
+      229 |
+    > 230 |   test('should display player tier/classification in rankings', async () => {
+          |       ^
+      231 |     await page.goto(`${BASE_URL}/rankings`);
+      232 |     await page.waitForSelector('[data-testid="rankings-container"]', { timeout: TIMEOUT });
+      233 |     
+
+      at rankings.test.ts:230:7
+      at Object.<anonymous> (rankings.test.ts:13:9)
+
+Test Suites: 1 failed, 1 total
+Tests:       10 failed, 10 total
+Snapshots:   0 total
+Time:        309.417 s
+Ran all test suites matching /tests\/e2e\/rankings.test.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

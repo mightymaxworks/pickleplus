@@ -45,7 +45,13 @@ jobs:
           PORT: 5000
       
       - name: Wait for server to start
-        run: npx wait-on http://localhost:5000 -t 60000
+        run: |
+          echo "Waiting for backend..."
+          npx wait-on http://localhost:5000 -t 60000
+          echo "✅ Backend ready!"
+          echo "Waiting for frontend (Vite) to build..."
+          sleep 15
+          echo "✅ Frontend should be ready!"
       
       - name: Run Bounce tests
         run: npx tsx run-with-fix-prompts.ts

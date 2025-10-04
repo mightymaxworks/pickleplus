@@ -1,0 +1,113 @@
+ts-jest[ts-jest-transformer] (WARN) Define `ts-jest` config under `globals` is deprecated. Please do
+transform: {
+    <transform_regex>: ['ts-jest', { /* ts-jest config goes here in Jest */ }],
+},
+See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/presets#advanced
+Setting up E2E test environment...
+Server is ready!
+Test users may already exist: Error: Failed to create test user: {"message":"Internal Server Error"}
+    at /home/runner/work/pickleplus/pickleplus/tests/e2e/setup.ts:174:19
+    at Generator.next (<anonymous>)
+    at fulfilled (/home/runner/work/pickleplus/pickleplus/tests/e2e/setup.ts:5:58)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Test data setup complete
+  console.log
+    E2E tests completed
+
+      at Object.<anonymous> (jest.setup.cjs:32:11)
+
+FAIL tests/e2e/auth.test.ts (158.984 s)
+  Authentication Flow
+    ✕ should load login page (30033 ms)
+    ✕ should register new user successfully (30033 ms)
+    ✕ should login with existing credentials (30030 ms)
+    ✕ should reject invalid credentials (30029 ms)
+    ✕ should logout successfully (30032 ms)
+
+  ● Authentication Flow › should load login page
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      38 |   });
+      39 |
+    > 40 |   test('should load login page', async () => {
+         |       ^
+      41 |     await page.goto(`${BASE_URL}/login`);
+      42 |     await page.waitForSelector('[data-testid="input-username"]', { timeout: TIMEOUT });
+      43 |     
+
+      at auth.test.ts:40:7
+      at Object.<anonymous> (auth.test.ts:19:9)
+
+  ● Authentication Flow › should register new user successfully
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      46 |   }, TIMEOUT);
+      47 |
+    > 48 |   test('should register new user successfully', async () => {
+         |       ^
+      49 |     const testUser = {
+      50 |       ...TEST_USERS.player1,
+      51 |       username: `test_${Date.now()}`,
+
+      at auth.test.ts:48:7
+      at Object.<anonymous> (auth.test.ts:19:9)
+
+  ● Authentication Flow › should login with existing credentials
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      61 |   }, TIMEOUT);
+      62 |
+    > 63 |   test('should login with existing credentials', async () => {
+         |       ^
+      64 |     await login(page, TEST_USERS.player1);
+      65 |     
+      66 |     // login() already waits for URL change
+
+      at auth.test.ts:63:7
+      at Object.<anonymous> (auth.test.ts:19:9)
+
+  ● Authentication Flow › should reject invalid credentials
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      70 |   }, TIMEOUT);
+      71 |
+    > 72 |   test('should reject invalid credentials', async () => {
+         |       ^
+      73 |     await page.goto(`${BASE_URL}/login`);
+      74 |     await page.waitForSelector('[data-testid="input-username"]', { timeout: TIMEOUT });
+      75 |     
+
+      at auth.test.ts:72:7
+      at Object.<anonymous> (auth.test.ts:19:9)
+
+  ● Authentication Flow › should logout successfully
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      86 |   }, TIMEOUT);
+      87 |
+    > 88 |   test('should logout successfully', async () => {
+         |       ^
+      89 |     await login(page, TEST_USERS.player1);
+      90 |     await page.waitForSelector('[data-testid="dashboard"]', { timeout: TIMEOUT });
+      91 |     
+
+      at auth.test.ts:88:7
+      at Object.<anonymous> (auth.test.ts:19:9)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 5 total
+Snapshots:   0 total
+Time:        159.008 s
+Ran all test suites matching /tests\/e2e\/auth.test.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+Error: Process completed with exit code 1.

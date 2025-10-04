@@ -1,0 +1,63 @@
+ts-jest[ts-jest-transformer] (WARN) Define `ts-jest` config under `globals` is deprecated. Please do
+transform: {
+    <transform_regex>: ['ts-jest', { /* ts-jest config goes here in Jest */ }],
+},
+See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/presets#advanced
+Setting up E2E test environment...
+Server is ready!
+Test users may already exist: Error: Failed to create test user: {"message":"Internal Server Error"}
+    at /home/runner/work/pickleplus/pickleplus/tests/e2e/setup.ts:174:19
+    at Generator.next (<anonymous>)
+    at fulfilled (/home/runner/work/pickleplus/pickleplus/tests/e2e/setup.ts:5:58)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Test data setup complete
+  console.log
+    E2E tests completed
+
+      at Object.<anonymous> (jest.setup.cjs:32:11)
+
+FAIL tests/e2e/challenges.test.ts (69.326 s)
+  Challenge System Flow
+    ✕ should load rankings page with challenge capability (30105 ms)
+    ✕ should load challenges page (30067 ms)
+
+  ● Challenge System Flow › should load rankings page with challenge capability
+
+    TimeoutError: Waiting for selector `[data-testid="input-username"]` failed
+
+      at Function.waitFor (../../node_modules/puppeteer-core/src/common/QueryHandler.ts:213:36)
+      at CdpFrame.waitForSelector (../../node_modules/puppeteer-core/src/api/Frame.ts:747:13)
+      at CdpPage.waitForSelector (../../node_modules/puppeteer-core/src/api/Page.ts:3036:12)
+
+    Cause:
+    TimeoutError: Waiting failed: 30000ms exceeded
+
+      at new WaitTask (../../node_modules/puppeteer-core/src/common/WaitTask.ts:77:28)
+      at IsolatedWorld.waitForFunction (../../node_modules/puppeteer-core/src/api/Realm.ts:74:22)
+      at Function.waitFor (../../node_modules/puppeteer-core/src/common/QueryHandler.ts:171:50)
+      at CdpFrame.waitForSelector (../../node_modules/puppeteer-core/src/api/Frame.ts:747:13)
+      at CdpPage.waitForSelector (../../node_modules/puppeteer-core/src/api/Page.ts:3036:12)
+
+  ● Challenge System Flow › should load challenges page
+
+    TimeoutError: Waiting for selector `[data-testid="input-username"]` failed
+
+      at Function.waitFor (../../node_modules/puppeteer-core/src/common/QueryHandler.ts:213:36)
+      at CdpFrame.waitForSelector (../../node_modules/puppeteer-core/src/api/Frame.ts:747:13)
+      at CdpPage.waitForSelector (../../node_modules/puppeteer-core/src/api/Page.ts:3036:12)
+
+    Cause:
+    TimeoutError: Waiting failed: 30000ms exceeded
+
+      at new WaitTask (../../node_modules/puppeteer-core/src/common/WaitTask.ts:77:28)
+      at IsolatedWorld.waitForFunction (../../node_modules/puppeteer-core/src/api/Realm.ts:74:22)
+      at Function.waitFor (../../node_modules/puppeteer-core/src/common/QueryHandler.ts:171:50)
+      at CdpFrame.waitForSelector (../../node_modules/puppeteer-core/src/api/Frame.ts:747:13)
+      at CdpPage.waitForSelector (../../node_modules/puppeteer-core/src/api/Page.ts:3036:12)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        69.349 s
+Ran all test suites matching /tests\/e2e\/challenges.test.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
