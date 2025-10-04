@@ -1063,11 +1063,17 @@ function QRCodeModal({
 function PassportModeContent({ 
   player, 
   passportPhoto, 
-  onPhotoUpload 
+  onPhotoUpload,
+  leaderboardPlayers,
+  contentFeedItems,
+  matchHistory
 }: { 
   player: PlayerData;
   passportPhoto?: string;
   onPhotoUpload: (photoData: string) => void;
+  leaderboardPlayers?: any[];
+  contentFeedItems?: any[];
+  matchHistory?: any[];
 }) {
   const { toast } = useToast();
   const [codeRevealed, setCodeRevealed] = useState(false);
@@ -1122,7 +1128,7 @@ function PassportModeContent({
 
           {/* Interactive Leaderboard with Challenge System */}
           <InteractiveLeaderboard
-            players={mockLeaderboardPlayers}
+            players={leaderboardPlayers || []}
             currentPlayerId={player.id}
             currentPlayerGender="male"
             onChallenge={(challengedPlayer, suggestedType) => {
@@ -1136,10 +1142,10 @@ function PassportModeContent({
         {/* Column 3: Content Feed & Battle Log */}
         <div className="lg:col-span-1 space-y-6" data-testid="column-content">
           {/* Personalized Content Feed */}
-          <ContentFeed items={mockContentFeed} />
+          <ContentFeed items={contentFeedItems || []} />
 
           {/* Battle Log - Match History */}
-          <BattleLogHistory matches={mockMatchHistory} />
+          <BattleLogHistory matches={matchHistory || []} />
         </div>
       </div>
       
@@ -2900,6 +2906,24 @@ export default function UnifiedPrototype() {
     queryKey: ['/api/auth/current-user'],
   });
   
+  // Fetch real leaderboard data
+  const { data: leaderboardData, isLoading: isLoadingLeaderboard } = useQuery({
+    queryKey: ['/api/rankings/leaderboard'],
+    enabled: !!currentUser,
+  });
+  
+  // Fetch real match history
+  const { data: matchHistoryData, isLoading: isLoadingMatches } = useQuery({
+    queryKey: ['/api/matches/recent'],
+    enabled: !!currentUser,
+  });
+  
+  // Fetch incoming challenges
+  const { data: incomingChallenges, isLoading: isLoadingChallenges } = useQuery({
+    queryKey: ['/api/challenges/incoming'],
+    enabled: !!currentUser,
+  });
+  
   // Transform user data to PlayerData format - no demo fallback
   const playerData: PlayerData | null = currentUser ? {
     id: (currentUser as any).id || 'unknown',
@@ -3048,6 +3072,9 @@ export default function UnifiedPrototype() {
                 player={playerData}
                 passportPhoto={passportPhoto}
                 onPhotoUpload={handlePhotoSave}
+                leaderboardPlayers={leaderboardData as any[] || []}
+                contentFeedItems={[]} 
+                matchHistory={matchHistoryData as any[] || []}
               />
             )}
             {/* Play tab redirects to /match-arena */}
