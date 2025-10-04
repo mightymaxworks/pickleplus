@@ -108,12 +108,16 @@ app.use((req, res, next) => {
   // Setup Vite last so its catch-all route doesn't interfere with API routes
   try {
     // Use Vite for development and test environments (CI/CD needs Vite)
-    if (app.get("env") === "development" || app.get("env") === "test") {
+    // Check process.env.NODE_ENV directly for reliability
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    console.log(`[FRONTEND] Node environment: ${nodeEnv}`);
+    
+    if (nodeEnv === 'development' || nodeEnv === 'test') {
       await setupVite(app, serverHttp);
-      console.log("Vite middleware setup complete");
+      console.log("[FRONTEND] Vite middleware setup complete");
     } else {
       serveStatic(app);
-      console.log("Static file serving setup complete");
+      console.log("[FRONTEND] Static file serving setup complete");
     }
   } catch (error) {
     console.error("Error setting up frontend serving:", error);
