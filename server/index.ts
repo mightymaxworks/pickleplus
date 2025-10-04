@@ -107,7 +107,8 @@ app.use((req, res, next) => {
 
   // Setup Vite last so its catch-all route doesn't interfere with API routes
   try {
-    if (app.get("env") === "development") {
+    // Use Vite for development and test environments (CI/CD needs Vite)
+    if (app.get("env") === "development" || app.get("env") === "test") {
       await setupVite(app, serverHttp);
       console.log("Vite middleware setup complete");
     } else {
