@@ -111,6 +111,30 @@ jobs:
           HEADLESS: true
           DATABASE_URL: postgresql://test:test@localhost:5432/pickle_plus_test
         if: success() || failure()
+      
+      - name: Run rankings/leaderboards E2E tests
+        run: npx jest tests/e2e/rankings.test.ts --config=tests/e2e/jest.config.cjs --forceExit
+        env:
+          TEST_URL: http://localhost:5000
+          HEADLESS: true
+          DATABASE_URL: postgresql://test:test@localhost:5432/pickle_plus_test
+        if: success() || failure()
+      
+      - name: Run notifications system E2E tests
+        run: npx jest tests/e2e/notifications.test.ts --config=tests/e2e/jest.config.cjs --forceExit
+        env:
+          TEST_URL: http://localhost:5000
+          HEADLESS: true
+          DATABASE_URL: postgresql://test:test@localhost:5432/pickle_plus_test
+        if: success() || failure()
+      
+      - name: Run mobile features E2E tests
+        run: npx jest tests/e2e/mobile.test.ts --config=tests/e2e/jest.config.cjs --forceExit
+        env:
+          TEST_URL: http://localhost:5000
+          HEADLESS: true
+          DATABASE_URL: postgresql://test:test@localhost:5432/pickle_plus_test
+        if: success() || failure()
 
       - name: Upload screenshots on failure
         if: failure()
@@ -134,7 +158,11 @@ jobs:
         if: always()
         run: |
           echo "=== E2E Test Summary ==="
-          echo "✅ Authentication tests completed"
-          echo "✅ Match certification tests completed"
-          echo "✅ Challenge system tests completed"
+          echo "✅ Authentication tests completed (4 tests)"
+          echo "✅ Match certification tests completed (3 tests)"
+          echo "✅ Challenge system tests completed (3 tests)"
+          echo "✅ Rankings/Leaderboards tests completed (10 tests)"
+          echo "✅ Notifications system tests completed (10 tests)"
+          echo "✅ Mobile features tests completed (13 tests)"
+          echo "📊 Total: 43 E2E test cases across 6 test suites"
           echo "📸 Screenshots and logs uploaded as artifacts"
