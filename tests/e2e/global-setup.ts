@@ -8,24 +8,27 @@ export default async function globalSetup() {
   console.log('Setting up E2E test environment...');
   
   // Wait for server to be ready
-  const maxRetries = 30;
+  const maxRetries = 20;
   let retries = 0;
   
   const baseUrl = process.env.TEST_URL || 'http://localhost:5000';
   
   while (retries < maxRetries) {
     try {
-      const response = await fetch(`${baseUrl}/api/health`);
-      if (response.ok) {
+      // Check root URL (same as GitHub Actions workflow)
+      const response = await fetch(baseUrl);
+      if (response.status < 500) {
         console.log('Server is ready!');
         break;
       }
     } catch (error) {
       retries++;
       if (retries === maxRetries) {
+        console.error('Server check failed after', maxRetries, 'attempts');
         throw new Error('Server failed to start within timeout');
       }
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log(`Waiting for server... (${retries}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
   
