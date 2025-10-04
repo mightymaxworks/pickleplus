@@ -243,7 +243,42 @@ export function MascotLoaderOverlay({
         }} />
       </div>
       
-      <MascotLoader message={message} size="lg" />
+      {/* Hexagonal Gaming Frame */}
+      <div className="relative">
+        <motion.svg 
+          width="300" 
+          height="300" 
+          viewBox="0 0 200 200" 
+          className="absolute inset-0 m-auto" 
+          style={{ top: '-50px' }}
+          animate={{
+            rotate: [0, 360]
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        >
+          <defs>
+            <linearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF5722" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#E91E63" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#9C27B0" stopOpacity="0.6" />
+            </linearGradient>
+          </defs>
+          <path 
+            d="M100 20 L170 60 L170 140 L100 180 L30 140 L30 60 Z" 
+            fill="none" 
+            stroke="url(#hexGradient)" 
+            strokeWidth="3" 
+            strokeLinecap="round"
+            strokeDasharray="10 5"
+          />
+        </motion.svg>
+        
+        <MascotLoader message={message} size="lg" />
+      </div>
     </motion.div>
   );
 }
