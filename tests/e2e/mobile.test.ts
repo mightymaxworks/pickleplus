@@ -182,7 +182,7 @@ describe('Mobile Features E2E Tests', () => {
     } else {
       // Verify at least we're on the right page
       const url = page.url();
-      expect(url).toContain('record') || expect(url).toContain('match');
+      expect(url.includes('record') || url.includes('match')).toBe(true);
     }
   }, TIMEOUT);
 
@@ -294,6 +294,7 @@ describe('Mobile Features E2E Tests', () => {
     expect(challengeCards.length).toBeGreaterThanOrEqual(0);
     
     // Verify mobile viewport
-    expect(page.viewport()?.isMobile).toBe(true);
+    const viewport = page.viewport();
+    expect(viewport?.isMobile).toBe(true);
   }, TIMEOUT);
 });
