@@ -103,8 +103,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log("[AUTH] Traditional authentication setup complete");
   
   // Set up OAuth authentication (Replit Auth + Social Logins)
-  await setupReplitAuth(app);
-  console.log("[AUTH] OAuth authentication setup complete");
+  // Only enable in Replit environments where REPL_ID is available
+  if (process.env.REPL_ID) {
+    await setupReplitAuth(app);
+    console.log("[AUTH] OAuth authentication setup complete");
+  } else {
+    console.log("[AUTH] OAuth authentication skipped (not in Replit environment)");
+  }
 
   // CRITICAL SECURITY: Apply JSON parsing selectively - exclude webhook paths to preserve raw body
   app.use((req, res, next) => {

@@ -1,0 +1,99 @@
+Checking server logs...
+  [Symbol(kMessage)]: ''
+}
+file:///home/runner/work/pickleplus/pickleplus/node_modules/openid-client/build/index.js:89
+    const err = new TypeError(message, { cause });
+                ^
+
+TypeError: "clientId" must be a non-empty string
+    at CodedTypeError (/home/runner/work/pickleplus/pickleplus/node_modules/openid-client/src/index.ts:838:15)
+    at new Configuration (/home/runner/work/pickleplus/pickleplus/node_modules/openid-client/src/index.ts:1843:13)
+    at Module.discovery (/home/runner/work/pickleplus/pickleplus/node_modules/openid-client/src/index.ts:1276:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async memoize.maxAge (/home/runner/work/pickleplus/pickleplus/server/replitAuth.ts:19:12)
+    at async setupAuth (/home/runner/work/pickleplus/pickleplus/server/replitAuth.ts:82:18)
+    at async registerRoutes (/home/runner/work/pickleplus/pickleplus/server/routes.ts:106:3)
+    at async <anonymous> (/home/runner/work/pickleplus/pickleplus/server/index.ts:99:22) {
+  code: 'ERR_INVALID_ARG_TYPE',
+  [cause]: undefined
+}
+
+Node.js v20.19.5
+Waiting for server... (1/30)
+Waiting for server... (2/30)
+Waiting for server... (3/30)
+Waiting for server... (4/30)
+Waiting for server... (5/30)
+Waiting for server... (6/30)
+Waiting for server... (7/30)
+Waiting for server... (8/30)
+Waiting for server... (9/30)
+Waiting for server... (10/30)
+      at afterConnectMultiple (node:net:1689:7) {
+    code: 'ECONNREFUSED',
+Error:     [errors]: [ [Error], [Error] ]
+  },
+  [Symbol(kMessage)]: ''
+}
+[PERF] Dashboard widgets cache hit for widgets:month
+[PERF] System metrics cache miss for system:metrics
+Error getting system metrics: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1122:18)
+      at afterConnectMultiple (node:net:1689:7) {
+    code: 'ECONNREFUSED',
+Error:     [errors]: [ [Error], [Error] ]
+  },
+  [Symbol(kMessage)]: ''
+}
+file:///home/runner/work/pickleplus/pickleplus/node_modules/openid-client/build/index.js:89
+    const err = new TypeError(message, { cause });
+                ^
+
+TypeError: "clientId" must be a non-empty string
+    at CodedTypeError (/home/runner/work/pickleplus/pickleplus/node_modules/openid-client/src/index.ts:838:15)
+    at new Configuration (/home/runner/work/pickleplus/pickleplus/node_modules/openid-client/src/index.ts:1843:13)
+    at Module.discovery (/home/runner/work/pickleplus/pickleplus/node_modules/openid-client/src/index.ts:1276:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async memoize.maxAge (/home/runner/work/pickleplus/pickleplus/server/replitAuth.ts:19:12)
+    at async setupAuth (/home/runner/work/pickleplus/pickleplus/server/replitAuth.ts:82:18)
+    at async registerRoutes (/home/runner/work/pickleplus/pickleplus/server/routes.ts:106:3)
+    at async <anonymous> (/home/runner/work/pickleplus/pickleplus/server/index.ts:99:22) {
+  code: 'ERR_INVALID_ARG_TYPE',
+  [cause]: undefined
+}
+
+Node.js v20.19.5
