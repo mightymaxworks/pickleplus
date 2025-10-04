@@ -69,24 +69,33 @@ jobs:
 
       - name: Start server
         run: |
-          npm run dev &
-          sleep 10
+          npm run dev > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Server started with PID: $SERVER_PID"
+          sleep 5
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://test:test@localhost:5432/pickle_plus_test
           PORT: 5000
+          SESSION_SECRET: test_session_secret_for_ci_cd
 
       - name: Wait for server
         run: |
+          echo "Checking server logs..."
+          tail -20 server.log || true
+          
           for i in {1..30}; do
-            if curl -s http://localhost:5000 > /dev/null; then
-              echo "Server is ready!"
+            if curl -s http://localhost:5000 > /dev/null 2>&1; then
+              echo "✅ Server is ready!"
               exit 0
             fi
             echo "Waiting for server... ($i/30)"
             sleep 2
           done
-          echo "Server failed to start"
+          
+          echo "❌ Server failed to start after 60 seconds"
+          echo "=== Server Logs ==="
+          cat server.log || echo "No server logs found"
           exit 1
 
       - name: Run authentication E2E tests
@@ -95,6 +104,7 @@ jobs:
           TEST_URL: http://localhost:5000
           HEADLESS: true
           DATABASE_URL: postgresql://test:test@localhost:5432/pickle_plus_test
+          SESSION_SECRET: test_session_secret_for_ci_cd
       
       - name: Run match certification E2E tests
         run: npx jest tests/e2e/match-certification.test.ts --config=tests/e2e/jest.config.cjs --forceExit
