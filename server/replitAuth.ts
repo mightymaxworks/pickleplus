@@ -8,7 +8,9 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
+// Only require REPLIT_DOMAINS in production/Replit environments
+// In test/CI environments, this auth system won't be used
+if (!process.env.REPLIT_DOMAINS && process.env.NODE_ENV === 'production') {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
