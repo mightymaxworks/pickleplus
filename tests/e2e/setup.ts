@@ -75,8 +75,10 @@ export async function setupPage(browser: Browser): Promise<Page> {
 }
 
 export async function login(page: Page, user: TestUser): Promise<void> {
-  await page.goto(`${BASE_URL}/login`);
-  await page.waitForSelector('[data-testid="input-username"]', { timeout: TIMEOUT });
+  await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle0' });
+  
+  // Wait for React to finish rendering the login form
+  await page.waitForSelector('[data-testid="input-username"]', { timeout: TIMEOUT, visible: true });
   
   await page.type('[data-testid="input-username"]', user.username);
   await page.type('[data-testid="input-password"]', user.password);
@@ -91,8 +93,8 @@ export async function login(page: Page, user: TestUser): Promise<void> {
 }
 
 export async function register(page: Page, user: TestUser): Promise<void> {
-  await page.goto(`${BASE_URL}/register`);
-  await page.waitForSelector('[data-testid="input-firstName"]', { timeout: TIMEOUT });
+  await page.goto(`${BASE_URL}/register`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('[data-testid="input-firstName"]', { timeout: TIMEOUT, visible: true });
   
   // Fill in all required fields
   await page.type('[data-testid="input-firstName"]', user.firstName);
