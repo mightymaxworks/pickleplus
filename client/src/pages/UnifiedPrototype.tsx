@@ -3024,7 +3024,7 @@ export default function UnifiedPrototype() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800" data-testid="dashboard">
       {/* Notifications Header */}
       <NotificationsHeader 
         player={playerData} 

@@ -79,11 +79,13 @@ const slideIn = {
 };
 
 export default function NewAuthPage() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const { login, register } = useAuth();
   const { language, t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("login");
+  // Detect initial tab from URL
+  const initialTab = location.includes('/register') ? 'register' : 'login';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState<{ isOpen: boolean; provider: string }>({ isOpen: false, provider: '' });
 
@@ -254,6 +256,7 @@ export default function NewAuthPage() {
                                   <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                   <Input 
                                     {...field} 
+                                    data-testid="input-username"
                                     placeholder={t('auth.usernamePlaceholder', 'Enter your username or email')}
                                     className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                   />
@@ -276,6 +279,7 @@ export default function NewAuthPage() {
                                   <Input 
                                     {...field} 
                                     type="password"
+                                    data-testid="input-password"
                                     placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                                     className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500"
                                   />
@@ -306,6 +310,7 @@ export default function NewAuthPage() {
 
                         <Button
                           type="submit"
+                          data-testid="button-login"
                           className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-3 rounded-lg font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
                           disabled={isLoading}
                         >
