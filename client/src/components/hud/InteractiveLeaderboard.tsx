@@ -111,7 +111,7 @@ function LeaderboardRow({
   onChallenge?: (player: LeaderboardPlayer, suggestedMatchType: RankingType) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const tierStyle = tierConfig[player.tier];
+  const tierStyle = tierConfig[player.tier] || tierConfig.recreational;
   const primaryGradient = 'linear-gradient(135deg, #f97316 0%, #ec4899 50%, #a855f7 100%)';
   
   // Get current ranking data based on active tab
