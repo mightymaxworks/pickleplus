@@ -3072,7 +3072,7 @@ export default function UnifiedPrototype() {
                 player={playerData}
                 passportPhoto={passportPhoto}
                 onPhotoUpload={handlePhotoSave}
-                leaderboardPlayers={leaderboardData as any[] || []}
+                leaderboardPlayers={(leaderboardData as any)?.leaderboard || []}
                 contentFeedItems={[]} 
                 matchHistory={matchHistoryData as any[] || []}
               />
