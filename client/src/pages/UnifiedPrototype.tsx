@@ -61,7 +61,6 @@ import InteractiveLeaderboard from '@/components/hud/InteractiveLeaderboard';
 import ContentFeed from '@/components/hud/ContentFeed';
 import BattleLogHistory from '@/components/hud/BattleLogHistory';
 import SmartChallengeModal from '@/components/hud/SmartChallengeModal';
-import { MascotLoaderOverlay } from '@/components/ui/MascotLoader';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -3031,8 +3030,38 @@ export default function UnifiedPrototype() {
   if (isLoadingUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <MascotLoaderOverlay message="Loading your player passport..." />
+        <div className="flex flex-col items-center space-y-6">
+          <div className="relative w-24 h-24">
+            <motion.div
+              className="absolute inset-0"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <svg viewBox="0 0 100 100" className="w-full h-full">
+                <polygon
+                  points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                  fill="none"
+                  stroke="#f97316"
+                  strokeWidth="3"
+                  opacity="0.8"
+                />
+              </svg>
+            </motion.div>
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 blur-sm" />
+            </motion.div>
+          </div>
+          <motion.p 
+            className="text-white text-lg"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            Loading your player passport...
+          </motion.p>
         </div>
       </div>
     );

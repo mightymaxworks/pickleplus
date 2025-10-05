@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedUser } from "@/types/enhanced-user";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Loader2, User, Settings, Info, Award, History, Dumbbell } from "lucide-react";
-import MascotLoader from "@/components/ui/MascotLoader";
+import { motion } from 'framer-motion';
 
 // Import section components
 import { ProfileDetailsSection } from "@/components/profile/sections/ProfileDetailsSection";
@@ -188,7 +188,39 @@ export function OptimizedProfileTabs({
 function LoadingSection() {
   return (
     <div className="w-full h-64 flex items-center justify-center">
-      <MascotLoader message="Loading your profile..." size="sm" />
+      <div className="flex flex-col items-center space-y-4">
+        <div className="relative w-16 h-16">
+          <motion.div
+            className="absolute inset-0"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <polygon
+                points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="3"
+                opacity="0.8"
+              />
+            </svg>
+          </motion.div>
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 blur-sm" />
+          </motion.div>
+        </div>
+        <motion.p 
+          className="text-white text-sm"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          Loading your profile...
+        </motion.p>
+      </div>
     </div>
   );
 }

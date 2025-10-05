@@ -19,7 +19,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // Import brand assets
 import pickleLogoPath from '@assets/Pickle (2).png';
 import pickleCharacterPath from '@assets/Untitled design (51).png';
-import MascotLoader, { MascotLoaderOverlay } from "@/components/ui/MascotLoader";
 import { ComingSoonModal } from "@/components/ui/coming-soon-modal";
 
 // Form schemas
@@ -172,10 +171,43 @@ export default function NewAuthPage() {
   return (
     <>
       {/* Loading Overlay */}
-      <MascotLoaderOverlay 
-        isVisible={isLoading} 
-        message={activeTab === "login" ? t('auth.signingIn', 'Signing you in...') : t('auth.creatingPassport', 'Creating your player passport...')}
-      />
+      {isLoading && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-6">
+            <div className="relative w-24 h-24">
+              <motion.div
+                className="absolute inset-0"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <polygon
+                    points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                    fill="none"
+                    stroke="#f97316"
+                    strokeWidth="3"
+                    opacity="0.8"
+                  />
+                </svg>
+              </motion.div>
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 blur-sm" />
+              </motion.div>
+            </div>
+            <motion.p 
+              className="text-white text-lg"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {activeTab === "login" ? t('auth.signingIn', 'Signing you in...') : t('auth.creatingPassport', 'Creating your player passport...')}
+            </motion.p>
+          </div>
+        </div>
+      )}
       
       <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
         <div className="min-h-screen flex">
