@@ -279,7 +279,7 @@ function LeaderboardRow({
                   }`}
                   data-testid={`singles-rank-${player.id}`}
                 >
-                  S: #{player.rankings.singlesRank}
+                  S: #{player.rankings?.singlesRank || 999}
                 </div>
                 <div 
                   className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] rounded-full font-medium transition-all ${
@@ -289,7 +289,7 @@ function LeaderboardRow({
                   }`}
                   data-testid={`doubles-rank-${player.id}`}
                 >
-                  D: #{player.rankings.doublesRank}
+                  D: #{player.rankings?.doublesRank || 999}
                 </div>
                 <div 
                   className={`px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] rounded-full font-medium transition-all ${
@@ -299,7 +299,7 @@ function LeaderboardRow({
                   }`}
                   data-testid={`mixed-rank-${player.id}`}
                 >
-                  M: #{player.rankings.mixedRank}
+                  M: #{player.rankings?.mixedRank || 999}
                 </div>
               </div>
 
