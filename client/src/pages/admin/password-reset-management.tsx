@@ -238,7 +238,16 @@ export default function PasswordResetManagement() {
 
             {isSearching && (
               <div className="text-center py-4">
-                <div className="animate-spin w-6 h-6 border-2 border-orange-600 border-t-transparent rounded-full mx-auto"></div>
+                <div className="relative w-6 h-6 mx-auto">
+                  <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+                    <polygon
+                      points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                      fill="none"
+                      stroke="#f97316"
+                      strokeWidth="8"
+                    />
+                  </svg>
+                </div>
               </div>
             )}
 
@@ -339,7 +348,16 @@ export default function PasswordResetManagement() {
           <CardContent>
             {isLoadingRequests ? (
               <div className="text-center py-8">
-                <div className="animate-spin w-6 h-6 border-2 border-orange-600 border-t-transparent rounded-full mx-auto"></div>
+                <div className="relative w-6 h-6 mx-auto">
+                  <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+                    <polygon
+                      points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                      fill="none"
+                      stroke="#f97316"
+                      strokeWidth="8"
+                    />
+                  </svg>
+                </div>
                 <p className="text-gray-600 mt-2">Loading requests...</p>
               </div>
             ) : resetRequests && resetRequests.length > 0 ? (

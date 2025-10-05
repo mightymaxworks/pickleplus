@@ -42,7 +42,16 @@ const CoachPublicProfile = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <div className="relative w-12 h-12 mx-auto mb-4">
+            <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+              <polygon
+                points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="8"
+              />
+            </svg>
+          </div>
           <p>Loading coach profile for {slug}...</p>
           {error && <p className="text-red-500 mt-2">Error: {String(error)}</p>}
         </div>

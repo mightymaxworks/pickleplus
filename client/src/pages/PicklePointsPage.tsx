@@ -201,7 +201,16 @@ export default function PicklePointsPage() {
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+            <div className="relative w-12 h-12 mx-auto">
+              <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+                <polygon
+                  points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                  fill="none"
+                  stroke="#f97316"
+                  strokeWidth="8"
+                />
+              </svg>
+            </div>
             <p className="text-gray-600">Loading Pickle Points leaderboard...</p>
           </div>
         </div>

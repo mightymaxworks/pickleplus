@@ -95,7 +95,16 @@ export default function PassportDashboard({ user, onFieldChange, initialTab }: P
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-50 to-red-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <div className="relative w-8 h-8 mx-auto mb-4">
+            <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+              <polygon
+                points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="8"
+              />
+            </svg>
+          </div>
           <p className="text-orange-600">Loading passport...</p>
         </div>
       </div>

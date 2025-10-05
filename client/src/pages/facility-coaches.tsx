@@ -181,7 +181,16 @@ export default function FacilityCoaches() {
       <StandardLayout>
         <div className="flex items-center justify-center min-h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <div className="relative w-8 h-8 mx-auto mb-4">
+              <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+                <polygon
+                  points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                  fill="none"
+                  stroke="#f97316"
+                  strokeWidth="8"
+                />
+              </svg>
+            </div>
             <p className="text-gray-600">Loading facility information...</p>
           </div>
         </div>
