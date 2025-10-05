@@ -2893,7 +2893,7 @@ function ProfileModeContent({ player }: { player: PlayerData }) {
 
 export default function UnifiedPrototype() {
   const [location, setLocation] = useLocation();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isLoading: authLoading } = useAuth();
   
   // Auto-detect initial tab based on route
   const getInitialTab = (): TabMode => {
@@ -2910,9 +2910,10 @@ export default function UnifiedPrototype() {
     setActiveTab(getInitialTab());
   }, [location]);
   
-  // Fetch real user data from API - always run, no demo data fallback
+  // Fetch real user data from API - only if auth user exists
   const { data: currentUser, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/auth/current-user'],
+    enabled: !!authUser, // Only fetch if authenticated
   });
   
   // Fetch real leaderboard data
@@ -3026,8 +3027,8 @@ export default function UnifiedPrototype() {
     }, ...prev].slice(0, 10));
   };
 
-  // Show loading state while fetching user data
-  if (isLoadingUser) {
+  // Show loading state while fetching user data OR during auth
+  if (authLoading || isLoadingUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-6">
@@ -3065,6 +3066,12 @@ export default function UnifiedPrototype() {
         </div>
       </div>
     );
+  }
+  
+  // Redirect to login if not authenticated
+  if (!authUser) {
+    setLocation('/login');
+    return null;
   }
   
   // Show error state if data fetch failed
