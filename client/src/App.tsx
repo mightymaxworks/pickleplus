@@ -1080,6 +1080,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* Excel Tournament Analyzer */}
+                  <Route path="/admin/excel-analyzer">
+                    {() => (
+                      <AdminProtectedRoute>
+                        {React.createElement(lazyLoad(() => import('./pages/admin/ExcelAnalyzer')))}
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   <Route path="/settings">
                     {(params) => <CentralProtectedRoute component={SettingsPage} path="/settings" />}
                   </Route>

@@ -343,18 +343,18 @@ function parseExcelFile(buffer: Buffer): ParsedMatch[] {
       const row = jsonData[i] as any;
       
       try {
-        // Handle different possible column formats
-        const player1 = row['Player 1'] || row['P1'] || row['Player1'] || '';
-        const player2 = row['Player 2'] || row['P2'] || row['Player2'] || '';
-        const player3 = row['Player 3'] || row['P3'] || row['Player3'] || '';
-        const player4 = row['Player 4'] || row['P4'] || row['Player4'] || '';
+        // Handle different possible column formats (English and Chinese)
+        const player1 = row['Player 1'] || row['P1'] || row['Player1'] || row['第一队选手一护照码'] || row['选手一护照码'] || '';
+        const player2 = row['Player 2'] || row['P2'] || row['Player2'] || row['第二队选手一护照码'] || row['选手二护照码'] || '';
+        const player3 = row['Player 3'] || row['P3'] || row['Player3'] || row['第一队选手二护照码'] || '';
+        const player4 = row['Player 4'] || row['P4'] || row['Player4'] || row['第二队选手二护照码'] || '';
         
-        const score1 = row['Score 1'] || row['Team 1 Score'] || row['T1'] || 0;
-        const score2 = row['Score 2'] || row['Team 2 Score'] || row['T2'] || 0;
+        const score1 = row['Score 1'] || row['Team 1 Score'] || row['T1'] || row['第一队得分'] || 0;
+        const score2 = row['Score 2'] || row['Team 2 Score'] || row['T2'] || row['第二队得分'] || 0;
         
-        const matchDate = row['Date'] || row['Match Date'] || new Date().toISOString().split('T')[0];
-        const location = row['Location'] || row['Court'] || '';
-        const notes = row['Notes'] || row['Comments'] || '';
+        const matchDate = row['Date'] || row['Match Date'] || row['比赛日期'] || new Date().toISOString().split('T')[0];
+        const location = row['Location'] || row['Court'] || row['场地'] || '';
+        const notes = row['Notes'] || row['Comments'] || row['备注'] || '';
         
         // Skip empty rows
         if (!player1 || !player2) {
@@ -392,6 +392,216 @@ function parseExcelFile(buffer: Buffer): ParsedMatch[] {
   console.log(`✅ TOTAL PARSED MATCHES: ${allMatches.length}`);
   return allMatches;
 }
+
+// ===== ANALYSIS-ONLY ENDPOINT (NO IMPORT) =====
+router.post('/analyze-excel', isAuthenticated, upload.single('excelFile'), async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Excel file is required' });
+    }
+
+    console.log('🔍 EXCEL ANALYSIS MODE - NO IMPORT');
+    console.log(`📁 File: ${req.file.originalname}`);
+    console.log(`📏 Size: ${(req.file.size / 1024 / 1024).toFixed(2)}MB`);
+
+    // Parse the Excel file
+    const parsedMatches = parseExcelFile(req.file.buffer);
+    
+    if (parsedMatches.length === 0) {
+      return res.status(400).json({ 
+        error: 'No valid matches found in Excel file',
+        suggestion: 'Check that your Excel file has the correct column headers (Player 1, Player 2, Score 1, Score 2, etc.)'
+      });
+    }
+
+    // Get all unique passport codes from the Excel
+    const allPassportCodes = new Set<string>();
+    parsedMatches.forEach(match => {
+      allPassportCodes.add(match.player1);
+      allPassportCodes.add(match.player2);
+      if (match.player3) allPassportCodes.add(match.player3);
+      if (match.player4) allPassportCodes.add(match.player4);
+    });
+
+    // Match passport codes with database
+    const existingPlayers = await db.select({ 
+      id: users.id,
+      passportCode: users.passportCode, 
+      displayName: users.displayName,
+      username: users.username,
+      rankingPoints: users.rankingPoints,
+      gender: users.gender
+    }).from(users);
+    
+    const existingPlayerMap = new Map(existingPlayers.map(p => [p.passportCode, p]));
+    
+    const matchedCodes: any[] = [];
+    const unmatchedCodes: string[] = [];
+    
+    allPassportCodes.forEach(code => {
+      const player = existingPlayerMap.get(code);
+      if (player) {
+        matchedCodes.push({
+          passportCode: code,
+          displayName: player.displayName || player.username,
+          currentPoints: player.rankingPoints || 0,
+          gender: player.gender
+        });
+      } else {
+        unmatchedCodes.push(code);
+      }
+    });
+
+    // Calculate expected points for each match
+    const matchAnalysis = parsedMatches.map(match => {
+      const p1 = existingPlayerMap.get(match.player1);
+      const p2 = existingPlayerMap.get(match.player2);
+      const p3 = match.player3 ? existingPlayerMap.get(match.player3) : null;
+      const p4 = match.player4 ? existingPlayerMap.get(match.player4) : null;
+
+      const team1Won = match.team1Score > match.team2Score;
+      
+      let pointsCalculation: any = {
+        canCalculate: Boolean(p1 && p2 && (!match.isDoubles || (p3 && p4)))
+      };
+
+      if (pointsCalculation.canCalculate) {
+        const isCrossGender = isCrossGenderMatch(
+          p1!.gender || 'unknown',
+          p2!.gender || 'unknown',
+          p3?.gender,
+          p4?.gender
+        );
+
+        const p1Points = calculateMatchPoints(
+          team1Won,
+          p1!.gender || 'unknown',
+          p1!.rankingPoints || 0,
+          isCrossGender,
+          OFFICIAL_PCP_CONFIG
+        );
+
+        const p2Points = calculateMatchPoints(
+          !team1Won,
+          p2!.gender || 'unknown',
+          p2!.rankingPoints || 0,
+          isCrossGender,
+          OFFICIAL_PCP_CONFIG
+        );
+
+        pointsCalculation.player1Points = p1Points;
+        pointsCalculation.player2Points = p2Points;
+
+        if (match.isDoubles && p3 && p4) {
+          const p3Points = calculateMatchPoints(
+            team1Won,
+            p3.gender || 'unknown',
+            p3.rankingPoints || 0,
+            isCrossGender,
+            OFFICIAL_PCP_CONFIG
+          );
+
+          const p4Points = calculateMatchPoints(
+            !team1Won,
+            p4.gender || 'unknown',
+            p4.rankingPoints || 0,
+            isCrossGender,
+            OFFICIAL_PCP_CONFIG
+          );
+
+          pointsCalculation.player3Points = p3Points;
+          pointsCalculation.player4Points = p4Points;
+          pointsCalculation.totalPoints = p1Points + p2Points + p3Points + p4Points;
+        } else {
+          pointsCalculation.totalPoints = p1Points + p2Points;
+        }
+
+        // Calculate Pickle Points (Ranking Points × 1.5)
+        pointsCalculation.picklePointsAwarded = Math.round(pointsCalculation.totalPoints * 1.5);
+        pointsCalculation.crossGenderBonus = isCrossGender;
+      }
+
+      return {
+        tabName: match.tabName,
+        rowNumber: match.rowNumber,
+        matchType: match.isDoubles ? 'Doubles' : 'Singles',
+        player1: match.player1,
+        player2: match.player2,
+        player3: match.player3,
+        player4: match.player4,
+        team1Score: match.team1Score,
+        team2Score: match.team2Score,
+        winner: team1Won ? 'Team 1' : 'Team 2',
+        matchDate: match.matchDate,
+        location: match.location,
+        notes: match.notes,
+        pointsCalculation
+      };
+    });
+
+    // Group matches by tab
+    const tabBreakdown = Array.from(new Set(parsedMatches.map(m => m.tabName))).map(tabName => {
+      const tabMatches = parsedMatches.filter(m => m.tabName === tabName);
+      return {
+        tabName,
+        matchCount: tabMatches.length,
+        singlesCount: tabMatches.filter(m => !m.isDoubles).length,
+        doublesCount: tabMatches.filter(m => m.isDoubles).length
+      };
+    });
+
+    // Calculate total expected points
+    const totalExpectedPoints = matchAnalysis
+      .filter(m => m.pointsCalculation.canCalculate)
+      .reduce((sum, m) => sum + m.pointsCalculation.totalPoints, 0);
+
+    const totalPicklePoints = matchAnalysis
+      .filter(m => m.pointsCalculation.canCalculate)
+      .reduce((sum, m) => sum + m.pointsCalculation.picklePointsAwarded, 0);
+
+    res.json({
+      success: true,
+      analysisMode: true,
+      fileName: req.file.originalname,
+      summary: {
+        totalTabs: tabBreakdown.length,
+        totalMatches: parsedMatches.length,
+        singlesMatches: parsedMatches.filter(m => !m.isDoubles).length,
+        doublesMatches: parsedMatches.filter(m => m.isDoubles).length,
+        uniquePlayers: allPassportCodes.size,
+        matchedPlayers: matchedCodes.length,
+        unmatchedPlayers: unmatchedCodes.length,
+        totalRankingPointsToAward: totalExpectedPoints,
+        totalPicklePointsToAward: totalPicklePoints
+      },
+      tabBreakdown,
+      playerMatching: {
+        matched: matchedCodes,
+        unmatched: unmatchedCodes,
+        unmatchedCount: unmatchedCodes.length
+      },
+      matches: matchAnalysis,
+      warnings: unmatchedCodes.length > 0 ? [
+        `⚠️ ${unmatchedCodes.length} passport codes not found in database. These matches cannot be imported until players are registered.`
+      ] : [],
+      readyToImport: unmatchedCodes.length === 0
+    });
+
+  } catch (error) {
+    console.error('Error analyzing Excel file:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to analyze Excel file',
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
 
 // ===== UDF RULE 24: MANDATORY BULK IMPORT WORKFLOW =====
 router.post('/udf-compliant-process', isAuthenticated, upload.single('excelFile'), async (req, res) => {
