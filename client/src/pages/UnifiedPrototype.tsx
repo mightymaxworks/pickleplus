@@ -2018,7 +2018,16 @@ function RankingsModeContent({ player }: { player: PlayerData }) {
       {isLoadingLeaderboard && (
         <Card className="p-4 bg-slate-800 border-slate-700">
           <div className="flex items-center gap-3 text-slate-300">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-400"></div>
+            <div className="relative w-4 h-4">
+              <svg viewBox="0 0 100 100" className="w-full h-full animate-spin">
+                <polygon
+                  points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"
+                  fill="none"
+                  stroke="#f97316"
+                  strokeWidth="8"
+                />
+              </svg>
+            </div>
             <span>Loading live rankings data...</span>
           </div>
         </Card>

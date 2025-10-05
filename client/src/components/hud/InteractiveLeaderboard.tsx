@@ -116,27 +116,37 @@ function LeaderboardRow({
   
   // Get current ranking data based on active tab
   const getCurrentRankData = () => {
+    // Safety check for rankings object
+    if (!player.rankings) {
+      return {
+        rank: 999,
+        points: 0,
+        wins: 0,
+        losses: 0
+      };
+    }
+    
     switch (activeRankingType) {
       case 'singles':
         return {
-          rank: player.rankings.singlesRank,
-          points: player.rankings.singlesPoints,
-          wins: player.rankings.singlesWins,
-          losses: player.rankings.singlesLosses
+          rank: player.rankings.singlesRank || 999,
+          points: player.rankings.singlesPoints || 0,
+          wins: player.rankings.singlesWins || 0,
+          losses: player.rankings.singlesLosses || 0
         };
       case 'doubles':
         return {
-          rank: player.rankings.doublesRank,
-          points: player.rankings.doublesPoints,
-          wins: player.rankings.doublesWins,
-          losses: player.rankings.doublesLosses
+          rank: player.rankings.doublesRank || 999,
+          points: player.rankings.doublesPoints || 0,
+          wins: player.rankings.doublesWins || 0,
+          losses: player.rankings.doublesLosses || 0
         };
       case 'mixed':
         return {
-          rank: player.rankings.mixedRank,
-          points: player.rankings.mixedPoints,
-          wins: player.rankings.mixedWins,
-          losses: player.rankings.mixedLosses
+          rank: player.rankings.mixedRank || 999,
+          points: player.rankings.mixedPoints || 0,
+          wins: player.rankings.mixedWins || 0,
+          losses: player.rankings.mixedLosses || 0
         };
     }
   };
