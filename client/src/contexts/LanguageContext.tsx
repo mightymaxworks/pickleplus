@@ -414,11 +414,15 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.footer.rights': 'All rights reserved.',
     
     // Authentication
+    'auth.backToHome': 'Back to Home',
+    'auth.signInDescription': 'Sign in to access your player dashboard',
+    'auth.usernamePlaceholder': 'Enter your username or email',
     'auth.welcomeBack': 'Welcome Back',
     'auth.createPassport': 'Create Your Passport',
     'auth.joinRevolution': 'Join the transparent ranking revolution',
     'auth.signIn': 'Sign In',
-
+    'forgotPassword': 'Forgot your password?',
+    'auth.forgotPassword': 'Forgot your password?',
     'auth.password': 'Password',
 
     'auth.signInToDashboard': 'Sign In to Dashboard',
