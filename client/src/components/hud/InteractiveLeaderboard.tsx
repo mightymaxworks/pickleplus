@@ -243,7 +243,7 @@ function LeaderboardRow({
                   className="text-lg md:text-xl font-bold"
                   style={{ color: tierStyle.color }}
                 >
-                  {player.name.charAt(0)}
+                  {player.name ? player.name.charAt(0) : '?'}
                 </div>
               </div>
             </div>
@@ -253,7 +253,7 @@ function LeaderboardRow({
               {/* Name & Tier */}
               <div className="flex flex-wrap items-center gap-2">
                 <div className="font-bold text-white text-sm md:text-base truncate">
-                  {player.name}
+                  {player.name || 'Unknown Player'}
                   {isCurrentPlayer && (
                     <span className="ml-2 text-xs text-[#f97316]">(You)</span>
                   )}
