@@ -1,10 +1,25 @@
 # UNIFIED DEVELOPMENT FRAMEWORK (UDF) BEST PRACTICES
 ## Algorithm Compliance & Framework Integration Standards
 
-**Version**: 4.0.0 - Trading Card Platform Architecture  
-**Last Updated**: September 25, 2025  
-**Mandatory Compliance**: ALL match calculation components + Trading Card UI patterns  
+**Version**: 4.3.0 - Data Integrity & Bulk Operations Standards  
+**Last Updated**: October 5, 2025  
+**Mandatory Compliance**: ALL match calculation components + Trading Card UI patterns + Data Import/Bulk Operations  
 **Source of Truth**: PICKLE_PLUS_ALGORITHM_DOCUMENT.md + PICKLE_PLUS_NEXTGEN.md  
+
+### **CHANGELOG v4.3.0** 📋
+*October 5, 2025 - Data Integrity & Bulk Operations Standards*
+
+**ADDED**:
+- **RULE DI-01**: Pre-Import Data Validation Pipeline - Multi-stage validation (structural, referential, business rules) before database operations
+- **RULE DI-02**: Enumerated Field Normalization - Case-insensitive comparison and normalized storage for all enum fields
+- **RULE DI-03**: Schema-Calculation Data Type Alignment - Database numeric types must match algorithmic precision requirements
+- **RULE DI-04**: Cascading Relationship Management - Explicit cascade deletion handling for parent-child dependencies
+- **RULE DI-05**: Mandatory Dry-Run for Destructive Operations - Preview and approval workflow for bulk modifications
+- **RULE DI-06**: Internationalization Data Support - Multi-locale header mapping and locale auto-detection
+- **RULE DI-07**: Post-Operation Compliance Verification - Automated business rule validation after data modifications
+- **RULE DI-08**: Calculation Metadata & Audit Trails - Store algorithmic decision metadata for transparency
+
+**CONTEXT**: Establishes comprehensive standards for data import workflows, bulk operations, and algorithm execution based on lessons from production data correction operations. These generic patterns prevent common pitfalls: case-sensitivity issues in enum comparisons, precision loss in calculations, orphaned records from improper deletions, and missing audit trails for algorithmic decisions.
 
 ### **CHANGELOG v4.0.0** 📋
 *September 25, 2025 - Trading Card Platform Transformation*
@@ -5729,4 +5744,717 @@ it('preserves state on back navigation', async () => {
 
 ---
 
-**[End of Document - UDF v4.2.0 - Trading Card Platform + Routing Architecture + User Flow Decision Points]**
+## 📊 DATA INTEGRITY & BULK OPERATIONS STANDARDS
+
+### **RULE DI-01: PRE-IMPORT DATA VALIDATION PIPELINE**
+**All bulk data imports must pass through comprehensive validation before touching the database.**
+
+**Implementation Requirements:**
+```typescript
+// MANDATORY: Multi-stage validation pipeline
+interface ValidationPipeline<T> {
+  validateStructure(data: T[]): ValidationResult;
+  validateReferences(data: T[]): ValidationResult;
+  validateBusinessRules(data: T[]): ValidationResult;
+  generateReport(): ValidationReport;
+}
+
+// Example: Match import validation
+async function validateMatchImport(matches: RawMatch[]) {
+  const pipeline = new ValidationPipeline();
+  
+  // Stage 1: Structural validation
+  const structureCheck = pipeline.validateStructure(matches);
+  if (!structureCheck.isValid) {
+    throw new ValidationError('Structure validation failed', structureCheck.errors);
+  }
+  
+  // Stage 2: Reference validation (all players exist, codes valid)
+  const referenceCheck = await pipeline.validateReferences(matches);
+  if (!referenceCheck.isValid) {
+    return { status: 'requires_resolution', issues: referenceCheck.errors };
+  }
+  
+  // Stage 3: Business rule validation (algorithm compliance)
+  const businessCheck = pipeline.validateBusinessRules(matches);
+  if (!businessCheck.isValid) {
+    throw new ValidationError('Business rule validation failed', businessCheck.errors);
+  }
+  
+  return { status: 'ready', validatedData: matches };
+}
+```
+
+**Critical Validations:**
+- **Structural**: Data types, required fields, format compliance
+- **Referential**: Foreign key existence, identifier resolution
+- **Business Rules**: Algorithm compliance, logical consistency
+- **Completeness**: No missing required entities (players, categories, etc.)
+
+**User Feedback Pattern:**
+```typescript
+// MANDATORY: Provide actionable resolution paths
+{
+  status: 'requires_resolution',
+  issues: [
+    {
+      type: 'missing_player',
+      identifier: 'ABC123',
+      resolution: 'Create player or map to existing user',
+      affectedRecords: 15
+    }
+  ]
+}
+```
+
+**ENFORCEMENT**: No bulk import may proceed without passing all three validation stages.
+
+---
+
+### **RULE DI-02: ENUMERATED FIELD NORMALIZATION**
+**All string-based enumerated fields must use case-insensitive comparison and normalized storage.**
+
+**Problem Pattern:**
+```typescript
+// ❌ FORBIDDEN: Case-sensitive comparison causes missed matches
+if (user.gender === 'Female') { /* bonus logic */ }
+// Fails when database has 'female', 'FEMALE', or null
+```
+
+**Correct Implementation:**
+```typescript
+// ✅ CORRECT: Normalized comparison
+function normalizeGender(gender: string | null): 'male' | 'female' | 'other' {
+  const normalized = (gender || '').toLowerCase().trim();
+  if (normalized === 'male') return 'male';
+  if (normalized === 'female') return 'female';
+  return 'other';
+}
+
+// Usage in algorithms
+const playerGender = normalizeGender(user.gender);
+if (playerGender === 'female' && crossGenderMatch && currentRP < 1000) {
+  genderBonus = 1.15;
+}
+```
+
+**Database Schema Pattern:**
+```typescript
+// MANDATORY: Constrained enums with lowercase values
+gender: varchar('gender', { enum: ['male', 'female', 'other'] })
+  .default('other')
+  .notNull()
+
+// Add check constraint for case enforcement
+sql`CHECK (gender IN ('male', 'female', 'other'))`
+```
+
+**Generic Normalization Utilities:**
+```typescript
+// src/shared/utils/enumNormalization.ts
+export function normalizeEnum<T extends string>(
+  value: string | null | undefined,
+  validValues: readonly T[],
+  defaultValue: T
+): T {
+  const normalized = (value || '').toLowerCase().trim();
+  return (validValues as readonly string[]).includes(normalized)
+    ? (normalized as T)
+    : defaultValue;
+}
+
+// Usage
+const category = normalizeEnum(
+  input.category,
+  ['singles', 'doubles', 'mixed'] as const,
+  'singles'
+);
+```
+
+**ENFORCEMENT**: All enum comparisons must use normalized values. Database constraints must enforce lowercase storage.
+
+---
+
+### **RULE DI-03: SCHEMA-CALCULATION DATA TYPE ALIGNMENT**
+**Database schema numeric types must match the precision requirements of algorithmic calculations.**
+
+**Problem Pattern:**
+```typescript
+// Algorithm calculates: 3 * 1.15 = 3.45 points
+const rankingPoints = basePoints * genderBonus; // 3.45
+
+// ❌ Database schema: integer field
+rankingPoints: integer('ranking_points').default(0)
+// Result: 3.45 → 3 (data loss, unfair to players)
+```
+
+**Correct Implementation:**
+```typescript
+// ✅ Database schema matches calculation precision
+rankingPoints: decimal('ranking_points', { precision: 10, scale: 2 })
+  .default('0.00')
+  .notNull()
+
+// Application code preserves precision
+const rankingPoints = Math.round(basePoints * genderBonus * 100) / 100; // 3.45
+await db.update(users).set({ rankingPoints }); // Stores 3.45, not 3
+```
+
+**Generic Pattern for Numeric Fields:**
+```typescript
+// Decision matrix for numeric type selection
+interface NumericFieldSpec {
+  requiresDecimals: boolean;
+  maxValue: number;
+  decimalPlaces: number;
+}
+
+function selectNumericType(spec: NumericFieldSpec): string {
+  if (!spec.requiresDecimals) {
+    return spec.maxValue > 2147483647 ? 'bigint' : 'integer';
+  }
+  
+  const precision = Math.ceil(Math.log10(spec.maxValue)) + spec.decimalPlaces;
+  return `decimal(${precision}, ${spec.decimalPlaces})`;
+}
+
+// Example: Ranking points with 2 decimal places, max 999999.99
+// Result: decimal(8, 2)
+```
+
+**Migration Pattern:**
+```typescript
+// Safe migration from integer to decimal
+// Step 1: Add new decimal column
+await db.schema.alterTable('users')
+  .addColumn('ranking_points_decimal', 'decimal(10,2)');
+
+// Step 2: Copy data with precision preservation
+await db.execute(sql`
+  UPDATE users
+  SET ranking_points_decimal = ranking_points::decimal(10,2)
+`);
+
+// Step 3: Drop old column, rename new
+// (Use db:push with schema changes)
+```
+
+**ENFORCEMENT**: All calculated fields storing monetary values, percentages, multipliers, or statistical data must use appropriate decimal types.
+
+---
+
+### **RULE DI-04: CASCADING RELATIONSHIP MANAGEMENT**
+**All destructive operations on parent entities must handle child dependencies explicitly.**
+
+**Problem Pattern:**
+```typescript
+// ❌ FORBIDDEN: Direct deletion without cascade handling
+await db.delete(matches).where(eq(matches.id, matchId));
+// Error: foreign key constraint violation from ranking_history
+```
+
+**Correct Implementation:**
+```typescript
+// ✅ CORRECT: Explicit cascade deletion in correct order
+async function deleteMatch(matchId: number) {
+  return await db.transaction(async (tx) => {
+    // Delete children first (bottom-up)
+    await tx.delete(rankingHistory).where(eq(rankingHistory.matchId, matchId));
+    await tx.delete(matchStatistics).where(eq(matchStatistics.matchId, matchId));
+    await tx.delete(playerResults).where(eq(playerResults.matchId, matchId));
+    
+    // Delete parent last
+    await tx.delete(matches).where(eq(matches.id, matchId));
+  });
+}
+```
+
+**Generic Cascade Utility:**
+```typescript
+// src/shared/utils/cascadeDelete.ts
+interface CascadeConfig {
+  table: string;
+  foreignKey: string;
+  order: number; // Lower numbers deleted first
+}
+
+async function cascadeDelete(
+  parentTable: string,
+  parentId: number,
+  cascadeRules: CascadeConfig[]
+) {
+  return await db.transaction(async (tx) => {
+    // Sort by deletion order
+    const sortedRules = cascadeRules.sort((a, b) => a.order - b.order);
+    
+    // Delete children in order
+    for (const rule of sortedRules) {
+      await tx.execute(sql`
+        DELETE FROM ${sql.identifier(rule.table)}
+        WHERE ${sql.identifier(rule.foreignKey)} = ${parentId}
+      `);
+    }
+    
+    // Delete parent last
+    await tx.execute(sql`
+      DELETE FROM ${sql.identifier(parentTable)}
+      WHERE id = ${parentId}
+    `);
+  });
+}
+```
+
+**Schema Pattern with ON DELETE CASCADE:**
+```typescript
+// Alternative: Use database-level cascades
+export const rankingHistory = pgTable('ranking_history', {
+  id: serial('id').primaryKey(),
+  matchId: integer('match_id')
+    .references(() => matches.id, { onDelete: 'cascade' }) // Automatic cascade
+});
+```
+
+**ENFORCEMENT**: All delete operations must either use explicit cascade handling OR database-level CASCADE constraints. No orphaned records permitted.
+
+---
+
+### **RULE DI-05: MANDATORY DRY-RUN FOR DESTRUCTIVE OPERATIONS**
+**All bulk destructive operations must support dry-run mode with detailed preview.**
+
+**Implementation Pattern:**
+```typescript
+// MANDATORY: Dry-run interface for all bulk operations
+interface BulkOperationOptions {
+  dryRun: boolean;
+  generateReport: boolean;
+}
+
+interface DryRunReport {
+  affectedEntities: {
+    table: string;
+    operation: 'insert' | 'update' | 'delete';
+    count: number;
+    preview: any[]; // First 10 records
+  }[];
+  warnings: string[];
+  estimatedDuration: number;
+  requiresApproval: boolean;
+}
+
+async function bulkDeleteMatches(
+  criteria: MatchCriteria,
+  options: BulkOperationOptions = { dryRun: true, generateReport: true }
+): Promise<BulkOperationResult | DryRunReport> {
+  
+  // Find affected matches
+  const matches = await findMatches(criteria);
+  
+  if (options.dryRun) {
+    // Generate impact report
+    const report: DryRunReport = {
+      affectedEntities: [
+        {
+          table: 'matches',
+          operation: 'delete',
+          count: matches.length,
+          preview: matches.slice(0, 10)
+        },
+        {
+          table: 'ranking_history',
+          operation: 'delete',
+          count: await countRelatedRecords('ranking_history', matches),
+          preview: []
+        }
+      ],
+      warnings: [
+        `${matches.length} matches will be permanently deleted`,
+        `${affectedPlayers.length} players will have points adjusted`
+      ],
+      estimatedDuration: matches.length * 50, // ms
+      requiresApproval: matches.length > 100
+    };
+    
+    return report;
+  }
+  
+  // Execute actual deletion
+  return await executeMatchDeletion(matches);
+}
+```
+
+**User Approval Pattern:**
+```typescript
+// MANDATORY: Explicit confirmation for destructive operations
+async function performBulkOperation() {
+  // Step 1: Show dry-run
+  const dryRunResult = await bulkDeleteMatches(criteria, { dryRun: true });
+  
+  // Step 2: Present to user
+  console.log('═'.repeat(80));
+  console.log('BULK OPERATION PREVIEW');
+  console.log('═'.repeat(80));
+  dryRunResult.affectedEntities.forEach(entity => {
+    console.log(`${entity.operation.toUpperCase()} ${entity.count} from ${entity.table}`);
+  });
+  
+  // Step 3: Require explicit approval
+  const approval = await getUserApproval({
+    message: 'This operation will modify database. Continue?',
+    requiresTypedConfirmation: dryRunResult.requiresApproval,
+    confirmationText: 'DELETE MATCHES'
+  });
+  
+  if (!approval) {
+    return { status: 'cancelled' };
+  }
+  
+  // Step 4: Execute with approval
+  return await bulkDeleteMatches(criteria, { dryRun: false });
+}
+```
+
+**ENFORCEMENT**: All operations affecting >10 records or performing DELETE/UPDATE must implement dry-run mode.
+
+---
+
+### **RULE DI-06: INTERNATIONALIZATION DATA SUPPORT**
+**All data import pipelines must support multiple languages/locales without hardcoded column mappings.**
+
+**Problem Pattern:**
+```typescript
+// ❌ FORBIDDEN: Hardcoded English-only headers
+const player1 = row['Team 1 Player 1'];
+// Fails with Chinese headers: 第一队选手一
+```
+
+**Correct Implementation:**
+```typescript
+// ✅ CORRECT: Locale-aware header mapping
+interface HeaderMapping {
+  canonical: string;
+  aliases: string[];
+}
+
+const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
+  team1Player1: {
+    canonical: 'team1Player1',
+    aliases: [
+      'Team 1 Player 1',
+      'Team 1 Player 1 Passport Code',
+      '第一队选手一',
+      '第一队选手一护照码'
+    ]
+  },
+  team1Score: {
+    canonical: 'team1Score',
+    aliases: [
+      'Team 1 Score',
+      'Score Team 1',
+      '第一队得分',
+      '第一队分数'
+    ]
+  }
+};
+
+// Generic header normalization
+function normalizeHeaders(row: Record<string, any>): Record<string, any> {
+  const normalized: Record<string, any> = {};
+  
+  for (const [canonical, mapping] of Object.entries(HEADER_MAPPINGS)) {
+    // Find matching header in row
+    const matchingHeader = Object.keys(row).find(header =>
+      mapping.aliases.some(alias => 
+        alias.toLowerCase() === header.toLowerCase()
+      )
+    );
+    
+    if (matchingHeader) {
+      normalized[canonical] = row[matchingHeader];
+    }
+  }
+  
+  return normalized;
+}
+
+// Usage
+const rawRow = { '第一队选手一护照码': 'ABC123', '第一队得分': 15 };
+const normalizedRow = normalizeHeaders(rawRow);
+// Result: { team1Player1: 'ABC123', team1Score: 15 }
+```
+
+**Generic Pattern for Multi-Locale Data:**
+```typescript
+// src/shared/constants/dataFormats.ts
+export interface LocaleFormat {
+  locale: string;
+  dateFormat: string;
+  numberFormat: string;
+  headerMappings: Record<string, string[]>;
+}
+
+export const SUPPORTED_LOCALES: LocaleFormat[] = [
+  {
+    locale: 'en-US',
+    dateFormat: 'MM/DD/YYYY',
+    numberFormat: '1,000.00',
+    headerMappings: { /* English headers */ }
+  },
+  {
+    locale: 'zh-CN',
+    dateFormat: 'YYYY.MM.DD',
+    numberFormat: '1,000.00',
+    headerMappings: { /* Chinese headers */ }
+  }
+];
+
+// Auto-detect locale from data
+function detectLocale(headers: string[]): LocaleFormat {
+  for (const format of SUPPORTED_LOCALES) {
+    const matchCount = headers.filter(h =>
+      Object.values(format.headerMappings).flat().includes(h)
+    ).length;
+    
+    if (matchCount > headers.length * 0.5) {
+      return format;
+    }
+  }
+  
+  return SUPPORTED_LOCALES[0]; // Default to English
+}
+```
+
+**ENFORCEMENT**: All import pipelines must support at minimum English and Chinese locales. Header mappings must be externalized to configuration files.
+
+---
+
+### **RULE DI-07: POST-OPERATION COMPLIANCE VERIFICATION**
+**All data modifications must include automated verification that business rules remain satisfied.**
+
+**Implementation Pattern:**
+```typescript
+// MANDATORY: Post-operation verification suite
+interface ComplianceCheck {
+  name: string;
+  verify: () => Promise<boolean>;
+  errorMessage: string;
+}
+
+async function verifyMatchImportCompliance(
+  importedMatches: Match[]
+): Promise<ComplianceReport> {
+  
+  const checks: ComplianceCheck[] = [
+    {
+      name: 'System B Points',
+      verify: async () => {
+        // Verify all matches used 3/1 points
+        const invalidPoints = await db.select().from(matches)
+          .where(sql`
+            (is_winner = true AND ranking_points_awarded != 3)
+            OR (is_winner = false AND ranking_points_awarded != 1)
+          `);
+        return invalidPoints.length === 0;
+      },
+      errorMessage: 'Some matches have incorrect base points (not 3 win / 1 loss)'
+    },
+    {
+      name: 'Gender Bonus Application',
+      verify: async () => {
+        // Verify gender bonuses only on eligible matches
+        const bonusedMatches = await findMatchesWithGenderBonus();
+        return bonusedMatches.every(m =>
+          m.isMixedDoubles && m.femalePlayerRP < 1000
+        );
+      },
+      errorMessage: 'Gender bonuses applied incorrectly'
+    },
+    {
+      name: 'Pickle Points Multiplier',
+      verify: async () => {
+        // Verify 1.5x multiplier
+        const invalidMultipliers = await db.select().from(matches)
+          .where(sql`ABS(pickle_points_awarded - (ranking_points_awarded * 1.5)) > 0.01`);
+        return invalidMultipliers.length === 0;
+      },
+      errorMessage: 'Pickle Points multiplier not 1.5x'
+    },
+    {
+      name: 'No Negative Points',
+      verify: async () => {
+        const negativePoints = await db.select().from(users)
+          .where(sql`ranking_points < 0 OR pickle_points < 0`);
+        return negativePoints.length === 0;
+      },
+      errorMessage: 'Players have negative points'
+    }
+  ];
+  
+  const results = await Promise.all(
+    checks.map(async check => ({
+      name: check.name,
+      passed: await check.verify(),
+      errorMessage: check.errorMessage
+    }))
+  );
+  
+  const failures = results.filter(r => !r.passed);
+  
+  return {
+    passed: failures.length === 0,
+    checks: results,
+    summary: failures.length === 0
+      ? 'All compliance checks passed'
+      : `${failures.length} compliance checks failed`
+  };
+}
+```
+
+**Generic Verification Framework:**
+```typescript
+// src/shared/utils/complianceVerification.ts
+export class ComplianceVerifier {
+  private checks: ComplianceCheck[] = [];
+  
+  addCheck(check: ComplianceCheck) {
+    this.checks.push(check);
+  }
+  
+  async verify(): Promise<ComplianceReport> {
+    const results = await Promise.all(
+      this.checks.map(async check => {
+        try {
+          const passed = await check.verify();
+          return { name: check.name, passed, error: null };
+        } catch (error) {
+          return {
+            name: check.name,
+            passed: false,
+            error: error.message
+          };
+        }
+      })
+    );
+    
+    return {
+      passed: results.every(r => r.passed),
+      checks: results,
+      timestamp: new Date()
+    };
+  }
+}
+```
+
+**ENFORCEMENT**: All bulk operations must run compliance verification before finalizing. Failed checks must trigger rollback or require manual override.
+
+---
+
+### **RULE DI-08: CALCULATION METADATA & AUDIT TRAILS**
+**All algorithmic calculations must store decision metadata for transparency and debugging.**
+
+**Implementation Pattern:**
+```typescript
+// MANDATORY: Store calculation reasoning with results
+interface CalculationMetadata {
+  algorithm: string;
+  version: string;
+  inputs: Record<string, any>;
+  steps: CalculationStep[];
+  finalValues: Record<string, number>;
+  bonusesApplied: BonusApplication[];
+}
+
+interface BonusApplication {
+  type: 'gender' | 'age' | 'tier';
+  multiplier: number;
+  eligibilityCheck: string;
+  applied: boolean;
+}
+
+// Store with match
+await db.insert(matches).values({
+  ...matchData,
+  calculationMetadata: {
+    algorithm: 'System B with Gender Bonus',
+    version: '2.1.0',
+    inputs: {
+      basePoints: 3,
+      playerGender: 'female',
+      isMixedDoubles: true,
+      currentRP: 850
+    },
+    steps: [
+      { operation: 'base_points', value: 3, reason: 'Winner in System B' },
+      { operation: 'gender_bonus', value: 1.15, reason: 'Female <1000RP in mixed' },
+      { operation: 'final_rp', value: 3.45, reason: '3 * 1.15' },
+      { operation: 'pickle_multiplier', value: 1.5, reason: 'Standard multiplier' },
+      { operation: 'final_pp', value: 5.175, reason: '3.45 * 1.5' }
+    ],
+    finalValues: {
+      rankingPoints: 3.45,
+      picklePoints: 5.175
+    },
+    bonusesApplied: [
+      {
+        type: 'gender',
+        multiplier: 1.15,
+        eligibilityCheck: 'isFemale && isMixedDoubles && currentRP < 1000',
+        applied: true
+      }
+    ]
+  }
+});
+```
+
+**Generic Audit Trail Pattern:**
+```typescript
+// src/shared/utils/auditTrail.ts
+export class CalculationAuditor {
+  private steps: CalculationStep[] = [];
+  
+  recordStep(operation: string, value: number, reason: string) {
+    this.steps.push({ operation, value, reason, timestamp: Date.now() });
+  }
+  
+  recordBonusCheck(
+    type: string,
+    multiplier: number,
+    eligibilityCheck: string,
+    applied: boolean
+  ) {
+    this.steps.push({
+      operation: `${type}_bonus_check`,
+      value: applied ? multiplier : 1.0,
+      reason: `${eligibilityCheck} → ${applied ? 'APPLIED' : 'SKIPPED'}`
+    });
+  }
+  
+  getMetadata(): CalculationMetadata {
+    return {
+      algorithm: this.algorithm,
+      version: this.version,
+      inputs: this.inputs,
+      steps: this.steps,
+      finalValues: this.finalValues,
+      bonusesApplied: this.getBonuses()
+    };
+  }
+}
+
+// Usage
+const auditor = new CalculationAuditor('System B', '2.1.0');
+auditor.recordStep('base_points', 3, 'Winner');
+auditor.recordBonusCheck('gender', 1.15, 'female && mixed && RP<1000', true);
+const metadata = auditor.getMetadata();
+```
+
+**Benefits:**
+- **Debugging**: Trace exact calculation path for disputed points
+- **Compliance**: Verify bonuses applied correctly
+- **Migration**: Recalculate points if algorithm changes
+- **Transparency**: Show players how points were earned
+
+**ENFORCEMENT**: All point allocation operations must store calculation metadata in JSONB field for audit purposes.
+
+---
+
+**[End of Document - UDF v4.3.0 - Trading Card Platform + Routing Architecture + Data Integrity Standards]**
