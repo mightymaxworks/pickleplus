@@ -3119,7 +3119,7 @@ export default function UnifiedPrototype() {
                 onPhotoUpload={handlePhotoSave}
                 leaderboardPlayers={(leaderboardData as any)?.leaderboard || []}
                 contentFeedItems={[]} 
-                matchHistory={matchHistoryData as any[] || []}
+                matchHistory={(matchHistoryData as any)?.data || []}
               />
             )}
             {/* Play tab redirects to /match-arena */}
