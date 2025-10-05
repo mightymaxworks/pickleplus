@@ -61,6 +61,7 @@ import InteractiveLeaderboard from '@/components/hud/InteractiveLeaderboard';
 import ContentFeed from '@/components/hud/ContentFeed';
 import BattleLogHistory from '@/components/hud/BattleLogHistory';
 import SmartChallengeModal from '@/components/hud/SmartChallengeModal';
+import { MascotLoaderOverlay } from '@/components/ui/MascotLoader';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -3022,8 +3023,7 @@ export default function UnifiedPrototype() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading your player passport...</p>
+          <MascotLoaderOverlay message="Loading your player passport..." />
         </div>
       </div>
     );

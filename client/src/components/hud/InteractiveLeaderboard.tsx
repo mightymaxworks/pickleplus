@@ -383,13 +383,16 @@ export default function InteractiveLeaderboard({
 
   // Sort players based on active ranking type
   const sortedPlayers = [...players].sort((a, b) => {
+    // Safety check for rankings object
+    if (!a.rankings || !b.rankings) return 0;
+    
     switch (activeRankingType) {
       case 'singles':
-        return a.rankings.singlesRank - b.rankings.singlesRank;
+        return (a.rankings.singlesRank || 999) - (b.rankings.singlesRank || 999);
       case 'doubles':
-        return a.rankings.doublesRank - b.rankings.doublesRank;
+        return (a.rankings.doublesRank || 999) - (b.rankings.doublesRank || 999);
       case 'mixed':
-        return a.rankings.mixedRank - b.rankings.mixedRank;
+        return (a.rankings.mixedRank || 999) - (b.rankings.mixedRank || 999);
       default:
         return 0;
     }
