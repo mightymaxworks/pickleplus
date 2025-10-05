@@ -243,6 +243,34 @@ export function registerMatchRoutes(app: express.Express): void {
     }
   });
   
+  // Recent matches endpoint for authenticated users
+  app.get('/api/matches/recent', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const limit = parseInt(req.query.limit as string) || 5;
+      
+      console.log(`[Recent Matches] Fetching recent matches for user ${userId}, limit: ${limit}`);
+      
+      // Get recent matches for the authenticated user
+      const recentMatches = await storage.getRecentMatchesForUser(userId, limit);
+      
+      console.log(`[Recent Matches] Found ${recentMatches.length} matches for user ${userId}`);
+      
+      res.status(200).json({
+        success: true,
+        data: recentMatches,
+        total: recentMatches.length
+      });
+    } catch (error) {
+      console.error('[Recent Matches] Error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch recent matches', 
+        details: (error as Error).message 
+      });
+    }
+  });
+  
   // Get match by serial
   app.get('/api/matches/:serial', async (req, res) => {
     try {
@@ -947,34 +975,6 @@ export function registerMatchRoutes(app: express.Express): void {
     } catch (error) {
       console.error('[Match Creation] Error:', error);
       res.status(500).json({ error: 'Failed to create match', details: (error as Error).message });
-    }
-  });
-  
-  // Recent matches endpoint for authenticated users
-  app.get('/api/matches/recent', isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any)?.id;
-      const limit = parseInt(req.query.limit as string) || 5;
-      
-      console.log(`[Recent Matches] Fetching recent matches for user ${userId}, limit: ${limit}`);
-      
-      // Get recent matches for the authenticated user
-      const recentMatches = await storage.getRecentMatchesForUser(userId, limit);
-      
-      console.log(`[Recent Matches] Found ${recentMatches.length} matches for user ${userId}`);
-      
-      res.status(200).json({
-        success: true,
-        data: recentMatches,
-        total: recentMatches.length
-      });
-    } catch (error) {
-      console.error('[Recent Matches] Error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to fetch recent matches', 
-        details: (error as Error).message 
-      });
     }
   });
 

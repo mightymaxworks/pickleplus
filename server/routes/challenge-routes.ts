@@ -227,6 +227,78 @@ router.post('/:id/respond', async (req, res) => {
 });
 
 /**
+ * GET /api/challenges/incoming
+ * Get pending challenges for current user
+ */
+router.get('/incoming', async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const challenges = await db.select({
+      id: matchChallenges.id,
+      matchType: matchChallenges.matchType,
+      status: matchChallenges.status,
+      message: matchChallenges.message,
+      createdAt: matchChallenges.createdAt,
+      expiresAt: matchChallenges.expiresAt,
+      challengerName: users.displayName,
+      challengerUsername: users.username
+    })
+    .from(matchChallenges)
+    .innerJoin(users, eq(matchChallenges.challengerId, users.id))
+    .where(and(
+      eq(matchChallenges.challengedId, userId),
+      eq(matchChallenges.status, 'pending')
+    ))
+    .orderBy(sql`${matchChallenges.createdAt} DESC`);
+
+    res.json({ challenges });
+
+  } catch (error) {
+    console.error('[Challenge Routes] Error fetching incoming challenges:', error);
+    res.status(500).json({ error: 'Failed to fetch challenges' });
+  }
+});
+
+/**
+ * GET /api/challenges/sent
+ * Get challenges sent by current user
+ */
+router.get('/sent', async (req, res) => {
+  try {
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const challenges = await db.select({
+      id: matchChallenges.id,
+      matchType: matchChallenges.matchType,
+      status: matchChallenges.status,
+      message: matchChallenges.message,
+      createdAt: matchChallenges.createdAt,
+      expiresAt: matchChallenges.expiresAt,
+      respondedAt: matchChallenges.respondedAt,
+      challengedName: users.displayName,
+      challengedUsername: users.username
+    })
+    .from(matchChallenges)
+    .innerJoin(users, eq(matchChallenges.challengedId, users.id))
+    .where(eq(matchChallenges.challengerId, userId))
+    .orderBy(sql`${matchChallenges.createdAt} DESC`);
+
+    res.json({ challenges });
+
+  } catch (error) {
+    console.error('[Challenge Routes] Error fetching sent challenges:', error);
+    res.status(500).json({ error: 'Failed to fetch sent challenges' });
+  }
+});
+
+/**
  * GET /api/challenges/:id
  * Get challenge details by ID
  */
@@ -448,78 +520,6 @@ router.get('/:id/status', async (req, res) => {
   } catch (error) {
     console.error('[Challenge Routes] Error fetching ready status:', error);
     res.status(500).json({ error: 'Failed to fetch ready status' });
-  }
-});
-
-/**
- * GET /api/challenges/incoming
- * Get pending challenges for current user
- */
-router.get('/incoming', async (req, res) => {
-  try {
-    const userId = (req.user as any)?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    const challenges = await db.select({
-      id: matchChallenges.id,
-      matchType: matchChallenges.matchType,
-      status: matchChallenges.status,
-      message: matchChallenges.message,
-      createdAt: matchChallenges.createdAt,
-      expiresAt: matchChallenges.expiresAt,
-      challengerName: users.displayName,
-      challengerUsername: users.username
-    })
-    .from(matchChallenges)
-    .innerJoin(users, eq(matchChallenges.challengerId, users.id))
-    .where(and(
-      eq(matchChallenges.challengedId, userId),
-      eq(matchChallenges.status, 'pending')
-    ))
-    .orderBy(sql`${matchChallenges.createdAt} DESC`);
-
-    res.json({ challenges });
-
-  } catch (error) {
-    console.error('[Challenge Routes] Error fetching incoming challenges:', error);
-    res.status(500).json({ error: 'Failed to fetch challenges' });
-  }
-});
-
-/**
- * GET /api/challenges/sent
- * Get challenges sent by current user
- */
-router.get('/sent', async (req, res) => {
-  try {
-    const userId = (req.user as any)?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    const challenges = await db.select({
-      id: matchChallenges.id,
-      matchType: matchChallenges.matchType,
-      status: matchChallenges.status,
-      message: matchChallenges.message,
-      createdAt: matchChallenges.createdAt,
-      expiresAt: matchChallenges.expiresAt,
-      respondedAt: matchChallenges.respondedAt,
-      challengedName: users.displayName,
-      challengedUsername: users.username
-    })
-    .from(matchChallenges)
-    .innerJoin(users, eq(matchChallenges.challengedId, users.id))
-    .where(eq(matchChallenges.challengerId, userId))
-    .orderBy(sql`${matchChallenges.createdAt} DESC`);
-
-    res.json({ challenges });
-
-  } catch (error) {
-    console.error('[Challenge Routes] Error fetching sent challenges:', error);
-    res.status(500).json({ error: 'Failed to fetch challenges' });
   }
 });
 
